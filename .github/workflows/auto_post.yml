@@ -1,0 +1,78 @@
+name: Binance Square Auto Poster
+
+on:
+  schedule:
+    # 每 30 分钟定时触发一次 (UTC 时间，可根据需要调整)
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    # 支持在 GitHub 仓库界面手动一键触发调试
+    inputs:
+      dry_run:
+        description: '是否开启测试模式 (true 则仅模拟不真实发布)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+      max_posts:
+        description: '本次单次最大发帖条数'
+        required: false
+        default: '1'
+        type: string
+
+# 赋予工作流写入仓库代码的权限（用于 Git 回写 sent_cache.json）
+permissions:
+  contents: write
+
+concurrency:
+  group: binance-square-poster
+  cancel-in-progress: false
+
+jobs:
+  run-poster:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出仓库代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: 配置 Python 环境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 安装项目依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 执行自动化发帖脚本
+        env:
+          SQUARE_API_KEY: ${{ secrets.SQUARE_API_KEY }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL || 'https://api.deepseek.com' }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL || 'deepseek-chat' }}
+          MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts || vars.MAX_POSTS_PER_RUN || '1' }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || vars.DRY_RUN || 'false' }}
+        run: |
+          python main.py
+
+      - name: 回写状态并提交 Git 变更
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if [ -n "$(git status --porcelain sent_cache.json)" ]; then
+            echo "检测到 sent_cache.json 已更新，准备提交并推送..."
+            git add sent_cache.json
+            git commit -m "chore(cache): update sent_cache.json [skip ci]"
+            git pull --rebase origin ${{ github.ref_name }} || true
+            git push origin HEAD:${{ github.ref_name }}
+          else
+            echo "sent_cache.json 无任何变动，无需提交。"
+          fi
