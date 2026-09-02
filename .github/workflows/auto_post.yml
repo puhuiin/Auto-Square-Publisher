@@ -1,11 +1,11 @@
-name: Binance Square Auto Poster
+name: Binance Square Auto Poster Pro
 
 on:
   schedule:
-    # 每 30 分钟定时触发一次 (UTC 时间，可根据需要调整)
+    # 每 30 分钟定时触发一次 (UTC 时间)
     - cron: '*/30 * * * *'
   workflow_dispatch:
-    # 支持在 GitHub 仓库界面手动一键触发调试
+    # 支持在 GitHub 仓库界面手动一键触发与调试
     inputs:
       dry_run:
         description: '是否开启测试模式 (true 则仅模拟不真实发布)'
@@ -51,12 +51,33 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: 执行自动化发帖脚本
+      - name: 执行自动化发帖脚本 (支持多模型故障转移)
         env:
           SQUARE_API_KEY: ${{ secrets.SQUARE_API_KEY }}
+          
+          # 主模型或自定义单一配置
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL || 'https://api.deepseek.com' }}
           LLM_MODEL: ${{ secrets.LLM_MODEL || 'deepseek-chat' }}
+          
+          # 高级多模型池配置 (JSON 数组格式)
+          LLM_PROVIDERS_CONFIG: ${{ secrets.LLM_PROVIDERS_CONFIG }}
+          
+          # 常用免费/第三方模型提供商专用 Key (可选)
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          BAI_API_KEY: ${{ secrets.BAI_API_KEY }}
+          XKIRO_API_KEY: ${{ secrets.XKIRO_API_KEY }}
+          AIHUBMIX_API_KEY: ${{ secrets.AIHUBMIX_API_KEY }}
+          INFERERA_API_KEY: ${{ secrets.INFERERA_API_KEY }}
+          TOKENROUTER_API_KEY: ${{ secrets.TOKENROUTER_API_KEY }}
+          SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
+          
+          # 可选通知 Webhook / Telegram
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          
+          # 运行参数
           MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts || vars.MAX_POSTS_PER_RUN || '1' }}
           DRY_RUN: ${{ github.event.inputs.dry_run || vars.DRY_RUN || 'false' }}
         run: |
