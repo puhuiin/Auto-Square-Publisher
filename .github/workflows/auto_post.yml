@@ -93,12 +93,12 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          if [ -n "$(git status --porcelain sent_cache.json)" ]; then
-            echo "检测到 sent_cache.json 已更新，准备提交并推送..."
-            git add sent_cache.json
-            git commit -m "chore(cache): update sent_cache.json [skip ci]"
+          if [ -n "$(git status --porcelain sent_cache.json campaign_intel.json)" ]; then
+            echo "检测到数据或活动情报已更新，准备提交并推送..."
+            git add sent_cache.json campaign_intel.json
+            git commit -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]"
             git pull --rebase origin ${{ github.ref_name }} || true
             git push origin HEAD:${{ github.ref_name }}
           else
-            echo "sent_cache.json 无任何变动，无需提交。"
+            echo "状态数据无任何变动，无需提交。"
           fi

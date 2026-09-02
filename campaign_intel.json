@@ -1,0 +1,15 @@
+{
+  "active_tags": [
+    "#Write2Earn",
+    "#BinanceSquare",
+    "#热点解析"
+  ],
+  "incentivized_tokens": [
+    "$BTC",
+    "$ETH",
+    "$BNB",
+    "$SOL"
+  ],
+  "strategy_guidance": "优先关联主流现货与USDT永续合约，吸引读者点击交易组件以赚取返佣。",
+  "last_updated": "2026-09-02T00:00:00Z"
+}

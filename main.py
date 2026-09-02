@@ -3,19 +3,24 @@
 
 """
 ==============================================================================
-币安广场（Binance Square）加密热点多模型自动发帖机器人 (Pro 增强版)
+币安广场（Binance Square）加密热点与活动智能结合发帖机器人 (Pro AI 增强版)
 ==============================================================================
 核心优势与特性：
-1. 多源热点监听：BlockTempo、Cointelegraph、CoinDesk、Decrypt、Bitcoin Magazine 等。
-2. 多 LLM 模型池与自动故障转移 (Auto-Failover)：
-   - 原生支持 OpenRouter, B.ai, xkiro, TokenRouter, aihubmix, inferera, DeepSeek, 硅基流动等。
-   - 当某个免费模型或接口遇到 Rate Limit (429)、欠费或超时时，自动平滑切换至下一个可用提供商。
-3. 币安广场 Write to Earn 深度适配：
-   - 自动提取标准大写代币标签（如 $BTC、$SOL），精准触发币安交易组件与返佣。
-   - 包含快讯事实提炼、1句话深度影响点评、互动话题提问。
-   - 内置敏感词与合规风控过滤（避免“带单/稳赚”等违规词）。
-4. 0 服务器成本：专为 GitHub Actions 定时执行设计，通过 Git 回写 sent_cache.json 去重。
-5. 可选多渠道通知：支持 Telegram / 钉钉 / 飞书 / 企业微信 / Discord Webhook 实时通知发帖结果。
+1. 币安官方活动智能扫描与理解 (AI Campaign Scanner & Analyzer)：
+   - 自动扫描币安官方活动接口（竞赛、新币上线、理财、衍生品活动）。
+   - 由 AI 深度理解当期最新官方活动、重点奖励代币池（如 $BNB、$SOL、竞赛代币等）与官方流量标签。
+   - 将情报缓存为 campaign_intel.json，发帖时自动将日常快讯与当期活动有机结合，最大化瓜分奖金池与流量。
+2. 多源热点实时监听：
+   - 支持 BlockTempo、Cointelegraph、CoinDesk、Decrypt、Bitcoin Magazine 等优质免鉴权 RSS 源。
+3. 多 LLM 模型池与自动故障转移 (Auto-Failover)：
+   - 原生支持 OpenRouter (minimax-m3:free), B.ai (glm-5.3-flash), xkiro, TokenRouter, aihubmix, inferera, DeepSeek, 硅基流动等。
+   - 遇到 Rate Limit (429)、欠费或超时时，自动平滑 failover 至下一个提供商。
+4. 币安广场 Write to Earn 收益转化优化：
+   - 自动提取标准大写代币标签（$TOKEN）激活官方交易组件。
+   - 包含快讯提炼、深度行情点评、标的交易对/合约类型（现货/USDT永续）及链上合约地址(CA)。
+   - 结尾附带争议性互动问题提升评论推荐权重，并附加交易转化与关注引导。
+5. 0 服务器成本：专为 GitHub Actions 定时执行设计，通过 Git 回写 sent_cache.json 与 campaign_intel.json。
+6. 可选多渠道通知：支持 Telegram / 钉钉 / 飞书 / 企微 / Discord Webhook 实时通知发帖结果。
 ==============================================================================
 """
 
@@ -48,13 +53,15 @@ logger = logging.getLogger("SquarePosterPro")
 # ---------------------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CACHE_FILE = os.path.join(BASE_DIR, "sent_cache.json")
+CAMPAIGN_INTEL_FILE = os.path.join(BASE_DIR, "campaign_intel.json")
 MAX_CACHE_SIZE = 500
+INTEL_EXPIRE_HOURS = 12  # 活动情报缓存有效期 12 小时
 
 # 币安广场 OpenAPI 官方端点
 BINANCE_SQUARE_API_URL = "https://www.binance.com/bapi/composite/v1/public/pgc/openApi/content/add"
 
 # ---------------------------------------------------------------------------
-# 常用预置模型提供商模板（特别适配免费模型与常用接口）
+# 常用预置模型提供商模板
 # ---------------------------------------------------------------------------
 PRESET_PROVIDERS = {
     "openrouter": {
@@ -303,7 +310,7 @@ class NewsFetcher:
 
 
 # ---------------------------------------------------------------------------
-# 模块三：多模型故障转移 AI 提炼引擎 (MultiLLMEngine)
+# 模块三：多模型故障转移 AI 引擎 (MultiLLMEngine)
 # ---------------------------------------------------------------------------
 class LLMProviderConfig:
     """单个 LLM 模型提供商配置"""
@@ -371,7 +378,6 @@ class MultiLLMEngine:
         chain: List[LLMProviderConfig] = []
 
         # 1. 优先读取高级 JSON 配置: LLM_PROVIDERS_CONFIG
-        # 格式示例: [{"name": "b.ai", "base_url": "https://api.b.ai/v1", "api_key": "sk-xxx", "model": "deepseek-v4-flash"}]
         providers_json = os.getenv("LLM_PROVIDERS_CONFIG", "").strip()
         if providers_json:
             try:
@@ -405,8 +411,7 @@ class MultiLLMEngine:
                 model=single_model,
             ))
 
-        # 3. 检查是否有单独配置的常见平台 Key (多提供商自动探测)
-        # 例如 OPENROUTER_API_KEY, BAI_API_KEY, XKIRO_API_KEY, SILICONFLOW_API_KEY 等
+        # 3. 检查是否有单独配置的常见平台 Key
         extra_keys = {
             "openrouter": (
                 os.getenv("OPENROUTER_API_KEY", "").strip(),
@@ -454,21 +459,34 @@ class MultiLLMEngine:
 
         return chain
 
-    def summarize(self, news_item: Dict[str, Any]) -> Optional[str]:
+    def summarize(self, news_item: Dict[str, Any], campaign_intel: Optional[Dict[str, Any]] = None) -> Optional[str]:
         """
-        带自动故障转移的 AI 提炼
+        结合最新币安官方活动情报进行高收益转化提炼
         """
         if not self.providers:
             logger.error("没有任何可用的 LLM 提供商配置！")
             return None
+
+        # 组织活动情报提示词
+        intel_section = ""
+        if campaign_intel:
+            active_tags = " ".join(campaign_intel.get("active_tags", ["#Write2Earn", "#BinanceSquare", "#热点解析"]))
+            incentivized_tokens = " ".join(campaign_intel.get("incentivized_tokens", ["$BNB", "$BTC"]))
+            strategy = campaign_intel.get("strategy_guidance", "优先关联主流现货与USDT永续合约。")
+            intel_section = f"""
+【币安官方当期重点活动情报与策略指导】：
+- 官方当期核心活动标签：{active_tags}
+- 官方当期重点奖励/交易代币池：{incentivized_tokens}
+- 收益策略指导：{strategy}
+"""
 
         user_prompt = f"""请将以下加密新闻提炼为一条高质量的币安广场快讯短贴：
 
 【新闻来源】：{news_item.get('source', '未知')}
 【原始标题】：{news_item.get('title', '')}
 【原始内容】：{news_item.get('summary', '')}
-
-请严格按照规范生成内容："""
+{intel_section}
+请结合上述币安当期活动情报与规范生成最利于收益转化的文案："""
 
         # 遍历提供商链进行容灾尝试
         for index, provider in enumerate(self.providers):
@@ -487,7 +505,7 @@ class MultiLLMEngine:
                         {"role": "user", "content": user_prompt},
                     ],
                     temperature=0.7,
-                    max_tokens=600,
+                    max_tokens=650,
                 )
 
                 content = response.choices[0].message.content.strip()
@@ -499,9 +517,13 @@ class MultiLLMEngine:
                     tokens = ["BTC"]
 
                 # 2. 创作者活动话题与标签保底处理
-                campaign_tags_env = os.getenv("CAMPAIGN_TAGS", "#Write2Earn #BinanceSquare #热点解析").strip()
+                campaign_tags_env = os.getenv("CAMPAIGN_TAGS", "").strip()
+                if not campaign_tags_env and campaign_intel:
+                    campaign_tags_env = " ".join(campaign_intel.get("active_tags", ["#Write2Earn", "#BinanceSquare", "#热点解析"]))
+                if not campaign_tags_env:
+                    campaign_tags_env = "#Write2Earn #BinanceSquare #热点解析"
+
                 if not re.search(r"#Write2Earn", content, re.IGNORECASE):
-                    # 构建代币话题标签 (如 #BTC #ETH)
                     token_hashtags = " ".join([f"#{t}" for t in tokens[:2] if f"#{t}" not in content])
                     cta_footer = (
                         f"\n\n👇 点击上方代币标签直达盘面交易，关注我获取第一手快讯与行情策略！\n"
@@ -515,7 +537,6 @@ class MultiLLMEngine:
             except Exception as e:
                 err_msg = str(e)
                 logger.warning(f"提供商 [{provider.name}] 请求失败: {err_msg}")
-                # 若还有后续提供商，则继续重试；否则返回 None
                 if index < len(self.providers) - 1:
                     logger.info(f"正在自动切换至下一个备用提供商...")
                     time.sleep(1)
@@ -525,7 +546,132 @@ class MultiLLMEngine:
 
 
 # ---------------------------------------------------------------------------
-# 模块四：币安广场 OpenAPI 客户端 (SquarePublisher)
+# 模块四：币安官方创作者活动智能扫描与理解 (CampaignScanner)
+# ---------------------------------------------------------------------------
+class CampaignScanner:
+    """自动扫描币安官方最新活动、竞赛与上线公告，并交由 AI 理解提炼活动策略"""
+
+    OFFICIAL_CATALOGS = [
+        {"id": 93, "name": "最新活动与交易竞赛"},
+        {"id": 48, "name": "合约与衍生品上线活动"},
+        {"id": 49, "name": "新币挖矿与理财活动"},
+    ]
+
+    @staticmethod
+    def fetch_raw_campaigns() -> List[str]:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+        }
+        campaign_titles = []
+        for catalog in CampaignScanner.OFFICIAL_CATALOGS:
+            cid = catalog["id"]
+            url = f"https://www.binance.com/bapi/composite/v1/public/cms/article/catalog/list/query?catalogId={cid}&pageNo=1&pageSize=6"
+            try:
+                resp = requests.get(url, headers=headers, timeout=8)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    articles = data.get("data", {}).get("articles", [])
+                    for a in articles:
+                        title = a.get("title", "").strip()
+                        if title and title not in campaign_titles:
+                            campaign_titles.append(title)
+            except Exception as e:
+                logger.warning(f"拉取币安官方活动分类 [{catalog['name']}] 失败: {e}")
+        return campaign_titles
+
+    @staticmethod
+    def analyze_with_ai(llm_engine: MultiLLMEngine, raw_titles: List[str]) -> Dict[str, Any]:
+        """让 AI 深度理解币安官方活动列表，提炼结构化活动情报"""
+        if not raw_titles:
+            return {
+                "active_tags": ["#Write2Earn", "#BinanceSquare", "#热点解析"],
+                "incentivized_tokens": ["$BTC", "$ETH", "$BNB", "$SOL"],
+                "strategy_guidance": "优先关联主流现货与USDT永续合约，吸引读者点击交易组件以赚取返佣。",
+                "last_updated": datetime.utcnow().isoformat() + "Z",
+            }
+
+        titles_text = "\n".join([f"- {t}" for t in raw_titles[:15]])
+        prompt = f"""你是一名精通币安创作者激励与生态活动的策略总监。
+以下是币安官方最新正在进行的活动、竞赛与上线公告列表：
+
+{titles_text}
+
+请深度分析这些活动，输出 JSON 格式的创作者发帖情报：
+1. "active_tags": 3~5 个当前最有流量、最匹配官方活动的标签（必须包含 #Write2Earn #BinanceSquare，以及 1~3 个当期活动词如 #Futures #TradingTournament #Megadrop 等）；
+2. "incentivized_tokens": 4~8 个当期有活动奖励、交易竞赛或新上线的焦点代币（大写加$，如 $BNB, $SOL, $BTC 等）；
+3. "strategy_guidance": 1~2 句话指导发帖机器人如何将日常快讯与当前币安官方活动/合约/产品结合以最大化获取曝光和 Write to Earn 交易返佣。
+
+请严格仅返回纯 JSON 字符串（不要输出 markdown 代码块）：
+{{
+  "active_tags": ["#Write2Earn", "#BinanceSquare", "#热点解析"],
+  "incentivized_tokens": ["$BNB", "$BTC", "$SOL"],
+  "strategy_guidance": "结合当期新合约与交易竞赛，引导读者参与交易获取返佣。"
+}}"""
+
+        try:
+            logger.info("正在使用 AI 深度分析币安官方当期活动情报...")
+            for provider in llm_engine.providers:
+                try:
+                    client = OpenAI(api_key=provider.api_key, base_url=provider.base_url, timeout=25.0)
+                    resp = client.chat.completions.create(
+                        model=provider.model,
+                        messages=[{"role": "user", "content": prompt}],
+                        temperature=0.3,
+                        max_tokens=400,
+                    )
+                    raw_res = resp.choices[0].message.content.strip()
+                    clean_res = re.sub(r"^```json\s*", "", raw_res, flags=re.IGNORECASE)
+                    clean_res = re.sub(r"^```\s*", "", clean_res)
+                    clean_res = re.sub(r"\s*```$", "", clean_res).strip()
+                    data = json.loads(clean_res)
+                    if isinstance(data, dict):
+                        data["last_updated"] = datetime.utcnow().isoformat() + "Z"
+                        logger.info(f"🎉 币安活动情报分析完成: {data.get('strategy_guidance')}")
+                        return data
+                except Exception as e:
+                    logger.warning(f"使用提供商 [{provider.name}] 分析活动失败: {e}")
+        except Exception as e:
+            logger.warning(f"AI 理解活动异常: {e}")
+
+        return {
+            "active_tags": ["#Write2Earn", "#BinanceSquare", "#热点解析"],
+            "incentivized_tokens": ["$BTC", "$ETH", "$BNB", "$SOL"],
+            "strategy_guidance": "优先关联主流现货与USDT永续合约，吸引读者点击交易组件以赚取返佣。",
+            "last_updated": datetime.utcnow().isoformat() + "Z",
+        }
+
+    @staticmethod
+    def get_campaign_intel(llm_engine: MultiLLMEngine) -> Dict[str, Any]:
+        """获取或更新活动情报缓存"""
+        if os.path.exists(CAMPAIGN_INTEL_FILE):
+            try:
+                with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
+                    cached = json.load(f)
+                    last_updated = cached.get("last_updated", "")
+                    if last_updated:
+                        updated_time = datetime.fromisoformat(last_updated.replace("Z", "+00:00"))
+                        now = datetime.now(updated_time.tzinfo)
+                        if (now - updated_time).total_seconds() < INTEL_EXPIRE_HOURS * 3600:
+                            logger.info(f"使用现存有效的币安活动情报 (更新于 {last_updated})")
+                            return cached
+            except Exception as e:
+                logger.warning(f"读取 campaign_intel.json 异常: {e}")
+
+        logger.info("活动情报已过期或不存在，正在重新扫描币安官方活动...")
+        raw_titles = CampaignScanner.fetch_raw_campaigns()
+        intel = CampaignScanner.analyze_with_ai(llm_engine, raw_titles)
+        try:
+            with open(CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
+                json.dump(intel, f, ensure_ascii=False, indent=2)
+            logger.info("最新币安活动情报已写入本地文件: campaign_intel.json")
+        except Exception as e:
+            logger.error(f"保存 campaign_intel.json 失败: {e}")
+
+        return intel
+
+
+# ---------------------------------------------------------------------------
+# 模块五：币安广场 OpenAPI 客户端 (SquarePublisher)
 # ---------------------------------------------------------------------------
 class SquarePublisher:
     """币安广场发布组件"""
@@ -590,14 +736,13 @@ class SquarePublisher:
 
 
 # ---------------------------------------------------------------------------
-# 模块五：可选外部通知组件 (Notifier)
+# 模块六：可选外部通知组件 (Notifier)
 # ---------------------------------------------------------------------------
 class Notifier:
     """支持 Telegram Bot 或通用 Webhook（钉钉/飞书/企微/Discord）通知"""
 
     @staticmethod
     def send_notification(title: str, message: str):
-        # 1. Telegram 通知
         tg_bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
         tg_chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
         if tg_bot_token and tg_chat_id:
@@ -609,7 +754,6 @@ class Notifier:
             except Exception as e:
                 logger.warning(f"发送 Telegram 通知失败: {e}")
 
-        # 2. 通用 Webhook (钉钉 / 飞书 / 企微 / Discord)
         webhook_url = os.getenv("WEBHOOK_URL", "").strip()
         if webhook_url:
             try:
@@ -629,7 +773,7 @@ def main():
     dry_run = os.getenv("DRY_RUN", "false").lower() in ("true", "1", "yes")
 
     logger.info("==================================================")
-    logger.info("🚀 币安广场加密热点自动化发帖机器人 (Pro 版) 启动")
+    logger.info("🚀 币安广场加密热点自动化发帖机器人 (Pro AI 活动结合版) 启动")
     logger.info(f"   运行时间: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}")
     logger.info(f"   运行模式: {'【DRY_RUN 试运行 (不真实发帖)】' if dry_run else '【正式发布模式】'}")
     logger.info(f"   单次最大发帖数: {max_posts}")
@@ -646,13 +790,18 @@ def main():
     llm_engine = MultiLLMEngine()
     publisher = SquarePublisher(api_key=square_api_key)
 
-    # 3. 获取待发布热点候选
+    # 3. 智能扫描与理解币安官方当期活动情报
+    campaign_intel = CampaignScanner.get_campaign_intel(llm_engine)
+    logger.info(f"💡 当期币安重点活动标签: {campaign_intel.get('active_tags')}")
+    logger.info(f"🪙 当期重点扶持代币池: {campaign_intel.get('incentivized_tokens')}")
+
+    # 4. 获取待发布热点候选
     candidates = fetcher.fetch_candidates(cache_mgr)
     if not candidates:
         logger.info("✅ 未检测到新的未发布热点，安全退出。")
         sys.exit(0)
 
-    # 4. 执行发帖循环
+    # 5. 执行发帖循环
     posted_count = 0
     for item in candidates:
         if posted_count >= max_posts:
@@ -666,8 +815,8 @@ def main():
         logger.info(f"--------------------------------------------------")
         logger.info(f"正在处理第 {posted_count + 1} 条热点: [{source}] {title}")
 
-        # AI 提炼
-        post_content = llm_engine.summarize(item)
+        # AI 结合活动情报进行高质量提炼
+        post_content = llm_engine.summarize(item, campaign_intel)
         if not post_content:
             logger.warning(f"AI 生成失败，跳过: {title}")
             continue
