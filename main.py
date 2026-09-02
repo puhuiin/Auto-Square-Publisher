@@ -3,27 +3,30 @@
 
 """
 ==============================================================================
-币安广场（Binance Square）加密热点与创作者活动智能变现系统 (Ultimate Edition)
+币安广场（Binance Square）全币种热点·山寨爆款·创作者活动智能变现系统 (Ultimate Edition)
 ==============================================================================
-核心升级：
-1. 资深实战交易员人设与去AI套路引擎 (Organic Trader Persona)：
+核心能力升级：
+1. 🌐 全币种流量雷达（主流 + 热门山寨 Altcoins + Meme 币 + 新币/次新币）：
+   - 覆盖主流币 ($BTC, $ETH, $BNB, $SOL) 以及全网高流量山寨币 ($PEPE, $WIF, $DOGE, $SHIB, $SUI, $TAO, $RENDER, $NEAR, $APT 等)。
+   - 扩展 9 大全球加密媒体源（涵盖 CryptoPotato, U.Today, DailyHodl, CryptoSlate 等山寨/Meme 爆款阵地）。
+2. 资深实战交易员人设与去AI套路引擎 (Organic Trader Persona)：
    - 彻底告别千篇一律的死板模板，以资深操盘手口吻进行第一性原理深度拆解。
-   - 包含：事件穿透本质、盘面与资金博弈推演、实战交易应对思路、接地气的高手互动讨论。
-2. 🎯 币安官方活动与激励感知 (AI Campaign Scanner & Analyzer)：
+   - 包含：事件穿透本质、资金盘面与庄家博弈推演、实战交易应对思路、接地气的高手互动讨论。
+3. 🎯 币安官方活动与激励感知 (AI Campaign Scanner & Analyzer)：
    - 自动扫描币安官方最新竞赛（Catalog 93）、合约上线（Catalog 48）、新币/理财（Catalog 49）。
-   - AI 提取当期重点扶持币种（$BNB、$SOL、竞赛币等）与官方流量标签（#Write2Earn 等），使每篇发帖紧扣官方奖励。
-3. 📊 实时盘面与全网情绪注入 (Live Market & Sentiment Context)：
+   - AI 提取当期重点扶持币种与官方流量标签（#Write2Earn 等），使每篇发帖紧扣官方奖励。
+4. 📊 实时盘面与全网情绪注入 (Live Market & Sentiment Context)：
    - 自动抓取全网恐慌与贪婪指数（Fear & Greed Index）。
-   - 自动拉取币安官方实时 24H 盘面行情（价格、涨跌幅），为 AI 分析提供真实数据支撑。
-4. 🔥 重磅热点价值打分器 (Breaking News Impact Scorer)：
-   - 引入市场冲击力关键词加权算法（ETF、SEC、美联储、降息、上线、Launchpool、爆仓、突破等），优先筛选最具吸睛力的新闻。
-5. ✅ 币安交易标的防幻觉校验器 (Symbol & Widget Validator)：
-   - 自动校验提取的 $TOKEN 是否为币安真实交易对，确保 100% 触发 Write to Earn 交易组件与返佣。
-6. 🔄 多 LLM 模型池与自动故障转移 (Auto-Failover)：
+   - 自动动态查询任意涉及代币在币安的实时 24H 盘面行情（价格、涨跌幅）。
+5. 🔥 重磅热点与暴涨山寨价值打分器 (Breaking News Impact Scorer)：
+   - 引入山寨爆款、Meme 热度、新币上线、大额解锁、资金异动等加权算法，优先捕捉流量最大的热点。
+6. ✅ 动态全币种交易标的防幻觉校验器 (Symbol & Widget Validator)：
+   - 自动校验提取的 $TOKEN 是否为币安真实交易对，确保 100% 触发 Write to Earn 交易挂件与返佣。
+7. 🔄 多 LLM 模型池与自动故障转移 (Auto-Failover)：
    - 支持 OpenRouter (minimax-m3:free), B.ai (glm-5.3-flash), xkiro, aihubmix, inferera, TokenRouter, DeepSeek, 硅基流动等。
-7. 🚨 多渠道异常报警系统 (Notifier)：
+8. 🚨 多渠道异常报警系统 (Notifier)：
    - 支持微信 (Server酱/PushPlus)、Bark iOS、Telegram、通用 Webhook 实时通知与崩溃告警。
-8. 0 服务器成本：基于 GitHub Actions 定时触发，通过 Git 状态回写持久化。
+9. 0 服务器成本：基于 GitHub Actions 定时触发，通过 Git 状态回写持久化。
 ==============================================================================
 """
 
@@ -142,68 +145,118 @@ PRESET_PROVIDERS = {
 }
 
 # ---------------------------------------------------------------------------
-# 免费与公开 RSS 数据源列表
+# 全球主流 + 山寨币/Meme/新叙事 RSS 数据源列表
 # ---------------------------------------------------------------------------
 RSS_FEEDS = [
+    {
+        "name": "CryptoPotato (山寨币/Meme热点)",
+        "url": "https://cryptopotato.com/feed/",
+        "lang": "en",
+    },
+    {
+        "name": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+        "url": "https://u.today/rss",
+        "lang": "en",
+    },
+    {
+        "name": "DailyHodl (山寨异动与百倍币叙事)",
+        "url": "https://dailyhodl.com/feed/",
+        "lang": "en",
+    },
+    {
+        "name": "CryptoSlate (新赛道与代币经济)",
+        "url": "https://cryptoslate.com/feed/",
+        "lang": "en",
+    },
     {
         "name": "BlockTempo (动区动趋中文)",
         "url": "https://www.blocktempo.com/feed/",
         "lang": "zh",
     },
     {
-        "name": "Cointelegraph",
+        "name": "Cointelegraph (全球综合快讯)",
         "url": "https://cointelegraph.com/rss",
         "lang": "en",
     },
     {
-        "name": "CoinDesk",
+        "name": "CoinDesk (权威宏观与机构)",
         "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",
         "lang": "en",
     },
     {
-        "name": "Decrypt",
+        "name": "Decrypt (Web3/AI/Meme)",
         "url": "https://decrypt.co/feed",
         "lang": "en",
     },
     {
-        "name": "Bitcoin Magazine",
+        "name": "Bitcoin Magazine (比特币核心)",
         "url": "https://bitcoinmagazine.com/.rss/full/",
         "lang": "en",
     },
 ]
 
-# 重磅热点打分关键词加权字典
+# 重磅热点与高流量山寨打分关键词加权字典
 IMPACT_KEYWORDS = {
+    # 爆款山寨与 Meme 赛道
+    "meme": 10,
+    "memecoin": 10,
+    "pepe": 10,
+    "doge": 10,
+    "shib": 10,
+    "wif": 10,
+    "bonk": 10,
+    "floki": 10,
+    "popcat": 10,
+    "solana": 9,
+    "sui": 9,
+    "ton": 9,
+    "ai": 9,
+    "depin": 8,
+    "rwa": 8,
+    "layer2": 7,
+    # 爆发性与行情异动
+    "暴涨": 10,
+    "暴跌": 10,
+    "surge": 9,
+    "plunge": 9,
+    "rally": 9,
+    "skyrocket": 10,
+    "crash": 9,
+    "突破": 8,
+    "新高": 9,
+    "ath": 9,
+    "爆仓": 9,
+    "清算": 9,
+    "翻倍": 9,
+    "10x": 9,
+    "100x": 9,
+    # 上线、新币与空投
+    "launchpool": 12,
+    "megadrop": 12,
+    "listing": 10,
+    "上线": 10,
+    "新币": 10,
+    "airdrop": 9,
+    "空投": 9,
+    "unlock": 9,
+    "解锁": 9,
+    "staking": 7,
+    "质押": 7,
+    "burn": 8,
+    "销毁": 8,
+    # 监管与宏观
     "etf": 12,
     "sec": 10,
     "fed": 10,
     "美联储": 10,
     "降息": 10,
-    "加息": 8,
-    "launchpool": 12,
-    "megadrop": 12,
-    "listing": 10,
-    "上线": 10,
-    "突破": 8,
-    "新高": 9,
-    "ath": 9,
-    "暴涨": 7,
-    "暴跌": 7,
-    "爆仓": 9,
-    "清算": 9,
-    "options": 10,
-    "选择权": 10,
+    "options": 9,
     "期权": 9,
-    "bstocks": 10,
-    "airdrop": 8,
-    "空投": 8,
+    # 资金与大户
+    "whale": 8,
+    "巨鲸": 8,
     "融资": 7,
-    "合作": 6,
-    "主网": 7,
-    "升级": 6,
     "黑客": 8,
-    "whale": 7,
-    "巨鲸": 7,
 }
 
 
@@ -211,7 +264,7 @@ IMPACT_KEYWORDS = {
 # 模块一：实时行情与全网情绪提供器 (MarketDataProvider)
 # ---------------------------------------------------------------------------
 class MarketDataProvider:
-    """获取加密货币全网宏观情绪与币安实时 24H 盘面价格数据"""
+    """获取加密货币全网宏观情绪与任意代币币安实时 24H 盘面价格数据"""
 
     @staticmethod
     def get_fear_and_greed() -> str:
@@ -229,9 +282,9 @@ class MarketDataProvider:
 
     @staticmethod
     def get_token_market_data(symbols: List[str]) -> str:
-        """批量获取币安实时价格与 24H 涨跌幅数据"""
+        """动态批量获取指定代币（主流或山寨）在币安的实时价格与 24H 涨跌幅数据"""
         results = []
-        for symbol in symbols[:3]:
+        for symbol in symbols[:4]:
             clean_sym = symbol.replace("$", "").upper()
             pair = f"{clean_sym}USDT"
             try:
@@ -267,7 +320,11 @@ class SymbolValidator:
         if cls._valid_symbols_cache is not None:
             return cls._valid_symbols_cache
 
-        valid_set = {"BTC", "ETH", "BNB", "SOL", "DOGE", "XRP", "PEPE", "SUI", "NEAR", "APT", "AVAX", "LINK", "TRX", "ADA", "SHIB"}
+        valid_set = {
+            "BTC", "ETH", "BNB", "SOL", "DOGE", "XRP", "PEPE", "SHIB", "WIF", "SUI", 
+            "NEAR", "APT", "AVAX", "LINK", "TRX", "ADA", "TAO", "RENDER", "FET", "POPCAT",
+            "BONK", "FLOKI", "SEI", "TIA", "ENA", "NOT", "DOGS", "TURBO", "NEIRO", "PNUT"
+        }
         try:
             r = requests.get("https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT", timeout=5)
             if r.status_code == 200:
@@ -276,7 +333,7 @@ class SymbolValidator:
                     if s.get("status") == "TRADING" and s.get("quoteAsset") in ("USDT", "FDUSD", "USDC"):
                         valid_set.add(s.get("baseAsset", "").upper())
                 cls._valid_symbols_cache = valid_set
-                logger.info(f"成功加载币安 {len(valid_set)} 个有效交易标的。")
+                logger.info(f"成功加载币安 {len(valid_set)} 个有效交易标的（含全部山寨币与 Meme 币）。")
         except Exception as e:
             logger.warning(f"获取币安交易标的列表失败 ({e})，使用基础标的池。")
             cls._valid_symbols_cache = valid_set
@@ -368,7 +425,7 @@ class NewsFetcher:
 
     @staticmethod
     def calculate_impact_score(title: str, summary: str) -> int:
-        """根据市场冲击力关键词计算新闻热度分值"""
+        """根据市场冲击力与山寨/Meme热点关键词计算分值"""
         combined = (title + " " + summary).lower()
         score = 0
         for kw, weight in IMPACT_KEYWORDS.items():
@@ -438,14 +495,14 @@ class NewsFetcher:
             except Exception as e:
                 logger.warning(f"拉取数据源 [{name}] 出错: {e}")
 
-        # 按照市场影响力分值降序排列（重大热点优先发布）
+        # 按照市场影响力分值降序排列（山寨暴涨、Meme爆款与重大热点优先）
         candidates.sort(key=lambda x: x["impact_score"], reverse=True)
-        logger.info(f"扫描完毕，共筛选出 {len(candidates)} 条未处理热点（已按热度加权排序）。")
+        logger.info(f"扫描完毕，共筛选出 {len(candidates)} 条未处理热点（已按全币种热度加权排序）。")
         return candidates
 
 
 # ---------------------------------------------------------------------------
-# 模块五：资深交易员原创风格多模型 AI 引擎 (MultiLLMEngine)
+# 模块五：资深交易员全币种原创风格多模型 AI 引擎 (MultiLLMEngine)
 # ---------------------------------------------------------------------------
 class LLMProviderConfig:
     """单个 LLM 模型提供商配置"""
@@ -468,31 +525,19 @@ class MultiLLMEngine:
     - 遇到 Rate Limit / 429 / 欠费 / 超时时，自动平滑 failover 至下一个提供商
     """
 
-    SYSTEM_PROMPT = """你是一名在加密市场实战多年、深受社区信任的资深交易员与币安广场独立分析师。
-你的写作风格：【真实自然、像真人手打、独立逻辑思考、观点犀利透彻、彻底去AI套路味、拒绝任何刻板模板】。
+    SYSTEM_PROMPT = """你是一名在加密市场摸爬滚打多年、深谙全市场财富密码与流量逻辑的资深实战交易员。
+你的关注范围：【全币种覆盖：无论是主流币 ($BTC, $ETH, $SOL, $BNB)，还是热门山寨币 ($PEPE, $WIF, $DOGE, $SHIB, $SUI, $TAO 等)、暴涨暴跌异动、Meme热点、新币上线、大额解锁、链上巨鲸动作，只要有流量和赚钱/亏钱效应，就进行深度犀利拆解】。
 
-【核心原则：去 AI 味、去死板模板、写出真实操盘手灵魂】：
+【核心原则：彻底去 AI 味，拒绝套路化模板，写出真实操盘手灵魂】：
 1. ❌ 严禁机械化的小标题堆砌！不要在每篇帖子都死板地列出“📌【快讯】”、“🔍 盘面解析”、“🎯 标的”这种千篇一律的机器人标签。
 2. 💡 【像顶级交易员发长文/动态一样的自然流结构】：
-   - **第一段（直击要害的第一反应）**：用一两句行家大白话，直接穿透事件本质，说出核心影响与判断，带出最受影响的代币标签（如 $BTC 、$ETH 或 $SOL ）。
-   - **第二段（深层逻辑与资金博弈推演）**：结合盘面行情、全网情绪或链上资金动向进行实战拆解。分析：这是主力借利好出货还是真启动？多空博弈的关键临界点在哪里？
-   - **第三段（实操应对思路与标的策略）**：给出接地气的交易策略建议（如现货建仓区间、合约关键防守位或观望确认点），自然提及标的（如 $BNB / USDT 现货或永续合约）。
+   - **第一段（直击要害的第一反应）**：用一两句行家大白话，直接穿透事件本质，说出核心影响与判断，带出最受影响的代币大写标签（如 $PEPE 、$SOL 、$DOGE 、$BTC ）。
+   - **第二段（深层逻辑与资金博弈推演）**：结合盘面行情、全网情绪、链上异动或庄家资金动向进行实战拆解。重点分析：这到底是主力借利好出货还是真启动？山寨币的筹码集中度与洗盘意图是什么？散户最大的认知盲区在哪里？
+   - **第三段（实操应对思路与标的策略）**：给出接地气的交易策略建议（如现货止盈止损区间、合约支撑阻力防守位、或者观望确认点），自然提及标的（如 $PEPE / USDT 现货或永续合约）。
    - **第四段（真诚自然的交易员互动）**：像在老韭菜群里交流一样，抛出一个有实战价值的讨论点，吸引真正的高手在评论区交流。
 3. 🪙 【代币与活动标签（自然融入）】：
-   - 正文自然融入 1~2 个大写代币标签（如 $BTC 、$SOL ），以激活币安交易挂件与 Write to Earn 返佣。
-   - 结尾自然附带官方标签：#Write2Earn #BinanceSquare #热点解析 以及对应代币标签（如 #BTC #BNB）。
-
-【语气与人设参考（仅供体会真实交易员口吻，不要机械死板复制）】：
-"很多人看到币安上线美股期权，只觉得是个普通功能更新，但从资金流动性来看，这其实是在给传统大资金开合规管道。
-
-表面看是对冲工具，深层逻辑是逐步蚕食传统券商份额。目前 $BTC 在高位震荡洗盘，美股开盘前后的波动率很可能会被进一步放大。主力最喜欢在流动性切换的节点上下插针洗掉高杠杆。
-
-实战思路：
-- $BNB 作为平台核心资产，生态基本盘持续扩大，适合现货逢低配置。
-- 合约玩家建议多看少动，重点盯紧美股交易时段的基差溢价，别在震荡区间中部乱追单。
-
-你们觉得这波能带动传统场外增量资金进场吗？目前你们是轻仓观望还是已经布局好了？
-#Write2Earn #BinanceSquare #热点解析 #BNB #BTC"
+   - 正文自然融入 1~2 个最相关的代币大写标签（如 $PEPE 、$SOL 、$DOGE 等），以激活币安交易挂件与 Write to Earn 返佣。
+   - 结尾自然附带官方标签：#Write2Earn #BinanceSquare #热点解析 以及对应代币标签（如 #PEPE #SOL）。
 
 【严格约束】：
 - 严禁出现任何“好的”、“这是为您生成的”等 AI 开场白或元说明。
@@ -623,7 +668,7 @@ class MultiLLMEngine:
 【原始标题】：{news_item.get('title', '')}
 【原始内容】：{news_item.get('summary', '')}
 {market_section}{intel_section}
-请以资深实操交易员的独到视角，结合上述情报，生成一篇真实、犀利、有灵魂的原创分析帖："""
+请以资深实操交易员的独到视角，重点挖掘核心标的（主流/山寨/Meme/新币均可），生成一篇真实、犀利、有灵魂的原创分析帖："""
 
         # 遍历提供商链进行容灾尝试
         for index, provider in enumerate(self.providers):
@@ -651,7 +696,6 @@ class MultiLLMEngine:
                 raw_tokens = re.findall(r"\$([A-Z0-9]{2,10})", content)
                 valid_tokens = SymbolValidator.filter_valid_tokens(raw_tokens)
                 if not raw_tokens or not valid_tokens:
-                    content += "\n\n重点标的关注：$BTC (现货 / USDT永续合约)"
                     valid_tokens = ["BTC"]
 
                 # 2. 创作者活动话题与标签保底处理
@@ -963,7 +1007,7 @@ def _run_main():
     dry_run = os.getenv("DRY_RUN", "false").lower() in ("true", "1", "yes")
 
     logger.info("==================================================")
-    logger.info("🚀 币安广场加密热点与活动智能变现系统 (Ultimate 版) 启动")
+    logger.info("🚀 币安广场全币种·山寨爆款与活动智能变现系统 (Ultimate 版) 启动")
     logger.info(f"   运行时间: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}")
     logger.info(f"   运行模式: {'【DRY_RUN 试运行 (不真实发帖)】' if dry_run else '【正式发布模式】'}")
     logger.info(f"   单次最大发帖数: {max_posts}")
@@ -989,7 +1033,7 @@ def _run_main():
     logger.info(f"💡 当期币安重点活动标签: {campaign_intel.get('active_tags')}")
     logger.info(f"🪙 当期重点扶持代币池: {campaign_intel.get('incentivized_tokens')}")
 
-    # 5. 获取待发布热点候选（按冲击力热度打分排序）
+    # 5. 获取待发布热点候选（按冲击力与山寨/Meme热度打分排序）
     candidates = fetcher.fetch_candidates(cache_mgr)
     if not candidates:
         logger.info("✅ 未检测到新的未发布热点，安全退出。")
@@ -997,6 +1041,9 @@ def _run_main():
 
     # 6. 执行发帖循环
     posted_count = 0
+    valid_symbols = SymbolValidator.get_valid_symbols()
+    IGNORE_WORDS = {"THE", "AND", "FOR", "WITH", "NEW", "TOP", "USD", "EUR", "SEC", "ETF", "FED", "CEO", "ALL", "NOW", "KEY", "NFT", "DAO", "DEX", "CEX", "API", "POS", "POW", "ATH", "APR", "APY"}
+
     for item in candidates:
         if posted_count >= max_posts:
             logger.info(f"已达到本次最大发帖数 ({max_posts})，退出循环。")
@@ -1010,11 +1057,20 @@ def _run_main():
         logger.info(f"--------------------------------------------------")
         logger.info(f"正在处理第 {posted_count + 1} 条热点 (热度分: {score}): [{source}] {title}")
 
-        # 动态提取相关币种并拉取实时盘面数据
-        mentioned_tokens = re.findall(r"\b(BTC|ETH|BNB|SOL|DOGE|XRP|PEPE|SUI|NEAR|APT|AVAX|LINK|TRX)\b", (title + " " + item["summary"]).upper())
-        target_tokens = list(dict.fromkeys(mentioned_tokens + ["BTC"]))[:3]
-        live_market_data = MarketDataProvider.get_token_market_data(target_tokens)
-        market_context_str = f"全网情绪指数: {fng_index}\n实时盘面数据: {live_market_data}"
+        # 动态全币种识别：提取标题与摘要中的所有潜在币种（主流 + 山寨 + Meme）
+        combined_text = title + " " + item["summary"]
+        raw_words = re.findall(r"\b[A-Za-z0-9]{2,10}\b", combined_text)
+        detected_tokens = []
+        for w in raw_words:
+            upper_w = w.upper()
+            if upper_w not in IGNORE_WORDS and upper_w in valid_symbols and upper_w not in detected_tokens:
+                detected_tokens.append(upper_w)
+
+        if not detected_tokens:
+            detected_tokens = ["BTC"]
+
+        live_market_data = MarketDataProvider.get_token_market_data(detected_tokens[:3])
+        market_context_str = f"全网情绪指数: {fng_index}\n涉及标的实时盘面: {live_market_data if live_market_data else '链上/全市场热点'}"
 
         # AI 结合活动情报与实时盘面进行高质量提炼
         post_content = llm_engine.summarize(item, campaign_intel, market_context=market_context_str)
