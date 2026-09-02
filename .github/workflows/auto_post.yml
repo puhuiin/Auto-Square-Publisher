@@ -74,7 +74,10 @@ jobs:
           TOKENROUTER_API_KEY: ${{ secrets.TOKENROUTER_API_KEY }}
           SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
           
-          # 可选通知 Webhook / Telegram
+          # 可选通知与异常报警渠道 (微信 / iOS / Telegram / 团队群)
+          SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+          BARK_KEY: ${{ secrets.BARK_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}

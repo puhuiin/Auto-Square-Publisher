@@ -877,28 +877,69 @@ class SquarePublisher:
 
 
 # ---------------------------------------------------------------------------
-# 模块八：可选外部通知组件 (Notifier)
+# 模块八：多渠道通知与异常报警系统 (Notifier)
 # ---------------------------------------------------------------------------
 class Notifier:
-    """支持 Telegram Bot 或通用 Webhook（钉钉/飞书/企微/Discord）通知"""
+    """
+    支持多渠道状态与错误报警通知：
+    1. 微信通知：Server酱 (SERVERCHAN_KEY) 或 PushPlus推送加 (PUSHPLUS_TOKEN)
+    2. 苹果 iOS 推送：Bark (BARK_KEY)
+    3. Telegram Bot (TELEGRAM_BOT_TOKEN & TELEGRAM_CHAT_ID)
+    4. 团队群机器人：通用 Webhook (钉钉 / 飞书 / 企微 / Discord)
+    """
 
     @staticmethod
-    def send_notification(title: str, message: str):
+    def send_notification(title: str, message: str, is_error: bool = False):
+        prefix = "🚨 【异常报警】" if is_error else "📢 【发帖成功】"
+        full_title = f"{prefix} {title}"
+
+        # 1. 微信推送：Server酱 (Turbo版)
+        serverchan_key = os.getenv("SERVERCHAN_KEY", "").strip()
+        if serverchan_key:
+            try:
+                url = f"https://sctapi.ftqq.com/{serverchan_key}.send"
+                requests.post(url, data={"title": full_title, "desp": message}, timeout=8)
+                logger.info("已发送 Server酱 微信通知。")
+            except Exception as e:
+                logger.warning(f"发送 Server酱 失败: {e}")
+
+        # 2. 微信推送：PushPlus (推送加)
+        pushplus_token = os.getenv("PUSHPLUS_TOKEN", "").strip()
+        if pushplus_token:
+            try:
+                url = "http://www.pushplus.plus/send"
+                requests.post(url, json={"token": pushplus_token, "title": full_title, "content": message, "template": "markdown"}, timeout=8)
+                logger.info("已发送 PushPlus 微信通知。")
+            except Exception as e:
+                logger.warning(f"发送 PushPlus 失败: {e}")
+
+        # 3. iOS 推送：Bark
+        bark_key = os.getenv("BARK_KEY", "").strip()
+        if bark_key:
+            try:
+                bark_url = f"https://api.day.app/{bark_key}/{full_title}/{message}"
+                requests.get(bark_url, timeout=8)
+                logger.info("已发送 Bark iOS 推送。")
+            except Exception as e:
+                logger.warning(f"发送 Bark 推送失败: {e}")
+
+        # 4. Telegram 通知
         tg_bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
         tg_chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
         if tg_bot_token and tg_chat_id:
             try:
                 tg_url = f"https://api.telegram.org/bot{tg_bot_token}/sendMessage"
-                text = f"📢 *{title}*\n\n{message}"
+                text = f"*{full_title}*\n\n{message}"
                 requests.post(tg_url, json={"chat_id": tg_chat_id, "text": text, "parse_mode": "Markdown"}, timeout=8)
                 logger.info("已发送 Telegram 状态通知。")
             except Exception as e:
                 logger.warning(f"发送 Telegram 通知失败: {e}")
 
+        # 5. 通用 Webhook (钉钉 / 飞书 / 企微 / Discord)
         webhook_url = os.getenv("WEBHOOK_URL", "").strip()
         if webhook_url:
             try:
-                payload = {"msgtype": "text", "text": {"content": f"【{title}】\n{message}"}, "content": f"**{title}**\n\n{message}"}
+                payload = {"msgtype": "text", "text": {"content": f"{full_title}\n\n{message}"}, "content": f"**{full_title}**\n\n{message}"}
                 requests.post(webhook_url, json=payload, timeout=8)
                 logger.info("已发送 Webhook 状态通知。")
             except Exception as e:
@@ -909,6 +950,17 @@ class Notifier:
 # 主流程入口
 # ---------------------------------------------------------------------------
 def main():
+    try:
+        _run_main()
+    except Exception as e:
+        import traceback
+        err_detail = traceback.format_exc()
+        logger.critical(f"💥 程序发生未捕获的致命异常: {e}\n{err_detail}")
+        Notifier.send_notification("币安发帖机器人运行崩溃", f"错误原因: {str(e)}\n\n堆栈详情:\n{err_detail[:600]}", is_error=True)
+        sys.exit(1)
+
+
+def _run_main():
     square_api_key = os.getenv("SQUARE_API_KEY", "").strip()
     max_posts = int(os.getenv("MAX_POSTS_PER_RUN", "1"))
     dry_run = os.getenv("DRY_RUN", "false").lower() in ("true", "1", "yes")
@@ -988,6 +1040,7 @@ def main():
                 Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n\n{post_content[:200]}...")
             else:
                 logger.error(f"发帖失败，本次暂不记录缓存以供下次重试: {title}")
+                Notifier.send_notification("币安发帖失败", f"新闻: {title}\n发布接口返回异常，已跳过并将在下次重试。", is_error=True)
 
         # 模拟自然人工操作延迟
         if posted_count < max_posts:
