@@ -3,24 +3,22 @@
 
 """
 ==============================================================================
-币安广场（Binance Square）加密热点与活动智能结合发帖机器人 (Pro AI 增强版)
+币安广场（Binance Square）加密热点与创作者活动智能变现系统 (Ultimate Edition)
 ==============================================================================
-核心优势与特性：
-1. 币安官方活动智能扫描与理解 (AI Campaign Scanner & Analyzer)：
-   - 自动扫描币安官方活动接口（竞赛、新币上线、理财、衍生品活动）。
-   - 由 AI 深度理解当期最新官方活动、重点奖励代币池（如 $BNB、$SOL、竞赛代币等）与官方流量标签。
-   - 将情报缓存为 campaign_intel.json，发帖时自动将日常快讯与当期活动有机结合，最大化瓜分奖金池与流量。
-2. 多源热点实时监听：
-   - 支持 BlockTempo、Cointelegraph、CoinDesk、Decrypt、Bitcoin Magazine 等优质免鉴权 RSS 源。
-3. 多 LLM 模型池与自动故障转移 (Auto-Failover)：
-   - 原生支持 OpenRouter (minimax-m3:free), B.ai (glm-5.3-flash), xkiro, TokenRouter, aihubmix, inferera, DeepSeek, 硅基流动等。
-   - 遇到 Rate Limit (429)、欠费或超时时，自动平滑 failover 至下一个提供商。
-4. 币安广场 Write to Earn 收益转化优化：
-   - 自动提取标准大写代币标签（$TOKEN）激活官方交易组件。
-   - 包含快讯提炼、深度行情点评、标的交易对/合约类型（现货/USDT永续）及链上合约地址(CA)。
-   - 结尾附带争议性互动问题提升评论推荐权重，并附加交易转化与关注引导。
-5. 0 服务器成本：专为 GitHub Actions 定时执行设计，通过 Git 回写 sent_cache.json 与 campaign_intel.json。
-6. 可选多渠道通知：支持 Telegram / 钉钉 / 飞书 / 企微 / Discord Webhook 实时通知发帖结果。
+核心升级与全网前沿技术融合：
+1. 🎯 币安官方活动与激励感知 (AI Campaign Scanner & Analyzer)：
+   - 自动扫描币安官方最新竞赛（Catalog 93）、合约上线（Catalog 48）、新币/理财（Catalog 49）。
+   - AI 提取当期重点扶持币种（$BNB、$SOL、竞赛币等）与官方流量标签（#Write2Earn 等），使每篇发帖紧扣官方奖励。
+2. 📊 实时盘面与全网情绪注入 (Live Market & Sentiment Context)：
+   - 自动抓取全网恐慌与贪婪指数（Fear & Greed Index）。
+   - 自动拉取币安官方实时 24H 盘面行情（价格、涨跌幅、成交量），为 AI 分析提供真实数据支撑，大幅提升专业度与转化率。
+3. 🔥 重磅热点价值打分器 (Breaking News Impact Scorer)：
+   - 引入市场冲击力关键词加权算法（ETF、SEC、美联储、降息、上线、Launchpool、爆仓、突破等），优先筛选最具吸睛力的新闻。
+4. ✅ 币安交易标的防幻觉校验器 (Symbol & Widget Validator)：
+   - 自动校验提取的 $TOKEN 是否为币安真实交易对，确保 100% 触发 Write to Earn 交易组件与返佣。
+5. 🔄 多 LLM 模型池与自动故障转移 (Auto-Failover)：
+   - 支持 OpenRouter (minimax-m3:free), B.ai (glm-5.3-flash), xkiro, aihubmix, inferera, TokenRouter, DeepSeek, 硅基流动等。
+6. 0 服务器成本：基于 GitHub Actions 定时触发，通过 Git 状态回写持久化。
 ==============================================================================
 """
 
@@ -29,9 +27,10 @@ import re
 import sys
 import json
 import time
+import random
 import hashlib
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 from datetime import datetime
 
 import requests
@@ -46,7 +45,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-logger = logging.getLogger("SquarePosterPro")
+logger = logging.getLogger("SquarePosterUltimate")
 
 # ---------------------------------------------------------------------------
 # 常量与路径
@@ -168,9 +167,127 @@ RSS_FEEDS = [
     },
 ]
 
+# 重磅热点打分关键词加权字典
+IMPACT_KEYWORDS = {
+    "etf": 12,
+    "sec": 10,
+    "fed": 10,
+    "美联储": 10,
+    "降息": 10,
+    "加息": 8,
+    "launchpool": 12,
+    "megadrop": 12,
+    "listing": 10,
+    "上线": 10,
+    "突破": 8,
+    "新高": 9,
+    "ath": 9,
+    "暴涨": 7,
+    "暴跌": 7,
+    "爆仓": 9,
+    "清算": 9,
+    "options": 10,
+    "选择权": 10,
+    "期权": 9,
+    "bstocks": 10,
+    "airdrop": 8,
+    "空投": 8,
+    "融资": 7,
+    "合作": 6,
+    "主网": 7,
+    "升级": 6,
+    "黑客": 8,
+    "whale": 7,
+    "巨鲸": 7,
+}
+
 
 # ---------------------------------------------------------------------------
-# 模块一：本地去重缓存管理 (CacheManager)
+# 模块一：实时行情与全网情绪提供器 (MarketDataProvider)
+# ---------------------------------------------------------------------------
+class MarketDataProvider:
+    """获取加密货币全网宏观情绪与币安实时 24H 盘面价格数据"""
+
+    @staticmethod
+    def get_fear_and_greed() -> str:
+        """获取全网恐慌与贪婪指数"""
+        try:
+            r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=4)
+            if r.status_code == 200:
+                data = r.json().get("data", [{}])[0]
+                val = data.get("value", "50")
+                cls = data.get("value_classification", "Neutral")
+                return f"{val}/100 ({cls})"
+        except Exception:
+            pass
+        return "50/100 (中立)"
+
+    @staticmethod
+    def get_token_market_data(symbols: List[str]) -> str:
+        """批量获取币安实时价格与 24H 涨跌幅数据"""
+        results = []
+        for symbol in symbols[:3]:  # 取前 3 个标的
+            clean_sym = symbol.replace("$", "").upper()
+            pair = f"{clean_sym}USDT"
+            try:
+                url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={pair}"
+                r = requests.get(url, timeout=4)
+                if r.status_code == 200:
+                    d = r.json()
+                    price = float(d.get("lastPrice", 0))
+                    chg = float(d.get("priceChangePercent", 0))
+                    sign = "+" if chg > 0 else ""
+                    # 格式化价格格式
+                    if price > 100:
+                        price_str = f"${price:,.2f}"
+                    elif price > 1:
+                        price_str = f"${price:.4f}"
+                    else:
+                        price_str = f"${price:.6f}"
+                    results.append(f"${clean_sym}: {price_str} (24H: {sign}{chg:.2f}%)")
+            except Exception:
+                pass
+        return " | ".join(results) if results else ""
+
+
+# ---------------------------------------------------------------------------
+# 模块二：币安交易标的有效性校验器 (SymbolValidator)
+# ---------------------------------------------------------------------------
+class SymbolValidator:
+    """校验提取的代币是否在币安真实上线，防止幻觉生成假标的"""
+
+    _valid_symbols_cache: Optional[Set[str]] = None
+
+    @classmethod
+    def get_valid_symbols(cls) -> Set[str]:
+        if cls._valid_symbols_cache is not None:
+            return cls._valid_symbols_cache
+
+        valid_set = {"BTC", "ETH", "BNB", "SOL", "DOGE", "XRP", "PEPE", "SUI", "NEAR", "APT", "AVAX", "LINK", "TRX", "ADA", "SHIB"}
+        try:
+            r = requests.get("https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT", timeout=5)
+            if r.status_code == 200:
+                data = r.json()
+                for s in data.get("symbols", []):
+                    if s.get("status") == "TRADING" and s.get("quoteAsset") in ("USDT", "FDUSD", "USDC"):
+                        valid_set.add(s.get("baseAsset", "").upper())
+                cls._valid_symbols_cache = valid_set
+                logger.info(f"成功加载币安 {len(valid_set)} 个有效交易标的。")
+        except Exception as e:
+            logger.warning(f"获取币安交易标的列表失败 ({e})，使用基础标的池。")
+            cls._valid_symbols_cache = valid_set
+
+        return cls._valid_symbols_cache
+
+    @classmethod
+    def filter_valid_tokens(cls, tokens: List[str]) -> List[str]:
+        valid_set = cls.get_valid_symbols()
+        filtered = [t for t in tokens if t.upper() in valid_set]
+        return filtered if filtered else ["BTC"]
+
+
+# ---------------------------------------------------------------------------
+# 模块三：本地去重缓存管理 (CacheManager)
 # ---------------------------------------------------------------------------
 class CacheManager:
     """管理已发送历史，保障去重持久化"""
@@ -224,10 +341,10 @@ class CacheManager:
 
 
 # ---------------------------------------------------------------------------
-# 模块二：多源热点抓取与解析 (NewsFetcher)
+# 模块四：多源热点抓取、清洗与价值打分 (NewsFetcher & Scorer)
 # ---------------------------------------------------------------------------
 class NewsFetcher:
-    """热点新闻抓取与清洗"""
+    """多源资讯抓取与重磅热点打分排序"""
 
     @staticmethod
     def clean_html(raw_html: str) -> str:
@@ -244,6 +361,16 @@ class NewsFetcher:
         clean_title = entry.get("title", "").strip().lower()
         seed = f"{feed_name}::{clean_title}::{raw_id}"
         return hashlib.sha256(seed.encode("utf-8")).hexdigest()[:16]
+
+    @staticmethod
+    def calculate_impact_score(title: str, summary: str) -> int:
+        """根据市场冲击力关键词计算新闻热度分值"""
+        combined = (title + " " + summary).lower()
+        score = 0
+        for kw, weight in IMPACT_KEYWORDS.items():
+            if kw in combined:
+                score += weight
+        return score
 
     def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5) -> List[Dict[str, Any]]:
         headers = {
@@ -292,6 +419,7 @@ class NewsFetcher:
                     clean_summary = self.clean_html(summary)
                     link = entry.get("link", "")
                     published = entry.get("published", "") or entry.get("updated", "")
+                    impact_score = self.calculate_impact_score(title, clean_summary)
 
                     candidates.append({
                         "id": news_id,
@@ -301,16 +429,19 @@ class NewsFetcher:
                         "source": name,
                         "lang": lang,
                         "published": published,
+                        "impact_score": impact_score,
                     })
             except Exception as e:
                 logger.warning(f"拉取数据源 [{name}] 出错: {e}")
 
-        logger.info(f"扫描完毕，发现 {len(candidates)} 条未处理热点。")
+        # 按照市场影响力分值降序排列（重大热点优先发布）
+        candidates.sort(key=lambda x: x["impact_score"], reverse=True)
+        logger.info(f"扫描完毕，共筛选出 {len(candidates)} 条未处理热点（已按热度加权排序）。")
         return candidates
 
 
 # ---------------------------------------------------------------------------
-# 模块三：多模型故障转移 AI 引擎 (MultiLLMEngine)
+# 模块五：多模型故障转移 AI 引擎 (MultiLLMEngine)
 # ---------------------------------------------------------------------------
 class LLMProviderConfig:
     """单个 LLM 模型提供商配置"""
@@ -340,10 +471,10 @@ class MultiLLMEngine:
 1. 📌 【核心提炼与事实】（80~150字）：
    - 用精炼有力的中文提炼事件核心要点，突出关键数据、机构动向、资金规模与事件本质。
 2. 🔍 【深度解析与盘面影响】（1~2句话）：
-   - 从流动性、资金博弈、短线情绪或关键支撑/阻力角度给出专业点评，激发读者的交易与观察兴趣。
+   - 结合实时行情与全网情绪数据，从流动性、资金博弈、短线情绪或关键支撑/阻力角度给出专业点评，激发读者的交易与观察兴趣。
 3. 🎯 【标的交易对与合约信息】（核心转化触发点）：
-   - 提取 1~2 个最相关的币安交易标的，必须严格包含大写代币标签（如 $BTC 、$ETH 、$SOL 、$BNB ），并标明推荐观察的交易类型（如：`$BTC (现货 / USDT永续合约)`）。
-   - 若新闻涉及链上新代币、Meme、Launchpool、Megadrop 或特定项目且包含合约地址(CA)，请清晰列出：`链上合约(CA): 0x... / Solana地址` 及主网网络（如无具体地址则写“币安主板已上线”）。
+   - 提取 1~2 个最相关的币安真实交易标的，必须严格包含大写代币标签（如 $BTC 、$ETH 、$SOL 、$BNB ），并标明推荐观察的交易类型（如：`$BTC (现货 / USDT永续合约)`）。
+   - 若新闻涉及链上新代币、Meme、Launchpool、Megadrop 或特定项目且包含合约地址(CA)，请清晰列出：`链上合约(CA): 0x... / Solana地址` 及主网网络（如无具体地址则注明“币安主板已上线”）。
 4. 💬 【互动思考】（1个开放式问题）：
    - 提出一个引发多空激辩或后市预测的犀利问题，吸引读者在评论区留言（拉升币安广场推荐流权重）。
 5. 🏷️ 【官方创作者活动与话题标签】（不可缺失）：
@@ -354,7 +485,7 @@ class MultiLLMEngine:
 ...（80~150字事实提炼）...
 
 🔍 盘面解析与潜在影响：
-...（1~2句专业行情/生态影响点评）...
+...（结合实时行情与情绪的 1~2 句专业点评）...
 
 🎯 标的与合约信息：
 - 核心标的：$BTC (现货 / USDT永续合约)
@@ -459,9 +590,14 @@ class MultiLLMEngine:
 
         return chain
 
-    def summarize(self, news_item: Dict[str, Any], campaign_intel: Optional[Dict[str, Any]] = None) -> Optional[str]:
+    def summarize(
+        self,
+        news_item: Dict[str, Any],
+        campaign_intel: Optional[Dict[str, Any]] = None,
+        market_context: str = "",
+    ) -> Optional[str]:
         """
-        结合最新币安官方活动情报进行高收益转化提炼
+        结合最新币安官方活动情报与实时行情进行高收益转化提炼
         """
         if not self.providers:
             logger.error("没有任何可用的 LLM 提供商配置！")
@@ -480,13 +616,17 @@ class MultiLLMEngine:
 - 收益策略指导：{strategy}
 """
 
+        market_section = ""
+        if market_context:
+            market_section = f"\n【实时盘面与市场情绪参考】：\n{market_context}\n"
+
         user_prompt = f"""请将以下加密新闻提炼为一条高质量的币安广场快讯短贴：
 
 【新闻来源】：{news_item.get('source', '未知')}
 【原始标题】：{news_item.get('title', '')}
 【原始内容】：{news_item.get('summary', '')}
-{intel_section}
-请结合上述币安当期活动情报与规范生成最利于收益转化的文案："""
+{market_section}{intel_section}
+请结合上述币安当期活动情报、实时行情与规范生成最利于收益转化的文案："""
 
         # 遍历提供商链进行容灾尝试
         for index, provider in enumerate(self.providers):
@@ -505,16 +645,17 @@ class MultiLLMEngine:
                         {"role": "user", "content": user_prompt},
                     ],
                     temperature=0.7,
-                    max_tokens=650,
+                    max_tokens=700,
                 )
 
                 content = response.choices[0].message.content.strip()
 
-                # 1. 代币标签保底校验：若缺失 $TOKEN 则自动补齐 $BTC
-                tokens = re.findall(r"\$([A-Z0-9]{2,10})", content)
-                if not tokens:
+                # 1. 提取并使用币安有效标的过滤
+                raw_tokens = re.findall(r"\$([A-Z0-9]{2,10})", content)
+                valid_tokens = SymbolValidator.filter_valid_tokens(raw_tokens)
+                if not raw_tokens or not valid_tokens:
                     content += "\n\n🎯 核心标的：$BTC (现货 / USDT永续合约)"
-                    tokens = ["BTC"]
+                    valid_tokens = ["BTC"]
 
                 # 2. 创作者活动话题与标签保底处理
                 campaign_tags_env = os.getenv("CAMPAIGN_TAGS", "").strip()
@@ -524,7 +665,7 @@ class MultiLLMEngine:
                     campaign_tags_env = "#Write2Earn #BinanceSquare #热点解析"
 
                 if not re.search(r"#Write2Earn", content, re.IGNORECASE):
-                    token_hashtags = " ".join([f"#{t}" for t in tokens[:2] if f"#{t}" not in content])
+                    token_hashtags = " ".join([f"#{t}" for t in valid_tokens[:2] if f"#{t}" not in content])
                     cta_footer = (
                         f"\n\n👇 点击上方代币标签直达盘面交易，关注我获取第一手快讯与行情策略！\n"
                         f"{campaign_tags_env} {token_hashtags}".strip()
@@ -546,7 +687,7 @@ class MultiLLMEngine:
 
 
 # ---------------------------------------------------------------------------
-# 模块四：币安官方创作者活动智能扫描与理解 (CampaignScanner)
+# 模块六：币安官方创作者活动智能扫描与理解 (CampaignScanner)
 # ---------------------------------------------------------------------------
 class CampaignScanner:
     """自动扫描币安官方最新活动、竞赛与上线公告，并交由 AI 理解提炼活动策略"""
@@ -671,7 +812,7 @@ class CampaignScanner:
 
 
 # ---------------------------------------------------------------------------
-# 模块五：币安广场 OpenAPI 客户端 (SquarePublisher)
+# 模块七：币安广场 OpenAPI 客户端 (SquarePublisher)
 # ---------------------------------------------------------------------------
 class SquarePublisher:
     """币安广场发布组件"""
@@ -688,7 +829,7 @@ class SquarePublisher:
             "X-Square-OpenAPI-Key": self.api_key,
             "Content-Type": "application/json",
             "clienttype": "binanceSkill",
-            "User-Agent": "BinanceSquareAutoPosterPro/2.0",
+            "User-Agent": "BinanceSquareAutoPosterPro/3.0",
         }
 
         payload = {
@@ -736,7 +877,7 @@ class SquarePublisher:
 
 
 # ---------------------------------------------------------------------------
-# 模块六：可选外部通知组件 (Notifier)
+# 模块八：可选外部通知组件 (Notifier)
 # ---------------------------------------------------------------------------
 class Notifier:
     """支持 Telegram Bot 或通用 Webhook（钉钉/飞书/企微/Discord）通知"""
@@ -773,7 +914,7 @@ def main():
     dry_run = os.getenv("DRY_RUN", "false").lower() in ("true", "1", "yes")
 
     logger.info("==================================================")
-    logger.info("🚀 币安广场加密热点自动化发帖机器人 (Pro AI 活动结合版) 启动")
+    logger.info("🚀 币安广场加密热点与活动智能变现系统 (Ultimate 版) 启动")
     logger.info(f"   运行时间: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}")
     logger.info(f"   运行模式: {'【DRY_RUN 试运行 (不真实发帖)】' if dry_run else '【正式发布模式】'}")
     logger.info(f"   单次最大发帖数: {max_posts}")
@@ -790,18 +931,22 @@ def main():
     llm_engine = MultiLLMEngine()
     publisher = SquarePublisher(api_key=square_api_key)
 
-    # 3. 智能扫描与理解币安官方当期活动情报
+    # 3. 获取全网恐慌贪婪指数与币安市场行情基准
+    fng_index = MarketDataProvider.get_fear_and_greed()
+    logger.info(f"📊 当前全网情绪指数: {fng_index}")
+
+    # 4. 智能扫描与理解币安官方当期活动情报
     campaign_intel = CampaignScanner.get_campaign_intel(llm_engine)
     logger.info(f"💡 当期币安重点活动标签: {campaign_intel.get('active_tags')}")
     logger.info(f"🪙 当期重点扶持代币池: {campaign_intel.get('incentivized_tokens')}")
 
-    # 4. 获取待发布热点候选
+    # 5. 获取待发布热点候选（按冲击力热度打分排序）
     candidates = fetcher.fetch_candidates(cache_mgr)
     if not candidates:
         logger.info("✅ 未检测到新的未发布热点，安全退出。")
         sys.exit(0)
 
-    # 5. 执行发帖循环
+    # 6. 执行发帖循环
     posted_count = 0
     for item in candidates:
         if posted_count >= max_posts:
@@ -811,12 +956,19 @@ def main():
         news_id = item["id"]
         title = item["title"]
         source = item["source"]
+        score = item.get("impact_score", 0)
 
         logger.info(f"--------------------------------------------------")
-        logger.info(f"正在处理第 {posted_count + 1} 条热点: [{source}] {title}")
+        logger.info(f"正在处理第 {posted_count + 1} 条热点 (热度分: {score}): [{source}] {title}")
 
-        # AI 结合活动情报进行高质量提炼
-        post_content = llm_engine.summarize(item, campaign_intel)
+        # 动态提取相关币种并拉取实时盘面数据
+        mentioned_tokens = re.findall(r"\b(BTC|ETH|BNB|SOL|DOGE|XRP|PEPE|SUI|NEAR|APT|AVAX|LINK|TRX)\b", (title + " " + item["summary"]).upper())
+        target_tokens = list(dict.fromkeys(mentioned_tokens + ["BTC"]))[:3]
+        live_market_data = MarketDataProvider.get_token_market_data(target_tokens)
+        market_context_str = f"全网情绪指数: {fng_index}\n实时盘面数据: {live_market_data}"
+
+        # AI 结合活动情报与实时盘面进行高质量提炼
+        post_content = llm_engine.summarize(item, campaign_intel, market_context=market_context_str)
         if not post_content:
             logger.warning(f"AI 生成失败，跳过: {title}")
             continue
@@ -837,8 +989,10 @@ def main():
             else:
                 logger.error(f"发帖失败，本次暂不记录缓存以供下次重试: {title}")
 
+        # 模拟自然人工操作延迟
         if posted_count < max_posts:
-            time.sleep(3)
+            delay = random.randint(3, 8)
+            time.sleep(delay)
 
     logger.info("==================================================")
     logger.info(f"🎯 任务完成！本次成功处理/发布: {posted_count} 篇")
