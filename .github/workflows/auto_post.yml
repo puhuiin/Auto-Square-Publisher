@@ -2,8 +2,8 @@ name: Binance Square Auto Poster Pro
 
 on:
   schedule:
-    # 每 30 分钟定时触发一次 (UTC 时间)
-    - cron: '*/30 * * * *'
+    # 采用错峰非整点触发 (每 20 分钟执行一次: 12分, 32分, 52分)，避开 GitHub 全球整点排队拥堵
+    - cron: '12,32,52 * * * *'
   workflow_dispatch:
     # 支持在 GitHub 仓库界面手动一键触发与调试
     inputs:
@@ -20,6 +20,9 @@ on:
         required: false
         default: '1'
         type: string
+  repository_dispatch:
+    # 支持外部免费 Cron (如 Cron-job.org / 宝塔 / 快捷指令) 发送 Webhook 0秒延迟远程唤醒
+    types: [auto_post, trigger]
 
 # 赋予工作流写入仓库代码的权限（用于 Git 回写 sent_cache.json）
 permissions:
