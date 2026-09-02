@@ -54,6 +54,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: 检查环境与密钥配置状态
+        run: |
+          echo "================ 运行环境与 Secrets 状态体检 ================"
+          if [ -n "${{ secrets.SQUARE_API_KEY }}" ]; then echo "✔ SQUARE_API_KEY: 已检测到"; else echo "❌ SQUARE_API_KEY: 未检测到 (请在 Repository Secrets 中添加)"; fi
+          if [ -n "${{ secrets.OPENROUTER_API_KEY }}" ]; then echo "✔ OPENROUTER_API_KEY: 已检测到"; fi
+          if [ -n "${{ secrets.BAI_API_KEY }}" ]; then echo "✔ BAI_API_KEY: 已检测到"; fi
+          if [ -n "${{ secrets.LLM_API_KEY }}" ]; then echo "✔ LLM_API_KEY: 已检测到"; fi
+          if [ -n "${{ secrets.XKIRO_API_KEY }}" ]; then echo "✔ XKIRO_API_KEY: 已检测到"; fi
+          if [ -n "${{ secrets.SERVERCHAN_KEY }}" ]; then echo "✔ SERVERCHAN_KEY (微信推送): 已检测到"; fi
+          if [ -n "${{ secrets.PUSHPLUS_TOKEN }}" ]; then echo "✔ PUSHPLUS_TOKEN (微信推送): 已检测到"; fi
+          if [ -n "${{ secrets.BARK_KEY }}" ]; then echo "✔ BARK_KEY (iOS推送): 已检测到"; fi
+          echo "============================================================"
+
       - name: 执行自动化发帖脚本 (支持多模型故障转移)
         env:
           SQUARE_API_KEY: ${{ secrets.SQUARE_API_KEY }}
@@ -102,9 +115,9 @@ jobs:
           if [ -n "$(git status --porcelain sent_cache.json campaign_intel.json)" ]; then
             echo "检测到数据或活动情报已更新，准备提交并推送..."
             git add sent_cache.json campaign_intel.json
-            git commit -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]"
+            git commit -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]" || true
             git pull --rebase origin ${{ github.ref_name }} || true
-            git push origin HEAD:${{ github.ref_name }}
+            git push origin HEAD:${{ github.ref_name }} || echo "⚠️ 提示: git push 未成功，请确认仓库 Settings -> Actions -> General 中是否开启了 'Read and write permissions' 权限"
           else
             echo "状态数据无任何变动，无需提交。"
           fi
