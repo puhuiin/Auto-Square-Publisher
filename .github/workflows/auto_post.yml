@@ -63,9 +63,11 @@ jobs:
           # 高级多模型池配置 (JSON 数组格式)
           LLM_PROVIDERS_CONFIG: ${{ secrets.LLM_PROVIDERS_CONFIG }}
           
-          # 常用免费/第三方模型提供商专用 Key (可选)
+          # 常用免费/第三方模型提供商专用 Key 与 Model 映射 (可选)
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL || vars.OPENROUTER_MODEL || 'minimax/minimax-m3:free' }}
           BAI_API_KEY: ${{ secrets.BAI_API_KEY }}
+          BAI_MODEL: ${{ secrets.BAI_MODEL || vars.BAI_MODEL || 'glm-5.3-flash' }}
           XKIRO_API_KEY: ${{ secrets.XKIRO_API_KEY }}
           AIHUBMIX_API_KEY: ${{ secrets.AIHUBMIX_API_KEY }}
           INFERERA_API_KEY: ${{ secrets.INFERERA_API_KEY }}

@@ -72,8 +72,8 @@ PRESET_PROVIDERS = {
         "name": "B.ai",
         "base_url": "https://api.b.ai/v1",
         "default_models": [
-            "deepseek-v4-flash",
             "glm-5.3-flash",
+            "deepseek-v4-flash",
             "qwen3.8-flash",
             "deepseek-v4-flash-vision-exp",
         ],
@@ -395,13 +395,41 @@ class MultiLLMEngine:
         # 3. 检查是否有单独配置的常见平台 Key (多提供商自动探测)
         # 例如 OPENROUTER_API_KEY, BAI_API_KEY, XKIRO_API_KEY, SILICONFLOW_API_KEY 等
         extra_keys = {
-            "openrouter": (os.getenv("OPENROUTER_API_KEY", "").strip(), "https://openrouter.ai/api/v1", "minimax/minimax-m3:free"),
-            "b.ai": (os.getenv("BAI_API_KEY", "").strip(), "https://api.b.ai/v1", "deepseek-v4-flash"),
-            "xkiro": (os.getenv("XKIRO_API_KEY", "").strip(), "https://api.xkiro.com/v1", "qwen/qwen3.8-max:free"),
-            "aihubmix": (os.getenv("AIHUBMIX_API_KEY", "").strip(), "https://aihubmix.com/v1", "coding-glm-5.3-flash-free"),
-            "inferera": (os.getenv("INFERERA_API_KEY", "").strip(), "https://api.inferera.com/v1", "coding-kimi-k3-free"),
-            "tokenrouter": (os.getenv("TOKENROUTER_API_KEY", "").strip(), "https://api.tokenrouter.com/v1", "qwen/qwen3.8-max-free"),
-            "siliconflow": (os.getenv("SILICONFLOW_API_KEY", "").strip(), "https://api.siliconflow.cn/v1", "deepseek-ai/DeepSeek-V3"),
+            "openrouter": (
+                os.getenv("OPENROUTER_API_KEY", "").strip(),
+                "https://openrouter.ai/api/v1",
+                os.getenv("OPENROUTER_MODEL", "minimax/minimax-m3:free").strip(),
+            ),
+            "b.ai": (
+                os.getenv("BAI_API_KEY", "").strip(),
+                "https://api.b.ai/v1",
+                os.getenv("BAI_MODEL", "glm-5.3-flash").strip(),
+            ),
+            "xkiro": (
+                os.getenv("XKIRO_API_KEY", "").strip(),
+                "https://api.xkiro.com/v1",
+                os.getenv("XKIRO_MODEL", "qwen/qwen3.8-max:free").strip(),
+            ),
+            "aihubmix": (
+                os.getenv("AIHUBMIX_API_KEY", "").strip(),
+                "https://aihubmix.com/v1",
+                os.getenv("AIHUBMIX_MODEL", "coding-glm-5.3-flash-free").strip(),
+            ),
+            "inferera": (
+                os.getenv("INFERERA_API_KEY", "").strip(),
+                "https://api.inferera.com/v1",
+                os.getenv("INFERERA_MODEL", "coding-kimi-k3-free").strip(),
+            ),
+            "tokenrouter": (
+                os.getenv("TOKENROUTER_API_KEY", "").strip(),
+                "https://api.tokenrouter.com/v1",
+                os.getenv("TOKENROUTER_MODEL", "qwen/qwen3.8-max-free").strip(),
+            ),
+            "siliconflow": (
+                os.getenv("SILICONFLOW_API_KEY", "").strip(),
+                "https://api.siliconflow.cn/v1",
+                os.getenv("SILICONFLOW_MODEL", "deepseek-ai/DeepSeek-V3").strip(),
+            ),
         }
 
         for name, (k, url, m) in extra_keys.items():
