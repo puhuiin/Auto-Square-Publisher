@@ -79,6 +79,9 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           
+          # 创作者活动与话题标签 (可选自定义)
+          CAMPAIGN_TAGS: ${{ secrets.CAMPAIGN_TAGS || vars.CAMPAIGN_TAGS || '#Write2Earn #BinanceSquare #热点解析' }}
+          
           # 运行参数
           MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts || vars.MAX_POSTS_PER_RUN || '1' }}
           DRY_RUN: ${{ github.event.inputs.dry_run || vars.DRY_RUN || 'false' }}
