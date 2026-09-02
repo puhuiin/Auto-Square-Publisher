@@ -5,20 +5,25 @@
 ==============================================================================
 币安广场（Binance Square）加密热点与创作者活动智能变现系统 (Ultimate Edition)
 ==============================================================================
-核心升级与全网前沿技术融合：
-1. 🎯 币安官方活动与激励感知 (AI Campaign Scanner & Analyzer)：
+核心升级：
+1. 资深实战交易员人设与去AI套路引擎 (Organic Trader Persona)：
+   - 彻底告别千篇一律的死板模板，以资深操盘手口吻进行第一性原理深度拆解。
+   - 包含：事件穿透本质、盘面与资金博弈推演、实战交易应对思路、接地气的高手互动讨论。
+2. 🎯 币安官方活动与激励感知 (AI Campaign Scanner & Analyzer)：
    - 自动扫描币安官方最新竞赛（Catalog 93）、合约上线（Catalog 48）、新币/理财（Catalog 49）。
    - AI 提取当期重点扶持币种（$BNB、$SOL、竞赛币等）与官方流量标签（#Write2Earn 等），使每篇发帖紧扣官方奖励。
-2. 📊 实时盘面与全网情绪注入 (Live Market & Sentiment Context)：
+3. 📊 实时盘面与全网情绪注入 (Live Market & Sentiment Context)：
    - 自动抓取全网恐慌与贪婪指数（Fear & Greed Index）。
-   - 自动拉取币安官方实时 24H 盘面行情（价格、涨跌幅、成交量），为 AI 分析提供真实数据支撑，大幅提升专业度与转化率。
-3. 🔥 重磅热点价值打分器 (Breaking News Impact Scorer)：
+   - 自动拉取币安官方实时 24H 盘面行情（价格、涨跌幅），为 AI 分析提供真实数据支撑。
+4. 🔥 重磅热点价值打分器 (Breaking News Impact Scorer)：
    - 引入市场冲击力关键词加权算法（ETF、SEC、美联储、降息、上线、Launchpool、爆仓、突破等），优先筛选最具吸睛力的新闻。
-4. ✅ 币安交易标的防幻觉校验器 (Symbol & Widget Validator)：
+5. ✅ 币安交易标的防幻觉校验器 (Symbol & Widget Validator)：
    - 自动校验提取的 $TOKEN 是否为币安真实交易对，确保 100% 触发 Write to Earn 交易组件与返佣。
-5. 🔄 多 LLM 模型池与自动故障转移 (Auto-Failover)：
+6. 🔄 多 LLM 模型池与自动故障转移 (Auto-Failover)：
    - 支持 OpenRouter (minimax-m3:free), B.ai (glm-5.3-flash), xkiro, aihubmix, inferera, TokenRouter, DeepSeek, 硅基流动等。
-6. 0 服务器成本：基于 GitHub Actions 定时触发，通过 Git 状态回写持久化。
+7. 🚨 多渠道异常报警系统 (Notifier)：
+   - 支持微信 (Server酱/PushPlus)、Bark iOS、Telegram、通用 Webhook 实时通知与崩溃告警。
+8. 0 服务器成本：基于 GitHub Actions 定时触发，通过 Git 状态回写持久化。
 ==============================================================================
 """
 
@@ -226,7 +231,7 @@ class MarketDataProvider:
     def get_token_market_data(symbols: List[str]) -> str:
         """批量获取币安实时价格与 24H 涨跌幅数据"""
         results = []
-        for symbol in symbols[:3]:  # 取前 3 个标的
+        for symbol in symbols[:3]:
             clean_sym = symbol.replace("$", "").upper()
             pair = f"{clean_sym}USDT"
             try:
@@ -237,7 +242,6 @@ class MarketDataProvider:
                     price = float(d.get("lastPrice", 0))
                     chg = float(d.get("priceChangePercent", 0))
                     sign = "+" if chg > 0 else ""
-                    # 格式化价格格式
                     if price > 100:
                         price_str = f"${price:,.2f}"
                     elif price > 1:
@@ -441,7 +445,7 @@ class NewsFetcher:
 
 
 # ---------------------------------------------------------------------------
-# 模块五：多模型故障转移 AI 引擎 (MultiLLMEngine)
+# 模块五：资深交易员原创风格多模型 AI 引擎 (MultiLLMEngine)
 # ---------------------------------------------------------------------------
 class LLMProviderConfig:
     """单个 LLM 模型提供商配置"""
@@ -464,47 +468,35 @@ class MultiLLMEngine:
     - 遇到 Rate Limit / 429 / 欠费 / 超时时，自动平滑 failover 至下一个提供商
     """
 
-    SYSTEM_PROMPT = """你是一名精通加密货币交易与币安广场（Binance Square）顶级流量密码与 Write to Earn 收益机制的爆款内容操盘手。
-你的核心目标是创作【爆款标题钩子、极高点击率 (CTR)、强互动评论数、精准触发交易返佣】的现象级短帖。
+    SYSTEM_PROMPT = """你是一名在加密市场实战多年、深受社区信任的资深交易员与币安广场独立分析师。
+你的写作风格：【真实自然、像真人手打、独立逻辑思考、观点犀利透彻、彻底去AI套路味、拒绝任何刻板模板】。
 
-【🔥 币安广场四大千万级爆款文案模型（根据新闻属性自适应选择一种最佳模型）】：
-1. 🚨 【巨鲸/突发异动钩子】：突出突发性与巨量资金（如“突发！链上监测到巨鲸单笔转移... 主力在密谋什么？”）
-2. 💥 【反直觉/多空反差钩子】：制造观点反差（如“全网都在看空 [代币]？但链上这 2 个信号暴露了庄家意图...”）
-3. ⚡ 【关键变盘/倒计时钩子】：制造紧迫感（如“关键变盘临界点！距离 [事件] 仅剩 48 小时，必须盯紧这 2 个标的！”）
-4. 📊 【1分钟极简财富内幕】：大白话穿透本质（如“1分钟看懂：[项目] 刚刚宣布的重磅变动，对 $TOKEN 意味着什么？”）
+【核心原则：去 AI 味、去死板模板、写出真实操盘手灵魂】：
+1. ❌ 严禁机械化的小标题堆砌！不要在每篇帖子都死板地列出“📌【快讯】”、“🔍 盘面解析”、“🎯 标的”这种千篇一律的机器人标签。
+2. 💡 【像顶级交易员发长文/动态一样的自然流结构】：
+   - **第一段（直击要害的第一反应）**：用一两句行家大白话，直接穿透事件本质，说出核心影响与判断，带出最受影响的代币标签（如 $BTC 、$ETH 或 $SOL ）。
+   - **第二段（深层逻辑与资金博弈推演）**：结合盘面行情、全网情绪或链上资金动向进行实战拆解。分析：这是主力借利好出货还是真启动？多空博弈的关键临界点在哪里？
+   - **第三段（实操应对思路与标的策略）**：给出接地气的交易策略建议（如现货建仓区间、合约关键防守位或观望确认点），自然提及标的（如 $BNB / USDT 现货或永续合约）。
+   - **第四段（真诚自然的交易员互动）**：像在老韭菜群里交流一样，抛出一个有实战价值的讨论点，吸引真正的高手在评论区交流。
+3. 🪙 【代币与活动标签（自然融入）】：
+   - 正文自然融入 1~2 个大写代币标签（如 $BTC 、$SOL ），以激活币安交易挂件与 Write to Earn 返佣。
+   - 结尾自然附带官方标签：#Write2Earn #BinanceSquare #热点解析 以及对应代币标签（如 #BTC #BNB）。
 
-【📝 严格排版与转化规范】：
-1. 🎯 第一行【爆款标题】：必须极具眼球冲击力，前 30 字决定信息流点击率，带上焦点代币大写标签（如 $BTC、$SOL）。
-2. 💡 【核心事实】（80~140字）：拒绝流水账废话，用精炼犀利语言穿透事件本质，突出关键数字、机构动向与核心利好/利空。
-3. 🔍 【深度解析与盘面推演】（1~2句）：结合实时盘面与多空博弈，给出明确方向判断（看涨/看跌/震荡吸筹）。
-4. 🎯 【标的交易对与合约类型】：
-   - 核心标的：$BTC (现货 / USDT永续合约)
-   - 链上合约(CA)/网络：（如无具体地址则写“币安主板已上线”）
-5. 💬 【高转化“扣 1 / 扣 2”极速互动投票锚点】：
-   - 设计一个让读者只需 1 秒就能在评论区参与的站队投票（例如：“🔥 评论区站队：你认为接下来会突破前高还是深度回调？看涨扣「 1 」，看空扣「 2 」！”）—— 极低门槛能带来 5~10 倍的评论爆炸增长，被币安算法直接推上广场首页！
-6. 🏷️ 【官方活动与代币标签】：必须带有 #Write2Earn #BinanceSquare #热点解析 以及代币标签 #BTC #SOL。
+【语气与人设参考（仅供体会真实交易员口吻，不要机械死板复制）】：
+"很多人看到币安上线美股期权，只觉得是个普通功能更新，但从资金流动性来看，这其实是在给传统大资金开合规管道。
 
-【输出格式样式规范】：
-🚨 【突发变盘】[吸睛标题/核心要点，带 $TOKEN]
-...（80~140字事实精炼）...
+表面看是对冲工具，深层逻辑是逐步蚕食传统券商份额。目前 $BTC 在高位震荡洗盘，美股开盘前后的波动率很可能会被进一步放大。主力最喜欢在流动性切换的节点上下插针洗掉高杠杆。
 
-🔍 盘面解析与潜在影响：
-...（结合实时行情与多空博弈的 1~2 句专业点评）...
+实战思路：
+- $BNB 作为平台核心资产，生态基本盘持续扩大，适合现货逢低配置。
+- 合约玩家建议多看少动，重点盯紧美股交易时段的基差溢价，别在震荡区间中部乱追单。
 
-🎯 标的与合约信息：
-- 核心标的：$BTC (现货 / USDT永续合约)
-- 链上合约/网络：币安主板已上线
+你们觉得这波能带动传统场外增量资金进场吗？目前你们是轻仓观望还是已经布局好了？
+#Write2Earn #BinanceSquare #热点解析 #BNB #BTC"
 
-💬 互动投票（评论区站队）：
-🔥 [针对本事件设计一个犀利的二选一预测问题]
-👉 看涨多头扣「 1 」，看空防守扣「 2 」！
-
-👇 点击下方代币标签直达盘面交易，关注我获取第一手快讯与行情策略！
-#Write2Earn #BinanceSquare #热点解析 #BTC
-
-【严格注意事项】：
-- 仅输出格式化后的正文，不要输出任何开场白或解释性说明。
-- 严禁出现“稳赚”、“包赚”等绝对化违规词汇，遵守平台合规要求。"""
+【严格约束】：
+- 严禁出现任何“好的”、“这是为您生成的”等 AI 开场白或元说明。
+- 严禁使用“稳赚”、“必涨”、“带单”等违规用词，保持交易员的严谨与对市场的敬畏心。"""
 
     def __init__(self):
         self.providers: List[LLMProviderConfig] = self._build_provider_chain()
@@ -631,7 +623,7 @@ class MultiLLMEngine:
 【原始标题】：{news_item.get('title', '')}
 【原始内容】：{news_item.get('summary', '')}
 {market_section}{intel_section}
-请结合上述币安当期活动情报、实时行情与规范生成最利于收益转化的文案："""
+请以资深实操交易员的独到视角，结合上述情报，生成一篇真实、犀利、有灵魂的原创分析帖："""
 
         # 遍历提供商链进行容灾尝试
         for index, provider in enumerate(self.providers):
@@ -649,8 +641,8 @@ class MultiLLMEngine:
                         {"role": "system", "content": self.SYSTEM_PROMPT},
                         {"role": "user", "content": user_prompt},
                     ],
-                    temperature=0.7,
-                    max_tokens=700,
+                    temperature=0.75,
+                    max_tokens=750,
                 )
 
                 content = response.choices[0].message.content.strip()
@@ -659,7 +651,7 @@ class MultiLLMEngine:
                 raw_tokens = re.findall(r"\$([A-Z0-9]{2,10})", content)
                 valid_tokens = SymbolValidator.filter_valid_tokens(raw_tokens)
                 if not raw_tokens or not valid_tokens:
-                    content += "\n\n🎯 核心标的：$BTC (现货 / USDT永续合约)"
+                    content += "\n\n重点标的关注：$BTC (现货 / USDT永续合约)"
                     valid_tokens = ["BTC"]
 
                 # 2. 创作者活动话题与标签保底处理
@@ -672,7 +664,7 @@ class MultiLLMEngine:
                 if not re.search(r"#Write2Earn", content, re.IGNORECASE):
                     token_hashtags = " ".join([f"#{t}" for t in valid_tokens[:2] if f"#{t}" not in content])
                     cta_footer = (
-                        f"\n\n👇 点击上方代币标签直达盘面交易，关注我获取第一手快讯与行情策略！\n"
+                        f"\n\n👇 关注我获取一手行情策略，点击上方代币标签直达盘面交易！\n"
                         f"{campaign_tags_env} {token_hashtags}".strip()
                     )
                     content += cta_footer
