@@ -864,10 +864,26 @@ class SquarePublisher:
     def __init__(self, api_key: str):
         self.api_key = api_key
 
+    @staticmethod
+    def _sanitize_content(content: str) -> str:
+        """
+        币安限制单篇 Hashtag 数量（通常上限为 3~4 个，超过将报错 220094: Hashtag count exceeds the allowed limit）
+        自动清洗超过 3 个的标签，多余标签去掉 # 保留关键词文本
+        """
+        hashtags = re.findall(r"#[^\s#]+", content)
+        if len(hashtags) > 3:
+            for tag in hashtags[3:]:
+                # 仅将多余的 tag 替换为去掉 # 的普通词
+                content = content.replace(tag, tag.lstrip("#"), 1)
+        return content
+
     def publish(self, content: str) -> bool:
         if not self.api_key:
             logger.error("未配置 SQUARE_API_KEY，无法发布到币安广场！")
             return False
+
+        # 严格清洗与合规处理
+        content = self._sanitize_content(content)
 
         headers = {
             "X-Square-OpenAPI-Key": self.api_key,
