@@ -323,8 +323,11 @@ class SymbolValidator:
         valid_set = {
             "BTC", "ETH", "BNB", "SOL", "DOGE", "XRP", "PEPE", "SHIB", "WIF", "SUI", 
             "NEAR", "APT", "AVAX", "LINK", "TRX", "ADA", "TAO", "RENDER", "FET", "POPCAT",
-            "BONK", "FLOKI", "SEI", "TIA", "ENA", "NOT", "DOGS", "TURBO", "NEIRO", "PNUT"
+            "BONK", "FLOKI", "SEI", "TIA", "ENA", "NOT", "DOGS", "TURBO", "NEIRO", "PNUT",
+            "BOME", "MEME", "ORDI", "SATS", "LTC", "BCH", "DOT", "UNI", "AAVE", "AR", "FIL"
         }
+        cls._valid_symbols_cache = valid_set
+
         try:
             r = requests.get("https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT", timeout=5)
             if r.status_code == 200:
@@ -332,11 +335,11 @@ class SymbolValidator:
                 for s in data.get("symbols", []):
                     if s.get("status") == "TRADING" and s.get("quoteAsset") in ("USDT", "FDUSD", "USDC"):
                         valid_set.add(s.get("baseAsset", "").upper())
-                cls._valid_symbols_cache = valid_set
                 logger.info(f"成功加载币安 {len(valid_set)} 个有效交易标的（含全部山寨币与 Meme 币）。")
+            else:
+                logger.warning(f"币安 exchangeInfo 返回 HTTP {r.status_code}，使用内置基础标的池。")
         except Exception as e:
-            logger.warning(f"获取币安交易标的列表失败 ({e})，使用基础标的池。")
-            cls._valid_symbols_cache = valid_set
+            logger.warning(f"获取币安交易标的列表异常 ({e})，使用内置基础标的池。")
 
         return cls._valid_symbols_cache
 
@@ -1042,7 +1045,7 @@ def _run_main():
 
     # 6. 执行发帖循环
     posted_count = 0
-    valid_symbols = SymbolValidator.get_valid_symbols()
+    valid_symbols = SymbolValidator.get_valid_symbols() or set()
     IGNORE_WORDS = {"THE", "AND", "FOR", "WITH", "NEW", "TOP", "USD", "EUR", "SEC", "ETF", "FED", "CEO", "ALL", "NOW", "KEY", "NFT", "DAO", "DEX", "CEX", "API", "POS", "POW", "ATH", "APR", "APY"}
 
     for item in candidates:
