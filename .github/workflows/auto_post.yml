@@ -2,8 +2,8 @@ name: Binance Square Auto Poster Pro
 
 on:
   schedule:
-    # 采用错峰非整点触发 (每 20 分钟执行一次: 12分, 32分, 52分)，避开 GitHub 全球整点排队拥堵
-    - cron: '12,32,52 * * * *'
+    # 定时自动触发 (每 20 分钟执行一次)
+    - cron: '*/20 * * * *'
   workflow_dispatch:
     # 支持在 GitHub 仓库界面手动一键触发与调试
     inputs:
@@ -21,7 +21,7 @@ on:
         default: '1'
         type: string
   repository_dispatch:
-    # 支持外部免费 Cron (如 Cron-job.org / 宝塔 / 快捷指令) 发送 Webhook 0秒延迟远程唤醒
+    # 支持外部免费 Cron 发送 Webhook 0秒延迟远程唤醒
     types: [auto_post, trigger]
 
 # 赋予工作流写入仓库代码的权限（用于 Git 回写 sent_cache.json）
@@ -55,16 +55,23 @@ jobs:
           pip install -r requirements.txt
 
       - name: 检查环境与密钥配置状态
+        env:
+          SQUARE_KEY: ${{ secrets.SQUARE_API_KEY }}
+          OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          BAI_KEY: ${{ secrets.BAI_API_KEY }}
+          LLM_KEY: ${{ secrets.LLM_API_KEY }}
+          SC_KEY: ${{ secrets.SERVERCHAN_KEY }}
+          PP_KEY: ${{ secrets.PUSHPLUS_TOKEN }}
+          BARK_KEY: ${{ secrets.BARK_KEY }}
         run: |
           echo "================ 运行环境与 Secrets 状态体检 ================"
-          if [ -n "${{ secrets.SQUARE_API_KEY }}" ]; then echo "✔ SQUARE_API_KEY: 已检测到"; else echo "❌ SQUARE_API_KEY: 未检测到 (请在 Repository Secrets 中添加)"; fi
-          if [ -n "${{ secrets.OPENROUTER_API_KEY }}" ]; then echo "✔ OPENROUTER_API_KEY: 已检测到"; fi
-          if [ -n "${{ secrets.BAI_API_KEY }}" ]; then echo "✔ BAI_API_KEY: 已检测到"; fi
-          if [ -n "${{ secrets.LLM_API_KEY }}" ]; then echo "✔ LLM_API_KEY: 已检测到"; fi
-          if [ -n "${{ secrets.XKIRO_API_KEY }}" ]; then echo "✔ XKIRO_API_KEY: 已检测到"; fi
-          if [ -n "${{ secrets.SERVERCHAN_KEY }}" ]; then echo "✔ SERVERCHAN_KEY (微信推送): 已检测到"; fi
-          if [ -n "${{ secrets.PUSHPLUS_TOKEN }}" ]; then echo "✔ PUSHPLUS_TOKEN (微信推送): 已检测到"; fi
-          if [ -n "${{ secrets.BARK_KEY }}" ]; then echo "✔ BARK_KEY (iOS推送): 已检测到"; fi
+          if [ -n "$SQUARE_KEY" ]; then echo "✔ SQUARE_API_KEY: 已检测到"; else echo "❌ SQUARE_API_KEY: 未检测到 (请在 Repository Secrets 中配置)"; fi
+          if [ -n "$OPENROUTER_KEY" ]; then echo "✔ OPENROUTER_API_KEY: 已检测到"; fi
+          if [ -n "$BAI_KEY" ]; then echo "✔ BAI_API_KEY: 已检测到"; fi
+          if [ -n "$LLM_KEY" ]; then echo "✔ LLM_API_KEY: 已检测到"; fi
+          if [ -n "$SC_KEY" ]; then echo "✔ SERVERCHAN_KEY (微信推送): 已检测到"; fi
+          if [ -n "$PP_KEY" ]; then echo "✔ PUSHPLUS_TOKEN (微信推送): 已检测到"; fi
+          if [ -n "$BARK_KEY" ]; then echo "✔ BARK_KEY (iOS推送): 已检测到"; fi
           echo "============================================================"
 
       - name: 执行自动化发帖脚本 (支持多模型故障转移)
@@ -73,17 +80,17 @@ jobs:
           
           # 主模型或自定义单一配置
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL || 'https://api.deepseek.com' }}
-          LLM_MODEL: ${{ secrets.LLM_MODEL || 'deepseek-chat' }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
           
           # 高级多模型池配置 (JSON 数组格式)
           LLM_PROVIDERS_CONFIG: ${{ secrets.LLM_PROVIDERS_CONFIG }}
           
-          # 常用免费/第三方模型提供商专用 Key 与 Model 映射 (可选)
+          # 常用免费/第三方模型提供商专用 Key 与 Model 映射
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL || vars.OPENROUTER_MODEL || 'minimax/minimax-m3:free' }}
+          OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
           BAI_API_KEY: ${{ secrets.BAI_API_KEY }}
-          BAI_MODEL: ${{ secrets.BAI_MODEL || vars.BAI_MODEL || 'glm-5.3-flash' }}
+          BAI_MODEL: ${{ secrets.BAI_MODEL }}
           XKIRO_API_KEY: ${{ secrets.XKIRO_API_KEY }}
           AIHUBMIX_API_KEY: ${{ secrets.AIHUBMIX_API_KEY }}
           INFERERA_API_KEY: ${{ secrets.INFERERA_API_KEY }}
@@ -99,11 +106,11 @@ jobs:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           
           # 创作者活动与话题标签 (可选自定义)
-          CAMPAIGN_TAGS: ${{ secrets.CAMPAIGN_TAGS || vars.CAMPAIGN_TAGS || '#Write2Earn #BinanceSquare #热点解析' }}
+          CAMPAIGN_TAGS: ${{ secrets.CAMPAIGN_TAGS }}
           
           # 运行参数
-          MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts || vars.MAX_POSTS_PER_RUN || '1' }}
-          DRY_RUN: ${{ github.event.inputs.dry_run || vars.DRY_RUN || 'false' }}
+          MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: |
           python main.py
 

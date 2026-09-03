@@ -573,8 +573,8 @@ class MultiLLMEngine:
 
         # 2. 读取标准单一环境变量
         single_api_key = os.getenv("LLM_API_KEY", "").strip()
-        single_base_url = os.getenv("LLM_BASE_URL", "https://api.deepseek.com").strip()
-        single_model = os.getenv("LLM_MODEL", "deepseek-chat").strip()
+        single_base_url = os.getenv("LLM_BASE_URL", "").strip() or "https://api.deepseek.com"
+        single_model = os.getenv("LLM_MODEL", "").strip() or "deepseek-chat"
 
         if single_api_key:
             chain.append(LLMProviderConfig(
@@ -589,37 +589,37 @@ class MultiLLMEngine:
             "openrouter": (
                 os.getenv("OPENROUTER_API_KEY", "").strip(),
                 "https://openrouter.ai/api/v1",
-                os.getenv("OPENROUTER_MODEL", "minimax/minimax-m3:free").strip(),
+                os.getenv("OPENROUTER_MODEL", "").strip() or "minimax/minimax-m3:free",
             ),
             "b.ai": (
                 os.getenv("BAI_API_KEY", "").strip(),
                 "https://api.b.ai/v1",
-                os.getenv("BAI_MODEL", "glm-5.3-flash").strip(),
+                os.getenv("BAI_MODEL", "").strip() or "glm-5.3-flash",
             ),
             "xkiro": (
                 os.getenv("XKIRO_API_KEY", "").strip(),
                 "https://api.xkiro.com/v1",
-                os.getenv("XKIRO_MODEL", "qwen/qwen3.8-max:free").strip(),
+                os.getenv("XKIRO_MODEL", "").strip() or "qwen/qwen3.8-max:free",
             ),
             "aihubmix": (
                 os.getenv("AIHUBMIX_API_KEY", "").strip(),
                 "https://aihubmix.com/v1",
-                os.getenv("AIHUBMIX_MODEL", "coding-glm-5.3-flash-free").strip(),
+                os.getenv("AIHUBMIX_MODEL", "").strip() or "coding-glm-5.3-flash-free",
             ),
             "inferera": (
                 os.getenv("INFERERA_API_KEY", "").strip(),
                 "https://api.inferera.com/v1",
-                os.getenv("INFERERA_MODEL", "coding-kimi-k3-free").strip(),
+                os.getenv("INFERERA_MODEL", "").strip() or "coding-kimi-k3-free",
             ),
             "tokenrouter": (
                 os.getenv("TOKENROUTER_API_KEY", "").strip(),
                 "https://api.tokenrouter.com/v1",
-                os.getenv("TOKENROUTER_MODEL", "qwen/qwen3.8-max-free").strip(),
+                os.getenv("TOKENROUTER_MODEL", "").strip() or "qwen/qwen3.8-max-free",
             ),
             "siliconflow": (
                 os.getenv("SILICONFLOW_API_KEY", "").strip(),
                 "https://api.siliconflow.cn/v1",
-                os.getenv("SILICONFLOW_MODEL", "deepseek-ai/DeepSeek-V3").strip(),
+                os.getenv("SILICONFLOW_MODEL", "").strip() or "deepseek-ai/DeepSeek-V3",
             ),
         }
 
@@ -1003,8 +1003,9 @@ def main():
 
 def _run_main():
     square_api_key = os.getenv("SQUARE_API_KEY", "").strip()
-    max_posts = int(os.getenv("MAX_POSTS_PER_RUN", "1"))
-    dry_run = os.getenv("DRY_RUN", "false").lower() in ("true", "1", "yes")
+    max_posts_raw = os.getenv("MAX_POSTS_PER_RUN", "").strip() or "1"
+    max_posts = int(max_posts_raw) if max_posts_raw.isdigit() else 1
+    dry_run = os.getenv("DRY_RUN", "false").strip().lower() in ("true", "1", "yes")
 
     logger.info("==================================================")
     logger.info("🚀 币安广场全币种·山寨爆款与活动智能变现系统 (Ultimate 版) 启动")
