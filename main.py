@@ -528,23 +528,55 @@ class MultiLLMEngine:
     - 遇到 Rate Limit / 429 / 欠费 / 超时时，自动平滑 failover 至下一个提供商
     """
 
-    SYSTEM_PROMPT = """你是一名在加密市场摸爬滚打多年、深谙全市场财富密码与流量逻辑的资深实战交易员。
-你的关注范围：【全币种覆盖：无论是主流币 ($BTC, $ETH, $SOL, $BNB)，还是热门山寨币 ($PEPE, $WIF, $DOGE, $SHIB, $SUI, $TAO 等)、暴涨暴跌异动、Meme热点、新币上线、大额解锁、链上巨鲸动作，只要有流量和赚钱/亏钱效应，就进行深度犀利拆解】。
+    SYSTEM_PROMPT = """你是一名在币圈实盘交易多年的野生操盘手、币安广场顶级原生创作者。
+你日常混迹于各大加密社区与微信群，说话直接、犀利、毒舌、极具网感，深谙韭菜心理与庄家操盘套路。
 
-【核心原则：彻底去 AI 味，拒绝套路化模板，写出真实操盘手灵魂】：
-1. ❌ 严禁机械化的小标题堆砌！不要在每篇帖子都死板地列出“📌【快讯】”、“🔍 盘面解析”、“🎯 标的”这种千篇一律的机器人标签。
-2. 💡 【像顶级交易员发长文/动态一样的自然流结构】：
-   - **第一段（直击要害的第一反应）**：用一两句行家大白话，直接穿透事件本质，说出核心影响与判断，带出最受影响的代币大写标签（如 $PEPE 、$SOL 、$DOGE 、$BTC ）。
-   - **第二段（深层逻辑与资金博弈推演）**：结合盘面行情、全网情绪、链上异动或庄家资金动向进行实战拆解。重点分析：这到底是主力借利好出货还是真启动？山寨币的筹码集中度与洗盘意图是什么？散户最大的认知盲区在哪里？
-   - **第三段（实操应对思路与标的策略）**：给出接地气的交易策略建议（如现货止盈止损区间、合约支撑阻力防守位、或者观望确认点），自然提及标的（如 $PEPE / USDT 现货或永续合约）。
-   - **第四段（真诚自然的交易员互动）**：像在老韭菜群里交流一样，抛出一个有实战价值的讨论点，吸引真正的高手在评论区交流。
-3. 🪙 【代币与活动标签（自然融入）】：
-   - 正文自然融入 1~2 个最相关的代币大写标签（如 $PEPE 、$SOL 、$DOGE 等），以激活币安交易挂件与 Write to Earn 返佣。
-   - 结尾自然附带官方标签：#Write2Earn #BinanceSquare #热点解析 以及对应代币标签（如 #PEPE #SOL）。
+【写作宗旨：100% 模拟真人野生交易员动态，彻底剔除所有 AI 腔调】：
+1. 🚫 【绝对禁用的 AI 假大空与套话】：
+   - 严禁出现小标题（如“【快讯】”、“【事件要点】”、“【深度分析】”、“【总结】”）。
+   - 严禁使用破折号“——”与冒号解释长句，多用口语化短句。
+   - 严禁使用 AI 常见烂梗句式：“拉到聚光灯下”、“老韭菜都知道这意味着什么”、“另外一个细节值得注意”、“总而言之”、“毋庸置疑”、“这到底是A还是B让我们拭目以待”、“综上所述”。
+   - 严禁假装客观当骑墙派（不要“一方面...另一方面...”）。真人都有鲜明态度：要么提示诱多风险，要么看好突破，要么吐槽韭菜追高。
+   - 严禁在非代币名词前加美元符号（绝对不要写 $ETF、$SEC、$AI、$CEO、$NFT、$USD、$CEX）。只在真实代币前加 $（如 $BTC, $ETH, $SOL, $XRP, $DOGE, $PEPE）。
 
-【严格约束】：
-- 严禁出现任何“好的”、“这是为您生成的”等 AI 开场白或元说明。
-- 严禁使用“稳赚”、“必涨”、“带单”等违规用词，保持交易员的严谨与对市场的敬畏心。"""
+2. 📏 【字数与排版规范（移动端极简短句流）】：
+   - 全文严格控制在 160 ~ 240 字以内！手机屏幕一屏就能快速读完，绝不长篇大论。
+   - 分成 3 到 4 个短段落，段与段之间空一行。每段只有 1~2 句话，短小精炼，节奏明快。
+
+3. 💬 【真人口吻与结构】：
+   - **第 1 段（开门见山）**：一句话爆出今天最刺激的行情或消息，带出核心标的（如 $XRP 或 $DOGE）。
+   - **第 2 段（拆解博弈真相）**：讲大白话、讲庄家人性。结合盘面异动或情绪，戳破利好背后的资金意图（是借利好出货？还是深度洗盘完毕？）。
+   - **第 3 段（实在的实操建议）**：说一句不装逼的真话（分批挂单别追高、把止损带好别抗单、现货拿住别被插针洗下车）。
+   - **第 4 段（极简站队互动）**：用“看多冲前高的扣 1，觉得是诱多出货的扣 2”等极简站队提问，刺激评论区开喷互动。
+   - **文末标签**：只带 3 个标签：#Write2Earn #BinanceSquare #核心代币名。
+
+【真人实战范文对照（请严格模仿这种口吻、长度与节奏）】：
+---
+范文一：
+这波 XRP 动静属实不小，4.7 亿 ETF 增量资金直接把盘面砸活了。
+
+很多人在喊冲 2 块，我说句得罪人的大实话：全网贪婪指数都 65 了，现在无脑追高，纯粹是去给老外机构当出货流动性。
+
+主力这波明显是在借消息拉高换手，真想参与的别着急上头，等一波日线级别的放量回踩确认支撑再考虑。现货拿稳别慌，合约把杠杆降到最低，千万别被洗盘插针带走。
+
+兄弟们，你觉得这次 $XRP 是真突破还是诱多出货？
+看好破前高的打 1
+觉得要暴跌洗盘的打 2
+
+#Write2Earn #BinanceSquare #XRP
+---
+范文二：
+今天 Meme 板块集体异动，DOGE、PEPE、SHIB 都在蠢蠢欲动。
+
+炒 Meme 这么多年，亏钱的永远是同一批人：行情初期不敢上，涨到山顶了抵押房子冲进去，最后一套就是大半年。
+
+现在盘面明显是情绪后半场的补涨，追高性价比极低。手痒想玩的，最多拿 5% 仓位去以小博大，翻倍立马把本金抽出来，用利润去博上限，心态才不会崩。
+
+手里的代币都浮盈了吗？
+这波你重仓了哪个？评论区报个代码，我挑两个盘面帮大家把把脉。
+
+#Write2Earn #BinanceSquare #PEPE
+---"""
 
     def __init__(self):
         self.providers: List[LLMProviderConfig] = self._build_provider_chain()
@@ -648,30 +680,26 @@ class MultiLLMEngine:
             logger.error("没有任何可用的 LLM 提供商配置！")
             return None
 
-        # 组织活动情报提示词
+        # 组织活动背景提示（仅作为潜意识背景，避免生搬硬套非相关代币）
         intel_section = ""
-        if campaign_intel:
-            active_tags = " ".join(campaign_intel.get("active_tags", ["#Write2Earn", "#BinanceSquare", "#热点解析"]))
-            incentivized_tokens = " ".join(campaign_intel.get("incentivized_tokens", ["$BNB", "$BTC"]))
-            strategy = campaign_intel.get("strategy_guidance", "优先关联主流现货与USDT永续合约。")
-            intel_section = f"""
-【币安官方当期重点活动情报与策略指导】：
-- 官方当期核心活动标签：{active_tags}
-- 官方当期重点奖励/交易代币池：{incentivized_tokens}
-- 收益策略指导：{strategy}
-"""
+        if campaign_intel and campaign_intel.get("strategy_guidance"):
+            intel_section = f"【官方活动风向参考】：{campaign_intel.get('strategy_guidance')}（若与本条新闻无关则切勿生硬提及）。\n"
 
         market_section = ""
         if market_context:
-            market_section = f"\n【实时盘面与市场情绪参考】：\n{market_context}\n"
+            market_section = f"【实时盘面情绪参考】：{market_context}\n"
 
-        user_prompt = f"""请将以下加密新闻提炼为一条高质量的币安广场快讯短贴：
+        user_prompt = f"""请将以下新闻提炼为一条极具穿透力、短小精悍的真人交易员动态：
 
-【新闻来源】：{news_item.get('source', '未知')}
-【原始标题】：{news_item.get('title', '')}
-【原始内容】：{news_item.get('summary', '')}
+【新闻标题】：{news_item.get('title', '')}
+【新闻摘要】：{news_item.get('summary', '')}
 {market_section}{intel_section}
-请以资深实操交易员的独到视角，重点挖掘核心标的（主流/山寨/Meme/新币均可），生成一篇真实、犀利、有灵魂的原创分析帖："""
+【核心要求】：
+1. 彻底去 AI 味！模仿真人老韭菜/交易员在社区发帖的极简口吻。
+2. 篇幅严格控制在 160~240 字之间，分 3~4 个短段落，短句为主，每段 1~2 句话。
+3. 只能给 1~2 个真实代币加 $（如 $XRP 或 $DOGE，严禁在 ETF/SEC/AI/CEO/FED 等非代币词前加 $）。
+4. 结尾设计一句极简的站队提问（如“看多的扣1，看空的扣2”），最后附带 3 个标签：#Write2Earn #BinanceSquare #核心代币。
+直接输出正文，不要任何开场白或多余解释："""
 
         # 遍历提供商链进行容灾尝试
         for index, provider in enumerate(self.providers):
@@ -690,31 +718,21 @@ class MultiLLMEngine:
                         {"role": "user", "content": user_prompt},
                     ],
                     temperature=0.75,
-                    max_tokens=750,
+                    max_tokens=600,
                 )
 
                 content = response.choices[0].message.content.strip()
 
-                # 1. 提取并使用币安有效标的过滤
+                # 1. 提取代币并清洗非代币伪标的
                 raw_tokens = re.findall(r"\$([A-Z0-9]{2,10})", content)
                 valid_tokens = SymbolValidator.filter_valid_tokens(raw_tokens)
-                if not raw_tokens or not valid_tokens:
+                if not valid_tokens:
                     valid_tokens = ["BTC"]
 
-                # 2. 创作者活动话题与标签保底处理
-                campaign_tags_env = os.getenv("CAMPAIGN_TAGS", "").strip()
-                if not campaign_tags_env and campaign_intel:
-                    campaign_tags_env = " ".join(campaign_intel.get("active_tags", ["#Write2Earn", "#BinanceSquare", "#热点解析"]))
-                if not campaign_tags_env:
-                    campaign_tags_env = "#Write2Earn #BinanceSquare #热点解析"
-
+                # 2. 标签保底处理（仅保留干净的 3 个标签，绝不附带机械化广告标语）
                 if not re.search(r"#Write2Earn", content, re.IGNORECASE):
-                    token_hashtags = " ".join([f"#{t}" for t in valid_tokens[:2] if f"#{t}" not in content])
-                    cta_footer = (
-                        f"\n\n👇 关注我获取一手行情策略，点击上方代币标签直达盘面交易！\n"
-                        f"{campaign_tags_env} {token_hashtags}".strip()
-                    )
-                    content += cta_footer
+                    primary_token = valid_tokens[0]
+                    content += f"\n\n#Write2Earn #BinanceSquare #{primary_token}"
 
                 logger.info(f"🎉 模型 [{provider.name}] 生成成功！")
                 return content
@@ -867,15 +885,29 @@ class SquarePublisher:
     @staticmethod
     def _sanitize_content(content: str) -> str:
         """
-        币安限制单篇 Hashtag 数量（通常上限为 3~4 个，超过将报错 220094: Hashtag count exceeds the allowed limit）
-        自动清洗超过 3 个的标签，多余标签去掉 # 保留关键词文本
+        全自动化内容精细清洗与去 AI 味保障：
+        1. 清洗非代币误加的 $（如 $ETF -> ETF, $SEC -> SEC, $AI -> AI, $CEO -> CEO 等）
+        2. 剔除生硬的破折号“——”
+        3. 币安限制单篇 Hashtag 数量（上限为 3~4 个，超过将报错 220094），严格保留最多 3 个核心标签
         """
+        # 1. 清洗非代币伪标的
+        non_token_words = [
+            "ETF", "SEC", "FED", "CEO", "NFT", "AI", "USD", "USDT", "USDC",
+            "CEX", "DEX", "API", "CAGR", "APR", "APY", "ATH", "BAPI", "NEWS", "MEME"
+        ]
+        for word in non_token_words:
+            content = re.sub(rf"\${word}\b", word, content, flags=re.IGNORECASE)
+
+        # 2. 移除生硬破折号
+        content = content.replace("——", "，")
+
+        # 3. 严格限制 Hashtag 数量（最多 3 个）
         hashtags = re.findall(r"#[^\s#]+", content)
         if len(hashtags) > 3:
             for tag in hashtags[3:]:
-                # 仅将多余的 tag 替换为去掉 # 的普通词
                 content = content.replace(tag, tag.lstrip("#"), 1)
-        return content
+
+        return content.strip()
 
     def publish(self, content: str) -> bool:
         if not self.api_key:
