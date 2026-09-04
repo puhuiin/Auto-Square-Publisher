@@ -3,18 +3,17 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#USStocksMegaFest",
-    "#AltcoinTrading"
+    "#AltcoinTrading",
+    "#BinanceAlpha"
   ],
   "incentivized_tokens": [
     "$ZKC",
+    "$COLLECT",
+    "$USDT",
     "$USDC",
     "$BNB",
-    "$BTC",
-    "$USD1",
-    "$COLLECT",
-    "$SOL"
+    "$BTC"
   ],
-  "strategy_guidance": "优先围绕当期正在进行的 ZKC Trading Tournament、Altcoin Trading Festival 及 US Stocks MegaFest 等高奖金池活动发布交易复盘与参与教程，穿插 Binance Wallet 新上活动与 Alpha 竞赛情报，引导用户点击合约/现货链接完成首笔交易，从而最大化 Write2Earn 阅读奖励及交易返佣曝光。",
-  "last_updated": "2026-09-03T17:15:31.842308Z"
+  "strategy_guidance": "发帖时优先结合当期Trading Tournament、Alpha新币(COLLECT、ZKC)、Altcoin交易节及Binance Wallet的PnL/股票活动，引导读者参与合约或现货交易以获取Write2Earn内容返佣与活动空投奖励。",
+  "last_updated": "2026-09-04T06:08:16.323515Z"
 }
