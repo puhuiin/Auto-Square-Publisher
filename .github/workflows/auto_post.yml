@@ -41,7 +41,7 @@ jobs:
       - name: 检出仓库代码
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1 # 浅克隆加速检出，回写步骤自带 fetch 对齐远端，无需完整历史
           persist-credentials: true
 
       - name: 配置 Python 环境
