@@ -112,6 +112,7 @@ jobs:
           MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts }}
           DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: |
+          python diag_test.py || true
           python main.py
 
       - name: 回写状态并提交 Git 变更
