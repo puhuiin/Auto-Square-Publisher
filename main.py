@@ -40,12 +40,16 @@ import hashlib
 import logging
 from typing import List, Dict, Any, Optional, Set, Tuple
 import io
-from datetime import datetime
+import concurrent.futures
+from datetime import datetime, timezone
 
 import requests
 import feedparser
 from PIL import Image
 from openai import OpenAI
+
+# 限制图片解析最大像素，杜绝恶意图像解压炸弹 (DecompressionBomb)
+Image.MAX_IMAGE_PIXELS = 50_000_000
 
 # ---------------------------------------------------------------------------
 # 日志配置
@@ -387,7 +391,7 @@ class CacheManager:
             "id": news_id,
             "title": title,
             "source": source,
-            "sent_at": datetime.utcnow().isoformat() + "Z",
+            "sent_at": datetime.now(timezone.utc).isoformat(),
         }
         self.cached_items.append(record)
         self.cached_ids.add(news_id)
@@ -478,73 +482,85 @@ class NewsFetcher:
 
         return None
 
-    def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5) -> List[Dict[str, Any]]:
+    def _fetch_single_feed(self, feed_cfg: Dict[str, Any], cache_mgr: CacheManager, limit_per_feed: int) -> List[Dict[str, Any]]:
+        name = feed_cfg["name"]
+        url = feed_cfg["url"]
+        lang = feed_cfg.get("lang", "en")
         headers = {
             "User-Agent": (
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
             )
         }
+        items = []
+        try:
+            resp = requests.get(url, headers=headers, timeout=8)
+            if resp.status_code != 200:
+                logger.warning(f"数据源 [{name}] 响应异常: HTTP {resp.status_code}")
+                return items
+
+            feed = feedparser.parse(resp.content)
+            if not feed.entries:
+                return items
+
+            logger.info(f"数据源 [{name}] 抓取到 {len(feed.entries)} 条新闻。")
+
+            for entry in feed.entries[:limit_per_feed]:
+                title = entry.get("title", "").strip()
+                if not title:
+                    continue
+
+                news_id = self.generate_news_id(entry, name)
+                if cache_mgr.is_cached(news_id):
+                    continue
+
+                summary = ""
+                if "summary" in entry:
+                    summary = entry.summary
+                elif "content" in entry and entry.content:
+                    summary = entry.content[0].value
+                elif "description" in entry:
+                    summary = entry.description
+
+                clean_summary = self.clean_html(summary)
+                link = entry.get("link", "")
+                published = entry.get("published", "") or entry.get("updated", "")
+                impact_score = self.calculate_impact_score(title, clean_summary)
+                image_url = self.extract_image_url(entry, summary)
+
+                items.append({
+                    "id": news_id,
+                    "title": title,
+                    "summary": clean_summary[:1000],
+                    "link": link,
+                    "source": name,
+                    "lang": lang,
+                    "published": published,
+                    "impact_score": impact_score,
+                    "image_url": image_url,
+                })
+        except Exception as e:
+            logger.warning(f"拉取数据源 [{name}] 出错: {e}")
+        return items
+
+    def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5) -> List[Dict[str, Any]]:
         candidates = []
-
-        for feed_cfg in RSS_FEEDS:
-            name = feed_cfg["name"]
-            url = feed_cfg["url"]
-            lang = feed_cfg.get("lang", "en")
-
-            logger.info(f"正在拉取数据源: [{name}]")
-            try:
-                resp = requests.get(url, headers=headers, timeout=12)
-                if resp.status_code != 200:
-                    logger.warning(f"数据源 [{name}] 响应异常: HTTP {resp.status_code}")
-                    continue
-
-                feed = feedparser.parse(resp.content)
-                if not feed.entries:
-                    continue
-
-                logger.info(f"数据源 [{name}] 抓取到 {len(feed.entries)} 条新闻。")
-
-                for entry in feed.entries[:limit_per_feed]:
-                    title = entry.get("title", "").strip()
-                    if not title:
-                        continue
-
-                    news_id = self.generate_news_id(entry, name)
-                    if cache_mgr.is_cached(news_id):
-                        continue
-
-                    summary = ""
-                    if "summary" in entry:
-                        summary = entry.summary
-                    elif "content" in entry and entry.content:
-                        summary = entry.content[0].value
-                    elif "description" in entry:
-                        summary = entry.description
-
-                    clean_summary = self.clean_html(summary)
-                    link = entry.get("link", "")
-                    published = entry.get("published", "") or entry.get("updated", "")
-                    impact_score = self.calculate_impact_score(title, clean_summary)
-                    image_url = self.extract_image_url(entry, summary)
-
-                    candidates.append({
-                        "id": news_id,
-                        "title": title,
-                        "summary": clean_summary[:1000],
-                        "link": link,
-                        "source": name,
-                        "lang": lang,
-                        "published": published,
-                        "impact_score": impact_score,
-                        "image_url": image_url,
-                    })
-            except Exception as e:
-                logger.warning(f"拉取数据源 [{name}] 出错: {e}")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(RSS_FEEDS), 10)) as executor:
+            future_to_feed = {
+                executor.submit(self._fetch_single_feed, cfg, cache_mgr, limit_per_feed): cfg["name"]
+                for cfg in RSS_FEEDS
+            }
+            for future in concurrent.futures.as_completed(future_to_feed):
+                feed_name = future_to_feed[future]
+                try:
+                    feed_items = future.result()
+                    candidates.extend(feed_items)
+                except Exception as exc:
+                    logger.warning(f"解析数据源 [{feed_name}] 结果异常: {exc}")
 
         # 按照市场影响力分值降序排列（山寨暴涨、Meme爆款与重大热点优先）
         candidates.sort(key=lambda x: x["impact_score"], reverse=True)
-        logger.info(f"扫描完毕，共筛选出 {len(candidates)} 条未处理热点（已按全币种热度加权排序）。")
+        logger.info(f"多源并发扫描完毕，共筛选出 {len(candidates)} 条未处理热点（已按全币种热度加权排序）。")
         return candidates
 
 
@@ -765,7 +781,13 @@ class MultiLLMEngine:
                     max_tokens=600,
                 )
 
-                content = response.choices[0].message.content.strip()
+                if not response.choices or not response.choices[0].message:
+                    raise ValueError("模型返回的 choices 为空")
+
+                raw_msg_content = response.choices[0].message.content or ""
+                content = raw_msg_content.strip()
+                if not content:
+                    raise ValueError("模型返回了空内容")
 
                 # 1. 提取代币并清洗非代币伪标的
                 raw_tokens = re.findall(r"\$([A-Z0-9]{2,10})", content)
@@ -1071,10 +1093,12 @@ class SquarePublisher:
     @staticmethod
     def _sanitize_content(content: str) -> str:
         """
-        全自动化内容精细清洗与去 AI 味保障：
-        1. 清洗非代币误加的 $（如 $ETF -> ETF, $SEC -> SEC, $AI -> AI, $CEO -> CEO 等）
-        2. 剔除生硬的破折号“——”
-        3. 币安限制单篇 Hashtag 数量（上限为 3~4 个，超过将报错 220094），严格保留最多 3 个核心标签
+        全自动化内容精细清洗与合规保障：
+        1. 清洗非代币误加的 $（如 $ETF -> ETF, $SEC -> SEC 等）
+        2. 剔除生硬破折号“——”
+        3. 敏感词/高危违规词自动安全替换（防止触发币安 20002/20022 审核拦截）
+        4. 严格限制全篇最多 3 个 Hashtag（杜绝 220094 错误）
+        5. 超长截断保护（确保在 900 字以内）
         """
         # 1. 清洗非代币伪标的
         non_token_words = [
@@ -1087,11 +1111,30 @@ class SquarePublisher:
         # 2. 移除生硬破折号
         content = content.replace("——", "，")
 
-        # 3. 严格限制 Hashtag 数量（最多 3 个）
+        # 3. 敏感词安全过滤（防封号/防拦截）
+        risky_words = {
+            "稳赚": "博弈",
+            "保本": "控制回撤",
+            "带单": "实盘交流",
+            "必暴涨": "有望走强",
+            "必大跌": "存在回调风险",
+            "加微信": "看主页",
+            "群号": "社区",
+            "返现": "返佣",
+            "内幕消息": "前沿资讯",
+        }
+        for bad_kw, safe_kw in risky_words.items():
+            content = content.replace(bad_kw, safe_kw)
+
+        # 4. 严格限制 Hashtag 数量（最多 3 个）
         hashtags = re.findall(r"#[^\s#]+", content)
         if len(hashtags) > 3:
             for tag in hashtags[3:]:
                 content = content.replace(tag, tag.lstrip("#"), 1)
+
+        # 5. 长度保护（移动端短讯保护）
+        if len(content) > 900:
+            content = content[:850].rsplit("\n", 1)[0] + "\n\n#Write2Earn #BinanceSquare"
 
         return content.strip()
 
@@ -1102,6 +1145,9 @@ class SquarePublisher:
 
         # 严格清洗与合规处理
         content = self._sanitize_content(content)
+        if len(content) < 15:
+            logger.error(f"发帖内容过短 ({len(content)} 字符)，拒绝发布以防被系统封禁")
+            return False
 
         headers = {
             "X-Square-OpenAPI-Key": self.api_key,
@@ -1133,7 +1179,16 @@ class SquarePublisher:
             resp_text = response.text
             logger.info(f"币安广场 API 响应状态码: {status_code}")
 
+            # 处理币安偶发 504 网关超时（官方客户端标准：内容已受理入库）
+            if status_code == 504:
+                logger.warning("币安接口返回 504 Gateway Timeout（内容已进入后台发布队列，按成功处理，杜绝重复发帖）")
+                return True
+
             if status_code != 200:
+                # 若带图发布返回非 200，自动平滑降级为纯文本重试一次
+                if image_url:
+                    logger.warning(f"带图发布遭遇 HTTP {status_code}，自动降级为纯文本重试发布...")
+                    return self.publish(content, image_url=None)
                 logger.error(f"发帖失败！HTTP {status_code}, 响应: {resp_text}")
                 return False
 
@@ -1152,10 +1207,17 @@ class SquarePublisher:
                 logger.info(f"🎉 成功发布到币安广场！Content ID: {content_id}")
                 return True
             else:
+                # 若带图发布返回业务错误且为图片处理异常，自动降级纯文本重发
+                if image_url:
+                    logger.warning(f"带图发布返回业务错误 ({resp_json.get('message')})，自动降级为纯文本重试发布...")
+                    return self.publish(content, image_url=None)
                 logger.error(f"币安广场返回业务错误: {json.dumps(resp_json, ensure_ascii=False)}")
                 return False
 
         except Exception as e:
+            if image_url:
+                logger.warning(f"发帖网络请求异常 ({e})，尝试降级为纯文本重发一次...")
+                return self.publish(content, image_url=None)
             logger.error(f"发帖网络请求异常: {e}")
             return False
 

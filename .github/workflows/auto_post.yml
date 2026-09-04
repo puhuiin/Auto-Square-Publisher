@@ -119,12 +119,54 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          if [ -n "$(git status --porcelain sent_cache.json campaign_intel.json)" ]; then
-            echo "检测到数据或活动情报已更新，准备提交并推送..."
+          for i in 1 2 3; do
+            if [ -z "$(git status --porcelain sent_cache.json campaign_intel.json)" ]; then
+              echo "状态数据无任何变动，无需提交。"
+              break
+            fi
+
+            echo "检测到数据或活动情报已更新，准备提交并推送 (尝试第 $i 次)..."
             git add sent_cache.json campaign_intel.json
             git commit -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]" || true
-            git pull --rebase origin ${{ github.ref_name }} || true
-            git push origin HEAD:${{ github.ref_name }} || echo "⚠️ 提示: git push 未成功，请确认仓库 Settings -> Actions -> General 中是否开启了 'Read and write permissions' 权限"
-          else
-            echo "状态数据无任何变动，无需提交。"
-          fi
+
+            if git pull --rebase origin ${{ github.ref_name }}; then
+              if git push origin HEAD:${{ github.ref_name }}; then
+                echo "✔ 状态持久化并成功推送到 GitHub 远程仓库！"
+                break
+              fi
+            fi
+
+            echo "⚠️ 检测到远程并发更新或 rebase 冲突，正在回滚并合并远程最新缓存..."
+            git rebase --abort || true
+            git fetch origin ${{ github.ref_name }}
+            python -c "
+import json, os
+for f in ['sent_cache.json', 'campaign_intel.json']:
+    if not os.path.exists(f): continue
+    try:
+        remote_data_raw = os.popen(f'git show origin/${{ github.ref_name }}:{f}').read()
+        if not remote_data_raw: continue
+        r_data = json.loads(remote_data_raw)
+        with open(f, 'r', encoding='utf-8') as local_f:
+            l_data = json.load(local_f)
+        if isinstance(l_data, list) and isinstance(r_data, list):
+            seen_ids = set()
+            merged = []
+            for item in r_data + l_data:
+                if isinstance(item, dict) and item.get('id'):
+                    if item['id'] not in seen_ids:
+                        seen_ids.add(item['id'])
+                        merged.append(item)
+            with open(f, 'w', encoding='utf-8') as out_f:
+                json.dump(merged, out_f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print('Merge error:', e)
+"
+            git add sent_cache.json campaign_intel.json
+            git commit --amend -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]" || true
+            if git push origin HEAD:${{ github.ref_name }}; then
+              echo "✔ 智能合并冲突后推送成功！"
+              break
+            fi
+            sleep 2
+          done
