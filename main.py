@@ -961,7 +961,7 @@ class ImageManager:
                 else:
                     content_type = "image/jpeg"
 
-                filename = f"cover_{int(time.time())}_{random.randint(1000, 9999)}.{ext}"
+                filename = f"cover.{ext}"
                 return r.content, filename, content_type
         except Exception as e:
             logger.warning(f"下载配图失败 ({image_url}): {e}")
@@ -976,6 +976,7 @@ class ImageManager:
             "X-Square-OpenAPI-Key": api_key,
             "Content-Type": "application/json",
             "clienttype": "binanceSkill",
+            "User-Agent": "BinanceSquareAutoPosterPro/3.0",
         }
 
         try:
