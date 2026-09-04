@@ -1,0 +1,40 @@
+name: CI 回归测试
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'sent_cache.json'
+      - 'campaign_intel.json'
+      - 'README.md'
+      - '**.md'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: 语法编译检查
+        run: python -m py_compile main.py tests/test_core.py
+
+      - name: 运行离线回归测试套件
+        run: python tests/test_core.py

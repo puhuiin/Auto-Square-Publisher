@@ -101,6 +101,7 @@ def _env_float(name: str, default: float) -> float:
 MAX_NEWS_AGE_HOURS = _env_int("MAX_NEWS_AGE_HOURS", 48)            # 新闻最大时效(小时)，过期旧闻直接丢弃
 DUP_SIMILARITY_THRESHOLD = _env_float("DUP_SIMILARITY_THRESHOLD", 0.65)  # 跨源近似标题去重阈值 (0~1)
 MIN_IMPACT_SCORE = _env_int("MIN_IMPACT_SCORE", 0)                 # 最低热度分过滤，0 表示不过滤
+MAX_DAILY_POSTS = _env_int("MAX_DAILY_POSTS", 12)                  # 24h 滚动发帖配额，0 表示不限制
 CAMPAIGN_TOKEN_BOOST = 8                                           # 命中官方活动重点代币的热度加权
 
 # 与英文单词撞名的真实代币代码：原文必须全大写(NEAR)或带 $ 前缀($NEAR) 才采信，防止误判
@@ -109,6 +110,13 @@ AMBIGUOUS_TICKERS = {
     "CAKE", "RAY", "SPELL", "ATOM", "GALA", "LIT", "DATA", "KEY", "FUN",
     "WAVES", "OCEAN", "DOCK", "HARD", "DENT", "WING", "FARM", "ALPHA", "TIME",
     "LINK", "FLOW", "BLUR", "ROSE", "NEO", "GAS", "SUSHI",
+}
+
+# 全大写缩写噪音词：永远不当代币识别
+IGNORE_WORDS = {
+    "THE", "AND", "FOR", "WITH", "NEW", "TOP", "USD", "EUR", "SEC", "ETF",
+    "FED", "CEO", "ALL", "NOW", "KEY", "NFT", "DAO", "DEX", "CEX", "API",
+    "POS", "POW", "ATH", "APR", "APY",
 }
 
 # 币安广场 OpenAPI 官方端点
@@ -478,6 +486,20 @@ class CacheManager:
     def is_cached(self, news_id: str) -> bool:
         return news_id in self.cached_ids
 
+    def count_since(self, hours: float = 24.0) -> int:
+        """统计最近 N 小时内已成功发布的条数（用于 24h 防刷屏配额）"""
+        cutoff = datetime.now(timezone.utc).timestamp() - hours * 3600
+        count = 0
+        for item in self.cached_items:
+            raw = item.get("sent_at", "")
+            try:
+                ts = datetime.fromisoformat(str(raw).replace("Z", "+00:00")).timestamp()
+                if ts >= cutoff:
+                    count += 1
+            except Exception:
+                continue
+        return count
+
     def recent_titles(self, limit: int = 150) -> List[str]:
         """最近已发布的标题列表（新→旧），用于跨源近似重复检测"""
         titles = []
@@ -560,6 +582,22 @@ class NewsFetcher:
             if kw in combined:
                 score += weight
         return score
+
+    @staticmethod
+    def extract_tokens(text: str, valid_symbols: Set[str]) -> List[str]:
+        """从新闻文本中识别真实代币代码。
+        歧义代码（NEAR/LINK/MASK 等英文单词撞名币）仅当原文为全大写或带 $ 前缀时才采信。"""
+        detected: List[str] = []
+        for m in re.finditer(r"\$?([A-Za-z0-9]{2,10})\b", text):
+            word = m.group(1)
+            upper_w = word.upper()
+            if upper_w in IGNORE_WORDS or upper_w not in valid_symbols:
+                continue
+            if upper_w in AMBIGUOUS_TICKERS and not (m.group(0).startswith("$") or word.isupper()):
+                continue
+            if upper_w not in detected:
+                detected.append(upper_w)
+        return detected
 
     @staticmethod
     def parse_entry_age_hours(entry: Dict[str, Any]) -> Optional[float]:
@@ -703,6 +741,7 @@ class NewsFetcher:
                     "source": name,
                     "lang": lang,
                     "published": published,
+                    "age_hours": round(age_h, 1) if age_h is not None else None,
                     "impact_score": impact_score,
                     "image_url": image_url,
                 })
@@ -1656,7 +1695,8 @@ def _run_main():
     logger.info("🚀 币安广场全币种·山寨爆款与活动智能变现系统 (Ultimate 版) 启动")
     logger.info(f"   运行时间: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
     logger.info(f"   运行模式: {'【DRY_RUN 试运行 (不真实发帖/不写缓存)】' if dry_run else '【正式发布模式】'}")
-    logger.info(f"   单次最大发帖数: {max_posts} | 新闻时效窗口: {MAX_NEWS_AGE_HOURS}h | 去重阈值: {DUP_SIMILARITY_THRESHOLD}")
+    logger.info(f"   单次最大发帖数: {max_posts} | 24h 配额上限: {MAX_DAILY_POSTS if MAX_DAILY_POSTS > 0 else '不限'}")
+    logger.info(f"   新闻时效窗口: {MAX_NEWS_AGE_HOURS}h | 去重阈值: {DUP_SIMILARITY_THRESHOLD}")
     logger.info("==================================================")
 
     # 1. 生产模式必要参数检查
@@ -1669,6 +1709,17 @@ def _run_main():
     fetcher = NewsFetcher()
     llm_engine = MultiLLMEngine()
     publisher = SquarePublisher(api_key=square_api_key)
+
+    # 2.5 防刷屏配额：24 小时滚动窗口内已发数量达到上限则本轮直接静默退出
+    if not dry_run and MAX_DAILY_POSTS > 0:
+        sent_24h = cache_mgr.count_since(24)
+        if sent_24h >= MAX_DAILY_POSTS:
+            logger.warning(f"🛑 24 小时内已发布 {sent_24h} 篇，达到配额上限 ({MAX_DAILY_POSTS})，本轮自动静默以保护账号权重。")
+            sys.exit(0)
+        remaining_quota = MAX_DAILY_POSTS - sent_24h
+        if remaining_quota < max_posts:
+            logger.info(f"24h 配额剩余 {remaining_quota} 篇，本轮发帖数自动收敛至该额度。")
+            max_posts = remaining_quota
 
     # 3. 获取全网恐慌贪婪指数与币安市场行情基准
     fng_index = MarketDataProvider.get_fear_and_greed()
@@ -1694,7 +1745,6 @@ def _run_main():
     posted_records: List[Dict[str, Any]] = []  # 供运行报告输出
     consecutive_llm_failures = 0  # 模型池熔断计数：连续失败说明全池不可用，提前止损
     valid_symbols = SymbolValidator.get_valid_symbols() or set()
-    IGNORE_WORDS = {"THE", "AND", "FOR", "WITH", "NEW", "TOP", "USD", "EUR", "SEC", "ETF", "FED", "CEO", "ALL", "NOW", "KEY", "NFT", "DAO", "DEX", "CEX", "API", "POS", "POW", "ATH", "APR", "APY"}
 
     for item in candidates:
         if posted_count >= max_posts:
@@ -1707,22 +1757,14 @@ def _run_main():
         score = item.get("impact_score", 0)
 
         logger.info(f"--------------------------------------------------")
-        logger.info(f"正在处理第 {posted_count + 1} 条热点 (热度分: {score}): [{source}] {title}")
+        age_h = item.get("age_hours")
+        age_label = f" | 时效: {age_h}h 前" if age_h is not None else ""
+        logger.info(f"正在处理第 {posted_count + 1} 条热点 (热度分: {score}{age_label}): [{source}] {title}")
 
         # 动态全币种识别：提取标题与摘要中的所有潜在币种（主流 + 山寨 + Meme）
         # 歧义代码（NEAR/LINK/MASK 等）仅当原文为全大写或带 $ 前缀时才采信
         combined_text = title + " " + item["summary"]
-        detected_tokens = []
-        for m in re.finditer(r"\$?([A-Za-z0-9]{2,10})\b", combined_text):
-            word = m.group(1)
-            upper_w = word.upper()
-            if upper_w in IGNORE_WORDS or upper_w not in valid_symbols:
-                continue
-            ambiguous_hit = upper_w in AMBIGUOUS_TICKERS
-            if ambiguous_hit and not (m.group(0).startswith("$") or word.isupper()):
-                continue
-            if upper_w not in detected_tokens:
-                detected_tokens.append(upper_w)
+        detected_tokens = NewsFetcher.extract_tokens(combined_text, valid_symbols)
 
         if not detected_tokens:
             detected_tokens = ["BTC"]
