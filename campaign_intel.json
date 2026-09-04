@@ -3,17 +3,18 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#AltcoinTrading",
-    "#BinanceAlpha"
+    "#BinanceAlpha",
+    "#BinanceWallet"
   ],
   "incentivized_tokens": [
+    "$XPIN",
+    "$SAHARA",
     "$ZKC",
     "$COLLECT",
-    "$USDT",
-    "$USDC",
     "$BNB",
-    "$BTC"
+    "$USDC",
+    "$USD1"
   ],
-  "strategy_guidance": "发帖时优先结合当期Trading Tournament、Alpha新币(COLLECT、ZKC)、Altcoin交易节及Binance Wallet的PnL/股票活动，引导读者参与合约或现货交易以获取Write2Earn内容返佣与活动空投奖励。",
-  "last_updated": "2026-09-04T06:08:16.323515Z"
+  "strategy_guidance": "优先围绕Binance Alpha交易竞赛（XPIN/COLLECT）、SAHARA与ZKC交易锦标赛以及Binance Wallet赛季PnL竞赛发文，引导读者参与指定代币现货/合约交易以叠加Write2Earn内容返佣与官方活动奖励双收益。",
+  "last_updated": "2026-09-04T18:57:34.035144Z"
 }
