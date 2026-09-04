@@ -39,10 +39,12 @@ import random
 import hashlib
 import logging
 from typing import List, Dict, Any, Optional, Set, Tuple
+import io
 from datetime import datetime
 
 import requests
 import feedparser
+from PIL import Image
 from openai import OpenAI
 
 # ---------------------------------------------------------------------------
@@ -945,24 +947,29 @@ class ImageManager:
         try:
             r = requests.get(image_url, headers=headers, timeout=6)
             if r.status_code == 200 and len(r.content) > 1024:
-                # 限制文件大小在 8MB 以内
-                if len(r.content) > 8 * 1024 * 1024:
-                    logger.warning("图片大小超出 8MB 上限，跳过")
+                # 限制文件大小在 15MB 以内
+                if len(r.content) > 15 * 1024 * 1024:
+                    logger.warning("图片大小超出 15MB 上限，跳过")
                     return None
 
-                content_type = r.headers.get("Content-Type", "").split(";")[0].strip().lower()
-                ext = "jpg"
-                if "png" in content_type:
-                    ext = "png"
-                elif "webp" in content_type:
-                    ext = "webp"
-                elif "gif" in content_type:
-                    ext = "gif"
-                else:
-                    content_type = "image/jpeg"
+                # 使用 Pillow 将任意格式（WebP, PNG, AVIF, GIF 等）标准化转换为高质量 JPEG
+                try:
+                    raw_img = Image.open(io.BytesIO(r.content))
+                    if raw_img.mode in ("RGBA", "P", "CMYK"):
+                        raw_img = raw_img.convert("RGB")
 
-                filename = f"cover.{ext}"
-                return r.content, filename, content_type
+                    # 适当等比缩放超大图片，极大提升网络传输与币安处理速度
+                    if raw_img.width > 1920 or raw_img.height > 1080:
+                        raw_img.thumbnail((1920, 1080), Image.Resampling.LANCZOS)
+
+                    buf = io.BytesIO()
+                    raw_img.save(buf, format="JPEG", quality=88, optimize=True)
+                    jpeg_bytes = buf.getvalue()
+                    logger.info(f"图片下载并标准化为 JPEG 成功: 原始 {len(r.content)} 字节 -> 转码 {len(jpeg_bytes)} 字节")
+                    return jpeg_bytes, "cover.jpg", "image/jpeg"
+                except Exception as conv_e:
+                    logger.warning(f"PIL 转码异常，回退使用原始数据: {conv_e}")
+                    return r.content, "cover.jpg", "image/jpeg"
         except Exception as e:
             logger.warning(f"下载配图失败 ({image_url}): {e}")
         return None
