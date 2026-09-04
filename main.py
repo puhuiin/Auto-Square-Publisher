@@ -22,11 +22,17 @@
    - 引入山寨爆款、Meme 热度、新币上线、大额解锁、资金异动等加权算法，优先捕捉流量最大的热点。
 6. ✅ 动态全币种交易标的防幻觉校验器 (Symbol & Widget Validator)：
    - 自动校验提取的 $TOKEN 是否为币安真实交易对，确保 100% 触发 Write to Earn 交易挂件与返佣。
+   - 歧义代码守护：NEAR/LINK/MASK/APT 等与英文单词撞名的代币，仅当原文为大写或带 $ 前缀才采信。
+   - 发布前强制校验正文至少含 1 个有效 $TOKEN 交易挂件，杜绝无返佣白发帖。
 7. 🔄 多 LLM 模型池与自动故障转移 (Auto-Failover)：
    - 支持 OpenRouter (minimax-m3:free), B.ai (glm-5.3-flash), xkiro, aihubmix, inferera, TokenRouter, DeepSeek, 硅基流动等。
 8. 🚨 多渠道异常报警系统 (Notifier)：
    - 支持微信 (Server酱/PushPlus)、Bark iOS、Telegram、通用 Webhook 实时通知与崩溃告警。
-9. 0 服务器成本：基于 GitHub Actions 定时触发，通过 Git 状态回写持久化。
+9. ⏰ 热点时效与跨源去重过滤器 (Freshness & Near-Dup Guard)：
+   - 自动按发布时间拦截过期旧闻 (默认 48 小时)。
+   - 标题级近似去重：同一事件被多家媒体报道时只发一次，避免刷屏式重复。
+10. ⚡ 基础设施强化：币安行情 symbols 批量接口、HTTP 自动重试退避、DRY_RUN 零副作用。
+11. 0 服务器成本：基于 GitHub Actions 定时触发，通过 Git 状态回写持久化 (远端并集合并，无冲突)。
 ==============================================================================
 """
 
@@ -70,8 +76,63 @@ CAMPAIGN_INTEL_FILE = os.path.join(BASE_DIR, "campaign_intel.json")
 MAX_CACHE_SIZE = 500
 INTEL_EXPIRE_HOURS = 12  # 活动情报缓存有效期 12 小时
 
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
+def _env_float(name: str, default: float) -> float:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        return default
+
+
+# ------------------------------ 可运营调优参数 (GitHub vars 可选覆盖) ------------------------------
+MAX_NEWS_AGE_HOURS = _env_int("MAX_NEWS_AGE_HOURS", 48)            # 新闻最大时效(小时)，过期旧闻直接丢弃
+DUP_SIMILARITY_THRESHOLD = _env_float("DUP_SIMILARITY_THRESHOLD", 0.65)  # 跨源近似标题去重阈值 (0~1)
+MIN_IMPACT_SCORE = _env_int("MIN_IMPACT_SCORE", 0)                 # 最低热度分过滤，0 表示不过滤
+CAMPAIGN_TOKEN_BOOST = 8                                           # 命中官方活动重点代币的热度加权
+
+# 与英文单词撞名的真实代币代码：原文必须全大写(NEAR)或带 $ 前缀($NEAR) 才采信，防止误判
+AMBIGUOUS_TICKERS = {
+    "NEAR", "NOT", "ONE", "APT", "APE", "SAND", "MANA", "MASK", "PEOPLE",
+    "CAKE", "RAY", "SPELL", "ATOM", "GALA", "LIT", "DATA", "KEY", "FUN",
+    "WAVES", "OCEAN", "DOCK", "HARD", "DENT", "WING", "FARM", "ALPHA", "TIME",
+    "LINK", "FLOW", "BLUR", "ROSE", "NEO", "GAS", "SUSHI",
+}
+
 # 币安广场 OpenAPI 官方端点
 BINANCE_SQUARE_API_URL = "https://www.binance.com/bapi/composite/v1/public/pgc/openApi/content/add"
+
+
+def http_get(url: str, *, timeout: int = 8, headers: Dict[str, str] = None,
+             retries: int = 2, backoff: float = 0.6) -> Optional[requests.Response]:
+    """带轻量重试与退避的 GET 请求，自动吸收 429/5xx 与网络抖动，最终失败返回 None"""
+    last_exc: Optional[Exception] = None
+    for attempt in range(retries + 1):
+        try:
+            resp = requests.get(url, headers=headers, timeout=timeout)
+            if resp.status_code in (429, 500, 502, 503, 504) and attempt < retries:
+                time.sleep(backoff * (attempt + 1))
+                continue
+            return resp
+        except requests.RequestException as e:
+            last_exc = e
+            if attempt < retries:
+                time.sleep(backoff * (attempt + 1))
+    if last_exc:
+        logger.debug(f"HTTP GET 最终失败 {url}: {last_exc}")
+    return None
 
 # ---------------------------------------------------------------------------
 # 常用预置模型提供商模板
@@ -275,41 +336,70 @@ class MarketDataProvider:
     @staticmethod
     def get_fear_and_greed() -> str:
         """获取全网恐慌与贪婪指数"""
-        try:
-            r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=4)
-            if r.status_code == 200:
+        r = http_get("https://api.alternative.me/fng/?limit=1", timeout=4, retries=1)
+        if r is not None and r.status_code == 200:
+            try:
                 data = r.json().get("data", [{}])[0]
                 val = data.get("value", "50")
                 cls = data.get("value_classification", "Neutral")
                 return f"{val}/100 ({cls})"
-        except Exception:
-            pass
+            except Exception:
+                pass
         return "50/100 (中立)"
 
     @staticmethod
-    def get_token_market_data(symbols: List[str]) -> str:
-        """动态批量获取指定代币（主流或山寨）在币安的实时价格与 24H 涨跌幅数据"""
+    def _format_ticker(sym: str, d: Dict[str, Any]) -> str:
+        price = float(d.get("lastPrice", 0))
+        chg = float(d.get("priceChangePercent", 0))
+        sign = "+" if chg > 0 else ""
+        if price > 100:
+            price_str = f"${price:,.2f}"
+        elif price > 1:
+            price_str = f"${price:.4f}"
+        else:
+            price_str = f"${price:.6f}"
+        return f"${sym}: {price_str} (24H: {sign}{chg:.2f}%)"
+
+    @classmethod
+    def get_token_market_data(cls, symbols: List[str]) -> str:
+        """动态批量获取指定代币（主流或山寨）在币安的实时价格与 24H 涨跌幅数据。
+        优先使用官方 symbols=[...] 批量接口一次请求完成，失败时降级为逐币查询。"""
+        clean_symbols = []
+        for s in symbols[:4]:
+            c = s.replace("$", "").upper()
+            if c and c not in clean_symbols:
+                clean_symbols.append(c)
+        if not clean_symbols:
+            return ""
+
+        pairs = [f"{s}USDT" for s in clean_symbols]
+
+        # 1. 批量接口：一次 HTTP 拉取全部标的
+        try:
+            url = "https://api.binance.com/api/v3/ticker/24hr?symbols=" + requests.utils.quote(json.dumps(pairs))
+            r = http_get(url, timeout=5, retries=1)
+            if r is not None and r.status_code == 200:
+                data = r.json()
+                if isinstance(data, list):
+                    stats = {d.get("symbol"): d for d in data if isinstance(d, dict)}
+                    results = [
+                        cls._format_ticker(sym, stats[f"{sym}USDT"])
+                        for sym in clean_symbols if stats.get(f"{sym}USDT")
+                    ]
+                    if results:
+                        return " | ".join(results)
+        except Exception as e:
+            logger.debug(f"批量行情接口异常，降级为逐币查询: {e}")
+
+        # 2. 降级：逐币查询
         results = []
-        for symbol in symbols[:4]:
-            clean_sym = symbol.replace("$", "").upper()
-            pair = f"{clean_sym}USDT"
-            try:
-                url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={pair}"
-                r = requests.get(url, timeout=4)
-                if r.status_code == 200:
-                    d = r.json()
-                    price = float(d.get("lastPrice", 0))
-                    chg = float(d.get("priceChangePercent", 0))
-                    sign = "+" if chg > 0 else ""
-                    if price > 100:
-                        price_str = f"${price:,.2f}"
-                    elif price > 1:
-                        price_str = f"${price:.4f}"
-                    else:
-                        price_str = f"${price:.6f}"
-                    results.append(f"${clean_sym}: {price_str} (24H: {sign}{chg:.2f}%)")
-            except Exception:
-                pass
+        for sym in clean_symbols:
+            r = http_get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={sym}USDT", timeout=4, retries=0)
+            if r is not None and r.status_code == 200:
+                try:
+                    results.append(cls._format_ticker(sym, r.json()))
+                except Exception:
+                    pass
         return " | ".join(results) if results else ""
 
 
@@ -334,18 +424,20 @@ class SymbolValidator:
         }
         cls._valid_symbols_cache = valid_set
 
-        try:
-            r = requests.get("https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT", timeout=5)
-            if r.status_code == 200:
+        r = http_get("https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT", timeout=6, retries=1)
+        if r is not None and r.status_code == 200:
+            try:
                 data = r.json()
                 for s in data.get("symbols", []):
                     if s.get("status") == "TRADING" and s.get("quoteAsset") in ("USDT", "FDUSD", "USDC"):
-                        valid_set.add(s.get("baseAsset", "").upper())
+                        base = s.get("baseAsset", "").upper()
+                        if base:
+                            valid_set.add(base)
                 logger.info(f"成功加载币安 {len(valid_set)} 个有效交易标的（含全部山寨币与 Meme 币）。")
-            else:
-                logger.warning(f"币安 exchangeInfo 返回 HTTP {r.status_code}，使用内置基础标的池。")
-        except Exception as e:
-            logger.warning(f"获取币安交易标的列表异常 ({e})，使用内置基础标的池。")
+            except Exception as e:
+                logger.warning(f"解析币安交易标的列表异常 ({e})，使用内置基础标的池。")
+        else:
+            logger.warning("获取币安交易标的列表失败，使用内置基础标的池。")
 
         return cls._valid_symbols_cache
 
@@ -385,6 +477,15 @@ class CacheManager:
 
     def is_cached(self, news_id: str) -> bool:
         return news_id in self.cached_ids
+
+    def recent_titles(self, limit: int = 150) -> List[str]:
+        """最近已发布的标题列表（新→旧），用于跨源近似重复检测"""
+        titles = []
+        for item in reversed(self.cached_items[-limit:]):
+            t = item.get("title")
+            if isinstance(t, str) and t.strip():
+                titles.append(t.strip())
+        return titles
 
     def record_sent(self, news_id: str, title: str, source: str):
         record = {
@@ -443,6 +544,38 @@ class NewsFetcher:
         return score
 
     @staticmethod
+    def parse_entry_age_hours(entry: Dict[str, Any]) -> Optional[float]:
+        """解析 RSS 条目发布时间距当前的小时数，解析失败返回 None（放行）"""
+        parsed = entry.get("published_parsed") or entry.get("updated_parsed")
+        if not parsed:
+            return None
+        try:
+            pub_dt = datetime(*parsed[:6], tzinfo=timezone.utc)
+            return (datetime.now(timezone.utc) - pub_dt).total_seconds() / 3600.0
+        except Exception:
+            return None
+
+    @staticmethod
+    def _title_words(title: str) -> Set[str]:
+        return set(re.sub(r"[^a-z0-9$]+", " ", title.lower()).split())
+
+    @classmethod
+    def _find_near_duplicate(cls, title: str, seen_titles: List[str],
+                             threshold: float = DUP_SIMILARITY_THRESHOLD) -> Optional[str]:
+        """标题词集 Jaccard 相似度去重：返回命中的历史标题，无重复返回 None"""
+        words = cls._title_words(title)
+        if not words:
+            return None
+        for other in seen_titles:
+            ow = cls._title_words(other)
+            if not ow:
+                continue
+            inter = len(words & ow)
+            if inter and (inter / len(words | ow)) >= threshold:
+                return other
+        return None
+
+    @staticmethod
     def extract_image_url(entry: Dict[str, Any], raw_summary: str = "") -> Optional[str]:
         """从 RSS 条目中多通道智能提取新闻原生配图"""
         # 1. 通道一：media_content
@@ -494,9 +627,9 @@ class NewsFetcher:
         }
         items = []
         try:
-            resp = requests.get(url, headers=headers, timeout=8)
-            if resp.status_code != 200:
-                logger.warning(f"数据源 [{name}] 响应异常: HTTP {resp.status_code}")
+            resp = http_get(url, headers=headers, timeout=8, retries=1)
+            if resp is None or resp.status_code != 200:
+                logger.warning(f"数据源 [{name}] 响应异常: {'网络错误' if resp is None else f'HTTP {resp.status_code}'}")
                 return items
 
             feed = feedparser.parse(resp.content)
@@ -504,10 +637,17 @@ class NewsFetcher:
                 return items
 
             logger.info(f"数据源 [{name}] 抓取到 {len(feed.entries)} 条新闻。")
+            stale_skipped = 0
 
             for entry in feed.entries[:limit_per_feed]:
                 title = entry.get("title", "").strip()
                 if not title:
+                    continue
+
+                # 时效过滤：仅发布 MAX_NEWS_AGE_HOURS 小时内的热点，杜绝把旧闻当新闻发
+                age_h = self.parse_entry_age_hours(entry)
+                if age_h is not None and age_h > MAX_NEWS_AGE_HOURS:
+                    stale_skipped += 1
                     continue
 
                 news_id = self.generate_news_id(entry, name)
@@ -539,11 +679,15 @@ class NewsFetcher:
                     "impact_score": impact_score,
                     "image_url": image_url,
                 })
+
+            if stale_skipped:
+                logger.info(f"数据源 [{name}] 过滤过期旧闻 {stale_skipped} 条（>{MAX_NEWS_AGE_HOURS}h）。")
         except Exception as e:
             logger.warning(f"拉取数据源 [{name}] 出错: {e}")
         return items
 
-    def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5) -> List[Dict[str, Any]]:
+    def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5,
+                         priority_tokens: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         candidates = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(RSS_FEEDS), 10)) as executor:
             future_to_feed = {
@@ -557,6 +701,33 @@ class NewsFetcher:
                     candidates.extend(feed_items)
                 except Exception as exc:
                     logger.warning(f"解析数据源 [{feed_name}] 结果异常: {exc}")
+
+        # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布
+        if priority_tokens:
+            boost_tokens = {t.replace("$", "").upper() for t in priority_tokens if t}
+            for item in candidates:
+                text_upper = (item["title"] + " " + item["summary"]).upper()
+                if any(re.search(rf"\b{re.escape(tok)}\b", text_upper) for tok in boost_tokens):
+                    item["impact_score"] += CAMPAIGN_TOKEN_BOOST
+
+        # 低热度新闻过滤（默认不过滤，可通过 MIN_IMPACT_SCORE 开启）
+        if MIN_IMPACT_SCORE > 0:
+            before = len(candidates)
+            candidates = [c for c in candidates if c["impact_score"] >= MIN_IMPACT_SCORE]
+            if before != len(candidates):
+                logger.info(f"热度分过滤(<{MIN_IMPACT_SCORE}): {before} -> {len(candidates)} 条。")
+
+        # 跨源近似去重：同一事件被多家媒体报道时仅保留第一条
+        seen_titles = cache_mgr.recent_titles(150)
+        unique_candidates = []
+        for item in candidates:
+            dup_of = self._find_near_duplicate(item["title"], seen_titles)
+            if dup_of is not None:
+                logger.info(f"近似重复热点已跳过: {item['title'][:60]} (≈ 历史: {dup_of[:60]})")
+                continue
+            unique_candidates.append(item)
+            seen_titles.append(item["title"])
+        candidates = unique_candidates
 
         # 按照市场影响力分值降序排列（山寨暴涨、Meme爆款与重大热点优先）
         candidates.sort(key=lambda x: x["impact_score"], reverse=True)
@@ -732,9 +903,10 @@ class MultiLLMEngine:
         news_item: Dict[str, Any],
         campaign_intel: Optional[Dict[str, Any]] = None,
         market_context: str = "",
-    ) -> Optional[str]:
+    ) -> Optional[Tuple[str, List[str]]]:
         """
-        结合最新币安官方活动情报与实时行情进行高收益转化提炼
+        结合最新币安官方活动情报与实时行情进行高收益转化提炼。
+        返回 (正文, 识别到的有效代币列表)，全部提供商失败时返回 None。
         """
         if not self.providers:
             logger.error("没有任何可用的 LLM 提供商配置！")
@@ -789,8 +961,8 @@ class MultiLLMEngine:
                 if not content:
                     raise ValueError("模型返回了空内容")
 
-                # 1. 提取代币并清洗非代币伪标的
-                raw_tokens = re.findall(r"\$([A-Z0-9]{2,10})", content)
+                # 1. 提取代币并清洗非代币伪标的（大小写不敏感兜底）
+                raw_tokens = re.findall(r"\$([A-Za-z0-9]{2,10})", content)
                 valid_tokens = SymbolValidator.filter_valid_tokens(raw_tokens)
                 if not valid_tokens:
                     valid_tokens = ["BTC"]
@@ -800,8 +972,8 @@ class MultiLLMEngine:
                     primary_token = valid_tokens[0]
                     content += f"\n\n#Write2Earn #BinanceSquare #{primary_token}"
 
-                logger.info(f"🎉 模型 [{provider.name}] 生成成功！")
-                return content
+                logger.info(f"🎉 模型 [{provider.name}] 生成成功！(识别标的: {valid_tokens})")
+                return content, valid_tokens
 
             except Exception as e:
                 err_msg = str(e)
@@ -835,17 +1007,19 @@ class CampaignScanner:
         for catalog in CampaignScanner.OFFICIAL_CATALOGS:
             cid = catalog["id"]
             url = f"https://www.binance.com/bapi/composite/v1/public/cms/article/catalog/list/query?catalogId={cid}&pageNo=1&pageSize=6"
+            resp = http_get(url, headers=headers, timeout=8, retries=1)
+            if resp is None or resp.status_code != 200:
+                logger.warning(f"拉取币安官方活动分类 [{catalog['name']}] 失败: {'网络错误' if resp is None else f'HTTP {resp.status_code}'}")
+                continue
             try:
-                resp = requests.get(url, headers=headers, timeout=8)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    articles = data.get("data", {}).get("articles", [])
-                    for a in articles:
-                        title = a.get("title", "").strip()
-                        if title and title not in campaign_titles:
-                            campaign_titles.append(title)
+                data = resp.json()
+                articles = data.get("data", {}).get("articles", [])
+                for a in articles:
+                    title = a.get("title", "").strip()
+                    if title and title not in campaign_titles:
+                        campaign_titles.append(title)
             except Exception as e:
-                logger.warning(f"拉取币安官方活动分类 [{catalog['name']}] 失败: {e}")
+                logger.warning(f"解析币安官方活动分类 [{catalog['name']}] 响应失败: {e}")
         return campaign_titles
 
     @staticmethod
@@ -856,7 +1030,7 @@ class CampaignScanner:
                 "active_tags": ["#Write2Earn", "#BinanceSquare", "#热点解析"],
                 "incentivized_tokens": ["$BTC", "$ETH", "$BNB", "$SOL"],
                 "strategy_guidance": "优先关联主流现货与USDT永续合约，吸引读者点击交易组件以赚取返佣。",
-                "last_updated": datetime.utcnow().isoformat() + "Z",
+                "last_updated": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             }
 
         titles_text = "\n".join([f"- {t}" for t in raw_titles[:15]])
@@ -894,7 +1068,7 @@ class CampaignScanner:
                     clean_res = re.sub(r"\s*```$", "", clean_res).strip()
                     data = json.loads(clean_res)
                     if isinstance(data, dict):
-                        data["last_updated"] = datetime.utcnow().isoformat() + "Z"
+                        data["last_updated"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
                         logger.info(f"🎉 币安活动情报分析完成: {data.get('strategy_guidance')}")
                         return data
                 except Exception as e:
@@ -906,7 +1080,7 @@ class CampaignScanner:
             "active_tags": ["#Write2Earn", "#BinanceSquare", "#热点解析"],
             "incentivized_tokens": ["$BTC", "$ETH", "$BNB", "$SOL"],
             "strategy_guidance": "优先关联主流现货与USDT永续合约，吸引读者点击交易组件以赚取返佣。",
-            "last_updated": datetime.utcnow().isoformat() + "Z",
+            "last_updated": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
 
     @staticmethod
@@ -974,10 +1148,10 @@ class ImageManager:
                     logger.warning("图片大小超出 15MB 上限，跳过")
                     return None
 
-                # 使用 Pillow 将任意格式（WebP, PNG, AVIF, GIF 等）标准化转换为高质量 JPEG
+                # 使用 Pillow 将任意格式（WebP, PNG, AVIF, GIF, LA, I;16 等）标准化转换为高质量 JPEG
                 try:
                     raw_img = Image.open(io.BytesIO(r.content))
-                    if raw_img.mode in ("RGBA", "P", "CMYK"):
+                    if raw_img.mode != "RGB":
                         raw_img = raw_img.convert("RGB")
 
                     # 适当等比缩放超大图片，极大提升网络传输与币安处理速度
@@ -1090,23 +1264,38 @@ class SquarePublisher:
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-    @staticmethod
-    def _sanitize_content(content: str) -> str:
+    # 固定强制剥离 $ 的非代币/稳定币词（即使在交易所存在同名标的也不做挂件）
+    FORCE_STRIP_CASHTAGS = [
+        "ETF", "SEC", "FED", "CEO", "NFT", "AI", "USD", "USDT", "USDC",
+        "CEX", "DEX", "API", "CAGR", "APR", "APY", "ATH", "BAPI", "NEWS", "MEME"
+    ]
+
+    @classmethod
+    def _sanitize_content(cls, content: str) -> str:
         """
         全自动化内容精细清洗与合规保障：
-        1. 清洗非代币误加的 $（如 $ETF -> ETF, $SEC -> SEC 等）
+        1. 清洗非代币误加的 $（静态黑名单 + 动态比对币安真实交易对）
         2. 剔除生硬破折号“——”
         3. 敏感词/高危违规词自动安全替换（防止触发币安 20002/20022 审核拦截）
         4. 严格限制全篇最多 3 个 Hashtag（杜绝 220094 错误）
         5. 超长截断保护（确保在 900 字以内）
         """
-        # 1. 清洗非代币伪标的
-        non_token_words = [
-            "ETF", "SEC", "FED", "CEO", "NFT", "AI", "USD", "USDT", "USDC",
-            "CEX", "DEX", "API", "CAGR", "APR", "APY", "ATH", "BAPI", "NEWS", "MEME"
-        ]
-        for word in non_token_words:
+        # 1a. 静态黑名单：稳定币/机构/通用缩写一律剥离 $
+        for word in cls.FORCE_STRIP_CASHTAGS:
             content = re.sub(rf"\${word}\b", word, content, flags=re.IGNORECASE)
+
+        # 1b. 动态清洗：凡是不在币安现货交易对中的含字母 $XXX 全部剥离 $（纯数字金额如 $1000 保留）
+        valid_symbols = SymbolValidator.get_valid_symbols()
+
+        def _strip_invalid_cashtag(m: "re.Match") -> str:
+            word = m.group(1)
+            if word.isdigit():
+                return m.group(0)
+            if word.upper() in valid_symbols:
+                return "$" + word.upper()
+            return word
+
+        content = re.sub(r"\$([A-Za-z0-9]{2,10})\b", _strip_invalid_cashtag, content)
 
         # 2. 移除生硬破折号
         content = content.replace("——", "，")
@@ -1138,13 +1327,34 @@ class SquarePublisher:
 
         return content.strip()
 
-    def publish(self, content: str, image_url: Optional[str] = None) -> bool:
+    @staticmethod
+    def _ensure_token_widget(content: str, ensure_tokens: Optional[List[str]]) -> str:
+        """
+        交易挂件保底：若正文没有任何有效 $TOKEN，自动把首个有效代币插到标签区之前，
+        确保币安 100% 渲染 Write to Earn 交易组件，不产生无返佣的空帖。
+        """
+        if not ensure_tokens:
+            return content
+        existing = re.findall(r"\$([A-Za-z0-9]{2,10})\b", content)
+        valid_symbols = SymbolValidator.get_valid_symbols()
+        if any(t.upper() in valid_symbols for t in existing):
+            return content
+
+        primary = ensure_tokens[0].upper()
+        idx = content.find("#")
+        if idx == -1:
+            return content + f"\n\n${primary}"
+        return content[:idx].rstrip() + f"\n\n${primary} " + content[idx:]
+
+    def publish(self, content: str, image_url: Optional[str] = None,
+                ensure_tokens: Optional[List[str]] = None) -> bool:
         if not self.api_key:
             logger.error("未配置 SQUARE_API_KEY，无法发布到币安广场！")
             return False
 
-        # 严格清洗与合规处理
+        # 严格清洗合规 + 交易挂件保底
         content = self._sanitize_content(content)
+        content = self._ensure_token_widget(content, ensure_tokens)
         if len(content) < 15:
             logger.error(f"发帖内容过短 ({len(content)} 字符)，拒绝发布以防被系统封禁")
             return False
@@ -1314,9 +1524,9 @@ def _run_main():
 
     logger.info("==================================================")
     logger.info("🚀 币安广场全币种·山寨爆款与活动智能变现系统 (Ultimate 版) 启动")
-    logger.info(f"   运行时间: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}")
-    logger.info(f"   运行模式: {'【DRY_RUN 试运行 (不真实发帖)】' if dry_run else '【正式发布模式】'}")
-    logger.info(f"   单次最大发帖数: {max_posts}")
+    logger.info(f"   运行时间: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    logger.info(f"   运行模式: {'【DRY_RUN 试运行 (不真实发帖/不写缓存)】' if dry_run else '【正式发布模式】'}")
+    logger.info(f"   单次最大发帖数: {max_posts} | 新闻时效窗口: {MAX_NEWS_AGE_HOURS}h | 去重阈值: {DUP_SIMILARITY_THRESHOLD}")
     logger.info("==================================================")
 
     # 1. 生产模式必要参数检查
@@ -1339,14 +1549,18 @@ def _run_main():
     logger.info(f"💡 当期币安重点活动标签: {campaign_intel.get('active_tags')}")
     logger.info(f"🪙 当期重点扶持代币池: {campaign_intel.get('incentivized_tokens')}")
 
-    # 5. 获取待发布热点候选（按冲击力与山寨/Meme热度打分排序）
-    candidates = fetcher.fetch_candidates(cache_mgr)
+    # 5. 获取待发布热点候选（按冲击力与山寨/Meme热度打分排序，结合官方活动代币加权 + 近似去重）
+    candidates = fetcher.fetch_candidates(
+        cache_mgr,
+        priority_tokens=campaign_intel.get("incentivized_tokens"),
+    )
     if not candidates:
         logger.info("✅ 未检测到新的未发布热点，安全退出。")
         sys.exit(0)
 
     # 6. 执行发帖循环
     posted_count = 0
+    consecutive_llm_failures = 0  # 模型池熔断计数：连续失败说明全池不可用，提前止损
     valid_symbols = SymbolValidator.get_valid_symbols() or set()
     IGNORE_WORDS = {"THE", "AND", "FOR", "WITH", "NEW", "TOP", "USD", "EUR", "SEC", "ETF", "FED", "CEO", "ALL", "NOW", "KEY", "NFT", "DAO", "DEX", "CEX", "API", "POS", "POW", "ATH", "APR", "APY"}
 
@@ -1364,12 +1578,18 @@ def _run_main():
         logger.info(f"正在处理第 {posted_count + 1} 条热点 (热度分: {score}): [{source}] {title}")
 
         # 动态全币种识别：提取标题与摘要中的所有潜在币种（主流 + 山寨 + Meme）
+        # 歧义代码（NEAR/LINK/MASK 等）仅当原文为全大写或带 $ 前缀时才采信
         combined_text = title + " " + item["summary"]
-        raw_words = re.findall(r"\b[A-Za-z0-9]{2,10}\b", combined_text)
         detected_tokens = []
-        for w in raw_words:
-            upper_w = w.upper()
-            if upper_w not in IGNORE_WORDS and upper_w in valid_symbols and upper_w not in detected_tokens:
+        for m in re.finditer(r"\$?([A-Za-z0-9]{2,10})\b", combined_text):
+            word = m.group(1)
+            upper_w = word.upper()
+            if upper_w in IGNORE_WORDS or upper_w not in valid_symbols:
+                continue
+            ambiguous_hit = upper_w in AMBIGUOUS_TICKERS
+            if ambiguous_hit and not (m.group(0).startswith("$") or word.isupper()):
+                continue
+            if upper_w not in detected_tokens:
                 detected_tokens.append(upper_w)
 
         if not detected_tokens:
@@ -1379,10 +1599,21 @@ def _run_main():
         market_context_str = f"全网情绪指数: {fng_index}\n涉及标的实时盘面: {live_market_data if live_market_data else '链上/全市场热点'}"
 
         # AI 结合活动情报与实时盘面进行高质量提炼
-        post_content = llm_engine.summarize(item, campaign_intel, market_context=market_context_str)
-        if not post_content:
-            logger.warning(f"AI 生成失败，跳过: {title}")
+        llm_result = llm_engine.summarize(item, campaign_intel, market_context=market_context_str)
+        if not llm_result:
+            consecutive_llm_failures += 1
+            logger.warning(f"AI 生成失败，跳过: {title} (连续失败 {consecutive_llm_failures} 次)")
+            if consecutive_llm_failures >= 3:
+                logger.error("🛑 模型池连续 3 次全部不可用，触发熔断提前终止，防止无效重试浪费运行时长。")
+                Notifier.send_notification(
+                    "币安发帖机器人模型池熔断",
+                    "已连续 3 次遍历完所有 LLM 提供商均生成失败，请检查 API Key 是否过期或额度耗尽。",
+                    is_error=True,
+                )
+                break
             continue
+        consecutive_llm_failures = 0
+        post_content, post_tokens = llm_result
 
         logger.info("生成内容预览:\n" + post_content)
 
@@ -1399,11 +1630,10 @@ def _run_main():
 
         # 发布或模拟
         if dry_run:
-            logger.info(f"【DRY_RUN 模式】模拟图文发布成功 (附带配图: {'是' if uploaded_image_url else '否'})，记录缓存: {news_id}")
-            cache_mgr.record_sent(news_id, title, source)
+            logger.info(f"【DRY_RUN 模式】仅模拟发布 (附带配图: {'是' if uploaded_image_url else '否'})，零副作用不写缓存。")
             posted_count += 1
         else:
-            success = publisher.publish(post_content, image_url=uploaded_image_url)
+            success = publisher.publish(post_content, image_url=uploaded_image_url, ensure_tokens=post_tokens)
             if success:
                 cache_mgr.record_sent(news_id, title, source)
                 posted_count += 1

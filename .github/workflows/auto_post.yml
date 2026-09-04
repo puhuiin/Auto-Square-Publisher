@@ -35,6 +35,7 @@ concurrency:
 jobs:
   run-poster:
     runs-on: ubuntu-latest
+    timeout-minutes: 15  # 硬性超时保护，防止网络挂起导致镜像浪费
 
     steps:
       - name: 检出仓库代码
@@ -107,40 +108,99 @@ jobs:
           
           # 创作者活动与话题标签 (可选自定义)
           CAMPAIGN_TAGS: ${{ secrets.CAMPAIGN_TAGS }}
-          
+
+          # 运营调优参数 (可在 Repo Settings -> Variables 中配置，不配则用默认值)
+          #   MAX_NEWS_AGE_HOURS:      新闻最大时效小时数 (默认 48)
+          #   DUP_SIMILARITY_THRESHOLD: 跨源近似标题去重阈值 0~1 (默认 0.65)
+          #   MIN_IMPACT_SCORE:        最低热度分门槛 (默认 0 = 不过滤)
+          MAX_NEWS_AGE_HOURS: ${{ vars.MAX_NEWS_AGE_HOURS }}
+          DUP_SIMILARITY_THRESHOLD: ${{ vars.DUP_SIMILARITY_THRESHOLD }}
+          MIN_IMPACT_SCORE: ${{ vars.MIN_IMPACT_SCORE }}
+
           # 运行参数
           MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts }}
           DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: |
           python main.py
 
-      - name: 回写状态并提交 Git 变更
+      - name: 回写状态并提交 Git 变更 (快照并集合并 - 零冲突)
         run: |
+          set -e
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          if [ -n "$(git status --porcelain sent_cache.json campaign_intel.json)" ]; then
-            echo "检测到数据或活动情报已更新，准备提交并推送..."
-            git add sent_cache.json campaign_intel.json
-            git commit -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]" || true
-            for i in 1 2 3; do
-              if git pull --rebase origin ${{ github.ref_name }}; then
-                if git push origin HEAD:${{ github.ref_name }}; then
-                  echo "✔ 状态持久化成功推送到远程仓库！"
-                  break
-                fi
-              else
-                echo "⚠️ 检测到 rebase 冲突，取消 rebase 并使用远程优先合并..."
-                git rebase --abort || true
-                git checkout --theirs sent_cache.json campaign_intel.json || true
-                git add sent_cache.json campaign_intel.json
-                git commit --amend -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]" || true
-                if git push origin HEAD:${{ github.ref_name }}; then
-                  break
-                fi
-                sleep 2
-              fi
-            done
-          else
+          BRANCH="${{ github.ref_name }}"
+
+          if [ -z "$(git status --porcelain sent_cache.json campaign_intel.json)" ]; then
             echo "状态数据无任何变动，无需提交。"
+            exit 0
           fi
+
+          echo "检测到状态变更，进入 [快照 -> 同步远端 -> 并集合并 -> 重试推送] 安全流程..."
+          # 1. 把本次运行产生的本地状态先存到沙箱外，防止被远端覆盖
+          cp sent_cache.json /tmp/local_sent_cache.json 2>/dev/null || true
+          cp campaign_intel.json /tmp/local_intel.json 2>/dev/null || true
+
+          for i in 1 2 3 4; do
+            # 2. 每次重试都先对齐到远端最新，本地状态始终从 /tmp 快照并回去，永远不会产生 Git 冲突
+            git fetch origin "$BRANCH"
+            git reset --hard "origin/$BRANCH"
+
+            python - <<'PYEOF'
+          import json
+
+          def load_list(path):
+              try:
+                  with open(path, encoding="utf-8") as f:
+                      data = json.load(f)
+                  if isinstance(data, list):
+                      return data
+                  if isinstance(data, dict):
+                      return data.get("sent_ids", [])
+              except Exception:
+                  pass
+              return []
+
+          # sent_cache.json: 本地与远端按 id 取并集，任何一方已发记录都不丢失，杜绝重复发帖
+          union = {}
+          for item in load_list("sent_cache.json") + load_list("/tmp/local_sent_cache.json"):
+              if isinstance(item, dict) and item.get("id"):
+                  union[item["id"]] = item
+          merged = sorted(union.values(), key=lambda x: x.get("sent_at", ""))[-500:]
+          with open("sent_cache.json", "w", encoding="utf-8") as f:
+              json.dump(merged, f, ensure_ascii=False, indent=2)
+
+          # campaign_intel.json: 保留 last_updated 较新的一份
+          def load_obj(path):
+              try:
+                  with open(path, encoding="utf-8") as f:
+                      d = json.load(f)
+                  return d if isinstance(d, dict) else None
+              except Exception:
+                  return None
+
+          versions = [d for d in (load_obj("campaign_intel.json"), load_obj("/tmp/local_intel.json")) if d]
+          if versions:
+              best = max(versions, key=lambda d: d.get("last_updated", ""))
+              with open("campaign_intel.json", "w", encoding="utf-8") as f:
+                  json.dump(best, f, ensure_ascii=False, indent=2)
+          PYEOF
+
+            # 3. 若并集后与远端完全一致则无需提交（例如并发任务已先一步回写）
+            if git diff --quiet -- sent_cache.json campaign_intel.json; then
+              echo "远端已包含全部最新状态，无需重复提交。"
+              exit 0
+            fi
+
+            git add sent_cache.json campaign_intel.json
+            git commit -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]"
+
+            if git push origin "HEAD:$BRANCH"; then
+              echo "✔ 状态持久化成功推送到远程仓库！(第 $i 次尝试)"
+              exit 0
+            fi
+            echo "⚠️ 推送被拒绝（远端出现新提交），重新拉取合并后重试 ($i/4)..."
+            sleep $((i * 2))
+          done
+
+          echo "❌ 多次重试后仍推送失败，本次缓存仅保留在运行沙箱中，下次运行会自动兜底。"
+          exit 1
