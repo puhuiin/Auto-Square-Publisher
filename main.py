@@ -38,7 +38,7 @@ import time
 import random
 import hashlib
 import logging
-from typing import List, Dict, Any, Optional, Set
+from typing import List, Dict, Any, Optional, Set, Tuple
 from datetime import datetime
 
 import requests
@@ -436,6 +436,46 @@ class NewsFetcher:
                 score += weight
         return score
 
+    @staticmethod
+    def extract_image_url(entry: Dict[str, Any], raw_summary: str = "") -> Optional[str]:
+        """从 RSS 条目中多通道智能提取新闻原生配图"""
+        # 1. 通道一：media_content
+        media_content = entry.get("media_content")
+        if isinstance(media_content, list) and media_content:
+            for item in media_content:
+                if isinstance(item, dict) and item.get("url"):
+                    u = str(item["url"]).strip()
+                    if u.startswith("http"):
+                        return u
+
+        # 2. 通道二：enclosures
+        enclosures = entry.get("enclosures")
+        if isinstance(enclosures, list) and enclosures:
+            for enc in enclosures:
+                if isinstance(enc, dict):
+                    u = enc.get("href") or enc.get("url")
+                    if u and str(u).strip().startswith("http"):
+                        return str(u).strip()
+
+        # 3. 通道三：media_thumbnail
+        media_thumbnail = entry.get("media_thumbnail")
+        if isinstance(media_thumbnail, list) and media_thumbnail:
+            for thumb in media_thumbnail:
+                if isinstance(thumb, dict) and thumb.get("url"):
+                    u = str(thumb["url"]).strip()
+                    if u.startswith("http"):
+                        return u
+
+        # 4. 通道四：从 summary / description HTML 中解析首张 <img>
+        if raw_summary:
+            m = re.search(r'<img[^>]+src=[\'"]([^\'"]+)[\'"]', raw_summary, re.IGNORECASE)
+            if m:
+                u = m.group(1).strip()
+                if u.startswith("http"):
+                    return u
+
+        return None
+
     def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5) -> List[Dict[str, Any]]:
         headers = {
             "User-Agent": (
@@ -484,6 +524,7 @@ class NewsFetcher:
                     link = entry.get("link", "")
                     published = entry.get("published", "") or entry.get("updated", "")
                     impact_score = self.calculate_impact_score(title, clean_summary)
+                    image_url = self.extract_image_url(entry, summary)
 
                     candidates.append({
                         "id": news_id,
@@ -494,6 +535,7 @@ class NewsFetcher:
                         "lang": lang,
                         "published": published,
                         "impact_score": impact_score,
+                        "image_url": image_url,
                     })
             except Exception as e:
                 logger.warning(f"拉取数据源 [{name}] 出错: {e}")
@@ -874,7 +916,143 @@ class CampaignScanner:
 
 
 # ---------------------------------------------------------------------------
-# 模块七：币安广场 OpenAPI 客户端 (SquarePublisher)
+# 模块七：多媒体图像处理与币安 S3 上传器 (ImageManager)
+# ---------------------------------------------------------------------------
+class ImageManager:
+    """
+    负责新闻配图下载、校验与币安广场官方 S3 异步上传流水线：
+    1. 下载原图并支持浏览器伪装头，超时控制在 6 秒以内
+    2. 若原图下载失败，无缝回退至恐慌贪婪指数当日仪表盘 (https://alternative.me/crypto/fear-and-greed-index.png)
+    3. 逆向实现币安官方 OpenAPI V2 图像上传标准 (获取 Presigned S3 URL -> PUT 上传 -> 轮询 imageStatus)
+    """
+
+    DEFAULT_FALLBACK_IMAGE = "https://alternative.me/crypto/fear-and-greed-index.png"
+    PRESIGNED_URL_API = "https://www.binance.com/bapi/composite/v2/public/pgc/openApi/image/presignedUrl"
+    IMAGE_STATUS_API = "https://www.binance.com/bapi/composite/v2/public/pgc/openApi/image/imageStatus"
+
+    @classmethod
+    def download_image(cls, image_url: str) -> Optional[Tuple[bytes, str, str]]:
+        """
+        安全下载图片，返回 (图片二进制, 文件名, Content-Type)
+        """
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+            ),
+            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        }
+        try:
+            r = requests.get(image_url, headers=headers, timeout=6)
+            if r.status_code == 200 and len(r.content) > 1024:
+                # 限制文件大小在 8MB 以内
+                if len(r.content) > 8 * 1024 * 1024:
+                    logger.warning("图片大小超出 8MB 上限，跳过")
+                    return None
+
+                content_type = r.headers.get("Content-Type", "").split(";")[0].strip().lower()
+                ext = "jpg"
+                if "png" in content_type:
+                    ext = "png"
+                elif "webp" in content_type:
+                    ext = "webp"
+                elif "gif" in content_type:
+                    ext = "gif"
+                else:
+                    content_type = "image/jpeg"
+
+                filename = f"cover_{int(time.time())}_{random.randint(1000, 9999)}.{ext}"
+                return r.content, filename, content_type
+        except Exception as e:
+            logger.warning(f"下载配图失败 ({image_url}): {e}")
+        return None
+
+    @classmethod
+    def upload_to_binance(cls, api_key: str, image_bytes: bytes, filename: str, content_type: str) -> Optional[str]:
+        """
+        按照币安官方标准流程上传至币安 S3 并获取托管图片 URL
+        """
+        headers = {
+            "X-Square-OpenAPI-Key": api_key,
+            "Content-Type": "application/json",
+            "clienttype": "binanceSkill",
+        }
+
+        try:
+            # 步骤 1：申请 Presigned URL 与 fileTicket
+            req_body = {"imageName": filename}
+            res = requests.post(cls.PRESIGNED_URL_API, headers=headers, json=req_body, timeout=10)
+            if res.status_code != 200:
+                logger.warning(f"获取币安图片上传凭证失败: HTTP {res.status_code} {res.text}")
+                return None
+
+            res_json = res.json()
+            if res_json.get("code") != "000000":
+                logger.warning(f"币安凭证接口返回业务异常: {res_json}")
+                return None
+
+            data = res_json.get("data") or {}
+            presigned_url = data.get("presignedUrl")
+            file_ticket = data.get("fileTicket")
+            if not presigned_url or not file_ticket:
+                logger.warning("未能从币安返回中提取有效的 presignedUrl 或 fileTicket")
+                return None
+
+            # 步骤 2：向 AWS S3 发起 PUT 二进制文件上传
+            s3_headers = {"Content-Type": content_type}
+            s3_res = requests.put(presigned_url, headers=s3_headers, data=image_bytes, timeout=20)
+            if s3_res.status_code not in (200, 204):
+                logger.warning(f"上传二进制至币安 S3 失败: HTTP {s3_res.status_code}")
+                return None
+
+            # 步骤 3：轮询图片处理状态 (最多重试 8 次，间隔 2 秒)
+            logger.info("图片已成功送达 S3，正在轮询币安图片转码与就绪状态...")
+            for poll_idx in range(8):
+                time.sleep(2)
+                stat_res = requests.post(cls.IMAGE_STATUS_API, headers=headers, json={"fileTicket": file_ticket}, timeout=8)
+                if stat_res.status_code == 200:
+                    stat_json = stat_res.json()
+                    stat_data = stat_json.get("data") or {}
+                    status = stat_data.get("status")
+                    if status == 1:
+                        final_image_url = stat_data.get("imageUrl")
+                        logger.info(f"🎉 币安广场图片转码就绪: {final_image_url}")
+                        return final_image_url
+                    elif status == 2:
+                        logger.warning(f"币安图片审核未通过: {stat_data.get('failedReason')}")
+                        return None
+                logger.info(f"等待图片就绪... ({poll_idx + 1}/8)")
+
+            logger.warning("轮询图片状态超时")
+            return None
+
+        except Exception as e:
+            logger.warning(f"上传图片至币安广场发生异常: {e}")
+            return None
+
+    @classmethod
+    def prepare_and_upload(cls, api_key: str, raw_image_url: Optional[str]) -> Optional[str]:
+        """
+        一站式准备配图：下载原图 -> 失败则兜底 -> 上传币安 S3 -> 返回官方托管链接
+        """
+        target_url = raw_image_url.strip() if raw_image_url else cls.DEFAULT_FALLBACK_IMAGE
+        download_result = cls.download_image(target_url)
+
+        # 若原图下载失败，尝试使用全网情绪仪表盘兜底
+        if not download_result and target_url != cls.DEFAULT_FALLBACK_IMAGE:
+            logger.info("新闻原图无法抓取，自动启用全网情绪仪表盘进行配图...")
+            download_result = cls.download_image(cls.DEFAULT_FALLBACK_IMAGE)
+
+        if not download_result:
+            logger.warning("配图下载完全失败，将以纯文本格式继续发布。")
+            return None
+
+        image_bytes, filename, content_type = download_result
+        return cls.upload_to_binance(api_key, image_bytes, filename, content_type)
+
+
+# ---------------------------------------------------------------------------
+# 模块八：币安广场 OpenAPI 客户端 (SquarePublisher)
 # ---------------------------------------------------------------------------
 class SquarePublisher:
     """币安广场发布组件"""
@@ -909,7 +1087,7 @@ class SquarePublisher:
 
         return content.strip()
 
-    def publish(self, content: str) -> bool:
+    def publish(self, content: str, image_url: Optional[str] = None) -> bool:
         if not self.api_key:
             logger.error("未配置 SQUARE_API_KEY，无法发布到币安广场！")
             return False
@@ -927,6 +1105,12 @@ class SquarePublisher:
         payload = {
             "bodyTextOnly": content,
         }
+        if image_url:
+            payload["contentType"] = 1
+            payload["imageList"] = [image_url]
+            logger.info(f"本次发帖已成功附带多媒体配图: {image_url}")
+        else:
+            logger.info("本次发帖以纯文本形式发布。")
 
         try:
             logger.info("正在向币安广场 OpenAPI 提交发帖请求...")
@@ -1132,17 +1316,28 @@ def _run_main():
 
         logger.info("生成内容预览:\n" + post_content)
 
+        # 多媒体图文装配：下载新闻原生配图或采用情绪仪表盘兜底，并上传至币安官方 S3
+        uploaded_image_url = None
+        raw_img = item.get("image_url")
+        if dry_run:
+            logger.info(f"【DRY_RUN】多媒体配图测试: {raw_img or '使用全网情绪图保底'}")
+            uploaded_image_url = raw_img or ImageManager.DEFAULT_FALLBACK_IMAGE
+        else:
+            if square_api_key:
+                logger.info(f"正在为本篇快讯准备多媒体配图并上传至币安 S3...")
+                uploaded_image_url = ImageManager.prepare_and_upload(square_api_key, raw_img)
+
         # 发布或模拟
         if dry_run:
-            logger.info(f"【DRY_RUN 模式】模拟发布成功，记录缓存: {news_id}")
+            logger.info(f"【DRY_RUN 模式】模拟图文发布成功 (附带配图: {'是' if uploaded_image_url else '否'})，记录缓存: {news_id}")
             cache_mgr.record_sent(news_id, title, source)
             posted_count += 1
         else:
-            success = publisher.publish(post_content)
+            success = publisher.publish(post_content, image_url=uploaded_image_url)
             if success:
                 cache_mgr.record_sent(news_id, title, source)
                 posted_count += 1
-                Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n\n{post_content[:200]}...")
+                Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}\n\n{post_content[:200]}...")
             else:
                 logger.error(f"发帖失败，本次暂不记录缓存以供下次重试: {title}")
                 Notifier.send_notification("币安发帖失败", f"新闻: {title}\n发布接口返回异常，已跳过并将在下次重试。", is_error=True)
