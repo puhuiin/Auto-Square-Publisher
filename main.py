@@ -108,7 +108,10 @@ FRESHNESS_BOOST_RULES = ((3, 10), (12, 6), (24, 3))                # (新闻不�
 
 
 def within_active_hours(spec: str = ACTIVE_HOURS_BEIJING) -> bool:
-    """北京时间活跃时段判断。spec 形如 "8-23" 或 "8:30-23:45"，空字符串表示全天开放。"""
+    """
+    北京时间活跃时段判断。spec 形如 "8-23"、"8:30-23:45"，支持跨夜（如 "22-7" 表示晚 22 点至次日 7 点）。
+    空字符串表示全天开放。
+    """
     if not spec:
         return True
     m = re.match(r"^\s*(\d{1,2})(?::(\d{1,2}))?\s*-\s*(\d{1,2})(?::(\d{1,2}))?\s*$", spec)
@@ -120,7 +123,9 @@ def within_active_hours(spec: str = ACTIVE_HOURS_BEIJING) -> bool:
     from datetime import timedelta
     beijing_now = datetime.now(timezone(timedelta(hours=8)))
     hour_now = beijing_now.hour + beijing_now.minute / 60
-    return start <= hour_now <= end
+    if start <= end:   # 常规同日窗口
+        return start <= hour_now <= end
+    return hour_now >= start or hour_now <= end  # 跨夜窗口
 
 # 与英文单词撞名的真实代币代码：原文必须全大写(NEAR)或带 $ 前缀($NEAR) 才采信，防止误判
 AMBIGUOUS_TICKERS = {
@@ -141,13 +146,20 @@ IGNORE_WORDS = {
 BINANCE_SQUARE_API_URL = "https://www.binance.com/bapi/composite/v1/public/pgc/openApi/content/add"
 
 
+# 模块级共享 Session：连接池复用，9 个 RSS 源 + 币安行情/校验请求显著减少 TCP/TLS 握手开销
+_HTTP_SESSION = requests.Session()
+_HTTP_ADAPTER = requests.adapters.HTTPAdapter(pool_connections=16, pool_maxsize=16, max_retries=0)
+_HTTP_SESSION.mount("http://", _HTTP_ADAPTER)
+_HTTP_SESSION.mount("https://", _HTTP_ADAPTER)
+
+
 def http_get(url: str, *, timeout: int = 8, headers: Dict[str, str] = None,
              retries: int = 2, backoff: float = 0.6) -> Optional[requests.Response]:
     """带轻量重试与退避的 GET 请求，自动吸收 429/5xx 与网络抖动，最终失败返回 None"""
     last_exc: Optional[Exception] = None
     for attempt in range(retries + 1):
         try:
-            resp = requests.get(url, headers=headers, timeout=timeout)
+            resp = _HTTP_SESSION.get(url, headers=headers, timeout=timeout)
             if resp.status_code in (429, 500, 502, 503, 504) and attempt < retries:
                 time.sleep(backoff * (attempt + 1))
                 continue
@@ -350,6 +362,14 @@ IMPACT_KEYWORDS = {
     "巨鲸": 8,
     "融资": 7,
     "黑客": 8,
+}
+
+# ASCII 关键词必须整词匹配：否则 ai→命中 "said"、ton→命中 "Washington"、fed→命中 "federal"，分数全面通胀。
+# 中文无词边界概念，CJK 关键词保持子串匹配。启动时预编译正则。
+_ASCII_KW_PATTERNS = {
+    kw: re.compile(rf"\b{re.escape(kw)}\b")
+    for kw in IMPACT_KEYWORDS
+    if all(ord(c) < 128 for c in kw)
 }
 
 
@@ -558,8 +578,9 @@ class NewsFetcher:
     """多源资讯抓取与重磅热点打分排序"""
 
     def __init__(self):
-        # 运行统计器：供最终报告输出吞吐详情
-        self.stats = {"fetched": 0, "stale": 0, "cached": 0, "near_dup": 0, "kept": 0}
+        # 运行统计器：供最终报告输出吞吐详情与可用性诊断
+        self.stats = {"fetched": 0, "stale": 0, "cached": 0, "near_dup": 0, "kept": 0,
+                      "feeds_ok": 0, "feeds_failed": []}  # feeds_failed: 失败的源名称列表
 
     # RSS 摘要中可能出现的提示词注入特征（命中即从其位置截断，防止劫持机器人发言）
     INJECTION_RE = re.compile(
@@ -593,11 +614,16 @@ class NewsFetcher:
 
     @staticmethod
     def calculate_impact_score(title: str, summary: str) -> int:
-        """根据市场冲击力与山寨/Meme热点关键词计算分值"""
+        """根据市场冲击力与山寨/Meme热点关键词计算分值。
+        ASCII 词走整词边界匹配，中文词保持子串匹配。"""
         combined = (title + " " + summary).lower()
         score = 0
         for kw, weight in IMPACT_KEYWORDS.items():
-            if kw in combined:
+            pattern = _ASCII_KW_PATTERNS.get(kw)
+            if pattern is not None:
+                if pattern.search(combined):
+                    score += weight
+            elif kw in combined:
                 score += weight
         return score
 
@@ -717,12 +743,15 @@ class NewsFetcher:
             resp = http_get(url, headers=headers, timeout=8, retries=1)
             if resp is None or resp.status_code != 200:
                 logger.warning(f"数据源 [{name}] 响应异常: {'网络错误' if resp is None else f'HTTP {resp.status_code}'}")
+                self.stats["feeds_failed"].append(name)
                 return items
 
             feed = feedparser.parse(resp.content)
             if not feed.entries:
+                self.stats["feeds_ok"] += 1
                 return items
 
+            self.stats["feeds_ok"] += 1
             logger.info(f"数据源 [{name}] 抓取到 {len(feed.entries)} 条新闻。")
             stale_skipped = 0
 
@@ -781,6 +810,7 @@ class NewsFetcher:
                 logger.info(f"数据源 [{name}] 过滤过期旧闻 {stale_skipped} 条（>{MAX_NEWS_AGE_HOURS}h）。")
         except Exception as e:
             logger.warning(f"拉取数据源 [{name}] 出错: {e}")
+            self.stats["feeds_failed"].append(name)
         return items
 
     def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5,
@@ -830,11 +860,16 @@ class NewsFetcher:
         # 按照市场影响力分值降序排列（山寨暴涨、Meme爆款与重大热点优先）
         candidates.sort(key=lambda x: x["impact_score"], reverse=True)
         self.stats["kept"] = len(candidates)
-        logger.info(
-            f"多源并发扫描完毕: 扫描 {self.stats['fetched']} 条 → "
-            f"过滤旧闻 {self.stats['stale']} / 已发 {self.stats['cached']} / 近似重复 {self.stats['near_dup']} → "
-            f"剩余候选 {len(candidates)} 条（已按全币种热度加权排序）。"
-        )
+        feeds_failed = self.stats["feeds_failed"]
+        if feeds_ok := self.stats["feeds_ok"]:
+            level = logging.WARNING if feeds_failed else logging.INFO
+            logger.log(
+                level,
+                f"多源并发扫描完毕: 源在线 {feeds_ok} / 故障 {len(feeds_failed)}"
+                f"{f' ({feeds_failed})' if feeds_failed else ''} | "
+                f"扫描 {self.stats['fetched']} 条 → 过滤旧闻 {self.stats['stale']} / "
+                f"已发 {self.stats['cached']} / 近似重复 {self.stats['near_dup']} → 剩候选 {len(candidates)} 条。"
+            )
         return candidates
 
 
@@ -1851,6 +1886,14 @@ def _run_main():
         priority_tokens=campaign_intel.get("incentivized_tokens"),
     )
     if not candidates:
+        # 全源同时故障 = 基建级问题，必须报警而非静默默认"无事发生"
+        if fetcher.stats["feeds_failed"] and fetcher.stats["feeds_ok"] == 0:
+            msg = (f"所有 {len(RSS_FEEDS)} 个 RSS 数据源均拉取失败，无法获取热点新闻，"
+                   f"请检查网络连通性或数据源可用性。失败源: {', '.join(fetcher.stats['feeds_failed'])}")
+            logger.error(f"🚨 {msg}")
+            Notifier.send_notification("RSS 数据源全线故障", msg, is_error=True)
+            write_github_step_summary(fetcher, fng_index, campaign_intel, [], dry_run)
+            sys.exit(1)
         logger.info("✅ 未检测到新的未发布热点，安全退出。")
         write_github_step_summary(fetcher, fng_index, campaign_intel, [], dry_run)
         sys.exit(0)

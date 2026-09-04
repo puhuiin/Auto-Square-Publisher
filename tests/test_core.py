@@ -233,6 +233,35 @@ class TestFreshnessBonus(unittest.TestCase):
         self.assertEqual(m.NewsFetcher.freshness_bonus(None), 0)
 
 
+class TestImpactScoreWordBoundary(unittest.TestCase):
+    """ASCII 关键词必须整词匹配，防止 says/Washington 误判加分"""
+
+    def test_short_ascii_keywords_no_false_positive(self):
+        # "said" 含 ai、"Washington" 含 ton、"federal" 含 fed，裸子串匹配会虚高 9+9+10 分
+        score = m.NewsFetcher.calculate_impact_score("Trump said Washington will issue federal guidance", "")
+        self.assertEqual(score, 0)
+
+    def test_real_keywords_still_score(self):
+        score = m.NewsFetcher.calculate_impact_score("SEC approves ETF, AI tokens surge", "")
+        self.assertGreaterEqual(score, 12 + 9 + 9)  # SEC(10)+ETF(12)+AI(9)+surge(9)
+
+    def test_cjk_substring_preserved(self):
+        score = m.NewsFetcher.calculate_impact_score("比特币暴涨突破新高", "")
+        self.assertEqual(score, 10 + 8 + 9)  # 暴涨+突破+新高
+
+    def test_case_insensitive_word_boundary(self):
+        self.assertGreater(m.NewsFetcher.calculate_impact_score("NEW ETF FILED", ""), 0)
+
+
+class TestFeedFailureDetection(unittest.TestCase):
+    """全源故障探测"""
+
+    def test_stats_track_feed_health(self):
+        f = m.NewsFetcher()
+        self.assertEqual(f.stats["feeds_ok"], 0)
+        self.assertEqual(f.stats["feeds_failed"], [])
+
+
 class TestActiveHoursWindow(unittest.TestCase):
     """北京时间活跃窗口"""
 
@@ -253,6 +282,17 @@ class TestActiveHoursWindow(unittest.TestCase):
             mock_dt.side_effect = lambda *a, **k: dt(*a, **k)
             self.assertFalse(m.within_active_hours("8-23"))     # 凌晨 4 点在窗外
             self.assertTrue(m.within_active_hours("3-6"))       # 凌晨 4 点在窗内
+
+    def test_overnight_window(self):
+        from datetime import datetime as dt, timezone as tz, timedelta
+        from unittest.mock import patch
+
+        bj_now = dt(2026, 9, 6, 2, 0, tzinfo=tz(timedelta(hours=8)))  # 北京时间凌晨 2 点
+        with patch.object(m, "datetime") as mock_dt:
+            mock_dt.now.return_value = bj_now
+            mock_dt.side_effect = lambda *a, **k: dt(*a, **k)
+            self.assertTrue(m.within_active_hours("22-7"))     # 跨夜窗口覆盖凌晨 2 点
+            self.assertFalse(m.within_active_hours("8-23"))    # 同日窗口不覆盖
 
 
 class TestRunLogUrl(unittest.TestCase):
