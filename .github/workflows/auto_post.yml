@@ -114,10 +114,12 @@ jobs:
           #   DUP_SIMILARITY_THRESHOLD: 跨源近似标题去重阈值 0~1 (默认 0.65)
           #   MIN_IMPACT_SCORE:        最低热度分门槛 (默认 0 = 不过滤)
           #   MAX_DAILY_POSTS:         24h 发帖配额上限，防刷屏保权重 (默认 12, 0 = 不限)
+          #   ACTIVE_HOURS_BEIJING:    北京时间活跃窗口，如 8-23；留空 = 全天
           MAX_NEWS_AGE_HOURS: ${{ vars.MAX_NEWS_AGE_HOURS }}
           DUP_SIMILARITY_THRESHOLD: ${{ vars.DUP_SIMILARITY_THRESHOLD }}
           MIN_IMPACT_SCORE: ${{ vars.MIN_IMPACT_SCORE }}
           MAX_DAILY_POSTS: ${{ vars.MAX_DAILY_POSTS }}
+          ACTIVE_HOURS_BEIJING: ${{ vars.ACTIVE_HOURS_BEIJING }}
 
           # 运行参数
           MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts }}

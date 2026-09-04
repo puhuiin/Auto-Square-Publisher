@@ -216,6 +216,67 @@ class TestDailyQuota(unittest.TestCase):
             os.unlink(path)
 
 
+class TestFreshnessBonus(unittest.TestCase):
+    """新鲜度加权排序"""
+
+    def test_hot_breaking_gets_max_bonus(self):
+        self.assertEqual(m.NewsFetcher.freshness_bonus(1.5), 10)
+
+    def test_same_day_gets_mid_bonus(self):
+        self.assertEqual(m.NewsFetcher.freshness_bonus(8), 6)
+
+    def test_within_24h_gets_small_bonus(self):
+        self.assertEqual(m.NewsFetcher.freshness_bonus(20), 3)
+
+    def test_old_or_unknown_gets_zero(self):
+        self.assertEqual(m.NewsFetcher.freshness_bonus(30), 0)
+        self.assertEqual(m.NewsFetcher.freshness_bonus(None), 0)
+
+
+class TestActiveHoursWindow(unittest.TestCase):
+    """北京时间活跃窗口"""
+
+    def test_empty_spec_always_open(self):
+        self.assertTrue(m.within_active_hours(""))
+
+    def test_invalid_spec_fails_open(self):
+        self.assertTrue(m.within_active_hours("not-a-window"))
+
+    def test_window_logic(self):
+        from datetime import datetime as dt, timezone as tz, timedelta
+        from unittest.mock import patch
+
+        # mock datetime.now 直接返回“北京时间 04:00”这一刻（北京时区对象）
+        bj_now = dt(2026, 9, 6, 4, 0, tzinfo=tz(timedelta(hours=8)))
+        with patch.object(m, "datetime") as mock_dt:
+            mock_dt.now.return_value = bj_now
+            mock_dt.side_effect = lambda *a, **k: dt(*a, **k)
+            self.assertFalse(m.within_active_hours("8-23"))     # 凌晨 4 点在窗外
+            self.assertTrue(m.within_active_hours("3-6"))       # 凌晨 4 点在窗内
+
+
+class TestRunLogUrl(unittest.TestCase):
+    """通知附带 Actions 运行日志链接"""
+
+    def test_url_built_when_env_present(self):
+        os.environ.update({
+            "GITHUB_SERVER_URL": "https://github.com",
+            "GITHUB_REPOSITORY": "alice/repo",
+            "GITHUB_RUN_ID": "12345",
+        })
+        try:
+            url = m.Notifier._run_log_url()
+            self.assertEqual(url, "https://github.com/alice/repo/actions/runs/12345")
+        finally:
+            for k in ("GITHUB_SERVER_URL", "GITHUB_REPOSITORY", "GITHUB_RUN_ID"):
+                os.environ.pop(k, None)
+
+    def test_empty_when_not_in_actions(self):
+        for k in ("GITHUB_SERVER_URL", "GITHUB_REPOSITORY", "GITHUB_RUN_ID"):
+            os.environ.pop(k, None)
+        self.assertEqual(m.Notifier._run_log_url(), "")
+
+
 class TestStepSummary(unittest.TestCase):
     """GitHub Step Summary 运行报告"""
 
