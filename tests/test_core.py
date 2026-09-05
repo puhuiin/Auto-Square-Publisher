@@ -174,6 +174,34 @@ class TestContentSanitizer(unittest.TestCase):
         s = m.SquarePublisher._sanitize_content("重仓 $btc 起飞")
         self.assertIn("$BTC", s)
 
+    def test_think_blocks_stripped(self):
+        """推理模型的 <think> 思考块绝不能进正文"""
+        s = m.SquarePublisher._sanitize_content(
+            "<think>分析一下行情...</think>\n比特币突破前高，量能健康。#Write2Earn"
+        )
+        self.assertNotIn("<think>", s)
+        self.assertIn("比特币突破前高", s)
+
+    def test_unclosed_think_block_stripped(self):
+        s = m.SquarePublisher._sanitize_content("正文开头。<think>想到一半被截断的思考")
+        self.assertNotIn("<think>", s)
+        self.assertIn("正文开头", s)
+
+    def test_markdown_artifacts_stripped(self):
+        s = m.SquarePublisher._sanitize_content(
+            "**重点**：放量突破\n\n```\n代码块混入\n```\n### 小标题\n内容继续"
+        )
+        self.assertNotIn("**", s)
+        self.assertNotIn("```", s)
+        self.assertNotIn("###", s)
+        self.assertIn("重点", s)
+        self.assertIn("内容继续", s)
+
+    def test_polite_preamble_stripped(self):
+        s = m.SquarePublisher._sanitize_content("好的，以下是正文：\n\n比特币 ETF 获批，市场沸腾。")
+        self.assertNotIn("好的", s)
+        self.assertIn("比特币 ETF 获批", s)
+
     def test_stable_cashtag_stripped(self):
         s = m.SquarePublisher._sanitize_content("用 $USDT 买入 $BTC")
         self.assertNotIn("$USDT", s)
