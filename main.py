@@ -341,47 +341,57 @@ _DIRECT_SESSION.mount("http://", _DIRECT_ADAPTER)
 _DIRECT_SESSION.trust_env = False  # 不读 HTTP_PROXY 等环境变量，保证 localhost 直连
 
 
-def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) -> Optional[LLMProviderConfig]:
+def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) -> List[LLMProviderConfig]:
     """
-    探测本地 Reasonix 免费模型网关是否在线：
-    - 环境变量 REASONIX_GW_OFF=1 可强制禁用（CI 里设置）
-    - 网关存活时返回一个置顶优先的 ProviderConfig，模型从 REASONIX_PREFERRED_MODELS 中按网关实际 catalogs 选交集
-    - 网关不可达返回 None，静默跳过
+    探测本地 Reasonix 免费模型网关。存活时返回 [首选模型 + 最多 2 个备份模型] 的提供商链，
+    同一网关上游宕机时自动沿清单降级（auto/best-fast → omni/auto/best-free → gem/…），
+    不清零到外部收费路径。不可达返回空列表，静默跳过。
     """
     if os.getenv("REASONIX_GW_OFF", "").strip() in ("1", "true", "yes"):
-        return None
-    # CI 环境不探测，零开销跳过
+        return []
     if os.getenv("GITHUB_ACTIONS", "").strip().lower() == "true":
-        return None
+        return []
     try:
-        # 剥离 /v1 后缀再拼健康检查端点（网关 /health 在根路径上，不在 /v1 下）
         root = gw_url[:-3] if gw_url.endswith("/v1") else gw_url
         health = _DIRECT_SESSION.get(f"{root}/health", timeout=timeout)
         if health.status_code != 200:
-            return None
-        # 网关在线，拿模型目录挑选优先级最高的可用模型
-        best_model = "auto/best-fast"
+            return []
+
+        available: set = set()
+        catalog_ok = False
         try:
             models_resp = _DIRECT_SESSION.get(f"{gw_url}/v1/models", timeout=timeout + 3)
             if models_resp.status_code == 200:
                 available = {m.get("id", "") for m in models_resp.json().get("data", [])}
-                for preferred in REASONIX_PREFERRED_MODELS:
-                    # 目录里带前缀(omni/auto/best-free)或不带前缀(auto/best-free)均可
-                    if preferred in available or any(a.endswith("/" + preferred) for a in available):
-                        best_model = preferred
-                        break
+                catalog_ok = True
         except Exception:
-            pass  # 目录拿不到就用默认 auto/best-fast，网关自动路由会兜底
-        logger.info(f"🌉 检测到本地 Reasonix 免费模型网关 ({gw_url})，置顶为首选 LLM 通道 (模型: {best_model})")
-        return LLMProviderConfig(
-            name="Reasonix-GW",
-            base_url=gw_url,
-            api_key="reasonix-local",  # 网关本地免鉴权，占位即可
-            model=best_model,
-            timeout=45.0,  # 网关内部做多上游容错，单跳最慢可能 ~30s，给足余量
-        )
+            pass
+
+        if not catalog_ok:
+            # 目录不可知：只保留默认 auto 路由（网关对无前缀 id 自动走 OmniRoute 兜底），
+            # 不能把全部 preferred 都注册成"可用"——那会注册一堆根本不存在的模型
+            picked = ["auto/best-fast"]
+        else:
+            picked = [mid for mid in REASONIX_PREFERRED_MODELS
+                      if mid in available or any(a.endswith("/" + mid) for a in available)][:3]
+            if not picked:
+                picked = ["auto/best-fast"]
+
+        providers = [
+            LLMProviderConfig(
+                name=f"Reasonix-GW" if i == 0 else f"Reasonix-GW-{i}",
+                base_url=gw_url,
+                api_key="reasonix-local",
+                model=mid,
+                timeout=45.0,
+            )
+            for i, mid in enumerate(picked)
+        ]
+        logger.info(f"🌉 检测到本地 Reasonix 免费模型网关 ({gw_url})，置顶 {len(providers)} 个 LLM 通道: "
+                    f"{[p.model for p in providers]}")
+        return providers
     except Exception:
-        return None
+        return []
 
 
 # ---------------------------------------------------------------------------
@@ -768,7 +778,8 @@ class NewsFetcher:
     def __init__(self):
         # 运行统计器：供最终报告输出吞吐详情与可用性诊断
         self.stats = {"fetched": 0, "stale": 0, "cached": 0, "near_dup": 0, "kept": 0,
-                      "feeds_ok": 0, "feeds_failed": [], "feeds_parked": []}
+                      "feeds_ok": 0, "feeds_failed": [], "feeds_parked": [],
+                      "per_feed": {}}  # feed_name -> {"entries": 扫描, "kept": 入选}
 
     # ---------------- 源健康度（跨运行持久化） ----------------
     def _feed_health(self) -> Dict[str, Dict[str, Any]]:
@@ -1066,6 +1077,8 @@ class NewsFetcher:
                     continue
 
                 self.stats["fetched"] += 1
+                feed_stat = self.stats["per_feed"].setdefault(name, {"entries": 0, "kept": 0})
+                feed_stat["entries"] += 1
 
                 # 时效过滤：仅发布 MAX_NEWS_AGE_HOURS 小时内的热点，杜绝把旧闻当新闻发
                 age_h = self.parse_entry_age_hours(entry)
@@ -1175,6 +1188,11 @@ class NewsFetcher:
         candidates.sort(key=lambda x: (-x["impact_score"],
                                         x["age_hours"] if x.get("age_hours") is not None else float("inf")))
         self.stats["kept"] = len(candidates)
+        # 每源入选统计：哪些源最出活一目了然
+        for item in candidates:
+            src = item.get("source", "?")
+            if src in self.stats["per_feed"]:
+                self.stats["per_feed"][src]["kept"] += 1
         feeds_failed = self.stats["feeds_failed"]
         feeds_parked = self.stats["feeds_parked"]
         if feeds_ok := self.stats["feeds_ok"]:
@@ -1447,10 +1465,11 @@ class MultiLLMEngine:
             if k and not any(p.api_key == k for p in chain):
                 chain.append(LLMProviderConfig(name=f"Preset-{name}", base_url=url, api_key=k, model=m))
 
-        # 4. 本地 Reasonix 免费模型网关：存活则置顶（它是聚合器，本身就有跨上游容错）
-        gw_cfg = probe_reasonix_gateway()
-        if gw_cfg:
-            chain.insert(0, gw_cfg)
+        # 4. 本地 Reasonix 免费模型网关：存活则置顶（返回首选+备份模型链，网关自身再兜底上游）
+        gw_cfgs = probe_reasonix_gateway()
+        if gw_cfgs:
+            for cfg in reversed(gw_cfgs):  # 逐个 insert(0)，最终顺序 = 首选在最前
+                chain.insert(0, cfg)
 
         if not chain:
             logger.warning("未检测到有效的 LLM API Key，AI 提炼模块将无法正常发起在线请求！")
@@ -1471,6 +1490,72 @@ class MultiLLMEngine:
             return False, f"内容过长 ({len(content)} 字符)"
         if cjk_count < 40:
             return False, f"中文字符过少 ({cjk_count})，疑似跑偏英文输出"
+        return True, ""
+
+    @staticmethod
+    def _verify_numbers(content: str, source_text: str) -> Tuple[bool, str]:
+        """
+        数字幻觉软校验：正文里出现的精确数字（小数百分比、大额精确金额）必须在源文能找到落点。
+        粗略整数（"涨 5%"、"止损 10%"）属于交易员人设的合理推测，不校验。
+        只拦截"精确到小数位但源文不存在"的数字——那种数字极大概率是模型编的。
+        """
+        if not source_text:
+            return True, ""
+
+        # 源文全部数字集合（识别 K/M/B 单位缩写：$2.4B = 2.4e9）
+        source_nums: List[float] = []
+        # 形如 $2.4B / 5.6M / 100K
+        for m in re.finditer(r"\$?\s*([\d,]+(?:\.\d+)?)\s*([KkMmBb])?(?![A-Za-z])", source_text):
+            num_str = m.group(1).replace(",", "")
+            scale_letter = (m.group(2) or "").upper()
+            scale = {"K": 1e3, "M": 1e6, "B": 1e9}.get(scale_letter, 1.0)
+            try:
+                source_nums.append(float(num_str) * scale)
+            except ValueError:
+                continue
+        # 中文单位：X万 / X亿（避免与英文缩写在同一正则在子串上歧义）
+        for m in re.finditer(r"(\d+(?:\.\d+)?)\s*(万|亿)", source_text):
+            scale = 1e4 if m.group(2) == "万" else 1e8
+            try:
+                source_nums.append(float(m.group(1)) * scale)
+            except ValueError:
+                continue
+
+        def _in_source(val: float) -> bool:
+            """val 一律为绝对值（百分比原值 / 金额绝对值），与源文数字做 2% 相对误差内比对"""
+            for sv in source_nums:
+                base = max(abs(sv), 1e-9)
+                if abs(val - sv) / base < 0.02:
+                    return True
+                # 百分比取整写法的容差 (5.23 vs 5.2/5)
+                if abs(val - round(sv, 1)) < 0.051 or abs(val - round(sv)) < 0.51:
+                    return True
+            return False
+
+        # 精确小数百分比（如 +5.23%、跌 12.4%）
+        for m in re.finditer(r"([+-]?\d+\.\d+)\s*%", content):
+            val = abs(float(m.group(1)))
+            if not _in_source(val):
+                return False, f"正文给出精确百分比 {m.group(1)}%，源文中找不到（疑似编造数据）"
+
+        # 大额精确美元金额（$120,000 / $450,000,000）
+        for m in re.finditer(r"\$(\d{1,3}(?:,\d{3})+|\d{4,})", content):
+            val = float(m.group(1).replace(",", ""))
+            if val < 10000:  # 小额不校验（正文里 $100、$500 这种不算数字幻觉）
+                continue
+            if not _in_source(val):
+                return False, f"正文给出精确金额 ${m.group(1)}，源文中找不到（疑似编造数据）"
+
+        # 中文大额单位金额（X亿 / X百万）：只查 ≥100万 的数额数据（"拿 5 万本金"这类口吻不校验）
+        for m in re.finditer(r"(\d+(?:\.\d+)?)\s*([亿万])\s*(?:美元|美刀|刀|U|u|USDT|usd|资金|美元计)?", content):
+            num = float(m.group(1))
+            scale = 1e8 if m.group(2) == "亿" else 1e4
+            abs_val = num * scale
+            if abs_val < 1e6:
+                continue
+            if not _in_source(abs_val):
+                return False, f"正文给出精确金额 {m.group(0)}（≈{abs_val:,.0f}），源文中找不到（疑似编造数据）"
+
         return True, ""
 
     def summarize(
@@ -1549,6 +1634,12 @@ class MultiLLMEngine:
                 passed, fail_reason = self._passes_quality_gate(content)
                 if not passed:
                     raise _QualityGateRejection(fail_reason)
+
+                # 0.1 数字幻觉软校验：编造精确百分比/大额金额的内容直接拦截
+                source_text = f"{news_item.get('title','')} {news_item.get('summary','')} {market_context}"
+                nums_ok, nums_reason = self._verify_numbers(content, source_text)
+                if not nums_ok:
+                    raise _QualityGateRejection(nums_reason)
 
                 # 1. 提取代币：交易所校验过的 token_hints 拥有最高权重，模型自报的 $ 标的仅作补充
                 raw_tokens = re.findall(r"\$([A-Za-z0-9]{2,10})", content)
@@ -1675,7 +1766,7 @@ class CampaignScanner:
                         temperature=0.3,
                         max_tokens=400,
                     )
-                    raw_res = resp.choices[0].message.content.strip()
+                    raw_res = (resp.choices[0].message.content or "").strip()
                     clean_res = re.sub(r"^```json\s*", "", raw_res, flags=re.IGNORECASE)
                     clean_res = re.sub(r"^```\s*", "", clean_res)
                     clean_res = re.sub(r"\s*```$", "", clean_res).strip()
@@ -2333,6 +2424,15 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
         ]
         if feeds_parked := s.get("feeds_parked"):
             lines.append(f"- **停放的源**: {', '.join(feeds_parked)}")
+        # 每源产出排行（只列有产出的前 5 名）
+        per_feed = s.get("per_feed") or {}
+        productive = sorted(
+            ((name, d["kept"], d["entries"]) for name, d in per_feed.items() if d["kept"] > 0),
+            key=lambda t: (-t[1], -t[2]),
+        )
+        if productive:
+            top = " / ".join(f"{name.split(' ')[0]} {kept}条" for name, kept, _ in productive[:5])
+            lines.append(f"- **源产出 TOP**: {top}")
         lines.append(f"- **本次发布**: {len(posted_records)} 篇")
         if timings:
             parts = [f"{k}={v:.1f}s" for k, v in timings.items() if v is not None]

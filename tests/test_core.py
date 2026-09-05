@@ -669,43 +669,58 @@ class TestReasonixGateway(unittest.TestCase):
     def test_probe_returns_none_in_ci(self):
         os.environ["GITHUB_ACTIONS"] = "true"
         try:
-            self.assertIsNone(m.probe_reasonix_gateway())
+            self.assertEqual(m.probe_reasonix_gateway(), [])
         finally:
             os.environ.pop("GITHUB_ACTIONS", None)
 
     def test_probe_returns_none_when_off(self):
         os.environ["REASONIX_GW_OFF"] = "1"
         try:
-            self.assertIsNone(m.probe_reasonix_gateway())
+            self.assertEqual(m.probe_reasonix_gateway(), [])
         finally:
             os.environ.pop("REASONIX_GW_OFF", None)
 
     def test_probe_returns_none_when_down(self):
-        # 本地未启动网关 → 探测必须静默失败
         for k in ("GITHUB_ACTIONS", "REASONIX_GW_OFF"):
             os.environ.pop(k, None)
-        self.assertIsNone(m.probe_reasonix_gateway("http://127.0.0.1:59999/v1"))
+        self.assertEqual(m.probe_reasonix_gateway("http://127.0.0.1:59999/v1"), [])
 
     def test_probe_up_picks_preferred_model(self):
-        """网关在线时返回置顶配置，且优先选 auto/best-fast"""
-        from unittest.mock import MagicMock, patch
+        """网关在线时返回 [首选+备份] 模型链，首个为 auto/best-fast"""
         fake_health = MagicMock(status_code=200)
         fake_models = MagicMock(status_code=200)
-        fake_models.json.return_value = {"data": [{"id": "auto/best-fast"}, {"id": "ovh/Qwen3.8-27B"}]}
+        fake_models.json.return_value = {"data": [
+            {"id": "auto/best-fast"}, {"id": "omni/auto/best-free"}, {"id": "ovh/Qwen3.8-27B"}
+        ]}
         with patch.object(m, "_DIRECT_SESSION") as mock_sess:
             mock_sess.get.side_effect = [fake_health, fake_models]
             for k in ("GITHUB_ACTIONS", "REASONIX_GW_OFF"):
                 os.environ.pop(k, None)
-            cfg = m.probe_reasonix_gateway("http://localhost:20140/v1")
-            self.assertIsNotNone(cfg)
-            self.assertEqual(cfg.name, "Reasonix-GW")
-            self.assertEqual(cfg.model, "auto/best-fast")
-            self.assertGreater(cfg.timeout, 30)  # 网关内部聚合需要给足超时
+            cfgs = m.probe_reasonix_gateway("http://localhost:20140/v1")
+            self.assertEqual(len(cfgs), 3, "应返回首选+2个备份")
+            self.assertEqual(cfgs[0].name, "Reasonix-GW")
+            self.assertEqual(cfgs[0].model, "auto/best-fast")
+            self.assertEqual(cfgs[1].name, "Reasonix-GW-1")
+            self.assertGreater(cfgs[0].timeout, 30)
+
+    def test_probe_returns_default_when_catalog_empty(self):
+        """目录请求失败时回退到 auto/best-fast 单条"""
+        fake_health = MagicMock(status_code=200)
+        fake_models = MagicMock(status_code=500)
+        with patch.object(m, "_DIRECT_SESSION") as mock_sess:
+            mock_sess.get.side_effect = [fake_health, fake_models]
+            for k in ("GITHUB_ACTIONS", "REASONIX_GW_OFF"):
+                os.environ.pop(k, None)
+            cfgs = m.probe_reasonix_gateway("http://localhost:20140/v1")
+            self.assertEqual(len(cfgs), 1)
+            self.assertEqual(cfgs[0].model, "auto/best-fast")
 
     def test_gateway_prepended_when_available(self):
         """引擎初始化时若网关存活应置顶到链首"""
-        import main
-        gw = m.LLMProviderConfig("Reasonix-GW", "http://localhost:20140/v1", "k", "auto/best-fast", 45.0)
+        gw_list = [
+            m.LLMProviderConfig("Reasonix-GW", "http://localhost:20140/v1", "k", "auto/best-fast", 45.0),
+            m.LLMProviderConfig("Reasonix-GW-1", "http://localhost:20140/v1", "k", "ovh/Qwen3.8-27B", 45.0),
+        ]
         os.environ["LLM_API_KEY"] = "test-key-123"
         os.environ.pop("LLM_PROVIDERS_CONFIG", None)
         saved_keys = {}
@@ -713,19 +728,20 @@ class TestReasonixGateway(unittest.TestCase):
             if k.endswith("_API_KEY") and k != "LLM_API_KEY":
                 saved_keys[k] = os.environ.pop(k)
         try:
-            with patch.object(m, "probe_reasonix_gateway", return_value=gw):
+            with patch.object(m, "probe_reasonix_gateway", return_value=gw_list):
                 eng = m.MultiLLMEngine()
         finally:
             os.environ.pop("LLM_API_KEY", None)
             os.environ.update(saved_keys)
-        self.assertEqual(eng.providers[0].name, "Reasonix-GW", "网关应置顶")
+        self.assertEqual(eng.providers[0].name, "Reasonix-GW")
+        self.assertEqual(eng.providers[1].name, "Reasonix-GW-1")
 
     def test_gateway_absent_keeps_normal_chain(self):
         """网关不在线时链路顺序不变"""
         os.environ["LLM_API_KEY"] = "test-key-123"
         os.environ.pop("LLM_PROVIDERS_CONFIG", None)
         try:
-            with patch.object(m, "probe_reasonix_gateway", return_value=None):
+            with patch.object(m, "probe_reasonix_gateway", return_value=[]):
                 eng = m.MultiLLMEngine()
         finally:
             os.environ.pop("LLM_API_KEY", None)
@@ -842,6 +858,47 @@ class TestThreadSafety(unittest.TestCase):
         with open(self.tmp, encoding="utf-8") as f:
             result = json.load(f)
         self.assertEqual(len(result["_counter"]), 20, "20 个并发线程各自加一个键，丢失就说明原子性有问题")
+
+
+class TestNumberHallucinationGuard(unittest.TestCase):
+    """AI 输出数字幻觉软校验"""
+
+    def test_valid_percentage_passes(self):
+        ok, _ = m.MultiLLMEngine._verify_numbers(
+            "BTC 突破 $119,850，单日 +5.23%",
+            "Bitcoin broke $119850, up 5.23% in 24h",
+        )
+        self.assertTrue(ok)
+
+    def test_fabricated_percentage_rejected(self):
+        ok, reason = m.MultiLLMEngine._verify_numbers(
+            "单日暴涨 12.53%，ETF 流入 8.4 亿",
+            "Bitcoin surged with ETF inflows of $2.4B",
+        )
+        self.assertFalse(ok)
+        self.assertIn("12.53", reason)
+
+    def test_rough_integer_passes(self):
+        # 交易员人设的"涨 5%"、"止损 10%"这种是合理建议，不算幻觉
+        ok, _ = m.MultiLLMEngine._verify_numbers("止损带好别超过 -5%，仓位最多 5 成", "no numbers")
+        self.assertTrue(ok)
+
+    def test_amount_with_B_abbreviation_passed(self):
+        # 源文 2.4B 写成 24亿 应放行（绝对值匹配）
+        ok, _ = m.MultiLLMEngine._verify_numbers("单日净流入 24 亿美元", "ETF inflows hit $2.4B")
+        self.assertTrue(ok)
+
+    def test_fabricated_cny_rejected(self):
+        ok, reason = m.MultiLLMEngine._verify_numbers(
+            "24 亿美元资金流入", "ETF inflows were modest at 100 million"
+        )
+        self.assertFalse(ok)
+        self.assertIn("24", reason)
+
+    def test_small_usd_passes(self):
+        # 小额美元不校验（$100, $500 是人设常见口吻）
+        ok, _ = m.MultiLLMEngine._verify_numbers("今天我的止盈 $500 落袋", "Bitcoin rises")
+        self.assertTrue(ok)
 
 
 class TestRunLogUrl(unittest.TestCase):
