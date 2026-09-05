@@ -175,7 +175,8 @@ jobs:
           with open("sent_cache.json", "w", encoding="utf-8") as f:
               json.dump(merged, f, ensure_ascii=False, indent=2)
 
-          # campaign_intel.json: 保留 last_updated 较新的一份
+          # campaign_intel.json: 主体保留 last_updated 较新的一份，
+          # 但 "_" 前缀的运行时状态键（断路器/报警节流/源健康/兜底图）按时间戳取双方最大值深合并，绝不丢状态
           def load_obj(path):
               try:
                   with open(path, encoding="utf-8") as f:
@@ -184,9 +185,28 @@ jobs:
               except Exception:
                   return None
 
+          def merge_state(a, b):
+              out = {}
+              for k in set(a) | set(b):
+                  va, vb = a.get(k), b.get(k)
+                  if isinstance(va, dict) and isinstance(vb, dict):
+                      out[k] = merge_state(va, vb)
+                  elif va is None:
+                      out[k] = vb
+                  elif vb is None:
+                      out[k] = va
+                  else:
+                      # 状态值本质是 ISO 时间戳或计数，取较大者即为较新状态
+                      out[k] = max(va, vb) if not isinstance(va, (list,)) else (va if len(va) >= len(vb) else vb)
+              return out
+
           versions = [d for d in (load_obj("campaign_intel.json"), load_obj("/tmp/local_intel.json")) if d]
           if versions:
-              best = max(versions, key=lambda d: d.get("last_updated", ""))
+              best = dict(max(versions, key=lambda d: d.get("last_updated", "")))
+              state1 = {k: v for k, v in (versions[0]).items() if k.startswith("_")}
+              state2 = {k: v for k, v in (versions[1]).items() if k.startswith("_")} if len(versions) > 1 else {}
+              merged_state = merge_state(state1, state2)
+              best.update(merged_state)
               with open("campaign_intel.json", "w", encoding="utf-8") as f:
                   json.dump(best, f, ensure_ascii=False, indent=2)
           PYEOF

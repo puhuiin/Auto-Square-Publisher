@@ -181,13 +181,13 @@ _HTTP_SESSION.mount("http://", _HTTP_ADAPTER)
 _HTTP_SESSION.mount("https://", _HTTP_ADAPTER)
 
 
-def http_get(url: str, *, timeout: int = 8, headers: Dict[str, str] = None,
-             retries: int = 2, backoff: float = 0.6) -> Optional[requests.Response]:
-    """带轻量重试与退避的 GET 请求，自动吸收 429/5xx 与网络抖动，最终失败返回 None"""
+def http_request(method: str, url: str, *, timeout: int = 8, headers: Dict[str, str] = None,
+                 retries: int = 2, backoff: float = 0.6, **kwargs) -> Optional[requests.Response]:
+    """带轻量重试与退避的 HTTP 请求，自动吸收 429/5xx 与网络抖动，最终失败返回 None"""
     last_exc: Optional[Exception] = None
     for attempt in range(retries + 1):
         try:
-            resp = _HTTP_SESSION.get(url, headers=headers, timeout=timeout)
+            resp = _HTTP_SESSION.request(method, url, headers=headers, timeout=timeout, **kwargs)
             if resp.status_code in (429, 500, 502, 503, 504) and attempt < retries:
                 time.sleep(backoff * (attempt + 1))
                 continue
@@ -197,8 +197,16 @@ def http_get(url: str, *, timeout: int = 8, headers: Dict[str, str] = None,
             if attempt < retries:
                 time.sleep(backoff * (attempt + 1))
     if last_exc:
-        logger.debug(f"HTTP GET 最终失败 {url}: {last_exc}")
+        logger.debug(f"HTTP {method} 最终失败 {url}: {last_exc}")
     return None
+
+
+def http_get(url: str, **kwargs) -> Optional[requests.Response]:
+    return http_request("GET", url, **kwargs)
+
+
+def http_post(url: str, **kwargs) -> Optional[requests.Response]:
+    return http_request("POST", url, **kwargs)
 
 # ---------------------------------------------------------------------------
 # 常用预置模型提供商模板
@@ -830,6 +838,13 @@ class NewsFetcher:
                 return items
 
             feed = feedparser.parse(resp.content)
+            # bozo=1 且无 entries = 源返回了 200 但内容不是有效 XML（通常是 HTML 错误页/风控页）
+            if getattr(feed, "bozo", 0) and not feed.entries:
+                logger.warning(f"数据源 [{name}] 返回 200 但 RSS 解析无效（可能被风控），按故障处理。")
+                self.stats["feeds_failed"].append(name)
+                self._feed_record(name, ok=False)
+                return items
+
             if not feed.entries:
                 self.stats["feeds_ok"] += 1
                 self._feed_record(name, ok=True)
@@ -956,8 +971,9 @@ class NewsFetcher:
             seen_titles.append(item["title"])
         candidates = unique_candidates
 
-        # 按照市场影响力分值降序排列（山寨暴涨、Meme爆款与重大热点优先）
-        candidates.sort(key=lambda x: x["impact_score"], reverse=True)
+        # 排序键：热度分降序 → 时效升序（同无时间戳的新闻排在最后）→ 原始扫描顺序稳定
+        candidates.sort(key=lambda x: (-x["impact_score"],
+                                        x["age_hours"] if x.get("age_hours") is not None else float("inf")))
         self.stats["kept"] = len(candidates)
         feeds_failed = self.stats["feeds_failed"]
         feeds_parked = self.stats["feeds_parked"]
@@ -1525,8 +1541,8 @@ class ImageManager:
             "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         }
         try:
-            r = requests.get(image_url, headers=headers, timeout=6)
-            if r.status_code == 200 and len(r.content) > 1024:
+            r = http_get(image_url, headers=headers, timeout=6, retries=1)
+            if r is not None and r.status_code == 200 and len(r.content) > 1024:
                 # 限制文件大小在 15MB 以内
                 if len(r.content) > 15 * 1024 * 1024:
                     logger.warning("图片大小超出 15MB 上限，跳过")
@@ -1569,9 +1585,9 @@ class ImageManager:
         try:
             # 步骤 1：申请 Presigned URL 与 fileTicket
             req_body = {"imageName": filename}
-            res = requests.post(cls.PRESIGNED_URL_API, headers=headers, json=req_body, timeout=10)
-            if res.status_code != 200:
-                logger.warning(f"获取币安图片上传凭证失败: HTTP {res.status_code} {res.text}")
+            res = http_post(cls.PRESIGNED_URL_API, headers=headers, json=req_body, timeout=10, retries=1)
+            if res is None or res.status_code != 200:
+                logger.warning(f"获取币安图片上传凭证失败: {'网络错误' if res is None else f'HTTP {res.status_code} {res.text[:200]}'}")
                 return None
 
             res_json = res.json()
@@ -1588,17 +1604,17 @@ class ImageManager:
 
             # 步骤 2：向 AWS S3 发起 PUT 二进制文件上传
             s3_headers = {"Content-Type": content_type}
-            s3_res = requests.put(presigned_url, headers=s3_headers, data=image_bytes, timeout=20)
-            if s3_res.status_code not in (200, 204):
-                logger.warning(f"上传二进制至币安 S3 失败: HTTP {s3_res.status_code}")
+            s3_res = http_request("PUT", presigned_url, headers=s3_headers, data=image_bytes, timeout=20, retries=1)
+            if s3_res is None or s3_res.status_code not in (200, 204):
+                logger.warning(f"上传二进制至币安 S3 失败: {'网络错误' if s3_res is None else f'HTTP {s3_res.status_code}'}")
                 return None
 
             # 步骤 3：轮询图片处理状态 (最多重试 8 次，间隔 2 秒)
             logger.info("图片已成功送达 S3，正在轮询币安图片转码与就绪状态...")
             for poll_idx in range(8):
                 time.sleep(2)
-                stat_res = requests.post(cls.IMAGE_STATUS_API, headers=headers, json={"fileTicket": file_ticket}, timeout=8)
-                if stat_res.status_code == 200:
+                stat_res = http_post(cls.IMAGE_STATUS_API, headers=headers, json={"fileTicket": file_ticket}, timeout=8, retries=1)
+                if stat_res is not None and stat_res.status_code == 200:
                     stat_json = stat_res.json()
                     stat_data = stat_json.get("data") or {}
                     status = stat_data.get("status")
@@ -1960,6 +1976,16 @@ class Notifier:
             os.getenv("WEBHOOK_URL", "").strip(),
         ])
 
+    # 推送消息体超长截断阈值，防止某些渠道（Bark/Server酱）因长度限制而拒绝
+    _MAX_MSG_LEN = 3500
+
+    @staticmethod
+    def _clip(text: str, limit: int = None) -> str:
+        limit = limit or Notifier._MAX_MSG_LEN
+        if len(text) <= limit:
+            return text
+        return text[:limit - 30] + "\n... [内容过长已截断]"
+
     @staticmethod
     def send_notification(title: str, message: str, is_error: bool = False):
         # 无任何通知渠道时直接返回：避免空跑写入节流状态，消耗未来真实报警的额度
@@ -1973,6 +1999,7 @@ class Notifier:
 
         prefix = "🚨 【异常报警】" if is_error else "📢 【发帖成功】"
         full_title = f"{prefix} {title}"
+        message = Notifier._clip(message)
 
         # 自动附带本次 Actions 运行日志链接，排障一键直达
         run_url = Notifier._run_log_url()
@@ -1999,24 +2026,25 @@ class Notifier:
             except Exception as e:
                 logger.warning(f"发送 PushPlus 失败: {e}")
 
-        # 3. iOS 推送：Bark
+        # 3. iOS 推送：Bark —— URL 路径必须做编码，否则中文/空格/斜杠会破坏请求
         bark_key = os.getenv("BARK_KEY", "").strip()
         if bark_key:
             try:
-                bark_url = f"https://api.day.app/{bark_key}/{full_title}/{message}"
+                from urllib.parse import quote
+                bark_url = f"https://api.day.app/{bark_key}/{quote(full_title, safe='')}/{quote(message, safe='')}"
                 requests.get(bark_url, timeout=8)
                 logger.info("已发送 Bark iOS 推送。")
             except Exception as e:
                 logger.warning(f"发送 Bark 推送失败: {e}")
 
-        # 4. Telegram 通知
+        # 4. Telegram 通知 —— MarkdownV1 对 _ [ * 等字符敏感，改用纯文本模式并保留加粗语义
         tg_bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
         tg_chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
         if tg_bot_token and tg_chat_id:
             try:
                 tg_url = f"https://api.telegram.org/bot{tg_bot_token}/sendMessage"
-                text = f"*{full_title}*\n\n{message}"
-                requests.post(tg_url, json={"chat_id": tg_chat_id, "text": text, "parse_mode": "Markdown"}, timeout=8)
+                text = f"{full_title}\n\n{message}"
+                requests.post(tg_url, json={"chat_id": tg_chat_id, "text": text}, timeout=8)
                 logger.info("已发送 Telegram 状态通知。")
             except Exception as e:
                 logger.warning(f"发送 Telegram 通知失败: {e}")

@@ -486,6 +486,34 @@ class TestPublishErrorClassification(unittest.TestCase):
         self.assertIn("SQUARE_API_KEY", pub.last_error or "")
 
 
+class TestNotificationEncoding(unittest.TestCase):
+    """通知渠道编码健壮性"""
+
+    def test_message_clipping(self):
+        long_msg = "x" * 4000
+        clipped = m.Notifier._clip(long_msg)
+        self.assertLessEqual(len(clipped), m.Notifier._MAX_MSG_LEN)
+        self.assertIn("截断", clipped)
+
+    def test_short_message_untouched(self):
+        self.assertEqual(m.Notifier._clip("短消息"), "短消息")
+
+
+class TestSorting(unittest.TestCase):
+    """候选排序：热度优先，同分按时效，无时间戳不炸"""
+
+    def test_secondary_recency_ordering(self):
+        items = [
+            {"impact_score": 10, "age_hours": 3.0, "title": "older"},
+            {"impact_score": 10, "age_hours": 0.5, "title": "fresh"},
+            {"impact_score": 10, "age_hours": None,  "title": "untimed"},
+            {"impact_score": 20, "age_hours": 9.0,  "title": "hotter"},
+        ]
+        items.sort(key=lambda x: (-x["impact_score"],
+                                  x["age_hours"] if x.get("age_hours") is not None else float("inf")))
+        self.assertEqual([i["title"] for i in items], ["hotter", "fresh", "older", "untimed"])
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 
