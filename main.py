@@ -47,7 +47,7 @@ import logging
 from typing import List, Dict, Any, Optional, Set, Tuple
 import io
 import concurrent.futures
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import requests
 import feedparser
@@ -121,12 +121,39 @@ def within_active_hours(spec: str = ACTIVE_HOURS_BEIJING) -> bool:
         return True
     start = int(m.group(1)) + int(m.group(2) or 0) / 60
     end = int(m.group(3)) + int(m.group(4) or 0) / 60
-    from datetime import timedelta
     beijing_now = datetime.now(timezone(timedelta(hours=8)))
     hour_now = beijing_now.hour + beijing_now.minute / 60
     if start <= end:   # 常规同日窗口
         return start <= hour_now <= end
     return hour_now >= start or hour_now <= end  # 跨夜窗口
+
+
+# ---------------------------------------------------------------------------
+# campaign_intel.json 通用状态读写器（_ 前缀键：AI 情报刷新时自动保留）
+# 兜底图托管缓存 / 报警节流 / LLM 断路 / RSS 源健康度 共用同一持久化通道
+# ---------------------------------------------------------------------------
+def intel_state_get(key: str, default=None):
+    try:
+        if os.path.exists(CAMPAIGN_INTEL_FILE):
+            with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
+                return json.load(f).get(key, default)
+    except Exception:
+        pass
+    return default
+
+
+def intel_state_set(key: str, value) -> None:
+    try:
+        intel = {}
+        if os.path.exists(CAMPAIGN_INTEL_FILE):
+            with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
+                intel = json.load(f)
+        intel[key] = value
+        with open(CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
+            json.dump(intel, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.debug(f"写入 intel 状态 [{key}] 失败 (不影响主流程): {e}")
+
 
 # 与英文单词撞名的真实代币代码：原文必须全大写(NEAR)或带 $ 前缀($NEAR) 才采信，防止误判
 AMBIGUOUS_TICKERS = {
@@ -597,10 +624,45 @@ class CacheManager:
 class NewsFetcher:
     """多源资讯抓取与重磅热点打分排序"""
 
+    _FEED_HEALTH_KEY = "_feed_health"
+    FEED_PARK_THRESHOLD = 3   # 连续失败 N 次进入停放
+    FEED_PARK_HOURS = 6       # 停放时长（小时）
+
     def __init__(self):
         # 运行统计器：供最终报告输出吞吐详情与可用性诊断
         self.stats = {"fetched": 0, "stale": 0, "cached": 0, "near_dup": 0, "kept": 0,
-                      "feeds_ok": 0, "feeds_failed": []}  # feeds_failed: 失败的源名称列表
+                      "feeds_ok": 0, "feeds_failed": [], "feeds_parked": []}
+
+    # ---------------- 源健康度（跨运行持久化） ----------------
+    def _feed_health(self) -> Dict[str, Dict[str, Any]]:
+        state = intel_state_get(self._FEED_HEALTH_KEY, {})
+        return state if isinstance(state, dict) else {}
+
+    def _feed_is_parked(self, name: str) -> bool:
+        info = self._feed_health().get(name)
+        if not info:
+            return False
+        try:
+            until = datetime.fromisoformat(str(info.get("parked_until", "")))
+            return datetime.now(until.tzinfo or timezone.utc) < until
+        except Exception:
+            return False
+
+    def _feed_record(self, name: str, ok: bool):
+        state = self._feed_health()
+        if ok:
+            if name in state:
+                state.pop(name)
+                intel_state_set(self._FEED_HEALTH_KEY, state)
+            return
+        info = state.get(name, {"fails": 0})
+        info["fails"] = int(info.get("fails", 0)) + 1
+        if info["fails"] >= self.FEED_PARK_THRESHOLD:
+            info["parked_until"] = (datetime.now(timezone.utc) + timedelta(hours=self.FEED_PARK_HOURS)).isoformat()
+            logger.warning(f"🔕 数据源 [{name}] 连续失败 {info['fails']} 次，自动停放 {self.FEED_PARK_HOURS} 小时。")
+        info["last_fail"] = datetime.now(timezone.utc).isoformat()
+        state[name] = info
+        intel_state_set(self._FEED_HEALTH_KEY, state)
 
     # RSS 摘要中可能出现的提示词注入特征（命中即从其位置截断，防止劫持机器人发言）
     INJECTION_RE = re.compile(
@@ -764,14 +826,17 @@ class NewsFetcher:
             if resp is None or resp.status_code != 200:
                 logger.warning(f"数据源 [{name}] 响应异常: {'网络错误' if resp is None else f'HTTP {resp.status_code}'}")
                 self.stats["feeds_failed"].append(name)
+                self._feed_record(name, ok=False)
                 return items
 
             feed = feedparser.parse(resp.content)
             if not feed.entries:
                 self.stats["feeds_ok"] += 1
+                self._feed_record(name, ok=True)
                 return items
 
             self.stats["feeds_ok"] += 1
+            self._feed_record(name, ok=True)
             logger.info(f"数据源 [{name}] 抓取到 {len(feed.entries)} 条新闻。")
             stale_skipped = 0
 
@@ -831,15 +896,27 @@ class NewsFetcher:
         except Exception as e:
             logger.warning(f"拉取数据源 [{name}] 出错: {e}")
             self.stats["feeds_failed"].append(name)
+            self._feed_record(name, ok=False)
         return items
 
     def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5,
                          priority_tokens: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        # 自动停放连续故障源：本次运行完全不触碰它们
+        active_feeds = []
+        for cfg in RSS_FEEDS:
+            if self._feed_is_parked(cfg["name"]):
+                self.stats["feeds_parked"].append(cfg["name"])
+                logger.info(f"⏸️ 数据源 [{cfg['name']}] 处于停放期，本次跳过。")
+            else:
+                active_feeds.append(cfg)
+
         candidates = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(RSS_FEEDS), 10)) as executor:
+        if not active_feeds:
+            logger.warning(f"⚠️ 所有 {len(RSS_FEEDS)} 个数据源均处于故障停放期，本轮将无候选。请人工检查网络。")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(active_feeds) or 1, 10)) as executor:
             future_to_feed = {
                 executor.submit(self._fetch_single_feed, cfg, cache_mgr, limit_per_feed): cfg["name"]
-                for cfg in RSS_FEEDS
+                for cfg in active_feeds
             }
             for future in concurrent.futures.as_completed(future_to_feed):
                 feed_name = future_to_feed[future]
@@ -848,6 +925,8 @@ class NewsFetcher:
                     candidates.extend(feed_items)
                 except Exception as exc:
                     logger.warning(f"解析数据源 [{feed_name}] 结果异常: {exc}")
+                    self.stats["feeds_failed"].append(feed_name)
+                    self._feed_record(feed_name, ok=False)
 
         # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布
         if priority_tokens:
@@ -881,11 +960,13 @@ class NewsFetcher:
         candidates.sort(key=lambda x: x["impact_score"], reverse=True)
         self.stats["kept"] = len(candidates)
         feeds_failed = self.stats["feeds_failed"]
+        feeds_parked = self.stats["feeds_parked"]
         if feeds_ok := self.stats["feeds_ok"]:
             level = logging.WARNING if feeds_failed else logging.INFO
+            extra = f" / 停放 {len(feeds_parked)}" if feeds_parked else ""
             logger.log(
                 level,
-                f"多源并发扫描完毕: 源在线 {feeds_ok} / 故障 {len(feeds_failed)}"
+                f"多源并发扫描完毕: 源在线 {feeds_ok} / 故障 {len(feeds_failed)}{extra}"
                 f"{f' ({feeds_failed})' if feeds_failed else ''} | "
                 f"扫描 {self.stats['fetched']} 条 → 过滤旧闻 {self.stats['stale']} / "
                 f"已发 {self.stats['cached']} / 近似重复 {self.stats['near_dup']} → 剩候选 {len(candidates)} 条。"
@@ -896,6 +977,11 @@ class NewsFetcher:
 # ---------------------------------------------------------------------------
 # 模块五：资深交易员全币种原创风格多模型 AI 引擎 (MultiLLMEngine)
 # ---------------------------------------------------------------------------
+class _QualityGateRejection(ValueError):
+    """质量门拦截专用异常：内容跑偏而非平台故障，不进跨运行断路器"""
+    pass
+
+
 class LLMProviderConfig:
     """单个 LLM 模型提供商配置"""
 
@@ -974,6 +1060,43 @@ class MultiLLMEngine:
         # 客户端缓存：同一提供商复用底层 httpx 连接池
         self._clients: Dict[str, OpenAI] = {}
 
+    # ---------------- 跨运行熔断持久化（网络抖动级降级到冷却级） ----------------
+    _BREAKER_STATE_KEY = "_llm_breaker"
+    _BREAKER_BASE_MIN = 10      # 第 1 次失败冷却 10 分钟
+    _BREAKER_MAX_MIN = 240      # 指数封顶 4 小时
+
+    def _breaker_state(self) -> Dict[str, Dict[str, Any]]:
+        state = intel_state_get(self._BREAKER_STATE_KEY, {})
+        return state if isinstance(state, dict) else {}
+
+    def _breaker_cooled_down(self, name: str) -> bool:
+        """True = 该提供商处于冷却期，本次运行应跳过"""
+        info = self._breaker_state().get(name)
+        if not info:
+            return False
+        try:
+            until = datetime.fromisoformat(str(info.get("cooldown_until", "")))
+            return datetime.now(until.tzinfo or timezone.utc) < until
+        except Exception:
+            return False
+
+    def _breaker_record_failure(self, name: str):
+        state = self._breaker_state()
+        info = state.get(name, {"fails": 0})
+        info["fails"] = int(info.get("fails", 0)) + 1
+        cooldown_min = min(self._BREAKER_BASE_MIN * (2 ** (info["fails"] - 1)), self._BREAKER_MAX_MIN)
+        info["cooldown_until"] = (datetime.now(timezone.utc) + timedelta(minutes=cooldown_min)).isoformat()
+        state[name] = info
+        intel_state_set(self._BREAKER_STATE_KEY, state)
+        logger.warning(f"提供商 [{name}] 累计失败 {info['fails']} 次，进入冷却 {cooldown_min} 分钟")
+
+    def _breaker_record_success(self, name: str):
+        state = self._breaker_state()
+        if name in state:
+            state.pop(name)
+            intel_state_set(self._BREAKER_STATE_KEY, state)
+            logger.info(f"提供商 [{name}] 冷却解除，恢复正常调度")
+
     def _get_client(self, provider: LLMProviderConfig) -> OpenAI:
         """按提供商缓存 OpenAI 客户端；带 HTTP-Referer/X-Title 头以兼容 OpenRouter 等要求来源识别的平台"""
         cache_key = provider.name
@@ -990,8 +1113,19 @@ class MultiLLMEngine:
         return self._clients[cache_key]
 
     def _ordered_providers(self) -> List[LLMProviderConfig]:
-        """按本次运行内的连续失败次数升序排序（稳定排序，保持原有配置优先级）"""
-        return sorted(self.providers, key=lambda p: self._fail_counts.get(p.name, 0))
+        """
+        两层健康度调度：
+        1. 跨运行断路：处于熔断冷却期的提供商直接跳过（全量冷却时才被迫重启用）
+        2. 运行内连续失败次数升序排序（稳定排序，保持原有配置优先级）
+        """
+        active = [p for p in self.providers if not self._breaker_cooled_down(p.name)]
+        cooled = [p for p in self.providers if self._breaker_cooled_down(p.name)]
+        if cooled:
+            logger.info(f"⚡ 断路器跳过冷却中提供商: {[p.name for p in cooled]}")
+        if not active:
+            logger.warning("所有提供商均在冷却期，强制全员重启尝试。")
+            active = list(self.providers)
+        return sorted(active, key=lambda p: self._fail_counts.get(p.name, 0))
 
     def _build_provider_chain(self) -> List[LLMProviderConfig]:
         """构建提供商备份链"""
@@ -1167,7 +1301,7 @@ class MultiLLMEngine:
                 # 0. 质量门：过短/过长/跑偏英文输出一律视为失败并切换下一模型
                 passed, fail_reason = self._passes_quality_gate(content)
                 if not passed:
-                    raise ValueError(f"质量门拦截: {fail_reason}")
+                    raise _QualityGateRejection(fail_reason)
 
                 # 1. 提取代币：交易所校验过的 token_hints 拥有最高权重，模型自报的 $ 标的仅作补充
                 raw_tokens = re.findall(r"\$([A-Za-z0-9]{2,10})", content)
@@ -1187,18 +1321,30 @@ class MultiLLMEngine:
                     primary_token = valid_tokens[0]
                     content += f"\n\n#Write2Earn #BinanceSquare #{primary_token}"
 
-                # 成功即清除该提供商的失败计数
+                # 成功即清除该提供商的失败计数与跨运行熔断
                 self._fail_counts.pop(provider.name, None)
+                self._breaker_record_success(provider.name)
                 logger.info(f"🎉 模型 [{provider.name}] 生成成功！(识别标的: {valid_tokens})")
                 return {"content": content, "tokens": valid_tokens, "provider": provider.name}
 
+            except _QualityGateRejection as e:
+                # 内容跑偏是模型质量问题，换一个模型重试；但不计入跨运行断路器
+                self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
+                logger.warning(f"提供商 [{provider.name}] 质量门拦截: {e}")
+                fail_reason = f"质量门: {e}"
+                enter_breaker = False
             except Exception as e:
                 err_msg = str(e)
                 self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
+                self._breaker_record_failure(provider.name)
+                fail_reason = err_msg
+                enter_breaker = True
                 logger.warning(f"提供商 [{provider.name}] 请求失败: {err_msg} (本次运行连续失败 {self._fail_counts[provider.name]} 次)")
-                if index < len(ordered) - 1:
-                    logger.info(f"正在自动切换至下一个备用提供商...")
-                    time.sleep(1)
+
+            # 统一出口：切换展示 + 退避
+            if index < len(ordered) - 1:
+                logger.info(f"正在自动切换至下一个备用提供商（原因: {fail_reason}{'，已记入断路器' if enter_breaker else ''}）...")
+                time.sleep(1)
 
         logger.error("所有已配置的 LLM 提供商均调用失败！")
         return None
@@ -1478,32 +1624,18 @@ class ImageManager:
     @classmethod
     def _read_fallback_cache(cls) -> Optional[str]:
         """当日已上传过的兜底图直接复用，跳过重复下载与 S3 上传流程"""
-        try:
-            with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
-                intel = json.load(f)
-            cached = intel.get(cls._FALLBACK_CACHE_KEY, {})
-            if cached.get("date") == datetime.now(timezone.utc).strftime("%Y-%m-%d") and cached.get("url"):
-                logger.info(f"兜底图当日已托管，直接复用: {cached['url']}")
-                return cached["url"]
-        except Exception:
-            pass
+        cached = intel_state_get(cls._FALLBACK_CACHE_KEY, {})
+        if isinstance(cached, dict) and cached.get("date") == datetime.now(timezone.utc).strftime("%Y-%m-%d") and cached.get("url"):
+            logger.info(f"兜底图当日已托管，直接复用: {cached['url']}")
+            return cached["url"]
         return None
 
     @classmethod
     def _write_fallback_cache(cls, url: str):
-        try:
-            intel: Dict[str, Any] = {}
-            if os.path.exists(CAMPAIGN_INTEL_FILE):
-                with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
-                    intel = json.load(f)
-            intel[cls._FALLBACK_CACHE_KEY] = {
-                "url": url,
-                "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-            }
-            with open(CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
-                json.dump(intel, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            logger.debug(f"写入兜底图缓存失败(不影响主流程): {e}")
+        intel_state_set(cls._FALLBACK_CACHE_KEY, {
+            "url": url,
+            "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        })
 
     @classmethod
     def prepare_and_upload(cls, api_key: str, raw_image_url: Optional[str]) -> Optional[str]:
@@ -1545,8 +1677,32 @@ class ImageManager:
 class SquarePublisher:
     """币安广场发布组件"""
 
+    # 币安广场已知业务错误码 → 人类可读的排障指引
+    BINANCE_ERROR_GUIDE = {
+        "20002":  "内容触发安全风控拦截（如含违禁词/诱导信息），请检查文案或换一篇。",
+        "20022":  "内容触发安全风控拦截（高危违规），同题需人工审核。",
+        "220094": "Hashtag 数量超过币安限制（>3），已自动切除多余标签仍失败则需查 prompt。",
+        "20005":  "账户发帖频率或被限流，请降低发帖频率/检查账号状态。",
+    }
+
+    @classmethod
+    def _classify_publish_error(cls, status_code: int, resp_json: Optional[Dict[str, Any]]) -> str:
+        """把发布失败翻译为可操作的排障指引"""
+        if status_code in (401, 403):
+            return ("❌ SQUARE_API_KEY 无效或已失效（HTTP {}). 请到 币安 Square → API 管理 "
+                    "重新生成密钥并更新仓库 Secrets。".format(status_code))
+        if resp_json:
+            code = str(resp_json.get("code", ""))
+            if code in cls.BINANCE_ERROR_GUIDE:
+                return f"币安返回业务码 {code}: {cls.BINANCE_ERROR_GUIDE[code]}"
+            msg = resp_json.get("message") or resp_json.get("msg") or ""
+            if msg:
+                return f"币安返回业务异常 (code={code}): {msg}"
+        return f"HTTP {status_code}（非常规状态，需人工查日志）"
+
     def __init__(self, api_key: str):
         self.api_key = api_key
+        self.last_error: Optional[str] = None  # 最近一次发布失败的诊断信息，供上层报警/报告使用
 
     # 固定强制剥离 $ 的非代币/稳定币词（即使在交易所存在同名标的也不做挂件）
     FORCE_STRIP_CASHTAGS = [
@@ -1699,7 +1855,11 @@ class SquarePublisher:
                 if image_url:
                     logger.warning(f"带图发布遭遇 HTTP {status_code}，自动降级为纯文本重试发布...")
                     return self.publish(content, image_url=None)
-                logger.error(f"发帖失败！HTTP {status_code}, 响应: {resp_text}")
+                diagnosis = self._classify_publish_error(status_code, None)
+                self.last_error = diagnosis
+                logger.error(f"发帖失败！HTTP {status_code} | 诊断: {diagnosis}\n原始响应: {resp_text[:300]}")
+                if status_code in (401, 403):
+                    Notifier.send_notification("币安 API Key 失效", diagnosis, is_error=True)
                 return False
 
             try:
@@ -1721,7 +1881,12 @@ class SquarePublisher:
                 if image_url:
                     logger.warning(f"带图发布返回业务错误 ({resp_json.get('message')})，自动降级为纯文本重试发布...")
                     return self.publish(content, image_url=None)
-                logger.error(f"币安广场返回业务错误: {json.dumps(resp_json, ensure_ascii=False)}")
+                diagnosis = self._classify_publish_error(status_code, resp_json)
+                self.last_error = diagnosis
+                logger.error(f"币安广场返回业务错误: {diagnosis} | 原始: {json.dumps(resp_json, ensure_ascii=False)[:300]}")
+                # 内容被风控拦截（20002/20022）≠ 网络故障，不重置熔断，但值得提醒
+                if str(resp_json.get("code", "")) in ("20002", "20022"):
+                    Notifier.send_notification("发帖内容被风控拦截", f"文案触发 20002/20022 审核拦截: {diagnosis}", is_error=True)
                 return False
 
         except Exception as e:
@@ -1755,12 +1920,8 @@ class Notifier:
         """返回 True 表示该报警在冷却期内，应跳过发送"""
         key = hashlib.sha256(title.encode("utf-8")).hexdigest()[:16]
         now = datetime.now(timezone.utc)
-        state = {}
-        try:
-            if os.path.exists(CAMPAIGN_INTEL_FILE):
-                with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
-                    state = json.load(f).get("_alert_state", {})
-        except Exception:
+        state = intel_state_get("_alert_state", {})
+        if not isinstance(state, dict):
             state = {}
 
         last = state.get(key)
@@ -1776,16 +1937,7 @@ class Notifier:
         state[key] = now.isoformat()
         # 只保留最近 32 条报警记录，防状态膨胀
         state = dict(sorted(state.items(), key=lambda kv: kv[1])[-32:])
-        try:
-            intel = {}
-            if os.path.exists(CAMPAIGN_INTEL_FILE):
-                with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
-                    intel = json.load(f)
-            intel["_alert_state"] = state
-            with open(CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
-                json.dump(intel, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            logger.debug(f"写入报警节流状态失败(不影响发送): {e}")
+        intel_state_set("_alert_state", state)
         return False
 
     @staticmethod
@@ -1983,9 +2135,14 @@ def _run_main():
     )
     if not candidates:
         # 全源同时故障 = 基建级问题，必须报警而非静默默认"无事发生"
-        if fetcher.stats["feeds_failed"] and fetcher.stats["feeds_ok"] == 0:
-            msg = (f"所有 {len(RSS_FEEDS)} 个 RSS 数据源均拉取失败，无法获取热点新闻，"
-                   f"请检查网络连通性或数据源可用性。失败源: {', '.join(fetcher.stats['feeds_failed'])}")
+        if fetcher.stats["feeds_failed"] and fetcher.stats["feeds_ok"] == 0 or \
+           len(fetcher.stats["feeds_parked"]) == len(RSS_FEEDS):
+            if fetcher.stats["feeds_ok"] == 0 and fetcher.stats["feeds_failed"]:
+                msg = (f"所有 {len(RSS_FEEDS)} 个 RSS 数据源均拉取失败，无法获取热点新闻，"
+                       f"请检查网络连通性或数据源可用性。失败源: {', '.join(fetcher.stats['feeds_failed'])}")
+            else:
+                msg = (f"所有 {len(RSS_FEEDS)} 个 RSS 数据源均已因连续故障被自动停放 "
+                       f"({NewsFetcher.FEED_PARK_HOURS}h)，请检查网络连通性或源可用性。")
             logger.error(f"🚨 {msg}")
             Notifier.send_notification("RSS 数据源全线故障", msg, is_error=True)
             write_github_step_summary(fetcher, fng_index, campaign_intel, [], dry_run)
@@ -2087,7 +2244,8 @@ def _run_main():
                 Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}\n\n{post_content[:200]}...")
             else:
                 logger.error(f"发帖失败，本次暂不记录缓存以供下次重试: {title}")
-                Notifier.send_notification("币安发帖失败", f"新闻: {title}\n发布接口返回异常，已跳过并将在下次重试。", is_error=True)
+                detail = publisher.last_error or "发布接口返回异常"
+                Notifier.send_notification("币安发帖失败", f"新闻: {title}\n诊断: {detail}\n已跳过并将在下次自动重试。", is_error=True)
 
         # 模拟自然人工操作延迟
         if posted_count < max_posts:

@@ -16,5 +16,11 @@
     "$USD1"
   ],
   "strategy_guidance": "优先围绕Binance Alpha交易竞赛（XPIN/COLLECT）、SAHARA与ZKC交易锦标赛以及Binance Wallet赛季PnL竞赛发文，引导读者参与指定代币现货/合约交易以叠加Write2Earn内容返佣与官方活动奖励双收益。",
-  "last_updated": "2026-09-04T18:57:34.035144Z"
+  "last_updated": "2026-09-04T18:57:34.035144Z",
+  "_feed_health": {
+    "CryptoSlate (新赛道与代币经济)": {
+      "fails": 1,
+      "last_fail": "2026-09-05T00:55:37.517287+00:00"
+    }
+  }
 }

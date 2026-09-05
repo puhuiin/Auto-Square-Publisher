@@ -364,6 +364,128 @@ class TestTokenDailyLimit(unittest.TestCase):
             os.unlink(path)
 
 
+class TestLLMBreaker(unittest.TestCase):
+    """跨运行 LLM 熔断器"""
+
+    def setUp(self):
+        import tempfile, json
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"active_tags": []}, f)
+
+        self.eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        self.eng._fail_counts = {}
+        self.eng._clients = {}
+        self.eng.providers = [
+            m.LLMProviderConfig("dead", "https://a", "k1", "m1"),
+            m.LLMProviderConfig("alive", "https://b", "k2", "m2"),
+        ]
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def test_cooled_down_provider_skipped(self):
+        self.eng._breaker_record_failure("dead")
+        ordered = [p.name for p in self.eng._ordered_providers()]
+        self.assertEqual(ordered, ["alive"], "冷却中的提供商应被跳过")
+
+    def test_success_clears_cooldown(self):
+        self.eng._breaker_record_failure("dead")
+        self.assertTrue(self.eng._breaker_cooled_down("dead"))
+        self.eng._breaker_record_success("dead")
+        self.assertFalse(self.eng._breaker_cooled_down("dead"))
+
+    def test_all_cooled_forces_restart(self):
+        self.eng._breaker_record_failure("dead")
+        self.eng._breaker_record_failure("alive")
+        ordered = self.eng._ordered_providers()
+        self.assertEqual(len(ordered), 2, "全员冷却时应强制重启全体")
+
+    def test_exponential_backoff(self):
+        from datetime import datetime as dt, timezone as tz
+        self.eng._breaker_record_failure("dead")  # 1st fail → 10min
+        s1 = m.intel_state_get("_llm_breaker")["dead"]["cooldown_until"]
+        until1 = dt.fromisoformat(s1)
+        expected = dt.now(tz.utc) + timedelta(minutes=10)
+        self.assertLess(abs((until1 - expected).total_seconds()), 30)
+
+        self.eng._breaker_record_failure("dead")  # 2nd fail → 20min
+        s2 = m.intel_state_get("_llm_breaker")["dead"]["cooldown_until"]
+        until2 = dt.fromisoformat(s2)
+        expected2 = dt.now(tz.utc) + timedelta(minutes=20)
+        self.assertLess(abs((until2 - expected2).total_seconds()), 30)
+
+
+class TestFeedParking(unittest.TestCase):
+    """RSS 源连续失败自动停放"""
+
+    def setUp(self):
+        import tempfile, json
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"active_tags": []}, f)
+        self.f = m.NewsFetcher()
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def test_parked_after_threshold_failures(self):
+        name = "TestFeed"
+        for _ in range(m.NewsFetcher.FEED_PARK_THRESHOLD - 1):
+            self.f._feed_record(name, ok=False)
+        self.assertFalse(self.f._feed_is_parked(name), "未达阈值不应停放")
+        self.f._feed_record(name, ok=False)  # 达到阈值
+        self.assertTrue(self.f._feed_is_parked(name))
+
+    def test_success_resets_health(self):
+        name = "RecoverFeed"
+        for _ in range(m.NewsFetcher.FEED_PARK_THRESHOLD):
+            self.f._feed_record(name, ok=False)
+        self.assertTrue(self.f._feed_is_parked(name))
+        self.f._feed_record(name, ok=True)
+        self.assertFalse(self.f._feed_is_parked(name))
+
+
+class TestPublishErrorClassification(unittest.TestCase):
+    """币安发布报错精细分类"""
+
+    def test_auth_error_guidance(self):
+        guide = m.SquarePublisher._classify_publish_error(401, None)
+        self.assertIn("SQUARE_API_KEY", guide)
+        self.assertIn("Secrets", guide)
+
+    def test_risk_control_code_20002(self):
+        guide = m.SquarePublisher._classify_publish_error(200, {"code": "20002"})
+        self.assertIn("风控", guide)
+
+    def test_hashtag_code_220094(self):
+        guide = m.SquarePublisher._classify_publish_error(200, {"code": "220094"})
+        self.assertIn("Hashtag", guide)
+
+    def test_unknown_falls_back_to_msg(self):
+        guide = m.SquarePublisher._classify_publish_error(200, {"code": "99999", "message": "weird thing"})
+        self.assertIn("weird thing", guide)
+
+    def test_last_error_recorded(self):
+        pub = m.SquarePublisher.__new__(m.SquarePublisher)
+        pub.api_key = "k"
+        pub.last_error = None
+        from unittest.mock import patch
+        fake_resp = type("R", (), {"status_code": 403, "text": "Forbidden"})()
+        with patch("main.requests.post", return_value=fake_resp):
+            result = pub.publish("这是一段足够长的正文内容，用于测试发布失败路径的行为是否符合预期。", image_url=None)
+        self.assertFalse(result)
+        self.assertIn("SQUARE_API_KEY", pub.last_error or "")
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 
