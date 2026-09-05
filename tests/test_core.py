@@ -692,6 +692,110 @@ class TestReasonixGateway(unittest.TestCase):
         self.assertEqual(p2.timeout, 25.0, "默认 timeout 应为 25 秒")
 
 
+class TestGitStateMerge(unittest.TestCase):
+    """git 同步合并脚本（独立于 workflow 的单测覆盖）"""
+
+    def setUp(self):
+        import tempfile, importlib.util
+        self.dir = tempfile.mkdtemp()
+        # 动态加载 scripts/git_state_merge.py
+        spec = importlib.util.spec_from_file_location(
+            "git_state_merge",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "git_state_merge.py"))
+        self.merger = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.merger)
+
+    def _write(self, name, obj):
+        import json
+        p = os.path.join(self.dir, name)
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(obj, f, ensure_ascii=False)
+        return p
+
+    def test_sent_cache_unions_by_id(self):
+        remote = [{"id": "a", "sent_at": "2026-09-01T00:00:00Z"},
+                   {"id": "b", "sent_at": "2026-09-02T00:00:00Z"}]
+        local  = [{"id": "b", "sent_at": "2026-09-02T01:00:00Z"},   # 同 id 以时间戳较大者为准
+                   {"id": "c", "sent_at": "2026-09-03T00:00:00Z"}]
+        remote_p = self._write("sent_cache.json", remote)
+        local_p = self._write("local_cache.json", local)
+        n = self.merger.merge_sent_cache(local_p, remote_p)
+        self.assertEqual(n, 3)
+
+    def test_sent_cache_respects_max_cap(self):
+        remote = [{"id": f"id{i}", "sent_at": "2026-09-01T00:00:00Z"} for i in range(600)]
+        remote_p = self._write("sent_cache.json", remote)
+        n = self.merger.merge_sent_cache(os.path.join(self.dir, "no_local.json"), remote_p)
+        self.assertEqual(n, 500)
+
+    def test_intel_state_deep_merge(self):
+        remote = {
+            "last_updated": "2026-09-04T10:00:00Z",
+            "active_tags": ["#Write2Earn"],
+            "_alert_state": {"k1": "2026-09-04T10:00:00"},
+            "_feed_health": {"feedA": {"fails": 1, "last_fail": "2026-09-04T09:00:00"}},
+        }
+        local = {
+            "last_updated": "2026-09-03T10:00:00Z",  # 更旧的主体
+            "_alert_state": {"k1": "2026-09-05T09:00:00", "k2": "2026-09-05T08:00:00"},  # 新状态
+            "_fallback_image": {"url": "http://x", "date": "2026-09-05"},  # 本地独有
+        }
+        remote_p = self._write("campaign_intel.json", remote)
+        local_p = self._write("local_intel.json", local)
+        self.assertTrue(self.merger.merge_intel(local_p, remote_p))
+        import json
+        with open(remote_p, encoding="utf-8") as f:
+            merged = json.load(f)
+        self.assertEqual(merged["last_updated"], "2026-09-04T10:00:00Z")  # 主体取较新
+        self.assertEqual(merged["_alert_state"]["k1"], "2026-09-05T09:00:00")  # 状态大值优先
+        self.assertIn("k2", merged["_alert_state"])  # 本地新增保留
+        self.assertIn("_fallback_image", merged)      # 本地独有键保留
+        self.assertEqual(merged["_feed_health"]["feedA"]["fails"], 1)  # 远端独有保留
+
+    def test_merge_state_recursive(self):
+        a = {"x": {"y": 1}}
+        b = {"x": {"z": 2}}
+        merged = self.merger.merge_state(a, b)
+        self.assertEqual(merged, {"x": {"y": 1, "z": 2}})
+
+
+class TestThreadSafety(unittest.TestCase):
+    """并发场景下 intel_state_update 不应丢失更新"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            import json
+            json.dump({"_counter": {}}, f)
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def test_concurrent_updates_no_lost_writes(self):
+        import threading
+        def worker(i):
+            def _add(state):
+                state = dict(state or {})
+                state[f"key{i}"] = i
+                return state
+            m.intel_state_update("_counter", _add, default={})
+
+        threads = [threading.Thread(target=worker, args=(i,)) for i in range(20)]
+        for t in threads: t.start()
+        for t in threads: t.join()
+
+        import json
+        with open(self.tmp, encoding="utf-8") as f:
+            result = json.load(f)
+        self.assertEqual(len(result["_counter"]), 20, "20 个并发线程各自加一个键，丢失就说明原子性有问题")
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 

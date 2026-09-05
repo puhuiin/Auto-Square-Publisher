@@ -156,65 +156,8 @@ jobs:
             git fetch origin "$BRANCH"
             git reset --hard "origin/$BRANCH"
 
-            python - <<'PYEOF'
-          import json
-
-          def load_list(path):
-              try:
-                  with open(path, encoding="utf-8") as f:
-                      data = json.load(f)
-                  if isinstance(data, list):
-                      return data
-                  if isinstance(data, dict):
-                      return data.get("sent_ids", [])
-              except Exception:
-                  pass
-              return []
-
-          # sent_cache.json: 本地与远端按 id 取并集，任何一方已发记录都不丢失，杜绝重复发帖
-          union = {}
-          for item in load_list("sent_cache.json") + load_list("/tmp/local_sent_cache.json"):
-              if isinstance(item, dict) and item.get("id"):
-                  union[item["id"]] = item
-          merged = sorted(union.values(), key=lambda x: x.get("sent_at", ""))[-500:]
-          with open("sent_cache.json", "w", encoding="utf-8") as f:
-              json.dump(merged, f, ensure_ascii=False, indent=2)
-
-          # campaign_intel.json: 主体保留 last_updated 较新的一份，
-          # 但 "_" 前缀的运行时状态键（断路器/报警节流/源健康/兜底图）按时间戳取双方最大值深合并，绝不丢状态
-          def load_obj(path):
-              try:
-                  with open(path, encoding="utf-8") as f:
-                      d = json.load(f)
-                  return d if isinstance(d, dict) else None
-              except Exception:
-                  return None
-
-          def merge_state(a, b):
-              out = {}
-              for k in set(a) | set(b):
-                  va, vb = a.get(k), b.get(k)
-                  if isinstance(va, dict) and isinstance(vb, dict):
-                      out[k] = merge_state(va, vb)
-                  elif va is None:
-                      out[k] = vb
-                  elif vb is None:
-                      out[k] = va
-                  else:
-                      # 状态值本质是 ISO 时间戳或计数，取较大者即为较新状态
-                      out[k] = max(va, vb) if not isinstance(va, (list,)) else (va if len(va) >= len(vb) else vb)
-              return out
-
-          versions = [d for d in (load_obj("campaign_intel.json"), load_obj("/tmp/local_intel.json")) if d]
-          if versions:
-              best = dict(max(versions, key=lambda d: d.get("last_updated", "")))
-              state1 = {k: v for k, v in (versions[0]).items() if k.startswith("_")}
-              state2 = {k: v for k, v in (versions[1]).items() if k.startswith("_")} if len(versions) > 1 else {}
-              merged_state = merge_state(state1, state2)
-              best.update(merged_state)
-              with open("campaign_intel.json", "w", encoding="utf-8") as f:
-                  json.dump(best, f, ensure_ascii=False, indent=2)
-          PYEOF
+            # 合并逻辑抽在 scripts/git_state_merge.py（独立于 workflow 可单元测试）
+            python scripts/git_state_merge.py /tmp
 
             # 3. 若并集后与远端完全一致则无需提交（例如并发任务已先一步回写）
             if git diff --quiet -- sent_cache.json campaign_intel.json; then

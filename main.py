@@ -47,6 +47,7 @@ import logging
 from typing import List, Dict, Any, Optional, Set, Tuple
 import io
 import math
+import threading
 import concurrent.futures
 from datetime import datetime, timezone, timedelta
 
@@ -134,10 +135,13 @@ def within_active_hours(spec: str = ACTIVE_HOURS_BEIJING) -> bool:
 # campaign_intel.json 通用状态读写器（_ 前缀键：AI 情报刷新时自动保留）
 # 兜底图托管缓存 / 报警节流 / LLM 断路 / RSS 源健康度 共用同一持久化通道
 # ---------------------------------------------------------------------------
+_INTEL_STATE_LOCK = threading.Lock()  # RSS 抓取是 10 线程并发，多个线程会同时改 _feed_health 等键
+
+
 def intel_state_get(key: str, default=None):
     try:
         if os.path.exists(CAMPAIGN_INTEL_FILE):
-            with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
+            with _INTEL_STATE_LOCK, open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
                 return json.load(f).get(key, default)
     except Exception:
         pass
@@ -146,15 +150,38 @@ def intel_state_get(key: str, default=None):
 
 def intel_state_set(key: str, value) -> None:
     try:
-        intel = {}
-        if os.path.exists(CAMPAIGN_INTEL_FILE):
-            with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
-                intel = json.load(f)
-        intel[key] = value
-        with open(CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
-            json.dump(intel, f, ensure_ascii=False, indent=2)
+        # 读-改-写整把锁：并发写入若不加锁会读旧源、部分覆盖，甚至截断成半个 JSON
+        with _INTEL_STATE_LOCK:
+            intel = {}
+            if os.path.exists(CAMPAIGN_INTEL_FILE):
+                with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
+                    intel = json.load(f)
+            intel[key] = value
+            with open(CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
+                json.dump(intel, f, ensure_ascii=False, indent=2)
     except Exception as e:
         logger.debug(f"写入 intel 状态 [{key}] 失败 (不影响主流程): {e}")
+
+
+def intel_state_update(key: str, mutate_fn, default=None):
+    """
+    原子读-改-写：mutate_fn(current_value) -> new_value。
+    并发场景下 get+set 分两次拿锁仍会撞车，此 API 保证整个变更过程原子。
+    """
+    with _INTEL_STATE_LOCK:
+        try:
+            intel = {}
+            if os.path.exists(CAMPAIGN_INTEL_FILE):
+                with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
+                    intel = json.load(f)
+            current = intel.get(key, default)
+            intel[key] = mutate_fn(current)
+            with open(CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
+                json.dump(intel, f, ensure_ascii=False, indent=2)
+            return intel[key]
+        except Exception as e:
+            logger.debug(f"原子更新 intel 状态 [{key}] 失败 (不影响主流程): {e}")
+            return None
 
 
 # 与英文单词撞名的真实代币代码：原文必须全大写(NEAR)或带 $ 前缀($NEAR) 才采信，防止误判
@@ -759,20 +786,30 @@ class NewsFetcher:
             return False
 
     def _feed_record(self, name: str, ok: bool):
-        state = self._feed_health()
         if ok:
-            if name in state:
-                state.pop(name)
-                intel_state_set(self._FEED_HEALTH_KEY, state)
+            def _clear(state):
+                state = dict(state or {})
+                state.pop(name, None)
+                return state
+            intel_state_update(self._FEED_HEALTH_KEY, _clear, default={})
             return
-        info = state.get(name, {"fails": 0})
-        info["fails"] = int(info.get("fails", 0)) + 1
-        if info["fails"] >= self.FEED_PARK_THRESHOLD:
-            info["parked_until"] = (datetime.now(timezone.utc) + timedelta(hours=self.FEED_PARK_HOURS)).isoformat()
-            logger.warning(f"🔕 数据源 [{name}] 连续失败 {info['fails']} 次，自动停放 {self.FEED_PARK_HOURS} 小时。")
-        info["last_fail"] = datetime.now(timezone.utc).isoformat()
-        state[name] = info
-        intel_state_set(self._FEED_HEALTH_KEY, state)
+
+        park_msg_holder = []
+
+        def _record_fail(state):
+            state = dict(state or {})
+            info = dict(state.get(name, {"fails": 0}))
+            info["fails"] = int(info.get("fails", 0)) + 1
+            if info["fails"] >= self.FEED_PARK_THRESHOLD:
+                info["parked_until"] = (datetime.now(timezone.utc) + timedelta(hours=self.FEED_PARK_HOURS)).isoformat()
+                park_msg_holder.append(f"🔕 数据源 [{name}] 连续失败 {info['fails']} 次，自动停放 {self.FEED_PARK_HOURS} 小时。")
+            info["last_fail"] = datetime.now(timezone.utc).isoformat()
+            state[name] = info
+            return state
+
+        intel_state_update(self._FEED_HEALTH_KEY, _record_fail, default={})
+        for msg in park_msg_holder:
+            logger.warning(msg)
 
     # RSS 摘要中可能出现的提示词注入特征（命中即从其位置截断，防止劫持机器人发言）
     INJECTION_RE = re.compile(
@@ -1261,21 +1298,34 @@ class MultiLLMEngine:
             return False
 
     def _breaker_record_failure(self, name: str):
-        state = self._breaker_state()
-        info = state.get(name, {"fails": 0})
-        info["fails"] = int(info.get("fails", 0)) + 1
-        cooldown_min = min(self._BREAKER_BASE_MIN * (2 ** (info["fails"] - 1)), self._BREAKER_MAX_MIN)
-        info["cooldown_until"] = (datetime.now(timezone.utc) + timedelta(minutes=cooldown_min)).isoformat()
-        state[name] = info
-        intel_state_set(self._BREAKER_STATE_KEY, state)
-        logger.warning(f"提供商 [{name}] 累计失败 {info['fails']} 次，进入冷却 {cooldown_min} 分钟")
+        result_msg = []
+
+        def _record(state):
+            state = dict(state or {})
+            info = dict(state.get(name, {"fails": 0}))
+            info["fails"] = int(info.get("fails", 0)) + 1
+            cooldown_min = min(self._BREAKER_BASE_MIN * (2 ** (info["fails"] - 1)), self._BREAKER_MAX_MIN)
+            info["cooldown_until"] = (datetime.now(timezone.utc) + timedelta(minutes=cooldown_min)).isoformat()
+            state[name] = info
+            result_msg.append(f"提供商 [{name}] 累计失败 {info['fails']} 次，进入冷却 {cooldown_min} 分钟")
+            return state
+
+        intel_state_update(self._BREAKER_STATE_KEY, _record, default={})
+        if result_msg:
+            logger.warning(result_msg[0])
 
     def _breaker_record_success(self, name: str):
-        state = self._breaker_state()
-        if name in state:
-            state.pop(name)
-            intel_state_set(self._BREAKER_STATE_KEY, state)
-            logger.info(f"提供商 [{name}] 冷却解除，恢复正常调度")
+        had_entry = name in self._breaker_state()
+        if not had_entry:
+            return  # 本来就不在断路器里，避免无意义写盘
+
+        def _clear(state):
+            state = dict(state or {})
+            state.pop(name, None)
+            return state
+
+        intel_state_update(self._BREAKER_STATE_KEY, _clear, default={})
+        logger.info(f"提供商 [{name}] 冷却解除，恢复正常调度")
 
     def _get_client(self, provider: LLMProviderConfig) -> OpenAI:
         """按提供商缓存 OpenAI 客户端；带 HTTP-Referer/X-Title 头以兼容 OpenRouter 等要求来源识别的平台。
