@@ -514,6 +514,78 @@ class TestSorting(unittest.TestCase):
         self.assertEqual([i["title"] for i in items], ["hotter", "fresh", "older", "untimed"])
 
 
+class TestCrossLangDedup(unittest.TestCase):
+    """跨语言同事件近似去重（英文+中文报道同一新闻时标题词集完全不重叠，靠金额+币种指纹识别）"""
+
+    def test_same_event_zh_en_detected(self):
+        en = "Bitcoin Surges Past $120,000 as ETF Inflows Hit Record"
+        zh = "比特币突破 12 万美元关口，ETF 资金流入创纪录"
+        self.assertTrue(m.NewsFetcher._is_cross_lang_dup(en, zh),
+                        "中英文同事件应被判定为重复")
+
+    def test_different_events_not_detected(self):
+        a = "Bitcoin Surges Past $120,000"
+        b = "以太坊完成主网升级，手续费下降 90%"
+        self.assertFalse(m.NewsFetcher._is_cross_lang_dup(a, b))
+
+    def test_same_coin_no_shared_amount_not_detected(self):
+        a = "Bitcoin rally continues to $110000"
+        b = "比特币 Ethereum Solana 普涨 ETF"
+        self.assertFalse(m.NewsFetcher._is_cross_lang_dup(a, b))
+
+    def test_amount_fingerprint_buckets(self):
+        f1 = m.NewsFetcher._title_amount_fingerprint("Whale moved $4.6M")
+        f2 = m.NewsFetcher._title_amount_fingerprint("某巨鲸转移了 460 万美元")
+        self.assertTrue(f1 & f2, "$4.6M 与 460 万美元（同量级约 4.6e6）应判为同桶")
+
+    def test_percent_fingerprint(self):
+        f1 = m.NewsFetcher._title_amount_fingerprint("BTC up 5.2%")
+        f2 = m.NewsFetcher._title_amount_fingerprint("比特币上涨 5.2%")
+        self.assertIn("pct:5.2", f1 & f2)
+
+
+class TestMarketDataCache(unittest.TestCase):
+    """行情 TTL 缓存：同一 run 内重复代币命中缓存、超期后重新拉取"""
+
+    def setUp(self):
+        m.MarketDataProvider._price_cache = {}
+        m.MarketDataProvider._fng_cache = (0.0, "")
+
+    def test_same_run_uses_cache(self):
+        from unittest.mock import patch
+        fake_rsp = type("R", (), {"status_code": 200, "json": lambda self=None: [{
+            "symbol": "BTCUSDT", "lastPrice": "113000.5", "priceChangePercent": "3.21"
+        }]})()
+        with patch.object(m, "http_get", return_value=fake_rsp) as mock_get:
+            first = m.MarketDataProvider.get_token_market_data(["BTC"])
+            second = m.MarketDataProvider.get_token_market_data(["BTC"])
+            self.assertEqual(first, second)
+            self.assertEqual(mock_get.call_count, 1, "第二次调用应命中缓存不再发请求")
+
+    def test_cache_expires_after_ttl(self):
+        from unittest.mock import patch
+        fake_rsp = type("R", (), {"status_code": 200, "json": lambda self=None: [{
+            "symbol": "BTCUSDT", "lastPrice": "113000.5", "priceChangePercent": "3.21"
+        }]})()
+        with patch.object(m, "http_get", return_value=fake_rsp) as mock_get:
+            m.MarketDataProvider.get_token_market_data(["BTC"])
+            # 人为让缓存过期
+            m.MarketDataProvider._price_cache["BTC"] = (0.0, "BTC: $99999")
+            m.MarketDataProvider.get_token_market_data(["BTC"])
+            self.assertEqual(mock_get.call_count, 2, "过期后应重新拉取")
+
+    def test_fng_cached(self):
+        from unittest.mock import patch
+        fake_rsp = type("R", (), {"status_code": 200, "json": lambda self=None: {
+            "data": [{"value": "67", "value_classification": "Greed"}]
+        }})()
+        with patch.object(m, "http_get", return_value=fake_rsp) as mock_get:
+            a = m.MarketDataProvider.get_fear_and_greed()
+            b = m.MarketDataProvider.get_fear_and_greed()
+            self.assertEqual(a, b)
+            self.assertEqual(mock_get.call_count, 1)
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 

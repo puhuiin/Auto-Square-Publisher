@@ -46,6 +46,7 @@ import hashlib
 import logging
 from typing import List, Dict, Any, Optional, Set, Tuple
 import io
+import math
 import concurrent.futures
 from datetime import datetime, timezone, timedelta
 
@@ -415,19 +416,28 @@ _ASCII_KW_PATTERNS = {
 class MarketDataProvider:
     """获取加密货币全网宏观情绪与任意代币币安实时 24H 盘面价格数据"""
 
-    @staticmethod
-    def get_fear_and_greed() -> str:
-        """获取全网恐慌与贪婪指数"""
+    _PRICE_CACHE_TTL_SEC = 90          # 同一轮内行情缓存窗口
+    _price_cache: Dict[str, Tuple[float, str]] = {}  # symbol -> (timestamp, formatted)
+    _fng_cache: Tuple[float, str] = (0.0, "")        # 恐慌贪婪指数同样缓存
+
+    @classmethod
+    def get_fear_and_greed(cls) -> str:
+        """获取全网恐慌与贪婪指数（90s 内重复调用直接命中缓存）"""
+        ts, cached = cls._fng_cache
+        if cached and (time.time() - ts) < cls._PRICE_CACHE_TTL_SEC:
+            return cached
         r = http_get("https://api.alternative.me/fng/?limit=1", timeout=4, retries=1)
+        result = "50/100 (中立)"
         if r is not None and r.status_code == 200:
             try:
                 data = r.json().get("data", [{}])[0]
                 val = data.get("value", "50")
-                cls = data.get("value_classification", "Neutral")
-                return f"{val}/100 ({cls})"
+                cls_v = data.get("value_classification", "Neutral")
+                result = f"{val}/100 ({cls_v})"
             except Exception:
                 pass
-        return "50/100 (中立)"
+        cls._fng_cache = (time.time(), result)
+        return result
 
     @staticmethod
     def _format_ticker(sym: str, d: Dict[str, Any]) -> str:
@@ -445,7 +455,7 @@ class MarketDataProvider:
     @classmethod
     def get_token_market_data(cls, symbols: List[str]) -> str:
         """动态批量获取指定代币（主流或山寨）在币安的实时价格与 24H 涨跌幅数据。
-        优先使用官方 symbols=[...] 批量接口一次请求完成，失败时降级为逐币查询。"""
+        逐币 90s TTL 缓存：同一轮内多条同标的新闻共享结果，命中后零 HTTP。"""
         clean_symbols = []
         for s in symbols[:4]:
             c = s.replace("$", "").upper()
@@ -454,9 +464,31 @@ class MarketDataProvider:
         if not clean_symbols:
             return ""
 
-        pairs = [f"{s}USDT" for s in clean_symbols]
+        now = time.time()
+        fresh: Dict[str, str] = {}
+        stale: List[str] = []
+        for sym in clean_symbols:
+            ts, cached = cls._price_cache.get(sym, (0.0, ""))
+            if cached and (now - ts) < cls._PRICE_CACHE_TTL_SEC:
+                fresh[sym] = cached
+            else:
+                stale.append(sym)
 
-        # 1. 批量接口：一次 HTTP 拉取全部标的
+        # 只对未命中缓存的标的批量拉取
+        if stale:
+            fetched = cls._fetch_tickers(stale)
+            for sym in stale:
+                if sym in fetched:
+                    cls._price_cache[sym] = (now, fetched[sym])
+                    fresh[sym] = fetched[sym]
+
+        results = [fresh[sym] for sym in clean_symbols if sym in fresh]
+        return " | ".join(results) if results else ""
+
+    @classmethod
+    def _fetch_tickers(cls, symbols: List[str]) -> Dict[str, str]:
+        """批量接口一次拿全部标的；失败降级逐币查询。返回 {symbol: formatted}"""
+        pairs = [f"{s}USDT" for s in symbols]
         try:
             url = "https://api.binance.com/api/v3/ticker/24hr?symbols=" + requests.utils.quote(json.dumps(pairs))
             r = http_get(url, timeout=5, retries=1)
@@ -464,25 +496,24 @@ class MarketDataProvider:
                 data = r.json()
                 if isinstance(data, list):
                     stats = {d.get("symbol"): d for d in data if isinstance(d, dict)}
-                    results = [
-                        cls._format_ticker(sym, stats[f"{sym}USDT"])
-                        for sym in clean_symbols if stats.get(f"{sym}USDT")
-                    ]
-                    if results:
-                        return " | ".join(results)
+                    out = {
+                        s: cls._format_ticker(s, stats[f"{s}USDT"])
+                        for s in symbols if stats.get(f"{s}USDT")
+                    }
+                    if out:
+                        return out
         except Exception as e:
             logger.debug(f"批量行情接口异常，降级为逐币查询: {e}")
 
-        # 2. 降级：逐币查询
-        results = []
-        for sym in clean_symbols:
-            r = http_get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={sym}USDT", timeout=4, retries=0)
+        out = {}
+        for s in symbols:
+            r = http_get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={s}USDT", timeout=4, retries=0)
             if r is not None and r.status_code == 200:
                 try:
-                    results.append(cls._format_ticker(sym, r.json()))
+                    out[s] = cls._format_ticker(s, r.json())
                 except Exception:
                     pass
-        return " | ".join(results) if results else ""
+        return out
 
 
 # ---------------------------------------------------------------------------
@@ -762,19 +793,71 @@ class NewsFetcher:
     def _title_words(title: str) -> Set[str]:
         return set(re.sub(r"[^a-z0-9$]+", " ", title.lower()).split())
 
+    @staticmethod
+    def _title_amount_fingerprint(title: str) -> frozenset:
+        """金额/百分比指纹：$4.6M / 460万美元 / 4600000美元 归一到同一 log10 量级桶；百分比原样收录。
+        中文单位后不能有 \\b（汉字相邻仍是 word char），故按单位类型分多条专用规则。"""
+        t = title.replace(",", "")
+        t_lower = t.lower()
+        amounts = set()
+
+        def _bucket(val: float) -> float:
+            return round(math.log10(val), 1) if val > 0 else 0.0
+
+        # 规则 1：中文大数单位（万亿/亿/万），无词边界要求
+        for m in re.finditer(r"(\d+(?:\.\d+)?)\s*(万亿|亿|万)", t):
+            scale = {"万亿": 1e12, "亿": 1e8, "万": 1e4}[m.group(2)]
+            amounts.add(_bucket(float(m.group(1)) * scale))
+
+        # 规则 2：英文大数单位 million/billion/trillion（词边界安全，均为 ASCII）
+        for m in re.finditer(r"(\d+(?:\.\d+)?)\s*(millions?|billions?|trillions?)\b", t_lower):
+            scale = 1e6 if m.group(2).startswith("m") else (1e9 if m.group(2).startswith("b") else 1e12)
+            amounts.add(_bucket(float(m.group(1)) * scale))
+
+        # 规则 3：$ 后的单字母缩写单位 ($4.6M / $2B / $500k)
+        for m in re.finditer(r"\$(\d+(?:\.\d+)?)\s*([mkb])\b", t_lower):
+            scale = {"k": 1e3, "m": 1e6, "b": 1e9}[m.group(2)]
+            amounts.add(_bucket(float(m.group(1)) * scale))
+
+        # 规则 4：裸美元数 $120000
+        for m in re.finditer(r"\$(\d+(?:\.\d+)?)", t):
+            amounts.add(_bucket(float(m.group(1))))
+
+        # 规则 5：N 美元/USDT
+        for m in re.finditer(r"(\d+(?:\.\d+)?)\s*(?:美元|美金|USDT|usd)", t_lower):
+            amounts.add(_bucket(float(m.group(1))))
+
+        # 规则 6：百分比原样
+        for m in re.finditer(r"(\d+(?:\.\d+)?)\s*%", t):
+            amounts.add(f"pct:{m.group(1)}")
+        return frozenset(amounts)
+
+    @staticmethod
+    def _title_tokens_upper(title: str) -> frozenset:
+        """标题里的全大写疑似代币符号集合（用于跨语言同事件判定）"""
+        return frozenset(re.findall(r"\b([A-Z]{2,10})\b", title))
+
+    @classmethod
+    def _is_cross_lang_dup(cls, title: str, other: str) -> bool:
+        """跨语言辅助判定：标题完全无共词时，若 币种集合有交集 且 金额/时间指纹有交集 → 视为同一事件"""
+        amt_a, amt_b = cls._title_amount_fingerprint(title), cls._title_amount_fingerprint(other)
+        token_a, token_b = cls._title_tokens_upper(title), cls._title_tokens_upper(other)
+        if not (amt_a & amt_b):
+            return False
+        return bool(token_a & token_b)
+
     @classmethod
     def _find_near_duplicate(cls, title: str, seen_titles: List[str],
                              threshold: float = DUP_SIMILARITY_THRESHOLD) -> Optional[str]:
-        """标题词集 Jaccard 相似度去重：返回命中的历史标题，无重复返回 None"""
+        """标题词集 Jaccard 相似度去重 + 跨语言事件指纹双通道：返回命中的历史标题，无重复返回 None"""
         words = cls._title_words(title)
-        if not words:
-            return None
         for other in seen_titles:
             ow = cls._title_words(other)
-            if not ow:
-                continue
-            inter = len(words & ow)
-            if inter and (inter / len(words | ow)) >= threshold:
+            if ow and words:
+                inter = len(words & ow)
+                if inter and (inter / len(words | ow)) >= threshold:
+                    return other
+            if cls._is_cross_lang_dup(title, other):
                 return other
         return None
 
@@ -2183,6 +2266,7 @@ def _run_main():
     posted_count = 0
     posted_records: List[Dict[str, Any]] = []  # 供运行报告输出
     consecutive_llm_failures = 0  # 模型池熔断计数：连续失败说明全池不可用，提前止损
+    consecutive_publish_failures = 0  # 发布链路熔断：币安侧持续故障时不再空烧 LLM
     valid_symbols = SymbolValidator.get_valid_symbols() or set()
 
     for item in candidates:
@@ -2263,6 +2347,7 @@ def _run_main():
         else:
             success = publisher.publish(post_content, image_url=uploaded_image_url, ensure_tokens=post_tokens)
             if success:
+                consecutive_publish_failures = 0
                 cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
                 posted_records.append({
                     "title": title, "source": source,
@@ -2271,9 +2356,18 @@ def _run_main():
                 posted_count += 1
                 Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}\n\n{post_content[:200]}...")
             else:
-                logger.error(f"发帖失败，本次暂不记录缓存以供下次重试: {title}")
+                consecutive_publish_failures += 1
+                logger.error(f"发帖失败，本次暂不记录缓存以供下次重试: {title} (发布链路连续失败 {consecutive_publish_failures} 次)")
                 detail = publisher.last_error or "发布接口返回异常"
                 Notifier.send_notification("币安发帖失败", f"新闻: {title}\n诊断: {detail}\n已跳过并将在下次自动重试。", is_error=True)
+                if consecutive_publish_failures >= 3:
+                    logger.error("🛑 发布通道连续 3 次失败，触发熔断终止运行，防止新闻持续产生而无端消耗 LLM。")
+                    Notifier.send_notification(
+                        "币安发布通道熔断",
+                        f"连续 3 篇发帖失败。最近诊断: {detail}\n请人工核查 Square API Key 有效性与账号风控状态。",
+                        is_error=True,
+                    )
+                    break
 
         # 模拟自然人工操作延迟
         if posted_count < max_posts:
