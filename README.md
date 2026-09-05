@@ -65,7 +65,8 @@
 - 🪙 **单代币 24h 限流**：同一代币（如 $BTC）24 小时内默认最多发 3 篇，避免全账号时间线被单一币种占据导致粉丝疲劳与算法降权。
 - 📌 **依赖版本锁定**：`requirements.txt` 全部声明主版本上限，任何上游 breaking release 都无法自动溜进 CI。
 - 🧪 **DRY_RUN 零副作用**：试运行模式下既不真实发帖、也**不写入去重缓存**，可放心反复调试。
-- 📋 **Actions 运行报告**：每次运行在 GitHub Actions Summary 页自动生成 Markdown 报告（吞吐漏斗、发布明细、命中模型与配图状态），无需翻日志。
+- 📋 **Actions 运行报告**：每次运行在 GitHub Actions Summary 页自动生成 Markdown 报告（吞吐漏斗、发布明细、命中模型与配图状态、**分阶段耗时画像**），无需翻日志。
+- 🏥 **一键健康自检**：`python main.py --healthcheck` 探测 LLM 链（含断路状态）、Reasonix 网关、RSS 源健康（含停放中/曾故障明细）、币安现货接口、情绪指数、运行策略，退出码即诊断结论。
 
 ---
 
@@ -151,11 +152,18 @@
 # 1. 安装依赖
 pip install -r requirements.txt
 
-# 2. 设置测试环境变量并运行 (以 PowerShell 为例)
-$env:SQUARE_API_KEY="your_square_key"
-$env:OPENROUTER_API_KEY="sk-or-v1-xxxx"
-$env:DRY_RUN="true" # 开启模拟模式，不实际发布
+# 2. 全链路健康自检（强烈推荐每次部署/改配置后先跑一下）
+python main.py --healthcheck
+#   → 一键检查 SQUARE_API_KEY、LLM 链路、Reasonix 网关、RSS 源、币安接口、通知渠道
+#   → 退出码 0 = 可放心运行，1 = 有硬性故障需先修
 
+# 3. DRY_RUN 完整演练（不发帖不写缓存）
+$env:SQUARE_API_KEY="your_square_key"
+$env:OPENROUTER_API_KEY="sk-or-v1-xxxx"  # 或者不配，自动用本地 Reasonix 网关
+$env:DRY_RUN="true"
+python main.py
+
+# 4. 正式运行
 python main.py
 ```
 

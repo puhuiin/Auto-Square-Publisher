@@ -2311,7 +2311,8 @@ class Notifier:
 # 运行报告输出 (GitHub Actions Step Summary)
 # ---------------------------------------------------------------------------
 def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_intel: Dict[str, Any],
-                              posted_records: List[Dict[str, Any]], dry_run: bool):
+                              posted_records: List[Dict[str, Any]], dry_run: bool,
+                              timings: Optional[Dict[str, float]] = None):
     """在 GitHub Actions 运行页输出结构化 Markdown 报告（本地运行时不生效）"""
     summary_path = os.getenv("GITHUB_STEP_SUMMARY", "").strip()
     if not summary_path:
@@ -2325,14 +2326,26 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
             f"- **全网情绪指数**: {fng_index}",
             f"- **当期活动标签**: {', '.join(campaign_intel.get('active_tags', []))}",
             f"- **管线吞吐**: 扫描 {s['fetched']} 条 → 过滤旧闻 {s['stale']} / 已发 {s['cached']} / 近似重复 {s['near_dup']} → 候选 {s['kept']} 条",
-            f"- **本次发布**: {len(posted_records)} 篇",
-            "",
         ]
+        if feeds_parked := s.get("feeds_parked"):
+            lines.append(f"- **停放的源**: {', '.join(feeds_parked)}")
+        lines.append(f"- **本次发布**: {len(posted_records)} 篇")
+        if timings:
+            parts = [f"{k}={v:.1f}s" for k, v in timings.items() if v is not None]
+            if parts:
+                lines.append(f"- **耗时画像**: {'  '.join(parts)}")
+        lines.append("")
         if posted_records:
-            lines += ["| # | 热点新闻 | 来源 | 模型 | 配图 |", "|---|---|---|---|---|"]
+            lines += ["| # | 热点新闻 | 时效 | 来源 | 模型 | 配图 | 耗时 |", "|---|---|---|---|---|---|---|"]
             for i, r in enumerate(posted_records, 1):
                 safe_title = r["title"][:48].replace("|", "\\|")
-                lines.append(f"| {i} | {safe_title} | {r['source']} | {r['provider']} | {'🖼️' if r['image'] else '—'} |")
+                elapsed = r.get("elapsed_sec")
+                age = r.get("age_hours")
+                lines.append(
+                    f"| {i} | {safe_title} | {f'{age}h前' if age is not None else '—'} | "
+                    f"{r['source']} | {r['provider']} | {'🖼️' if r['image'] else '—'} | "
+                    f"{f'{elapsed:.1f}s' if elapsed is not None else '—'} |"
+                )
         with open(summary_path, "a", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
     except Exception as e:
@@ -2343,6 +2356,10 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
 # 主流程入口
 # ---------------------------------------------------------------------------
 def main():
+    # 一键健康自检：python main.py --healthcheck
+    if "--healthcheck" in sys.argv or "-H" in sys.argv:
+        run_healthcheck()
+        return
     try:
         _run_main()
     except Exception as e:
@@ -2351,6 +2368,96 @@ def main():
         logger.critical(f"💥 程序发生未捕获的致命异常: {e}\n{err_detail}")
         Notifier.send_notification("币安发帖机器人运行崩溃", f"错误原因: {str(e)}\n\n堆栈详情:\n{err_detail[:600]}", is_error=True)
         sys.exit(1)
+
+
+def run_healthcheck():
+    """
+    全链路健康自检（不实际发帖）：
+    1. Secrets 与环境配置完整性
+    2. Reasonix 本地网关 + LLM 提供商链
+    3. RSS 源可达性
+    4. 币安现货接口 + 恐慌贪婪指数
+    5. 通知渠道配置
+    """
+    print("\n" + "=" * 60)
+    print("🏥 Binance Square Auto Poster - 全链路健康自检")
+    print("=" * 60)
+
+    checks: List[Tuple[str, str, str]] = []  # (组件, 状态, 详情)
+
+    # ---- 1. 核心密钥配置 ----
+    sq_key = os.getenv("SQUARE_API_KEY", "").strip()
+    checks.append(("SQUARE_API_KEY", "✔" if sq_key else "✗", f"{'已配置' if sq_key else '未配置，发帖必需'}"))
+
+    # ---- 2. LLM 提供商链 ----
+    try:
+        eng = MultiLLMEngine()
+        if eng.providers:
+            names = []
+            for p in eng.providers:
+                cooled = "❄️冷却中" if eng._breaker_cooled_down(p.name) else "✔"
+                names.append(f"{p.name}({p.model}){cooled}")
+            checks.append(("LLM 提供商链", "✔", f"{len(eng.providers)} 个: " + ", ".join(names)))
+        else:
+            checks.append(("LLM 提供商链", "✗", "无可用提供商，AI 提炼无法工作"))
+    except Exception as e:
+        checks.append(("LLM 提供商链", "✗", f"构建异常: {e}"))
+
+    # ---- 3. Reasonix 网关（复用 MultiLLMEngine 已探测的链路，避免双探测） ----
+    gw_from_engine = next((p for p in eng.providers if p.name == "Reasonix-GW"), None)
+    if gw_from_engine:
+        checks.append(("Reasonix 本地网关", "✔", f"{gw_from_engine.base_url} 在线 (首选模型: {gw_from_engine.model})"))
+    elif os.getenv("GITHUB_ACTIONS"):
+        checks.append(("Reasonix 本地网关", "⊘", "CI 环境自动禁用"))
+    else:
+        checks.append(("Reasonix 本地网关", "⚠", f"未在线（{REASONIX_GW_URL}）；可启动后零成本接入"))
+
+    # ---- 4. RSS 源健康度 ----
+    fetcher = NewsFetcher()
+    health = fetcher._feed_health()
+    parked = [k for k in health if fetcher._feed_is_parked(k)]
+    failed = {k: v for k, v in health.items() if not fetcher._feed_is_parked(k) and v.get("fails", 0) > 0}
+    parts = [f"{len(RSS_FEEDS)} 源"]
+    if parked:
+        parts.append(f"停放 {len(parked)}: {', '.join(parked)}")
+    if failed:
+        parts.append(f"有过故障 {len(failed)}: {', '.join(failed)}")
+    if not parked and not failed:
+        parts.append("全部在线")
+    checks.append(("RSS 源健康", "⚠" if parked else ("ℹ" if failed else "✔"), " / ".join(parts)))
+
+    # ---- 5. 币安现货 API ----
+    syms = SymbolValidator.get_valid_symbols()
+    if len(syms) > 100:
+        checks.append(("币安现货接口", "✔", f"在线（{len(syms)} 个交易对）"))
+    else:
+        checks.append(("币安现货接口", "✗", "无法获取交易对（网络或接口异常）"))
+
+    # ---- 6. 恐慌贪婪指数 ----
+    fng = MarketDataProvider.get_fear_and_greed()
+    checks.append(("恐慌贪婪指数", "✔" if "中立" not in fng else "⚠", fng))
+
+    # ---- 7. 发布通道级开关 ----
+    checks.append(("运行策略", "ℹ", f"日配额={MAX_DAILY_POSTS} | 单币种限流={TOKEN_DAILY_LIMIT} | "
+                                  f"时效={MAX_NEWS_AGE_HOURS}h | 去重={DUP_SIMILARITY_THRESHOLD} | "
+                                  f"时段={ACTIVE_HOURS_BEIJING or '全天'} | LOG={_LOG_LEVEL}"))
+
+    # 汇总输出
+    print()
+    for name, status, detail in checks:
+        icon = {"✔": "✅", "⚠": "⚠️", "✗": "❌", "⊘": "⏭️", "ℹ": "ℹ️"}.get(status, status)
+        print(f"  {icon} [{name}] {detail}")
+    print()
+
+    n_err = sum(1 for _, s, _ in checks if s == "✗")
+    n_warn = sum(1 for _, s, _ in checks if s == "⚠")
+    verdict = "✅ 全部通过，可以放心运行" if not n_err else f"❌ 有 {n_err} 项故障，请先修复"
+    if not n_err and n_warn:
+        verdict = f"⚠️ {n_warn} 项警告，可运行但建议关注"
+    print(f"  {verdict}")
+    print("=" * 60 + "\n")
+
+    sys.exit(0 if not n_err else 1)
 
 
 def _run_main():
@@ -2404,10 +2511,12 @@ def _run_main():
     logger.info(f"🪙 当期重点扶持代币池: {campaign_intel.get('incentivized_tokens')}")
 
     # 5. 获取待发布热点候选（按冲击力与山寨/Meme热度打分排序，结合官方活动代币加权 + 近似去重）
+    t_fetch_start = time.time()
     candidates = fetcher.fetch_candidates(
         cache_mgr,
         priority_tokens=campaign_intel.get("incentivized_tokens"),
     )
+    fetch_elapsed = time.time() - t_fetch_start
     if not candidates:
         # 全源同时故障 = 基建级问题，必须报警而非静默默认"无事发生"
         if fetcher.stats["feeds_failed"] and fetcher.stats["feeds_ok"] == 0 or \
@@ -2431,6 +2540,7 @@ def _run_main():
     posted_records: List[Dict[str, Any]] = []  # 供运行报告输出
     consecutive_llm_failures = 0  # 模型池熔断计数：连续失败说明全池不可用，提前止损
     consecutive_publish_failures = 0  # 发布链路熔断：币安侧持续故障时不再空烧 LLM
+    stage_timings: Dict[str, float] = {"fetch": fetch_elapsed, "llm": 0.0, "image": 0.0, "publish": 0.0}
     valid_symbols = SymbolValidator.get_valid_symbols() or set()
 
     for item in candidates:
@@ -2469,8 +2579,10 @@ def _run_main():
         market_context_str = f"全网情绪指数: {fng_index}\n涉及标的实时盘面: {live_market_data if live_market_data else '链上/全市场热点'}"
 
         # AI 结合活动情报与实时盘面进行高质量提炼（注入已校验真实标的提示）
+        t_llm_start = time.time()
         llm_result = llm_engine.summarize(item, campaign_intel, market_context=market_context_str,
                                           token_hints=detected_tokens)
+        stage_timings["llm"] += time.time() - t_llm_start
         if not llm_result:
             consecutive_llm_failures += 1
             logger.warning(f"AI 生成失败，跳过: {title} (连续失败 {consecutive_llm_failures} 次)")
@@ -2498,7 +2610,9 @@ def _run_main():
         else:
             if square_api_key:
                 logger.info(f"正在为本篇快讯准备多媒体配图并上传至币安 S3...")
+                t_img_start = time.time()
                 uploaded_image_url = ImageManager.prepare_and_upload(square_api_key, raw_img)
+                stage_timings["image"] += time.time() - t_img_start
 
         # 发布或模拟
         if dry_run:
@@ -2506,16 +2620,23 @@ def _run_main():
             posted_records.append({
                 "title": title, "source": source,
                 "provider": llm_result["provider"], "image": bool(uploaded_image_url),
+                "age_hours": item.get("age_hours"),
+                "elapsed_sec": None,
             })
             posted_count += 1
         else:
+            t_pub_start = time.time()
             success = publisher.publish(post_content, image_url=uploaded_image_url, ensure_tokens=post_tokens)
+            publish_elapsed = time.time() - t_pub_start
+            stage_timings["publish"] += publish_elapsed
             if success:
                 consecutive_publish_failures = 0
                 cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
                 posted_records.append({
                     "title": title, "source": source,
                     "provider": llm_result["provider"], "image": bool(uploaded_image_url),
+                    "age_hours": item.get("age_hours"),
+                    "elapsed_sec": round(publish_elapsed, 1),
                 })
                 posted_count += 1
                 Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}\n\n{post_content[:200]}...")
@@ -2538,7 +2659,9 @@ def _run_main():
             delay = random.randint(3, 8)
             time.sleep(delay)
 
-    write_github_step_summary(fetcher, fng_index, campaign_intel, posted_records, dry_run)
+    write_github_step_summary(fetcher, fng_index, campaign_intel, posted_records, dry_run,
+                              timings=stage_timings)
+    logger.info(f"⏱️ 耗时画像: 抓取={stage_timings['fetch']:.1f}s / LLM={stage_timings['llm']:.1f}s / 配图={stage_timings['image']:.1f}s / 发布={stage_timings['publish']:.1f}s")
 
     logger.info("==================================================")
     logger.info(f"🎯 任务完成！本次成功处理/发布: {posted_count} 篇")

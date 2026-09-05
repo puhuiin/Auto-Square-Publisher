@@ -34,7 +34,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: 语法编译检查
-        run: python -m py_compile main.py tests/test_core.py
+        run: python -m py_compile main.py tests/test_core.py scripts/git_state_merge.py
 
       - name: 运行离线回归测试套件
         run: python tests/test_core.py

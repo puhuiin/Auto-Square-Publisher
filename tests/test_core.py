@@ -615,6 +615,42 @@ class TestMarketDataCache(unittest.TestCase):
             self.assertEqual(mock_get.call_count, 1)
 
 
+class TestHealthcheck(unittest.TestCase):
+    """--healthcheck 自检模式"""
+
+    def test_exits_zero_when_healthy(self):
+        # 满仓正常路径：配置好必需的密钥，其他外部调用 mock 成功
+        os.environ["SQUARE_API_KEY"] = "test"
+        os.environ["LLM_API_KEY"] = "test-llm-key"
+        fake_syms = {f"T{i}" for i in range(200)} | {"BTC", "ETH", "XRP"}
+        fake_syms.add("PLACEHOLDER")
+        try:
+            with patch.object(m.SymbolValidator, "get_valid_symbols", return_value=fake_syms), \
+                 patch.object(m.MarketDataProvider, "get_fear_and_greed", return_value="74/100 (Greed)"), \
+                 patch.object(m, "probe_reasonix_gateway", return_value=None), \
+                 patch.object(m.NewsFetcher, "_feed_health", return_value={}):
+                try:
+                    m.run_healthcheck()
+                except SystemExit as e:
+                    self.assertEqual(e.code, 0)
+        finally:
+            os.environ.pop("SQUARE_API_KEY", None)
+            os.environ.pop("LLM_API_KEY", None)
+
+    def test_exits_one_when_no_key(self):
+        # 不配置 Square key 时必须报故障
+        os.environ.pop("SQUARE_API_KEY", None)
+        fake_syms = {f"T{i}" for i in range(200)}
+        with patch.object(m.SymbolValidator, "get_valid_symbols", return_value=fake_syms), \
+             patch.object(m.MarketDataProvider, "get_fear_and_greed", return_value="74/100"), \
+             patch.object(m, "probe_reasonix_gateway", return_value=None), \
+             patch.object(m.NewsFetcher, "_feed_health", return_value={}):
+            try:
+                m.run_healthcheck()
+            except SystemExit as e:
+                self.assertEqual(e.code, 1)
+
+
 class TestReasonixGateway(unittest.TestCase):
     """Reasonix 本地免费模型网关集成"""
 
