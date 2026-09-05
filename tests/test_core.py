@@ -145,6 +145,22 @@ class TestContentSanitizer(unittest.TestCase):
             "重仓 $PEPE 冲 #Write2Earn #BinanceSquare #PEPE #Extra #More")
         self.assertLessEqual(s.count("#"), 3)
 
+    def test_hashtag_positional_stripping(self):
+        """超限时只切第 4 个及以后，不动前 3 个同名标签"""
+        s = m.SquarePublisher._sanitize_content(
+            "分析 $BTC\n\n#BTC #Write2Earn #BinanceSquare\n\n复盘观点 #BTC"
+        )
+        self.assertEqual(s.count("#BTC"), 1, "正文中第一个 #BTC 应保留，末尾超出的应脱壳")
+        self.assertTrue(s.rstrip().endswith("BTC"), "末尾的第 4 个同名标签应被脱壳为 BTC")
+        self.assertLessEqual(s.count("#"), 3)
+
+    def test_fullwidth_symbols_normalized(self):
+        s = m.SquarePublisher._sanitize_content("重大突破 ＃BTC ＄ETH 冲击前高 5％")
+        self.assertIn("#BTC", s)
+        self.assertIn("$ETH", s)
+        self.assertIn("%", s)
+        self.assertNotIn("＃", s)
+
     def test_stable_cashtag_stripped(self):
         s = m.SquarePublisher._sanitize_content("用 $USDT 买入 $BTC")
         self.assertNotIn("$USDT", s)

@@ -61,8 +61,9 @@ Image.MAX_IMAGE_PIXELS = 50_000_000
 # ---------------------------------------------------------------------------
 # 日志配置
 # ---------------------------------------------------------------------------
+_LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").strip().upper()
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, _LOG_LEVEL, logging.INFO),
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
@@ -1813,12 +1814,15 @@ class SquarePublisher:
     def _sanitize_content(cls, content: str) -> str:
         """
         全自动化内容精细清洗与合规保障：
+        0. 全角 #、＄ 归一为半角，防止模型输出全角符号漏过 hashtag/挂件识别
         1. 清洗非代币误加的 $（静态黑名单 + 动态比对币安真实交易对）
         2. 剔除生硬破折号“——”
         3. 敏感词/高危违规词自动安全替换（防止触发币安 20002/20022 审核拦截）
         4. 严格限制全篇最多 3 个 Hashtag（杜绝 220094 错误）
         5. 超长截断保护（确保在 900 字以内）
         """
+        # 0. 全角符号归一（常见 LLM 输出中 “＃” “＄” “％” 等会破坏下游正则识别）
+        content = content.replace("＃", "#").replace("＄", "$").replace("％", "%")
         # 1a. 静态黑名单：稳定币/机构/通用缩写一律剥离 $
         for word in cls.FORCE_STRIP_CASHTAGS:
             content = re.sub(rf"\${word}\b", word, content, flags=re.IGNORECASE)
@@ -1854,11 +1858,17 @@ class SquarePublisher:
         for bad_kw, safe_kw in risky_words.items():
             content = content.replace(bad_kw, safe_kw)
 
-        # 4. 严格限制 Hashtag 数量（最多 3 个）
-        hashtags = re.findall(r"#[^\s#]+", content)
-        if len(hashtags) > 3:
-            for tag in hashtags[3:]:
-                content = content.replace(tag, tag.lstrip("#"), 1)
+        # 4. 严格限制 Hashtag 数量：仅保留前 3 个，超出的按字符位置精确脱壳 #（避免误伤同名前序标签）
+        tag_matches = list(re.finditer(r"#[^\s#]+", content))
+        if len(tag_matches) > 3:
+            rebuild = []
+            last_end = 0
+            for idx, m in enumerate(tag_matches):
+                rebuild.append(content[last_end:m.start()])
+                rebuild.append(m.group(0) if idx < 3 else m.group(0)[1:])
+                last_end = m.end()
+            rebuild.append(content[last_end:])
+            content = "".join(rebuild)
 
         # 5. 长度保护（移动端短讯保护）
         if len(content) > 900:
@@ -1935,8 +1945,15 @@ class SquarePublisher:
                         continue
                     raise
                 if response.status_code in (429, 500, 502, 503) and attempt == 0:
-                    logger.warning(f"币安接口返回暂态错误 HTTP {response.status_code}，2.5 秒后重试一次...")
-                    time.sleep(2.5)
+                    # 尊重服务器的 Retry-After 指引；回落到默认 2.5 秒
+                    retry_after_raw = (response.headers or {}).get("Retry-After", "")
+                    try:
+                        wait = float(retry_after_raw) if retry_after_raw else 2.5
+                        wait = min(max(wait, 0.5), 30.0)
+                    except (TypeError, ValueError):
+                        wait = 2.5
+                    logger.warning(f"币安接口暂态错误 HTTP {response.status_code}，按 {'Retry-After' if retry_after_raw else '默认'} 等待 {wait}s 后重试...")
+                    time.sleep(wait)
                     continue
                 break
 
