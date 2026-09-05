@@ -1,4 +1,5 @@
-requests>=2.31.0
-feedparser>=6.0.11
-openai>=1.0.0
-Pillow>=10.0.0
+# 版本带上限锁定：防止上游依赖发布不兼容主版本时，CI 无感崩坏
+requests>=2.31.0,<3
+feedparser>=6.0.11,<7
+openai>=1.0.0,<2
+Pillow>=10.0.0,<13

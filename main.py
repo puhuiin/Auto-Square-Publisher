@@ -102,6 +102,7 @@ MAX_NEWS_AGE_HOURS = _env_int("MAX_NEWS_AGE_HOURS", 48)            # 新闻最�
 DUP_SIMILARITY_THRESHOLD = _env_float("DUP_SIMILARITY_THRESHOLD", 0.65)  # 跨源近似标题去重阈值 (0~1)
 MIN_IMPACT_SCORE = _env_int("MIN_IMPACT_SCORE", 0)                 # 最低热度分过滤，0 表示不过滤
 MAX_DAILY_POSTS = _env_int("MAX_DAILY_POSTS", 12)                  # 24h 滚动发帖配额，0 表示不限制
+TOKEN_DAILY_LIMIT = _env_int("TOKEN_DAILY_LIMIT", 3)               # 同一代币 24h 内最多发布篇数，0 表示不限制
 ACTIVE_HOURS_BEIJING = os.getenv("ACTIVE_HOURS_BEIJING", "").strip()  # 活跃时段(北京时间)，如 "8-23"；空 = 全天
 CAMPAIGN_TOKEN_BOOST = 8                                           # 命中官方活动重点代币的热度加权
 FRESHNESS_BOOST_RULES = ((3, 10), (12, 6), (24, 3))                # (新闻不超过 N 小时, 加分)
@@ -547,13 +548,15 @@ class CacheManager:
                 titles.append(t.strip())
         return titles
 
-    def record_sent(self, news_id: str, title: str, source: str):
+    def record_sent(self, news_id: str, title: str, source: str, tokens: Optional[List[str]] = None):
         record = {
             "id": news_id,
             "title": title,
             "source": source,
             "sent_at": datetime.now(timezone.utc).isoformat(),
         }
+        if tokens:
+            record["tokens"] = tokens
         self.cached_items.append(record)
         self.cached_ids.add(news_id)
 
@@ -561,6 +564,23 @@ class CacheManager:
             self.cached_items = self.cached_items[-MAX_CACHE_SIZE:]
 
         self._save_cache()
+
+    def token_posts_since(self, token: str, hours: float = 24.0) -> int:
+        """统计最近 N 小时内发布过且命中指定代币的篇数（用于单币种限流）"""
+        cutoff = datetime.now(timezone.utc).timestamp() - hours * 3600
+        count = 0
+        for item in self.cached_items:
+            try:
+                ts = datetime.fromisoformat(str(item.get("sent_at", "")).replace("Z", "+00:00")).timestamp()
+            except Exception:
+                continue
+            if ts < cutoff:
+                continue
+            for t in item.get("tokens") or []:
+                if isinstance(t, str) and t.upper() == token.upper():
+                    count += 1
+                    break
+        return count
 
     def _save_cache(self):
         try:
@@ -951,6 +971,23 @@ class MultiLLMEngine:
         self.providers: List[LLMProviderConfig] = self._build_provider_chain()
         # 本次运行内的连续失败计数：失败越多的提供商排越后，避免每条新闻都先撞一次死节点
         self._fail_counts: Dict[str, int] = {}
+        # 客户端缓存：同一提供商复用底层 httpx 连接池
+        self._clients: Dict[str, OpenAI] = {}
+
+    def _get_client(self, provider: LLMProviderConfig) -> OpenAI:
+        """按提供商缓存 OpenAI 客户端；带 HTTP-Referer/X-Title 头以兼容 OpenRouter 等要求来源识别的平台"""
+        cache_key = provider.name
+        if cache_key not in self._clients:
+            self._clients[cache_key] = OpenAI(
+                api_key=provider.api_key,
+                base_url=provider.base_url,
+                timeout=25.0,
+                default_headers={
+                    "HTTP-Referer": "https://github.com/puhuiin/Auto-Square-Publisher",
+                    "X-Title": "Binance Square Auto Poster",
+                },
+            )
+        return self._clients[cache_key]
 
     def _ordered_providers(self) -> List[LLMProviderConfig]:
         """按本次运行内的连续失败次数升序排序（稳定排序，保持原有配置优先级）"""
@@ -1107,11 +1144,7 @@ class MultiLLMEngine:
         for index, provider in enumerate(ordered):
             logger.info(f"[{index + 1}/{len(ordered)}] 正在尝试使用提供商 [{provider.name}] (模型: {provider.model})...")
             try:
-                client = OpenAI(
-                    api_key=provider.api_key,
-                    base_url=provider.base_url,
-                    timeout=25.0,
-                )
+                client = self._get_client(provider)
 
                 response = client.chat.completions.create(
                     model=provider.model,
@@ -1240,9 +1273,9 @@ class CampaignScanner:
 
         try:
             logger.info("正在使用 AI 深度分析币安官方当期活动情报...")
-            for provider in llm_engine.providers:
+            for provider in llm_engine._ordered_providers():
                 try:
-                    client = OpenAI(api_key=provider.api_key, base_url=provider.base_url, timeout=25.0)
+                    client = llm_engine._get_client(provider)
                     resp = client.chat.completions.create(
                         model=provider.model,
                         messages=[{"role": "user", "content": prompt}],
@@ -1709,7 +1742,51 @@ class Notifier:
     2. 苹果 iOS 推送：Bark (BARK_KEY)
     3. Telegram Bot (TELEGRAM_BOT_TOKEN & TELEGRAM_CHAT_ID)
     4. 团队群机器人：通用 Webhook (钉钉 / 飞书 / 企微 / Discord)
+
+    报警节流：同一标题的错误报警 12 小时内只发一次。
+    状态存于 campaign_intel.json 的 `_alert_state` 键（随 Git 同步持久化），
+    防止持续故障（如 LLM Key 欠费）时每次定时运行都轰炸推送渠道。
     """
+
+    _ALERT_THROTTLE_HOURS = 12
+
+    @classmethod
+    def _alert_throttled(cls, title: str) -> bool:
+        """返回 True 表示该报警在冷却期内，应跳过发送"""
+        key = hashlib.sha256(title.encode("utf-8")).hexdigest()[:16]
+        now = datetime.now(timezone.utc)
+        state = {}
+        try:
+            if os.path.exists(CAMPAIGN_INTEL_FILE):
+                with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
+                    state = json.load(f).get("_alert_state", {})
+        except Exception:
+            state = {}
+
+        last = state.get(key)
+        if last:
+            try:
+                last_dt = datetime.fromisoformat(str(last).replace("Z", "+00:00"))
+                if (now - last_dt).total_seconds() < cls._ALERT_THROTTLE_HOURS * 3600:
+                    logger.info(f"报警已节流（{cls._ALERT_THROTTLE_HOURS}h 内不重复推送）: {title}")
+                    return True
+            except Exception:
+                pass
+
+        state[key] = now.isoformat()
+        # 只保留最近 32 条报警记录，防状态膨胀
+        state = dict(sorted(state.items(), key=lambda kv: kv[1])[-32:])
+        try:
+            intel = {}
+            if os.path.exists(CAMPAIGN_INTEL_FILE):
+                with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
+                    intel = json.load(f)
+            intel["_alert_state"] = state
+            with open(CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
+                json.dump(intel, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.debug(f"写入报警节流状态失败(不影响发送): {e}")
+        return False
 
     @staticmethod
     def _run_log_url() -> str:
@@ -1722,7 +1799,26 @@ class Notifier:
         return ""
 
     @staticmethod
+    def _any_channel_configured() -> bool:
+        return any([
+            os.getenv("SERVERCHAN_KEY", "").strip(),
+            os.getenv("PUSHPLUS_TOKEN", "").strip(),
+            os.getenv("BARK_KEY", "").strip(),
+            (os.getenv("TELEGRAM_BOT_TOKEN", "").strip() and os.getenv("TELEGRAM_CHAT_ID", "").strip()),
+            os.getenv("WEBHOOK_URL", "").strip(),
+        ])
+
+    @staticmethod
     def send_notification(title: str, message: str, is_error: bool = False):
+        # 无任何通知渠道时直接返回：避免空跑写入节流状态，消耗未来真实报警的额度
+        if not Notifier._any_channel_configured():
+            logger.info(f"[通知未配置渠道，跳过推送] {title}")
+            return
+
+        # 错误报警 12h 同题节流（成功通知不去重，每条成功都有价值）
+        if is_error and Notifier._alert_throttled(title):
+            return
+
         prefix = "🚨 【异常报警】" if is_error else "📢 【发帖成功】"
         full_title = f"{prefix} {title}"
 
@@ -1929,6 +2025,13 @@ def _run_main():
             logger.info(f"本条新闻未识别到任何币安真实交易标的，缺乏 Write2Earn 挂件抓手，跳过: {title}")
             continue
 
+        # 单代币 24h 限流：BTC 热点刷屏会拉低账号垂直度画像
+        if TOKEN_DAILY_LIMIT > 0:
+            capped = [t for t in detected_tokens if cache_mgr.token_posts_since(t, 24) >= TOKEN_DAILY_LIMIT]
+            if capped and all(t in capped for t in detected_tokens):
+                logger.info(f"代币 {capped} 24h 内已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)，为避免刷屏跳过本条: {title}")
+                continue
+
         live_market_data = MarketDataProvider.get_token_market_data(detected_tokens[:3])
         market_context_str = f"全网情绪指数: {fng_index}\n涉及标的实时盘面: {live_market_data if live_market_data else '链上/全市场热点'}"
 
@@ -1975,7 +2078,7 @@ def _run_main():
         else:
             success = publisher.publish(post_content, image_url=uploaded_image_url, ensure_tokens=post_tokens)
             if success:
-                cache_mgr.record_sent(news_id, title, source)
+                cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
                 posted_records.append({
                     "title": title, "source": source,
                     "provider": llm_result["provider"], "image": bool(uploaded_image_url),

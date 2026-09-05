@@ -295,6 +295,75 @@ class TestActiveHoursWindow(unittest.TestCase):
             self.assertFalse(m.within_active_hours("8-23"))    # 同日窗口不覆盖
 
 
+class TestAlertThrottling(unittest.TestCase):
+    """错误报警 12h 同题节流"""
+
+    def setUp(self):
+        # 把 intel 文件指向临时文件，不污染真实数据
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            import json
+            json.dump({"active_tags": []}, f)
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def test_first_alert_passes_second_throttled(self):
+        self.assertFalse(m.Notifier._alert_throttled("LLM 池熔断"))
+        self.assertTrue(m.Notifier._alert_throttled("LLM 池熔断"))
+        self.assertFalse(m.Notifier._alert_throttled("另一条报警"))
+
+    def test_state_persists_to_file(self):
+        m.Notifier._alert_throttled("某些故障")
+        import json
+        with open(self.tmp, encoding="utf-8") as f:
+            intel = json.load(f)
+        self.assertIn("_alert_state", intel)
+        self.assertEqual(len(intel["_alert_state"]), 1)
+
+    def test_no_channel_means_no_throttle(self):
+        """未配置任何通知渠道时，send_notification 不应写入节流状态"""
+        for k in ("SERVERCHAN_KEY", "PUSHPLUS_TOKEN", "BARK_KEY",
+                  "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "WEBHOOK_URL"):
+            os.environ.pop(k, None)
+        m.Notifier.send_notification("测试报警", "内容", is_error=True)
+        import json
+        with open(self.tmp, encoding="utf-8") as f:
+            intel = json.load(f)
+        self.assertNotIn("_alert_state", intel)
+
+
+class TestTokenDailyLimit(unittest.TestCase):
+    """同一代币 24h 发帖限流"""
+
+    def test_token_posts_since_counts_correctly(self):
+        import tempfile, json
+        now = datetime.now(timezone.utc)
+        items = [
+            {"id": "1", "title": "a", "source": "s",
+             "sent_at": (now - timedelta(hours=2)).isoformat(), "tokens": ["BTC", "ETH"]},
+            {"id": "2", "title": "b", "source": "s",
+             "sent_at": (now - timedelta(hours=5)).isoformat(), "tokens": ["BTC"]},
+            {"id": "3", "title": "c", "source": "s",
+             "sent_at": (now - timedelta(hours=30)).isoformat(), "tokens": ["BTC"]},  # 超窗
+        ]
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+            json.dump(items, f)
+            path = f.name
+        try:
+            mgr = m.CacheManager(path)
+            self.assertEqual(mgr.token_posts_since("BTC", 24), 2)
+            self.assertEqual(mgr.token_posts_since("ETH", 24), 1)
+            self.assertEqual(mgr.token_posts_since("SOL", 24), 0)
+        finally:
+            os.unlink(path)
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 

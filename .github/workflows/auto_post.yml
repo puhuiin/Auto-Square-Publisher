@@ -120,6 +120,8 @@ jobs:
           MIN_IMPACT_SCORE: ${{ vars.MIN_IMPACT_SCORE }}
           MAX_DAILY_POSTS: ${{ vars.MAX_DAILY_POSTS }}
           ACTIVE_HOURS_BEIJING: ${{ vars.ACTIVE_HOURS_BEIJING }}
+          #   TOKEN_DAILY_LIMIT:       同一代币 24h 内最多发帖篇数 (默认 3, 0 = 不限)
+          TOKEN_DAILY_LIMIT: ${{ vars.TOKEN_DAILY_LIMIT }}
 
           # 运行参数
           MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts }}
