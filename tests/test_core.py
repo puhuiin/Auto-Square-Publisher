@@ -9,6 +9,7 @@ import os
 import sys
 import unittest
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -612,6 +613,83 @@ class TestMarketDataCache(unittest.TestCase):
             b = m.MarketDataProvider.get_fear_and_greed()
             self.assertEqual(a, b)
             self.assertEqual(mock_get.call_count, 1)
+
+
+class TestReasonixGateway(unittest.TestCase):
+    """Reasonix 本地免费模型网关集成"""
+
+    def test_probe_returns_none_in_ci(self):
+        os.environ["GITHUB_ACTIONS"] = "true"
+        try:
+            self.assertIsNone(m.probe_reasonix_gateway())
+        finally:
+            os.environ.pop("GITHUB_ACTIONS", None)
+
+    def test_probe_returns_none_when_off(self):
+        os.environ["REASONIX_GW_OFF"] = "1"
+        try:
+            self.assertIsNone(m.probe_reasonix_gateway())
+        finally:
+            os.environ.pop("REASONIX_GW_OFF", None)
+
+    def test_probe_returns_none_when_down(self):
+        # 本地未启动网关 → 探测必须静默失败
+        for k in ("GITHUB_ACTIONS", "REASONIX_GW_OFF"):
+            os.environ.pop(k, None)
+        self.assertIsNone(m.probe_reasonix_gateway("http://127.0.0.1:59999/v1"))
+
+    def test_probe_up_picks_preferred_model(self):
+        """网关在线时返回置顶配置，且优先选 auto/best-fast"""
+        from unittest.mock import MagicMock, patch
+        fake_health = MagicMock(status_code=200)
+        fake_models = MagicMock(status_code=200)
+        fake_models.json.return_value = {"data": [{"id": "auto/best-fast"}, {"id": "ovh/Qwen3.8-27B"}]}
+        with patch.object(m, "_DIRECT_SESSION") as mock_sess:
+            mock_sess.get.side_effect = [fake_health, fake_models]
+            for k in ("GITHUB_ACTIONS", "REASONIX_GW_OFF"):
+                os.environ.pop(k, None)
+            cfg = m.probe_reasonix_gateway("http://localhost:20140/v1")
+            self.assertIsNotNone(cfg)
+            self.assertEqual(cfg.name, "Reasonix-GW")
+            self.assertEqual(cfg.model, "auto/best-fast")
+            self.assertGreater(cfg.timeout, 30)  # 网关内部聚合需要给足超时
+
+    def test_gateway_prepended_when_available(self):
+        """引擎初始化时若网关存活应置顶到链首"""
+        import main
+        gw = m.LLMProviderConfig("Reasonix-GW", "http://localhost:20140/v1", "k", "auto/best-fast", 45.0)
+        os.environ["LLM_API_KEY"] = "test-key-123"
+        os.environ.pop("LLM_PROVIDERS_CONFIG", None)
+        saved_keys = {}
+        for k in list(os.environ):
+            if k.endswith("_API_KEY") and k != "LLM_API_KEY":
+                saved_keys[k] = os.environ.pop(k)
+        try:
+            with patch.object(m, "probe_reasonix_gateway", return_value=gw):
+                eng = m.MultiLLMEngine()
+        finally:
+            os.environ.pop("LLM_API_KEY", None)
+            os.environ.update(saved_keys)
+        self.assertEqual(eng.providers[0].name, "Reasonix-GW", "网关应置顶")
+
+    def test_gateway_absent_keeps_normal_chain(self):
+        """网关不在线时链路顺序不变"""
+        os.environ["LLM_API_KEY"] = "test-key-123"
+        os.environ.pop("LLM_PROVIDERS_CONFIG", None)
+        try:
+            with patch.object(m, "probe_reasonix_gateway", return_value=None):
+                eng = m.MultiLLMEngine()
+        finally:
+            os.environ.pop("LLM_API_KEY", None)
+        names = [p.name for p in eng.providers]
+        self.assertNotIn("Reasonix-GW", names)
+        self.assertEqual(names[0], "Primary-LLM")
+
+    def test_provider_timeout_field(self):
+        p = m.LLMProviderConfig("t", "https://x", "k", "m", timeout=99.0)
+        self.assertEqual(p.timeout, 99.0)
+        p2 = m.LLMProviderConfig("t", "https://x", "k", "m")
+        self.assertEqual(p2.timeout, 25.0, "默认 timeout 应为 25 秒")
 
 
 class TestRunLogUrl(unittest.TestCase):

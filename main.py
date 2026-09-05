@@ -288,6 +288,76 @@ PRESET_PROVIDERS = {
 }
 
 # ---------------------------------------------------------------------------
+# Reasonix 本地免费模型聚合网关集成
+# 本地跑时（网关存活）自动把 http://localhost:20140/v1 置顶为首选提供商，
+# 网关自身已聚合 OmniRoute/g4f/Ollama/OpenCode/OVH/OpenRouter 等 90+ 免费上游并做内部容错。
+# CI(GitHub Actions) 无 localhost, 探测失败自动跳过，不影响线上链路。
+# ---------------------------------------------------------------------------
+REASONIX_GW_URL = os.getenv("REASONIX_GW_URL", "http://localhost:20140/v1").rstrip("/")
+# 网关上按优先级挑选的免费模型（自动路由型最优先，网关兜底）
+REASONIX_PREFERRED_MODELS = [
+    "auto/best-fast",           # OmniRoute 自动路由（网关默认接管无前缀 id）
+    "omni/auto/best-free",
+    "omni/auto/coding:free",
+    "gem/gemini-3-flash-preview",
+    "groq/openai/gpt-oss-120b",
+    "or/openrouter/free",
+    "op/deepseek-v4-flash-free",
+    "ovh/Qwen3.8-27B",
+    "oai/gpt-4o",
+]
+
+# 直连 session：本机 127.0.0.1/localhost 必须绕过系统代理（Windows TUN/Clash 会劫持）
+_DIRECT_SESSION = requests.Session()
+_DIRECT_ADAPTER = requests.adapters.HTTPAdapter(pool_connections=4, pool_maxsize=8)
+_DIRECT_SESSION.mount("http://", _DIRECT_ADAPTER)
+_DIRECT_SESSION.trust_env = False  # 不读 HTTP_PROXY 等环境变量，保证 localhost 直连
+
+
+def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) -> Optional[LLMProviderConfig]:
+    """
+    探测本地 Reasonix 免费模型网关是否在线：
+    - 环境变量 REASONIX_GW_OFF=1 可强制禁用（CI 里设置）
+    - 网关存活时返回一个置顶优先的 ProviderConfig，模型从 REASONIX_PREFERRED_MODELS 中按网关实际 catalogs 选交集
+    - 网关不可达返回 None，静默跳过
+    """
+    if os.getenv("REASONIX_GW_OFF", "").strip() in ("1", "true", "yes"):
+        return None
+    # CI 环境不探测，零开销跳过
+    if os.getenv("GITHUB_ACTIONS", "").strip().lower() == "true":
+        return None
+    try:
+        # 剥离 /v1 后缀再拼健康检查端点（网关 /health 在根路径上，不在 /v1 下）
+        root = gw_url[:-3] if gw_url.endswith("/v1") else gw_url
+        health = _DIRECT_SESSION.get(f"{root}/health", timeout=timeout)
+        if health.status_code != 200:
+            return None
+        # 网关在线，拿模型目录挑选优先级最高的可用模型
+        best_model = "auto/best-fast"
+        try:
+            models_resp = _DIRECT_SESSION.get(f"{gw_url}/v1/models", timeout=timeout + 3)
+            if models_resp.status_code == 200:
+                available = {m.get("id", "") for m in models_resp.json().get("data", [])}
+                for preferred in REASONIX_PREFERRED_MODELS:
+                    # 目录里带前缀(omni/auto/best-free)或不带前缀(auto/best-free)均可
+                    if preferred in available or any(a.endswith("/" + preferred) for a in available):
+                        best_model = preferred
+                        break
+        except Exception:
+            pass  # 目录拿不到就用默认 auto/best-fast，网关自动路由会兜底
+        logger.info(f"🌉 检测到本地 Reasonix 免费模型网关 ({gw_url})，置顶为首选 LLM 通道 (模型: {best_model})")
+        return LLMProviderConfig(
+            name="Reasonix-GW",
+            base_url=gw_url,
+            api_key="reasonix-local",  # 网关本地免鉴权，占位即可
+            model=best_model,
+            timeout=45.0,  # 网关内部做多上游容错，单跳最慢可能 ~30s，给足余量
+        )
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------------------
 # 全球主流 + 山寨币/Meme/新叙事 RSS 数据源列表
 # ---------------------------------------------------------------------------
 RSS_FEEDS = [
@@ -1094,11 +1164,12 @@ class _QualityGateRejection(ValueError):
 class LLMProviderConfig:
     """单个 LLM 模型提供商配置"""
 
-    def __init__(self, name: str, base_url: str, api_key: str, model: str):
+    def __init__(self, name: str, base_url: str, api_key: str, model: str, timeout: float = 25.0):
         self.name = name
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model = model
+        self.timeout = timeout
 
     def __repr__(self):
         masked_key = (self.api_key[:6] + "..." + self.api_key[-4:]) if len(self.api_key) > 10 else "***"
@@ -1207,18 +1278,27 @@ class MultiLLMEngine:
             logger.info(f"提供商 [{name}] 冷却解除，恢复正常调度")
 
     def _get_client(self, provider: LLMProviderConfig) -> OpenAI:
-        """按提供商缓存 OpenAI 客户端；带 HTTP-Referer/X-Title 头以兼容 OpenRouter 等要求来源识别的平台"""
+        """按提供商缓存 OpenAI 客户端；带 HTTP-Referer/X-Title 头以兼容 OpenRouter 等要求来源识别的平台。
+        localhost 提供商（Reasonix 网关）需绕开系统代理，否则 Windows TUN/Clash 会把本地请求吞掉。"""
         cache_key = provider.name
         if cache_key not in self._clients:
-            self._clients[cache_key] = OpenAI(
+            kwargs: Dict[str, Any] = dict(
                 api_key=provider.api_key,
                 base_url=provider.base_url,
-                timeout=25.0,
+                timeout=provider.timeout,
                 default_headers={
                     "HTTP-Referer": "https://github.com/puhuiin/Auto-Square-Publisher",
                     "X-Title": "Binance Square Auto Poster",
                 },
             )
+            is_local = provider.base_url.startswith(("http://localhost", "http://127.0.0.1", "https://localhost", "https://127.0.0.1"))
+            if is_local:
+                try:
+                    import httpx
+                    kwargs["http_client"] = httpx.Client(trust_env=False, timeout=provider.timeout)
+                except ImportError:
+                    pass
+            self._clients[cache_key] = OpenAI(**kwargs)
         return self._clients[cache_key]
 
     def _ordered_providers(self) -> List[LLMProviderConfig]:
@@ -1317,6 +1397,11 @@ class MultiLLMEngine:
             if k and not any(p.api_key == k for p in chain):
                 chain.append(LLMProviderConfig(name=f"Preset-{name}", base_url=url, api_key=k, model=m))
 
+        # 4. 本地 Reasonix 免费模型网关：存活则置顶（它是聚合器，本身就有跨上游容错）
+        gw_cfg = probe_reasonix_gateway()
+        if gw_cfg:
+            chain.insert(0, gw_cfg)
+
         if not chain:
             logger.warning("未检测到有效的 LLM API Key，AI 提炼模块将无法正常发起在线请求！")
 
@@ -1389,6 +1474,9 @@ class MultiLLMEngine:
             try:
                 client = self._get_client(provider)
 
+                # Reasonix 网关后端的 auto/best-* 是推理模型，前几百 token 全消耗在思考链
+                # 里不给足预算 → content 直接 None。网关渠道把预算抬到 1500 才稳。
+                effective_max_tokens = 1500 if provider.name == "Reasonix-GW" else 600
                 response = client.chat.completions.create(
                     model=provider.model,
                     messages=[
@@ -1396,7 +1484,7 @@ class MultiLLMEngine:
                         {"role": "user", "content": user_prompt},
                     ],
                     temperature=0.75,
-                    max_tokens=600,
+                    max_tokens=effective_max_tokens,
                 )
 
                 if not response.choices or not response.choices[0].message:

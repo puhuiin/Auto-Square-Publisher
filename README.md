@@ -83,6 +83,17 @@
 | **TokenRouter** | `https://api.tokenrouter.com/v1` | `qwen/qwen3.8-max-free`<br>`z-ai/glm-5.3-free` | `TOKENROUTER_API_KEY` |
 | **DeepSeek 官方** | `https://api.deepseek.com` | `deepseek-chat` | `LLM_API_KEY` |
 | **SiliconFlow (硅基流动)** | `https://api.siliconflow.cn/v1` | `deepseek-ai/DeepSeek-V3`<br>`Qwen/Qwen2.5-7B-Instruct` | `SILICONFLOW_API_KEY` |
+| **🏠 Reasonix 本地网关** ⭐ 本地首选 | `http://localhost:20140/v1` | `auto/best-fast`（自动路由） | **无需 Key**（本地自动发现） |
+
+### 🏠 Reasonix 本地免费模型网关（本地开发首选）
+
+如果你本机跑着 [Reasonix Gateway](https://github.com/your-reasonix)（聚合 OmniRoute/g4f/OpenCode/OVH/OpenRouter 等 90+ 免费上游的本地统一网关），**什么都不用配置**：发帖机器人在本地启动时会自动探测 `http://localhost:20140/v1`，在线则置顶为首选，离线的 CI 环境自动跳过零干扰：
+
+- **零成本模型池**：网关自动聚合几十路免费上游并做内部容错，本地开发/调试/DRY_RUN 不再消耗任何 API Key 额度
+- **探测开销极低**：约 2 秒一次 ping，失败静默跳过；`GITHUB_ACTIONS=true` 时自动跳过
+- **代理安全**：本地通道强制 `trust_env=False`，规避 Windows TUN/Clash 拦截 localhost 的老坑
+- **推理预算**：网关被识别为推理型模型通道，自动扩容 `max_tokens=1500`（其他渠道仍按 600 节省成本）
+- **手动关闭**：环境变量 `REASONIX_GW_OFF=1` 可强制禁用；`REASONIX_GW_URL` 可换自定义地址
 
 ---
 
