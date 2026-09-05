@@ -833,10 +833,19 @@ class NewsFetcher:
             amounts.add(f"pct:{m.group(1)}")
         return frozenset(amounts)
 
+    # 跨语言判重中必须剔除的大写噪音词：仅含地理/机构/版式缩写（US/UK/UN/FBI 类）
+    # 注意不复用 IGNORE_WORDS——ETF/SEC/ATH 等虽是"非代币"，但在跨语言同事件判定中是有效锚点
+    _FP_NOISE_TOKENS = {
+        "US", "USA", "UK", "EU", "UN", "UAE", "IMF", "FBI", "CIA", "NATO",
+        "LLC", "INC", "LTD", "IPO", "GDP", "CPI", "CEO", "CFO", "CTO",
+        "JUST", "FAIR", "ALSO", "NEW", "TOP", "ALL", "NOW",
+    }
+
     @staticmethod
     def _title_tokens_upper(title: str) -> frozenset:
-        """标题里的全大写疑似代币符号集合（用于跨语言同事件判定）"""
-        return frozenset(re.findall(r"\b([A-Z]{2,10})\b", title))
+        """标题里的全大写疑似代币符号集合（跨语言同事件判定用；剔除国家/机构/通用缩写噪音）"""
+        raw = set(re.findall(r"\b([A-Z]{2,10})\b", title))
+        return frozenset(t for t in raw if t not in NewsFetcher._FP_NOISE_TOKENS)
 
     @classmethod
     def _is_cross_lang_dup(cls, title: str, other: str) -> bool:

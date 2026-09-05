@@ -559,6 +559,18 @@ class TestCrossLangDedup(unittest.TestCase):
         f2 = m.NewsFetcher._title_amount_fingerprint("比特币上涨 5.2%")
         self.assertIn("pct:5.2", f1 & f2)
 
+    def test_noise_tokens_excluded_from_fingerprint(self):
+        # “US/ETF”是噪音词，不能因为双方都出现就误判同一事件
+        a = "Global Top-20 Economy Yanks $13,588,825,600 in Gold out of US"
+        b = "FinCEN ties $13B in crypto scams to non-US operations"
+        self.assertFalse(m.NewsFetcher._is_cross_lang_dup(a, b),
+                         "同金额量级 + US 共同词不应误判为同一事件")
+
+    def test_real_token_intersection_still_works(self):
+        a = "Binance lists XRP perpetual with $50M volume"
+        b = "币安上线 XRP 永续，成交量 5000 万美元"
+        self.assertTrue(m.NewsFetcher._is_cross_lang_dup(a, b))
+
 
 class TestMarketDataCache(unittest.TestCase):
     """行情 TTL 缓存：同一 run 内重复代币命中缓存、超期后重新拉取"""
