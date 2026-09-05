@@ -162,6 +162,18 @@ class TestContentSanitizer(unittest.TestCase):
         self.assertIn("%", s)
         self.assertNotIn("＃", s)
 
+    def test_amount_abbreviations_preserved(self):
+        # $120K / $2.5B / $4.6M 这类金额缩写绝不能被剥壳（它们不是代币）
+        s = m.SquarePublisher._sanitize_content("目标价 $120K，单日成交量 $2.5B，流入 $4.6M")
+        self.assertIn("$120K", s)
+        self.assertIn("$2.5B", s)
+        self.assertIn("$4.6M", s)
+
+    def test_valid_token_lowercase_normalized(self):
+        # $btc 应归为 $BTC，币安挂件对大小写敏感
+        s = m.SquarePublisher._sanitize_content("重仓 $btc 起飞")
+        self.assertIn("$BTC", s)
+
     def test_stable_cashtag_stripped(self):
         s = m.SquarePublisher._sanitize_content("用 $USDT 买入 $BTC")
         self.assertNotIn("$USDT", s)

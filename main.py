@@ -1979,10 +1979,14 @@ class SquarePublisher:
 
         def _strip_invalid_cashtag(m: "re.Match") -> str:
             word = m.group(1)
+            # 纯数字金额 $120000 → 保留
             if word.isdigit():
                 return m.group(0)
+            # 数字开头+量级后缀是金额缩写（$120K / $100M / $5B），不是代币 → 保留 $
+            if re.fullmatch(r"\d+(?:\.\d+)?[KMB]", word, re.IGNORECASE):
+                return m.group(0)
             if word.upper() in valid_symbols:
-                return "$" + word.upper()
+                return "$" + word.upper()  # $btc → $BTC 归一化
             return word
 
         content = re.sub(r"\$([A-Za-z0-9]{2,10})\b", _strip_invalid_cashtag, content)
