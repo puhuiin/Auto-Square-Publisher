@@ -16,6 +16,23 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import main as m
 
 
+# 套件级 hermetic 符号表：_sanitize_content 等逻辑无条件调用 get_valid_symbols，
+# 缓存为空时会打真实币安 API（"离线单测"名存实亡：顺断网、有网慢，且结果不可复现）。
+# 此处预设与 TestContentSanitizer 一致的最小宇宙，各测试仍可自行覆盖/打补丁。
+TEST_SYMBOL_UNIVERSE = {"BTC", "ETH", "XRP", "PEPE", "SOL", "DOGE"}
+_ORIG_SYMBOL_CACHE = None
+
+
+def setUpModule():
+    global _ORIG_SYMBOL_CACHE
+    _ORIG_SYMBOL_CACHE = m.SymbolValidator._valid_symbols_cache
+    m.SymbolValidator._valid_symbols_cache = set(TEST_SYMBOL_UNIVERSE)
+
+
+def tearDownModule():
+    m.SymbolValidator._valid_symbols_cache = _ORIG_SYMBOL_CACHE
+
+
 class TestFreshnessFilter(unittest.TestCase):
     """时效过滤：旧闻必须被丢弃，无时间戳的条目放行"""
 
@@ -79,6 +96,30 @@ class TestTokenExtraction(unittest.TestCase):
     def test_dedup_preserves_order(self):
         out = m.NewsFetcher.extract_tokens("$SOL and $SOL again then $ETH", self.VALID)
         self.assertEqual(out, ["SOL", "ETH"])
+
+
+class TestSymbolValidatorFallback(unittest.TestCase):
+    """断网回退到内置小标的池（不断言具体数量，只锁住"小而可用"的不变量）"""
+
+    def test_builtin_pool_when_network_dead(self):
+        orig = m.SymbolValidator._valid_symbols_cache
+        m.SymbolValidator._valid_symbols_cache = None
+        try:
+            # 真实 http_get 永不抛异常（内层 http_request 已吸收转 None），此处同语义模拟断网
+            with patch.object(m, "http_get", return_value=None):
+                syms = m.SymbolValidator.get_valid_symbols()
+            self.assertIn("BTC", syms)
+            self.assertIn("ETH", syms)
+            self.assertLess(len(syms), 100, "断网应回退小内置池，而非 489 全量")
+        finally:
+            m.SymbolValidator._valid_symbols_cache = orig
+
+    def test_suite_universe_covers_sanitizer_needs(self):
+        # setUpModule 预设必须覆盖净化测试用到的全部真实标的，否则关掉网络就会红
+        for tok in ("BTC", "ETH", "XRP", "PEPE", "SOL", "DOGE"):
+            self.assertIn(tok, TEST_SYMBOL_UNIVERSE)
+        for fake in ("FAKECOIN", "SCAM"):
+            self.assertNotIn(fake, TEST_SYMBOL_UNIVERSE)
 
 
 class TestQualityGate(unittest.TestCase):
