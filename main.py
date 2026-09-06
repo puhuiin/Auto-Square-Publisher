@@ -2119,6 +2119,23 @@ class BasePublisher:
                 ensure_tokens: Optional[List[str]] = None, meta: Optional[Dict[str, Any]] = None) -> bool:
         raise NotImplementedError
 
+    @classmethod
+    def _prepare_cross_platform_content(cls, content: str) -> str:
+        """
+        非币安平台的内容适配：主循环传入的是币安净化前的原始 LLM 输出，
+        直接镜像会把 <think> 思考块、伪标的（$FAKECOIN）、AI 套话、#Write2Earn 币安专属标签
+        全部带到别的平台。此处复用币安净化管线后，再剥离币安专属话题标签。
+        """
+        try:
+            cleaned = SquarePublisher._sanitize_content(content)  # 同模块延迟解析，调用时必已定义
+        except Exception:
+            cleaned = content
+        # 剥离币安广场专属标签（#Write2Earn/#BinanceSquare 在其他平台是纯噪音）
+        cleaned = re.sub(r"#(?:Write2Earn|BinanceSquare|币安广场)\b\s*", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+        # 防护仅在清洗结果为空时回退原文（不能用长度阈值——短内容会被整体回退吞掉适配效果）
+        return cleaned if cleaned else content
+
 
 # ---------------------------------------------------------------------------
 # 模块八：币安广场 OpenAPI 客户端 (SquarePublisher)
@@ -2411,6 +2428,8 @@ class OKXDraftExporter(BasePublisher):
             if self._draft_exists(meta.get("news_id", "")):
                 logger.info(f"📝 该新闻已有草稿（此前币安失败待重试），跳过重复导出: {meta.get('title', '')[:40]}")
                 return False
+            # 跨平台内容适配：净化 + 剥离币安专属标签（#Write2Earn 等）
+            content = self._prepare_cross_platform_content(content)
             now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
             day_dir = os.path.join(self.DRAFTS_DIR, datetime.now(timezone.utc).strftime("%Y-%m-%d"))
             os.makedirs(day_dir, exist_ok=True)
@@ -2510,6 +2529,8 @@ class TelegramChannelPublisher(BasePublisher):
             return False
 
         api_base = f"https://api.telegram.org/bot{token}"
+        # 跨平台内容适配：净化 + 剥离币安专属标签
+        content = self._prepare_cross_platform_content(content)
         # caption 上限 1024，正文清洗后 ≤900，安全
         if len(content) > 1020:
             content = content[:1020].rsplit("\n", 1)[0] + "…"

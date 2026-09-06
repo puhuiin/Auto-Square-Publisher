@@ -1221,6 +1221,37 @@ class TestTelegramMirror(unittest.TestCase):
             self.assertLessEqual(len(sent), 1024)
 
 
+class TestCrossPlatformContentAdaptation(unittest.TestCase):
+    """非币安平台的内容适配：净化管线复用 + 币安专属标签剥离"""
+
+    @classmethod
+    def setUpClass(cls):
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP"}
+
+    def test_full_adaptation(self):
+        raw = ("大盘反弹。<think>思考过程</think>假如 $FAKECOIN 起飞。"
+               "总而言之，偏多。 #Write2Earn #BinanceSquare #BTC")
+        out = m.BasePublisher._prepare_cross_platform_content(raw)
+        self.assertNotIn("Write2Earn", out)
+        self.assertNotIn("BinanceSquare", out)
+        self.assertNotIn("think", out)
+        self.assertNotIn("总而言之", out)
+        self.assertNotIn("$FAKECOIN", out)   # 伪标的剥壳（去 $ 留词）
+        self.assertIn("FAKECOIN", out)
+        self.assertIn("#BTC", out)           # 代币标签保留
+        self.assertIn("大盘反弹", out)
+
+    def test_short_content_still_adapted(self):
+        """短内容不能因防护阈值被整体回退（曾因 len>=15 阈值吞掉适配效果）"""
+        out = m.BasePublisher._prepare_cross_platform_content("短句。 #Write2Earn #BinanceSquare #BTC")
+        self.assertNotIn("Write2Earn", out)
+        self.assertIn("#BTC", out)
+
+    def test_empty_after_clean_falls_back(self):
+        out = m.BasePublisher._prepare_cross_platform_content("<think>" + "x" * 50)
+        self.assertTrue(out, "清洗后为空必须回退原文而非空串")
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 
