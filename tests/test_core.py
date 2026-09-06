@@ -1293,6 +1293,38 @@ class TestTelegramCrossRunDedup(unittest.TestCase):
             self.assertEqual(mp.call_count, 2)
 
 
+class TestRiskBlockDenylist(unittest.TestCase):
+    """风控拦截否认名单：20002/20022 拦过的新闻不再重试"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        import json
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"active_tags": []}, f)
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def test_mark_and_cap(self):
+        for i in range(m.SquarePublisher.__mro__ and 210):  # 超过 200 上限
+            def _mk(idx=i):
+                def _add(state):
+                    state = dict(state or {})
+                    state[f"nid{idx}"] = datetime.now(timezone.utc).isoformat()
+                    return dict(sorted(state.items(), key=lambda kv: kv[1])[-200:])
+                return _add
+            m.intel_state_update("_risk_blocked", _mk(), default={})
+        state = m.intel_state_get("_risk_blocked", {})
+        self.assertEqual(len(state), 200, "否认名单应截断到 200 条")
+        self.assertNotIn("nid0", state)   # 最老的被剪掉
+        self.assertIn("nid209", state)    # 最新的保留
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 

@@ -3093,7 +3093,20 @@ def _run_main():
                     continue
 
             live_market_data = MarketDataProvider.get_token_market_data(detected_tokens[:3])
-            market_context_str = f"全网情绪指数: {fng_index}\n涉及标的实时盘面: {live_market_data if live_market_data else '链上/全市场热点'}"
+            # 时段人设：让文案与发布时间自然对齐（凌晨的帖说"早间策略"一眼假）
+            bj_hour = datetime.now(timezone(timedelta(hours=8))).hour
+            if 6 <= bj_hour < 11:
+                daypart = "早间（开盘前情绪铺垫期）"
+            elif 11 <= bj_hour < 14:
+                daypart = "午间（午休刷盘高峰）"
+            elif 14 <= bj_hour < 18:
+                daypart = "午后（欧盘接力期）"
+            elif 18 <= bj_hour < 23:
+                daypart = "晚间（美盘主战场，互动黄金期）"
+            else:
+                daypart = "深夜（全球夜猫子时段，短线客在线）"
+            market_context_str = (f"全网情绪指数: {fng_index}\n涉及标的实时盘面: {live_market_data if live_market_data else '链上/全市场热点'}\n"
+                                  f"发布时段: 北京时间 {bj_hour} 点（{daypart}），语气与节奏请贴合该时段读者状态")
 
             # AI 结合活动情报与实时盘面进行高质量提炼（注入已校验真实标的提示）
             t_llm_start = time.time()
@@ -3149,6 +3162,11 @@ def _run_main():
                 draft_meta = {"news_id": news_id, "title": title, "source": source,
                               "link": item.get("link", ""), "impact_score": score}
                 draft_exported = False
+
+                # 风控拦截否认名单：20002/20022 拦过的内容重试大概率再被拦，直接跳过防烧 LLM
+                if news_id in (intel_state_get("_risk_blocked", {}) or {}):
+                    logger.info(f"⛔ 该新闻此前被币安风控拦截（20002/20022），跳过重试: {title[:50]}")
+                    continue
 
                 if binance_enabled:
                     t_pub_start = time.time()
@@ -3219,6 +3237,14 @@ def _run_main():
                     consecutive_publish_failures += 1
                     logger.error(f"发帖失败，本次暂不记录缓存以供下次重试: {title} (发布链路连续失败 {consecutive_publish_failures} 次)")
                     detail = publisher.last_error or "发布接口返回异常"
+                    # 风控拦截（20002/20022）重试无意义：内容不变结果不变，记入否认名单永久跳过
+                    if "20002" in detail or "20022" in detail:
+                        def _mark_blocked(state):
+                            state = dict(state or {})
+                            state[news_id] = datetime.now(timezone.utc).isoformat()
+                            return dict(sorted(state.items(), key=lambda kv: kv[1])[-200:])
+                        intel_state_update("_risk_blocked", _mark_blocked, default={})
+                        logger.warning(f"⛔ 已将 {news_id} 记入风控拦截否认名单（后续运行不再重试）。")
                     Notifier.send_notification("币安发帖失败", f"新闻: {title}\n诊断: {detail}\n已跳过并将在下次自动重试。", is_error=True)
                     if consecutive_publish_failures >= 3:
                         logger.error("🛑 发布通道连续 3 次失败，触发熔断终止运行，防止新闻持续产生而无端消耗 LLM。")
