@@ -169,7 +169,9 @@ jobs:
               exit 0
             fi
 
-            git add sent_cache.json campaign_intel.json drafts
+            git add sent_cache.json campaign_intel.json
+            # drafts 目录在首次 okx_draft 运行前不存在，git add 会 fatal，必须条件添加
+            [ -d drafts ] && git add drafts || true
             git commit -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]"
 
             if git push origin "HEAD:$BRANCH"; then

@@ -2441,6 +2441,19 @@ class OKXDraftExporter(BasePublisher):
             except ValueError:  # 跨盘符（Windows 临时目录在别的驱动器）
                 display_path = path
             logger.info(f"📝 OKX 草稿已生成: {display_path}")
+
+            # 推送提醒（附 GitHub 草稿直链，手机点开即复制，闭环手动发布流程）
+            blob_url = ""
+            server = os.getenv("GITHUB_SERVER_URL", "").strip()
+            repo = os.getenv("GITHUB_REPOSITORY", "").strip()
+            if server and repo:
+                rel_posix = display_path.replace("\\", "/") if display_path != path else os.path.basename(path)
+                branch = os.getenv("GITHUB_REF_NAME", "main").strip() or "main"
+                blob_url = f"{server}/{repo}/blob/{branch}/{rel_posix}"
+            Notifier.send_notification(
+                "📝 OKX 草稿已就绪",
+                f"热点: {title}\n标的: {tokens}\n草稿: {blob_url or display_path}\n\n打开复制正文，粘贴到 OKX App 广场即可（约 10 秒）。",
+            )
             return True
         except Exception as e:
             self.last_error = str(e)
@@ -2614,7 +2627,8 @@ class Notifier:
 # ---------------------------------------------------------------------------
 def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_intel: Dict[str, Any],
                               posted_records: List[Dict[str, Any]], dry_run: bool,
-                              timings: Optional[Dict[str, float]] = None):
+                              timings: Optional[Dict[str, float]] = None,
+                              drafts_count: int = 0):
     """在 GitHub Actions 运行页输出结构化 Markdown 报告（本地运行时不生效）"""
     summary_path = os.getenv("GITHUB_STEP_SUMMARY", "").strip()
     if not summary_path:
@@ -2641,6 +2655,8 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
             top = " / ".join(f"{name.split(' ')[0]} {kept}条" for name, kept, _ in productive[:5])
             lines.append(f"- **源产出 TOP**: {top}")
         lines.append(f"- **本次发布**: {len(posted_records)} 篇")
+        if drafts_count:
+            lines.append(f"- **OKX 草稿**: {drafts_count} 份（drafts/ 目录，App 内粘贴即发）")
         if timings:
             parts = [f"{k}={v:.1f}s" for k, v in timings.items() if v is not None]
             if parts:
@@ -2861,6 +2877,7 @@ def _run_main():
     stage_timings: Dict[str, float] = {"fetch": fetch_elapsed, "intel": intel_elapsed, "llm": 0.0, "image": 0.0, "publish": 0.0}
     valid_symbols = SymbolValidator.get_valid_symbols() or set()
     posted_titles_this_run: List[str] = []  # 本轮已处理的标题，防同批次近似变体连发
+    drafts_count = 0  # 本轮 OKX 草稿导出数（运行报告用）
 
     for item in candidates:
         if posted_count >= max_posts:
@@ -2961,8 +2978,9 @@ def _run_main():
                 draft_meta = {"news_id": news_id, "title": title, "source": source,
                               "link": item.get("link", ""), "impact_score": score}
                 if "okx_draft" in PUBLISH_PLATFORMS:
-                    okx_exporter.publish(post_content, image_url=uploaded_image_url,
-                                         ensure_tokens=post_tokens, meta=draft_meta)
+                    if okx_exporter.publish(post_content, image_url=uploaded_image_url,
+                                            ensure_tokens=post_tokens, meta=draft_meta):
+                        drafts_count += 1
 
                 if success:
                     consecutive_publish_failures = 0
@@ -3001,7 +3019,7 @@ def _run_main():
             time.sleep(delay)
 
     write_github_step_summary(fetcher, fng_index, campaign_intel, posted_records, dry_run,
-                              timings=stage_timings)
+                              timings=stage_timings, drafts_count=drafts_count)
     logger.info(f"⏱️ 耗时画像: 抓取={stage_timings['fetch']:.1f}s / 情报={stage_timings['intel']:.1f}s / "
                 f"LLM={stage_timings['llm']:.1f}s / 配图={stage_timings['image']:.1f}s / 发布={stage_timings['publish']:.1f}s")
 
