@@ -152,8 +152,8 @@ MAX_DAILY_POSTS = _env_int("MAX_DAILY_POSTS", 12)                  # 24h 滚动�
 TOKEN_DAILY_LIMIT = _env_int("TOKEN_DAILY_LIMIT", 3)               # 同一代币 24h 内最多发布篇数，0 表示不限制
 # 发布平台组合：binance=币安广场官方API；okx_draft=OKX广场草稿直出（合规半自动，见 OKXDraftExporter）
 PUBLISH_PLATFORMS = [p.strip().lower() for p in os.getenv("PUBLISH_PLATFORMS", "binance").split(",") if p.strip()]
-# 遥测指标文件：每篇投递追加一行 JSONL（时段/币种/来源/模型/平台），随 Git 同步积累，
-# 供未来做数据驱动调优（哪些时段/币种/来源的产出值得加权）
+# 遥测指标文件：每次投递成功或 LLM 拒单都追加一行 JSONL（时段/币种/来源/模型/平台/拦截阶段），
+# 随 Git 同步积累，供未来做数据驱动调优（哪些时段/币种/来源的产出值得加权，以及质量门在误杀谁）
 METRICS_FILE = os.path.join(BASE_DIR, "metrics.jsonl")
 
 
@@ -1394,11 +1394,18 @@ class LLMProviderConfig:
         return f"<Provider: {self.name} | Model: {self.model} | BaseURL: {self.base_url} | Key: {masked_key}>"
 
 
+def _is_reasoning_channel(provider_name: str) -> bool:
+    """推理模型通道判定（Reasonix 网关全系）：思考链吃掉前几百 token，必须给大预算。
+    三处预算逻辑共用此谓词——此前各处手写 startswith/==，曾漏掉备份通道酿成实祸，
+    下次加新推理渠道只改这一处。"""
+    return provider_name.startswith("Reasonix-GW")
+
+
 def _summarize_max_tokens(provider_name: str) -> int:
     """提炼预算：Reasonix 网关全系（含 -GW-1/-GW-2 备份）皆为推理模型，
     前几百 token 全消耗在思考链里，预算不足则 content 直接 None。
     此前 summarize 用 == 精确匹配，仅首选通道拿到 1500，备份链名存实亡。"""
-    return 1500 if provider_name.startswith("Reasonix-GW") else 600
+    return 1500 if _is_reasoning_channel(provider_name) else 600
 
 
 class MultiLLMEngine:
@@ -1754,6 +1761,23 @@ class MultiLLMEngine:
 
         return True, ""
 
+    @staticmethod
+    def _log_reject(news_item: Dict[str, Any], provider: str, stage: str, reason: str) -> None:
+        """拒单遥测：每次 LLM 尝试被丢弃都记一行（stage=quality/numbers/transport）。
+        投递遥测只记录成功，失败全黑盒会导致未来调优只看得到"活下来的稿子"
+        （幸存者偏差：高热新闻是否系统性被质量门误杀，无数据回答不了）。
+        与投递共用 metrics.jsonl（outcome=llm_rejected 区分，provider 字段可切分
+        本地 DRY_RUN 与线上），append_metrics 本身永不抛异常。"""
+        append_metrics({
+            "title": (news_item.get("title") or "")[:60],
+            "source": news_item.get("source"),
+            "impact_score": news_item.get("impact_score"),
+            "provider": provider,
+            "stage": stage,
+            "reason": (reason or "")[:80],
+            "outcome": "llm_rejected",
+        })
+
     def summarize(
         self,
         news_item: Dict[str, Any],
@@ -1768,6 +1792,9 @@ class MultiLLMEngine:
         """
         if not self.providers:
             logger.error("没有任何可用的 LLM 提供商配置！")
+            # 空链也留痕：否则"连续 3 次失败熔断"在遥测里看不到任何前因，
+            # 事后只能猜是没配 Key 还是模型全挂
+            self._log_reject(news_item, "-", "no_provider", "无可用 LLM 提供商（Key 未配或网关离线）")
             return None
 
         # 组织活动背景提示（仅作为潜意识背景，避免生搬硬套非相关代币）
@@ -1833,12 +1860,14 @@ class MultiLLMEngine:
                 # 0. 质量门：过短/过长/跑偏英文输出一律视为失败并切换下一模型
                 passed, fail_reason = self._passes_quality_gate(content)
                 if not passed:
+                    self._log_reject(news_item, provider.name, "quality", fail_reason)
                     raise _QualityGateRejection(fail_reason)
 
                 # 0.1 数字幻觉软校验：编造精确百分比/大额金额的内容直接拦截
                 source_text = f"{news_item.get('title','')} {news_item.get('summary','')} {market_context}"
                 nums_ok, nums_reason = self._verify_numbers(content, source_text)
                 if not nums_ok:
+                    self._log_reject(news_item, provider.name, "numbers", nums_reason)
                     raise _QualityGateRejection(nums_reason)
 
                 # 1. 提取代币：交易所校验过的 token_hints 拥有最高权重，模型自报的 $ 标的仅作补充
@@ -1875,6 +1904,7 @@ class MultiLLMEngine:
                 err_msg = str(e)
                 self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
                 self._breaker_record_failure(provider.name)
+                self._log_reject(news_item, provider.name, "transport", err_msg)
                 fail_reason = err_msg
                 enter_breaker = True
                 logger.warning(f"提供商 [{provider.name}] 请求失败: {err_msg} (本次运行连续失败 {self._fail_counts[provider.name]} 次)")
@@ -1965,7 +1995,7 @@ class CampaignScanner:
                 try:
                     client = llm_engine._get_client(provider)
                     # 推理型渠道（Reasonix 网关）思考链就吃几百 token，400 预算会静默产出空内容
-                    effective_max_tokens = 1200 if provider.name.startswith("Reasonix-GW") else 400
+                    effective_max_tokens = 1200 if _is_reasoning_channel(provider.name) else 400
                     resp = client.chat.completions.create(
                         model=provider.model,
                         messages=[{"role": "user", "content": prompt}],
@@ -3058,11 +3088,11 @@ def run_healthcheck():
         try:
             with open(METRICS_FILE, "r", encoding="utf-8") as f:
                 n_metrics = sum(1 for line in f if line.strip())
-            checks.append(("遥测样本", "✔", f"{METRICS_FILE} 已积累 {n_metrics} 条投递指标（数据驱动调优的原料）"))
+            checks.append(("遥测样本", "✔", f"{METRICS_FILE} 已积累 {n_metrics} 条遥测样本（投递+拦截，数据驱动调优的原料）"))
         except Exception as e:
             checks.append(("遥测样本", "⚠", f"读取失败: {e}"))
     else:
-        checks.append(("遥测样本", "ℹ", "尚无数据（每次投递自动累积到 metrics.jsonl）"))
+        checks.append(("遥测样本", "ℹ", "尚无数据（每次投递/拦截自动累积到 metrics.jsonl）"))
 
     # ---- 2.6 LLM 实弹测试（仅 --llm-live，消耗少量 token）----
     if "--llm-live" in sys.argv and eng is not None and eng.providers:
@@ -3072,7 +3102,7 @@ def run_healthcheck():
             try:
                 client = eng._get_client(p)
                 # 推理渠道思考链吃预算，与 summarize 同规则
-                budget = 1500 if p.name.startswith("Reasonix-GW") else 50
+                budget = 1500 if _is_reasoning_channel(p.name) else 50
                 resp = client.chat.completions.create(
                     model=p.model,
                     messages=[{"role": "user", "content": "收到请只回复两个字: 正常"}],

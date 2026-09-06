@@ -1891,6 +1891,115 @@ class TestDeliveredPlatforms(unittest.TestCase):
         self.assertEqual(m._delivered_platforms(), [])
 
 
+class TestReasoningChannel(unittest.TestCase):
+    """推理通道谓词：三处预算逻辑共用，杜绝手写匹配再次漏备份通道"""
+
+    def test_gateway_family_all_reasoning(self):
+        for name in ("Reasonix-GW", "Reasonix-GW-1", "Reasonix-GW-2", "Reasonix-GW-foo"):
+            self.assertTrue(m._is_reasoning_channel(name), name)
+
+    def test_external_providers_not_reasoning(self):
+        for name in ("Primary-LLM", "Preset-openrouter", "", "reasonix-gw"):
+            self.assertFalse(m._is_reasoning_channel(name), repr(name))
+
+    def test_budget_helpers_share_predicate(self):
+        # 预算函数必须与谓词一致（改谓词即全局生效，不断链）
+        self.assertEqual(m._summarize_max_tokens("Reasonix-GW-9"), 1500)
+        self.assertEqual(m._summarize_max_tokens("Preset-x"), 600)
+
+
+class TestRejectTelemetry(unittest.TestCase):
+    """拒单遥测：失败尝试必须留痕，否则调优只看得到活下来的稿子"""
+
+    def setUp(self):
+        import tempfile
+        self.tmpdir = tempfile.mkdtemp()
+        self._orig_metrics = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(self.tmpdir, "metrics.jsonl")
+        self.intel_tmp = tempfile.mktemp(suffix=".json")
+        with open(self.intel_tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        self._orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.intel_tmp
+
+    def tearDown(self):
+        m.METRICS_FILE = self._orig_metrics
+        m.CAMPAIGN_INTEL_FILE = self._orig_intel
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        if os.path.exists(self.intel_tmp):
+            os.remove(self.intel_tmp)
+
+    def _rows(self):
+        import json
+        with open(m.METRICS_FILE, encoding="utf-8") as f:
+            return [json.loads(l) for l in f if l.strip()]
+
+    def test_log_reject_row_schema(self):
+        m.MultiLLMEngine._log_reject(
+            {"title": "t" * 100, "source": "U.Today", "impact_score": 42},
+            "stub", "numbers", "r" * 100)
+        rows = self._rows()
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        self.assertEqual(row["outcome"], "llm_rejected")
+        self.assertEqual((row["stage"], row["provider"]), ("numbers", "stub"))
+        self.assertEqual(row["source"], "U.Today")
+        self.assertEqual(row["impact_score"], 42)
+        self.assertEqual(len(row["title"]), 60, "标题截断防行膨胀")
+        self.assertEqual(len(row["reason"]), 80)
+        self.assertIn("hour_bj", row)
+
+    def _stub_engine(self):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.providers = [m.LLMProviderConfig("stub", "https://x", "k", "mm")]
+        return eng
+
+    def _fake_client(self, content=None, exc=None):
+        if exc is not None:
+            fake = MagicMock()
+            fake.chat.completions.create.side_effect = exc
+            return fake
+        fake_msg = MagicMock(content=content)
+        fake_resp = MagicMock(choices=[MagicMock(message=fake_msg)])
+        fake = MagicMock()
+        fake.chat.completions.create.return_value = fake_resp
+        return fake
+
+    def test_quality_reject_logged_through_summarize(self):
+        eng = self._stub_engine()
+        client = self._fake_client(content="作为AI助手，我无法提供投资建议。" * 3)
+        item = {"title": "BTC news", "summary": "body", "source": "U.Today", "impact_score": 10}
+        with patch.object(eng, "_get_client", return_value=client):
+            self.assertIsNone(eng.summarize(item, None, market_context="", token_hints=["BTC"]))
+        rows = self._rows()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual((rows[0]["stage"], rows[0]["provider"]), ("quality", "stub"))
+        self.assertEqual(rows[0]["outcome"], "llm_rejected")
+
+    def test_transport_failure_logged(self):
+        eng = self._stub_engine()
+        client = self._fake_client(exc=RuntimeError("connect timeout"))
+        item = {"title": "ETH news", "summary": "body", "source": "CoinDesk"}
+        with patch.object(eng, "_get_client", return_value=client):
+            self.assertIsNone(eng.summarize(item))
+        rows = self._rows()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["stage"], "transport")
+        self.assertIn("timeout", rows[0]["reason"])
+
+    def test_empty_chain_logged_once(self):
+        eng = self._stub_engine()
+        eng.providers = []
+        item = {"title": "SOL news", "summary": "body", "source": "Decrypt"}
+        self.assertIsNone(eng.summarize(item))
+        rows = self._rows()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual((rows[0]["stage"], rows[0]["provider"]), ("no_provider", "-"))
+
+
 class TestSummarizeTokenBudget(unittest.TestCase):
     """提炼预算：网关备份通道（-GW-1/-GW-2）同为推理模型，必须同等 1500 预算"""
 
