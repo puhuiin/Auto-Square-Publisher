@@ -2951,6 +2951,25 @@ class Notifier:
         return text[:limit - 30] + "\n... [内容过长已截断]"
 
     @staticmethod
+    def _deliver(channel: str, send_fn) -> bool:
+        """单通道投递带一次重试：此前各通道 fire-and-forget，抖动丢包或业务码
+        异常（HTTP 200 但 code != 成功）都只记一条 warning——而报警恰恰在系统
+        出故障时发送，此时网络本就可疑，丢一条关键报警的代价远大于多一次请求。
+        send_fn 负责把"HTTP 非 2xx / 业务码不对"转成异常，本函数只管重试与日志。"""
+        try:
+            send_fn()
+            return True
+        except Exception as e:
+            logger.debug(f"{channel}首次投递失败，2s 后重试一次: {e}")
+        time.sleep(2)
+        try:
+            send_fn()
+            return True
+        except Exception as e:
+            logger.warning(f"发送{channel}失败(已重试): {e}")
+            return False
+
+    @staticmethod
     def send_notification(title: str, message: str, is_error: bool = False):
         # 无任何通知渠道时直接返回：避免空跑写入节流状态，消耗未来真实报警的额度
         if not Notifier._any_channel_configured():
@@ -2970,58 +2989,76 @@ class Notifier:
         if run_url:
             message = f"{message}\n\n🔍 运行日志: {run_url}"
 
-        # 1. 微信推送：Server酱 (Turbo版)
+        # 1. 微信推送：Server酱 (Turbo版，成功业务码 code==0)
         serverchan_key = os.getenv("SERVERCHAN_KEY", "").strip()
         if serverchan_key:
-            try:
-                url = f"https://sctapi.ftqq.com/{serverchan_key}.send"
-                requests.post(url, data={"title": full_title, "desp": message}, timeout=8)
-                logger.info("已发送 Server酱 微信通知。")
-            except Exception as e:
-                logger.warning(f"发送 Server酱 失败: {e}")
+            url = f"https://sctapi.ftqq.com/{serverchan_key}.send"
 
-        # 2. 微信推送：PushPlus (推送加)
+            def _send_serverchan():
+                r = requests.post(url, data={"title": full_title, "desp": message}, timeout=8)
+                r.raise_for_status()
+                if r.json().get("code") != 0:
+                    raise ValueError(f"Server酱业务码异常: {r.text[:150]}")
+
+            if Notifier._deliver("Server酱", _send_serverchan):
+                logger.info("已发送 Server酱 微信通知。")
+
+        # 2. 微信推送：PushPlus (推送加，成功业务码 code==200)
         pushplus_token = os.getenv("PUSHPLUS_TOKEN", "").strip()
         if pushplus_token:
-            try:
-                url = "http://www.pushplus.plus/send"
-                requests.post(url, json={"token": pushplus_token, "title": full_title, "content": message, "template": "markdown"}, timeout=8)
-                logger.info("已发送 PushPlus 微信通知。")
-            except Exception as e:
-                logger.warning(f"发送 PushPlus 失败: {e}")
+            url = "http://www.pushplus.plus/send"
 
-        # 3. iOS 推送：Bark —— URL 路径必须做编码，否则中文/空格/斜杠会破坏请求
+            def _send_pushplus():
+                r = requests.post(url, json={"token": pushplus_token, "title": full_title, "content": message, "template": "markdown"}, timeout=8)
+                r.raise_for_status()
+                if r.json().get("code") != 200:
+                    raise ValueError(f"PushPlus业务码异常: {r.text[:150]}")
+
+            if Notifier._deliver("PushPlus", _send_pushplus):
+                logger.info("已发送 PushPlus 微信通知。")
+
+        # 3. iOS 推送：Bark —— URL 路径必须做编码，否则中文/空格/斜杠会破坏请求（成功业务码 code==200）
         bark_key = os.getenv("BARK_KEY", "").strip()
         if bark_key:
-            try:
-                from urllib.parse import quote
-                bark_url = f"https://api.day.app/{bark_key}/{quote(full_title, safe='')}/{quote(message, safe='')}"
-                requests.get(bark_url, timeout=8)
+            from urllib.parse import quote
+            bark_url = f"https://api.day.app/{bark_key}/{quote(full_title, safe='')}/{quote(message, safe='')}"
+
+            def _send_bark():
+                r = requests.get(bark_url, timeout=8)
+                r.raise_for_status()
+                if r.json().get("code") != 200:
+                    raise ValueError(f"Bark业务码异常: {r.text[:150]}")
+
+            if Notifier._deliver("Bark", _send_bark):
                 logger.info("已发送 Bark iOS 推送。")
-            except Exception as e:
-                logger.warning(f"发送 Bark 推送失败: {e}")
 
         # 4. Telegram 通知 —— MarkdownV1 对 _ [ * 等字符敏感，改用纯文本模式并保留加粗语义
         tg_bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
         tg_chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
         if tg_bot_token and tg_chat_id:
-            try:
-                tg_url = f"https://api.telegram.org/bot{tg_bot_token}/sendMessage"
-                text = f"{full_title}\n\n{message}"
-                requests.post(tg_url, json={"chat_id": tg_chat_id, "text": text}, timeout=8)
-                logger.info("已发送 Telegram 状态通知。")
-            except Exception as e:
-                logger.warning(f"发送 Telegram 通知失败: {e}")
+            tg_url = f"https://api.telegram.org/bot{tg_bot_token}/sendMessage"
+            text = f"{full_title}\n\n{message}"
 
-        # 5. 通用 Webhook (钉钉 / 飞书 / 企微 / Discord)
+            def _send_tg():
+                r = requests.post(tg_url, json={"chat_id": tg_chat_id, "text": text}, timeout=8)
+                r.raise_for_status()
+                if not r.json().get("ok"):
+                    raise ValueError(f"Telegram业务异常: {r.text[:150]}")
+
+            if Notifier._deliver("Telegram", _send_tg):
+                logger.info("已发送 Telegram 状态通知。")
+
+        # 5. 通用 Webhook (钉钉 / 飞书 / 企微 / Discord)：各家成功语义不一，只验 HTTP 2xx
         webhook_url = os.getenv("WEBHOOK_URL", "").strip()
         if webhook_url:
-            try:
-                payload = {"msgtype": "text", "text": {"content": f"{full_title}\n\n{message}"}, "content": f"**{full_title}**\n\n{message}"}
-                requests.post(webhook_url, json=payload, timeout=8)
+            payload = {"msgtype": "text", "text": {"content": f"{full_title}\n\n{message}"}, "content": f"**{full_title}**\n\n{message}"}
+
+            def _send_webhook():
+                r = requests.post(webhook_url, json=payload, timeout=8)
+                r.raise_for_status()
+
+            if Notifier._deliver("Webhook", _send_webhook):
                 logger.info("已发送 Webhook 状态通知。")
-            except Exception as e:
-                logger.warning(f"发送 Webhook 通知失败: {e}")
 
 
 # ---------------------------------------------------------------------------

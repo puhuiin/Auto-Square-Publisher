@@ -739,6 +739,84 @@ class TestNotificationEncoding(unittest.TestCase):
         self.assertEqual(m.Notifier._clip("短消息"), "短消息")
 
 
+class TestNotifyDelivery(unittest.TestCase):
+    """报警投递可靠性：一次重试 + 业务码校验（HTTP 200 但 code 不对也算失败）"""
+
+    def test_first_try_success_no_retry(self):
+        calls = {"n": 0}
+
+        def _ok():
+            calls["n"] += 1
+
+        with patch.object(m.time, "sleep") as mock_sleep:
+            self.assertTrue(m.Notifier._deliver("X", _ok))
+        self.assertEqual(calls["n"], 1)
+        mock_sleep.assert_not_called()
+
+    def test_retry_once_then_success(self):
+        calls = {"n": 0}
+
+        def _flaky():
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise ConnectionError("reset")
+
+        with patch.object(m.time, "sleep") as mock_sleep:
+            self.assertTrue(m.Notifier._deliver("X", _flaky))
+        self.assertEqual(calls["n"], 2)
+        mock_sleep.assert_called_once_with(2)
+
+    def test_gives_up_after_two_attempts(self):
+        calls = {"n": 0}
+
+        def _dead():
+            calls["n"] += 1
+            raise TimeoutError("down")
+
+        with patch.object(m.time, "sleep"):
+            self.assertFalse(m.Notifier._deliver("X", _dead))
+        self.assertEqual(calls["n"], 2, "只重试一次，不得无限打渠道")
+
+    def _serverchan_env(self):
+        os.environ["SERVERCHAN_KEY"] = "k"
+        for k in ("PUSHPLUS_TOKEN", "BARK_KEY", "TELEGRAM_BOT_TOKEN",
+                  "TELEGRAM_CHAT_ID", "WEBHOOK_URL"):
+            os.environ.pop(k, None)
+
+    def _fake_resp(self, code):
+        return type("R", (), {
+            "status_code": 200,
+            "text": f'{{"code": {code}}}',
+            "json": lambda self=None, _c=code: {"code": _c},
+            "raise_for_status": lambda self=None: None,
+        })()
+
+    def test_serverchan_business_code_failure_retried(self):
+        self._serverchan_env()
+        try:
+            with patch.object(m.requests, "post", return_value=self._fake_resp(1)) as mock_post, \
+                 patch.object(m.time, "sleep"), \
+                 self.assertLogs("SquarePosterUltimate", level="WARNING") as logs:
+                m.Notifier.send_notification("t", "m")
+            self.assertEqual(mock_post.call_count, 2, "业务码异常必须重试")
+            self.assertTrue(any("已重试" in o for o in logs.output))
+        finally:
+            os.environ.pop("SERVERCHAN_KEY", None)
+
+    def test_serverchan_success_logged_once(self):
+        self._serverchan_env()
+        try:
+            with patch.object(m.requests, "post", return_value=self._fake_resp(0)) as mock_post, \
+                 patch.object(m.time, "sleep") as mock_sleep, \
+                 self.assertLogs("SquarePosterUltimate", level="INFO") as logs:
+                m.Notifier.send_notification("t", "m")
+            self.assertEqual(mock_post.call_count, 1)
+            mock_sleep.assert_not_called()
+            self.assertTrue(any("已发送 Server酱" in o for o in logs.output))
+        finally:
+            os.environ.pop("SERVERCHAN_KEY", None)
+
+
 class TestSorting(unittest.TestCase):
     """候选排序：热度优先，同分按时效，无时间戳不炸"""
 
