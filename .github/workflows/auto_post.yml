@@ -35,7 +35,9 @@ concurrency:
 jobs:
   run-poster:
     runs-on: ubuntu-latest
-    timeout-minutes: 15  # 硬性超时保护，防止网络挂起导致镜像浪费
+    # 手动 max_posts 拉满 + 网关抖动重试时，单轮 LLM 阶段实测可达数分钟，15 分钟会被误杀；
+    # 超时被杀后同步步骤（if: always）仍能抢救已产生的部分状态
+    timeout-minutes: 30
 
     steps:
       - name: 检出仓库代码
@@ -137,6 +139,10 @@ jobs:
           python main.py
 
       - name: 回写状态并提交 Git 变更 (快照并集合并 - 零冲突)
+        # 主脚本非零退出（全源故障 exit 1 / 未捕获崩溃 / 超时被杀）时仍要同步：
+        # 本轮已产生的发帖记录与断路器状态不落盘就会丢失 → 下轮重复发帖。
+        # 无变更时步骤内自行 exit 0，always 不会把成功的运行标红。
+        if: always()
         run: |
           set -e
           git config --global user.name "github-actions[bot]"

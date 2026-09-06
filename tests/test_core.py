@@ -946,6 +946,26 @@ class TestGitStateMerge(unittest.TestCase):
         self.assertEqual(self.merger.INTEL_FILE, "campaign_intel.json")
         self.assertEqual(self.merger.METRICS_FILE, "metrics.jsonl")
 
+    def test_sync_step_runs_even_when_main_fails(self):
+        # 主脚本 exit 1（全源故障/崩溃）或超时被杀时，默认 success() 会跳过同步步骤，
+        # 本轮已发记录丢失 → 下轮重复发帖。必须 if: always() 兜底。
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        with open(os.path.join(repo_root, ".github", "workflows", "auto_post.yml"), encoding="utf-8") as f:
+            wf = f.read()
+        name_pos = wf.find("回写状态并提交")
+        self.assertGreater(name_pos, 0)
+        run_pos = wf.find("run: |", name_pos)
+        self.assertGreater(run_pos, name_pos)
+        self.assertIn("if: always()", wf[name_pos:run_pos])
+
+    def test_job_timeout_has_headroom(self):
+        # 单轮 LLM 阶段实测 100~230s（网关抖动重试），手动 max_posts 拉满时
+        # 15 分钟超时会被误杀；30 分钟是底线
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        with open(os.path.join(repo_root, ".github", "workflows", "auto_post.yml"), encoding="utf-8") as f:
+            wf = f.read()
+        self.assertIn("timeout-minutes: 30", wf)
+
 
 class TestThreadSafety(unittest.TestCase):
     """并发场景下 intel_state_update 不应丢失更新"""

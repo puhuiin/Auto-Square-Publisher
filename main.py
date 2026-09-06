@@ -3438,8 +3438,8 @@ def _run_main():
             logger.error(f"处理候选 [{title}] 时发生意外异常，已隔离跳过: {e}\n{traceback.format_exc()[-500:]}")
             continue
 
-        # 模拟自然人工操作延迟
-        if posted_count < max_posts:
+        # 模拟自然人工操作延迟（DRY_RUN 只验证链路，不睡：冒烟要快）
+        if not dry_run and posted_count < max_posts:
             delay = random.randint(3, 8)
             time.sleep(delay)
 
