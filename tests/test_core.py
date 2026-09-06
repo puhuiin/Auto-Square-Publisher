@@ -2802,10 +2802,10 @@ class TestSquarePublisherSession(unittest.TestCase):
             self.assertIn("$XRP", payload["bodyTextOnly"])
 
 
-class TestDryRunSemantics(unittest.TestCase):
-    """DRY_RUN 零副作用红线（设计红线第 2 条）：试运行不得写缓存/导草稿/记遥测。
-   此前全套件无任何测试触碰 _run_main，该红线全靠自觉——一旦有人把 record_sent
-    挪到 dry 判断之前， suite 照样全绿。用全 mock 集成测试把两条路都锁死。"""
+class TestRunMainSemantics(unittest.TestCase):
+    """_run_main 投递语义集成锁：DRY 零副作用（设计红线第 2 条）+ 正式投递守卫
+    （幂等/配额/限流/批内去重）。此前全套件无任何测试触碰 _run_main，全靠自觉；
+    用全 mock 集成测试把每条路都锁死。"""
 
     def _candidate(self):
         return {"id": "news-1", "title": "BTC breaks past key level",
@@ -2823,12 +2823,13 @@ class TestDryRunSemantics(unittest.TestCase):
             "drafts": os.path.join(tmpdir, "drafts"),
         }
 
-    def _base_patches(self, tmpdir, paths, dry):
+    def _base_patches(self, tmpdir, paths, dry, max_posts="1", candidates=None,
+                      real_near_dup=False):
         for k in ("SERVERCHAN_KEY", "PUSHPLUS_TOKEN", "BARK_KEY",
                   "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "WEBHOOK_URL",
                   "GITHUB_STEP_SUMMARY"):
             os.environ.pop(k, None)
-        os.environ["MAX_POSTS_PER_RUN"] = "1"
+        os.environ["MAX_POSTS_PER_RUN"] = max_posts
         if dry:
             os.environ["DRY_RUN"] = "true"
             os.environ.pop("SQUARE_API_KEY", None)
@@ -2855,13 +2856,21 @@ class TestDryRunSemantics(unittest.TestCase):
         # 配图上传走真实网络（超时重试可达十几秒）：此处只测投递语义，图片管线另有单测
         _start(patch.object(m.ImageManager, "prepare_and_upload", return_value=None))
         fetcher = MagicMock()
-        fetcher.fetch_candidates.return_value = [self._candidate()]
+        fetcher.fetch_candidates.return_value = (candidates if candidates is not None
+                                                 else [self._candidate()])
         fetcher.stats = {"fetched": 1, "stale": 0, "cached": 0, "near_dup": 0,
                          "kept": 1, "feeds_ok": 9, "feeds_failed": [],
                          "feeds_parked": [], "per_feed": {}}
+        real_nd = m.NewsFetcher._find_near_duplicate
         _start(patch.object(m, "NewsFetcher", return_value=fetcher))
         # 以下断言绑在 mock 类的属性 mock 上（patch 已启动，此时 m.NewsFetcher 即 mock）
-        m.NewsFetcher._find_near_duplicate.return_value = None
+        if real_near_dup:
+            # 批内去重测试用真实判定（默认 mock 恒返 None 会关掉该分支）
+            m.NewsFetcher._find_near_duplicate.side_effect = (
+                lambda title, seen, threshold=m.DUP_SIMILARITY_THRESHOLD:
+                real_nd(title, seen, threshold))
+        else:
+            m.NewsFetcher._find_near_duplicate.return_value = None
         m.NewsFetcher.extract_tokens.return_value = ["BTC"]
         engine = MagicMock()
         engine.summarize.return_value = {
@@ -2972,6 +2981,115 @@ class TestDryRunSemantics(unittest.TestCase):
                 m._run_main()
             self.assertEqual(self._engine.summarize.call_count, 0)
             self.assertTrue(any("停放" in o for o in logs.output), "必须走到停放跳过分支而非空转")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def _read_json(self, path, default=None):
+        import json
+        try:
+            with open(path, encoding="utf-8") as f:
+                return json.load(f)
+        except OSError:
+            return default
+
+
+    def test_cached_id_filtered_at_ingest(self):
+        # 幂等锁在抓取层（_run_main 自身不查 ID，它信任抓取层已去重）：
+        # 已入库 ID 必须在 _fetch_single_feed 内被过滤，部首轮不产出候选、不烧 LLM。
+        import tempfile
+        intel_tmp = tempfile.mktemp(suffix=".json")
+        with open(intel_tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        cache_tmp = tempfile.mktemp(suffix=".json")
+        orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = intel_tmp
+        try:
+            title = "BTC breaks past key level as inflows surge"
+            link = "https://x.example/idem-1"
+            xml = ('<?xml version="1.0" encoding="UTF-8"?>'
+                   '<rss version="2.0"><channel><title>T</title>'
+                   f'<item><title>{title}</title><link>{link}</link>'
+                   '<description>body</description></item>'
+                   '</channel></rss>')
+            feed = m.feedparser.parse(xml)
+            nid = m.NewsFetcher.generate_news_id(feed.entries[0], "TestFeed")
+            import json
+            with open(cache_tmp, "w", encoding="utf-8") as f:
+                json.dump([{"id": nid, "title": title, "source": "TestFeed",
+                            "sent_at": datetime.now(timezone.utc).isoformat()}], f)
+            fake_resp = type("R", (), {"status_code": 200,
+                                       "content": xml.encode("utf-8")})()
+            fetcher = m.NewsFetcher()
+            with patch.object(m, "http_get", return_value=fake_resp):
+                items = fetcher._fetch_single_feed(
+                    {"name": "TestFeed", "url": "https://x.example/rss", "lang": "en"},
+                    m.CacheManager(cache_tmp), 5)
+            self.assertEqual(items, [], "已发 ID 必须在抓取层被过滤")
+            self.assertEqual(fetcher.stats["cached"], 1)
+            self.assertNotIn("TestFeed", fetcher.stats["feeds_failed"])
+        finally:
+            m.CAMPAIGN_INTEL_FILE = orig_intel
+            for p in (cache_tmp, intel_tmp):
+                if os.path.exists(p):
+                    os.remove(p)
+
+    def test_quota_exit_is_silent(self):
+        # 配额用尽整轮静默退出：不调 LLM、不写任何状态、exit 0
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        try:
+            import json
+            with open(paths["cache"], "w", encoding="utf-8") as f:
+                json.dump([{"id": "old", "title": "t", "source": "s",
+                            "sent_at": datetime.now(timezone.utc).isoformat(),
+                            "tokens": ["BTC"]}], f)
+            with patch.object(m, "MAX_DAILY_POSTS", 1):
+                with self.assertRaises(SystemExit) as cm:
+                    m._run_main()
+            self.assertEqual(cm.exception.code, 0)
+            self.assertEqual(self._engine.summarize.call_count, 0)
+            self.assertFalse(os.path.exists(paths["metrics"]))
+            self.assertEqual(len(self._read_json(paths["cache"], [])), 1, "配额轮不得改写缓存")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_token_limit_skips_pre_llm(self):
+        # 单币种限流在 LLM 之前跳过（BTC 已达上限的候选不再烧生成）
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        try:
+            import json
+            with open(paths["cache"], "w", encoding="utf-8") as f:
+                json.dump([{"id": "old", "title": "t", "source": "s",
+                            "sent_at": datetime.now(timezone.utc).isoformat(),
+                            "tokens": ["BTC"]}], f)
+            with patch.object(m, "TOKEN_DAILY_LIMIT", 1):
+                m._run_main()
+            self.assertEqual(self._engine.summarize.call_count, 0)
+            self.assertFalse(os.path.exists(paths["metrics"]))
+            self.assertEqual(len(self._read_json(paths["cache"], [])), 1, "限流跳过不得改写缓存")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_in_batch_dup_burns_llm_once(self):
+        # 同批近似变体：首篇发出后，第二篇必须判重跳过（只烧一次 LLM）
+        second = dict(self._candidate(), id="news-2", title="BTC breaks past key level!!")
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False, max_posts="2",
+                                      candidates=[self._candidate(), second],
+                                      real_near_dup=True)
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            m._run_main()
+            self.assertEqual(self._engine.summarize.call_count, 1)
+            self.assertEqual(pub.publish.call_count, 1)
+            records = self._read_json(paths["cache"], [])
+            self.assertEqual([r["id"] for r in records], ["news-1"])
         finally:
             self._teardown(patches, tmpdir)
 
