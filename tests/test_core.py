@@ -1252,6 +1252,47 @@ class TestCrossPlatformContentAdaptation(unittest.TestCase):
         self.assertTrue(out, "清洗后为空必须回退原文而非空串")
 
 
+class TestTelegramCrossRunDedup(unittest.TestCase):
+    """TG 镜像跨运行查重：binance+tg 双开且币安失败重试时，频道不能重复发同一故事"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        import json
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"active_tags": []}, f)
+        os.environ["TELEGRAM_BOT_TOKEN"] = "tok"
+        os.environ["TELEGRAM_MIRROR_CHANNEL_ID"] = "@c"
+        self.pub = m.TelegramChannelPublisher()
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+        for k in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_MIRROR_CHANNEL_ID"):
+            os.environ.pop(k, None)
+
+    def test_same_news_sent_once(self):
+        fake = MagicMock(status_code=200)
+        fake.json.return_value = {"ok": True}
+        with patch.object(m, "http_post", return_value=fake) as mp:
+            ok1 = self.pub.publish("第一条", meta={"news_id": "newsX"})
+            ok2 = self.pub.publish("重试后同一条", meta={"news_id": "newsX"})
+            self.assertTrue(ok1)
+            self.assertFalse(ok2, "重复发布应被拒绝")
+            self.assertEqual(mp.call_count, 1, "第二次不得再发 HTTP 请求")
+
+    def test_different_news_both_sent(self):
+        fake = MagicMock(status_code=200)
+        fake.json.return_value = {"ok": True}
+        with patch.object(m, "http_post", return_value=fake) as mp:
+            self.assertTrue(self.pub.publish("新闻 A", meta={"news_id": "a"}))
+            self.assertTrue(self.pub.publish("新闻 B", meta={"news_id": "b"}))
+            self.assertEqual(mp.call_count, 2)
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 

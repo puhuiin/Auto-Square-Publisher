@@ -2517,6 +2517,26 @@ class OKXDraftExporter(BasePublisher):
 # ---------------------------------------------------------------------------
 class TelegramChannelPublisher(BasePublisher):
     name = "telegram"
+    _TG_STATE_KEY = "_tg_delivered"
+
+    def _tg_already_sent(self, news_id: str) -> bool:
+        """持久化查重：binance+tg 双开且币安失败时，新闻会重试，频道不能跟着重复发"""
+        if not news_id:
+            return False
+        state = intel_state_get(self._TG_STATE_KEY, {})
+        return isinstance(state, dict) and bool(state.get(news_id))
+
+    def _tg_mark_sent(self, news_id: str):
+        if not news_id:
+            return
+
+        def _add(state):
+            state = dict(state or {})
+            state[news_id] = datetime.now(timezone.utc).isoformat()
+            # 只保留最近 200 条，防状态膨胀
+            return dict(sorted(state.items(), key=lambda kv: kv[1])[-200:])
+
+        intel_state_update(self._TG_STATE_KEY, _add, default={})
 
     def publish(self, content: str, image_url: Optional[str] = None,
                 ensure_tokens: Optional[List[str]] = None, meta: Optional[Dict[str, Any]] = None) -> bool:
@@ -2526,6 +2546,11 @@ class TelegramChannelPublisher(BasePublisher):
         if not token or not channel:
             self.last_error = "缺少 TELEGRAM_BOT_TOKEN 或 TELEGRAM_MIRROR_CHANNEL_ID"
             logger.warning("Telegram 镜像通道未配置凭证，跳过。")
+            return False
+
+        meta = meta or {}
+        if self._tg_already_sent(meta.get("news_id", "")):
+            logger.info(f"📢 该新闻此前已镜像到 Telegram，跳过重复发布: {meta.get('title', '')[:40]}")
             return False
 
         api_base = f"https://api.telegram.org/bot{token}"
@@ -2543,6 +2568,7 @@ class TelegramChannelPublisher(BasePublisher):
                 if r is not None and r.status_code == 200:
                     try:
                         if r.json().get("ok"):
+                            self._tg_mark_sent(meta.get("news_id", ""))
                             return True
                     except Exception:
                         pass
@@ -2556,6 +2582,7 @@ class TelegramChannelPublisher(BasePublisher):
             if r is not None and r.status_code == 200:
                 try:
                     if r.json().get("ok"):
+                        self._tg_mark_sent(meta.get("news_id", ""))
                         return True
                 except Exception:
                     pass
