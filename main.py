@@ -194,6 +194,24 @@ def within_active_hours(spec: str = ACTIVE_HOURS_BEIJING) -> bool:
 # campaign_intel.json 通用状态读写器（_ 前缀键：AI 情报刷新时自动保留）
 # 兜底图托管缓存 / 报警节流 / LLM 断路 / RSS 源健康度 共用同一持久化通道
 # ---------------------------------------------------------------------------
+def _atomic_write_text(path: str, text: str) -> None:
+    """崩溃安全写盘：同目录 tmp + os.replace 原子替换。
+    进程若在写半截被杀（Actions 超时/取消），直接写会留下半个 JSON：
+    半个 sent_cache.json 让下一轮去重全失效→重复发帖，半个 intel 则丢断路器状态。
+    tmp 与目标同目录保证同文件系统（replace 跨盘不原子）；失败时尽力清掉残留 tmp，
+    防止 *.tmp 被 workflow 的 git add 误收进仓库。"""
+    tmp = f"{path}.tmp"
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(text)
+        os.replace(tmp, path)
+    except Exception:
+        try:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+        except Exception:
+            pass
+        raise
 _INTEL_STATE_LOCK = threading.Lock()  # RSS 抓取是 10 线程并发，多个线程会同时改 _feed_health 等键
 
 
@@ -216,8 +234,7 @@ def intel_state_set(key: str, value) -> None:
                 with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
                     intel = json.load(f)
             intel[key] = value
-            with open(CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
-                json.dump(intel, f, ensure_ascii=False, indent=2)
+            _atomic_write_text(CAMPAIGN_INTEL_FILE, json.dumps(intel, ensure_ascii=False, indent=2))
     except Exception as e:
         logger.debug(f"写入 intel 状态 [{key}] 失败 (不影响主流程): {e}")
 
@@ -235,8 +252,7 @@ def intel_state_update(key: str, mutate_fn, default=None):
                     intel = json.load(f)
             current = intel.get(key, default)
             intel[key] = mutate_fn(current)
-            with open(CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
-                json.dump(intel, f, ensure_ascii=False, indent=2)
+            _atomic_write_text(CAMPAIGN_INTEL_FILE, json.dumps(intel, ensure_ascii=False, indent=2))
             return intel[key]
         except Exception as e:
             logger.debug(f"原子更新 intel 状态 [{key}] 失败 (不影响主流程): {e}")
@@ -820,8 +836,7 @@ class CacheManager:
 
     def _save_cache(self):
         try:
-            with open(self.cache_path, "w", encoding="utf-8") as f:
-                json.dump(self.cached_items, f, ensure_ascii=False, indent=2)
+            _atomic_write_text(self.cache_path, json.dumps(self.cached_items, ensure_ascii=False, indent=2))
             logger.info(f"缓存已持久化，当前条数: {len(self.cached_items)}")
         except Exception as e:
             logger.error(f"保存缓存失败: {e}")
@@ -842,6 +857,21 @@ class NewsFetcher:
         self.stats = {"fetched": 0, "stale": 0, "cached": 0, "near_dup": 0, "kept": 0,
                       "feeds_ok": 0, "feeds_failed": [], "feeds_parked": [],
                       "per_feed": {}}  # feed_name -> {"entries": 扫描, "kept": 入选}
+        # _fetch_single_feed 跑在 10 线程池里：计数器 += 非原子，list.append/setdefault
+        # 混用会丢增量，Step Summary 的吞吐数字对不上。工作线程一律走下面三个带锁 helper。
+        self._stats_lock = threading.Lock()
+
+    def _stat_inc(self, key: str, delta: int = 1) -> None:
+        with self._stats_lock:
+            self.stats[key] += delta
+
+    def _stat_fail(self, name: str) -> None:
+        with self._stats_lock:
+            self.stats["feeds_failed"].append(name)
+
+    def _stat_feed_entry(self, name: str) -> None:
+        with self._stats_lock:
+            self.stats["per_feed"].setdefault(name, {"entries": 0, "kept": 0})["entries"] += 1
 
     # ---------------- 源健康度（跨运行持久化） ----------------
     def _feed_health(self) -> Dict[str, Dict[str, Any]]:
@@ -961,15 +991,13 @@ class NewsFetcher:
 
     @staticmethod
     def freshness_bonus(age_hours: Optional[float]) -> int:
-        """新鲜度加权：<3h 的突发热点优先排在前面"""
+        """新鲜度加权：<3h 的突发热点优先排在前面（规则以 FRESHNESS_BOOST_RULES 为准，
+        此前此处硬编码三档数值，常量调了也不生效）"""
         if age_hours is None:
             return 0
-        if age_hours < 3:
-            return 10
-        if age_hours < 12:
-            return 6
-        if age_hours < 24:
-            return 3
+        for max_age, bonus in FRESHNESS_BOOST_RULES:
+            if age_hours < max_age:
+                return bonus
         return 0
 
     @staticmethod
@@ -1132,7 +1160,7 @@ class NewsFetcher:
                     logger.info(f"数据源 [{name}] 指纹升级重试成功。")
             if resp is None or resp.status_code != 200:
                 logger.warning(f"数据源 [{name}] 响应异常: {'网络错误' if resp is None else f'HTTP {resp.status_code}'}")
-                self.stats["feeds_failed"].append(name)
+                self._stat_fail(name)
                 self._feed_record(name, ok=False)
                 return items
 
@@ -1140,16 +1168,16 @@ class NewsFetcher:
             # bozo=1 且无 entries = 源返回了 200 但内容不是有效 XML（通常是 HTML 错误页/风控页）
             if getattr(feed, "bozo", 0) and not feed.entries:
                 logger.warning(f"数据源 [{name}] 返回 200 但 RSS 解析无效（可能被风控），按故障处理。")
-                self.stats["feeds_failed"].append(name)
+                self._stat_fail(name)
                 self._feed_record(name, ok=False)
                 return items
 
             if not feed.entries:
-                self.stats["feeds_ok"] += 1
+                self._stat_inc("feeds_ok")
                 self._feed_record(name, ok=True)
                 return items
 
-            self.stats["feeds_ok"] += 1
+            self._stat_inc("feeds_ok")
             self._feed_record(name, ok=True)
             logger.info(f"数据源 [{name}] 抓取到 {len(feed.entries)} 条新闻。")
             stale_skipped = 0
@@ -1164,20 +1192,19 @@ class NewsFetcher:
                 if not title:
                     continue
 
-                self.stats["fetched"] += 1
-                feed_stat = self.stats["per_feed"].setdefault(name, {"entries": 0, "kept": 0})
-                feed_stat["entries"] += 1
+                self._stat_inc("fetched")
+                self._stat_feed_entry(name)
 
                 # 时效过滤：仅发布 MAX_NEWS_AGE_HOURS 小时内的热点，杜绝把旧闻当新闻发
                 age_h = self.parse_entry_age_hours(entry)
                 if age_h is not None and age_h > MAX_NEWS_AGE_HOURS:
                     stale_skipped += 1
-                    self.stats["stale"] += 1
+                    self._stat_inc("stale")
                     continue
 
                 news_id = self.generate_news_id(entry, name)
                 if cache_mgr.is_cached(news_id):
-                    self.stats["cached"] += 1
+                    self._stat_inc("cached")
                     continue
 
                 summary = ""
@@ -1211,7 +1238,7 @@ class NewsFetcher:
                 logger.info(f"数据源 [{name}] 过滤过期旧闻 {stale_skipped} 条（>{MAX_NEWS_AGE_HOURS}h）。")
         except Exception as e:
             logger.warning(f"拉取数据源 [{name}] 出错: {e}")
-            self.stats["feeds_failed"].append(name)
+            self._stat_fail(name)
             self._feed_record(name, ok=False)
         return items
 
@@ -1241,7 +1268,7 @@ class NewsFetcher:
                     candidates.extend(feed_items)
                 except Exception as exc:
                     logger.warning(f"解析数据源 [{feed_name}] 结果异常: {exc}")
-                    self.stats["feeds_failed"].append(feed_name)
+                    self._stat_fail(feed_name)
                     self._feed_record(feed_name, ok=False)
 
         # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布（正则一次性预编译）
@@ -1589,8 +1616,11 @@ class MultiLLMEngine:
 
     # 模型拒答/身份暴露特征：出现即判废（发出去等于自曝机器人身份）。
     # 注意："不构成投资建议"是合规风险提示，属正当内容，不列入。
+    # "语言模型"必须带第一人称限定：AI 赛道（TAO/RENDER/FET）稿件常提"大语言模型"，
+    # 裸子串会把正常热点稿整篇判废，烧掉一次 LLM 调用不说还漏掉真热点。
     _REFUSAL_PATTERNS = (
-        "作为AI", "作为一个AI", "AI助手", "AI 助手", "人工智能助手", "语言模型",
+        "作为AI", "作为一个AI", "AI助手", "AI 助手", "人工智能助手",
+        "作为语言模型", "我是语言模型", "是一个语言模型",
         "我无法提供", "无法提供投资建议", "我不能提供", "请咨询专业人士",
         "As an AI", "I cannot provide",
     )
@@ -1986,8 +2016,7 @@ class CampaignScanner:
             intel["_intel_refresh_fail"] = {}
             # 仅当 AI 产出了真实分析结果才落盘持久化
             try:
-                with open(CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
-                    json.dump(intel, f, ensure_ascii=False, indent=2)
+                _atomic_write_text(CAMPAIGN_INTEL_FILE, json.dumps(intel, ensure_ascii=False, indent=2))
                 logger.info("最新币安活动情报已写入本地文件: campaign_intel.json")
             except Exception as e:
                 logger.error(f"保存 campaign_intel.json 失败: {e}")
@@ -2549,8 +2578,9 @@ class OKXDraftExporter(BasePublisher):
                 "- [ ] 参与星球创作者激励需在 App 内确认活动页打卡",
             ]
 
-            with open(path, "w", encoding="utf-8") as f:
-                f.write("\n".join(lines))
+            # 原子替换：草稿随 git 同步进仓库，半截 md 会污染历史；tmp 后缀非 .md，
+            # 既不会被 _draft_exists 误判，也不会被 _prune_old_drafts 误删
+            _atomic_write_text(path, "\n".join(lines))
             self._prune_old_drafts()
             try:
                 display_path = os.path.relpath(path, BASE_DIR)

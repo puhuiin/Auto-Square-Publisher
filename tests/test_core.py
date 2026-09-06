@@ -313,6 +313,17 @@ class TestFreshnessBonus(unittest.TestCase):
         self.assertEqual(m.NewsFetcher.freshness_bonus(30), 0)
         self.assertEqual(m.NewsFetcher.freshness_bonus(None), 0)
 
+    def test_rules_constant_is_single_source_of_truth(self):
+        # 调参改 FRESHNESS_BOOST_RULES 必须生效（此前此处硬编码，调常量等于没调）
+        orig = m.FRESHNESS_BOOST_RULES
+        m.FRESHNESS_BOOST_RULES = ((1, 99), (10, 5))
+        try:
+            self.assertEqual(m.NewsFetcher.freshness_bonus(0.5), 99)
+            self.assertEqual(m.NewsFetcher.freshness_bonus(5), 5)
+            self.assertEqual(m.NewsFetcher.freshness_bonus(50), 0)
+        finally:
+            m.FRESHNESS_BOOST_RULES = orig
+
 
 class TestImpactScoreWordBoundary(unittest.TestCase):
     """ASCII 关键词必须整词匹配，防止 says/Washington 误判加分"""
@@ -969,6 +980,18 @@ class TestNumberHallucinationGuard(unittest.TestCase):
         )
         self.assertTrue(ok)
 
+    def test_ai_narrative_mentioning_llm_passes(self):
+        # AI 赛道稿件提"大语言模型"是正常行话，不得被拒答名单误杀（裸"语言模型"已收窄）
+        body = ("TAO 这波走得非常硬，大语言模型赛道资金回流明显，RENDER 跟着放量。"
+                "主力借 AI 叙事拉盘换手，真想参与的等回踩确认再进，仓位控制好。")
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(body)
+        self.assertTrue(ok, reason)
+
+    def test_first_person_llm_identity_still_rejected(self):
+        for leak in ("我是一个语言模型，以下仅供参考。", "作为语言模型，我无法提供建议。"):
+            ok, _ = m.MultiLLMEngine._passes_quality_gate(leak * 3)
+            self.assertFalse(ok, leak)
+
 
 class TestInBatchDedup(unittest.TestCase):
     """同批次内近似去重：max_posts>1 时同事件变体不应连发"""
@@ -1567,6 +1590,123 @@ class TestDownloadImageGate(unittest.TestCase):
             out = m.ImageManager.download_image("https://x.example/cover.png")
         self.assertIsNotNone(out)
         self.assertEqual(out[2], "image/png")
+
+
+class TestAtomicWrite(unittest.TestCase):
+    """崩溃安全写盘：写半截被杀不得留下损坏的状态文件"""
+
+    def test_helper_roundtrip_and_no_tmp_residue(self):
+        import tempfile
+        tmpdir = tempfile.mkdtemp()
+        try:
+            target = os.path.join(tmpdir, "state.json")
+            m._atomic_write_text(target, '{"a": 1}')
+            with open(target, encoding="utf-8") as f:
+                self.assertEqual(f.read(), '{"a": 1}')
+            self.assertEqual(os.listdir(tmpdir), ["state.json"], "不得残留 .tmp 文件")
+        finally:
+            import shutil
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def test_helper_failure_keeps_old_file_and_cleans_tmp(self):
+        import tempfile
+        tmpdir = tempfile.mkdtemp()
+        try:
+            target = os.path.join(tmpdir, "state.json")
+            with open(target, "w", encoding="utf-8") as f:
+                f.write('{"old": true}')
+            with patch.object(m.os, "replace", side_effect=OSError("disk gone")):
+                with self.assertRaises(OSError):
+                    m._atomic_write_text(target, '{"new": true}')
+            with open(target, encoding="utf-8") as f:
+                self.assertEqual(f.read(), '{"old": true}', "旧文件必须原样保留")
+            self.assertEqual(os.listdir(tmpdir), ["state.json"], "失败时必须清掉残留 tmp")
+        finally:
+            import shutil
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def test_save_cache_failure_keeps_valid_file(self):
+        import tempfile
+        import shutil
+        tmpdir = tempfile.mkdtemp()
+        try:
+            path = os.path.join(tmpdir, "sent_cache.json")
+            mgr = m.CacheManager(path)
+            mgr.record_sent("id-1", "t1", "s1")
+            with open(path, encoding="utf-8") as f:
+                before = f.read()
+            self.assertIn("id-1", before)
+            with patch("main.json.dumps", side_effect=RuntimeError("boom")):
+                mgr.record_sent("id-2", "t2", "s2")  # 内部吞错记 error 日志，不抛
+            with open(path, encoding="utf-8") as f:
+                after = f.read()
+            self.assertEqual(before, after, "落盘失败不得把缓存写成半截")
+            import json as _json
+            self.assertIn("id-1", [x["id"] for x in _json.loads(after)])
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+class TestFetcherStatsThreadSafety(unittest.TestCase):
+    """抓取统计 10 线程并发：计数必须精确，Step Summary 才对得上"""
+
+    def test_concurrent_increments_exact(self):
+        import threading
+        fetcher = m.NewsFetcher()
+        n_threads, n_each = 8, 1000
+
+        def _hammer():
+            for _ in range(n_each):
+                fetcher._stat_inc("fetched")
+            for _ in range(10):
+                fetcher._stat_fail("F")
+            fetcher._stat_feed_entry("Feed-X")
+
+        threads = [threading.Thread(target=_hammer) for _ in range(n_threads)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.assertEqual(fetcher.stats["fetched"], n_threads * n_each)
+        self.assertEqual(len(fetcher.stats["feeds_failed"]), n_threads * 10)
+        self.assertEqual(fetcher.stats["per_feed"]["Feed-X"]["entries"], n_threads)
+
+
+class TestMergeScriptAtomic(unittest.TestCase):
+    """合并脚本原子写：成功后无 tmp 残留（残留会被 workflow 的 git add 误收）"""
+
+    def _load_merger(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "git_state_merge",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                          "scripts", "git_state_merge.py"))
+        merger = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(merger)
+        return merger
+
+    def test_no_tmp_residue_after_merges(self):
+        import tempfile
+        import shutil
+        tmpdir = tempfile.mkdtemp()
+        try:
+            merger = self._load_merger()
+            remote_cache = os.path.join(tmpdir, "sent_cache.json")
+            local_cache = os.path.join(tmpdir, "local_cache.json")
+            with open(remote_cache, "w", encoding="utf-8") as f:
+                f.write('[{"id": "a", "sent_at": "2026-09-06T01:00:00+00:00"}]')
+            with open(local_cache, "w", encoding="utf-8") as f:
+                f.write('[{"id": "b", "sent_at": "2026-09-06T02:00:00+00:00"}]')
+            merger.merge_sent_cache(local_cache, remote_cache)
+            remote_metrics = os.path.join(tmpdir, "metrics.jsonl")
+            local_metrics = os.path.join(tmpdir, "local_metrics.jsonl")
+            with open(local_metrics, "w", encoding="utf-8") as f:
+                f.write('{"ts": "2026-09-06T01:00:00Z"}\n')
+            merger.merge_metrics(local_metrics, remote_metrics)
+            leftovers = [f for f in os.listdir(tmpdir) if f.endswith(".tmp")]
+            self.assertEqual(leftovers, [])
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 class TestSquarePublisherSession(unittest.TestCase):

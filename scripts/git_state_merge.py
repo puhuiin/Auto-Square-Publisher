@@ -17,6 +17,7 @@ Git 状态同步合并器（GPIO: 用于 GitHub Actions workflow 的 push 前预
   python scripts/git_state_merge.py [本地快照目录]   # 默认 /tmp
 """
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -24,6 +25,23 @@ CACHE_FILE = "sent_cache.json"
 INTEL_FILE = "campaign_intel.json"
 METRICS_FILE = "metrics.jsonl"
 MAX_CACHE_KEEP = 500
+
+
+def atomic_write_text(path, text: str) -> None:
+    """崩溃安全写盘：同目录 tmp + os.replace（与 main._atomic_write_text 同语义，
+    此脚本独立运行不 import 主模块，故小段重复）。
+    合并写半截会把已同步的状态损坏后推上远端，比本地崩溃更严重。"""
+    tmp = f"{path}.tmp"
+    try:
+        Path(tmp).write_text(text, encoding="utf-8")
+        os.replace(tmp, path)
+    except Exception:
+        try:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+        except Exception:
+            pass
+        raise
 
 
 def load_list(path):
@@ -71,7 +89,7 @@ def merge_sent_cache(local_snapshot_path: str, remote_path: str) -> int:
         if isinstance(item, dict) and item.get("id"):
             union[item["id"]] = item
     merged = sorted(union.values(), key=lambda x: x.get("sent_at", ""))[-MAX_CACHE_KEEP:]
-    Path(remote_path).write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
+    atomic_write_text(remote_path, json.dumps(merged, ensure_ascii=False, indent=2))
     return len(merged)
 
 
@@ -84,7 +102,7 @@ def merge_intel(local_snapshot_path: str, remote_path: str) -> bool:
     states = [{k: v for k, v in ver.items() if k.startswith("_")} for ver in versions]
     merged_state = merge_state(states[0], states[1] if len(states) > 1 else {})
     best.update(merged_state)
-    Path(remote_path).write_text(json.dumps(best, ensure_ascii=False, indent=2), encoding="utf-8")
+    atomic_write_text(remote_path, json.dumps(best, ensure_ascii=False, indent=2))
     return True
 
 
@@ -102,7 +120,7 @@ def merge_metrics(local_snapshot_path: str, remote_path: str) -> int:
         except Exception:
             continue
     lines.sort()  # ts 开头的 JSON 行排序即时间序
-    Path(remote_path).write_text(("\n".join(lines) + "\n") if lines else "", encoding="utf-8")
+    atomic_write_text(remote_path, ("\n".join(lines) + "\n") if lines else "")
     return len(lines)
 
 
