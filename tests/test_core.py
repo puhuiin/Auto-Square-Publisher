@@ -1413,6 +1413,53 @@ class TestThreadSafety(unittest.TestCase):
         self.assertEqual(len(result["_counter"]), 20, "20 个并发线程各自加一个键，丢失就说明原子性有问题")
 
 
+class TestIntelStoreRecovery(unittest.TestCase):
+    """状态存储自愈：手改损坏的 JSON 不得永久卡死后续写入"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def test_corrupt_file_heals_on_set(self):
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            f.write("{not valid json!!!")
+        with self.assertLogs("SquarePosterUltimate", level="WARNING"):
+            m.intel_state_set("_k", {"v": 1})
+        import json
+        with open(self.tmp, encoding="utf-8") as f:
+            data = json.load(f)
+        self.assertEqual(data["_k"], {"v": 1}, "损坏文件必须被重建而非永久阻断写入")
+        self.assertEqual(m.intel_state_get("_k"), {"v": 1})
+
+    def test_non_dict_file_heals_on_update(self):
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            f.write('[{"id": "x"}]')
+        out = m.intel_state_update("_k", lambda s: "new", default="old")
+        self.assertEqual(out, "new")
+        self.assertEqual(m.intel_state_get("_k"), "new")
+
+    def test_get_on_corrupt_stays_quiet_default(self):
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            f.write("garbage{{{")
+        self.assertEqual(m.intel_state_get("_k", "dflt"), "dflt")
+
+    def test_write_failure_is_warning_not_debug(self):
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        with patch.object(m, "_atomic_write_text", side_effect=OSError("disk full")), \
+             self.assertLogs("SquarePosterUltimate", level="WARNING") as logs:
+            m.intel_state_set("_k", 1)
+        self.assertTrue(any("写入 intel 状态" in o for o in logs.output),
+                        "写失败必须 warning 可见，debug 等于静默丢状态")
+
+
 class TestNumberHallucinationGuard(unittest.TestCase):
     """AI 输出数字幻觉软校验"""
 

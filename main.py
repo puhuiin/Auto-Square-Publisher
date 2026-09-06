@@ -245,11 +245,30 @@ def _atomic_write_text(path: str, text: str) -> None:
 _INTEL_STATE_LOCK = threading.Lock()  # RSS 抓取是 10 线程并发，多个线程会同时改 _feed_health 等键
 
 
+def _read_intel_file(quiet: bool = False) -> dict:
+    """读整份 intel：文件损坏/内容非对象时自愈为空 dict。
+    此前 load 失败直接抛，导致其后写入被整段跳过——手改改坏一次 JSON，
+    所有断路器/停放/节流状态永久失忆且只记一条 debug。读路径默认安静
+    （get 本就按缺省降级），写路径大声（见调用方）。"""
+    if not os.path.exists(CAMPAIGN_INTEL_FILE):
+        return {}
+    try:
+        with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
+            intel = json.load(f)
+        if isinstance(intel, dict):
+            return intel
+        if not quiet:
+            logger.warning(f"{CAMPAIGN_INTEL_FILE} 内容非对象已无法使用，用空状态重建。")
+    except Exception as e:
+        if not quiet:
+            logger.warning(f"{CAMPAIGN_INTEL_FILE} 解析失败 ({e})，用空状态重建（旧状态已不可恢复）。")
+    return {}
+
+
 def intel_state_get(key: str, default=None):
     try:
-        if os.path.exists(CAMPAIGN_INTEL_FILE):
-            with _INTEL_STATE_LOCK, open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
-                return json.load(f).get(key, default)
+        with _INTEL_STATE_LOCK:
+            return _read_intel_file(quiet=True).get(key, default)
     except Exception:
         pass
     return default
@@ -259,14 +278,11 @@ def intel_state_set(key: str, value) -> None:
     try:
         # 读-改-写整把锁：并发写入若不加锁会读旧源、部分覆盖，甚至截断成半个 JSON
         with _INTEL_STATE_LOCK:
-            intel = {}
-            if os.path.exists(CAMPAIGN_INTEL_FILE):
-                with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
-                    intel = json.load(f)
+            intel = _read_intel_file()
             intel[key] = value
             _atomic_write_text(CAMPAIGN_INTEL_FILE, json.dumps(intel, ensure_ascii=False, indent=2))
     except Exception as e:
-        logger.debug(f"写入 intel 状态 [{key}] 失败 (不影响主流程): {e}")
+        logger.warning(f"写入 intel 状态 [{key}] 失败 (不影响主流程): {e}")
 
 
 def intel_state_update(key: str, mutate_fn, default=None):
@@ -276,16 +292,13 @@ def intel_state_update(key: str, mutate_fn, default=None):
     """
     with _INTEL_STATE_LOCK:
         try:
-            intel = {}
-            if os.path.exists(CAMPAIGN_INTEL_FILE):
-                with open(CAMPAIGN_INTEL_FILE, "r", encoding="utf-8") as f:
-                    intel = json.load(f)
+            intel = _read_intel_file()
             current = intel.get(key, default)
             intel[key] = mutate_fn(current)
             _atomic_write_text(CAMPAIGN_INTEL_FILE, json.dumps(intel, ensure_ascii=False, indent=2))
             return intel[key]
         except Exception as e:
-            logger.debug(f"原子更新 intel 状态 [{key}] 失败 (不影响主流程): {e}")
+            logger.warning(f"原子更新 intel 状态 [{key}] 失败 (不影响主流程): {e}")
             return None
 
 
