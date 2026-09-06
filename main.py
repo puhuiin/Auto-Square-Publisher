@@ -1787,6 +1787,10 @@ class CampaignScanner:
                     clean_res = re.sub(r"^```json\s*", "", raw_res, flags=re.IGNORECASE)
                     clean_res = re.sub(r"^```\s*", "", clean_res)
                     clean_res = re.sub(r"\s*```$", "", clean_res).strip()
+                    # 模型常在 JSON 前后夹说明文字（"以下是分析结果:"），截取首个 { 到末个 } 再解析
+                    brace_start, brace_end = clean_res.find("{"), clean_res.rfind("}")
+                    if brace_start != -1 and brace_end > brace_start:
+                        clean_res = clean_res[brace_start:brace_end + 1]
                     data = json.loads(clean_res)
                     if isinstance(data, dict):
                         data["last_updated"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -1826,6 +1830,8 @@ class CampaignScanner:
 
         logger.info("活动情报已过期或不存在，正在重新扫描币安官方活动...")
         raw_titles = CampaignScanner.fetch_raw_campaigns()
+        if not raw_titles:
+            logger.warning("币安官方活动目录拉取为空（接口变更或网络问题），将沿用历史/默认情报。")
         intel = CampaignScanner.analyze_with_ai(llm_engine, raw_titles)
 
         if intel:
@@ -2086,6 +2092,8 @@ class SquarePublisher:
         content = content.replace("**", "").replace("__", "")                                   # 加粗标记
         content = re.sub(r"^#{1,6}\s+", "", content, flags=re.MULTILINE)                        # Markdown 标题
         content = re.sub(r"^\s*(?:好的[，,。!！]?|以下是|这是|Here is|Sure[,!]?|好的，以下是)[^\n]{0,40}\n", "", content)  # 客套开场白
+        # prompt 模板标签回显（模型偶尔把【新闻标题】等标记原样吐出来）
+        content = re.sub(r"^【(?:新闻标题|新闻摘要|实时盘面情绪参考|本条新闻可用标的|本条结尾站队提问的套路|核心要求|安全提示)】[^\n]*\n?", "", content, flags=re.MULTILINE)
         content = content.strip()
         # 1a. 静态黑名单：稳定币/机构/通用缩写一律剥离 $
         for word in cls.FORCE_STRIP_CASHTAGS:
@@ -2625,6 +2633,7 @@ def _run_main():
         sent_24h = cache_mgr.count_since(24)
         if sent_24h >= MAX_DAILY_POSTS:
             logger.warning(f"🛑 24 小时内已发布 {sent_24h} 篇，达到配额上限 ({MAX_DAILY_POSTS})，本轮自动静默以保护账号权重。")
+            write_github_step_summary(NewsFetcher(), "配额满跳过抓取", {}, [], dry_run)
             sys.exit(0)
         remaining_quota = MAX_DAILY_POSTS - sent_24h
         if remaining_quota < max_posts:
@@ -2672,6 +2681,7 @@ def _run_main():
     consecutive_publish_failures = 0  # 发布链路熔断：币安侧持续故障时不再空烧 LLM
     stage_timings: Dict[str, float] = {"fetch": fetch_elapsed, "llm": 0.0, "image": 0.0, "publish": 0.0}
     valid_symbols = SymbolValidator.get_valid_symbols() or set()
+    posted_titles_this_run: List[str] = []  # 本轮已处理的标题，防同批次近似变体连发
 
     for item in candidates:
         if posted_count >= max_posts:
@@ -2689,6 +2699,12 @@ def _run_main():
         logger.info(f"正在处理第 {posted_count + 1} 条热点 (热度分: {score}{age_label}): [{source}] {title}")
 
         try:
+            # 同批次内近似去重：max_posts>1 时，同一事件的另一家报道不能再发第二遍
+            dup_of = NewsFetcher._find_near_duplicate(title, posted_titles_this_run)
+            if dup_of is not None:
+                logger.info(f"与本轮已发内容近似重复，跳过: {title[:50]} (≈ {dup_of[:50]})")
+                continue
+
             # 动态全币种识别：提取标题与摘要中的所有潜在币种（主流 + 山寨 + Meme）
             # 歧义代码（NEAR/LINK/MASK 等）仅当原文为全大写或带 $ 前缀时才采信
             combined_text = title + " " + item["summary"]
@@ -2748,6 +2764,7 @@ def _run_main():
             # 发布或模拟
             if dry_run:
                 logger.info(f"【DRY_RUN 模式】仅模拟发布 (附带配图: {'是' if uploaded_image_url else '否'})，零副作用不写缓存。")
+                posted_titles_this_run.append(title)
                 posted_records.append({
                     "title": title, "source": source,
                     "provider": llm_result["provider"], "image": bool(uploaded_image_url),
@@ -2763,6 +2780,7 @@ def _run_main():
                 if success:
                     consecutive_publish_failures = 0
                     cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
+                    posted_titles_this_run.append(title)
                     posted_records.append({
                         "title": title, "source": source,
                         "provider": llm_result["provider"], "image": bool(uploaded_image_url),

@@ -202,6 +202,20 @@ class TestContentSanitizer(unittest.TestCase):
         self.assertNotIn("好的", s)
         self.assertIn("比特币 ETF 获批", s)
 
+    def test_prompt_label_echo_stripped(self):
+        """模型把 prompt 模板标签（【新闻标题】等）回显进正文时必须剥掉"""
+        s = m.SquarePublisher._sanitize_content(
+            "【新闻标题】Bitcoin hits ATH\n\n【实时盘面情绪参考】Greed\n\n正文从这里才开始：放量突破关键位。"
+        )
+        self.assertNotIn("【新闻标题】", s)
+        self.assertNotIn("【实时盘面情绪参考】", s)
+        self.assertIn("正文从这里才开始", s)
+
+    def test_chinese_brackets_in_body_preserved(self):
+        # 正文正当使用【】强调不应被误杀
+        s = m.SquarePublisher._sanitize_content("【重点】这个位置不能追高，等回踩确认。")
+        self.assertIn("【重点】", s)
+
     def test_stable_cashtag_stripped(self):
         s = m.SquarePublisher._sanitize_content("用 $USDT 买入 $BTC")
         self.assertNotIn("$USDT", s)
@@ -927,6 +941,33 @@ class TestNumberHallucinationGuard(unittest.TestCase):
         # 小额美元不校验（$100, $500 是人设常见口吻）
         ok, _ = m.MultiLLMEngine._verify_numbers("今天我的止盈 $500 落袋", "Bitcoin rises")
         self.assertTrue(ok)
+
+
+class TestInBatchDedup(unittest.TestCase):
+    """同批次内近似去重：max_posts>1 时同事件变体不应连发"""
+
+    def test_second_variant_caught_against_posted_titles(self):
+        t1 = "Bitcoin ETF sees record $474M inflow as price hits new high"
+        t2 = "Bitcoin ETF Sees Record $474M Inflow As Price Hits New High!"  # 另一家报道
+        # 模拟主循环逻辑：发过 t1 后，t2 应被判重
+        self.assertIsNotNone(m.NewsFetcher._find_near_duplicate(t2, [t1]))
+
+    def test_different_story_passes(self):
+        t1 = "Bitcoin ETF sees record $474M inflow as price hits new high"
+        t2 = "Ethereum staking yields drop below 3% as validators surge"
+        self.assertIsNone(m.NewsFetcher._find_near_duplicate(t2, [t1]))
+
+
+class TestCampaignJsonExtraction(unittest.TestCase):
+    """活动情报 JSON 提取健壮化：模型在 JSON 前后夹说明文字也能解析"""
+
+    def test_json_with_preamble_and_epilogue(self):
+        import json as _json
+        raw = '好的，以下是分析结果：\n```json\n{"active_tags": ["#A"], "incentivized_tokens": ["$BTC"]}\n```\n以上就是全部内容。'
+        clean = raw.replace("```json", "").replace("```", "")
+        start, end = clean.find("{"), clean.rfind("}")
+        data = _json.loads(clean[start:end + 1])
+        self.assertEqual(data["incentivized_tokens"], ["$BTC"])
 
 
 class TestRunLogUrl(unittest.TestCase):
