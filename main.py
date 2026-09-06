@@ -1282,6 +1282,25 @@ class NewsFetcher:
             self._feed_record(name, ok=False)
         return items
 
+    @staticmethod
+    def _apply_campaign_boost(candidates: List[Dict[str, Any]],
+                              priority_tokens: Optional[List[str]]) -> None:
+        """币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布（正则一次性预编译）。
+        非字符串条目直接丢弃——脏情报里的 dict/数字走到 t.replace 会炸掉整轮；
+        存量脏文件由 get_campaign_intel 拦截，这里是消费侧第二道门。"""
+        if not priority_tokens:
+            return
+        boost_patterns = [
+            re.compile(rf"\b{re.escape(t.replace('$', '').upper())}\b")
+            for t in priority_tokens if isinstance(t, str) and t
+        ]
+        if not boost_patterns:
+            return
+        for item in candidates:
+            text_upper = (item["title"] + " " + item["summary"]).upper()
+            if any(p.search(text_upper) for p in boost_patterns):
+                item["impact_score"] += CAMPAIGN_TOKEN_BOOST
+
     def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5,
                          priority_tokens: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         # 自动停放连续故障源：本次运行完全不触碰它们
@@ -1311,16 +1330,8 @@ class NewsFetcher:
                     self._stat_fail(feed_name)
                     self._feed_record(feed_name, ok=False)
 
-        # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布（正则一次性预编译）
-        if priority_tokens:
-            boost_patterns = [
-                re.compile(rf"\b{re.escape(t.replace('$', '').upper())}\b")
-                for t in priority_tokens if t
-            ]
-            for item in candidates:
-                text_upper = (item["title"] + " " + item["summary"]).upper()
-                if any(p.search(text_upper) for p in boost_patterns):
-                    item["impact_score"] += CAMPAIGN_TOKEN_BOOST
+        # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布
+        self._apply_campaign_boost(candidates, priority_tokens)
 
         # 低热度新闻过滤（默认不过滤，可通过 MIN_IMPACT_SCORE 开启）
         if MIN_IMPACT_SCORE > 0:
@@ -1963,6 +1974,28 @@ class CampaignScanner:
                 and isinstance(data.get("strategy_guidance"), str))
 
     @staticmethod
+    def _sanitize_cached_body(cached: Any) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+        """加载侧修复（与上面的写入侧门配合）：存量文件可能是旧版本落盘的脏正文
+        （错类型/甚至非 dict），直接沿用会炸下游，直接丢弃又违背"优先沿用
+        历史"的退避设计。折中：在场但错型的正文字段剔除（下游 .get 默认值接管），
+        好字段、缺失字段（历史极简正文本就允许缺键）与全部 _ 状态键保留。
+        返回 (可用正文或 None, 被剔除的字段名)。"""
+        if not isinstance(cached, dict):
+            return None, (["<non-dict>"] if cached is not None else [])
+        cleaned = dict(cached)
+        checks = {
+            "active_tags": isinstance(cleaned.get("active_tags"), list)
+                           and all(isinstance(t, str) for t in cleaned["active_tags"]),
+            "incentivized_tokens": isinstance(cleaned.get("incentivized_tokens"), list)
+                           and all(isinstance(t, str) for t in cleaned["incentivized_tokens"]),
+            "strategy_guidance": isinstance(cleaned.get("strategy_guidance"), str),
+        }
+        dropped = [k for k, ok in checks.items() if k in cleaned and not ok]
+        for k in dropped:
+            cleaned.pop(k, None)
+        return cleaned, dropped
+
+    @staticmethod
     def fetch_raw_campaigns() -> List[str]:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
@@ -2092,9 +2125,17 @@ class CampaignScanner:
             except Exception as e:
                 logger.warning(f"读取 campaign_intel.json 异常: {e}")
 
-        if cached and is_fresh:
-            logger.info(f"使用现存有效的币安活动情报 (更新于 {cached.get('last_updated')})")
-            return cached
+        # 存量正文可用性（加载侧修复）：R42 只拦了新分析，文件里躺着的旧脏正文
+        # （错类型/甚至非 dict——注意上文 except 后 cached 可能残留列表）会原样
+        # 直达下游：错型 tokens 在 fetch 加权处炸整轮。坏字段剔除、好字段保留，
+        # _ 键合并仍用 cached 原样保留状态。
+        usable_cache, dropped_fields = CampaignScanner._sanitize_cached_body(cached)
+        if dropped_fields:
+            logger.warning(f"存量活动情报正文字段损坏已剔除 {dropped_fields}，保留可用部分继续运行（_ 状态键不受影响）。")
+
+        if usable_cache and is_fresh:
+            logger.info(f"使用现存有效的币安活动情报 (更新于 {usable_cache.get('last_updated')})")
+            return usable_cache
 
         logger.info("活动情报已过期或不存在，正在重新扫描币安官方活动...")
 
@@ -2106,8 +2147,8 @@ class CampaignScanner:
                 until_dt = datetime.fromisoformat(cooldown_until)
                 if datetime.now(until_dt.tzinfo or timezone.utc) < until_dt:
                     logger.warning(f"⏭️ 情报分析处于失败退避期（至 {cooldown_until}），本轮沿用历史/默认情报。")
-                    if cached:
-                        return cached
+                    if usable_cache:
+                        return usable_cache
                     return dict(CampaignScanner.DEFAULT_INTEL,
                                 last_updated=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
             except Exception:
@@ -2137,7 +2178,8 @@ class CampaignScanner:
             # 但 _intel_refresh_fail 不保留——成功刷新后失败退避必须归零；
             # _intel_empty_streak 同理：本轮拉取非空已清零，入口快照 cached 里还是旧值，
             # 若合并回去会把刚清的零覆盖掉（stale-cache 回写）。
-            if cached:
+            # 注意用 isinstance 守卫：cached 可能是脏文件残留的非 dict（如列表），直接 .items() 会炸。
+            if isinstance(cached, dict):
                 for k, v in cached.items():
                     if k.startswith("_") and k not in intel and k not in (
                             "_intel_refresh_fail", CampaignScanner._EMPTY_STREAK_KEY):
@@ -2152,9 +2194,9 @@ class CampaignScanner:
             return intel
 
         # 分析失败：有过期情报就续用，没有才返回静态兜底（且不落盘，下轮自动重试）
-        if cached:
+        if usable_cache:
             logger.warning("AI 活动分析失败，沿用上一份历史活动情报（稍后再自动重试）。")
-            return cached
+            return usable_cache
         logger.warning("AI 活动分析失败且无历史情报，本次使用静态兜底配置（不落盘）。")
         return dict(CampaignScanner.DEFAULT_INTEL,
                     last_updated=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))

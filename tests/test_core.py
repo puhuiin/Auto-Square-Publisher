@@ -1378,6 +1378,85 @@ class TestIntelSchema(unittest.TestCase):
         self.assertIn("last_updated", intel)
 
 
+class TestStaleIntelBody(unittest.TestCase):
+    """存量脏正文：schema 门必须同样拦加载路径，且 _ 状态键不受牵连"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _write(self, obj):
+        import json
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump(obj, f, ensure_ascii=False)
+
+    def _fresh_ts(self):
+        return (datetime.now(timezone.utc) + timedelta(hours=6)).isoformat().replace("+00:00", "Z")
+
+    def test_fresh_malformed_body_served_sanitized_without_refetch(self):
+        # 新鲜但脏的正文：坏字段剔除、好字段照常服务，不烧 LLM 重拉
+        import json
+        self._write({
+            "last_updated": self._fresh_ts(),
+            "active_tags": "junk-string",
+            "incentivized_tokens": [{"x": 1}],
+            "strategy_guidance": "g",
+            "_llm_breaker": {"p": {"fails": 1}},
+        })
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns") as mock_fetch, \
+             patch.object(m.CampaignScanner, "analyze_with_ai") as mock_ai:
+            intel = m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+            mock_fetch.assert_not_called()
+            mock_ai.assert_not_called()
+        self.assertNotIn("incentivized_tokens", intel, "毒字段必须被剔除")
+        self.assertNotIn("active_tags", intel)
+        self.assertEqual(intel.get("strategy_guidance"), "g", "好字段保留")
+
+    def test_stale_malformed_history_reused_safely(self):
+        # 过期脏正文 + 分析失败：沿用历史时同样是修复后的安全子集，而非脏原文
+        self._write({"last_updated": "2026-01-01T00:00:00Z",
+                     "active_tags": ["#A"], "incentivized_tokens": "oops", "strategy_guidance": "g"})
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns", return_value=["t1"]), \
+             patch.object(m.CampaignScanner, "analyze_with_ai", return_value=None):
+            intel = m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+        self.assertEqual(intel.get("active_tags"), ["#A"], "历史好字段优先沿用")
+        self.assertNotIn("incentivized_tokens", intel, "毒字段不得进入下游加权")
+
+    def test_non_dict_file_does_not_crash(self):
+        self._write([{"id": "x"}])  # 手改/损坏的文件：以前在 cached.get 处炸整轮
+        fake_intel = {"active_tags": ["#新"], "incentivized_tokens": ["$BTC"],
+                      "strategy_guidance": "g", "last_updated": datetime.now(timezone.utc).isoformat()}
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns", return_value=["t1"]), \
+             patch.object(m.CampaignScanner, "analyze_with_ai", return_value=fake_intel):
+            intel = m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+        self.assertEqual(intel.get("active_tags"), ["#新"])
+
+
+class TestCampaignBoost(unittest.TestCase):
+    """活动加权消费侧：非字符串条目直接丢弃，不得炸轮"""
+
+    def test_mixed_junk_ignored_real_tokens_boost(self):
+        cands = [{"title": "BNB breaks out strongly", "summary": "", "impact_score": 5},
+                 {"title": "quiet market today", "summary": "", "impact_score": 5}]
+        m.NewsFetcher._apply_campaign_boost(cands, ["$BNB", {"x": 1}, 42, "", None])
+        self.assertEqual(cands[0]["impact_score"], 5 + m.CAMPAIGN_TOKEN_BOOST)
+        self.assertEqual(cands[1]["impact_score"], 5)
+
+    def test_empty_or_all_junk_is_noop(self):
+        cands = [{"title": "BNB breaks out", "summary": "", "impact_score": 5}]
+        m.NewsFetcher._apply_campaign_boost(cands, None)
+        m.NewsFetcher._apply_campaign_boost(cands, [])
+        m.NewsFetcher._apply_campaign_boost(cands, [{"x": 1}])
+        self.assertEqual(cands[0]["impact_score"], 5)
+
+
 class TestIntelRefreshBackoff(unittest.TestCase):
     """情报刷新失败退避：2h 内不重复白烧 LLM"""
 
