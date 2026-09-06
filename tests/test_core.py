@@ -1046,6 +1046,52 @@ class TestImageExtraction(unittest.TestCase):
         self.assertIsNone(m.NewsFetcher.extract_image_url({}, "<p>纯文字内容</p>"))
 
 
+class TestRefusalDetection(unittest.TestCase):
+    """模型拒答/身份暴露 → 质量门判废切换下一模型"""
+
+    def test_refusal_rejected(self):
+        ok, reason = m.MultiLLMEngine._passes_quality_gate("作为AI助手，我无法提供投资建议。" * 3)
+        self.assertFalse(ok)
+        self.assertIn("作为AI", reason)
+
+    def test_identity_leak_rejected(self):
+        ok, _ = m.MultiLLMEngine._passes_quality_gate(
+            "我是一个语言模型，以下内容仅供参考。" * 3 + "比特币今天涨了。")
+        self.assertFalse(ok)
+
+    def test_compliance_disclaimer_allowed(self):
+        # "不构成投资建议"是合规风险提示，不该被杀
+        body = "比特币放量突破关键位，短线情绪转多，注意回踩确认。中线逻辑没变，etf 资金持续流入，回调就是上车机会，仓位控制好。"
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(body + "以上不构成投资建议。")
+        self.assertTrue(ok, reason)
+
+    def test_normal_content_passes(self):
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(
+            "比特币放量突破前高，短线情绪彻底点燃。ETF 单日净流入创纪录，机构在真金白银投票。"
+            "回调就是上车机会，但别追高，等回踩确认支撑再进。仓位控制在半成以内，止损带好。")
+        self.assertTrue(ok, reason)
+
+
+class TestAiSlopStripping(unittest.TestCase):
+    """AI 高频套话剥离"""
+
+    def test_sentence_initial_slop_removed(self):
+        s = m.SquarePublisher._sanitize_content("比特币放量突破。总而言之，短期趋势偏多。综上所述，注意仓位。")
+        self.assertNotIn("总而言之", s)
+        self.assertNotIn("综上所述", s)
+        self.assertIn("短期趋势偏多", s)
+        self.assertIn("注意仓位", s)
+
+    def test_mid_sentence_preserved(self):
+        s = m.SquarePublisher._sanitize_content("这里有个值得注意的细节：ETF 净流入在加速，说明机构态度。")
+        self.assertIn("值得注意的细节", s)
+
+    def test_multiple_slop_cleaned(self):
+        s = m.SquarePublisher._sanitize_content("行情启动。不难看出，主力在吸筹。总的来说，趋势健康。")
+        self.assertNotIn("不难看出", s)
+        self.assertNotIn("总的来说", s)
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 

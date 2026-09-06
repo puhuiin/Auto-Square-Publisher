@@ -1516,13 +1516,25 @@ class MultiLLMEngine:
 
         return chain
 
-    @staticmethod
-    def _passes_quality_gate(content: str) -> Tuple[bool, str]:
+    # 模型拒答/身份暴露特征：出现即判废（发出去等于自曝机器人身份）。
+    # 注意："不构成投资建议"是合规风险提示，属正当内容，不列入。
+    _REFUSAL_PATTERNS = (
+        "作为AI", "作为一个AI", "AI助手", "AI 助手", "人工智能助手", "语言模型",
+        "我无法提供", "无法提供投资建议", "我不能提供", "请咨询专业人士",
+        "As an AI", "I cannot provide",
+    )
+
+    @classmethod
+    def _passes_quality_gate(cls, content: str) -> Tuple[bool, str]:
         """
         AI 输出质量硬门槛：防止低质量/跑偏输出被直接发布。
+        - 拒答/身份暴露（"作为AI我无法…"）直接判废并切换下一模型
         - 中文字符必须 >= 40（本账号面向中文读者，纯英文输出视为跑偏）
         - 总长度必须在 60~1200 字符之间
         """
+        for pat in cls._REFUSAL_PATTERNS:
+            if pat in content:
+                return False, f"疑似拒答/身份暴露（命中: {pat}）"
         cjk_count = len(re.findall(r"[一-鿿]", content))
         if len(content) < 60:
             return False, f"内容过短 ({len(content)} 字符)"
@@ -2152,6 +2164,9 @@ class SquarePublisher:
         content = re.sub(r"^\s*(?:好的[，,。!！]?|以下是|这是|Here is|Sure[,!]?|好的，以下是)[^\n]{0,40}\n", "", content)  # 客套开场白
         # prompt 模板标签回显（模型偶尔把【新闻标题】等标记原样吐出来）
         content = re.sub(r"^【(?:新闻标题|新闻摘要|实时盘面情绪参考|本条新闻可用标的|本条结尾站队提问的套路|核心要求|安全提示)】[^\n]*\n?", "", content, flags=re.MULTILINE)
+        # AI 高频套话剥离：句首的总结腔/书面腔一眼假，真人交易员不这么说话
+        for slop in ("总而言之", "综上所述", "总的来说", "值得注意的是", "值得一提的是", "不难看出", "显而易见，"):
+            content = re.sub(rf"(^|[。！？\n]\s*){slop}[，,：:]?\s*", r"\1", content)
         content = content.strip()
         # 1a. 静态黑名单：稳定币/机构/通用缩写一律剥离 $
         for word in cls.FORCE_STRIP_CASHTAGS:
