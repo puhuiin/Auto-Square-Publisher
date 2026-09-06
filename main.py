@@ -328,6 +328,20 @@ _HTTP_SESSION.mount("http://", _HTTP_ADAPTER)
 _HTTP_SESSION.mount("https://", _HTTP_ADAPTER)
 
 
+def _retry_wait(resp, attempt: int, backoff: float) -> float:
+    """退避时长：优先尊重服务端 Retry-After（被限流时盲等默认值会反复撞墙，
+    币安 429/418 限流就靠该头下标注解禁时间），解析失败或缺头回落指数退避。
+    上下钳制 [0.5, 30]s：畸形大值不得拖死整轮（与发帖通道同口径）。"""
+    wait = backoff * (attempt + 1)
+    try:
+        retry_after = (resp.headers or {}).get("Retry-After", "")
+        if retry_after:
+            wait = min(max(float(retry_after), 0.5), 30.0)
+    except (TypeError, ValueError, AttributeError):
+        pass
+    return wait
+
+
 def http_request(method: str, url: str, *, timeout: int = 8, headers: Dict[str, str] = None,
                  retries: int = 2, backoff: float = 0.6, **kwargs) -> Optional[requests.Response]:
     """带轻量重试与退避的 HTTP 请求，自动吸收 429/5xx 与网络抖动，最终失败返回 None"""
@@ -336,7 +350,7 @@ def http_request(method: str, url: str, *, timeout: int = 8, headers: Dict[str, 
         try:
             resp = _HTTP_SESSION.request(method, url, headers=headers, timeout=timeout, **kwargs)
             if resp.status_code in (429, 500, 502, 503, 504) and attempt < retries:
-                time.sleep(backoff * (attempt + 1))
+                time.sleep(_retry_wait(resp, attempt, backoff))
                 continue
             return resp
         except requests.RequestException as e:

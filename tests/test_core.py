@@ -1048,6 +1048,60 @@ class TestMarketDataCache(unittest.TestCase):
             self.assertEqual(mock_get.call_count, 1)
 
 
+class TestHttpRetryWait(unittest.TestCase):
+    """共享退避尊重 Retry-After：被限流时按服务端要求等待，而非盲等默认值"""
+
+    def _resp(self, status, headers=None):
+        attrs = {"status_code": status}
+        if headers is not None:
+            attrs["headers"] = headers
+        return type("R", (), attrs)()
+
+    def test_retry_after_honored(self):
+        r429 = self._resp(429, {"Retry-After": "5"})
+        r200 = self._resp(200, {})
+        with patch.object(m._HTTP_SESSION, "request", side_effect=[r429, r200]) as mock_req, \
+             patch.object(m.time, "sleep") as mock_sleep:
+            out = m.http_request("GET", "https://x.example/", retries=1)
+        self.assertIs(out, r200)
+        self.assertEqual(mock_req.call_count, 2)
+        mock_sleep.assert_called_once_with(5.0)
+
+    def test_missing_header_falls_back_to_backoff(self):
+        r429 = self._resp(429, {})
+        r200 = self._resp(200, {})
+        with patch.object(m._HTTP_SESSION, "request", side_effect=[r429, r200]), \
+             patch.object(m.time, "sleep") as mock_sleep:
+            m.http_request("GET", "https://x.example/", retries=1, backoff=0.6)
+        mock_sleep.assert_called_once_with(0.6)
+
+    def test_garbage_header_falls_back(self):
+        r429 = self._resp(429, {"Retry-After": "soon"})
+        r200 = self._resp(200, {})
+        with patch.object(m._HTTP_SESSION, "request", side_effect=[r429, r200]), \
+             patch.object(m.time, "sleep") as mock_sleep:
+            m.http_request("GET", "https://x.example/", retries=1, backoff=0.6)
+        mock_sleep.assert_called_once_with(0.6)
+
+    def test_absurd_header_clamped(self):
+        r429 = self._resp(429, {"Retry-After": "3600"})
+        r200 = self._resp(200, {})
+        with patch.object(m._HTTP_SESSION, "request", side_effect=[r429, r200]), \
+             patch.object(m.time, "sleep") as mock_sleep:
+            m.http_request("GET", "https://x.example/", retries=1)
+        mock_sleep.assert_called_once_with(30.0)
+
+    def test_headerless_response_safe(self):
+        # 假对象无 headers 属性也不得炸（historical 单测假对象即如此）
+        r429 = self._resp(429)
+        r200 = self._resp(200)
+        with patch.object(m._HTTP_SESSION, "request", side_effect=[r429, r200]), \
+             patch.object(m.time, "sleep") as mock_sleep:
+            out = m.http_request("GET", "https://x.example/", retries=1, backoff=0.6)
+        self.assertIs(out, r200)
+        mock_sleep.assert_called_once_with(0.6)
+
+
 class TestHealthcheck(unittest.TestCase):
     """--healthcheck 自检模式"""
 
