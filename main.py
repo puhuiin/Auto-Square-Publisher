@@ -3348,7 +3348,9 @@ def run_healthcheck():
     fetcher = NewsFetcher()
     health = fetcher._feed_health()
     parked = [k for k in health if fetcher._feed_is_parked(k)]
-    failed = {k: v for k, v in health.items() if not fetcher._feed_is_parked(k) and v.get("fails", 0) > 0}
+    # v 可能是手改残留的非 dict（如字符串）：无 isinstance 守卫会在此直接炸掉整份自检报告
+    failed = {k: v for k, v in health.items()
+              if isinstance(v, dict) and not fetcher._feed_is_parked(k) and v.get("fails", 0) > 0}
     parts = [f"{len(RSS_FEEDS)} 源"]
     if parked:
         parts.append(f"停放 {len(parked)}: {', '.join(parked)}")

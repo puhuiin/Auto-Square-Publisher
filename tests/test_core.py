@@ -1141,6 +1141,41 @@ class TestHealthcheck(unittest.TestCase):
             if os.path.exists(intel_tmp):
                 os.remove(intel_tmp)
 
+    def test_junk_feed_health_does_not_crash_report(self):
+        # 手改残留的非 dict 源状态不得炸掉整份自检报告（自检工具绝不能比被诊断对象先崩）
+        import tempfile
+        intel_tmp = tempfile.mktemp(suffix=".json")
+        import json
+        with open(intel_tmp, "w", encoding="utf-8") as f:
+            json.dump({"_feed_health": {"JunkFeed": "garbage-string",
+                                        "SickFeed": {"fails": 2}}}, f)
+        orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = intel_tmp
+        os.environ["SQUARE_API_KEY"] = "test"
+        os.environ["LLM_API_KEY"] = "test-llm-key"
+        fake_syms = {f"T{i}" for i in range(200)}
+        try:
+            with patch.object(m.SymbolValidator, "get_valid_symbols", return_value=fake_syms), \
+                 patch.object(m.MarketDataProvider, "get_fear_and_greed", return_value="50/100"), \
+                 patch.object(m, "probe_reasonix_gateway", return_value=None), \
+                 patch.object(m, "_safe_print") as mock_print:
+                try:
+                    m.run_healthcheck()
+                except SystemExit as e:
+                    self.assertEqual(e.code, 0)
+                except AttributeError:
+                    self.fail("脏 _feed_health 炸掉了健康自检")
+                out = "\n".join(str(c.args[0]) for c in mock_print.call_args_list if c.args)
+                self.assertIn("RSS 源健康", out)
+                self.assertIn("SickFeed", out, "正常条目仍应如实报告")
+                self.assertNotIn("JunkFeed", out, "脏条目应被跳过而非入选故障名单")
+        finally:
+            m.CAMPAIGN_INTEL_FILE = orig_intel
+            os.environ.pop("SQUARE_API_KEY", None)
+            os.environ.pop("LLM_API_KEY", None)
+            if os.path.exists(intel_tmp):
+                os.remove(intel_tmp)
+
 
 class TestReasonixGateway(unittest.TestCase):
     """Reasonix 本地免费模型网关集成"""
