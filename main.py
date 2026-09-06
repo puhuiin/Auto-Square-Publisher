@@ -70,6 +70,28 @@ logging.basicConfig(
 )
 logger = logging.getLogger("SquarePosterUltimate")
 
+# Windows 控制台默认 GBK(cp936)：emoji 直接 print 会 UnicodeEncodeError 炸掉 --healthcheck。
+# 启动即把 stdout/stderr 重配为 UTF-8（失败静默），healthcheck 输出再经 _safe_print 兜底。
+try:
+    if getattr(sys.stdout, "reconfigure", None):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if getattr(sys.stderr, "reconfigure", None):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
+
+def _safe_print(*args, **kwargs) -> None:
+    """GBK 安全输出：编码失败时降级为 ascii 转义，保证任何控制台都不抛异常"""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        safe = " ".join(str(a).encode("ascii", "backslashreplace").decode("ascii") for a in args)
+        try:
+            print(safe, **{k: v for k, v in kwargs.items() if k != "flush"})
+        except Exception:
+            pass
+
 # ---------------------------------------------------------------------------
 # 常量与路径
 # ---------------------------------------------------------------------------
@@ -127,6 +149,21 @@ def append_metrics(record: Dict[str, Any]) -> None:
             f.write(json.dumps(base, ensure_ascii=False) + "\n")
     except Exception as e:
         logger.debug(f"写入 metrics 失败(不影响主流程): {e}")
+
+
+def _delivered_platforms(binance_ok: bool = False, draft_ok: bool = False,
+                         tg_ok: bool = False) -> List[str]:
+    """实际投递成功的平台清单（metrics.jsonl 的 platforms 字段唯一口径）。
+    与 PUBLISH_PLATFORMS（启用意愿）区分：只记真实送达，副平台-only 模式不再出现
+    ["okx_draft+telegram"] 这类拼接串，binance 成功路径也不再把未送达的副平台计入。"""
+    out: List[str] = []
+    if binance_ok:
+        out.append("binance")
+    if draft_ok:
+        out.append("okx_draft")
+    if tg_ok:
+        out.append("telegram")
+    return out
 ACTIVE_HOURS_BEIJING = os.getenv("ACTIVE_HOURS_BEIJING", "").strip()  # 活跃时段(北京时间)，如 "8-23"；空 = 全天
 CAMPAIGN_TOKEN_BOOST = 8                                           # 命中官方活动重点代币的热度加权
 FRESHNESS_BOOST_RULES = ((3, 10), (12, 6), (24, 3))                # (新闻不超过 N 小时, 加分)
@@ -373,15 +410,18 @@ def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) 
     if os.getenv("GITHUB_ACTIONS", "").strip().lower() == "true":
         return []
     try:
-        root = gw_url[:-3] if gw_url.endswith("/v1") else gw_url
-        health = _DIRECT_SESSION.get(f"{root}/health", timeout=timeout)
+        gw_base = gw_url[:-3] if gw_url.endswith("/v1") else gw_url  # 网关根（不带 /v1）
+        health = _DIRECT_SESSION.get(f"{gw_base}/health", timeout=timeout)
         if health.status_code != 200:
             return []
 
         available: set = set()
         catalog_ok = False
         try:
-            models_resp = _DIRECT_SESSION.get(f"{gw_url}/v1/models", timeout=timeout + 3)
+            # OpenAI 兼容目录固定挂在 <root>/v1/models：gw_url 自带 /v1 时不可再拼一层
+            #（此前 f"{gw_url}/v1/models" 在默认配置下得到 /v1/v1/models → 恒 404，
+            # 目录探测永不成功，多模型备份链退化成单条 auto/best-fast）
+            models_resp = _DIRECT_SESSION.get(f"{gw_base}/v1/models", timeout=timeout + 3)
             if models_resp.status_code == 200:
                 available = {m.get("id", "") for m in models_resp.json().get("data", [])}
                 catalog_ok = True
@@ -2334,7 +2374,8 @@ class SquarePublisher(BasePublisher):
             response = None
             for attempt in (0, 1):
                 try:
-                    response = requests.post(
+                    # 共享 Session（连接池复用；adapter 已禁用 urllib3 自动重试，暂态退避由下循环接管）
+                    response = _HTTP_SESSION.post(
                         BINANCE_SQUARE_API_URL,
                         headers=headers,
                         json=payload,
@@ -2845,9 +2886,9 @@ def run_healthcheck():
     4. 币安现货接口 + 恐慌贪婪指数
     5. 通知渠道配置
     """
-    print("\n" + "=" * 60)
-    print("🏥 Binance Square Auto Poster - 全链路健康自检")
-    print("=" * 60)
+    _safe_print("\n" + "=" * 60)
+    _safe_print("🏥 Binance Square Auto Poster - 全链路健康自检")
+    _safe_print("=" * 60)
 
     checks: List[Tuple[str, str, str]] = []  # (组件, 状态, 详情)
 
@@ -2973,19 +3014,19 @@ def run_healthcheck():
         checks.append(("发布平台", "✔" if PUBLISH_PLATFORMS else "✗", f"{plats} {okx_hint}".strip()))
 
     # 汇总输出
-    print()
+    _safe_print()
     for name, status, detail in checks:
         icon = {"✔": "✅", "⚠": "⚠️", "✗": "❌", "⊘": "⏭️", "ℹ": "ℹ️"}.get(status, status)
-        print(f"  {icon} [{name}] {detail}")
-    print()
+        _safe_print(f"  {icon} [{name}] {detail}")
+    _safe_print()
 
     n_err = sum(1 for _, s, _ in checks if s == "✗")
     n_warn = sum(1 for _, s, _ in checks if s == "⚠")
     verdict = "✅ 全部通过，可以放心运行" if not n_err else f"❌ 有 {n_err} 项故障，请先修复"
     if not n_err and n_warn:
         verdict = f"⚠️ {n_warn} 项警告，可运行但建议关注"
-    print(f"  {verdict}")
-    print("=" * 60 + "\n")
+    _safe_print(f"  {verdict}")
+    _safe_print("=" * 60 + "\n")
 
     sys.exit(0 if not n_err else 1)
 
@@ -3226,7 +3267,7 @@ def _run_main():
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
-                        "platforms": [p for p in ("binance", "okx_draft", "telegram") if p in PUBLISH_PLATFORMS],
+                        "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "outcome": "binance_published",
                     })
@@ -3240,15 +3281,14 @@ def _run_main():
                     Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}\n\n{post_content[:200]}...")
                 elif not binance_enabled and (draft_exported or telegram_exported):
                     # 仅副平台模式：任一平台完成投递即入缓存，防止每 20 分钟重复处理同一新闻
-                    delivered_by = "okx_draft" if draft_exported else "telegram"
-                    if draft_exported and telegram_exported:
-                        delivered_by = "okx_draft+telegram"
+                    delivered = _delivered_platforms(False, draft_exported, telegram_exported)
+                    delivered_by = "+".join(delivered)
                     cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
                     posted_titles_this_run.append(title)
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
-                        "platforms": [delivered_by],
+                        "platforms": delivered,
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "outcome": f"{delivered_by}_delivered",
                     })

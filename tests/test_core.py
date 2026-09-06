@@ -551,7 +551,8 @@ class TestPublishErrorClassification(unittest.TestCase):
         pub.last_error = None
         from unittest.mock import patch
         fake_resp = type("R", (), {"status_code": 403, "text": "Forbidden"})()
-        with patch("main.requests.post", return_value=fake_resp):
+        # 发布走共享 Session（连接池复用），此处随实现同步迁移 mock 路径
+        with patch.object(m._HTTP_SESSION, "post", return_value=fake_resp):
             result = pub.publish("这是一段足够长的正文内容，用于测试发布失败路径的行为是否符合预期。", image_url=None)
         self.assertFalse(result)
         self.assertIn("SQUARE_API_KEY", pub.last_error or "")
@@ -1421,6 +1422,99 @@ class TestStepSummary(unittest.TestCase):
             os.environ.pop("GITHUB_STEP_SUMMARY", None)
             if os.path.exists(tmp):
                 os.unlink(tmp)
+
+
+class TestReasonixModelsUrl(unittest.TestCase):
+    """网关模型目录 URL：gw_url 自带 /v1 时不可再拼一层（/v1/v1/models 恒 404）"""
+
+    def _probe_with_capture(self, gw_url):
+        from unittest.mock import patch
+        captured = []
+        fake_health = MagicMock(status_code=200)
+        fake_models = MagicMock(status_code=200)
+        fake_models.json.return_value = {"data": [
+            {"id": "auto/best-fast"}, {"id": "omni/auto/best-free"}, {"id": "ovh/Qwen3.8-27B"},
+        ]}
+
+        def _fake_get(url, **kwargs):
+            captured.append(url)
+            return fake_health if captured and len(captured) == 1 else fake_models
+
+        for k in ("GITHUB_ACTIONS", "REASONIX_GW_OFF"):
+            os.environ.pop(k, None)
+        with patch.object(m, "_DIRECT_SESSION") as mock_sess:
+            mock_sess.get.side_effect = _fake_get
+            cfgs = m.probe_reasonix_gateway(gw_url)
+        return captured, cfgs
+
+    def test_default_gw_url_hits_single_v1_models(self):
+        captured, cfgs = self._probe_with_capture("http://localhost:20140/v1")
+        self.assertIn("http://localhost:20140/v1/models", captured)
+        self.assertNotIn("http://localhost:20140/v1/v1/models", captured)
+        self.assertEqual(len(cfgs), 3, "目录可用时应返回首选+备份链")
+
+    def test_bare_root_gw_url_also_correct(self):
+        captured, cfgs = self._probe_with_capture("http://localhost:20140")
+        self.assertIn("http://localhost:20140/v1/models", captured)
+        self.assertEqual(len(cfgs), 3)
+
+
+class TestSafePrint(unittest.TestCase):
+    """GBK 控制台：healthcheck 输出不得抛 UnicodeEncodeError"""
+
+    def test_unicode_encode_error_degraded_not_raised(self):
+        import builtins
+        calls = {"n": 0}
+
+        def _flaky_print(*args, **kwargs):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise UnicodeEncodeError("gbk", args[0] if args else "", 0, 1, "illegal")
+            return None
+
+        with patch.object(builtins, "print", side_effect=_flaky_print):
+            m._safe_print("🏥 emoji 在 GBK 下会炸")
+        self.assertEqual(calls["n"], 2, "首次编码失败后应降级重打一次")
+
+    def test_normal_print_passthrough(self):
+        with patch("builtins.print") as mock_print:
+            m._safe_print("hello", "world")
+            mock_print.assert_called_once_with("hello", "world")
+
+
+class TestDeliveredPlatforms(unittest.TestCase):
+    """metrics platforms 口径：只记真实送达，不记启用意愿，不拼串"""
+
+    def test_mirror_both_delivered(self):
+        self.assertEqual(m._delivered_platforms(False, True, True), ["okx_draft", "telegram"])
+
+    def test_mirror_single(self):
+        self.assertEqual(m._delivered_platforms(False, True, False), ["okx_draft"])
+        self.assertEqual(m._delivered_platforms(False, False, True), ["telegram"])
+
+    def test_binance_path_only_counts_real_delivery(self):
+        # 币安成功但副平台均失败：不得把未送达的副平台计入
+        self.assertEqual(m._delivered_platforms(True, False, False), ["binance"])
+        self.assertEqual(m._delivered_platforms(True, True, False), ["binance", "okx_draft"])
+
+    def test_none_delivered(self):
+        self.assertEqual(m._delivered_platforms(), [])
+
+
+class TestSquarePublisherSession(unittest.TestCase):
+    """币安发布走共享 Session（连接池复用），不再直调 requests.post"""
+
+    def test_publish_uses_shared_session(self):
+        pub = m.SquarePublisher(api_key="k")
+        fake_resp = MagicMock(status_code=200, text='{"code":"000000"}')
+        fake_resp.json.return_value = {"code": "000000", "data": {"contentId": "cid1"}}
+        content = "这是一段超过十五个中文字符的测试发帖内容，用于验证共享会话 $BTC #Write2Earn"
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}), \
+             patch.object(m.requests, "post", side_effect=AssertionError("must use shared session")):
+            mock_sess.post.return_value = fake_resp
+            self.assertTrue(pub.publish(content, ensure_tokens=["BTC"]))
+            mock_sess.post.assert_called_once()
 
 
 if __name__ == "__main__":
