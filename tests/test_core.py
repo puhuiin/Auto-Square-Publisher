@@ -303,6 +303,46 @@ class TestProviderHealthScheduling(unittest.TestCase):
                          ["healthy", "flaky", "dead"])
 
 
+class TestEnvParsing(unittest.TestCase):
+    """运营调参防呆：非法/越界 env 必须告警并安全回退，不得静默改变行为"""
+
+    def test_int_valid_and_empty(self):
+        os.environ["T_X"] = "7"
+        try:
+            self.assertEqual(m._env_int("T_X", 3), 7)
+        finally:
+            os.environ.pop("T_X", None)
+        self.assertEqual(m._env_int("T_X", 3), 3)
+
+    def test_int_garbage_warns_and_defaults(self):
+        os.environ["T_X"] = "abc"
+        try:
+            with self.assertLogs("SquarePosterUltimate", level="WARNING"):
+                self.assertEqual(m._env_int("T_X", 3), 3)
+        finally:
+            os.environ.pop("T_X", None)
+
+    def test_float_garbage_warns_and_defaults(self):
+        os.environ["T_F"] = "x.y"
+        try:
+            with self.assertLogs("SquarePosterUltimate", level="WARNING"):
+                self.assertEqual(m._env_float("T_F", 0.5), 0.5)
+        finally:
+            os.environ.pop("T_F", None)
+
+    def test_clamp01(self):
+        self.assertEqual(m._clamp01("T", 0.65), 0.65)
+        self.assertEqual(m._clamp01("T", 0.0), 0.0)
+        self.assertEqual(m._clamp01("T", 1.0), 1.0)
+        self.assertEqual(m._clamp01("T", 1.5), 1.0)
+        self.assertEqual(m._clamp01("T", -2.0), 0.0)
+
+    def test_positive_int(self):
+        self.assertEqual(m._positive_int("T", 48, 48), 48)
+        self.assertEqual(m._positive_int("T", 0, 48), 48)
+        self.assertEqual(m._positive_int("T", -5, 48), 48)
+
+
 class TestDailyQuota(unittest.TestCase):
     """24h 滚动配额统计"""
 
@@ -798,6 +838,25 @@ class TestHealthcheck(unittest.TestCase):
                 m.run_healthcheck()
             except SystemExit as e:
                 self.assertEqual(e.code, 1)
+
+    def test_engine_build_failure_still_reports(self):
+        # 引擎构造异常时自检报告不得崩（eng.providers 空引用曾是 AttributeError 坑）
+        saved = os.environ.pop("SQUARE_API_KEY", None)
+        fake_syms = {f"T{i}" for i in range(200)}
+        try:
+            with patch.object(m, "MultiLLMEngine", side_effect=RuntimeError("boom")), \
+                 patch.object(m.SymbolValidator, "get_valid_symbols", return_value=fake_syms), \
+                 patch.object(m.MarketDataProvider, "get_fear_and_greed", return_value="50/100"), \
+                 patch.object(m.NewsFetcher, "_feed_health", return_value={}):
+                try:
+                    m.run_healthcheck()
+                except SystemExit as e:
+                    self.assertIn(e.code, (0, 1))
+                except AttributeError:
+                    self.fail("eng=None 时健康自检崩溃")
+        finally:
+            if saved is not None:
+                os.environ["SQUARE_API_KEY"] = saved
 
 
 class TestReasonixGateway(unittest.TestCase):

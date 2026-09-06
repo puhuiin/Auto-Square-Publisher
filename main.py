@@ -110,6 +110,8 @@ def _env_int(name: str, default: int) -> int:
     try:
         return int(raw)
     except ValueError:
+        # 非空却解析失败=配了个错值：静默回退会让用户误以为调参已生效，必须告警
+        logger.warning(f"环境变量 {name}={raw!r} 不是整数，按默认值 {default} 处理。")
         return default
 
 
@@ -120,12 +122,31 @@ def _env_float(name: str, default: float) -> float:
     try:
         return float(raw)
     except ValueError:
+        logger.warning(f"环境变量 {name}={raw!r} 不是数字，按默认值 {default} 处理。")
         return default
 
 
+def _clamp01(name: str, value: float) -> float:
+    """0~1 闭区间钳制：去重阈值越界静默接受会变成"永不去重刷屏"(>1)或"全判重停摆"(<0)"""
+    if 0.0 <= value <= 1.0:
+        return value
+    clamped = min(max(value, 0.0), 1.0)
+    logger.warning(f"环境变量 {name}={value} 超出 [0,1]，已钳制为 {clamped}。")
+    return clamped
+
+
+def _positive_int(name: str, value: int, default: int) -> int:
+    """正整数守卫：时效窗口 ≤0 会让全部新闻判过期=整轮静默（且日志看起来一切正常），
+    必须回退默认值而不能钳制到 0（0 同样全灭）"""
+    if value > 0:
+        return value
+    logger.warning(f"环境变量 {name}={value} 非正数无意义，已回退默认值 {default}。")
+    return default
+
+
 # ------------------------------ 可运营调优参数 (GitHub vars 可选覆盖) ------------------------------
-MAX_NEWS_AGE_HOURS = _env_int("MAX_NEWS_AGE_HOURS", 48)            # 新闻最大时效(小时)，过期旧闻直接丢弃
-DUP_SIMILARITY_THRESHOLD = _env_float("DUP_SIMILARITY_THRESHOLD", 0.65)  # 跨源近似标题去重阈值 (0~1)
+MAX_NEWS_AGE_HOURS = _positive_int("MAX_NEWS_AGE_HOURS", _env_int("MAX_NEWS_AGE_HOURS", 48), 48)  # 新闻最大时效(小时)，过期旧闻直接丢弃
+DUP_SIMILARITY_THRESHOLD = _clamp01("DUP_SIMILARITY_THRESHOLD", _env_float("DUP_SIMILARITY_THRESHOLD", 0.65))  # 跨源近似标题去重阈值 (0~1)
 MIN_IMPACT_SCORE = _env_int("MIN_IMPACT_SCORE", 0)                 # 最低热度分过滤，0 表示不过滤
 MAX_DAILY_POSTS = _env_int("MAX_DAILY_POSTS", 12)                  # 24h 滚动发帖配额，0 表示不限制
 TOKEN_DAILY_LIMIT = _env_int("TOKEN_DAILY_LIMIT", 3)               # 同一代币 24h 内最多发布篇数，0 表示不限制
@@ -3069,7 +3090,8 @@ def run_healthcheck():
                        " ".join(live_results) + ("（已通过实弹验证）" if any_live_ok else "（全部不可用！）")))
 
     # ---- 3. Reasonix 网关（复用 MultiLLMEngine 已探测的链路，避免双探测） ----
-    gw_from_engine = next((p for p in eng.providers if p.name == "Reasonix-GW"), None)
+    # eng 可能为 None（引擎构造异常时上文已记一条 ✗，此处不得再炸 AttributeError 毁掉整份报告）
+    gw_from_engine = next((p for p in (eng.providers if eng else []) if p.name == "Reasonix-GW"), None)
     if gw_from_engine:
         checks.append(("Reasonix 本地网关", "✔", f"{gw_from_engine.base_url} 在线 (首选模型: {gw_from_engine.model})"))
     elif os.getenv("GITHUB_ACTIONS"):
