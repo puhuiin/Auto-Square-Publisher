@@ -106,6 +106,8 @@ DUP_SIMILARITY_THRESHOLD = _env_float("DUP_SIMILARITY_THRESHOLD", 0.65)  # 跨�
 MIN_IMPACT_SCORE = _env_int("MIN_IMPACT_SCORE", 0)                 # 最低热度分过滤，0 表示不过滤
 MAX_DAILY_POSTS = _env_int("MAX_DAILY_POSTS", 12)                  # 24h 滚动发帖配额，0 表示不限制
 TOKEN_DAILY_LIMIT = _env_int("TOKEN_DAILY_LIMIT", 3)               # 同一代币 24h 内最多发布篇数，0 表示不限制
+# 发布平台组合：binance=币安广场官方API；okx_draft=OKX广场草稿直出（合规半自动，见 OKXDraftExporter）
+PUBLISH_PLATFORMS = [p.strip().lower() for p in os.getenv("PUBLISH_PLATFORMS", "binance").split(",") if p.strip()]
 ACTIVE_HOURS_BEIJING = os.getenv("ACTIVE_HOURS_BEIJING", "").strip()  # 活跃时段(北京时间)，如 "8-23"；空 = 全天
 CAMPAIGN_TOKEN_BOOST = 8                                           # 命中官方活动重点代币的热度加权
 FRESHNESS_BOOST_RULES = ((3, 10), (12, 6), (24, 3))                # (新闻不超过 N 小时, 加分)
@@ -2103,9 +2105,25 @@ class ImageManager:
 
 
 # ---------------------------------------------------------------------------
+# 多平台发布架构
+# BasePublisher 定义统一发布接口；平台实现按 PUBLISH_PLATFORMS 组合启用。
+# 现有平台：binance（币安广场官方 OpenAPI）、okx_draft（OKX 广场草稿直出，官方暂无 API）。
+# ---------------------------------------------------------------------------
+class BasePublisher:
+    """多平台发布器统一接口。实现方约定：失败返回 False 并置 last_error 供上层报警。"""
+
+    name = "base"
+    last_error: Optional[str] = None
+
+    def publish(self, content: str, image_url: Optional[str] = None,
+                ensure_tokens: Optional[List[str]] = None, meta: Optional[Dict[str, Any]] = None) -> bool:
+        raise NotImplementedError
+
+
+# ---------------------------------------------------------------------------
 # 模块八：币安广场 OpenAPI 客户端 (SquarePublisher)
 # ---------------------------------------------------------------------------
-class SquarePublisher:
+class SquarePublisher(BasePublisher):
     """币安广场发布组件"""
 
     # 币安广场已知业务错误码 → 人类可读的排障指引
@@ -2140,7 +2158,6 @@ class SquarePublisher:
         "ETF", "SEC", "FED", "CEO", "NFT", "AI", "USD", "USDT", "USDC",
         "CEX", "DEX", "API", "CAGR", "APR", "APY", "ATH", "BAPI", "NEWS", "MEME"
     ]
-
     @classmethod
     def _sanitize_content(cls, content: str) -> str:
         """
@@ -2360,6 +2377,89 @@ class SquarePublisher:
                 return self.publish(content, image_url=None)
             logger.error(f"发帖网络请求异常: {e}")
             return False
+
+
+# ---------------------------------------------------------------------------
+# OKX 广场草稿直出通道 (OKXDraftExporter)
+# OKX 官方暂无发帖 API（V5 仅交易/行情/账户）。走 cookie 逆向属违反 ToS 且有封号风险，
+# 故采用合规折中：AI 生成完毕后自动产出"即贴即用"草稿文件，随 Git 同步到仓库，
+# 手机/电脑打开复制粘贴到 OKX App 广场仅 10 秒，照样参与 OKX 星球创作者激励（发文赚 USDT）。
+# 待 OKX 官方开放 API 后，新增一个 BasePublisher 实现即可无缝切换全自动。
+# ---------------------------------------------------------------------------
+class OKXDraftExporter(BasePublisher):
+    name = "okx_draft"
+    DRAFTS_DIR = os.path.join(BASE_DIR, "drafts")
+    KEEP_DRAFTS = 30  # 草稿保留上限，防止仓库膨胀
+
+    def publish(self, content: str, image_url: Optional[str] = None,
+                ensure_tokens: Optional[List[str]] = None, meta: Optional[Dict[str, Any]] = None) -> bool:
+        try:
+            meta = meta or {}
+            now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+            day_dir = os.path.join(self.DRAFTS_DIR, datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+            os.makedirs(day_dir, exist_ok=True)
+            slug = re.sub(r"[^\w-]", "", meta.get("news_id", "draft"))[:24] or "draft"
+            path = os.path.join(day_dir, f"{datetime.now(timezone.utc).strftime('%H%M%S')}_{slug}.md")
+
+            source = meta.get("source", "未知")
+            title = meta.get("title", "")
+            link = meta.get("link", "")
+            tokens = " ".join(f"${t}" for t in (ensure_tokens or []))
+
+            lines = [
+                f"# OKX 广场发帖草稿 · {now_str}",
+                "",
+                f"> 来源: {source} ｜ 标的: {tokens or '—'} ｜ 热度: {meta.get('impact_score', '—')}",
+                f"> 原文: {link or '—'}",
+                "",
+                "## 正文（整段复制 → OKX App 广场发帖）",
+                "",
+                "---",
+                "",
+                content,
+                "",
+                "---",
+                "",
+            ]
+            if image_url:
+                lines += [f"**配图直链**（浏览器打开另存后上传）: {image_url}", ""]
+            lines += [
+                "**发布清单**:",
+                "",
+                "- [ ] 打开 OKX App → 广场 → 发帖",
+                "- [ ] 粘贴上方正文",
+                "- [ ] 下载配图并上传（如有）",
+                "- [ ] 补 1~2 个广场话题标签（OKX 的 $BTC 会自动挂交易组件）",
+                "- [ ] 参与星球创作者激励需在 App 内确认活动页打卡",
+            ]
+
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n".join(lines))
+            self._prune_old_drafts()
+            try:
+                display_path = os.path.relpath(path, BASE_DIR)
+            except ValueError:  # 跨盘符（Windows 临时目录在别的驱动器）
+                display_path = path
+            logger.info(f"📝 OKX 草稿已生成: {display_path}")
+            return True
+        except Exception as e:
+            self.last_error = str(e)
+            logger.warning(f"OKX 草稿导出失败(不影响其他平台): {e}")
+            return False
+
+    def _prune_old_drafts(self):
+        try:
+            files = []
+            for root, _dirs, fnames in os.walk(self.DRAFTS_DIR):
+                for fn in fnames:
+                    if fn.endswith(".md"):
+                        p = os.path.join(root, fn)
+                        files.append((os.path.getmtime(p), p))
+            files.sort(reverse=True)
+            for _mt, p in files[self.KEEP_DRAFTS:]:
+                os.remove(p)
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------------------
@@ -2652,6 +2752,9 @@ def run_healthcheck():
     checks.append(("运行策略", "ℹ", f"日配额={MAX_DAILY_POSTS} | 单币种限流={TOKEN_DAILY_LIMIT} | "
                                   f"时效={MAX_NEWS_AGE_HOURS}h | 去重={DUP_SIMILARITY_THRESHOLD} | "
                                   f"时段={ACTIVE_HOURS_BEIJING or '全天'} | LOG={_LOG_LEVEL}"))
+    plats = " / ".join(PUBLISH_PLATFORMS)
+    okx_hint = "（OKX 官方暂无发帖 API，草稿模式=AI 生成后 10 秒手动粘贴）" if "okx_draft" in PUBLISH_PLATFORMS else ""
+    checks.append(("发布平台", "✔" if PUBLISH_PLATFORMS else "✗", f"{plats} {okx_hint}".strip()))
 
     # 汇总输出
     print()
@@ -2700,6 +2803,7 @@ def _run_main():
     fetcher = NewsFetcher()
     llm_engine = MultiLLMEngine()
     publisher = SquarePublisher(api_key=square_api_key)
+    okx_exporter = OKXDraftExporter()
 
     # 2.5 防刷屏配额：24 小时滚动窗口内已发数量达到上限则本轮直接静默退出
     if not dry_run and MAX_DAILY_POSTS > 0:
@@ -2852,6 +2956,14 @@ def _run_main():
                 success = publisher.publish(post_content, image_url=uploaded_image_url, ensure_tokens=post_tokens)
                 publish_elapsed = time.time() - t_pub_start
                 stage_timings["publish"] += publish_elapsed
+
+                # 副平台分发（草稿直出等）：无论币安成败都执行，手动兜底通道
+                draft_meta = {"news_id": news_id, "title": title, "source": source,
+                              "link": item.get("link", ""), "impact_score": score}
+                if "okx_draft" in PUBLISH_PLATFORMS:
+                    okx_exporter.publish(post_content, image_url=uploaded_image_url,
+                                         ensure_tokens=post_tokens, meta=draft_meta)
+
                 if success:
                     consecutive_publish_failures = 0
                     cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)

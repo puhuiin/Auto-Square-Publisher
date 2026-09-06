@@ -122,8 +122,10 @@ jobs:
           ACTIVE_HOURS_BEIJING: ${{ vars.ACTIVE_HOURS_BEIJING }}
           #   TOKEN_DAILY_LIMIT:       同一代币 24h 内最多发帖篇数 (默认 3, 0 = 不限)
           #   LOG_LEVEL:               日志级别 (默认 INFO；诊断时可设 DEBUG)
+          #   PUBLISH_PLATFORMS:       发布平台组合，逗号分隔 (默认 binance；可加 okx_draft 草稿直出)
           TOKEN_DAILY_LIMIT: ${{ vars.TOKEN_DAILY_LIMIT }}
           LOG_LEVEL: ${{ vars.LOG_LEVEL }}
+          PUBLISH_PLATFORMS: ${{ vars.PUBLISH_PLATFORMS }}
 
           # CI 环境无 localhost，显式关闭 Reasonix 本地网关探测（本地跑时自动启用）
           REASONIX_GW_OFF: "1"
@@ -141,7 +143,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           BRANCH="${{ github.ref_name }}"
 
-          if [ -z "$(git status --porcelain sent_cache.json campaign_intel.json)" ]; then
+          if [ -z "$(git status --porcelain sent_cache.json campaign_intel.json drafts)" ]; then
             echo "状态数据无任何变动，无需提交。"
             exit 0
           fi
@@ -150,6 +152,8 @@ jobs:
           # 1. 把本次运行产生的本地状态先存到沙箱外，防止被远端覆盖
           cp sent_cache.json /tmp/local_sent_cache.json 2>/dev/null || true
           cp campaign_intel.json /tmp/local_intel.json 2>/dev/null || true
+          mkdir -p /tmp/local_drafts
+          [ -d drafts ] && cp -r drafts/. /tmp/local_drafts/ 2>/dev/null || true
 
           for i in 1 2 3 4; do
             # 2. 每次重试都先对齐到远端最新，本地状态始终从 /tmp 快照并回去，永远不会产生 Git 冲突
@@ -160,12 +164,12 @@ jobs:
             python scripts/git_state_merge.py /tmp
 
             # 3. 若并集后与远端完全一致则无需提交（例如并发任务已先一步回写）
-            if git diff --quiet -- sent_cache.json campaign_intel.json; then
+            if git diff --quiet -- sent_cache.json campaign_intel.json drafts; then
               echo "远端已包含全部最新状态，无需重复提交。"
               exit 0
             fi
 
-            git add sent_cache.json campaign_intel.json
+            git add sent_cache.json campaign_intel.json drafts
             git commit -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]"
 
             if git push origin "HEAD:$BRANCH"; then

@@ -1092,6 +1092,61 @@ class TestAiSlopStripping(unittest.TestCase):
         self.assertNotIn("总的来说", s)
 
 
+class TestOKXDraftExporter(unittest.TestCase):
+    """OKX 草稿直出通道"""
+
+    def setUp(self):
+        import tempfile
+        self.tmpdir = tempfile.mkdtemp()
+        self.exp = m.OKXDraftExporter()
+        self.exp.DRAFTS_DIR = self.tmpdir
+        self._orig = m.PUBLISH_PLATFORMS
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+        m.PUBLISH_PLATFORMS = self._orig
+
+    def test_draft_written_with_all_sections(self):
+        ok = self.exp.publish(
+            "比特币放量突破，短线情绪转多。", image_url="https://img.example/a.jpg",
+            ensure_tokens=["BTC"],
+            meta={"news_id": "abc123", "title": "BTC rally", "source": "U.Today",
+                  "link": "https://u.today/x", "impact_score": 29},
+        )
+        self.assertTrue(ok)
+        import glob
+        files = glob.glob(os.path.join(self.tmpdir, "**", "*.md"), recursive=True)
+        self.assertEqual(len(files), 1)
+        with open(files[0], encoding="utf-8") as f:
+            content = f.read()
+        for section in ("比特币放量突破", "https://img.example/a.jpg", "U.Today",
+                        "发布清单", "$BTC", "https://u.today/x"):
+            self.assertIn(section, content)
+
+    def test_draft_without_image(self):
+        ok = self.exp.publish("纯文本草稿内容。", meta={"news_id": "xyz"})
+        self.assertTrue(ok)
+        import glob
+        files = glob.glob(os.path.join(self.tmpdir, "**", "*.md"), recursive=True)
+        with open(files[0], encoding="utf-8") as f:
+            content = f.read()
+        self.assertNotIn("配图直链", content)
+
+    def test_prune_keeps_limit(self):
+        for i in range(m.OKXDraftExporter.KEEP_DRAFTS + 5):
+            self.exp.publish(f"草稿 {i}", meta={"news_id": f"n{i}"})
+        import glob
+        files = glob.glob(os.path.join(self.tmpdir, "**", "*.md"), recursive=True)
+        self.assertEqual(len(files), m.OKXDraftExporter.KEEP_DRAFTS)
+
+    def test_base_publisher_interface(self):
+        self.assertTrue(hasattr(m.SquarePublisher, "publish"))
+        self.assertTrue(issubclass(m.SquarePublisher, m.BasePublisher))
+        self.assertTrue(issubclass(m.OKXDraftExporter, m.BasePublisher))
+        self.assertEqual(m.OKXDraftExporter.name, "okx_draft")
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 
