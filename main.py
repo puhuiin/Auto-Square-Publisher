@@ -2728,9 +2728,13 @@ def run_healthcheck():
 
     checks: List[Tuple[str, str, str]] = []  # (组件, 状态, 详情)
 
-    # ---- 1. 核心密钥配置 ----
+    # ---- 1. 核心密钥配置（仅 binance 平台启用时必需） ----
     sq_key = os.getenv("SQUARE_API_KEY", "").strip()
-    checks.append(("SQUARE_API_KEY", "✔" if sq_key else "✗", f"{'已配置' if sq_key else '未配置，发帖必需'}"))
+    binance_on = "binance" in PUBLISH_PLATFORMS
+    if not binance_on:
+        checks.append(("SQUARE_API_KEY", "⊘", "binance 平台未启用，无需配置"))
+    else:
+        checks.append(("SQUARE_API_KEY", "✔" if sq_key else "✗", f"{'已配置' if sq_key else '未配置，发帖必需'}"))
 
     # ---- 2. LLM 提供商链 ----
     try:
@@ -2830,9 +2834,9 @@ def _run_main():
     logger.info(f"   新闻时效窗口: {MAX_NEWS_AGE_HOURS}h | 去重阈值: {DUP_SIMILARITY_THRESHOLD}")
     logger.info("==================================================")
 
-    # 1. 生产模式必要参数检查
-    if not dry_run and not square_api_key:
-        logger.error("错误: 未配置 SQUARE_API_KEY 环境变量！")
+    # 1. 生产模式必要参数检查（仅 binance 启用时强制要求 Square Key）
+    if not dry_run and "binance" in PUBLISH_PLATFORMS and not square_api_key:
+        logger.error("错误: 未配置 SQUARE_API_KEY 环境变量（binance 平台已启用）！")
         sys.exit(1)
 
     # 2. 初始化核心组件
@@ -2966,17 +2970,20 @@ def _run_main():
             logger.info("生成内容预览:\n" + post_content)
 
             # 多媒体图文装配：下载新闻原生配图或采用情绪仪表盘兜底，并上传至币安官方 S3
+            binance_enabled = "binance" in PUBLISH_PLATFORMS
             uploaded_image_url = None
             raw_img = item.get("image_url")
             if dry_run:
                 logger.info(f"【DRY_RUN】多媒体配图测试: {raw_img or '使用全网情绪图保底'}")
                 uploaded_image_url = raw_img or ImageManager.DEFAULT_FALLBACK_IMAGE
-            else:
-                if square_api_key:
-                    logger.info(f"正在为本篇快讯准备多媒体配图并上传至币安 S3...")
-                    t_img_start = time.time()
-                    uploaded_image_url = ImageManager.prepare_and_upload(square_api_key, raw_img)
-                    stage_timings["image"] += time.time() - t_img_start
+            elif binance_enabled and square_api_key:
+                logger.info(f"正在为本篇快讯准备多媒体配图并上传至币安 S3...")
+                t_img_start = time.time()
+                uploaded_image_url = ImageManager.prepare_and_upload(square_api_key, raw_img)
+                stage_timings["image"] += time.time() - t_img_start
+            elif not binance_enabled and raw_img:
+                # 草稿模式无 S3 上传：直接给新闻原图直链，供手动下载后上传 OKX
+                uploaded_image_url = raw_img
 
             # 发布或模拟
             if dry_run:
@@ -2990,18 +2997,25 @@ def _run_main():
                 })
                 posted_count += 1
             else:
-                t_pub_start = time.time()
-                success = publisher.publish(post_content, image_url=uploaded_image_url, ensure_tokens=post_tokens)
-                publish_elapsed = time.time() - t_pub_start
-                stage_timings["publish"] += publish_elapsed
-
-                # 副平台分发（草稿直出等）：无论币安成败都执行，手动兜底通道
                 draft_meta = {"news_id": news_id, "title": title, "source": source,
                               "link": item.get("link", ""), "impact_score": score}
+                draft_exported = False
+
+                if binance_enabled:
+                    t_pub_start = time.time()
+                    success = publisher.publish(post_content, image_url=uploaded_image_url, ensure_tokens=post_tokens)
+                    publish_elapsed = time.time() - t_pub_start
+                    stage_timings["publish"] += publish_elapsed
+                else:
+                    success = False  # 币安未启用时不打 API，投递语义完全由草稿通道承担
+                    logger.info("币安平台未启用（PUBLISH_PLATFORMS），跳过 Square API 调用。")
+
+                # 副平台分发（草稿直出等）：无论币安成败都执行，手动兜底通道
                 if "okx_draft" in PUBLISH_PLATFORMS:
                     if okx_exporter.publish(post_content, image_url=uploaded_image_url,
                                             ensure_tokens=post_tokens, meta=draft_meta):
                         drafts_count += 1
+                        draft_exported = True
 
                 if success:
                     consecutive_publish_failures = 0
@@ -3015,6 +3029,18 @@ def _run_main():
                     })
                     posted_count += 1
                     Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}\n\n{post_content[:200]}...")
+                elif not binance_enabled and draft_exported:
+                    # 仅草稿模式：草稿导出即完成投递，入缓存防止每 20 分钟重复处理同一新闻
+                    cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
+                    posted_titles_this_run.append(title)
+                    posted_records.append({
+                        "title": title, "source": source,
+                        "provider": "okx_draft", "image": bool(uploaded_image_url),
+                        "age_hours": item.get("age_hours"),
+                        "elapsed_sec": None,
+                    })
+                    posted_count += 1
+                    logger.info(f"📝 草稿模式投递完成: {title}")
                 else:
                     consecutive_publish_failures += 1
                     logger.error(f"发帖失败，本次暂不记录缓存以供下次重试: {title} (发布链路连续失败 {consecutive_publish_failures} 次)")
