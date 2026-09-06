@@ -3710,6 +3710,9 @@ def _run_main():
                             is_error=True,
                         )
                         break
+                    # 没发出去就别装"人工间隔"：底部的 sleep 是成功发帖之间的拟人 pacing，
+                    # 失败 fall-through 下去会白等 3~8s（副平台失败分支/异常分支都有 continue 跳过此处）
+                    continue
         except Exception as e:
             # 单条候选的意外异常（脏数据/上游结构变化/字段缺失）不允许炸掉整轮
             import traceback

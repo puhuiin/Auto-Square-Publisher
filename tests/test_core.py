@@ -2471,6 +2471,20 @@ class TestRejectTelemetry(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual((rows[0]["stage"], rows[0]["provider"]), ("no_provider", "-"))
 
+    def test_numbers_reject_logged_through_summarize(self):
+        # 数字门接线：过质量门但编造精确百分比，必须在 summarize 内被拦并记 numbers 行
+        eng = self._stub_engine()
+        content = ("比特币放量突破关键位，短线情绪转多，单日暴涨12.53%点燃全场。"
+                   "回调就是上车机会，但别追高，等回踩确认支撑再进，仓位控制好。")
+        client = self._fake_client(content=content)
+        item = {"title": "BTC news", "summary": "Bitcoin surged", "source": "U.Today"}
+        with patch.object(eng, "_get_client", return_value=client):
+            self.assertIsNone(eng.summarize(item, None, market_context="", token_hints=["BTC"]))
+        rows = self._rows()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["stage"], "numbers")
+        self.assertIn("12.53", rows[0]["reason"])
+
 
 class TestSummarizeTokenBudget(unittest.TestCase):
     """提炼预算：网关备份通道（-GW-1/-GW-2）同为推理模型，必须同等 1500 预算"""
@@ -2646,6 +2660,19 @@ class TestSquarePublisherSession(unittest.TestCase):
             self.assertTrue(pub.publish(content, ensure_tokens=["BTC"]))
             mock_sess.post.assert_called_once()
 
+    def test_widget_inserted_into_payload(self):
+        # 挂件接线：正文无有效 $ 时，发出载荷里必须有保底 $TOKEN（光测静态函数不够）
+        pub = m.SquarePublisher(api_key="k")
+        fake_resp = MagicMock(status_code=200, text='{"code":"000000"}')
+        fake_resp.json.return_value = {"code": "000000", "data": {"contentId": "c1"}}
+        content = "这是一段超过十五个中文字符的测试内容，情绪转多注意风险。"
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC", "XRP"}):
+            mock_sess.post.return_value = fake_resp
+            self.assertTrue(pub.publish(content, ensure_tokens=["XRP"]))
+            payload = mock_sess.post.call_args.kwargs["json"]
+            self.assertIn("$XRP", payload["bodyTextOnly"])
+
 
 class TestDryRunSemantics(unittest.TestCase):
     """DRY_RUN 零副作用红线（设计红线第 2 条）：试运行不得写缓存/导草稿/记遥测。
@@ -2697,6 +2724,8 @@ class TestDryRunSemantics(unittest.TestCase):
         _start(patch.object(m.MarketDataProvider, "get_fear_and_greed", return_value="50/100"))
         _start(patch.object(m.MarketDataProvider, "get_token_market_data", return_value=""))
         _start(patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}))
+        # 配图上传走真实网络（超时重试可达十几秒）：此处只测投递语义，图片管线另有单测
+        _start(patch.object(m.ImageManager, "prepare_and_upload", return_value=None))
         fetcher = MagicMock()
         fetcher.fetch_candidates.return_value = [self._candidate()]
         fetcher.stats = {"fetched": 1, "stale": 0, "cached": 0, "near_dup": 0,
@@ -2762,6 +2791,26 @@ class TestDryRunSemantics(unittest.TestCase):
                 rows = [json.loads(l) for l in f if l.strip()]
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0]["outcome"], "binance_published")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_failed_publish_records_park_entry(self):
+        # 失败记次接线：币安发布失败必须调用停放记录（否则 R47 的跨轮止损无从谈起）
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        pub = MagicMock()
+        pub.publish.return_value = False
+        pub.last_error = "HTTP 500"
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            with patch.object(m.time, "sleep") as mock_sleep:
+                m._run_main()
+            pub._publish_record.assert_called_once_with("news-1", ok=False)
+            # 失败路径不得触发拟人睡眠（成功发帖之间才需要 pacing）
+            mock_sleep.assert_not_called()
         finally:
             self._teardown(patches, tmpdir)
 
