@@ -150,9 +150,12 @@ jobs:
 
           echo "检测到状态变更，进入 [快照 -> 同步远端 -> 并集合并 -> 重试推送] 安全流程..."
           # 1. 把本次运行产生的本地状态先存到沙箱外，防止被远端覆盖
-          cp sent_cache.json /tmp/local_sent_cache.json 2>/dev/null || true
-          cp campaign_intel.json /tmp/local_intel.json 2>/dev/null || true
-          cp metrics.jsonl /tmp/local_metrics.jsonl 2>/dev/null || true
+          # 快照文件名必须与 scripts/git_state_merge.py 的约定一致
+          # （SNAP=snapshot_dir/CACHE|INTEL|METRICS_FILE，草稿为 snapshot_dir/local_drafts/）：
+          # 曾因两边命名错位导致合并读空快照、本地记录静默丢失！
+          cp sent_cache.json /tmp/sent_cache.json 2>/dev/null || true
+          cp campaign_intel.json /tmp/campaign_intel.json 2>/dev/null || true
+          cp metrics.jsonl /tmp/metrics.jsonl 2>/dev/null || true
           mkdir -p /tmp/local_drafts
           [ -d drafts ] && cp -r drafts/. /tmp/local_drafts/ 2>/dev/null || true
 

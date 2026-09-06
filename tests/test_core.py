@@ -902,6 +902,50 @@ class TestGitStateMerge(unittest.TestCase):
         merged = self.merger.merge_state(a, b)
         self.assertEqual(merged, {"x": {"y": 1, "z": 2}})
 
+    def test_merge_drafts_adds_new_and_skips_dup_slug(self):
+        import shutil
+        snap_day = os.path.join(self.dir, "snap", "local_drafts", "2026-09-06")
+        dest_day = os.path.join(self.dir, "drafts", "2026-09-06")
+        os.makedirs(snap_day)
+        os.makedirs(dest_day)
+        # 远端已恢复的同故事草稿（时间戳不同但 news_id 后缀相同）
+        with open(os.path.join(dest_day, "101010_dup-news-001.md"), "w", encoding="utf-8") as f:
+            f.write("remote version")
+        # 快照：同故事另一时间戳版本 + 全新故事 + 非 md 杂物
+        with open(os.path.join(snap_day, "101500_dup-news-001.md"), "w", encoding="utf-8") as f:
+            f.write("dup story")
+        with open(os.path.join(snap_day, "101600_brand-new-story.md"), "w", encoding="utf-8") as f:
+            f.write("new story")
+        with open(os.path.join(snap_day, "notes.txt"), "w", encoding="utf-8") as f:
+            f.write("ignore me")
+        snap_root = os.path.join(self.dir, "snap")
+        added = self.merger.merge_drafts(snap_root, os.path.join(self.dir, "drafts"))
+        self.assertEqual(added, 1, "仅全新故事应被并回")
+        self.assertTrue(os.path.exists(os.path.join(dest_day, "101600_brand-new-story.md")))
+        with open(os.path.join(dest_day, "101010_dup-news-001.md"), encoding="utf-8") as f:
+            self.assertEqual(f.read(), "remote version", "远端版不得被快照版覆盖")
+
+    def test_merge_drafts_missing_snapshot_is_noop(self):
+        self.assertEqual(self.merger.merge_drafts(os.path.join(self.dir, "nope"), self.dir), 0)
+
+    def test_workflow_snapshot_contract(self):
+        # 回归锁：workflow 的 cp 落点必须与合并脚本的读取约定逐字一致。
+        # 2026-09-05 抽取脚本时两边命名错位（local_* vs 同名），导致每轮本地状态
+        # 被 reset --hard 后静默丢弃、连续多日零 chore 提交，此测试防止重演。
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        with open(os.path.join(repo_root, ".github", "workflows", "auto_post.yml"), encoding="utf-8") as f:
+            wf = f.read()
+        self.assertIn("cp sent_cache.json /tmp/sent_cache.json", wf)
+        self.assertIn("cp campaign_intel.json /tmp/campaign_intel.json", wf)
+        self.assertIn("cp metrics.jsonl /tmp/metrics.jsonl", wf)
+        self.assertIn("cp -r drafts/. /tmp/local_drafts/", wf)
+        for stale in ("local_sent_cache", "local_intel", "local_metrics"):
+            self.assertNotIn(stale, wf, f"过期快照名 {stale} 不得重现")
+        self.assertEqual(self.merger.DRAFTS_SNAPSHOT_SUBDIR, "local_drafts")
+        self.assertEqual(self.merger.CACHE_FILE, "sent_cache.json")
+        self.assertEqual(self.merger.INTEL_FILE, "campaign_intel.json")
+        self.assertEqual(self.merger.METRICS_FILE, "metrics.jsonl")
+
 
 class TestThreadSafety(unittest.TestCase):
     """并发场景下 intel_state_update 不应丢失更新"""

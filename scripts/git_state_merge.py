@@ -12,6 +12,15 @@ Git 状态同步合并器（GPIO: 用于 GitHub Actions workflow 的 push 前预
   - sent_cache.json: 按 id 并集，按 sent_at 排序，截断到最新 500 条
   - campaign_intel.json: 主体键保留 last_updated 较新的一份；"_" 前缀的运行时状态键
     (断路器/源停放/报警节流/兜底图缓存) 递归深合并，标量按时间戳较大者优先
+  - metrics.jsonl: 行级去重并集
+  - drafts/: 快照中的新草稿按 news_id 后缀去重并回（reset --hard 后远端版已恢复）
+
+快照契约（与 .github/workflows/auto_post.yml 的 cp 必须逐字一致，
+两边曾错位导致合并读空快照、本地记录静默丢失）：
+  <snapshot_dir>/sent_cache.json
+  <snapshot_dir>/campaign_intel.json
+  <snapshot_dir>/metrics.jsonl
+  <snapshot_dir>/local_drafts/   （drafts/ 下相对结构原样拷贝，含日期子目录）
 
 用法（在仓库根目录）：
   python scripts/git_state_merge.py [本地快照目录]   # 默认 /tmp
@@ -124,6 +133,49 @@ def merge_metrics(local_snapshot_path: str, remote_path: str) -> int:
     return len(lines)
 
 
+DRAFTS_SNAPSHOT_SUBDIR = "local_drafts"
+DRAFTS_DIR = "drafts"
+
+
+def merge_drafts(snapshot_dir: str, drafts_dir: str = DRAFTS_DIR) -> int:
+    """把快照中的新草稿并回 drafts/，返回新增份数。
+
+    reset --hard 后远端版草稿已恢复，为防同故事收两份，按文件名 news_id 后缀
+    （HHMMSS_<slug>.md 取 _ 后部分，与 OKXDraftExporter._draft_exists 同规则）去重。
+    快照保留相对子目录结构（日期文件夹），按原结构归位。
+    """
+    snap = Path(snapshot_dir) / DRAFTS_SNAPSHOT_SUBDIR
+    dest = Path(drafts_dir)
+    if not snap.is_dir():
+        return 0
+
+    def _slug(name: str) -> str:
+        return name.rsplit("_", 1)[-1] if "_" in name else name
+
+    existing_slugs = set()
+    if dest.is_dir():
+        for p in dest.rglob("*.md"):
+            existing_slugs.add(_slug(p.name))
+
+    added = 0
+    for src in sorted(snap.rglob("*.md")):
+        if _slug(src.name) in existing_slugs:
+            continue
+        try:
+            rel = src.relative_to(snap)
+        except ValueError:
+            rel = Path(src.name)
+        target = dest / rel
+        if target.exists():
+            existing_slugs.add(_slug(src.name))
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(src.read_bytes())
+        existing_slugs.add(_slug(src.name))
+        added += 1
+    return added
+
+
 def main():
     snapshot_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/tmp")
     n = merge_sent_cache(snapshot_dir / CACHE_FILE, CACHE_FILE)
@@ -132,6 +184,8 @@ def main():
         print("campaign_intel.json 合并完成 (主体较新 + 状态键深合并)")
     m = merge_metrics(snapshot_dir / METRICS_FILE, METRICS_FILE)
     print(f"metrics.jsonl 合并完成: {m} 行")
+    d = merge_drafts(snapshot_dir, DRAFTS_DIR)
+    print(f"drafts/ 合并完成: 新增 {d} 份草稿")
 
 
 if __name__ == "__main__":
