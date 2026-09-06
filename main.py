@@ -2461,7 +2461,12 @@ class SquarePublisher(BasePublisher):
         """该故事是否处于发布退避停放期（仅币安失败记次，副平台-only 模式不用）"""
         if not news_id:
             return False
-        info = self._publish_health().get(news_id)
+        return self._parked_with(self._publish_health(), news_id)
+
+    @staticmethod
+    def _parked_with(state: dict, news_id: str) -> bool:
+        """快照版停放判定（计数器一次读盘后复用，避免逐故事重复读文件）"""
+        info = (state or {}).get(news_id)
         if not info:
             return False
         try:
@@ -2469,6 +2474,14 @@ class SquarePublisher(BasePublisher):
             return datetime.now(until.tzinfo or timezone.utc) < until
         except Exception:
             return False
+
+    def _publish_parked_count(self) -> int:
+        """当前仍在停放期内的故事数（健康自检展示用）"""
+        try:
+            state = self._publish_health()
+            return sum(1 for nid in state if self._parked_with(state, nid))
+        except Exception:
+            return 0
 
     def _publish_record(self, news_id: str, ok: bool) -> None:
         """记录一次币安投递结果：失败记次（达阈值停放），成功清零且无记录时不写盘"""
@@ -3344,6 +3357,15 @@ def run_healthcheck():
     if not parked and not failed:
         parts.append("全部在线")
     checks.append(("RSS 源健康", "⚠" if parked else ("ℹ" if failed else "✔"), " / ".join(parts)))
+
+    # ---- 4.5 发布退避与风控否认（故事停发时排障可见，否则"为什么不发"无处可查）----
+    n_parked = SquarePublisher(api_key="")._publish_parked_count()
+    blocked_state = intel_state_get("_risk_blocked", {}) or {}
+    n_blocked = len(blocked_state) if isinstance(blocked_state, dict) else 0
+    if n_parked or n_blocked:
+        checks.append(("发布退避", "ℹ", f"发布退避停放 {n_parked} 个故事 / 风控否认 {n_blocked} 个（停放到期自动解禁，否认永久有效）"))
+    else:
+        checks.append(("发布退避", "ℹ", "无停放故事、无风控否认"))
 
     # ---- 5. 币安现货 API ----
     syms = SymbolValidator.get_valid_symbols()

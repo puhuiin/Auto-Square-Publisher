@@ -1102,6 +1102,45 @@ class TestHealthcheck(unittest.TestCase):
             if saved is not None:
                 os.environ["SQUARE_API_KEY"] = saved
 
+    def test_park_and_denylist_visible(self):
+        # 发布退避停放与风控否认必须在自检报告里可见，否则"为什么不发"无处可查
+        import tempfile
+        intel_tmp = tempfile.mktemp(suffix=".json")
+        future = (datetime.now(timezone.utc) + timedelta(hours=6)).isoformat()
+        past = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+        import json
+        with open(intel_tmp, "w", encoding="utf-8") as f:
+            json.dump({"_publish_park": {"s1": {"fails": 2, "parked_until": future,
+                                                "last_fail": future},
+                                         "s0": {"fails": 2, "parked_until": past,
+                                                "last_fail": past}},
+                       "_risk_blocked": {"n1": future, "n2": future}}, f)
+        orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = intel_tmp
+        os.environ["SQUARE_API_KEY"] = "test"
+        os.environ["LLM_API_KEY"] = "test-llm-key"
+        fake_syms = {f"T{i}" for i in range(200)}
+        try:
+            with patch.object(m.SymbolValidator, "get_valid_symbols", return_value=fake_syms), \
+                 patch.object(m.MarketDataProvider, "get_fear_and_greed", return_value="50/100"), \
+                 patch.object(m, "probe_reasonix_gateway", return_value=None), \
+                 patch.object(m.NewsFetcher, "_feed_health", return_value={}), \
+                 patch.object(m, "_safe_print") as mock_print:
+                try:
+                    m.run_healthcheck()
+                except SystemExit as e:
+                    self.assertEqual(e.code, 0, "ℹ️ 行不得影响退出码")
+                out = "\n".join(str(c.args[0]) for c in mock_print.call_args_list if c.args)
+                self.assertIn("发布退避", out)
+                self.assertIn("停放 1 个故事", out)
+                self.assertIn("否认 2 个", out)
+        finally:
+            m.CAMPAIGN_INTEL_FILE = orig_intel
+            os.environ.pop("SQUARE_API_KEY", None)
+            os.environ.pop("LLM_API_KEY", None)
+            if os.path.exists(intel_tmp):
+                os.remove(intel_tmp)
+
 
 class TestReasonixGateway(unittest.TestCase):
     """Reasonix 本地免费模型网关集成"""
