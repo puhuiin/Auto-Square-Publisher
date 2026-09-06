@@ -2404,5 +2404,121 @@ class TestSquarePublisherSession(unittest.TestCase):
             mock_sess.post.assert_called_once()
 
 
+class TestDryRunSemantics(unittest.TestCase):
+    """DRY_RUN 零副作用红线（设计红线第 2 条）：试运行不得写缓存/导草稿/记遥测。
+   此前全套件无任何测试触碰 _run_main，该红线全靠自觉——一旦有人把 record_sent
+    挪到 dry 判断之前， suite 照样全绿。用全 mock 集成测试把两条路都锁死。"""
+
+    def _candidate(self):
+        return {"id": "news-1", "title": "BTC breaks past key level",
+                "summary": "spot flows stay strong", "source": "U.Today",
+                "link": "https://x.example/1", "impact_score": 20,
+                "age_hours": 1.0, "image_url": None, "lang": "en"}
+
+    def _iso_files(self):
+        import tempfile
+        tmpdir = tempfile.mkdtemp()
+        return tmpdir, {
+            "cache": os.path.join(tmpdir, "sent_cache.json"),
+            "intel": os.path.join(tmpdir, "campaign_intel.json"),
+            "metrics": os.path.join(tmpdir, "metrics.jsonl"),
+            "drafts": os.path.join(tmpdir, "drafts"),
+        }
+
+    def _base_patches(self, tmpdir, paths, dry):
+        for k in ("SERVERCHAN_KEY", "PUSHPLUS_TOKEN", "BARK_KEY",
+                  "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "WEBHOOK_URL",
+                  "GITHUB_STEP_SUMMARY"):
+            os.environ.pop(k, None)
+        os.environ["MAX_POSTS_PER_RUN"] = "1"
+        if dry:
+            os.environ["DRY_RUN"] = "true"
+            os.environ.pop("SQUARE_API_KEY", None)
+        else:
+            os.environ["DRY_RUN"] = "false"
+            os.environ["SQUARE_API_KEY"] = "test"
+        started = []
+
+        def _start(patcher):
+            patcher.start()
+            started.append(patcher)
+            return patcher
+
+        _start(patch.object(m, "CACHE_FILE", paths["cache"]))
+        _start(patch.object(m, "CAMPAIGN_INTEL_FILE", paths["intel"]))
+        _start(patch.object(m, "METRICS_FILE", paths["metrics"]))
+        _start(patch.object(m, "ACTIVE_HOURS_BEIJING", ""))
+        _start(patch.object(m, "PUBLISH_PLATFORMS", ["binance"]))
+        _start(patch.object(m.CampaignScanner, "get_campaign_intel",
+                            return_value={"active_tags": [], "incentivized_tokens": []}))
+        _start(patch.object(m.MarketDataProvider, "get_fear_and_greed", return_value="50/100"))
+        _start(patch.object(m.MarketDataProvider, "get_token_market_data", return_value=""))
+        _start(patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}))
+        fetcher = MagicMock()
+        fetcher.fetch_candidates.return_value = [self._candidate()]
+        fetcher.stats = {"fetched": 1, "stale": 0, "cached": 0, "near_dup": 0,
+                         "kept": 1, "feeds_ok": 9, "feeds_failed": [],
+                         "feeds_parked": [], "per_feed": {}}
+        _start(patch.object(m, "NewsFetcher", return_value=fetcher))
+        # 以下断言绑在 mock 类的属性 mock 上（patch 已启动，此时 m.NewsFetcher 即 mock）
+        m.NewsFetcher._find_near_duplicate.return_value = None
+        m.NewsFetcher.extract_tokens.return_value = ["BTC"]
+        engine = MagicMock()
+        engine.summarize.return_value = {
+            "content": "BTC 放量突破关键位，短线情绪转多，注意回踩确认再进。",
+            "tokens": ["BTC"], "provider": "stub"}
+        _start(patch.object(m, "MultiLLMEngine", return_value=engine))
+        return started
+
+    def _teardown(self, patches, tmpdir):
+        for p in patches:
+            p.stop()
+        for k in ("MAX_POSTS_PER_RUN", "DRY_RUN", "SQUARE_API_KEY"):
+            os.environ.pop(k, None)
+        import shutil
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def _draft_files(self, drafts_dir):
+        out = []
+        for root, _d, fnames in os.walk(drafts_dir):
+            out += [f for f in fnames if f.endswith(".md")]
+        return out
+
+    def test_dry_run_writes_nothing(self):
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True)
+        try:
+            # DRY_RUN 标记日志证明流程真正走到了试运行分支（否则文件断言是空转通过）
+            with self.assertLogs("SquarePosterUltimate", level="INFO") as logs:
+                m._run_main()
+            self.assertTrue(any("DRY_RUN" in o for o in logs.output), "必须真正走到试运行分支")
+            self.assertFalse(os.path.exists(paths["cache"]), "DRY 不得写去重缓存")
+            self.assertFalse(os.path.exists(paths["metrics"]), "DRY 不得记遥测")
+            self.assertEqual(self._draft_files(paths["drafts"]), [], "DRY 不得导草稿")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_production_run_records_cache_and_metrics(self):
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        pub = MagicMock()
+        pub.publish.return_value = True
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            m._run_main()
+            import json
+            with open(paths["cache"], encoding="utf-8") as f:
+                records = json.load(f)
+            self.assertEqual([r["id"] for r in records], ["news-1"])
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0]["outcome"], "binance_published")
+        finally:
+            self._teardown(patches, tmpdir)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
