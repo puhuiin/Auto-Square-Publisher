@@ -1025,6 +1025,96 @@ class TestGitStateMerge(unittest.TestCase):
         self.assertIn("timeout-minutes: 30", wf)
 
 
+def _load_validator():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "validate_workflows",
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                      "scripts", "validate_workflows.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _require_bash(testcase):
+    import shutil
+    if shutil.which("bash") is None:
+        testcase.skipTest("本机无 bash，跳过内嵌脚本检查测试")
+
+
+def _require_yaml(testcase):
+    try:
+        import yaml  # noqa: F401
+    except ImportError:
+        testcase.skipTest("未安装 pyyaml（仅 CI 校验需要），跳过")
+
+
+class TestValidateWorkflows(unittest.TestCase):
+    """CI workflow 自检脚本：掩码逻辑纯单测，bash/yaml 相关按环境降级跳过"""
+
+    def test_mask_expressions(self):
+        v = _load_validator()
+        out = v.mask_expressions('BRANCH="${{ github.ref_name }}"\necho "${{ secrets.X }}"')
+        self.assertNotIn("${{", out)
+        self.assertEqual(out.count(v.GHA_PLACEHOLDER), 2)
+        self.assertIn('BRANCH="__GHA_EXPR__"', out)
+
+    def test_mask_leaves_plain_shell_untouched(self):
+        v = _load_validator()
+        code = 'for i in 1 2 3; do\n  echo "$i"\ndone\n'
+        self.assertEqual(v.mask_expressions(code), code)
+
+    def test_valid_bash_passes(self):
+        _require_bash(self)
+        v = _load_validator()
+        self.assertEqual(v.bash_check('echo hello\nexit 0\n'), "")
+
+    def test_broken_bash_detected(self):
+        _require_bash(self)
+        v = _load_validator()
+        err = v.bash_check('if [ -z "$x" ]; then\necho oops\n')
+        self.assertTrue(err, "缺 fi 的脚本必须被 bash -n 揪出")
+
+    def test_gha_expression_block_passes_after_mask(self):
+        # 核心坑位：run 块里遍地是 ${{ }}，掩码后 bash -n 必须通过
+        _require_bash(self)
+        v = _load_validator()
+        masked = v.mask_expressions('BRANCH="${{ github.ref_name }}"\n'
+                                    'if [ -z "$BRANCH" ]; then\n  exit 0\nfi\n')
+        self.assertEqual(v.bash_check(masked), "")
+
+    def test_broken_yaml_detected(self):
+        _require_yaml(self)
+        import tempfile
+        v = _load_validator()
+        with tempfile.NamedTemporaryFile("w", suffix=".yml", delete=False, encoding="utf-8") as f:
+            f.write("jobs:\n  test:\n   steps: [unclosed\n")
+            path = f.name
+        try:
+            self.assertTrue(v.check_file(path), "非法 YAML 必须报错")
+        finally:
+            os.unlink(path)
+
+    def test_iter_run_blocks_extracts(self):
+        _require_yaml(self)
+        import tempfile
+        v = _load_validator()
+        doc = ("name: demo\njobs:\n  j:\n    runs-on: ubuntu-latest\n    steps:\n"
+               "      - name: hi\n        run: |\n          echo \"${{ github.ref }}\"\n"
+               "      - uses: actions/checkout@v4\n")
+        with tempfile.NamedTemporaryFile("w", suffix=".yml", delete=False, encoding="utf-8") as f:
+            f.write(doc)
+            path = f.name
+        try:
+            blocks = list(v.iter_run_blocks(path))
+            self.assertEqual(len(blocks), 1, "只有 run: 块被提取，uses: 步骤跳过")
+            job_id, idx, name, script = blocks[0]
+            self.assertEqual((job_id, name), ("j", "hi"))
+            self.assertNotIn("${{", script)
+        finally:
+            os.unlink(path)
+
+
 class TestThreadSafety(unittest.TestCase):
     """并发场景下 intel_state_update 不应丢失更新"""
 

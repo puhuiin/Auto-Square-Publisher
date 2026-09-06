@@ -34,7 +34,14 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: 语法编译检查
-        run: python -m py_compile main.py tests/test_core.py scripts/git_state_merge.py
+        run: python -m py_compile main.py tests/test_core.py scripts/git_state_merge.py scripts/validate_workflows.py
+
+      - name: Workflow YAML 与内嵌 Bash 语法校验
+        # workflow 文件变更会触发本 CI，但单测覆盖不到它们：YAML 手滑或 run 块少个 fi
+        # 以前要等定时任务运行时才爆炸。在此提前拦截（pyyaml 仅校验用，不进 prod 依赖）。
+        run: |
+          pip install -q "pyyaml>=6,<7"
+          python scripts/validate_workflows.py
 
       - name: 运行离线回归测试套件
         run: python tests/test_core.py
