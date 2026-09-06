@@ -2841,6 +2841,7 @@ def run_healthcheck():
         checks.append(("SQUARE_API_KEY", "✔" if sq_key else "✗", f"{'已配置' if sq_key else '未配置，发帖必需'}"))
 
     # ---- 2. LLM 提供商链 ----
+    eng = None
     try:
         eng = MultiLLMEngine()
         if eng.providers:
@@ -2853,6 +2854,43 @@ def run_healthcheck():
             checks.append(("LLM 提供商链", "✗", "无可用提供商，AI 提炼无法工作"))
     except Exception as e:
         checks.append(("LLM 提供商链", "✗", f"构建异常: {e}"))
+
+    # ---- 2.5 状态文件完整性 ----
+    for label, path in (("sent_cache.json", CACHE_FILE), ("campaign_intel.json", CAMPAIGN_INTEL_FILE)):
+        if not os.path.exists(path):
+            checks.append((f"状态文件 {label}", "ℹ", "尚不存在（首次运行时创建）"))
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                json.load(f)
+            checks.append((f"状态文件 {label}", "✔", "可正常解析"))
+        except Exception as e:
+            checks.append((f"状态文件 {label}", "✗", f"JSON 损坏: {e}（可删除该文件让系统重建）"))
+
+    # ---- 2.6 LLM 实弹测试（仅 --llm-live，消耗少量 token）----
+    if "--llm-live" in sys.argv and eng is not None and eng.providers:
+        live_results = []
+        any_live_ok = False
+        for p in eng._ordered_providers():
+            try:
+                client = eng._get_client(p)
+                # 推理渠道思考链吃预算，与 summarize 同规则
+                budget = 1500 if p.name.startswith("Reasonix-GW") else 50
+                resp = client.chat.completions.create(
+                    model=p.model,
+                    messages=[{"role": "user", "content": "收到请只回复两个字: 正常"}],
+                    max_tokens=budget,
+                )
+                text = (resp.choices[0].message.content or "").strip()
+                if text:
+                    live_results.append(f"{p.name}✔")
+                    any_live_ok = True
+                else:
+                    live_results.append(f"{p.name}空响应")
+            except Exception as e:
+                live_results.append(f"{p.name}✗({str(e)[:40]})")
+        checks.append(("LLM 实弹测试", "✔" if any_live_ok else "✗",
+                       " ".join(live_results) + ("（已通过实弹验证）" if any_live_ok else "（全部不可用！）")))
 
     # ---- 3. Reasonix 网关（复用 MultiLLMEngine 已探测的链路，避免双探测） ----
     gw_from_engine = next((p for p in eng.providers if p.name == "Reasonix-GW"), None)
