@@ -62,8 +62,9 @@
 - 📢 **可选消息通知**：支持绑定 Telegram Bot 或 Webhook（钉钉/飞书/企微/Discord）实时推送发帖结果。
 - 🌍 **多平台分发**：`PUBLISH_PLATFORMS` 变量组合启用（默认 `binance`）：
   - `binance` — 币安广场官方 OpenAPI 全自动发帖
-  - `okx_draft` — **OKX 广场草稿直出**：OKX 官方暂无发帖 API（V5 仅交易/行情），逆向 cookie 属违反 ToS 有封号风险故不做。折中方案：每篇 AI 生成内容自动落一份"即贴即用"草稿（正文+配图直链+发布清单）到 `drafts/` 目录随 Git 同步，手机打开复制粘贴到 OKX App 广场约 10 秒，可配合 [OKX 星球创作者激励](https://www.okx.com/zh-hans/campaigns/orbit-creator-monetization)（发文赚 USDT）。保留最近 30 份自动清理。
-  - 架构上所有平台实现统一的 `BasePublisher` 接口，OKX 未来开放 API 时新增一个类即可无缝全自动。
+  - `telegram` — **Telegram 频道镜像**（全自动）：Bot 拉进频道做管理员，设 `TELEGRAM_MIRROR_CHANNEL_ID`（如 `@mychannel`）即可；带图走 sendPhoto，图拉取失败自动降级纯文本。加密社区原生分发渠道，引流利器
+  - `okx_draft` — **OKX 广场草稿直出**：OKX 官方暂无发帖 API（V5 仅交易/行情），逆向 cookie 属违反 ToS 有封号风险故不做。折中方案：每篇 AI 生成内容自动落一份"即贴即用"草稿（正文+配图直链+发布清单）到 `drafts/` 目录随 Git 同步并推送提醒，手机打开复制粘贴到 OKX App 广场约 10 秒，可配合 [OKX 星球创作者激励](https://www.okx.com/zh-hans/campaigns/orbit-creator-monetization)（发文赚 USDT）。保留最近 30 份自动清理
+  - 仅副平台模式（如只开 `okx_draft` 或 `telegram`）**无需币安 Key**，任一平台完成投递即入缓存；所有平台实现统一 `BasePublisher` 接口，新平台接入只需一个类
   - **报警 12h 节流**：同一标题的错误报警 12 小时内只推送一次，状态随 Git 同步持久化，LLM 池长期失效也不再被消息轰炸。
   - **错误精细化诊断**：发布失败自动翻译成可操作的排障指引（401/403 → 请重新生成 Key、20002/20022 → 内容被风控拦截、220094 → Hashtag 超限），无需翻日志。
   - 未配置任何渠道时通知链路完全静默短路，不写任何状态文件。

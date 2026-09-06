@@ -2492,6 +2492,62 @@ class OKXDraftExporter(BasePublisher):
 
 
 # ---------------------------------------------------------------------------
+# Telegram 频道镜像通道 (TelegramChannelPublisher)
+# 唯一免费且官方 API 全自动的第二分发平台：Bot 拉进频道做管理员即可。
+# 带图走 sendPhoto（caption 上限 1024，正文≤900 安全），失败自动降级 sendMessage 纯文本。
+# ---------------------------------------------------------------------------
+class TelegramChannelPublisher(BasePublisher):
+    name = "telegram"
+
+    def publish(self, content: str, image_url: Optional[str] = None,
+                ensure_tokens: Optional[List[str]] = None, meta: Optional[Dict[str, Any]] = None) -> bool:
+        token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+        # 频道 ID 独立于报警用的 TELEGRAM_CHAT_ID；未单设时回退复用
+        channel = os.getenv("TELEGRAM_MIRROR_CHANNEL_ID", "").strip() or os.getenv("TELEGRAM_CHAT_ID", "").strip()
+        if not token or not channel:
+            self.last_error = "缺少 TELEGRAM_BOT_TOKEN 或 TELEGRAM_MIRROR_CHANNEL_ID"
+            logger.warning("Telegram 镜像通道未配置凭证，跳过。")
+            return False
+
+        api_base = f"https://api.telegram.org/bot{token}"
+        # caption 上限 1024，正文清洗后 ≤900，安全
+        if len(content) > 1020:
+            content = content[:1020].rsplit("\n", 1)[0] + "…"
+
+        try:
+            if image_url:
+                r = http_post(f"{api_base}/sendPhoto",
+                              json={"chat_id": channel, "photo": image_url, "caption": content},
+                              timeout=15, retries=1)
+                if r is not None and r.status_code == 200:
+                    try:
+                        if r.json().get("ok"):
+                            return True
+                    except Exception:
+                        pass
+                # Telegram 服务器拉不到图（403/防盗链）→ 降级纯文本
+                logger.info("sendPhoto 失败，降级为纯文本 sendMessage。")
+
+            r = http_post(f"{api_base}/sendMessage",
+                          json={"chat_id": channel, "text": content,
+                                "disable_web_page_preview": bool(image_url)},
+                          timeout=15, retries=1)
+            if r is not None and r.status_code == 200:
+                try:
+                    if r.json().get("ok"):
+                        return True
+                except Exception:
+                    pass
+            self.last_error = f"Telegram API 异常: {'网络错误' if r is None else r.text[:150]}"
+            logger.warning(f"Telegram 镜像发布失败: {self.last_error}")
+            return False
+        except Exception as e:
+            self.last_error = str(e)
+            logger.warning(f"Telegram 镜像发布异常: {e}")
+            return False
+
+
+# ---------------------------------------------------------------------------
 # 模块八：多渠道通知与异常报警系统 (Notifier)
 # ---------------------------------------------------------------------------
 class Notifier:
@@ -2790,10 +2846,14 @@ def run_healthcheck():
                                   f"时段={ACTIVE_HOURS_BEIJING or '全天'} | LOG={_LOG_LEVEL}"))
     plats = " / ".join(PUBLISH_PLATFORMS)
     okx_hint = "（OKX 官方暂无发帖 API，草稿模式=AI 生成后 10 秒手动粘贴）" if "okx_draft" in PUBLISH_PLATFORMS else ""
-    known_platforms = {"binance", "okx_draft"}
+    known_platforms = {"binance", "okx_draft", "telegram"}
     unknown = [p for p in PUBLISH_PLATFORMS if p not in known_platforms]
     if unknown:
-        checks.append(("发布平台", "⚠", f"存在未知平台名（将被忽略）: {unknown}；有效值 binance/okx_draft"))
+        checks.append(("发布平台", "⚠", f"存在未知平台名（将被忽略）: {unknown}；有效值 binance/okx_draft/telegram"))
+    elif "telegram" in PUBLISH_PLATFORMS and not (
+            os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+            and (os.getenv("TELEGRAM_MIRROR_CHANNEL_ID", "").strip() or os.getenv("TELEGRAM_CHAT_ID", "").strip())):
+        checks.append(("发布平台", "⚠", f"{plats} — telegram 已启用但缺 TELEGRAM_BOT_TOKEN / TELEGRAM_MIRROR_CHANNEL_ID"))
     else:
         checks.append(("发布平台", "✔" if PUBLISH_PLATFORMS else "✗", f"{plats} {okx_hint}".strip()))
 
@@ -2845,6 +2905,7 @@ def _run_main():
     llm_engine = MultiLLMEngine()
     publisher = SquarePublisher(api_key=square_api_key)
     okx_exporter = OKXDraftExporter()
+    telegram_mirror = TelegramChannelPublisher()
 
     # 2.5 防刷屏配额：24 小时滚动窗口内已发数量达到上限则本轮直接静默退出
     if not dry_run and MAX_DAILY_POSTS > 0:
@@ -3010,12 +3071,18 @@ def _run_main():
                     success = False  # 币安未启用时不打 API，投递语义完全由草稿通道承担
                     logger.info("币安平台未启用（PUBLISH_PLATFORMS），跳过 Square API 调用。")
 
-                # 副平台分发（草稿直出等）：无论币安成败都执行，手动兜底通道
+                # 副平台分发：无论币安成败都执行
                 if "okx_draft" in PUBLISH_PLATFORMS:
                     if okx_exporter.publish(post_content, image_url=uploaded_image_url,
                                             ensure_tokens=post_tokens, meta=draft_meta):
                         drafts_count += 1
                         draft_exported = True
+
+                telegram_exported = False
+                if "telegram" in PUBLISH_PLATFORMS:
+                    telegram_exported = telegram_mirror.publish(
+                        post_content, image_url=uploaded_image_url,
+                        ensure_tokens=post_tokens, meta=draft_meta)
 
                 if success:
                     consecutive_publish_failures = 0
@@ -3029,18 +3096,21 @@ def _run_main():
                     })
                     posted_count += 1
                     Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}\n\n{post_content[:200]}...")
-                elif not binance_enabled and draft_exported:
-                    # 仅草稿模式：草稿导出即完成投递，入缓存防止每 20 分钟重复处理同一新闻
+                elif not binance_enabled and (draft_exported or telegram_exported):
+                    # 仅副平台模式：任一平台完成投递即入缓存，防止每 20 分钟重复处理同一新闻
+                    delivered_by = "okx_draft" if draft_exported else "telegram"
+                    if draft_exported and telegram_exported:
+                        delivered_by = "okx_draft+telegram"
                     cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
                     posted_titles_this_run.append(title)
                     posted_records.append({
                         "title": title, "source": source,
-                        "provider": "okx_draft", "image": bool(uploaded_image_url),
+                        "provider": delivered_by, "image": bool(uploaded_image_url),
                         "age_hours": item.get("age_hours"),
                         "elapsed_sec": None,
                     })
                     posted_count += 1
-                    logger.info(f"📝 草稿模式投递完成: {title}")
+                    logger.info(f"📮 副平台投递完成 ({delivered_by}): {title}")
                 else:
                     consecutive_publish_failures += 1
                     logger.error(f"发帖失败，本次暂不记录缓存以供下次重试: {title} (发布链路连续失败 {consecutive_publish_failures} 次)")

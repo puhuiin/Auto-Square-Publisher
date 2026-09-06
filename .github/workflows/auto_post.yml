@@ -122,7 +122,7 @@ jobs:
           ACTIVE_HOURS_BEIJING: ${{ vars.ACTIVE_HOURS_BEIJING }}
           #   TOKEN_DAILY_LIMIT:       同一代币 24h 内最多发帖篇数 (默认 3, 0 = 不限)
           #   LOG_LEVEL:               日志级别 (默认 INFO；诊断时可设 DEBUG)
-          #   PUBLISH_PLATFORMS:       发布平台组合，逗号分隔 (默认 binance；可加 okx_draft 草稿直出)
+          #   PUBLISH_PLATFORMS:       发布平台组合，逗号分隔 (默认 binance；可加 okx_draft 草稿直出 / telegram 频道镜像)
           TOKEN_DAILY_LIMIT: ${{ vars.TOKEN_DAILY_LIMIT }}
           LOG_LEVEL: ${{ vars.LOG_LEVEL }}
           PUBLISH_PLATFORMS: ${{ vars.PUBLISH_PLATFORMS }}

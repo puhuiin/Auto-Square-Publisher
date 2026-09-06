@@ -1163,6 +1163,64 @@ class TestOKXDraftExporter(unittest.TestCase):
         self.assertEqual(m.OKXDraftExporter.name, "okx_draft")
 
 
+class TestTelegramMirror(unittest.TestCase):
+    """Telegram 频道镜像通道"""
+
+    def setUp(self):
+        self.pub = m.TelegramChannelPublisher()
+        self._orig = m.PUBLISH_PLATFORMS
+
+    def tearDown(self):
+        m.PUBLISH_PLATFORMS = self._orig
+        for k in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_MIRROR_CHANNEL_ID"):
+            os.environ.pop(k, None)
+
+    def test_missing_creds_rejected(self):
+        for k in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_MIRROR_CHANNEL_ID"):
+            os.environ.pop(k, None)
+        ok = self.pub.publish("内容", meta={})
+        self.assertFalse(ok)
+        self.assertIn("TELEGRAM_BOT_TOKEN", self.pub.last_error)
+
+    def test_send_photo_with_image(self):
+        os.environ["TELEGRAM_BOT_TOKEN"] = "tok"
+        os.environ["TELEGRAM_MIRROR_CHANNEL_ID"] = "@mychannel"
+        fake = MagicMock(status_code=200)
+        fake.json.return_value = {"ok": True}
+        with patch.object(m, "http_post", return_value=fake) as mp:
+            ok = self.pub.publish("带图内容。", image_url="https://img.example/a.jpg", meta={})
+            self.assertTrue(ok)
+            called_payload = mp.call_args.kwargs["json"]
+            self.assertEqual(called_payload["chat_id"], "@mychannel")
+            self.assertEqual(called_payload["photo"], "https://img.example/a.jpg")
+
+    def test_send_photo_fallback_to_text(self):
+        """sendPhoto 失败（图拉不到）→ 自动降级 sendMessage"""
+        os.environ["TELEGRAM_BOT_TOKEN"] = "tok"
+        os.environ["TELEGRAM_MIRROR_CHANNEL_ID"] = "@mychannel"
+        fail_photo = MagicMock(status_code=200)
+        fail_photo.json.return_value = {"ok": False, "description": "wrong file identifier"}
+        ok_text = MagicMock(status_code=200)
+        ok_text.json.return_value = {"ok": True}
+        with patch.object(m, "http_post", side_effect=[fail_photo, ok_text]) as mp:
+            ok = self.pub.publish("纯文字降级。", image_url="https://blocked.example/a.jpg", meta={})
+            self.assertTrue(ok)
+            self.assertEqual(mp.call_count, 2)
+            second = mp.call_args_list[1].kwargs["json"]
+            self.assertIn("text", second)
+
+    def test_caption_length_clamped(self):
+        os.environ["TELEGRAM_BOT_TOKEN"] = "tok"
+        os.environ["TELEGRAM_MIRROR_CHANNEL_ID"] = "@ch"
+        fake = MagicMock(status_code=200)
+        fake.json.return_value = {"ok": True}
+        long_content = "长" * 1500
+        with patch.object(m, "http_post", return_value=fake) as mp:
+            self.pub.publish(long_content, meta={})
+            sent = mp.call_args.kwargs["json"]["text"]
+            self.assertLessEqual(len(sent), 1024)
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 
