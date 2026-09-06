@@ -43,6 +43,7 @@ import json
 import time
 import random
 import hashlib
+import html
 import logging
 from typing import List, Dict, Any, Optional, Set, Tuple
 import io
@@ -895,9 +896,11 @@ class NewsFetcher:
     def clean_html(raw_html: str) -> str:
         if not raw_html:
             return ""
-        clean_text = re.sub(r"<(script|style).*?</\1>", "", raw_html, flags=re.DOTALL | re.IGNORECASE)
+        # 先解码 HTML 实体：&lt;script&gt; 这类转义标签解码后同样走下方标签剥离，
+        # 否则以字面形式残留进 prompt（此前仅手写 4 种实体，&lt;/&gt; 等会漏网）
+        clean_text = html.unescape(raw_html)
+        clean_text = re.sub(r"<(script|style).*?</\1>", "", clean_text, flags=re.DOTALL | re.IGNORECASE)
         clean_text = re.sub(r"<[^>]+>", " ", clean_text)
-        clean_text = clean_text.replace("&nbsp;", " ").replace("&amp;", "&").replace("&quot;", '"').replace("&#39;", "'")
         clean_text = re.sub(r"\s+", " ", clean_text).strip()
         # 提示词注入防护：命中注入特征即从该处截断正文
         m = NewsFetcher.INJECTION_RE.search(clean_text)
@@ -1332,6 +1335,13 @@ class LLMProviderConfig:
         return f"<Provider: {self.name} | Model: {self.model} | BaseURL: {self.base_url} | Key: {masked_key}>"
 
 
+def _summarize_max_tokens(provider_name: str) -> int:
+    """提炼预算：Reasonix 网关全系（含 -GW-1/-GW-2 备份）皆为推理模型，
+    前几百 token 全消耗在思考链里，预算不足则 content 直接 None。
+    此前 summarize 用 == 精确匹配，仅首选通道拿到 1500，备份链名存实亡。"""
+    return 1500 if provider_name.startswith("Reasonix-GW") else 600
+
+
 class MultiLLMEngine:
     """
     智能多模型池提炼引擎：
@@ -1614,6 +1624,9 @@ class MultiLLMEngine:
         """
         if not source_text:
             return True, ""
+        # 全角 ％ 归一：中文 LLM 输出常用全角百分号，归一前精确百分比校验会被整体绕过
+        content = content.replace("％", "%")
+        source_text = source_text.replace("％", "%")
 
         # 源文全部数字集合（识别 K/M/B 单位缩写：$2.4B = 2.4e9）
         source_nums: List[float] = []
@@ -1727,8 +1740,8 @@ class MultiLLMEngine:
                 client = self._get_client(provider)
 
                 # Reasonix 网关后端的 auto/best-* 是推理模型，前几百 token 全消耗在思考链
-                # 里不给足预算 → content 直接 None。网关渠道把预算抬到 1500 才稳。
-                effective_max_tokens = 1500 if provider.name == "Reasonix-GW" else 600
+                # 里不给足预算 → content 直接 None。网关全系通道（含备份）一律抬到 1500 才稳。
+                effective_max_tokens = _summarize_max_tokens(provider.name)
                 response = client.chat.completions.create(
                     model=provider.model,
                     messages=[
@@ -2019,6 +2032,13 @@ class ImageManager:
         try:
             r = http_get(image_url, headers=headers, timeout=6, retries=1)
             if r is not None and r.status_code == 200 and len(r.content) > 1024:
+                # 内容类型门禁：200 也可能是 WAF 挑战页/JSON 错误体，早拒比晚炸好
+                #（此前无门禁：HTML 错误页会一路走到 S3 上传才失败，白烧 3 次 API 与轮询）
+                ctype = (r.headers.get("Content-Type", "") or "").split(";")[0].strip().lower()
+                if ctype and not (ctype.startswith("image/") or ctype == "application/octet-stream"):
+                    logger.warning(f"配图 Content-Type 非图片 ({ctype})，跳过")
+                    return None
+
                 # 限制文件大小在 15MB 以内
                 if len(r.content) > 15 * 1024 * 1024:
                     logger.warning("图片大小超出 15MB 上限，跳过")
@@ -2041,7 +2061,8 @@ class ImageManager:
                     return jpeg_bytes, "cover.jpg", "image/jpeg"
                 except Exception as conv_e:
                     logger.warning(f"PIL 转码异常，回退使用原始数据: {conv_e}")
-                    return r.content, "cover.jpg", "image/jpeg"
+                    # 如实标注原始类型：此前硬标 image/jpeg，SVG 等非 JPEG 会以错误类型进 S3
+                    return r.content, "cover.jpg", ctype or "image/jpeg"
         except Exception as e:
             logger.warning(f"下载配图失败 ({image_url}): {e}")
         return None

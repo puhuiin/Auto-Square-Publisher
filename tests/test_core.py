@@ -122,6 +122,16 @@ class TestInjectionDefense(unittest.TestCase):
         out = m.NewsFetcher.clean_html("<p>ETH surges as ETF inflows hit <b>record</b></p>")
         self.assertEqual(out, "ETH surges as ETF inflows hit record")
 
+    def test_escaped_entities_decoded_then_stripped(self):
+        # &lt;b&gt; 这类转义标签此前以字面残留进 prompt（仅手写 4 种实体）
+        out = m.NewsFetcher.clean_html("ETH &lt;b&gt;surges&lt;/b&gt; &amp; &quot;record&quot;")
+        self.assertEqual(out, 'ETH surges & "record"')
+
+    def test_escaped_script_removed(self):
+        out = m.NewsFetcher.clean_html("&lt;script&gt;evil()&lt;/script&gt;正文保留")
+        self.assertNotIn("evil", out)
+        self.assertIn("正文保留", out)
+
 
 class TestContentSanitizer(unittest.TestCase):
     """发布内容清洗：伪标的剥壳、金额保护、hashtag 上限"""
@@ -943,6 +953,22 @@ class TestNumberHallucinationGuard(unittest.TestCase):
         ok, _ = m.MultiLLMEngine._verify_numbers("今天我的止盈 $500 落袋", "Bitcoin rises")
         self.assertTrue(ok)
 
+    def test_fullwidth_percent_fabricated_rejected(self):
+        # 全角 ％ 不得绕过精确百分比校验（中文 LLM 高频输出全角符号）
+        ok, reason = m.MultiLLMEngine._verify_numbers(
+            "单日暴涨 12.53％，情绪亢奋",
+            "Bitcoin surged with ETF inflows of $2.4B",
+        )
+        self.assertFalse(ok)
+        self.assertIn("12.53", reason)
+
+    def test_fullwidth_percent_valid_passes(self):
+        ok, _ = m.MultiLLMEngine._verify_numbers(
+            "单日上涨 5.23％，延续强势",
+            "Bitcoin up 5.23% in 24h",
+        )
+        self.assertTrue(ok)
+
 
 class TestInBatchDedup(unittest.TestCase):
     """同批次内近似去重：max_posts>1 时同事件变体不应连发"""
@@ -1499,6 +1525,48 @@ class TestDeliveredPlatforms(unittest.TestCase):
 
     def test_none_delivered(self):
         self.assertEqual(m._delivered_platforms(), [])
+
+
+class TestSummarizeTokenBudget(unittest.TestCase):
+    """提炼预算：网关备份通道（-GW-1/-GW-2）同为推理模型，必须同等 1500 预算"""
+
+    def test_gateway_family_gets_reasoning_budget(self):
+        self.assertEqual(m._summarize_max_tokens("Reasonix-GW"), 1500)
+        self.assertEqual(m._summarize_max_tokens("Reasonix-GW-1"), 1500)
+        self.assertEqual(m._summarize_max_tokens("Reasonix-GW-2"), 1500)
+
+    def test_external_providers_keep_small_budget(self):
+        self.assertEqual(m._summarize_max_tokens("Primary-LLM"), 600)
+        self.assertEqual(m._summarize_max_tokens("Preset-openrouter"), 600)
+
+
+class TestDownloadImageGate(unittest.TestCase):
+    """配图下载门禁：非图片 Content-Type 早拒；转码失败回退如实标注类型"""
+
+    def _fake_resp(self, content, ctype):
+        return type("R", (), {
+            "status_code": 200, "content": content,
+            "headers": {"Content-Type": ctype},
+        })()
+
+    def test_html_error_page_rejected_early(self):
+        # 200 + text/html（WAF 挑战页）此前会一路走到 S3 上传才失败
+        page = b"<html><body>challenge</body></html>" * 100
+        with patch.object(m, "http_get", return_value=self._fake_resp(page, "text/html; charset=utf-8")):
+            self.assertIsNone(m.ImageManager.download_image("https://x.example/cover.jpg"))
+
+    def test_json_error_body_rejected(self):
+        body = b'{"error": "denied"}' * 200
+        with patch.object(m, "http_get", return_value=self._fake_resp(body, "application/json")):
+            self.assertIsNone(m.ImageManager.download_image("https://x.example/cover.jpg"))
+
+    def test_pil_fallback_reports_true_content_type(self):
+        # 垃圾字节 + 图片声明：PIL 转码失败时回退原始数据，类型必须如实（此前硬标 image/jpeg）
+        garbage = bytes(range(256)) * 20
+        with patch.object(m, "http_get", return_value=self._fake_resp(garbage, "image/png")):
+            out = m.ImageManager.download_image("https://x.example/cover.png")
+        self.assertIsNotNone(out)
+        self.assertEqual(out[2], "image/png")
 
 
 class TestSquarePublisherSession(unittest.TestCase):
