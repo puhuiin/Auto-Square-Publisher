@@ -1325,6 +1325,56 @@ class TestRiskBlockDenylist(unittest.TestCase):
         self.assertIn("nid209", state)    # 最新的保留
 
 
+class TestMetrics(unittest.TestCase):
+    """遥测 JSONL 追加与合并去重"""
+
+    def setUp(self):
+        import tempfile
+        self.tmpdir = tempfile.mkdtemp()
+        self._orig = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(self.tmpdir, "metrics.jsonl")
+
+    def tearDown(self):
+        m.METRICS_FILE = self._orig
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_append_and_read_back(self):
+        m.append_metrics({"title": "t1", "tokens": ["BTC"], "impact_score": 20})
+        m.append_metrics({"title": "t2", "provider": None})  # None 值应被剔除
+        import json
+        with open(m.METRICS_FILE, encoding="utf-8") as f:
+            lines = [json.loads(l) for l in f if l.strip()]
+        self.assertEqual(len(lines), 2)
+        self.assertIn("ts", lines[0])
+        self.assertIn("hour_bj", lines[0])       # append_metrics 自动补北京时间
+        self.assertIn("weekday_bj", lines[0])
+        self.assertNotIn("provider", lines[1])   # record 里显式 None 的字段不落盘
+
+    def test_merge_metrics_dedupes(self):
+        # 动态加载合并脚本
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "git_state_merge",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "git_state_merge.py"))
+        merger = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(merger)
+
+        remote_p = os.path.join(self.tmpdir, "remote.jsonl")
+        local_p = os.path.join(self.tmpdir, "local.jsonl")
+        with open(remote_p, "w", encoding="utf-8") as f:
+            f.write('{"ts": "2026-09-06T01:00:00Z", "title": "a"}\n{"ts": "2026-09-06T02:00:00Z", "title": "b"}\n')
+        with open(local_p, "w", encoding="utf-8") as f:
+            f.write('{"ts": "2026-09-06T02:00:00Z", "title": "b"}\n{"ts": "2026-09-06T03:00:00Z", "title": "c"}\n')
+        n = merger.merge_metrics(local_p, remote_p)
+        self.assertEqual(n, 3, "重复行只保留一份")
+        import json
+        with open(remote_p, encoding="utf-8") as f:
+            lines = [json.loads(l) for l in f if l.strip()]
+        self.assertEqual([l["title"] for l in lines], ["a", "b", "c"], "合并后按时间排序")
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 

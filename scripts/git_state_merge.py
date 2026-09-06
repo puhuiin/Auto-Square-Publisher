@@ -22,6 +22,7 @@ from pathlib import Path
 
 CACHE_FILE = "sent_cache.json"
 INTEL_FILE = "campaign_intel.json"
+METRICS_FILE = "metrics.jsonl"
 MAX_CACHE_KEEP = 500
 
 
@@ -87,12 +88,32 @@ def merge_intel(local_snapshot_path: str, remote_path: str) -> bool:
     return True
 
 
+def merge_metrics(local_snapshot_path: str, remote_path: str) -> int:
+    """JSONL 行级去重并集（追加型遥测，重复行只保留一份），返回合并后行数"""
+    lines = []
+    seen = set()
+    for path in (remote_path, local_snapshot_path):
+        try:
+            for line in Path(path).read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line and line not in seen:
+                    seen.add(line)
+                    lines.append(line)
+        except Exception:
+            continue
+    lines.sort()  # ts 开头的 JSON 行排序即时间序
+    Path(remote_path).write_text(("\n".join(lines) + "\n") if lines else "", encoding="utf-8")
+    return len(lines)
+
+
 def main():
     snapshot_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/tmp")
     n = merge_sent_cache(snapshot_dir / CACHE_FILE, CACHE_FILE)
     print(f"sent_cache.json 合并完成: {n} 条")
     if merge_intel(snapshot_dir / INTEL_FILE, INTEL_FILE):
         print("campaign_intel.json 合并完成 (主体较新 + 状态键深合并)")
+    m = merge_metrics(snapshot_dir / METRICS_FILE, METRICS_FILE)
+    print(f"metrics.jsonl 合并完成: {m} 行")
 
 
 if __name__ == "__main__":

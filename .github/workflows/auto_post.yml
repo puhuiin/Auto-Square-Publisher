@@ -143,7 +143,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           BRANCH="${{ github.ref_name }}"
 
-          if [ -z "$(git status --porcelain sent_cache.json campaign_intel.json drafts)" ]; then
+          if [ -z "$(git status --porcelain sent_cache.json campaign_intel.json drafts metrics.jsonl)" ]; then
             echo "状态数据无任何变动，无需提交。"
             exit 0
           fi
@@ -152,6 +152,7 @@ jobs:
           # 1. 把本次运行产生的本地状态先存到沙箱外，防止被远端覆盖
           cp sent_cache.json /tmp/local_sent_cache.json 2>/dev/null || true
           cp campaign_intel.json /tmp/local_intel.json 2>/dev/null || true
+          cp metrics.jsonl /tmp/local_metrics.jsonl 2>/dev/null || true
           mkdir -p /tmp/local_drafts
           [ -d drafts ] && cp -r drafts/. /tmp/local_drafts/ 2>/dev/null || true
 
@@ -164,16 +165,17 @@ jobs:
             python scripts/git_state_merge.py /tmp
 
             # 3. 若并集后与远端完全一致则无需提交（例如并发任务已先一步回写）
-            if git diff --quiet -- sent_cache.json campaign_intel.json drafts; then
+            if git diff --quiet -- sent_cache.json campaign_intel.json drafts metrics.jsonl; then
               echo "远端已包含全部最新状态，无需重复提交。"
               exit 0
             fi
 
             git add sent_cache.json campaign_intel.json
-            # drafts 目录在首次 okx_draft 运行前不存在，git add 会 fatal，必须条件添加
+            # drafts / metrics 首次产生前不存在，git add 会 fatal，必须条件添加
             [ -d drafts ] && git add drafts || true
-            if [ -n "$(git status --porcelain drafts 2>/dev/null)" ]; then
-              git commit -m "chore(cache): update state + okx drafts [skip ci]"
+            [ -f metrics.jsonl ] && git add metrics.jsonl || true
+            if [ -n "$(git status --porcelain drafts metrics.jsonl 2>/dev/null)" ]; then
+              git commit -m "chore(cache): update state + okx drafts/metrics [skip ci]"
             else
               git commit -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]"
             fi

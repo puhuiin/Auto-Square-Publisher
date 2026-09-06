@@ -108,6 +108,25 @@ MAX_DAILY_POSTS = _env_int("MAX_DAILY_POSTS", 12)                  # 24h 滚动�
 TOKEN_DAILY_LIMIT = _env_int("TOKEN_DAILY_LIMIT", 3)               # 同一代币 24h 内最多发布篇数，0 表示不限制
 # 发布平台组合：binance=币安广场官方API；okx_draft=OKX广场草稿直出（合规半自动，见 OKXDraftExporter）
 PUBLISH_PLATFORMS = [p.strip().lower() for p in os.getenv("PUBLISH_PLATFORMS", "binance").split(",") if p.strip()]
+# 遥测指标文件：每篇投递追加一行 JSONL（时段/币种/来源/模型/平台），随 Git 同步积累，
+# 供未来做数据驱动调优（哪些时段/币种/来源的产出值得加权）
+METRICS_FILE = os.path.join(BASE_DIR, "metrics.jsonl")
+
+
+def append_metrics(record: Dict[str, Any]) -> None:
+    """追加一行投递指标（主线程调用，无需锁；JSONL 单行追加对并发写安全）"""
+    try:
+        bj_now = datetime.now(timezone(timedelta(hours=8)))
+        base = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "hour_bj": bj_now.hour,
+            "weekday_bj": bj_now.weekday(),  # 0=周一
+        }
+        base.update({k: v for k, v in record.items() if v is not None})
+        with open(METRICS_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(base, ensure_ascii=False) + "\n")
+    except Exception as e:
+        logger.debug(f"写入 metrics 失败(不影响主流程): {e}")
 ACTIVE_HOURS_BEIJING = os.getenv("ACTIVE_HOURS_BEIJING", "").strip()  # 活跃时段(北京时间)，如 "8-23"；空 = 全天
 CAMPAIGN_TOKEN_BOOST = 8                                           # 命中官方活动重点代币的热度加权
 FRESHNESS_BOOST_RULES = ((3, 10), (12, 6), (24, 3))                # (新闻不超过 N 小时, 加分)
@@ -2867,6 +2886,16 @@ def run_healthcheck():
         except Exception as e:
             checks.append((f"状态文件 {label}", "✗", f"JSON 损坏: {e}（可删除该文件让系统重建）"))
 
+    if os.path.exists(METRICS_FILE):
+        try:
+            with open(METRICS_FILE, "r", encoding="utf-8") as f:
+                n_metrics = sum(1 for line in f if line.strip())
+            checks.append(("遥测样本", "✔", f"{METRICS_FILE} 已积累 {n_metrics} 条投递指标（数据驱动调优的原料）"))
+        except Exception as e:
+            checks.append(("遥测样本", "⚠", f"读取失败: {e}"))
+    else:
+        checks.append(("遥测样本", "ℹ", "尚无数据（每次投递自动累积到 metrics.jsonl）"))
+
     # ---- 2.6 LLM 实弹测试（仅 --llm-live，消耗少量 token）----
     if "--llm-live" in sys.argv and eng is not None and eng.providers:
         live_results = []
@@ -3194,6 +3223,13 @@ def _run_main():
                     consecutive_publish_failures = 0
                     cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
                     posted_titles_this_run.append(title)
+                    append_metrics({
+                        "title": title[:60], "source": source, "tokens": post_tokens,
+                        "impact_score": score, "provider": llm_result["provider"],
+                        "platforms": [p for p in ("binance", "okx_draft", "telegram") if p in PUBLISH_PLATFORMS],
+                        "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
+                        "outcome": "binance_published",
+                    })
                     posted_records.append({
                         "title": title, "source": source,
                         "provider": llm_result["provider"], "image": bool(uploaded_image_url),
@@ -3209,6 +3245,13 @@ def _run_main():
                         delivered_by = "okx_draft+telegram"
                     cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
                     posted_titles_this_run.append(title)
+                    append_metrics({
+                        "title": title[:60], "source": source, "tokens": post_tokens,
+                        "impact_score": score, "provider": llm_result["provider"],
+                        "platforms": [delivered_by],
+                        "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
+                        "outcome": f"{delivered_by}_delivered",
+                    })
                     posted_records.append({
                         "title": title, "source": source,
                         "provider": delivered_by, "image": bool(uploaded_image_url),
