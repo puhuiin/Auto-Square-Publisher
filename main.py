@@ -1217,54 +1217,62 @@ class NewsFetcher:
                 if len(items) >= limit_per_feed:
                     break
 
-                # 标题同样过注入截断：此前只有摘要走 clean_html，标题原文直进 prompt；
-                # 标题里的"Ignore previous instructions…"会被安全提示兜底，但纵深防御
-                # 应在入口就截断（顺带归一空白）。ID 用原文种子不受影响（稳定性不变）。
-                title = self.clean_html(entry.get("title", ""))
-                if not title:
+                # 条目级隔离：单个脏条目（bozo 半解析/非字符串标题/畸形时间戳/
+                # 缺属性 content 结构）只跳过自己。此前整段循环体裸奔在源级 try 里，
+                # 一条脏数据就 abort 整源产出，还顺手记一次源故障——3 轮即可把
+                # 健康源停放 6 小时。源级故障（网络/整包解析失败）仍走外层 except。
+                try:
+                    # 标题同样过注入截断：此前只有摘要走 clean_html，标题原文直进 prompt；
+                    # 标题里的"Ignore previous instructions…"会被安全提示兜底，但纵深防御
+                    # 应在入口就截断（顺带归一空白）。ID 用原文种子不受影响（稳定性不变）。
+                    title = self.clean_html(entry.get("title", ""))
+                    if not title:
+                        continue
+
+                    self._stat_inc("fetched")
+                    self._stat_feed_entry(name)
+
+                    # 时效过滤：仅发布 MAX_NEWS_AGE_HOURS 小时内的热点，杜绝把旧闻当新闻发
+                    age_h = self.parse_entry_age_hours(entry)
+                    if age_h is not None and age_h > MAX_NEWS_AGE_HOURS:
+                        stale_skipped += 1
+                        self._stat_inc("stale")
+                        continue
+
+                    news_id = self.generate_news_id(entry, name)
+                    if cache_mgr.is_cached(news_id):
+                        self._stat_inc("cached")
+                        continue
+
+                    summary = ""
+                    if "summary" in entry:
+                        summary = entry.summary
+                    elif "content" in entry and entry.content:
+                        summary = entry.content[0].value
+                    elif "description" in entry:
+                        summary = entry.description
+
+                    clean_summary = self.clean_html(summary)
+                    link = entry.get("link", "")
+                    published = entry.get("published", "") or entry.get("updated", "")
+                    impact_score = self.calculate_impact_score(title, clean_summary) + self.freshness_bonus(age_h)
+                    image_url = self.extract_image_url(entry, summary)
+
+                    items.append({
+                        "id": news_id,
+                        "title": title,
+                        "summary": clean_summary[:1000],
+                        "link": link,
+                        "source": name,
+                        "lang": lang,
+                        "published": published,
+                        "age_hours": round(age_h, 1) if age_h is not None else None,
+                        "impact_score": impact_score,
+                        "image_url": image_url,
+                    })
+                except Exception as entry_err:
+                    logger.warning(f"数据源 [{name}] 某条目解析异常，已跳过（不影响本源其他条目）: {entry_err}")
                     continue
-
-                self._stat_inc("fetched")
-                self._stat_feed_entry(name)
-
-                # 时效过滤：仅发布 MAX_NEWS_AGE_HOURS 小时内的热点，杜绝把旧闻当新闻发
-                age_h = self.parse_entry_age_hours(entry)
-                if age_h is not None and age_h > MAX_NEWS_AGE_HOURS:
-                    stale_skipped += 1
-                    self._stat_inc("stale")
-                    continue
-
-                news_id = self.generate_news_id(entry, name)
-                if cache_mgr.is_cached(news_id):
-                    self._stat_inc("cached")
-                    continue
-
-                summary = ""
-                if "summary" in entry:
-                    summary = entry.summary
-                elif "content" in entry and entry.content:
-                    summary = entry.content[0].value
-                elif "description" in entry:
-                    summary = entry.description
-
-                clean_summary = self.clean_html(summary)
-                link = entry.get("link", "")
-                published = entry.get("published", "") or entry.get("updated", "")
-                impact_score = self.calculate_impact_score(title, clean_summary) + self.freshness_bonus(age_h)
-                image_url = self.extract_image_url(entry, summary)
-
-                items.append({
-                    "id": news_id,
-                    "title": title,
-                    "summary": clean_summary[:1000],
-                    "link": link,
-                    "source": name,
-                    "lang": lang,
-                    "published": published,
-                    "age_hours": round(age_h, 1) if age_h is not None else None,
-                    "impact_score": impact_score,
-                    "image_url": image_url,
-                })
 
             if stale_skipped:
                 logger.info(f"数据源 [{name}] 过滤过期旧闻 {stale_skipped} 条（>{MAX_NEWS_AGE_HOURS}h）。")

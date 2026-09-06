@@ -659,6 +659,40 @@ class TestFeedParking(unittest.TestCase):
         self.assertFalse(self.f._feed_is_parked(name))
 
 
+class TestEntryIsolation(unittest.TestCase):
+    """条目级隔离：单个脏条目只跳过自己，不得 abort 整源、不得记源故障"""
+
+    def test_single_bad_entry_does_not_kill_feed(self):
+        import tempfile
+        intel_tmp = tempfile.mktemp(suffix=".json")
+        with open(intel_tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        cache_tmp = tempfile.mktemp(suffix=".json")
+        orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = intel_tmp
+        try:
+            bad = {"title": 12345, "link": "https://x.example/bad"}  # 非字符串标题：clean_html 必炸
+            good = {"title": "BTC rallies on record ETF inflows", "link": "https://x.example/good"}
+            fake_feed = type("F", (), {"entries": [bad, good], "bozo": 0})()
+            fake_resp = type("R", (), {"status_code": 200, "content": b""})()
+            fetcher = m.NewsFetcher()
+            with patch.object(m.feedparser, "parse", return_value=fake_feed), \
+                 patch.object(m, "http_get", return_value=fake_resp):
+                items = fetcher._fetch_single_feed(
+                    {"name": "TestFeed", "url": "https://x.example/rss", "lang": "en"},
+                    m.CacheManager(cache_tmp), 5)
+            self.assertEqual(len(items), 1, "脏条目跳过，好条目必须产出")
+            self.assertIn("BTC rallies", items[0]["title"])
+            self.assertEqual(fetcher.stats["feeds_ok"], 1)
+            self.assertNotIn("TestFeed", fetcher.stats["feeds_failed"])
+            self.assertEqual(fetcher._feed_health(), {}, "条目级异常不得污染源健康计数（否则 3 轮停放健康源）")
+        finally:
+            m.CAMPAIGN_INTEL_FILE = orig_intel
+            for p in (cache_tmp, intel_tmp):
+                if os.path.exists(p):
+                    os.remove(p)
+
+
 class TestPublishErrorClassification(unittest.TestCase):
     """币安发布报错精细分类"""
 
