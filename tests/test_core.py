@@ -2083,6 +2083,70 @@ class TestRiskBlockDenylist(unittest.TestCase):
         self.assertIn("nid209", state)    # 最新的保留
 
 
+class TestPublishParking(unittest.TestCase):
+    """同一故事发布退避：连挂达阈值后停放，到期自动重试，成功清零"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        self.pub = m.SquarePublisher(api_key="k")
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def test_park_lifecycle(self):
+        self.assertFalse(self.pub._publish_parked("n1"))
+        self.pub._publish_record("n1", ok=False)
+        self.assertFalse(self.pub._publish_parked("n1"), "第 1 次失败只记次不停放")
+        self.pub._publish_record("n1", ok=False)
+        self.assertTrue(self.pub._publish_parked("n1"), "达阈值(2次)必须停放")
+
+    def test_park_expires(self):
+        self.pub._publish_record("n1", ok=False)
+        self.pub._publish_record("n1", ok=False)
+        self.assertTrue(self.pub._publish_parked("n1"))
+
+        def _expire(state):
+            state = dict(state or {})
+            info = dict(state.get("n1", {}))
+            info["parked_until"] = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+            state["n1"] = info
+            return state
+
+        m.intel_state_update("_publish_park", _expire, default={})
+        self.assertFalse(self.pub._publish_parked("n1"), "到期必须自动解禁重试")
+
+    def test_success_clears_without_pointless_writes(self):
+        self.pub._publish_record("n1", ok=False)
+        before = os.path.getmtime(self.tmp)
+        import time
+        time.sleep(0.02)
+        self.pub._publish_record("n1", ok=True)
+        self.assertFalse(self.pub._publish_parked("n1"))
+        self.assertNotIn("n1", self.pub._publish_health())
+        before2 = os.path.getmtime(self.tmp)
+        time.sleep(0.02)
+        self.pub._publish_record("never-failed", ok=True)
+        self.assertEqual(os.path.getmtime(self.tmp), before2, "无记录的成功不得写盘")
+
+    def test_state_capped(self):
+        import json
+        seed = {f"nid{i}": {"fails": 2, "parked_until": "2099-01-01T00:00:00+00:00",
+                            "last_fail": f"2026-09-06T00:{i // 60:02d}:{i % 60:02d}+00:00"}
+                for i in range(200)}
+        m.intel_state_set("_publish_park", seed)
+        self.pub._publish_record("newcomer", ok=False)
+        state = self.pub._publish_health()
+        self.assertEqual(len(state), 200, "故事键必须 cap 200 防膨胀")
+        self.assertIn("newcomer", state)
+
+
 class TestMetrics(unittest.TestCase):
     """遥测 JSONL 追加与合并去重"""
 
@@ -2606,6 +2670,7 @@ class TestDryRunSemantics(unittest.TestCase):
             "content": "BTC 放量突破关键位，短线情绪转多，注意回踩确认再进。",
             "tokens": ["BTC"], "provider": "stub"}
         _start(patch.object(m, "MultiLLMEngine", return_value=engine))
+        self._engine = engine  # 供跳过类断言检查 LLM 是否被调用
         return started
 
     def _teardown(self, patches, tmpdir):
@@ -2641,6 +2706,8 @@ class TestDryRunSemantics(unittest.TestCase):
         patches = self._base_patches(tmpdir, paths, dry=False)
         pub = MagicMock()
         pub.publish.return_value = True
+        # 整类 mock 下 _publish_parked 默认返回 truthy Mock，必须显式放行（否则恒跳过）
+        pub._publish_parked.return_value = False
         sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
         sq_patch.start()
         patches.append(sq_patch)
@@ -2654,6 +2721,39 @@ class TestDryRunSemantics(unittest.TestCase):
                 rows = [json.loads(l) for l in f if l.strip()]
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0]["outcome"], "binance_published")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_blocked_news_skips_before_llm(self):
+        # 否认名单检查已前移到 LLM 之前：在此命中必须零 LLM 调用（此前放配图后，每轮白烧一次）
+        import json
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True)
+        try:
+            with open(paths["intel"], "w", encoding="utf-8") as f:
+                json.dump({"_risk_blocked": {"news-1": "2026-09-06T00:00:00+00:00"}}, f)
+            with self.assertLogs("SquarePosterUltimate", level="INFO") as logs:
+                m._run_main()
+            self.assertEqual(self._engine.summarize.call_count, 0)
+            self.assertTrue(any("跳过重试" in o for o in logs.output), "必须走到前置跳过分支而非空转")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_parked_news_skips_before_llm(self):
+        # 停放中的故事同样在 LLM 之前跳过（币安故障期不再空烧）
+        import json
+        from datetime import timedelta
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True)
+        try:
+            future = (datetime.now(timezone.utc) + timedelta(hours=6)).isoformat()
+            with open(paths["intel"], "w", encoding="utf-8") as f:
+                json.dump({"_publish_park": {"news-1": {"fails": 2, "parked_until": future,
+                                                        "last_fail": future}}}, f)
+            with self.assertLogs("SquarePosterUltimate", level="INFO") as logs:
+                m._run_main()
+            self.assertEqual(self._engine.summarize.call_count, 0)
+            self.assertTrue(any("停放" in o for o in logs.output), "必须走到停放跳过分支而非空转")
         finally:
             self._teardown(patches, tmpdir)
 

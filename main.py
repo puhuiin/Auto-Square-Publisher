@@ -2447,6 +2447,66 @@ class SquarePublisher(BasePublisher):
         "20005":  "账户发帖频率或被限流，请降低发帖频率/检查账号状态。",
     }
 
+    # 同一故事发布退避：币安故障期每 20 分钟重复烧 LLM 毫无意义。
+    # 复用源停放同款语义——连续失败达阈值后停放数小时，到期自动重试（48h 时效窗内仍有机会）。
+    _PUBLISH_PARK_KEY = "_publish_park"
+    PUBLISH_PARK_THRESHOLD = 2   # 同一 news_id 连续发布失败 N 次后停放
+    PUBLISH_PARK_HOURS = 6       # 停放时长（小时）
+
+    def _publish_health(self) -> Dict[str, Dict[str, Any]]:
+        state = intel_state_get(self._PUBLISH_PARK_KEY, {})
+        return state if isinstance(state, dict) else {}
+
+    def _publish_parked(self, news_id: str) -> bool:
+        """该故事是否处于发布退避停放期（仅币安失败记次，副平台-only 模式不用）"""
+        if not news_id:
+            return False
+        info = self._publish_health().get(news_id)
+        if not info:
+            return False
+        try:
+            until = datetime.fromisoformat(str(info.get("parked_until", "")))
+            return datetime.now(until.tzinfo or timezone.utc) < until
+        except Exception:
+            return False
+
+    def _publish_record(self, news_id: str, ok: bool) -> None:
+        """记录一次币安投递结果：失败记次（达阈值停放），成功清零且无记录时不写盘"""
+        if not news_id:
+            return
+        if ok:
+            if news_id not in self._publish_health():
+                return  # 无停放记录时不写盘，避免成功帖制造无意义 git 变更
+            def _clear(state):
+                state = dict(state or {})
+                state.pop(news_id, None)
+                return state
+            intel_state_update(self._PUBLISH_PARK_KEY, _clear, default={})
+            return
+
+        parked_note = []
+
+        def _record_fail(state):
+            state = dict(state or {})
+            info = dict(state.get(news_id, {"fails": 0}))
+            try:
+                info["fails"] = int(info.get("fails", 0)) + 1
+            except (TypeError, ValueError):
+                info["fails"] = 1
+            if info["fails"] >= self.PUBLISH_PARK_THRESHOLD:
+                info["parked_until"] = (datetime.now(timezone.utc) + timedelta(hours=self.PUBLISH_PARK_HOURS)).isoformat()
+                parked_note.append(info["fails"])
+            info["last_fail"] = datetime.now(timezone.utc).isoformat()
+            state[news_id] = info
+            # 按故事键 cap 200（已发布故事的孤儿条目自然淘汰），防状态膨胀
+            if len(state) > 200:
+                state = dict(sorted(state.items(), key=lambda kv: kv[1].get("last_fail", ""))[-200:])
+            return state
+
+        intel_state_update(self._PUBLISH_PARK_KEY, _record_fail, default={})
+        for n in parked_note:
+            logger.warning(f"⏸️ 故事 [{news_id[:12]}…] 币安发布连续失败 {n} 次，自动停放 {self.PUBLISH_PARK_HOURS} 小时。")
+
     @classmethod
     def _classify_publish_error(cls, status_code: int, resp_json: Optional[Dict[str, Any]]) -> str:
         """把发布失败翻译为可操作的排障指引"""
@@ -3462,6 +3522,19 @@ def _run_main():
                     logger.info(f"代币 {capped} 24h 内已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)，为避免刷屏跳过本条: {title}")
                     continue
 
+            # 风控拦截否认名单前置：20002/20022 拦过的内容重试大概率再被拦，
+            # 此前该检查在 LLM+配图之后，每轮白烧一次生成（挪到前面，条件不变）
+            if news_id in (intel_state_get("_risk_blocked", {}) or {}):
+                logger.info(f"⛔ 该新闻此前被币安风控拦截（20002/20022），跳过重试: {title[:50]}")
+                continue
+
+            # 发布退避停放：同一故事连续发布失败达阈值后停放数小时。币安故障期
+            # 每 20 分钟重复烧 LLM 毫无意义，停放期内直接跳过，到期自动重试。
+            # 副平台-only 模式不走币安，无需查（也不写）停放记录。
+            if "binance" in PUBLISH_PLATFORMS and publisher._publish_parked(news_id):
+                logger.info(f"⏸️ 该新闻发布连续失败已被停放，跳过等待恢复: {title[:50]}")
+                continue
+
             live_market_data = MarketDataProvider.get_token_market_data(detected_tokens[:3])
             # 时段人设：让文案与发布时间自然对齐（凌晨的帖说"早间策略"一眼假）
             bj_hour = datetime.now(timezone(timedelta(hours=8))).hour
@@ -3533,11 +3606,6 @@ def _run_main():
                               "link": item.get("link", ""), "impact_score": score}
                 draft_exported = False
 
-                # 风控拦截否认名单：20002/20022 拦过的内容重试大概率再被拦，直接跳过防烧 LLM
-                if news_id in (intel_state_get("_risk_blocked", {}) or {}):
-                    logger.info(f"⛔ 该新闻此前被币安风控拦截（20002/20022），跳过重试: {title[:50]}")
-                    continue
-
                 if binance_enabled:
                     t_pub_start = time.time()
                     success = publisher.publish(post_content, image_url=uploaded_image_url, ensure_tokens=post_tokens)
@@ -3562,6 +3630,7 @@ def _run_main():
 
                 if success:
                     consecutive_publish_failures = 0
+                    publisher._publish_record(news_id, ok=True)  # 清掉可能存在的停放记次
                     cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
                     posted_titles_this_run.append(title)
                     append_metrics({
@@ -3628,6 +3697,10 @@ def _run_main():
                             return dict(sorted(state.items(), key=lambda kv: kv[1])[-200:])
                         intel_state_update("_risk_blocked", _mark_blocked, default={})
                         logger.warning(f"⛔ 已将 {news_id} 记入风控拦截否认名单（后续运行不再重试）。")
+                    else:
+                        # 普通发布失败按故事记次：连挂达阈值后停放数小时，
+                        # 币安故障期不再每轮重复烧 LLM（否认名单的永久案子不重复记）
+                        publisher._publish_record(news_id, ok=False)
                     Notifier.send_notification("币安发帖失败", f"新闻: {title}\n诊断: {detail}\n已跳过并将在下次自动重试。", is_error=True)
                     if consecutive_publish_failures >= 3:
                         logger.error("🛑 发布通道连续 3 次失败，触发熔断终止运行，防止新闻持续产生而无端消耗 LLM。")
