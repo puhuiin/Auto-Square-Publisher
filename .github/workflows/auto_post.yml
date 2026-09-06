@@ -172,7 +172,11 @@ jobs:
             git add sent_cache.json campaign_intel.json
             # drafts 目录在首次 okx_draft 运行前不存在，git add 会 fatal，必须条件添加
             [ -d drafts ] && git add drafts || true
-            git commit -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]"
+            if [ -n "$(git status --porcelain drafts 2>/dev/null)" ]; then
+              git commit -m "chore(cache): update state + okx drafts [skip ci]"
+            else
+              git commit -m "chore(cache): update sent_cache.json & campaign_intel.json [skip ci]"
+            fi
 
             if git push origin "HEAD:$BRANCH"; then
               echo "✔ 状态持久化成功推送到远程仓库！(第 $i 次尝试)"

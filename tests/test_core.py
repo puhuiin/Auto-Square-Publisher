@@ -1140,6 +1140,22 @@ class TestOKXDraftExporter(unittest.TestCase):
         files = glob.glob(os.path.join(self.tmpdir, "**", "*.md"), recursive=True)
         self.assertEqual(len(files), m.OKXDraftExporter.KEEP_DRAFTS)
 
+    def test_cross_run_draft_dedup(self):
+        """币安失败重试场景：同一 news_id 不应产生第二份草稿"""
+        ok1 = self.exp.publish("第一次导出。", meta={"news_id": "dup-news-001"})
+        ok2 = self.exp.publish("20 分钟后重试的第二次导出。", meta={"news_id": "dup-news-001"})
+        self.assertTrue(ok1)
+        self.assertFalse(ok2, "重复导出应被拒绝")
+        import glob
+        files = glob.glob(os.path.join(self.tmpdir, "**", "*.md"), recursive=True)
+        self.assertEqual(len(files), 1)
+
+    def test_different_news_still_exports(self):
+        ok1 = self.exp.publish("新闻 A。", meta={"news_id": "aaa"})
+        ok2 = self.exp.publish("新闻 B。", meta={"news_id": "bbb"})
+        self.assertTrue(ok1)
+        self.assertTrue(ok2, "不同新闻不受去重影响")
+
     def test_base_publisher_interface(self):
         self.assertTrue(hasattr(m.SquarePublisher, "publish"))
         self.assertTrue(issubclass(m.SquarePublisher, m.BasePublisher))

@@ -2391,10 +2391,26 @@ class OKXDraftExporter(BasePublisher):
     DRAFTS_DIR = os.path.join(BASE_DIR, "drafts")
     KEEP_DRAFTS = 30  # 草稿保留上限，防止仓库膨胀
 
+    def _draft_exists(self, news_id: str) -> bool:
+        """按 news_id 检查是否已有草稿：币安失败重试时不再重复导出同一故事"""
+        if not news_id or not os.path.isdir(self.DRAFTS_DIR):
+            return False
+        slug = re.sub(r"[^\w-]", "", news_id)[:24]
+        if not slug:
+            return False
+        for root, _dirs, fnames in os.walk(self.DRAFTS_DIR):
+            for fn in fnames:
+                if fn.endswith(f"_{slug}.md"):
+                    return True
+        return False
+
     def publish(self, content: str, image_url: Optional[str] = None,
                 ensure_tokens: Optional[List[str]] = None, meta: Optional[Dict[str, Any]] = None) -> bool:
         try:
             meta = meta or {}
+            if self._draft_exists(meta.get("news_id", "")):
+                logger.info(f"📝 该新闻已有草稿（此前币安失败待重试），跳过重复导出: {meta.get('title', '')[:40]}")
+                return False
             now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
             day_dir = os.path.join(self.DRAFTS_DIR, datetime.now(timezone.utc).strftime("%Y-%m-%d"))
             os.makedirs(day_dir, exist_ok=True)
@@ -2770,7 +2786,12 @@ def run_healthcheck():
                                   f"时段={ACTIVE_HOURS_BEIJING or '全天'} | LOG={_LOG_LEVEL}"))
     plats = " / ".join(PUBLISH_PLATFORMS)
     okx_hint = "（OKX 官方暂无发帖 API，草稿模式=AI 生成后 10 秒手动粘贴）" if "okx_draft" in PUBLISH_PLATFORMS else ""
-    checks.append(("发布平台", "✔" if PUBLISH_PLATFORMS else "✗", f"{plats} {okx_hint}".strip()))
+    known_platforms = {"binance", "okx_draft"}
+    unknown = [p for p in PUBLISH_PLATFORMS if p not in known_platforms]
+    if unknown:
+        checks.append(("发布平台", "⚠", f"存在未知平台名（将被忽略）: {unknown}；有效值 binance/okx_draft"))
+    else:
+        checks.append(("发布平台", "✔" if PUBLISH_PLATFORMS else "✗", f"{plats} {okx_hint}".strip()))
 
     # 汇总输出
     print()
