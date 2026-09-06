@@ -2487,7 +2487,7 @@ class OKXDraftExporter(BasePublisher):
                 blob_url = f"{server}/{repo}/blob/{branch}/{rel_posix}"
             Notifier.send_notification(
                 "📝 OKX 草稿已就绪",
-                f"热点: {title}\n标的: {tokens}\n草稿: {blob_url or display_path}\n\n打开复制正文，粘贴到 OKX App 广场即可（约 10 秒）。",
+                f"热点: {title}\n标的: {tokens}\n草稿: {blob_url or display_path}\n\n预览: {content[:120]}\n\n打开复制正文，粘贴到 OKX App 广场即可（约 10 秒）。",
             )
             return True
         except Exception as e:
@@ -2912,6 +2912,7 @@ def _run_main():
     logger.info(f"   运行时间: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
     logger.info(f"   运行模式: {'【DRY_RUN 试运行 (不真实发帖/不写缓存)】' if dry_run else '【正式发布模式】'}")
     logger.info(f"   单次最大发帖数: {max_posts} | 24h 配额上限: {MAX_DAILY_POSTS if MAX_DAILY_POSTS > 0 else '不限'}")
+    logger.info(f"   发布平台: {' / '.join(PUBLISH_PLATFORMS)}")
     logger.info(f"   新闻时效窗口: {MAX_NEWS_AGE_HOURS}h | 去重阈值: {DUP_SIMILARITY_THRESHOLD}")
     logger.info("==================================================")
 
@@ -2981,6 +2982,7 @@ def _run_main():
     posted_records: List[Dict[str, Any]] = []  # 供运行报告输出
     consecutive_llm_failures = 0  # 模型池熔断计数：连续失败说明全池不可用，提前止损
     consecutive_publish_failures = 0  # 发布链路熔断：币安侧持续故障时不再空烧 LLM
+    consecutive_mirror_failures = 0  # 副平台-only 模式熔断：所有副平台持续失败时不再静默空转
     stage_timings: Dict[str, float] = {"fetch": fetch_elapsed, "intel": intel_elapsed, "llm": 0.0, "image": 0.0, "publish": 0.0}
     valid_symbols = SymbolValidator.get_valid_symbols() or set()
     posted_titles_this_run: List[str] = []  # 本轮已处理的标题，防同批次近似变体连发
@@ -3131,7 +3133,23 @@ def _run_main():
                         "elapsed_sec": None,
                     })
                     posted_count += 1
+                    consecutive_mirror_failures = 0
                     logger.info(f"📮 副平台投递完成 ({delivered_by}): {title}")
+                elif not binance_enabled:
+                    # 副平台-only 模式下所有平台都投递失败：不能无限静默空转
+                    consecutive_mirror_failures += 1
+                    logger.error(f"副平台投递失败 ({consecutive_mirror_failures}/3): "
+                                 f"okx={'成功' if draft_exported else '失败'} tg={'成功' if telegram_exported else '失败'} | {title}")
+                    if consecutive_mirror_failures >= 3:
+                        detail = okx_exporter.last_error or telegram_mirror.last_error or "未知原因"
+                        logger.error("🛑 副平台连续 3 次投递失败，熔断终止运行。")
+                        Notifier.send_notification(
+                            "副平台发布通道熔断",
+                            f"连续 3 篇均未能投递到任何启用平台。最近诊断: {detail}\n请检查平台凭证与配置。",
+                            is_error=True,
+                        )
+                        break
+                    continue
                 else:
                     consecutive_publish_failures += 1
                     logger.error(f"发帖失败，本次暂不记录缓存以供下次重试: {title} (发布链路连续失败 {consecutive_publish_failures} 次)")
