@@ -191,11 +191,14 @@ CAMPAIGN_TOKEN_BOOST = 8                                           # 命中官�
 FRESHNESS_BOOST_RULES = ((3, 10), (12, 6), (24, 3))                # (新闻不超过 N 小时, 加分)
 
 
-def within_active_hours(spec: str = ACTIVE_HOURS_BEIJING) -> bool:
+def within_active_hours(spec: str = None) -> bool:
     """
     北京时间活跃时段判断。spec 形如 "8-23"、"8:30-23:45"，支持跨夜（如 "22-7" 表示晚 22 点至次日 7 点）。
-    空字符串表示全天开放。
+    空字符串表示全天开放；spec 省略时读当前全局配置（None 哨兵而非 import 时绑定，
+    否则运行时改配置/测试 mock 全局都不生效）。
     """
+    if spec is None:
+        spec = ACTIVE_HOURS_BEIJING
     if not spec:
         return True
     m = re.match(r"^\s*(\d{1,2})(?::(\d{1,2}))?\s*-\s*(\d{1,2})(?::(\d{1,2}))?\s*$", spec)

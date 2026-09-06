@@ -482,6 +482,33 @@ class TestActiveHoursWindow(unittest.TestCase):
             mock_dt.now.return_value = bj_now
             mock_dt.side_effect = lambda *a, **k: dt(*a, **k)
             self.assertTrue(m.within_active_hours("22-7"))     # 跨夜窗口覆盖凌晨 2 点
+
+    def test_default_spec_tracks_live_global(self):
+        # 无参调用必须读调用时全局（此前默认参数在 import 时绑定，运行时改配置不生效）。
+        # 用等价性断言：无论 import 时环境如何，旧绑定必与显式传参分叉。
+        from datetime import datetime as dt, timezone as tz, timedelta
+        from unittest.mock import patch
+
+        bj_now = dt(2026, 9, 6, 4, 0, tzinfo=tz(timedelta(hours=8)))  # 北京时间凌晨 4 点
+        with patch.object(m, "datetime") as mock_dt, \
+             patch.object(m, "ACTIVE_HOURS_BEIJING", "8-23"):
+            mock_dt.now.return_value = bj_now
+            mock_dt.side_effect = lambda *a, **k: dt(*a, **k)
+            self.assertEqual(m.within_active_hours(), m.within_active_hours("8-23"))
+
+    def test_quiet_exit_outside_window_skips_init(self):
+        # 窗口外整轮静默退出：必须发生在任何组件初始化之前（已有哨兵修复打底）
+        from datetime import datetime as dt, timezone as tz, timedelta
+        from unittest.mock import patch
+
+        bj_now = dt(2026, 9, 6, 4, 0, tzinfo=tz(timedelta(hours=8)))
+        with patch.object(m, "datetime") as mock_dt, \
+             patch.object(m, "ACTIVE_HOURS_BEIJING", "8-23"), \
+             patch.object(m, "CacheManager",
+                          side_effect=AssertionError("窗口外不得初始化任何组件")):
+            mock_dt.now.return_value = bj_now
+            mock_dt.side_effect = lambda *a, **k: dt(*a, **k)
+            self.assertIsNone(m._run_main())
             self.assertFalse(m.within_active_hours("8-23"))    # 同日窗口不覆盖
 
 
@@ -830,6 +857,44 @@ class TestSorting(unittest.TestCase):
         items.sort(key=lambda x: (-x["impact_score"],
                                   x["age_hours"] if x.get("age_hours") is not None else float("inf")))
         self.assertEqual([i["title"] for i in items], ["hotter", "fresh", "older", "untimed"])
+
+    def test_fetch_wiring_boost_then_dedup_then_sort(self):
+        # 打分→活动加权→去重→排序的整条接线：任何一环掉线（加权没调、排序键写错）
+        # 纯单元测试都看不出来，必须走真实 fetch_candidates（抓取层 mock，逻辑层真实）
+        import tempfile
+        intel_tmp = tempfile.mktemp(suffix=".json")
+        with open(intel_tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        cache_tmp = tempfile.mktemp(suffix=".json")
+        orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = intel_tmp
+        base = [
+            {"id": "a", "title": "BNB breaks out strongly today", "summary": "",
+             "source": "S1", "lang": "en", "link": "", "published": "",
+             "age_hours": 5.0, "impact_score": 5, "image_url": None},
+            {"id": "b", "title": "Ethereum quietly consolidates below resistance", "summary": "",
+             "source": "S2", "lang": "en", "link": "", "published": "",
+             "age_hours": 1.0, "impact_score": 20, "image_url": None},
+            {"id": "c", "title": "Solana DEX volume hits record high", "summary": "",
+             "source": "S3", "lang": "en", "link": "", "published": "",
+             "age_hours": 9.0, "impact_score": 10, "image_url": None},
+        ]
+        try:
+            fetcher = m.NewsFetcher()
+            # 9 个源返回同样的 3 条（每次深拷贝防别名叠加）：去重后应剩 3 条
+            with patch.object(m.NewsFetcher, "_fetch_single_feed",
+                              side_effect=lambda *a, **k: [dict(x) for x in base]):
+                out = fetcher.fetch_candidates(m.CacheManager(cache_tmp),
+                                               priority_tokens=["$BNB"])
+            # b(20) > a(5+8活动加权=13) > c(10)：加权与排序同时被锁死
+            self.assertEqual([x["id"] for x in out], ["b", "a", "c"])
+            self.assertEqual(fetcher.stats["kept"], 3)
+            self.assertGreater(fetcher.stats["near_dup"], 0, "重复副本应被去重吃掉")
+        finally:
+            m.CAMPAIGN_INTEL_FILE = orig_intel
+            for p in (cache_tmp, intel_tmp):
+                if os.path.exists(p):
+                    os.remove(p)
 
 
 class TestCrossLangDedup(unittest.TestCase):
