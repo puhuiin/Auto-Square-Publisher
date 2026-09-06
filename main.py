@@ -1019,9 +1019,20 @@ class NewsFetcher:
                     if u.startswith("http"):
                         return u
 
-        # 4. 通道四：从 summary / description HTML 中解析首张 <img>
+        # 4. 通道四：从 summary / description HTML 中解析首张 <img>（含懒加载 data-src / srcset 现代属性）
         if raw_summary:
             m = re.search(r'<img[^>]+src=[\'"]([^\'"]+)[\'"]', raw_summary, re.IGNORECASE)
+            if m:
+                u = m.group(1).strip()
+                if u.startswith("http"):
+                    return u
+            # 懒加载属性（WordPress/主流 CMS 的 data-src、srcset 首选）
+            m = re.search(r'<img[^>]+(?:data-src|data-lazy-src)=[\'"]([^\'"]+)[\'"]', raw_summary, re.IGNORECASE)
+            if m:
+                u = m.group(1).strip()
+                if u.startswith("http"):
+                    return u
+            m = re.search(r'srcset=[\'"]([^\'"\s]+)', raw_summary, re.IGNORECASE)
             if m:
                 u = m.group(1).strip()
                 if u.startswith("http"):
@@ -1042,6 +1053,19 @@ class NewsFetcher:
         items = []
         try:
             resp = http_get(url, headers=headers, timeout=8, retries=1)
+            # WAF/Cloudflare 偶发 403：用完整浏览器指纹再试一次（很多源只认 Accept 系列头齐全的请求）
+            if resp is not None and resp.status_code in (403, 429):
+                time.sleep(0.5)
+                fp_headers = {
+                    **headers,
+                    "Accept": "application/rss+xml, application/xml, application/atom+xml, text/xml, */*",
+                    "Accept-Language": "en-US,en;q=0.9,zh-CN;q=0.8",
+                    "Referer": url.rsplit("/", 1)[0] + "/",
+                    "Cache-Control": "no-cache",
+                }
+                resp = http_get(url, headers=fp_headers, timeout=8, retries=1)
+                if resp is not None and resp.status_code == 200:
+                    logger.info(f"数据源 [{name}] 指纹升级重试成功。")
             if resp is None or resp.status_code != 200:
                 logger.warning(f"数据源 [{name}] 响应异常: {'网络错误' if resp is None else f'HTTP {resp.status_code}'}")
                 self.stats["feeds_failed"].append(name)
@@ -2679,7 +2703,9 @@ def _run_main():
     logger.info(f"📊 当前全网情绪指数: {fng_index}")
 
     # 4. 智能扫描与理解币安官方当期活动情报
+    t_intel_start = time.time()
     campaign_intel = CampaignScanner.get_campaign_intel(llm_engine)
+    intel_elapsed = time.time() - t_intel_start
     logger.info(f"💡 当期币安重点活动标签: {campaign_intel.get('active_tags')}")
     logger.info(f"🪙 当期重点扶持代币池: {campaign_intel.get('incentivized_tokens')}")
 
@@ -2713,7 +2739,7 @@ def _run_main():
     posted_records: List[Dict[str, Any]] = []  # 供运行报告输出
     consecutive_llm_failures = 0  # 模型池熔断计数：连续失败说明全池不可用，提前止损
     consecutive_publish_failures = 0  # 发布链路熔断：币安侧持续故障时不再空烧 LLM
-    stage_timings: Dict[str, float] = {"fetch": fetch_elapsed, "llm": 0.0, "image": 0.0, "publish": 0.0}
+    stage_timings: Dict[str, float] = {"fetch": fetch_elapsed, "intel": intel_elapsed, "llm": 0.0, "image": 0.0, "publish": 0.0}
     valid_symbols = SymbolValidator.get_valid_symbols() or set()
     posted_titles_this_run: List[str] = []  # 本轮已处理的标题，防同批次近似变体连发
 
@@ -2849,7 +2875,8 @@ def _run_main():
 
     write_github_step_summary(fetcher, fng_index, campaign_intel, posted_records, dry_run,
                               timings=stage_timings)
-    logger.info(f"⏱️ 耗时画像: 抓取={stage_timings['fetch']:.1f}s / LLM={stage_timings['llm']:.1f}s / 配图={stage_timings['image']:.1f}s / 发布={stage_timings['publish']:.1f}s")
+    logger.info(f"⏱️ 耗时画像: 抓取={stage_timings['fetch']:.1f}s / 情报={stage_timings['intel']:.1f}s / "
+                f"LLM={stage_timings['llm']:.1f}s / 配图={stage_timings['image']:.1f}s / 发布={stage_timings['publish']:.1f}s")
 
     logger.info("==================================================")
     logger.info(f"🎯 任务完成！本次成功处理/发布: {posted_count} 篇")

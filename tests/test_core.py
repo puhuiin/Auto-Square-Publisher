@@ -1021,6 +1021,31 @@ class MultiLLMEngineStub:
     pass
 
 
+class TestImageExtraction(unittest.TestCase):
+    """配图提取四通道 + 懒加载属性"""
+
+    def test_standard_src(self):
+        entry = {"media_content": [{"url": "https://img.example/a.jpg"}]}
+        self.assertEqual(m.NewsFetcher.extract_image_url(entry, ""), "https://img.example/a.jpg")
+
+    def test_enclosure_fallback(self):
+        entry = {"enclosures": [{"href": "https://img.example/b.png"}]}
+        self.assertEqual(m.NewsFetcher.extract_image_url(entry, ""), "https://img.example/b.png")
+
+    def test_lazy_data_src(self):
+        entry = {}
+        html = '<img class="lazy" data-src="https://img.example/c.jpg" src="placeholder.gif">'
+        self.assertEqual(m.NewsFetcher.extract_image_url(entry, html), "https://img.example/c.jpg")
+
+    def test_srcset_first_candidate(self):
+        entry = {}
+        html = '<img srcset="https://img.example/d.jpg 800w, https://img.example/d2x.jpg 1600w">'
+        self.assertEqual(m.NewsFetcher.extract_image_url(entry, html), "https://img.example/d.jpg")
+
+    def test_none_when_no_image(self):
+        self.assertIsNone(m.NewsFetcher.extract_image_url({}, "<p>纯文字内容</p>"))
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 
