@@ -497,6 +497,21 @@ class TestLLMBreaker(unittest.TestCase):
         ordered = self.eng._ordered_providers()
         self.assertEqual(len(ordered), 2, "全员冷却时应强制重启全体")
 
+    def test_ordered_providers_reads_breaker_state_once(self):
+        # 此前 active/cooled 两遍列表各读一次文件（2N 次读盘），且并发下两份名单版本可能对不上
+        self.eng._breaker_record_failure("dead")
+        orig_get = m.intel_state_get
+        calls = {"n": 0}
+
+        def _counting_get(key, default=None):
+            calls["n"] += 1
+            return orig_get(key, default)
+
+        with patch.object(m, "intel_state_get", side_effect=_counting_get):
+            ordered = [p.name for p in self.eng._ordered_providers()]
+        self.assertEqual(ordered, ["alive"])
+        self.assertEqual(calls["n"], 1, "一次快照复用，全程只读一次盘")
+
     def test_exponential_backoff(self):
         from datetime import datetime as dt, timezone as tz
         self.eng._breaker_record_failure("dead")  # 1st fail → 10min
@@ -1064,6 +1079,61 @@ class TestIntelRefreshBackoff(unittest.TestCase):
             self.assertEqual(intel.get("active_tags"), ["#新"])
             # 成功后退避标记应被清空
             self.assertFalse(m.intel_state_get("_intel_refresh_fail", {}).get("cooldown_until"))
+
+
+class TestEmptyCatalogStreak(unittest.TestCase):
+    """活动目录全空监控：连续多轮全空≈ catalogId 失效，必须升级报警而非永久静默"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp  # 不存在 → 无缓存，直达拉取分支
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _run_empty_round(self):
+        from unittest.mock import patch
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns", return_value=[]), \
+             patch.object(m.CampaignScanner, "analyze_with_ai", return_value=None), \
+             patch.object(m.Notifier, "send_notification") as mock_notify:
+            m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+            # AI 分析失败会记 2h 退避，下一轮前清掉以便连测
+            m.intel_state_set("_intel_refresh_fail", {})
+            return mock_notify
+
+    def test_streak_counts_and_alerts_at_threshold(self):
+        self.assertEqual(self._run_empty_round().call_count, 0)
+        self.assertEqual(m.intel_state_get("_intel_empty_streak", 0), 1)
+        self.assertEqual(self._run_empty_round().call_count, 0)
+        self.assertEqual(m.intel_state_get("_intel_empty_streak", 0), 2)
+        mock_notify = self._run_empty_round()
+        self.assertEqual(m.intel_state_get("_intel_empty_streak", 0), 3)
+        self.assertEqual(mock_notify.call_count, 1, "达阈值必须报警一次")
+        title = mock_notify.call_args[0][0]
+        self.assertIn("catalogId", mock_notify.call_args[0][1])
+        self.assertTrue(mock_notify.call_args[1].get("is_error"), title)
+
+    def test_streak_resets_on_nonempty_fetch(self):
+        from unittest.mock import patch
+        m.intel_state_set("_intel_empty_streak", 2)
+        fake_intel = {"active_tags": ["#新"], "incentivized_tokens": ["$BTC"],
+                      "strategy_guidance": "g", "last_updated": datetime.now(timezone.utc).isoformat()}
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns", return_value=["t1"]), \
+             patch.object(m.CampaignScanner, "analyze_with_ai", return_value=fake_intel):
+            m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+        self.assertEqual(m.intel_state_get("_intel_empty_streak", 0), 0)
+
+    def test_clear_skips_write_when_already_zero(self):
+        m.intel_state_set("_intel_empty_streak", 0)
+        before = os.path.getmtime(self.tmp)
+        import time
+        time.sleep(0.02)
+        m.CampaignScanner._clear_empty_streak()
+        self.assertEqual(os.path.getmtime(self.tmp), before, "零值清零不应制造无意义写盘")
 
 
 class MultiLLMEngineStub:

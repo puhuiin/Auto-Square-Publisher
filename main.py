@@ -1442,9 +1442,10 @@ class MultiLLMEngine:
         state = intel_state_get(self._BREAKER_STATE_KEY, {})
         return state if isinstance(state, dict) else {}
 
-    def _breaker_cooled_down(self, name: str) -> bool:
-        """True = 该提供商处于冷却期，本次运行应跳过"""
-        info = self._breaker_state().get(name)
+    @staticmethod
+    def _is_cooled(state: Dict[str, Dict[str, Any]], name: str) -> bool:
+        """快照版冷却判定（_ordered_providers 一次读盘后复用，避免逐提供商重复读文件）"""
+        info = state.get(name)
         if not info:
             return False
         try:
@@ -1452,6 +1453,10 @@ class MultiLLMEngine:
             return datetime.now(until.tzinfo or timezone.utc) < until
         except Exception:
             return False
+
+    def _breaker_cooled_down(self, name: str) -> bool:
+        """True = 该提供商处于冷却期，本次运行应跳过"""
+        return self._is_cooled(self._breaker_state(), name)
 
     def _breaker_record_failure(self, name: str):
         result_msg = []
@@ -1513,8 +1518,11 @@ class MultiLLMEngine:
         1. 跨运行断路：处于熔断冷却期的提供商直接跳过（全量冷却时才被迫重启用）
         2. 运行内连续失败次数升序排序（稳定排序，保持原有配置优先级）
         """
-        active = [p for p in self.providers if not self._breaker_cooled_down(p.name)]
-        cooled = [p for p in self.providers if self._breaker_cooled_down(p.name)]
+        # 一次快照复用：此前 active/cooled 两遍列表各读一次文件（2N 次读盘），
+        # 且并发运行时两份名单可能基于不同版本状态对不上
+        state = self._breaker_state()
+        active = [p for p in self.providers if not self._is_cooled(state, p.name)]
+        cooled = [p for p in self.providers if self._is_cooled(state, p.name)]
         if cooled:
             logger.info(f"⚡ 断路器跳过冷却中提供商: {[p.name for p in cooled]}")
         if not active:
@@ -1860,6 +1868,10 @@ class CampaignScanner:
         {"id": 49, "name": "新币挖矿与理财活动"},
     ]
 
+    # 全空拉取连续计数键：3 个分类连续多轮全空≈ catalogId 失效（偶发抖动不断全空）
+    _EMPTY_STREAK_KEY = "_intel_empty_streak"
+    EMPTY_STREAK_ALERT_THRESHOLD = 3  # 连续 3 轮（约 1 小时）全空即报警
+
     # AI 分析不可用时的静态兜底情报（仅作为返回值兜底，绝不覆写本地 intel 文件）
     DEFAULT_INTEL = {
         "active_tags": ["#Write2Earn", "#BinanceSquare", "#热点解析"],
@@ -1947,6 +1959,32 @@ class CampaignScanner:
             logger.warning(f"AI 理解活动异常: {e}")
         return None
 
+    @classmethod
+    def _note_empty_catalog(cls) -> int:
+        """记录一次全空拉取并返回连续次数；达阈值时发 12h 节流报警（Notifier 自带节流）"""
+        def _inc(s):
+            try:
+                return int(s or 0) + 1
+            except (TypeError, ValueError):
+                return 1  # 脏状态自愈为 1，不断连但也不炸
+
+        streak = intel_state_update(cls._EMPTY_STREAK_KEY, _inc, default=0) or 0
+        if streak >= cls.EMPTY_STREAK_ALERT_THRESHOLD:
+            Notifier.send_notification(
+                "币安活动目录持续拉取为空",
+                f"官方活动 3 个分类已连续 {streak} 轮拉取全空（约 {streak * 20} 分钟）。"
+                "偶发网络抖动不太可能连续全空，请检查 OFFICIAL_CATALOGS 的 catalogId 是否失效"
+                "（币安改版常换 ID），或确认 Actions 出口网络。",
+                is_error=True,
+            )
+        return streak
+
+    @classmethod
+    def _clear_empty_streak(cls) -> None:
+        # 只在非零时写盘：每轮都写会制造无意义的 git 变更噪音
+        if intel_state_get(cls._EMPTY_STREAK_KEY, 0):
+            intel_state_set(cls._EMPTY_STREAK_KEY, 0)
+
     @staticmethod
     def get_campaign_intel(llm_engine: MultiLLMEngine) -> Dict[str, Any]:
         """
@@ -1993,6 +2031,9 @@ class CampaignScanner:
         raw_titles = CampaignScanner.fetch_raw_campaigns()
         if not raw_titles:
             logger.warning("币安官方活动目录拉取为空（接口变更或网络问题），将沿用历史/默认情报。")
+            CampaignScanner._note_empty_catalog()
+        else:
+            CampaignScanner._clear_empty_streak()
         intel = CampaignScanner.analyze_with_ai(llm_engine, raw_titles)
 
         if intel:
@@ -2008,10 +2049,13 @@ class CampaignScanner:
 
         if intel:
             # 保留文件中的非 AI 键（如 _fallback_image 兜底图缓存），避免情报刷新时被冲刷；
-            # 但 _intel_refresh_fail 不保留——成功刷新后失败退避必须归零
+            # 但 _intel_refresh_fail 不保留——成功刷新后失败退避必须归零；
+            # _intel_empty_streak 同理：本轮拉取非空已清零，入口快照 cached 里还是旧值，
+            # 若合并回去会把刚清的零覆盖掉（stale-cache 回写）。
             if cached:
                 for k, v in cached.items():
-                    if k.startswith("_") and k not in intel and k != "_intel_refresh_fail":
+                    if k.startswith("_") and k not in intel and k not in (
+                            "_intel_refresh_fail", CampaignScanner._EMPTY_STREAK_KEY):
                         intel[k] = v
             intel["_intel_refresh_fail"] = {}
             # 仅当 AI 产出了真实分析结果才落盘持久化
