@@ -2,9 +2,9 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
+    "#TradingCompetition",
     "#TradingTournament",
-    "#BinanceAlpha",
-    "#BinanceWallet"
+    "#Airdrop"
   ],
   "incentivized_tokens": [
     "$XPIN",
@@ -12,15 +12,11 @@
     "$ZKC",
     "$COLLECT",
     "$BNB",
-    "$USDC",
-    "$USD1"
+    "$USDT",
+    "$USDC"
   ],
-  "strategy_guidance": "优先围绕Binance Alpha交易竞赛（XPIN/COLLECT）、SAHARA与ZKC交易锦标赛以及Binance Wallet赛季PnL竞赛发文，引导读者参与指定代币现货/合约交易以叠加Write2Earn内容返佣与官方活动奖励双收益。",
-  "last_updated": "2026-09-04T18:57:34.035144Z",
-  "_feed_health": {
-    "CryptoSlate (新赛道与代币经济)": {
-      "fails": 1,
-      "last_fail": "2026-09-05T00:55:37.517287+00:00"
-    }
-  }
+  "strategy_guidance": "结合Binance Alpha交易竞赛与Trading Tournament热点，发布代币分析并附上交易链接，引导用户参与竞赛，同时利用Write2Earn获取返佣。",
+  "last_updated": "2026-09-06T00:24:55.322463Z",
+  "_feed_health": {},
+  "_intel_refresh_fail": {}
 }

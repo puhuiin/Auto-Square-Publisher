@@ -970,6 +970,57 @@ class TestCampaignJsonExtraction(unittest.TestCase):
         self.assertEqual(data["incentivized_tokens"], ["$BTC"])
 
 
+class TestIntelRefreshBackoff(unittest.TestCase):
+    """情报刷新失败退避：2h 内不重复白烧 LLM"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        import json
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"active_tags": ["#历史"], "last_updated": "2026-01-01T00:00:00Z"}, f)
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def test_backoff_skips_retry_within_window(self):
+        from unittest.mock import patch
+        # 标记 2h 前刚失败
+        m.intel_state_set("_intel_refresh_fail", {
+            "cooldown_until": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
+        })
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns") as mock_fetch, \
+             patch.object(m.CampaignScanner, "analyze_with_ai") as mock_ai:
+            intel = m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+            mock_fetch.assert_not_called()
+            mock_ai.assert_not_called()
+            self.assertEqual(intel.get("active_tags"), ["#历史"], "退避期内应沿用历史情报")
+
+    def test_backoff_cleared_after_success(self):
+        from unittest.mock import patch
+        # 退避标记已过期（模拟 2h 前的失败记录），此时应正常重试
+        m.intel_state_set("_intel_refresh_fail", {
+            "cooldown_until": (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+        })
+        fake_intel = {"active_tags": ["#新"], "incentivized_tokens": ["$BTC"],
+                      "strategy_guidance": "g", "last_updated": datetime.now(timezone.utc).isoformat()}
+        with patch.object(m.CampaignScanner, "analyze_with_ai", return_value=fake_intel), \
+             patch.object(m.CampaignScanner, "fetch_raw_campaigns", return_value=["t1"]):
+            intel = m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+            self.assertEqual(intel.get("active_tags"), ["#新"])
+            # 成功后退避标记应被清空
+            self.assertFalse(m.intel_state_get("_intel_refresh_fail", {}).get("cooldown_until"))
+
+
+class MultiLLMEngineStub:
+    """健康检查/情报流程用的最小引擎替身"""
+    pass
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 

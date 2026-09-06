@@ -383,7 +383,7 @@ def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) 
                 base_url=gw_url,
                 api_key="reasonix-local",
                 model=mid,
-                timeout=45.0,
+                timeout=90.0,  # 推理模型链路实测可达 60s+，45s 曾在悬崖边缘
             )
             for i, mid in enumerate(picked)
         ]
@@ -1156,12 +1156,15 @@ class NewsFetcher:
                     self.stats["feeds_failed"].append(feed_name)
                     self._feed_record(feed_name, ok=False)
 
-        # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布
+        # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布（正则一次性预编译）
         if priority_tokens:
-            boost_tokens = {t.replace("$", "").upper() for t in priority_tokens if t}
+            boost_patterns = [
+                re.compile(rf"\b{re.escape(t.replace('$', '').upper())}\b")
+                for t in priority_tokens if t
+            ]
             for item in candidates:
                 text_upper = (item["title"] + " " + item["summary"]).upper()
-                if any(re.search(rf"\b{re.escape(tok)}\b", text_upper) for tok in boost_tokens):
+                if any(p.search(text_upper) for p in boost_patterns):
                     item["impact_score"] += CAMPAIGN_TOKEN_BOOST
 
         # 低热度新闻过滤（默认不过滤，可通过 MIN_IMPACT_SCORE 开启）
@@ -1777,11 +1780,13 @@ class CampaignScanner:
             for provider in llm_engine._ordered_providers():
                 try:
                     client = llm_engine._get_client(provider)
+                    # 推理型渠道（Reasonix 网关）思考链就吃几百 token，400 预算会静默产出空内容
+                    effective_max_tokens = 1200 if provider.name.startswith("Reasonix-GW") else 400
                     resp = client.chat.completions.create(
                         model=provider.model,
                         messages=[{"role": "user", "content": prompt}],
                         temperature=0.3,
-                        max_tokens=400,
+                        max_tokens=effective_max_tokens,
                     )
                     raw_res = (resp.choices[0].message.content or "").strip()
                     clean_res = re.sub(r"^```json\s*", "", raw_res, flags=re.IGNORECASE)
@@ -1829,17 +1834,46 @@ class CampaignScanner:
             return cached
 
         logger.info("活动情报已过期或不存在，正在重新扫描币安官方活动...")
+
+        # 刷新失败退避：上次分析失败后 2 小时内不再重试（避免付费 LLM 每 20 分钟被白烧一次）
+        fail_state = intel_state_get("_intel_refresh_fail", {}) or {}
+        cooldown_until = str(fail_state.get("cooldown_until", "") or "")
+        if cooldown_until:
+            try:
+                until_dt = datetime.fromisoformat(cooldown_until)
+                if datetime.now(until_dt.tzinfo or timezone.utc) < until_dt:
+                    logger.warning(f"⏭️ 情报分析处于失败退避期（至 {cooldown_until}），本轮沿用历史/默认情报。")
+                    if cached:
+                        return cached
+                    return dict(CampaignScanner.DEFAULT_INTEL,
+                                last_updated=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+            except Exception:
+                pass
+
         raw_titles = CampaignScanner.fetch_raw_campaigns()
         if not raw_titles:
             logger.warning("币安官方活动目录拉取为空（接口变更或网络问题），将沿用历史/默认情报。")
         intel = CampaignScanner.analyze_with_ai(llm_engine, raw_titles)
 
         if intel:
-            # 保留文件中的非 AI 键（如 _fallback_image 兜底图缓存），避免情报刷新时被冲刷
+            # 分析成功：清除失败退避标记
+            intel_state_set("_intel_refresh_fail", {})
+        else:
+            # 记录失败退避（2 小时）
+            def _mark_fail(state):
+                state = dict(state or {})
+                state["cooldown_until"] = (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
+                return state
+            intel_state_update("_intel_refresh_fail", _mark_fail, default={})
+
+        if intel:
+            # 保留文件中的非 AI 键（如 _fallback_image 兜底图缓存），避免情报刷新时被冲刷；
+            # 但 _intel_refresh_fail 不保留——成功刷新后失败退避必须归零
             if cached:
                 for k, v in cached.items():
-                    if k.startswith("_") and k not in intel:
+                    if k.startswith("_") and k not in intel and k != "_intel_refresh_fail":
                         intel[k] = v
+            intel["_intel_refresh_fail"] = {}
             # 仅当 AI 产出了真实分析结果才落盘持久化
             try:
                 with open(CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
