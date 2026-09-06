@@ -181,8 +181,14 @@ def within_active_hours(spec: str = ACTIVE_HOURS_BEIJING) -> bool:
     if not m:
         logger.warning(f"ACTIVE_HOURS_BEIJING 格式无法解析 ({spec})，按全天开放处理。")
         return True
-    start = int(m.group(1)) + int(m.group(2) or 0) / 60
-    end = int(m.group(3)) + int(m.group(4) or 0) / 60
+    sh, sm, eh, em = int(m.group(1)), int(m.group(2) or 0), int(m.group(3)), int(m.group(4) or 0)
+    if not (0 <= sh < 24 and 0 <= sm < 60 and 0 <= eh < 24 and 0 <= em < 60):
+        # "8:75"/"25-26" 这类能过正则但越界的值：静默接受会扭曲成错误窗口
+        # （错过全天发帖或在错误时段发帖），与不可解析同等按全天开放处理
+        logger.warning(f"ACTIVE_HOURS_BEIJING 取值越界 ({spec})，按全天开放处理。")
+        return True
+    start = sh + sm / 60
+    end = eh + em / 60
     beijing_now = datetime.now(timezone(timedelta(hours=8)))
     hour_now = beijing_now.hour + beijing_now.minute / 60
     if start <= end:   # 常规同日窗口
@@ -768,7 +774,9 @@ class CacheManager:
                 if isinstance(data, list):
                     return [x for x in data if isinstance(x, dict)]
                 elif isinstance(data, dict) and "sent_ids" in data:
-                    return data["sent_ids"]
+                    # 远古格式兼容：同样只收 dict 条目，否则字符串/数字条目会在
+                    # count_since/recent_titles 的 item.get() 上直接炸掉整轮
+                    return [x for x in (data.get("sent_ids") or []) if isinstance(x, dict)]
                 return []
         except Exception as e:
             logger.warning(f"读取缓存文件异常 ({e})，使用空缓存。")
@@ -1188,7 +1196,10 @@ class NewsFetcher:
                 if len(items) >= limit_per_feed:
                     break
 
-                title = entry.get("title", "").strip()
+                # 标题同样过注入截断：此前只有摘要走 clean_html，标题原文直进 prompt；
+                # 标题里的"Ignore previous instructions…"会被安全提示兜底，但纵深防御
+                # 应在入口就截断（顺带归一空白）。ID 用原文种子不受影响（稳定性不变）。
+                title = self.clean_html(entry.get("title", ""))
                 if not title:
                     continue
 
