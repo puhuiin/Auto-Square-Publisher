@@ -2524,21 +2524,45 @@ class SquarePublisher(BasePublisher):
         for bad_kw, safe_kw in risky_words.items():
             content = content.replace(bad_kw, safe_kw)
 
-        # 4. 严格限制 Hashtag 数量：仅保留前 3 个，超出的按字符位置精确脱壳 #（避免误伤同名前序标签）
+        # 4. 长度保护先行（移动端短讯保护）：只截断不清标签——截断会打乱标签位置，
+        #    在此处补标签可能与残留叠加超限（币安 220094）。截断后前缀里的残留标签
+        #    一并清除（位置已乱且第 6 步会重补，留着只会挤占名额）。
+        if len(content) > 900:
+            content = re.sub(r"#[^\s#]+", "", content[:850].rsplit("\n", 1)[0]).strip()
+
+        # 5. Hashtag 上限 3 个：#Write2Earn/#BinanceSquare 保底优先保留（Write to Earn
+        #    收益归因就靠它们；此前纯位置优先，模型自带 3 个标签时会把保底全切掉），
+        #    其余按出现顺序补足；超出的按字符位置精确脱壳 #（避免误伤同名前序标签）
         tag_matches = list(re.finditer(r"#[^\s#]+", content))
         if len(tag_matches) > 3:
+            keep = set()
+            seen_mandatory = set()
+            for idx, mm in enumerate(tag_matches):
+                tag_low = mm.group(0)[1:].lower()
+                if tag_low in ("write2earn", "binancesquare") and tag_low not in seen_mandatory:
+                    seen_mandatory.add(tag_low)
+                    keep.add(idx)
+            for idx in range(len(tag_matches)):
+                if len(keep) >= 3:
+                    break
+                keep.add(idx)
             rebuild = []
             last_end = 0
-            for idx, m in enumerate(tag_matches):
-                rebuild.append(content[last_end:m.start()])
-                rebuild.append(m.group(0) if idx < 3 else m.group(0)[1:])
-                last_end = m.end()
+            for idx, mm in enumerate(tag_matches):
+                rebuild.append(content[last_end:mm.start()])
+                rebuild.append(mm.group(0) if idx in keep else mm.group(0)[1:])
+                last_end = mm.end()
             rebuild.append(content[last_end:])
             content = "".join(rebuild)
 
-        # 5. 长度保护（移动端短讯保护）
-        if len(content) > 900:
-            content = content[:850].rsplit("\n", 1)[0] + "\n\n#Write2Earn #BinanceSquare"
+        # 6. 保底标签补齐：缺 #Write2Earn/#BinanceSquare 且还有名额时补上
+        #    （正常管线 summarize 已保证在文，走到这里多为短内容；已满 3 个不再硬塞）
+        for mandatory in ("#Write2Earn", "#BinanceSquare"):
+            tags_now = list(re.finditer(r"#[^\s#]+", content))
+            have = {mm.group(0)[1:].lower() for mm in tags_now}
+            if mandatory[1:].lower() in have or len(tags_now) >= 3:
+                continue
+            content = content.rstrip() + f" {mandatory}"
 
         return content.strip()
 

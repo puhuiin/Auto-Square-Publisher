@@ -195,6 +195,32 @@ class TestContentSanitizer(unittest.TestCase):
         self.assertTrue(s.rstrip().endswith("BTC"), "末尾的第 4 个同名标签应被脱壳为 BTC")
         self.assertLessEqual(s.count("#"), 3)
 
+    def test_mandatory_tags_survive_overflow(self):
+        # 模型自带 3 个标签 +  append 的保底：保底必须活下来（收益归因），总数仍 ≤3
+        s = m.SquarePublisher._sanitize_content(
+            "分析 $BTC #BTC #ETH #SOL 观点 #Write2Earn #BinanceSquare #PEPE")
+        self.assertIn("#Write2Earn", s)
+        self.assertIn("#BinanceSquare", s)
+        self.assertLessEqual(s.count("#"), 3)
+
+    def test_mandatory_filled_when_room(self):
+        # 无标签短内容：保底补齐（此前保持 0 标签发出，无归因）
+        s = m.SquarePublisher._sanitize_content("比特币放量突破，短线情绪转多。")
+        self.assertIn("#Write2Earn", s)
+        self.assertIn("#BinanceSquare", s)
+        self.assertLessEqual(s.count("#"), 3)
+
+    def test_truncation_respects_tag_budget(self):
+        # 超长截断不再无条件追加保底（曾与残留叠加超 3 个触发 220094）；
+        # 前缀残留清掉后统一重补，结果恰好 2 个保底
+        body = "正文内容。" * 200 + "\n#AAA #BBB #CCC\n" + "结尾。" * 100 + "\n#Write2Earn #BinanceSquare #XRP"
+        self.assertGreater(len(body), 900)
+        s = m.SquarePublisher._sanitize_content(body)
+        self.assertIn("#Write2Earn", s)
+        self.assertIn("#BinanceSquare", s)
+        self.assertLessEqual(s.count("#"), 3)
+        self.assertNotIn("#AAA", s)
+
     def test_fullwidth_symbols_normalized(self):
         s = m.SquarePublisher._sanitize_content("重大突破 ＃BTC ＄ETH 冲击前高 5％")
         self.assertIn("#BTC", s)
