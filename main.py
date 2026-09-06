@@ -1950,6 +1950,19 @@ class CampaignScanner:
     }
 
     @staticmethod
+    def _valid_intel_shape(data: Any) -> bool:
+        """情报 schema 门：能解析的 JSON 不等于可用的情报。
+        缺键/错类型一旦落盘会毒 12h：incentivized_tokens 非字符串列表会让
+        fetch_candidates 的 t.replace 直接炸掉整轮（该处无 try 兜底），
+        active_tags 非列表则炸运行报告。宁可判废换下一家，不收脏情报。"""
+        return (isinstance(data, dict)
+                and isinstance(data.get("active_tags"), list)
+                and all(isinstance(t, str) for t in data["active_tags"])
+                and isinstance(data.get("incentivized_tokens"), list)
+                and all(isinstance(t, str) for t in data["incentivized_tokens"])
+                and isinstance(data.get("strategy_guidance"), str))
+
+    @staticmethod
     def fetch_raw_campaigns() -> List[str]:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
@@ -2019,10 +2032,12 @@ class CampaignScanner:
                     if brace_start != -1 and brace_end > brace_start:
                         clean_res = clean_res[brace_start:brace_end + 1]
                     data = json.loads(clean_res)
-                    if isinstance(data, dict):
+                    if CampaignScanner._valid_intel_shape(data):
                         data["last_updated"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
                         logger.info(f"🎉 币安活动情报分析完成: {data.get('strategy_guidance')}")
                         return data
+                    logger.warning(f"提供商 [{provider.name}] 返回的情报缺字段/类型不对，已丢弃换下一家: "
+                                   f"{str(data)[:120]}")
                 except Exception as e:
                     logger.warning(f"使用提供商 [{provider.name}] 分析活动失败: {e}")
         except Exception as e:

@@ -1340,6 +1340,44 @@ class TestCampaignJsonExtraction(unittest.TestCase):
         self.assertEqual(data["incentivized_tokens"], ["$BTC"])
 
 
+class TestIntelSchema(unittest.TestCase):
+    """情报 schema 门：缺键/错类型的可解析 JSON 必须判废，不能落盘毒 12h"""
+
+    def _stub_engine(self, content):
+        cfg = m.LLMProviderConfig("stub", "https://x", "k", "mm")
+        fake_client = MagicMock()
+        fake_client.chat.completions.create.return_value = MagicMock(
+            choices=[MagicMock(message=MagicMock(content=content))])
+        eng = MagicMock()
+        eng._ordered_providers.return_value = [cfg]
+        eng._get_client.return_value = fake_client
+        return eng
+
+    def test_missing_keys_rejected(self):
+        eng = self._stub_engine('{"foo": 1, "active_tags": ["#A"]}')
+        self.assertIsNone(m.CampaignScanner.analyze_with_ai(eng, ["t1"]))
+
+    def test_string_tokens_rejected(self):
+        # incentivized_tokens 是字符串时下游会逐字迭代；必须在此拦下
+        eng = self._stub_engine('{"active_tags": ["#A"], "incentivized_tokens": "$BTC,$ETH", '
+                                '"strategy_guidance": "g"}')
+        self.assertIsNone(m.CampaignScanner.analyze_with_ai(eng, ["t1"]))
+
+    def test_nonstring_list_items_rejected(self):
+        # 列表里混入 dict 会在 fetch_candidates 的 t.replace 处炸掉整轮
+        eng = self._stub_engine('{"active_tags": ["#A", 42], "incentivized_tokens": ["$BTC"], '
+                                '"strategy_guidance": "g"}')
+        self.assertIsNone(m.CampaignScanner.analyze_with_ai(eng, ["t1"]))
+
+    def test_valid_intel_accepted(self):
+        eng = self._stub_engine('{"active_tags": ["#A"], "incentivized_tokens": ["$BTC"], '
+                                '"strategy_guidance": "guide"}')
+        intel = m.CampaignScanner.analyze_with_ai(eng, ["t1"])
+        self.assertIsNotNone(intel)
+        self.assertEqual(intel["incentivized_tokens"], ["$BTC"])
+        self.assertIn("last_updated", intel)
+
+
 class TestIntelRefreshBackoff(unittest.TestCase):
     """情报刷新失败退避：2h 内不重复白烧 LLM"""
 
