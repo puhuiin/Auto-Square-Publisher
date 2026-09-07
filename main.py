@@ -543,9 +543,19 @@ def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) 
     if os.getenv("GITHUB_ACTIONS", "").strip().lower() == "true":
         return []
     try:
-        gw_base = gw_url[:-3] if gw_url.endswith("/v1") else gw_url  # 网关根（不带 /v1）
-        health = _DIRECT_SESSION.get(f"{gw_base}/health", timeout=timeout)
-        if health.status_code != 200:
+        root = gw_url[:-3] if gw_url.endswith("/v1") else gw_url
+        # 瞬态探测失败兜底：本地网关压测/重启窗口会让单次 ping 超时（本仓实测发生过），
+        # 直接判死会让整轮零提供商快速失败。0.5s 后重试一次再下结论。
+        health = None
+        for attempt in (0, 1):
+            try:
+                health = _DIRECT_SESSION.get(f"{root}/health", timeout=timeout)
+                if health.status_code == 200:
+                    break
+            except Exception:
+                if attempt == 0:
+                    time.sleep(0.5)
+        if health is None or health.status_code != 200:
             return []
 
         available: set = set()
@@ -554,7 +564,7 @@ def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) 
             # OpenAI 兼容目录固定挂在 <root>/v1/models：gw_url 自带 /v1 时不可再拼一层
             #（此前 f"{gw_url}/v1/models" 在默认配置下得到 /v1/v1/models → 恒 404，
             # 目录探测永不成功，多模型备份链退化成单条 auto/best-fast）
-            models_resp = _DIRECT_SESSION.get(f"{gw_base}/v1/models", timeout=timeout + 3)
+            models_resp = _DIRECT_SESSION.get(f"{root}/v1/models", timeout=timeout + 3)
             if models_resp.status_code == 200:
                 available = {m.get("id", "") for m in models_resp.json().get("data", [])}
                 catalog_ok = True
