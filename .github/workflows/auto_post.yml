@@ -41,13 +41,13 @@ jobs:
 
     steps:
       - name: 检出仓库代码
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.4.0（SHA 锁定防投毒，dependabot 负责跟进）
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1（SHA 锁定防投毒，dependabot 负责跟进）
         with:
           fetch-depth: 1 # 浅克隆加速检出，回写步骤自带 fetch 对齐远端，无需完整历史
           persist-credentials: true
 
       - name: 配置 Python 环境
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v5.6.0（同上锁定）
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0（同上锁定）
         with:
           python-version: '3.11'
           cache: 'pip'

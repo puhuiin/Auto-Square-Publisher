@@ -11,6 +11,10 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # 每周一 09:17 UTC（北京 17:17）跑一次含 LLM 实弹的全量检查：
+    # 提前发现 Key 过期/额度耗尽/模型下线，而不是等发帖机器人连续熔断报警才知道。
+    - cron: '17 9 * * 1'
 
 permissions:
   contents: read
@@ -21,11 +25,11 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.4.0（SHA 锁定防投毒，dependabot 负责跟进）
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1（SHA 锁定防投毒，dependabot 负责跟进）
         with:
           fetch-depth: 1
 
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v5.6.0（同上锁定）
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0（同上锁定）
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -48,3 +52,41 @@ jobs:
           python tests/test_core.py
           python tests/test_metrics_report.py
           python tests/test_workflows.py
+
+  llm-live:
+    # LLM 实弹冒烟：真实调一次生成链，验证 Key 有效性与模型可用性。
+    # 仅 scheduled / 手动触发时执行（push/PR 不跑，避免每个 PR 都烧 token）。
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1（同上锁定）
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0（同上锁定）
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: LLM 实弹冒烟（全部提供商逐个实弹验证，失败即红）
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          BAI_API_KEY: ${{ secrets.BAI_API_KEY }}
+          SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
+          REASONIX_GW_OFF: "1" # CI 无本地网关，显式关闭探测
+        run: |
+          OUT=$(python main.py --healthcheck --llm-live 2>&1)
+          echo "$OUT"
+          if ! echo "$OUT" | grep -q "LLM 实弹测试.*✔"; then
+            echo "::error::LLM 实弹测试未通过——Key 过期/额度耗尽/模型下线，发帖机器人将在熔断中空转。请检查 Secrets。"
+            exit 1
+          fi
