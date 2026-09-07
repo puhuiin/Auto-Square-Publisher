@@ -19,5 +19,9 @@
   "strategy_guidance": "将日快讯与Alpha交易赛、SAHARA/ZKC锦标赛及USD1空投延期强关联，引导用户通过参与指定币种交易或完成新手任务获取代金券与返佣，同步嵌入钱包足球赛与区域专属福利扩大受众覆盖。",
   "last_updated": "2026-09-07T03:13:49.583957Z",
   "_feed_health": {},
-  "_intel_refresh_fail": {}
+  "_intel_refresh_fail": {},
+  "_fallback_image": {
+    "url": "https://public.bnbstatic.com/image/pgc/20260907/dcf48e05172a4202bc97922d56752434.jpg",
+    "date": "2026-09-07"
+  }
 }
