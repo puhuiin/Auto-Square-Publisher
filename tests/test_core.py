@@ -5,10 +5,12 @@
 
     python tests/test_core.py
 """
+import json
 import os
 import sys
 import unittest
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -368,6 +370,128 @@ class TestProviderHealthScheduling(unittest.TestCase):
         eng.providers = [p_dead, p_healthy, p_flaky]
         self.assertEqual([p.name for p in eng._ordered_providers()],
                          ["healthy", "flaky", "dead"])
+
+
+class TestBtcFallbackContract(unittest.TestCase):
+    """Round 3：消除静默 BTC 臆造，改为显式/可观测/可关闭的兜底契约"""
+
+    def test_filter_valid_tokens_no_silent_btc(self):
+        # 过滤职责是过滤而非臆造：无有效标的应返回空，而非 ["BTC"]
+        self.assertEqual(m.SymbolValidator.filter_valid_tokens([]), [])
+        self.assertEqual(m.SymbolValidator.filter_valid_tokens(["FAKECOIN", "SCAM"]), [])
+        self.assertEqual(m.SymbolValidator.filter_valid_tokens(["btc", "eth"]), ["btc", "eth"])
+
+    def _skip_engine(self, content, env_force=False):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.providers = [m.LLMProviderConfig("stub", "https://x", "k", "mm")]
+        resp = MagicMock()
+        resp.choices = [MagicMock(message=MagicMock(content=content))]
+        resp.usage = None
+        fake = MagicMock()
+        fake.chat.completions.create.return_value = resp
+        eng._get_client = lambda p: fake
+        return eng
+
+    def test_summarize_skips_when_no_token_and_not_forced(self):
+        # 模型与新闻侧均无有效标的 → 默认跳过并留痕 no_valid_token（不强行挂 $BTC）
+        eng = self._skip_engine(
+            "市场情绪今日偏谨慎，整体观望为主，成交量温和回落，等待方向选择。"
+            "短线控制仓位，严格止损，避免追高被套，保持耐心等待更优入场点。")
+        item = {"title": "市场观望", "summary": "sentiment", "source": "U.Today"}
+        import tempfile, json as _json
+        tmp = tempfile.mkdtemp()
+        orig = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(tmp, "metrics.jsonl")
+        try:
+            with patch.object(eng, "_ordered_providers", return_value=eng.providers):
+                with patch.dict(os.environ, {}, clear=False):
+                    os.environ.pop("BINANCE_FORCE_BTC_FALLBACK", None)
+                    result = eng.summarize(item, None, market_context="", token_hints=[])
+            self.assertIsNone(result)
+            with open(m.METRICS_FILE, encoding="utf-8") as f:
+                rows = [ _json.loads(l) for l in f if l.strip()]
+            self.assertTrue(any(r.get("stage") == "no_valid_token" for r in rows),
+                             "应写入 no_valid_token 拒单遥测")
+        finally:
+            m.METRICS_FILE = orig
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_summarize_forces_btc_only_when_env_set(self):
+        # 显式 BINANCE_FORCE_BTC_FALLBACK=1 时恢复静默 BTC 兜底（向后兼容开关）
+        eng = self._skip_engine(
+            "比特币围绕六万关口震荡整理，多空拉锯，链上活跃度平稳，短线谨慎偏强。"
+            "回踩不破可轻仓试多，上方先看前高，仓位管理第一，跌破支撑离场。")
+        item = {"title": "BTC 震荡", "summary": "Bitcoin", "source": "Decrypt"}
+        with patch.object(eng, "_ordered_providers", return_value=eng.providers):
+            with patch.dict(os.environ, {"BINANCE_FORCE_BTC_FALLBACK": "1"}):
+                result = eng.summarize(item, None, market_context="", token_hints=[])
+        self.assertIsNotNone(result)
+        self.assertIn("BTC", result["tokens"])
+
+
+class TestCostAwareScheduling(unittest.TestCase):
+    """Round 3：同健康档内按历史(延迟+成本)二次排序；无遥测时回退原顺序"""
+
+    def _engine_with(self, names):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {n: 0 for n in names}
+        eng.providers = [m.LLMProviderConfig(n, "https://x", "k", "m") for n in names]
+        return eng
+
+    def test_no_telemetry_preserves_config_order(self):
+        eng = self._engine_with(["a", "b", "c"])
+        import tempfile
+        orig = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(tempfile.mkdtemp(), "metrics.jsonl")
+        try:
+            self.assertEqual([p.name for p in eng._ordered_providers()], ["a", "b", "c"])
+        finally:
+            m.METRICS_FILE = orig
+
+    def test_cheaper_faster_provider_preferred(self):
+        # 构造遥测：b 平均延迟与 token 都明显低于 a → b 应在 a 之前
+        import tempfile, json as _json
+        tmp = tempfile.mkdtemp()
+        orig = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(tmp, "metrics.jsonl")
+        with open(m.METRICS_FILE, "w", encoding="utf-8") as f:
+            for _ in range(5):
+                f.write(_json.dumps({"stage": "summarize", "provider": "a",
+                                     "llm_latency_sec": 3.0, "tokens_used": 2000}) + "\n")
+                f.write(_json.dumps({"stage": "summarize", "provider": "b",
+                                     "llm_latency_sec": 0.5, "tokens_used": 300}) + "\n")
+        try:
+            eng = self._engine_with(["a", "b"])
+            self.assertEqual([p.name for p in eng._ordered_providers()], ["b", "a"])
+        finally:
+            m.METRICS_FILE = orig
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_fail_count_still_dominates(self):
+        # 健康度(失败次数)是主排序键，成本只在同档内二次排序
+        eng = self._engine_with(["cheap", "healthy_but_costly", "dead"])
+        eng._fail_counts = {"cheap": 5, "healthy_but_costly": 0, "dead": 9}
+        import tempfile, json as _json
+        tmp = tempfile.mkdtemp()
+        orig = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(tmp, "metrics.jsonl")
+        with open(m.METRICS_FILE, "w", encoding="utf-8") as f:
+            # cheap 虽便宜但失败多；dead 最差；healthy_but_costly 零失败应排第一
+            f.write(_json.dumps({"stage": "summarize", "provider": "healthy_but_costly",
+                                 "llm_latency_sec": 5.0, "tokens_used": 5000}) + "\n")
+            f.write(_json.dumps({"stage": "summarize", "provider": "cheap",
+                                 "llm_latency_sec": 0.1, "tokens_used": 100}) + "\n")
+        try:
+            self.assertEqual([p.name for p in eng._ordered_providers()],
+                             ["healthy_but_costly", "cheap", "dead"])
+        finally:
+            m.METRICS_FILE = orig
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
 
 
 class TestEnvParsing(unittest.TestCase):
@@ -1467,10 +1591,13 @@ def _load_validator():
     return mod
 
 
-def _require_bash(testcase):
-    import shutil
-    if shutil.which("bash") is None:
-        testcase.skipTest("本机无 bash，跳过内嵌脚本检查测试")
+def _require_bash(testcase, validator=None):
+    # 不能只查 shutil.which("bash")：PATH 上的 bash 可能是 WSL 启动器，或被安全策略
+    # 拦住（--version 能过、`bash -n -c` 被拒），此时继续断言等于把环境故障当成产品缺陷。
+    v = validator if validator is not None else _load_validator()
+    v.reset_bash_cache()
+    if not v.bash_available():
+        testcase.skipTest("本机无可用 bash（无法执行 `bash -n -c true`），跳过内嵌脚本检查测试")
 
 
 def _require_yaml(testcase):
@@ -2252,6 +2379,106 @@ class TestRiskBlockDenylist(unittest.TestCase):
         self.assertIn("nid209", state)    # 最新的保留
 
 
+class TestMetricsScaleGovernance(unittest.TestCase):
+    """Round 4：metrics.jsonl 规模治理（轮转裁剪 + 聚合缓存）"""
+
+    def setUp(self):
+        import tempfile
+        self.tmpdir = tempfile.mkdtemp()
+        self._orig_metrics = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(self.tmpdir, "metrics.jsonl")
+        m._METRICS_AGG_CACHE.update({"key": None, "val": {}, "ts": 0.0})
+
+    def tearDown(self):
+        m.METRICS_FILE = self._orig_metrics
+        m._METRICS_AGG_CACHE.update({"key": None, "val": {}, "ts": 0.0})
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _write(self, lines):
+        with open(m.METRICS_FILE, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+
+    def test_rotate_noop_under_threshold(self):
+        self._write([f'{{"i":{i}}}' for i in range(5)])
+        trimmed = m.rotate_metrics_if_needed(keep=10)
+        self.assertEqual(trimmed, 0)
+        with open(m.METRICS_FILE, encoding="utf-8") as f:
+            self.assertEqual(len([l for l in f if l.strip()]), 5)
+
+    def test_rotate_trims_to_keep_and_preserves_recent(self):
+        self._write([f'{{"i":{i}}}' for i in range(15)])
+        trimmed = m.rotate_metrics_if_needed(keep=10)
+        self.assertEqual(trimmed, 5)
+        with open(m.METRICS_FILE, encoding="utf-8") as f:
+            kept = [l for l in f if l.strip()]
+        self.assertEqual(len(kept), 10)
+        self.assertEqual(json.loads(kept[0])["i"], 5)   # 最老 5 行被裁掉
+        self.assertEqual(json.loads(kept[-1])["i"], 14)  # 最新保留
+        # 不留半截临时文件
+        import glob
+        self.assertFalse(glob.glob(os.path.join(self.tmpdir, "*.tmp")))
+
+    def test_rotate_invalidates_agg_cache(self):
+        self._write([f'{{"i":{i}}}' for i in range(15)])
+        m._METRICS_AGG_CACHE["val"] = {"stale": 1.0}
+        m.rotate_metrics_if_needed(keep=10)
+        self.assertIsNone(m._METRICS_AGG_CACHE["key"], "轮转后缓存应失效")
+
+    def test_agg_scores_cache_avoids_reread(self):
+        import builtins
+        from unittest.mock import patch
+        self._write([
+            '{"stage":"summarize","provider":"a","llm_latency_sec":3.0,"tokens_used":2000}',
+            '{"stage":"summarize","provider":"b","llm_latency_sec":0.5,"tokens_used":300}',
+        ])
+        real_open = builtins.open
+        counter = {"n": 0}
+
+        def counting_open(*args, **kwargs):
+            mode = args[1] if len(args) > 1 else kwargs.get("mode", "r")
+            if (args and isinstance(args[0], str)
+                    and os.path.abspath(args[0]) == os.path.abspath(m.METRICS_FILE)
+                    and str(mode).startswith("r")):
+                counter["n"] += 1
+            return real_open(*args, **kwargs)
+
+        with patch("builtins.open", side_effect=counting_open):
+            m._METRICS_AGG_CACHE.update({"key": None, "val": {}, "ts": 0.0})
+            s1 = m.MultiLLMEngine._provider_cost_latency_scores()
+            s2 = m.MultiLLMEngine._provider_cost_latency_scores()
+        self.assertEqual(counter["n"], 1, "同文件未变时第二次调用应命中缓存，不再读盘")
+        self.assertEqual(set(s1), {"a", "b"})
+
+    def test_agg_scores_cache_invalidated_on_mtime_change(self):
+        import builtins
+        from unittest.mock import patch
+        self._write([
+            '{"stage":"summarize","provider":"a","llm_latency_sec":3.0,"tokens_used":2000}',
+        ])
+        real_open = builtins.open
+        counter = {"n": 0}
+
+        def counting_open(*args, **kwargs):
+            mode = args[1] if len(args) > 1 else kwargs.get("mode", "r")
+            if (args and isinstance(args[0], str)
+                    and os.path.abspath(args[0]) == os.path.abspath(m.METRICS_FILE)
+                    and str(mode).startswith("r")):
+                counter["n"] += 1
+            return real_open(*args, **kwargs)
+
+        with patch("builtins.open", side_effect=counting_open):
+            m._METRICS_AGG_CACHE.update({"key": None, "val": {}, "ts": 0.0})
+            m.MultiLLMEngine._provider_cost_latency_scores()
+            # 改写文件（mtime 变化）→ 应重新读盘
+            self._write([
+                '{"stage":"summarize","provider":"a","llm_latency_sec":3.0,"tokens_used":2000}',
+                '{"stage":"summarize","provider":"b","llm_latency_sec":0.5,"tokens_used":300}',
+            ])
+            m.MultiLLMEngine._provider_cost_latency_scores()
+        self.assertEqual(counter["n"], 2, "文件变更(mtime)后应重新解析")
+
+
 class TestPublishParking(unittest.TestCase):
     """同一故事发布退避：连挂达阈值后停放，到期自动重试，成功清零"""
 
@@ -2612,6 +2839,166 @@ class TestRejectTelemetry(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["stage"], "numbers")
         self.assertIn("12.53", rows[0]["reason"])
+
+
+class TestCostObservability(unittest.TestCase):
+    """方向 2（成本可观测化）：tokens_used / llm_latency_sec 的提取、落盘与透传。
+
+    核心约束：遥测是加分项，绝不能因为 usage 缺失/结构异常把自己搞挂；
+    主链路在任意 provider 不出 usage 时也必须照常走完。
+    """
+
+    def setUp(self):
+        import tempfile
+        self.tmpdir = tempfile.mkdtemp()
+        self._orig_metrics = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(self.tmpdir, "metrics.jsonl")
+
+    def tearDown(self):
+        m.METRICS_FILE = self._orig_metrics
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _rows(self):
+        import json
+        with open(m.METRICS_FILE, encoding="utf-8") as f:
+            return [json.loads(l) for l in f if l.strip()]
+
+    # ---- _extract_usage_tokens 提取鲁棒性 ----
+    def test_extract_total_tokens(self):
+        resp = SimpleNamespace(usage=SimpleNamespace(total_tokens=1234))
+        self.assertEqual(m._extract_usage_tokens(resp), 1234)
+
+    def test_extract_partial_tokens(self):
+        resp = SimpleNamespace(usage=SimpleNamespace(
+            total_tokens=None, prompt_tokens=1000, completion_tokens=234))
+        self.assertEqual(m._extract_usage_tokens(resp), 1234)
+
+    def test_extract_missing_usage_attr(self):
+        resp = SimpleNamespace()  # 没有 usage 属性
+        self.assertIsNone(m._extract_usage_tokens(resp))
+
+    def test_extract_usage_none(self):
+        resp = SimpleNamespace(usage=None)
+        self.assertIsNone(m._extract_usage_tokens(resp))
+
+    def test_extract_zero_is_none(self):
+        # 空 usage 不应污染聚合（0 token 视为无效）
+        resp = SimpleNamespace(usage=SimpleNamespace(total_tokens=0))
+        self.assertIsNone(m._extract_usage_tokens(resp))
+
+    def test_extract_garbage_no_crash(self):
+        # 非数值 total_tokens（如 object()/字符串）会让 int() 抛 → 必须降级 None，不炸主链路
+        resp = SimpleNamespace(usage=SimpleNamespace(total_tokens=object()))
+        self.assertIsNone(m._extract_usage_tokens(resp))
+        bad_str = SimpleNamespace(usage=SimpleNamespace(total_tokens="not-a-number"))
+        self.assertIsNone(m._extract_usage_tokens(bad_str))
+
+    # ---- 扩展 _log_reject schema ----
+    def test_log_reject_extended_fields_present(self):
+        m.MultiLLMEngine._log_reject(
+            {"title": "t", "source": "U.Today", "impact_score": 1},
+            "stub", "quality", "r" * 100,
+            tokens_used=123, latency_sec=0.5, model="mm")
+        row = self._rows()[0]
+        self.assertEqual(row["tokens_used"], 123)
+        self.assertEqual(row["llm_latency_sec"], 0.5)
+        self.assertEqual(row["model"], "mm")
+
+    def test_log_reject_extended_fields_absent_when_none(self):
+        # 显式传 None 的项必须被 append_metrics 的 None 过滤剔除，行更干净
+        m.MultiLLMEngine._log_reject(
+            {"title": "t", "source": "X", "impact_score": 1},
+            "stub", "numbers", "x")
+        row = self._rows()[0]
+        self.assertNotIn("tokens_used", row)
+        self.assertNotIn("llm_latency_sec", row)
+        self.assertNotIn("model", row)
+
+    # ---- summarize 成功路径透出成本字段 ----
+    def _success_engine(self, usage_tokens):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.providers = [m.LLMProviderConfig("stub", "https://x", "k", "mm")]
+
+        content = ("比特币今日围绕六万关口震荡，多空拉锯明显，链上活跃地址稳步回升。"
+                   "短线看震荡偏强，回踩不破可轻仓试多，上方压力先看前高。仓位管理第一，"
+                   "跌破支撑果断离场。本周关注宏观数据与币安活动动向。")
+        resp = MagicMock()
+        resp.choices = [MagicMock(message=MagicMock(content=content))]
+        if usage_tokens is None:
+            resp.usage = None
+        else:
+            usage = MagicMock()
+            usage.total_tokens = usage_tokens
+            usage.prompt_tokens = 800
+            usage.completion_tokens = usage_tokens - 800
+            resp.usage = usage
+        fake = MagicMock()
+        fake.chat.completions.create.return_value = resp
+        eng._get_client = lambda p: fake
+        return eng
+
+    def test_summarize_success_returns_cost_fields(self):
+        eng = self._success_engine(1234)
+        item = {"title": "BTC news", "summary": "Bitcoin market update",
+                "source": "U.Today", "impact_score": 10}
+        with patch.object(eng, "_ordered_providers", return_value=eng.providers):
+            result = eng.summarize(item, None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(result)
+        self.assertEqual(result["model"], "mm")
+        self.assertEqual(result["tokens_used"], 1234)
+        self.assertIsInstance(result["latency_sec"], float)
+        self.assertGreaterEqual(result["latency_sec"], 0.0)
+
+    def test_summarize_success_without_usage_still_works(self):
+        # usage 缺失时主链路必须照常，tokens_used 透传为 None（落盘被过滤）
+        eng = self._success_engine(None)
+        item = {"title": "ETH news", "summary": "Ethereum upgrade", "source": "Decrypt"}
+        with patch.object(eng, "_ordered_providers", return_value=eng.providers):
+            result = eng.summarize(item, None, market_context="", token_hints=["ETH"])
+        self.assertIsNotNone(result)
+        self.assertIsNone(result["tokens_used"])
+
+    # ---- analyze_with_ai 成本遥测对齐 ----
+    def test_analyze_with_ai_cost_telemetry(self):
+        import json as _json
+        intel = {
+            "active_tags": ["#Write2Earn", "#BinanceSquare", "#热点解析"],
+            "incentivized_tokens": ["$BNB", "$BTC", "$SOL"],
+            "strategy_guidance": "结合当期活动引导交易",
+        }
+        resp = MagicMock()
+        resp.choices = [MagicMock(message=MagicMock(
+            content=_json.dumps(intel, ensure_ascii=False)))]
+        usage = MagicMock()
+        usage.total_tokens = 567
+        usage.prompt_tokens = 400
+        usage.completion_tokens = 167
+        resp.usage = usage
+        fake = MagicMock()
+        fake.chat.completions.create.return_value = resp
+
+        class StubEngine:
+            def _ordered_providers(self):
+                return [m.LLMProviderConfig("stub", "https://x", "k", "mm")]
+
+            def _get_client(self, provider):
+                return fake
+
+        result = m.CampaignScanner.analyze_with_ai(StubEngine(), ["活动A", "活动B"])
+        self.assertIsNotNone(result)
+        self.assertEqual(result["strategy_guidance"], "结合当期活动引导交易")
+
+        rows = [r for r in self._rows() if r.get("stage") == "campaign_intel"]
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        self.assertEqual(row["outcome"], "llm_success")
+        self.assertEqual(row["provider"], "stub")
+        self.assertEqual(row["model"], "mm")
+        self.assertEqual(row["tokens_used"], 567)
+        self.assertIsInstance(row["llm_latency_sec"], float)
 
 
 class TestSummarizeTokenBudget(unittest.TestCase):
@@ -3092,6 +3479,543 @@ class TestRunMainSemantics(unittest.TestCase):
             self.assertEqual([r["id"] for r in records], ["news-1"])
         finally:
             self._teardown(patches, tmpdir)
+
+
+class TestDedupIndexEquivalence(unittest.TestCase):
+    """判重索引必须与逐对比较逐字等价（性能优化不许悄悄改变拦截口径）"""
+
+    TITLES = [
+        "Bitcoin ETF inflows hit $4.6B as SEC signals approval",
+        "bitcoin etf inflows hit $4.6b as sec signals approval odds",
+        "比特币现货ETF净流入 46 亿美元，SEC 表态",
+        "Solana validator client upgrade ships with new fee market patch",
+        "Ethereum gas fees drop 12.53% after Dencun goes live",
+        "以太坊 Dencun 上线后 Gas 费下降 12.53%",
+        "Trump says Fed should cut rates, markets rally",
+        "AI tokens rally 30% led by FET and TAO",
+        "$BTC breaks $120,000 as ETF demand accelerates",
+        "巨鲸地址单笔转出 2.4 亿美元 BTC",
+    ]
+
+    @staticmethod
+    def _legacy_find(cls, title, seen, thr):
+        import re
+        words = set(re.sub(r"[^a-z0-9$]+", " ", title.lower()).split())
+        for other in seen:
+            ow = set(re.sub(r"[^a-z0-9$]+", " ", other.lower()).split())
+            if ow and words:
+                inter = len(words & ow)
+                if inter and (inter / len(words | ow)) >= thr:
+                    return other
+            if cls._is_cross_lang_dup(title, other):
+                return other
+        return None
+
+    def test_index_matches_pairwise_scan(self):
+        cls = m.NewsFetcher
+        for thr in (0.3, 0.5, 0.65, 0.9):
+            for title in self.TITLES:
+                for seen in (self.TITLES, list(reversed(self.TITLES))):
+                    self.assertEqual(
+                        cls._match_dedup_index(title, cls.build_dedup_index(seen), thr),
+                        self._legacy_find(cls, title, seen, thr),
+                        f"阈值 {thr} 下索引判重与逐对扫描不一致: {title}",
+                    )
+
+    def test_incremental_index_matches_rebuild(self):
+        """fetch_candidates 是边判边追加索引：增量路径必须与每轮重建结果一致"""
+        cls = m.NewsFetcher
+        index = cls.build_dedup_index(self.TITLES[:3])
+        seen = list(self.TITLES[:3])
+        for title in self.TITLES[3:]:
+            self.assertEqual(cls._match_dedup_index(title, index, m.DUP_SIMILARITY_THRESHOLD),
+                             cls._find_near_duplicate(title, seen))
+            index.append(cls._dedup_entry(title))
+            seen.append(title)
+
+
+class TestBashResolution(unittest.TestCase):
+    """workflow 内嵌脚本校验的 bash 解析器：环境问题绝不能被当成语法错误
+
+    真实事故：Windows 上 PATH 里的 bash 能跑 --version，但执行 `bash -n -c`
+    被本地安全策略拒绝（stderr 是 UTF-16 的"拒绝访问。"）。旧逻辑把非 0 退出
+    一律读作"bash 语法错误"，8 个 run 块全部误报，且 stderr 解码成满屏乱码，
+    排障方向被彻底带偏。
+    """
+
+    def _validator(self):
+        return _load_validator()
+
+    @staticmethod
+    def _run_result(returncode=0, stdout=b"", stderr=b""):
+        from unittest.mock import MagicMock
+        r = MagicMock()
+        r.returncode = returncode
+        r.stdout = stdout
+        r.stderr = stderr
+        return r
+
+    def test_denied_bash_is_skipped_not_reported_as_syntax_error(self):
+        v = self._validator()
+        v.reset_bash_cache()
+        denied = self._run_result(returncode=1, stderr="拒绝访问。\r\n".encode("utf-16-le"))
+        with patch.object(v.subprocess, "run", return_value=denied) as mock_run, \
+             patch("shutil.which", return_value=os.path.abspath(__file__)):
+            self.assertFalse(v.bash_available())
+            # 关键红线：校验不了就放行，绝不制造假故障
+            self.assertEqual(v.bash_check("if [ -z \"$x\" ]; then\n"), "")
+        self.assertTrue(mock_run.called)
+
+    def test_utf16_stderr_decoded_readably(self):
+        """探测通过、真检失败且 stderr 是 UTF-16 时，必须解出可读中文而非乱码"""
+        v = self._validator()
+        v.reset_bash_cache()
+        ok, denied = self._run_result(0), self._run_result(1, stderr="拒绝访问。\r\n".encode("utf-16-le"))
+        with patch.object(v.subprocess, "run", side_effect=[ok, denied]), \
+             patch("shutil.which", return_value=os.path.abspath(__file__)):
+            err = v.bash_check("if [ 1 ]; then\n")
+        self.assertEqual(err, "拒绝访问。")
+        self.assertNotIn("�", err)
+
+    def test_real_syntax_error_still_surfaces(self):
+        """bash 可用时，真正的语法错误必须照旧报出来（不能因为加固而漏检）"""
+        v = self._validator()
+        v.reset_bash_cache()
+        ok, bad = self._run_result(0), self._run_result(1, stderr=b"bash: syntax error near `fi'\n")
+        with patch.object(v.subprocess, "run", side_effect=[ok, bad]), \
+             patch("shutil.which", return_value=os.path.abspath(__file__)):
+            self.assertTrue(v.bash_available())
+            self.assertIn("syntax error", v.bash_check("if [ 1 ]; then\n"))
+
+    def test_bash_path_env_takes_priority(self):
+        v = self._validator()
+        v.reset_bash_cache()
+        custom = os.path.abspath(__file__)
+        with patch.dict(os.environ, {"BASH_PATH": custom}), \
+             patch.object(v.subprocess, "run", return_value=self._run_result(0)) as mock_run, \
+             patch("shutil.which", return_value="/nonexistent/bash"):
+            self.assertEqual(v.resolve_bash(), custom)
+        self.assertEqual(mock_run.call_args.args[0][0], custom)
+
+    def test_cache_prevents_repeated_probes(self):
+        v = self._validator()
+        v.reset_bash_cache()
+        with patch.object(v.subprocess, "run", return_value=self._run_result(0)) as mock_run, \
+             patch("shutil.which", return_value=os.path.abspath(__file__)):
+            v.bash_available()
+            v.bash_check("echo a")
+            v.bash_check("echo b")
+        probes = [c for c in mock_run.call_args_list if c.args[0][-1] == "true"]
+        # 3 次调用 = 1 次探测 + 2 次真检；探测本身不许随 run 块数量线性增长
+        self.assertEqual(mock_run.call_count, 3)
+        self.assertEqual(len(probes), 1, "探测结果必须缓存，每个 run 块都 spawn 太贵")
+        v.reset_bash_cache()
+        with patch.object(v.subprocess, "run", return_value=self._run_result(1)):
+            self.assertFalse(v.bash_available())
+
+
+class TestMergeStateTypeSafety(unittest.TestCase):
+    """git_state_merge 深合并的类型异构守卫
+
+    该脚本是 workflow 里状态落盘的最后一道防线：它一抛异常，整轮的 sent_cache
+    与断路器状态全部丢失，下一轮必然重复发帖。合并比较必须永不炸。
+    """
+
+    def _merger(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "git_state_merge_ts",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                          "scripts", "git_state_merge.py"))
+        merger = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(merger)
+        return merger
+
+    def test_heterogeneous_scalars_do_not_raise(self):
+        # py3 的 max(3, "2026-...") 直接 TypeError；脏状态里 int/str 混存并不罕见
+        gm = self._merger()
+        out = gm.merge_state({"_streak": 3}, {"_streak": "2026-09-06T00:00:00+00:00"})
+        self.assertIn(out["_streak"], (3, "2026-09-06T00:00:00+00:00"))
+        # 确定性：同样输入两次必须选同一侧，否则并发合并会持续互相翻转
+        self.assertEqual(out, gm.merge_state({"_streak": 3}, {"_streak": "2026-09-06T00:00:00+00:00"}))
+
+    def test_heterogeneous_nested_state_does_not_raise(self):
+        gm = self._merger()
+        out = gm.merge_state({"_feed_health": {"A": {"fails": 2, "parked_until": "x"}}},
+                             {"_feed_health": {"A": {"fails": "3"}}})
+        self.assertEqual(out["_feed_health"]["A"]["parked_until"], "x")
+        self.assertIsInstance(out["_feed_health"]["A"]["fails"], (int, str))
+
+    def test_same_type_still_picks_max(self):
+        gm = self._merger()
+        self.assertEqual(gm.merge_state({"n": 1}, {"n": 5})["n"], 5)
+        self.assertEqual(gm.merge_state({"t": "2026-01-01"}, {"t": "2026-06-01"})["t"], "2026-06-01")
+
+    def test_sent_cache_sort_tolerates_null_timestamp(self):
+        """脏记录里 sent_at 显式为 None：旧写法 key 返回 None，sorted 直接 TypeError"""
+        import tempfile, shutil
+        gm = self._merger()
+        tmpdir = tempfile.mkdtemp()
+        try:
+            remote = os.path.join(tmpdir, "sent_cache.json")
+            local = os.path.join(tmpdir, "local.json")
+            with open(remote, "w", encoding="utf-8") as f:
+                f.write('[{"id": "a", "sent_at": "2026-09-06T01:00:00+00:00"}]')
+            with open(local, "w", encoding="utf-8") as f:
+                f.write('[{"id": "b", "sent_at": null}]')
+            self.assertEqual(gm.merge_sent_cache(local, remote), 2)
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def test_intel_merge_tolerates_null_last_updated(self):
+        import tempfile, shutil
+        gm = self._merger()
+        tmpdir = tempfile.mkdtemp()
+        try:
+            remote = os.path.join(tmpdir, "campaign_intel.json")
+            local = os.path.join(tmpdir, "local_intel.json")
+            with open(remote, "w", encoding="utf-8") as f:
+                f.write('{"active_tags": ["#Write2Earn"], "last_updated": "2026-09-06T00:00:00Z"}')
+            with open(local, "w", encoding="utf-8") as f:
+                f.write('{"active_tags": ["#X"], "last_updated": null, "_llm_breaker": {"p": {"fails": 1}}}')
+            self.assertTrue(gm.merge_intel(local, remote))
+            with open(remote, encoding="utf-8") as f:
+                merged = json.load(f)
+            self.assertEqual(merged["_llm_breaker"], {"p": {"fails": 1}})
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+# ===========================================================================
+# Round 5 — 决策正确性与发布链路状态一致性
+# ===========================================================================
+class _FakeCache:
+    """fetch_candidates 只用到 is_cached / cached 状态，无需真实落盘"""
+
+    def __init__(self):
+        self.cached_items: list = []
+        self.cached_ids = set()
+
+    def is_cached(self, news_id):
+        return news_id in self.cached_ids
+
+    def recent_titles(self, limit: int = 150):
+        return []
+
+
+def _cand(nid, title, score, source="FeedA", age=1.0, summary=""):
+    return {"id": nid, "title": title, "summary": summary, "link": "",
+            "source": source, "lang": "en", "published": "", "age_hours": age,
+            "impact_score": score, "base_impact_score": score, "image_url": None}
+
+
+class TestFingerprintDedupStrictness(unittest.TestCase):
+    """跨语言指纹判重加严：单一共享百分比 + 同币种不再构成"同一事件" """
+
+    def test_single_shared_percent_not_duplicate(self):
+        a = "BTC breaks $100,000 as momentum builds, up 5%"
+        b = "BTC ETF inflows hit $100,000,000 while fees cut 5%"
+        self.assertFalse(m.NewsFetcher._is_cross_lang_dup(a, b),
+                         "仅共享一个 5% 且金额量级不同的两条新闻不得判重")
+        self.assertIsNone(m.NewsFetcher._find_near_duplicate(b, [a]))
+
+    def test_shared_money_magnitude_still_duplicate(self):
+        a = "BTC breaks $120,000 as ETF inflows hit record"
+        b = "比特币突破 12 万美元，ETF 资金流入创纪录"
+        self.assertTrue(m.NewsFetcher._is_cross_lang_dup(a, b))
+        self.assertIsNotNone(m.NewsFetcher._find_near_duplicate(b, [a]))
+
+    def test_two_shared_percents_is_duplicate(self):
+        a = "BTC up 5% and volume 12%"
+        b = "BTC 上涨 5%，成交量放大 12%"
+        self.assertTrue(m.NewsFetcher._is_cross_lang_dup(a, b),
+                        "两个不同百分比同时命中构成有效指纹")
+
+    def test_no_shared_token_never_duplicate(self):
+        a = "BTC breaks $120,000 as ETF inflows hit record"
+        b = "以太坊突破 12 万美元关口"
+        self.assertFalse(m.NewsFetcher._is_cross_lang_dup(a, b))
+
+    def test_index_path_matches_primitive(self):
+        """_match_dedup_index 与 _is_cross_lang_dup 必须同口径（前者不得另搞一套）"""
+        pairs = [
+            ("BTC breaks $120,000 as ETF inflows hit record", "比特币突破 12 万美元，ETF 资金流入创纪录"),
+            ("BTC breaks $100,000 as momentum builds, up 5%", "BTC ETF inflows hit $100,000,000 while fees cut 5%"),
+            ("Binance lists XRP perpetual with $50M volume", "币安上线 XRP 永续，成交量 5000 万美元"),
+        ]
+        for a, b in pairs:
+            via_primitive = m.NewsFetcher._is_cross_lang_dup(a, b)
+            via_index = m.NewsFetcher._find_near_duplicate(b, [a]) is not None
+            self.assertEqual(via_primitive, via_index, f"口径漂移: {a!r} vs {b!r}")
+
+
+class TestSelectionOrderGuards(unittest.TestCase):
+    """选稿口径：先排序后去重、加权分不过准入门、排序完全确定"""
+
+    def _fetch(self, feeds_items, min_score=0, boost_tokens=None):
+        fetcher = m.NewsFetcher()
+        feeds = [{"name": n, "url": "http://x", "lang": "en"} for n in feeds_items]
+
+        def fake(self, feed_cfg, cache_mgr, limit_per_feed):
+            return [dict(x) for x in feeds_items[feed_cfg["name"]]]
+
+        with patch.object(m, "RSS_FEEDS", feeds), \
+             patch.object(m.NewsFetcher, "_fetch_single_feed", fake), \
+             patch.object(m, "MIN_IMPACT_SCORE", min_score), \
+             patch.object(m, "DUP_SIMILARITY_THRESHOLD", 0.65):
+            return fetcher.fetch_candidates(_FakeCache(), priority_tokens=boost_tokens)
+
+    def test_dedup_keeps_highest_scoring_variant(self):
+        """同一事件的两篇近似稿：保留高分那条，而非线程竞速的赢家"""
+        low = _cand("a", "Bitcoin ETF Inflows Hit Record High", 5, source="SlowFeed")
+        high = _cand("b", "Bitcoin ETF Inflows Hit Record High Today", 50, source="FastFeed")
+        out = self._fetch({"FastFeed": [low], "SlowFeed": [high]})
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["impact_score"], 50, "去重必须保留分值更高的变体")
+
+    def test_dedup_result_order_independent(self):
+        """输入顺序变化（线程完成顺序）不得改变选稿结果"""
+        low = _cand("a", "Bitcoin ETF Inflows Hit Record High", 5)
+        high = _cand("b", "Bitcoin ETF Inflows Hit Record High Today", 50)
+        r1 = self._fetch({"F1": [low, high], "F2": []})
+        r2 = self._fetch({"F1": [high, low], "F2": []})
+        self.assertEqual([x["id"] for x in r1], [x["id"] for x in r2])
+
+    def test_campaign_boost_cannot_bypass_score_gate(self):
+        """活动加权只影响排序，不得让低分稿越过 MIN_IMPACT_SCORE"""
+        weak = _cand("w", "BTC 相关低质快讯", 5, summary="BTC")
+        strong = _cand("s", "重大突发：某交易所遭黑客攻击", 30, summary="")
+        out = self._fetch({"F1": [weak, strong]}, min_score=10, boost_tokens=["$BTC"])
+        ids = [x["id"] for x in out]
+        self.assertIn("s", ids)
+        self.assertNotIn("w", ids, f"加权后 {weak['impact_score'] + m.CAMPAIGN_TOKEN_BOOST} 分也不得越过 10 分门槛")
+
+    def test_boost_still_affects_ranking(self):
+        a = _cand("plain", "某交易所上线新功能", 20, summary="")
+        b = _cand("boosted", "BNB 生态新币上线", 20, summary="BNB")
+        out = self._fetch({"F1": [a, b]}, boost_tokens=["$BNB"])
+        self.assertEqual(out[0]["id"], "boosted")
+
+
+class TestFreshnessClockGuard(unittest.TestCase):
+    """时间解析兜底与可疑时钟处理"""
+
+    def _rfc822(self, dt):
+        from email.utils import formatdate
+        return formatdate(dt.timestamp(), usegmt=True)
+
+    def test_falls_back_to_raw_date_string(self):
+        """*_parsed 缺失时（非标准格式）必须回落解析原始串，否则该稿永远垫底、永不发布"""
+        dt = datetime.now(timezone.utc) - timedelta(hours=2)
+        age = m.NewsFetcher.parse_entry_age_hours({"published": self._rfc822(dt)})
+        self.assertIsNotNone(age, "RFC822 字符串应当被兜底解析")
+        self.assertAlmostEqual(age, 2.0, delta=0.2)
+
+    def test_iso_string_fallback(self):
+        dt = datetime.now(timezone.utc) - timedelta(hours=4)
+        age = m.NewsFetcher.parse_entry_age_hours({"published": dt.isoformat()})
+        self.assertIsNotNone(age)
+        self.assertAlmostEqual(age, 4.0, delta=0.2)
+
+    def test_far_future_timestamp_treated_as_unknown(self):
+        """源时钟超前 >1h：不得靠"新鲜度 +10"登顶，按未知处理"""
+        dt = datetime.now(timezone.utc) + timedelta(hours=5)
+        self.assertIsNone(m.NewsFetcher.parse_entry_age_hours({"published": self._rfc822(dt)}))
+
+    def test_slight_clock_skew_clamped_to_zero(self):
+        dt = datetime.now(timezone.utc) + timedelta(minutes=10)
+        self.assertEqual(m.NewsFetcher.parse_entry_age_hours({"published": self._rfc822(dt)}), 0.0)
+
+    def test_garbage_date_returns_none(self):
+        for raw in ("上周三", "", "not-a-date", 12345):
+            self.assertIsNone(m.NewsFetcher.parse_entry_age_hours({"published": raw}))
+
+
+class TestEmptyFeedNotHealthy(unittest.TestCase):
+    """空 feed（有效 RSS 但 0 条目）不得为源健康背书，也不该清零失败计数"""
+
+    def _call(self, fetcher, cache):
+        resp = MagicMock(status_code=200)
+        resp.content = (b'<?xml version="1.0" encoding="UTF-8"?>'
+                        b'<rss version="2.0"><channel><title>Empty</title></channel></rss>')
+        with patch.object(m, "http_get", return_value=resp), \
+             patch.object(m.NewsFetcher, "_feed_record") as rec:
+            fetcher._fetch_single_feed({"name": "EmptyFeed", "url": "http://x", "lang": "en"},
+                                       cache, 5)
+            return rec
+
+    def test_empty_feed_neither_healthy_nor_failed(self):
+        f = m.NewsFetcher()
+        rec = self._call(f, _FakeCache())
+        self.assertEqual(f.stats["feeds_ok"], 0, "空 feed 不得计入健康源")
+        self.assertEqual(f.stats["feeds_empty"], 1)
+        self.assertEqual(f.stats["feeds_empty_sources"], ["EmptyFeed"])
+        rec.assert_not_called(), "空 feed 不得清零失败计数，否则被降级的源会一直显示为健康"
+
+    def test_empty_feed_keeps_existing_fail_streak(self):
+        """已累计 2 次失败的源返回空内容时，失败计数不得被重置"""
+        f = m.NewsFetcher()
+        with patch.object(m.NewsFetcher, "_feed_health",
+                          return_value={"EmptyFeed": {"fails": 2}}):
+            self._call(f, _FakeCache())
+        self.assertEqual(f.stats["feeds_ok"], 0)
+
+
+class TestCachePersistenceContract(unittest.TestCase):
+    """去重缓存落盘：失败必须回传给调用方，tokens 必须始终写入"""
+
+    def _mgr(self, tmpdir):
+        return m.CacheManager(os.path.join(tmpdir, "sent_cache.json"))
+
+    def test_record_sent_returns_false_when_disk_write_fails(self):
+        import tempfile, shutil
+        tmpdir = tempfile.mkdtemp()
+        try:
+            mgr = self._mgr(tmpdir)
+            with patch.object(m, "_atomic_write_text", side_effect=OSError("disk full")), \
+                 patch.object(m.time, "sleep"):
+                self.assertFalse(mgr.record_sent("id-1", "t", "s", tokens=["BTC"]),
+                                 "落盘失败必须让主流程知情，否则下轮重复发帖")
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def test_record_sent_returns_true_on_success(self):
+        import tempfile, shutil
+        tmpdir = tempfile.mkdtemp()
+        try:
+            mgr = self._mgr(tmpdir)
+            self.assertTrue(mgr.record_sent("id-1", "t", "s", tokens=["BTC"]))
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def test_tokens_always_persisted(self):
+        """tokens 缺省会让 token_posts_since 恒为 0，单币限流对这条记录永远失效"""
+        import tempfile, shutil
+        tmpdir = tempfile.mkdtemp()
+        try:
+            mgr = self._mgr(tmpdir)
+            mgr.record_sent("id-1", "t", "s", tokens=None)
+            self.assertIn("tokens", mgr.cached_items[-1])
+            self.assertEqual(mgr.cached_items[-1]["tokens"], [])
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+class TestPublishErrorStateIsolation(unittest.TestCase):
+    """publisher 是循环外复用实例：错误状态不得跨条目残留"""
+
+    def _resp(self, status=200, payload=None):
+        r = MagicMock(status_code=status)
+        r.headers = {}
+        r.text = json.dumps(payload or {}, ensure_ascii=False)
+        r.json.return_value = payload or {}
+        return r
+
+    def test_last_error_code_captured(self):
+        pub = m.SquarePublisher(api_key="k")
+        body = "这是一段足够长的正文内容，用于验证风控错误码的结构化透出是否符合预期。"
+        with patch.object(m._HTTP_SESSION, "post",
+                          return_value=self._resp(200, {"code": "20002", "success": False, "message": "risk"})):
+            self.assertFalse(pub.publish(body, image_url=None))
+        self.assertEqual(pub.last_error_code, "20002")
+
+    def test_error_state_does_not_leak_to_next_item(self):
+        """上一条被风控拦截、下一条只是网络抖动：错误码不得残留导致误封"""
+        pub = m.SquarePublisher(api_key="k")
+        body = "这是一段足够长的正文内容，用于验证风控错误码的结构化透出是否符合预期。"
+        with patch.object(m._HTTP_SESSION, "post",
+                          return_value=self._resp(200, {"code": "20002", "success": False})):
+            pub.publish(body, image_url=None)
+        self.assertEqual(pub.last_error_code, "20002")
+
+        with patch.object(m._HTTP_SESSION, "post", side_effect=OSError("network down")):
+            pub.publish("另一条正文内容，用于验证错误状态不会跨条目残留。", image_url=None)
+        self.assertIsNone(pub.last_error_code, "网络故障条目不得继承上一条的风控码")
+
+
+class TestIdempotentSkipNotTreatedAsFailure(unittest.TestCase):
+    """幂等跳过（此前已投递）必须与失败区分，否则副平台-only 模式会误报熔断"""
+
+    def test_okx_idempotent_skip_flagged(self):
+        import tempfile, shutil
+        tmpdir = tempfile.mkdtemp()
+        try:
+            exp = m.OKXDraftExporter()
+            exp.DRAFTS_DIR = tmpdir
+            self.assertTrue(exp.publish("第一条草稿。", meta={"news_id": "n1"}))
+            self.assertFalse(exp.publish("第二次同 id。", meta={"news_id": "n1"}))
+            self.assertEqual(exp.skipped_reason, m.IDEMPOTENT_SKIP)
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def test_telegram_idempotent_skip_flagged(self):
+        os.environ["TELEGRAM_BOT_TOKEN"] = "tok"
+        os.environ["TELEGRAM_MIRROR_CHANNEL_ID"] = "@c"
+        try:
+            pub = m.TelegramChannelPublisher()
+            with patch.object(pub, "_tg_already_sent", return_value=True), \
+                 patch.object(m, "http_post") as hp:
+                self.assertFalse(pub.publish("重复内容", meta={"news_id": "x"}))
+                hp.assert_not_called()
+            self.assertEqual(pub.skipped_reason, m.IDEMPOTENT_SKIP)
+        finally:
+            for k in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_MIRROR_CHANNEL_ID"):
+                os.environ.pop(k, None)
+
+    def test_skip_flag_reset_between_calls(self):
+        import tempfile, shutil
+        tmpdir = tempfile.mkdtemp()
+        try:
+            exp = m.OKXDraftExporter()
+            exp.DRAFTS_DIR = tmpdir
+            exp.publish("a", meta={"news_id": "n1"})
+            exp.publish("a", meta={"news_id": "n1"})
+            self.assertEqual(exp.skipped_reason, m.IDEMPOTENT_SKIP)
+            self.assertTrue(exp.publish("b", meta={"news_id": "n2"}))
+            self.assertIsNone(exp.skipped_reason, "新条目必须清掉上一次的跳过标记")
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+class TestAlertThrottleAfterDelivery(unittest.TestCase):
+    """报警节流必须在投递成功后才登记：全渠道失败时不得吞掉这条报警"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        self._orig_hook = os.environ.get("WEBHOOK_URL")
+        os.environ["WEBHOOK_URL"] = "http://example.invalid/hook"
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if self._orig_hook is None:
+            os.environ.pop("WEBHOOK_URL", None)
+        else:
+            os.environ["WEBHOOK_URL"] = self._orig_hook
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _send(self, title, deliver_ok):
+        with patch.object(m.Notifier, "_any_channel_configured", return_value=True), \
+             patch.object(m.Notifier, "_deliver", return_value=deliver_ok) as d:
+            m.Notifier.send_notification(title, "msg", is_error=True)
+        return d
+
+    def test_failed_delivery_does_not_consume_quota(self):
+        d = self._send("发布通道熔断", False)
+        self.assertEqual(d.call_count, 1)
+        self.assertFalse(m.Notifier._alert_in_cooldown("发布通道熔断"),
+                         "投递失败的报警不得占用 12h 节流额度")
+
+    def test_successful_delivery_starts_cooldown(self):
+        self._send("模型池熔断", True)
+        self.assertTrue(m.Notifier._alert_in_cooldown("模型池熔断"))
+
+    def test_legacy_throttled_api_preserved(self):
+        self.assertFalse(m.Notifier._alert_throttled("旧接口报警"))
+        self.assertTrue(m.Notifier._alert_throttled("旧接口报警"))
 
 
 if __name__ == "__main__":

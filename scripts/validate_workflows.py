@@ -20,6 +20,7 @@ import re
 import shutil
 import subprocess
 import sys
+from typing import Optional
 
 try:
     import yaml
@@ -29,6 +30,87 @@ except ImportError:  # pragma: no cover
 
 GHA_EXPR_RE = re.compile(r"\$\{\{.*?\}\}", re.DOTALL)
 GHA_PLACEHOLDER = "__GHA_EXPR__"
+
+# 探测用最小脚本：既能验证"这个 bash 真的能执行 -n -c"，又无任何副作用
+_PROBE_SCRIPT = "true"
+
+# bash 可用性探测结果缓存（每个 run 块都 spawn 一次进程太贵，探测一次即可）
+_BASH_CACHE: dict = {"probed": False, "path": None}
+
+
+def reset_bash_cache() -> None:
+    """清空解析缓存（测试与长驻进程切换环境时用）"""
+    _BASH_CACHE.update({"probed": False, "path": None})
+
+
+def _decode(data: bytes) -> str:
+    """宽容解码子进程输出。
+
+    Windows 上被安全策略/权限拒绝的进程常以 UTF-16LE 吐本地化错误（如"拒绝访问。"），
+    此前一律 utf-8+replace 解码，得到满屏 '�' 的乱码并被当成"bash 语法错误"，
+    排障方向直接被带偏。故先按 BOM/空字节嗅探 UTF-16，再回落 utf-8 / 本地代码页。
+    """
+    if not data:
+        return ""
+    if data[:2] in (b"\xff\xfe", b"\xfe\xff"):
+        try:
+            return data.decode("utf-16", errors="replace")
+        except Exception:
+            pass
+    if b"\x00" in data:
+        try:
+            return data.decode("utf-16-le", errors="replace")
+        except Exception:
+            pass
+    for enc in ("utf-8", "mbcs" if os.name == "nt" else "latin-1"):
+        try:
+            return data.decode(enc)
+        except Exception:
+            continue
+    return data.decode("utf-8", errors="replace")
+
+
+def _bash_candidates():
+    """bash 候选路径：显式指定 > PATH > Windows 常见 Git Bash 安装位"""
+    env_path = os.getenv("BASH_PATH", "").strip()
+    if env_path:
+        yield env_path
+    on_path = shutil.which("bash")
+    if on_path:
+        yield on_path
+    if os.name == "nt":
+        for base in (os.environ.get("PROGRAMFILES", r"C:\Program Files"),
+                     os.environ.get("PROGRAMFILES(X86)", r"C:\Program Files (x86)")):
+            for rel in (r"Git\usr\bin\bash.exe", r"Git\bin\bash.exe"):
+                yield os.path.join(base, rel)
+
+
+def _bash_works(path: str) -> bool:
+    """真机验证：该 bash 能否执行 `bash -n -c true`。
+
+    只看 `bash --version` 不够——PATH 上可能是 WSL 启动器，或被安全策略/权限
+    拦住（--version 放行、执行任意命令被拒），两种情况下 `bash -n` 都会以非 0
+    退出并吐本地化错误，被本脚本误读成 workflow 里的 shell 语法错误。
+    """
+    try:
+        r = subprocess.run([path, "-n", "-c", _PROBE_SCRIPT],
+                           capture_output=True, timeout=10)
+        return r.returncode == 0
+    except Exception:
+        return False
+
+
+def resolve_bash() -> Optional[str]:
+    """返回可用的 bash 路径，无可用者返回 None（探测结果进程内缓存）"""
+    if _BASH_CACHE["probed"]:
+        return _BASH_CACHE["path"]
+    _BASH_CACHE["probed"] = True
+    for cand in _bash_candidates():
+        if cand and os.path.exists(cand) and _bash_works(cand):
+            _BASH_CACHE["path"] = cand
+            return cand
+    _BASH_CACHE["path"] = None
+    return None
 
 
 def mask_expressions(text: str) -> str:
@@ -49,19 +131,31 @@ def iter_run_blocks(workflow_path: str):
 
 
 def bash_available() -> bool:
-    return shutil.which("bash") is not None
+    """本机是否存在"能真正执行 -n -c"的 bash（仅 PATH 里有同名可执行文件不算）"""
+    return resolve_bash() is not None
 
 
 def bash_check(script: str) -> str:
     """bash -n 检查一段脚本，返回 '' 表示通过，否则返回 stderr 摘要。
+
     用 `bash -n -c` 直接验字符串：不落地临时文件（Windows 上系统临时目录
     的盘符路径会被 bash 反斜杠转义误读），也不走 stdin（本机 GBK 会炸
-    非 ASCII，且部分 bash 的 /dev/stdin 读管道受限）。"""
-    r = subprocess.run(["bash", "-n", "-c", script],
-                       capture_output=True, timeout=30)
-    if r.returncode != 0:
-        return r.stderr.decode("utf-8", errors="replace").strip()[:300] or "bash -n 未通过"
-    return ""
+    非 ASCII，且部分 bash 的 /dev/stdin 读管道受限）。
+
+    无法校验时（无可用 bash / 进程被拒绝）一律返回 ''：宁可漏检，也绝不把
+    环境问题伪装成 workflow 的语法错误——那会让维护者去改根本没错的文件。
+    """
+    exe = resolve_bash()
+    if not exe:
+        return ""
+    try:
+        r = subprocess.run([exe, "-n", "-c", script],
+                           capture_output=True, timeout=30)
+    except Exception as e:
+        return f"bash 执行失败: {e}"
+    if r.returncode == 0:
+        return ""
+    return _decode(r.stderr).strip()[:300] or "bash -n 未通过"
 
 
 def check_file(path: str):
@@ -72,7 +166,11 @@ def check_file(path: str):
     except Exception as e:
         return [f"{path}: YAML 解析失败: {e}"]
     if not bash_available():
-        print("WARN: 本机无 bash，仅校验 YAML 解析，跳过内嵌脚本检查")
+        # 说清"为什么不查"：此前只说"无 bash"，而实际是 PATH 上有 bash 却执行不了，
+        # 维护者会误以为装个 Git Bash 就好，反复排查方向错误。
+        print(f"WARN: 本机无可用 bash（PATH/已知安装位上的 bash 均无法执行 "
+              f"`bash -n -c true`），仅校验 YAML 解析，跳过 {len(blocks)} 个内嵌脚本"
+              f"（可用 BASH_PATH 显式指定）")
         return errors
     for job_id, idx, name, script in blocks:
         err = bash_check(script)
@@ -98,7 +196,8 @@ def main(argv=None) -> int:
     if errors:
         print("\n".join(errors))
         return 1
-    print(f"workflows 校验通过: {len(paths)} 个文件 / {n_blocks} 个内嵌脚本")
+    skipped = "" if bash_available() else "（内嵌脚本未校验：本机无可用 bash）"
+    print(f"workflows 校验通过: {len(paths)} 个文件 / {n_blocks} 个内嵌脚本{skipped}")
     return 0
 
 

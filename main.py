@@ -53,11 +53,13 @@ from typing import List, Dict, Any, Optional, Set, Tuple
 import io
 import math
 import threading
+import unicodedata
 import concurrent.futures
 from datetime import datetime, timezone, timedelta
 
 import requests
 import feedparser
+from email.utils import parsedate_to_datetime
 from PIL import Image
 from openai import OpenAI
 
@@ -175,6 +177,54 @@ def append_metrics(record: Dict[str, Any]) -> None:
             f.write(json.dumps(base, ensure_ascii=False) + "\n")
     except Exception as e:
         logger.debug(f"写入 metrics 失败(不影响主流程): {e}")
+
+
+# 遥测聚合缓存：_provider_cost_latency_scores 每次 _ordered_providers 都会调用，
+# 而它要整文件读 metrics.jsonl。同一次运行内文件不会变，缓存避免重复解析（见 Round 4）。
+_METRICS_AGG_CACHE: Dict[str, Any] = {"key": None, "val": {}, "ts": 0.0}
+_METRICS_AGG_TTL = 120.0  # 秒；长跑场景下也确保定期刷新，不依赖进程重启
+
+
+def rotate_metrics_if_needed(keep: int = 5000) -> int:
+    """遥测文件规模治理：超过 keep 行时仅保留最近 keep 行，原子回写。
+
+    metrics.jsonl 只追加不清理，长期无界增长（且 Round 3 的调度器每次调用都整文件
+    重读）。本函数在每轮运行结束时调用一次（冷路径），把文件收敛到上限，避免磁盘
+    与读取成本随时间线性膨胀。原子写（temp + os.replace）保证中途崩溃不留半截文件。
+    返回被裁剪的行数（0 表示无需裁剪）。异常全吞，绝不影响主流程。
+    """
+    if keep <= 0:
+        return 0
+    if not os.path.exists(METRICS_FILE):
+        return 0
+    try:
+        with open(METRICS_FILE, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+    except Exception:
+        return 0
+    if len(lines) <= keep:
+        return 0
+    kept = lines[-keep:]
+    try:
+        import tempfile
+        d = os.path.dirname(os.path.abspath(METRICS_FILE))
+        fd, tmp = tempfile.mkstemp(dir=d, suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.writelines(kept)
+            os.replace(tmp, METRICS_FILE)
+        finally:
+            if os.path.exists(tmp):
+                try:
+                    os.remove(tmp)
+                except Exception:
+                    pass
+    except Exception as e:
+        logger.debug(f"metrics 轮转失败(不影响主流程): {e}")
+        return 0
+    # 文件已变更，使聚合缓存失效
+    _METRICS_AGG_CACHE["key"] = None
+    return len(lines) - keep
 
 
 def _delivered_platforms(binance_ok: bool = False, draft_ok: bool = False,
@@ -323,6 +373,11 @@ IGNORE_WORDS = {
 
 # 币安广场 OpenAPI 官方端点
 BINANCE_SQUARE_API_URL = "https://www.binance.com/bapi/composite/v1/public/pgc/openApi/content/add"
+
+# 发布通道的"幂等跳过"标记：内容此前已投递过，本次无需重复投递。
+# 与"投递失败"必须区分——否则副平台-only 模式下连续命中 3 次幂等跳过会被误判为
+# 通道故障并触发熔断（Round 5）。publisher.skipped_reason 每次 publish 入口重置。
+IDEMPOTENT_SKIP = "already_delivered"
 
 
 # 模块级共享 Session：连接池复用，9 个 RSS 源 + 币安行情/校验请求显著减少 TCP/TLS 握手开销
@@ -803,9 +858,16 @@ class SymbolValidator:
 
     @classmethod
     def filter_valid_tokens(cls, tokens: List[str]) -> List[str]:
+        """过滤出交易所真实存在的代币，剔除臆造/无关代码。
+
+        **不再静默回退为 ["BTC"]**：FILTER 职责是过滤而非臆造。强制挂 $BTC 与
+        README 契约「强行挂 $BTC 是无关曝光，直接跳过」冲突，且本函数仅在
+        summarize 内被调用——那里 token_hints 恒非空（_run_main 前置过滤保证），
+        旧的 BTC 兜底属于永不可达的死代码。空结果交由调用方决定（summarize 会
+        显式跳过并留痕，或按 BINANCE_FORCE_BTC_FALLBACK 显式兜底）。
+        """
         valid_set = cls.get_valid_symbols()
-        filtered = [t for t in tokens if t.upper() in valid_set]
-        return filtered if filtered else ["BTC"]
+        return [t for t in tokens if t.upper() in valid_set]
 
 
 # ---------------------------------------------------------------------------
@@ -863,22 +925,28 @@ class CacheManager:
                 titles.append(t.strip())
         return titles
 
-    def record_sent(self, news_id: str, title: str, source: str, tokens: Optional[List[str]] = None):
+    def record_sent(self, news_id: str, title: str, source: str, tokens: Optional[List[str]] = None) -> bool:
+        """写入已发记录并落盘，返回落盘是否成功。
+
+        Round 5：此前落盘失败只在 _save_cache 里记一条 error 就继续，调用方视为成功并
+        发「发帖成功」通知；下一轮 cached_ids 由磁盘重建时不含该 id，同一条会再发一遍。
+        现在把结果回传给调用方，由主流程决定止损（见 _run_main）。"""
         record = {
             "id": news_id,
             "title": title,
             "source": source,
             "sent_at": datetime.now(timezone.utc).isoformat(),
+            # 始终写 tokens：缺省字段会让 token_posts_since 恒返回 0，单币限流对这条
+            # 记录永远失效（存量脏数据仍按未知处理，新记录不再产生新的盲区）。
+            "tokens": list(tokens or []),
         }
-        if tokens:
-            record["tokens"] = tokens
         self.cached_items.append(record)
         self.cached_ids.add(news_id)
 
         if len(self.cached_items) > MAX_CACHE_SIZE:
             self.cached_items = self.cached_items[-MAX_CACHE_SIZE:]
 
-        self._save_cache()
+        return self._save_cache()
 
     def token_posts_since(self, token: str, hours: float = 24.0) -> int:
         """统计最近 N 小时内发布过且命中指定代币的篇数（用于单币种限流）"""
@@ -897,12 +965,21 @@ class CacheManager:
                     break
         return count
 
-    def _save_cache(self):
-        try:
-            _atomic_write_text(self.cache_path, json.dumps(self.cached_items, ensure_ascii=False, indent=2))
-            logger.info(f"缓存已持久化，当前条数: {len(self.cached_items)}")
-        except Exception as e:
-            logger.error(f"保存缓存失败: {e}")
+    def _save_cache(self) -> bool:
+        """落盘已发记录；带一次重试（磁盘抖动/杀软短暂占用是主要失败原因）。
+        返回是否成功——调用方据此判断是否还能安全地继续发帖。"""
+        for attempt in (0, 1):
+            try:
+                _atomic_write_text(self.cache_path, json.dumps(self.cached_items, ensure_ascii=False, indent=2))
+                logger.info(f"缓存已持久化，当前条数: {len(self.cached_items)}")
+                return True
+            except Exception as e:
+                if attempt == 0:
+                    logger.warning(f"保存缓存失败，0.5s 后重试一次: {e}")
+                    time.sleep(0.5)
+                    continue
+                logger.error(f"保存缓存失败（已重试）: {e}")
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -919,6 +996,7 @@ class NewsFetcher:
         # 运行统计器：供最终报告输出吞吐详情与可用性诊断
         self.stats = {"fetched": 0, "stale": 0, "cached": 0, "near_dup": 0, "kept": 0,
                       "feeds_ok": 0, "feeds_failed": [], "feeds_parked": [],
+                      "feeds_empty": 0, "feeds_empty_sources": [],
                       "per_feed": {}}  # feed_name -> {"entries": 扫描, "kept": 入选}
         # _fetch_single_feed 跑在 10 线程池里：计数器 += 非原子，list.append/setdefault
         # 混用会丢增量，Step Summary 的吞吐数字对不上。工作线程一律走下面三个带锁 helper。
@@ -936,6 +1014,11 @@ class NewsFetcher:
         with self._stats_lock:
             self.stats["per_feed"].setdefault(name, {"entries": 0, "kept": 0})["entries"] += 1
 
+    def _stat_empty(self, name: str) -> None:
+        with self._stats_lock:
+            self.stats["feeds_empty"] += 1
+            self.stats["feeds_empty_sources"].append(name)
+
     # ---------------- 源健康度（跨运行持久化） ----------------
     def _feed_health(self) -> Dict[str, Dict[str, Any]]:
         state = intel_state_get(self._FEED_HEALTH_KEY, {})
@@ -943,12 +1026,24 @@ class NewsFetcher:
 
     def _feed_is_parked(self, name: str) -> bool:
         info = self._feed_health().get(name)
-        if not info:
+        # 脏状态里可能塞进字符串/数字（手改或旧版本遗留）：当作未停放，不能让
+        # 它把抓取链路炸掉
+        if not isinstance(info, dict):
+            return False
+        raw_until = info.get("parked_until", "")
+        if not raw_until:
             return False
         try:
-            until = datetime.fromisoformat(str(info.get("parked_until", "")))
-            return datetime.now(until.tzinfo or timezone.utc) < until
-        except Exception:
+            until = datetime.fromisoformat(str(raw_until).replace("Z", "+00:00"))
+            # 历史/手改数据可能是 naive 时间戳，直接与 aware 相减会抛 TypeError 并落进
+            # except → 停放静默失效（源明明被停放却照抓）。统一按 UTC 解释（Round 5）。
+            if until.tzinfo is None:
+                until = until.replace(tzinfo=timezone.utc)
+            return datetime.now(timezone.utc) < until
+        except Exception as e:
+            # 畸形 parked_until 以前静默 return False，排障时完全看不到。现在明说，
+            # 并按"未停放"处理——自愈优先于卡死。
+            logger.warning(f"数据源 [{name}] 的停放截止时间 {raw_until!r} 无法解析 ({e})，按未停放处理。")
             return False
 
     def _feed_record(self, name: str, ok: bool):
@@ -989,9 +1084,8 @@ class NewsFetcher:
     def clean_html(raw_html: str) -> str:
         if not raw_html:
             return ""
-        # 先解码 HTML 实体：&lt;script&gt; 这类转义标签解码后同样走下方标签剥离，
-        # 否则以字面形式残留进 prompt（此前仅手写 4 种实体，&lt;/&gt; 等会漏网）
-        clean_text = html.unescape(raw_html)
+        # NFKC 优先再解实体：全角转义（如 ＆lt;）先归一半角，否则 unescape 认不出而漏网
+        clean_text = html.unescape(unicodedata.normalize("NFKC", raw_html))
         clean_text = re.sub(r"<(script|style).*?</\1>", "", clean_text, flags=re.DOTALL | re.IGNORECASE)
         clean_text = re.sub(r"<[^>]+>", " ", clean_text)
         clean_text = re.sub(r"\s+", " ", clean_text).strip()
@@ -1041,16 +1135,54 @@ class NewsFetcher:
         return detected
 
     @staticmethod
-    def parse_entry_age_hours(entry: Dict[str, Any]) -> Optional[float]:
-        """解析 RSS 条目发布时间距当前的小时数，解析失败返回 None（放行）"""
-        parsed = entry.get("published_parsed") or entry.get("updated_parsed")
-        if not parsed:
+    def _parse_loose_datetime(raw: str) -> Optional[datetime]:
+        """兜底解析 feedparser 未能结构化的日期字符串（RFC822 变体 / ISO8601 / 含
+        中文或无冒号时区的写法）。失败返回 None，调用方按「未知」处理。"""
+        if not isinstance(raw, str) or not raw.strip():
             return None
+        raw = raw.strip()
         try:
-            pub_dt = datetime(*parsed[:6], tzinfo=timezone.utc)
-            return (datetime.now(timezone.utc) - pub_dt).total_seconds() / 3600.0
+            dt = parsedate_to_datetime(raw)
+            if dt is not None:
+                return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+        except Exception:
+            pass
+        try:
+            dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+            return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
         except Exception:
             return None
+
+    @staticmethod
+    def parse_entry_age_hours(entry: Dict[str, Any]) -> Optional[float]:
+        """解析 RSS 条目发布时间距当前的小时数，解析失败返回 None（放行）。
+
+        Round 5 两处口径修正：
+        ① feedparser 的 *_parsed 缺失时（非标准 RFC822 / 中文月份 / GMT+0800 无冒号
+           等）回落解析原始日期串。此前这类条目既躲过时效过滤、又拿不到新鲜度加权，
+           排序时按 inf 永远垫底——权威源的稿子反而永不被发（max_posts=1 时等于永久漏发）。
+        ② 源时钟超前的未来时间戳（age < 0）此前会命中「<3h +10」直接登顶，把旧闻顶到
+           第一。超过 1 小时的未来时间按可疑时钟处理，返回 None（不给加分、排最后）。"""
+        pub_dt: Optional[datetime] = None
+        parsed = entry.get("published_parsed") or entry.get("updated_parsed")
+        if parsed:
+            try:
+                pub_dt = datetime(*parsed[:6], tzinfo=timezone.utc)
+            except Exception:
+                pub_dt = None
+        if pub_dt is None:
+            pub_dt = NewsFetcher._parse_loose_datetime(
+                entry.get("published") or entry.get("updated") or "")
+        if pub_dt is None:
+            return None
+        try:
+            age = (datetime.now(timezone.utc) - pub_dt).total_seconds() / 3600.0
+        except Exception:
+            return None
+        if age < -1.0:
+            logger.debug(f"条目时间戳超前当前时间 {abs(age):.1f}h，判定为源时钟异常，按未知处理。")
+            return None
+        return max(age, 0.0)
 
     @staticmethod
     def freshness_bonus(age_hours: Optional[float]) -> int:
@@ -1121,28 +1253,67 @@ class NewsFetcher:
         return frozenset(t for t in raw if t not in NewsFetcher._FP_NOISE_TOKENS)
 
     @classmethod
+    def _fingerprint_match(cls, amt_a: frozenset, amt_b: frozenset,
+                           tok_a: frozenset, tok_b: frozenset) -> bool:
+        """跨语言事件指纹判定（唯一实现，供 _is_cross_lang_dup 与判重索引共用）。
+
+        加严理由（Round 5）：原实现只要「金额有交集 ∧ 币种有交集」即判重，而百分比桶
+        （pct:5）是极弱信号——任意两条都提到 5% 的 BTC 新闻就会被判成同一事件，
+        高分好新闻被静默丢弃且不留痕。故金额交集必须满足二者之一：
+          ① 至少含一个非百分比桶（$120,000 / 46 亿美元 / $4.6M 这类真实金额量级）；
+          ② 至少两个不同的百分比桶同时命中（单一百分比属巧合，两个构成指纹）。
+        判负代价（偶发重复发帖）远小于判正代价（永久漏发一条好稿），故取此口径。"""
+        if not (tok_a & tok_b):
+            return False
+        shared = amt_a & amt_b
+        if not shared:
+            return False
+        hard = {x for x in shared if not (isinstance(x, str) and x.startswith("pct:"))}
+        return bool(hard) or len(shared) >= 2
+
+    @classmethod
     def _is_cross_lang_dup(cls, title: str, other: str) -> bool:
-        """跨语言辅助判定：标题完全无共词时，若 币种集合有交集 且 金额/时间指纹有交集 → 视为同一事件"""
+        """跨语言辅助判定：Jaccard 词集相似度不足以定论时（中英文报道同一事件，
+        词集往往只在 ETF/BTC 这类锚点上相交），改用 金额量级指纹 + 大写币种交集 定夺。"""
         amt_a, amt_b = cls._title_amount_fingerprint(title), cls._title_amount_fingerprint(other)
         token_a, token_b = cls._title_tokens_upper(title), cls._title_tokens_upper(other)
-        if not (amt_a & amt_b):
-            return False
-        return bool(token_a & token_b)
+        return cls._fingerprint_match(amt_a, amt_b, token_a, token_b)
+
+    @classmethod
+    def _dedup_entry(cls, title: str) -> Tuple[str, frozenset, frozenset, frozenset]:
+        """预计算单条标题的判重指纹：(原文, 词集, 金额量级, 大写符号)。
+
+        跨源去重是 O(候选 × 历史)，历史侧每条都要跑 8 次正则。历史标题在整轮内
+        不变，却对每个候选重算一遍：45 候选 × 180 条历史实测约 270ms 纯重复计算。
+        指纹算一次、增量追加即可。"""
+        return (title, cls._title_words(title),
+                cls._title_amount_fingerprint(title), cls._title_tokens_upper(title))
+
+    @classmethod
+    def build_dedup_index(cls, titles: List[str]) -> List[Tuple[str, frozenset, frozenset, frozenset]]:
+        """把历史标题列表编译成可复用的判重索引"""
+        return [cls._dedup_entry(t) for t in titles]
+
+    @classmethod
+    def _match_dedup_index(cls, title: str, index, threshold: float) -> Optional[str]:
+        """对预编译索引做判重，语义与 _find_near_duplicate 完全一致"""
+        words = cls._title_words(title)
+        amt_b = cls._title_amount_fingerprint(title)
+        tok_b = cls._title_tokens_upper(title)
+        for other, ow, amt_a, tok_a in index:
+            if ow and words:
+                inter = len(words & ow)
+                if inter and (inter / len(words | ow)) >= threshold:
+                    return other
+            if cls._fingerprint_match(amt_a, amt_b, tok_a, tok_b):
+                return other
+        return None
 
     @classmethod
     def _find_near_duplicate(cls, title: str, seen_titles: List[str],
                              threshold: float = DUP_SIMILARITY_THRESHOLD) -> Optional[str]:
         """标题词集 Jaccard 相似度去重 + 跨语言事件指纹双通道：返回命中的历史标题，无重复返回 None"""
-        words = cls._title_words(title)
-        for other in seen_titles:
-            ow = cls._title_words(other)
-            if ow and words:
-                inter = len(words & ow)
-                if inter and (inter / len(words | ow)) >= threshold:
-                    return other
-            if cls._is_cross_lang_dup(title, other):
-                return other
-        return None
+        return cls._match_dedup_index(title, cls.build_dedup_index(seen_titles), threshold)
 
     @staticmethod
     def extract_image_url(entry: Dict[str, Any], raw_summary: str = "") -> Optional[str]:
@@ -1236,8 +1407,12 @@ class NewsFetcher:
                 return items
 
             if not feed.entries:
-                self._stat_inc("feeds_ok")
-                self._feed_record(name, ok=True)
+                # XML 有效但 0 条目：既不算健康，也不算故障。
+                # 此前计 feeds_ok 且 _feed_record(ok=True) 会清零失败计数——被风控降级成
+                # 空 feed 的源会一直"健康"，真实故障被永久静默；但偶发空窗也不该把源推进
+                # 6h 停放，故只记账 + 告警，最终由主流程判断是否为全域异常。
+                self._stat_empty(name)
+                logger.warning(f"数据源 [{name}] 返回有效 RSS 但 0 条目（可能被风控降级），不计入健康源。")
                 return items
 
             self._stat_inc("feeds_ok")
@@ -1292,7 +1467,10 @@ class NewsFetcher:
                     impact_score = self.calculate_impact_score(title, clean_summary) + self.freshness_bonus(age_h)
                     image_url = self.extract_image_url(entry, summary)
 
+                    # base_impact_score = 未经活动加权的热度分。MIN_IMPACT_SCORE 过滤必须用
+                    # 原始分：否则低质源只要蹭到当期活动币就能靠 +8 越过门槛并登顶（Round 5）。
                     items.append({
+                        "base_impact_score": impact_score,
                         "id": news_id,
                         "title": title,
                         "summary": clean_summary[:1000],
@@ -1364,27 +1542,40 @@ class NewsFetcher:
                     self._stat_fail(feed_name)
                     self._feed_record(feed_name, ok=False)
 
-        # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布
+        # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布（只影响排序，不影响准入）
         self._apply_campaign_boost(candidates, priority_tokens)
 
-        # 低热度新闻过滤（默认不过滤，可通过 MIN_IMPACT_SCORE 开启）
+        # 低热度新闻过滤（默认不过滤）：必须以「未加权原始分」判定。此前 boost 先加再过滤，
+        # 低质源只要蹭到当期活动币就能靠 +8 越过门槛并压过真正的突发（Round 5）。
         if MIN_IMPACT_SCORE > 0:
             before = len(candidates)
-            candidates = [c for c in candidates if c["impact_score"] >= MIN_IMPACT_SCORE]
+            candidates = [c for c in candidates
+                          if c.get("base_impact_score", c["impact_score"]) >= MIN_IMPACT_SCORE]
             if before != len(candidates):
-                logger.info(f"热度分过滤(<{MIN_IMPACT_SCORE}): {before} -> {len(candidates)} 条。")
+                logger.info(f"热度分过滤(原始分 <{MIN_IMPACT_SCORE}): {before} -> {len(candidates)} 条。")
 
-        # 跨源近似去重：同一事件被多家媒体报道时仅保留第一条
+        # 先排序、后去重：candidates 由 as_completed 拼接，顺序取决于线程完成先后。
+        # 旧实现先去重再排序，同一事件保留的是"跑得最快的那条"而不是"分最高、有图、
+        # 摘要完整那条"，同一批输入两次运行可能选出不同的稿。末位补 source/title 做
+        # 确定性 tiebreak，让结果可复现、可回归。
+        candidates.sort(key=lambda x: (-x["impact_score"],
+                                        x["age_hours"] if x.get("age_hours") is not None else float("inf"),
+                                        x.get("source", ""), x.get("title", "")))
+
+        # 跨源近似去重：同一事件被多家媒体报道时仅保留排在最前（最优）的一条
+        # 历史侧指纹预编译：候选逐个进来时只算自己的指纹，历史不再重复跑正则
         seen_titles = cache_mgr.recent_titles(150)
+        dedup_index = self.build_dedup_index(seen_titles)
         unique_candidates = []
         for item in candidates:
-            dup_of = self._find_near_duplicate(item["title"], seen_titles)
+            dup_of = self._match_dedup_index(item["title"], dedup_index, DUP_SIMILARITY_THRESHOLD)
             if dup_of is not None:
                 self.stats["near_dup"] += 1
                 logger.info(f"近似重复热点已跳过: {item['title'][:60]} (≈ 历史: {dup_of[:60]})")
                 continue
             unique_candidates.append(item)
             seen_titles.append(item["title"])
+            dedup_index.append(self._dedup_entry(item["title"]))
         candidates = unique_candidates
 
         # 排序键：热度分降序 → 时效升序（同无时间戳的新闻排在最后）→ 原始扫描顺序稳定
@@ -1398,6 +1589,9 @@ class NewsFetcher:
                 self.stats["per_feed"][src]["kept"] += 1
         feeds_failed = self.stats["feeds_failed"]
         feeds_parked = self.stats["feeds_parked"]
+        if self.stats["feeds_empty"]:
+            logger.warning(f"⚠️ {self.stats['feeds_empty']} 个数据源返回 0 条目（XML 有效但无内容）: "
+                           f"{', '.join(self.stats['feeds_empty_sources'])}")
         if feeds_ok := self.stats["feeds_ok"]:
             level = logging.WARNING if feeds_failed else logging.INFO
             extra = f" / 停放 {len(feeds_parked)}" if feeds_parked else ""
@@ -1445,6 +1639,29 @@ class LLMProviderConfig:
     def __repr__(self):
         masked_key = (self.api_key[:6] + "..." + self.api_key[-4:]) if len(self.api_key) > 10 else "***"
         return f"<Provider: {self.name} | Model: {self.model} | BaseURL: {self.base_url} | Key: {masked_key}>"
+
+
+def _extract_usage_tokens(response: Any) -> Optional[int]:
+    """从 OpenAI 兼容响应里取本次调用的总 token 数，取不到返回 None。
+
+    usage 缺失/结构异常（部分网关不返回、MagicMock 测试替身）一律降级为 None，
+    绝不因为遥测把自己搞挂——成本可观测是加分项，不是主链路的前置条件。
+    """
+    try:
+        usage = getattr(response, "usage", None)
+        if usage is None:
+            return None
+        total = getattr(usage, "total_tokens", None)
+        if total is None:
+            prompt = getattr(usage, "prompt_tokens", 0) or 0
+            completion = getattr(usage, "completion_tokens", 0) or 0
+            total = (int(prompt) + int(completion)) or None
+        if total is None:
+            return None
+        total_int = int(total)
+        return total_int if total_int > 0 else None
+    except Exception:
+        return None
 
 
 def _is_reasoning_channel(provider_name: str) -> bool:
@@ -1604,11 +1821,78 @@ class MultiLLMEngine:
             self._clients[cache_key] = OpenAI(**kwargs)
         return self._clients[cache_key]
 
+    @staticmethod
+    def _provider_cost_latency_scores() -> Dict[str, float]:
+        """从 metrics.jsonl 聚合每个 provider 的历史(平均延迟 + 平均 token)，
+        合成一个「越小越优」的调度分数，供 _ordered_providers 在同健康档内二次排序。
+
+        - 仅统计 stage ∈ {summarize, campaign_intel} 的 LLM 遥测（承接 Round 2 成本可观测化）。
+        - 分数 = 平均延迟(s) + 0.001 × (平均 token / 1000)：token 是成本代理（无单价时足够排序）。
+        - 无遥测 / 文件缺失 / 解析异常 → 返回空 dict，调用方保持原 fail-count 顺序（零副作用）。
+        - 进程内缓存（按 路径+mtime+size 失效，TTL 120s）：同一运行内多次 _ordered_providers
+          只解析文件一次，避免无界增长的 metrics.jsonl 被反复整文件读取（见 Round 4）。
+        - 纯读取、异常全吞，绝不影响主链路。
+        """
+        path = METRICS_FILE
+        if not os.path.exists(path):
+            return {}
+        # 缓存命中：文件未变且未过期 → 直接返回，跳过整文件解析
+        try:
+            _st = os.stat(path)
+            _key = (os.path.abspath(path), _st.st_mtime, _st.st_size)
+        except Exception:
+            _key = None
+        if (_METRICS_AGG_CACHE["key"] == _key
+                and (time.monotonic() - _METRICS_AGG_CACHE["ts"]) < _METRICS_AGG_TTL):
+            return _METRICS_AGG_CACHE["val"]
+        agg: Dict[str, List[float]] = {}  # name -> [n, lat_sum, tok_sum]
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        r = json.loads(line)
+                    except Exception:
+                        continue
+                    if r.get("stage") not in ("summarize", "campaign_intel"):
+                        continue
+                    name = r.get("provider")
+                    if not name:
+                        continue
+                    lat = r.get("llm_latency_sec")
+                    tok = r.get("tokens_used")
+                    if not isinstance(lat, (int, float)) and not isinstance(tok, int):
+                        continue
+                    a = agg.setdefault(name, [0.0, 0.0, 0.0])
+                    a[0] += 1
+                    if isinstance(lat, (int, float)):
+                        a[1] += lat
+                    if isinstance(tok, int):
+                        a[2] += tok
+        except Exception:
+            return {}
+        scores: Dict[str, float] = {}
+        for name, (n, lat_sum, tok_sum) in agg.items():
+            if n <= 0:
+                continue
+            avg_lat = (lat_sum / n) if lat_sum else 0.0
+            avg_tok = (tok_sum / n) if tok_sum else 0.0
+            scores[name] = avg_lat + 0.001 * (avg_tok / 1000.0)
+        # 写入缓存（key 已在上方算出；若 stat 失败则 key=None，下次必重算）
+        _METRICS_AGG_CACHE["key"] = _key
+        _METRICS_AGG_CACHE["val"] = scores
+        _METRICS_AGG_CACHE["ts"] = time.monotonic()
+        return scores
+
     def _ordered_providers(self) -> List[LLMProviderConfig]:
         """
-        两层健康度调度：
+        三层健康度调度：
         1. 跨运行断路：处于熔断冷却期的提供商直接跳过（全量冷却时才被迫重启用）
-        2. 运行内连续失败次数升序排序（稳定排序，保持原有配置优先级）
+        2. 运行内连续失败次数升序排序（健康优先）
+        3. 同健康档内，按历史(平均延迟 + 成本代理)升序二次排序——承接 Round 2 遥测，
+           让更便宜更快的 provider 优先；无遥测时该维度为 +inf，保持原有配置优先级。
         """
         # 一次快照复用：此前 active/cooled 两遍列表各读一次文件（2N 次读盘），
         # 且并发运行时两份名单可能基于不同版本状态对不上
@@ -1620,7 +1904,10 @@ class MultiLLMEngine:
         if not active:
             logger.warning("所有提供商均在冷却期，强制全员重启尝试。")
             active = list(self.providers)
-        return sorted(active, key=lambda p: self._fail_counts.get(p.name, 0))
+        # 无遥测时 scores 为空 → 二级键恒 +inf → 退化为纯 fail-count 排序（稳定，保配置序）
+        scores = self._provider_cost_latency_scores()
+        rank_key = lambda p: (self._fail_counts.get(p.name, 0), scores.get(p.name, float("inf")))
+        return sorted(active, key=rank_key)
 
     def _build_provider_chain(self) -> List[LLMProviderConfig]:
         """构建提供商备份链"""
@@ -1815,7 +2102,9 @@ class MultiLLMEngine:
         return True, ""
 
     @staticmethod
-    def _log_reject(news_item: Dict[str, Any], provider: str, stage: str, reason: str) -> None:
+    def _log_reject(news_item: Dict[str, Any], provider: str, stage: str, reason: str,
+                    tokens_used: Optional[int] = None, latency_sec: Optional[float] = None,
+                    model: Optional[str] = None) -> None:
         """拒单遥测：每次 LLM 尝试被丢弃都记一行（stage=quality/numbers/transport）。
         投递遥测只记录成功，失败全黑盒会导致未来调优只看得到"活下来的稿子"
         （幸存者偏差：高热新闻是否系统性被质量门误杀，无数据回答不了）。
@@ -1826,6 +2115,9 @@ class MultiLLMEngine:
             "source": news_item.get("source"),
             "impact_score": news_item.get("impact_score"),
             "provider": provider,
+            "model": model,
+            "tokens_used": tokens_used,
+            "llm_latency_sec": latency_sec,
             "stage": stage,
             "reason": (reason or "")[:80],
             "outcome": "llm_rejected",
@@ -1878,14 +2170,17 @@ class MultiLLMEngine:
 【核心要求】：
 1. 彻底去 AI 味！模仿真人老韭菜/交易员在社区发帖的极简口吻。
 2. 篇幅严格控制在 160~240 字之间，分 3~4 个短段落，短句为主，每段 1~2 句话。
-3. 只能给 1~2 个真实代币加 $（如 $XRP 或 $DOGE，严禁在 ETF/SEC/AI/CEO/FED 等非代币词前加 $）。
+3. 每次提到代币一律用 $大写 形式（如 $PEPE、$WIF），并织在句子里（首段点名异动标的、后文至少再提一次核心标的）——这是交易挂件与创作激励返佣的生命线，严禁只写裸名或只在文末补一个。严禁在 ETF/SEC/AI/CEO/FED 等非代币词前加 $。
 4. 结尾设计一句极简的站队提问（如“看多的扣1，看空的扣2”），最后附带 3 个标签：#Write2Earn #BinanceSquare #核心代币。
+5. 所有数字（价格/涨跌幅/资金量/贪婪指数）只能来自上面给的资料，一个都不许编造。
 直接输出正文，不要任何开场白或多余解释："""
 
         # 遍历提供商链进行容灾尝试（按本次运行连续失败数升序，健康节点优先）
         ordered = self._ordered_providers()
         for index, provider in enumerate(ordered):
             logger.info(f"[{index + 1}/{len(ordered)}] 正在尝试使用提供商 [{provider.name}] (模型: {provider.model})...")
+            # 计时起点放在 try 之前：连 _get_client 构造失败也要能记出耗时
+            t_call = time.perf_counter()
             try:
                 client = self._get_client(provider)
 
@@ -1901,6 +2196,8 @@ class MultiLLMEngine:
                     temperature=0.75,
                     max_tokens=effective_max_tokens,
                 )
+                latency_sec = round(time.perf_counter() - t_call, 3)
+                tokens_used = _extract_usage_tokens(response)
 
                 if not response.choices or not response.choices[0].message:
                     raise ValueError("模型返回的 choices 为空")
@@ -1913,14 +2210,16 @@ class MultiLLMEngine:
                 # 0. 质量门：过短/过长/跑偏英文输出一律视为失败并切换下一模型
                 passed, fail_reason = self._passes_quality_gate(content)
                 if not passed:
-                    self._log_reject(news_item, provider.name, "quality", fail_reason)
+                    self._log_reject(news_item, provider.name, "quality", fail_reason,
+                                     tokens_used, latency_sec, provider.model)
                     raise _QualityGateRejection(fail_reason)
 
                 # 0.1 数字幻觉软校验：编造精确百分比/大额金额的内容直接拦截
                 source_text = f"{news_item.get('title','')} {news_item.get('summary','')} {market_context}"
                 nums_ok, nums_reason = self._verify_numbers(content, source_text)
                 if not nums_ok:
-                    self._log_reject(news_item, provider.name, "numbers", nums_reason)
+                    self._log_reject(news_item, provider.name, "numbers", nums_reason,
+                                     tokens_used, latency_sec, provider.model)
                     raise _QualityGateRejection(nums_reason)
 
                 # 1. 提取代币：交易所校验过的 token_hints 拥有最高权重，模型自报的 $ 标的仅作补充
@@ -1928,13 +2227,44 @@ class MultiLLMEngine:
                 valid_tokens = SymbolValidator.filter_valid_tokens(raw_tokens)
                 if token_hints:
                     # 以新闻侧校验标的为准，模型额外识别到的有效标的追加在后
-                    merged = list(token_hints)
-                    for t in valid_tokens:
-                        if t not in merged:
-                            merged.append(t)
+                    # （大小写/$ 前缀归一后去重：$link 与 LINK 是同一个标的）
+                    seen = set()
+                    merged = []
+                    for t in list(token_hints) + valid_tokens:
+                        u = t.upper().replace("$", "")
+                        if u and u not in seen:
+                            seen.add(u)
+                            merged.append(u)
+                    # 去散射：超出新闻标的 ≥2 个有效币视为刷屏式硬蹭，从正文剥壳并摘除
+                    # （恰好 1 个时保留：歧义修复/合理关联多为单发，宁可放过。
+                    #  金额缩写 $120K/$5B 与纯数字金额不受影响，只动有效币名。）
+                    news_set = {t.upper().replace("$", "") for t in token_hints}
+                    valid_syms = SymbolValidator.get_valid_symbols()
+                    extras = [t for t in merged
+                              if t not in news_set and t in valid_syms]
+                    if len(extras) >= 2:
+                        for t in extras:
+                            content = re.sub(r"\$" + re.escape(t) + r"\b", t,
+                                             content, flags=re.IGNORECASE)
+                            merged.remove(t)
+                        logger.info(f"去散射：剥离与本条新闻无关的标的 {extras}，保留 {merged}")
                     valid_tokens = merged
+
+                # 2. 代币兜底策略（显式、可观测、可关闭）：
+                #    模型自报与新闻侧 token_hints 均无有效标的 → 与 README 契约一致，
+                #    这是「无关曝光」，不应强行挂 $BTC。默认跳过并留痕；仅当运维显式设置
+                #    BINANCE_FORCE_BTC_FALLBACK=1/true 时，才恢复旧版静默 BTC 兜底。
+                #    注：生产链路中 _run_main 已在调用前用 detected_tokens 非空前置过滤，
+                #    此分支在生产恒不可达；保留为契约兜底与显式开关，防御未来改动误放。
                 if not valid_tokens:
-                    valid_tokens = ["BTC"]
+                    if os.getenv("BINANCE_FORCE_BTC_FALLBACK", "").strip().lower() in ("1", "true", "yes", "on"):
+                        valid_tokens = ["BTC"]
+                        logger.warning("未识别到任何有效标的，按 BINANCE_FORCE_BTC_FALLBACK 显式兜底挂 $BTC")
+                    else:
+                        self._log_reject(news_item, provider.name, "no_valid_token",
+                                         "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光",
+                                         tokens_used, latency_sec, provider.model)
+                        return None
 
                 # 2. 标签保底处理（仅保留干净的 3 个标签，绝不附带机械化广告标语）
                 if not re.search(r"#Write2Earn", content, re.IGNORECASE):
@@ -1944,8 +2274,10 @@ class MultiLLMEngine:
                 # 成功即清除该提供商的失败计数与跨运行熔断
                 self._fail_counts.pop(provider.name, None)
                 self._breaker_record_success(provider.name)
-                logger.info(f"🎉 模型 [{provider.name}] 生成成功！(识别标的: {valid_tokens})")
-                return {"content": content, "tokens": valid_tokens, "provider": provider.name}
+                logger.info(f"🎉 模型 [{provider.name}] 生成成功！(识别标的: {valid_tokens})"
+                            f" | 耗时 {latency_sec}s / tokens {tokens_used or '?'}")
+                return {"content": content, "tokens": valid_tokens, "provider": provider.name,
+                        "model": provider.model, "tokens_used": tokens_used, "latency_sec": latency_sec}
 
             except _QualityGateRejection as e:
                 # 内容跑偏是模型质量问题，换一个模型重试；但不计入跨运行断路器
@@ -1957,7 +2289,10 @@ class MultiLLMEngine:
                 err_msg = str(e)
                 self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
                 self._breaker_record_failure(provider.name)
-                self._log_reject(news_item, provider.name, "transport", err_msg)
+                # 传输层失败同样要记耗时：超时型故障靠 latency 才能定位
+                self._log_reject(news_item, provider.name, "transport", err_msg,
+                                 latency_sec=round(time.perf_counter() - t_call, 3),
+                                 model=provider.model)
                 fail_reason = err_msg
                 enter_breaker = True
                 logger.warning(f"提供商 [{provider.name}] 请求失败: {err_msg} (本次运行连续失败 {self._fail_counts[provider.name]} 次)")
@@ -2080,6 +2415,8 @@ class CampaignScanner:
         try:
             logger.info("正在使用 AI 深度分析币安官方当期活动情报...")
             for provider in llm_engine._ordered_providers():
+                t_call = time.perf_counter()
+                tokens_used = None
                 try:
                     client = llm_engine._get_client(provider)
                     # 推理型渠道（Reasonix 网关）思考链就吃几百 token，400 预算会静默产出空内容
@@ -2090,6 +2427,8 @@ class CampaignScanner:
                         temperature=0.3,
                         max_tokens=effective_max_tokens,
                     )
+                    latency_sec = round(time.perf_counter() - t_call, 3)
+                    tokens_used = _extract_usage_tokens(resp)
                     raw_res = (resp.choices[0].message.content or "").strip()
                     clean_res = re.sub(r"^```json\s*", "", raw_res, flags=re.IGNORECASE)
                     clean_res = re.sub(r"^```\s*", "", clean_res)
@@ -2101,11 +2440,38 @@ class CampaignScanner:
                     data = json.loads(clean_res)
                     if CampaignScanner._valid_intel_shape(data):
                         data["last_updated"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+                        append_metrics({
+                            "provider": provider.name,
+                            "model": provider.model,
+                            "tokens_used": tokens_used,
+                            "llm_latency_sec": latency_sec,
+                            "stage": "campaign_intel",
+                            "outcome": "llm_success",
+                        })
                         logger.info(f"🎉 币安活动情报分析完成: {data.get('strategy_guidance')}")
                         return data
                     logger.warning(f"提供商 [{provider.name}] 返回的情报缺字段/类型不对，已丢弃换下一家: "
                                    f"{str(data)[:120]}")
+                    append_metrics({
+                        "provider": provider.name,
+                        "model": provider.model,
+                        "tokens_used": tokens_used,
+                        "llm_latency_sec": latency_sec,
+                        "stage": "campaign_intel",
+                        "reason": "invalid_intel_shape",
+                        "outcome": "llm_rejected",
+                    })
                 except Exception as e:
+                    # 情报分析失败同样记耗时/ token，便于定位是哪家 provider 在抖
+                    append_metrics({
+                        "provider": provider.name,
+                        "model": provider.model,
+                        "tokens_used": tokens_used,
+                        "llm_latency_sec": round(time.perf_counter() - t_call, 3),
+                        "stage": "campaign_intel",
+                        "reason": str(e)[:80],
+                        "outcome": "llm_rejected",
+                    })
                     logger.warning(f"使用提供商 [{provider.name}] 分析活动失败: {e}")
         except Exception as e:
             logger.warning(f"AI 理解活动异常: {e}")
@@ -2389,26 +2755,30 @@ class ImageManager:
         """
         一站式准备配图：下载原图 -> 失败则兜底 -> 上传币安 S3 -> 返回官方托管链接。
         兜底图（全网情绪仪表盘）按日复用托管 URL，避免同一图片当天反复走上传流水线。
+        缓存检查在下载之前：此前先下载、失败直接 return None，根本走不到缓存——
+        图床抖动叠加有效缓存时，本应复用却降级纯文本，缓存形同虚设。
         """
         target_url = raw_image_url.strip() if raw_image_url else cls.DEFAULT_FALLBACK_IMAGE
-        download_result = cls.download_image(target_url)
-
-        # 若原图下载失败或无原图，尝试使用全网情绪仪表盘兜底
-        if not download_result and target_url != cls.DEFAULT_FALLBACK_IMAGE:
-            logger.info("新闻原图无法抓取，自动启用全网情绪仪表盘进行配图...")
-            target_url = cls.DEFAULT_FALLBACK_IMAGE
-            download_result = cls.download_image(target_url)
-
-        if not download_result:
-            logger.warning("配图下载完全失败，将以纯文本格式继续发布。")
-            return None
-
-        # 兜底图：先查当日托管缓存
         using_fallback = target_url == cls.DEFAULT_FALLBACK_IMAGE
         if using_fallback:
             cached_url = cls._read_fallback_cache()
             if cached_url:
                 return cached_url
+        download_result = cls.download_image(target_url)
+
+        # 若原图下载失败或无原图，尝试使用全网情绪仪表盘兜底（先看缓存，再下载）
+        if not download_result and not using_fallback:
+            logger.info("新闻原图无法抓取，自动启用全网情绪仪表盘进行配图...")
+            target_url = cls.DEFAULT_FALLBACK_IMAGE
+            using_fallback = True
+            cached_url = cls._read_fallback_cache()
+            if cached_url:
+                return cached_url
+            download_result = cls.download_image(target_url)
+
+        if not download_result:
+            logger.warning("配图下载完全失败，将以纯文本格式继续发布。")
+            return None
 
         image_bytes, filename, content_type = download_result
         hosted_url = cls.upload_to_binance(api_key, image_bytes, filename, content_type)
@@ -2424,10 +2794,13 @@ class ImageManager:
 # 现有平台：binance（币安广场官方 OpenAPI）、okx_draft（OKX 广场草稿直出，官方暂无 API）。
 # ---------------------------------------------------------------------------
 class BasePublisher:
-    """多平台发布器统一接口。实现方约定：失败返回 False 并置 last_error 供上层报警。"""
+    """多平台发布器统一接口。实现方约定：失败返回 False 并置 last_error 供上层报警。
+    若失败属于"此前已投递过"的幂等跳过，额外置 skipped_reason = IDEMPOTENT_SKIP，
+    主流程据此按"已投递"处理，不计入失败与熔断。"""
 
     name = "base"
     last_error: Optional[str] = None
+    skipped_reason: Optional[str] = None  # 每次 publish 入口重置，见各实现
 
     def publish(self, content: str, image_url: Optional[str] = None,
                 ensure_tokens: Optional[List[str]] = None, meta: Optional[Dict[str, Any]] = None) -> bool:
@@ -2556,6 +2929,10 @@ class SquarePublisher(BasePublisher):
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.last_error: Optional[str] = None  # 最近一次发布失败的诊断信息，供上层报警/报告使用
+        # 结构化业务错误码（如 "20002"）。上层判"是否被风控拦截"必须用它而非
+        # last_error 字符串包含匹配：publisher 是循环外复用的单实例，旧值会跨条目
+        # 残留，把一次网络抖动的稿子永久写进风控否认名单（Round 5）。
+        self.last_error_code: Optional[str] = None
 
     # 固定强制剥离 $ 的非代币/稳定币词（即使在交易所存在同名标的也不做挂件）
     FORCE_STRIP_CASHTAGS = [
@@ -2566,15 +2943,18 @@ class SquarePublisher(BasePublisher):
     def _sanitize_content(cls, content: str) -> str:
         """
         全自动化内容精细清洗与合规保障：
-        0. 全角 #、＄ 归一为半角，防止模型输出全角符号漏过 hashtag/挂件识别
+        0. NFKC 全角归一（R32 手写 ＃＄％ 三字符的子集升级）：全角字母数字
+        （ＢＴＣ/１２００００/全角空格）同样归半角，否则 $ＢＴＣ 这类"币标识"
+        既挂不上交易挂件又被误判，等于白发一篇
         1. 清洗非代币误加的 $（静态黑名单 + 动态比对币安真实交易对）
         2. 剔除生硬破折号“——”
         3. 敏感词/高危违规词自动安全替换（防止触发币安 20002/20022 审核拦截）
         4. 严格限制全篇最多 3 个 Hashtag（杜绝 220094 错误）
         5. 超长截断保护（确保在 900 字以内）
         """
-        # 0. 全角符号归一（常见 LLM 输出中 “＃” “＄” “％” 等会破坏下游正则识别）
-        content = content.replace("＃", "#").replace("＄", "$").replace("％", "%")
+        # 0. 全角符号归一（常见 LLM 输出中 “＃” “＄” “％” 等会破坏下游正则识别，
+        #    全角字母数字同理：$ＢＴＣ 必须先变 $BTC，否则挂件识别与金额保护全 miss）
+        content = unicodedata.normalize("NFKC", content)
 
         # 0.5 输出洁净度：推理模型的 <think> 思考块 / Markdown 痕迹 / 客套开场白在纯文本广场全是噪音
         content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL | re.IGNORECASE)  # 思考链
@@ -2590,8 +2970,9 @@ class SquarePublisher(BasePublisher):
             content = re.sub(rf"(^|[。！？\n]\s*){slop}[，,：:]?\s*", r"\1", content)
         content = content.strip()
         # 1a. 静态黑名单：稳定币/机构/通用缩写一律剥离 $
+        # 注意不能用 \b 收尾：中文紧贴时（如 "$USDT和"）汉字是 word char，\b 不触发，剥壳失效
         for word in cls.FORCE_STRIP_CASHTAGS:
-            content = re.sub(rf"\${word}\b", word, content, flags=re.IGNORECASE)
+            content = re.sub(rf"\${word}(?![A-Za-z0-9])", word, content, flags=re.IGNORECASE)
 
         # 1b. 动态清洗：凡是不在币安现货交易对中的含字母 $XXX 全部剥离 $（纯数字金额如 $1000 保留）
         valid_symbols = SymbolValidator.get_valid_symbols()
@@ -2608,7 +2989,8 @@ class SquarePublisher(BasePublisher):
                 return "$" + word.upper()  # $btc → $BTC 归一化
             return word
 
-        content = re.sub(r"\$([A-Za-z0-9]{2,10})\b", _strip_invalid_cashtag, content)
+        # 注意不能用 \b 收尾：中文紧贴时（如 "$FAKECOIN和"）汉字是 word char，\b 不触发，剥壳失效
+        content = re.sub(r"\$([A-Za-z0-9]{2,10})(?![A-Za-z0-9])", _strip_invalid_cashtag, content)
 
         # 2. 移除生硬破折号
         content = content.replace("——", "，")
@@ -2670,6 +3052,28 @@ class SquarePublisher(BasePublisher):
 
         return content.strip()
 
+    @classmethod
+    def _inject_campaign_tag(cls, content: str, campaign_intel: Optional[Dict[str, Any]]) -> str:
+        """
+        活动标签入帖：把当期官方活动标签（如 #TradingTournament/#AltcoinTrading）
+        作为第 3 个标签注入——这是参与币安广场创作激励活动的入口（第 1/2 名额固定给
+        #Write2Earn/#BinanceSquare 返佣归因）。
+        """
+        if not campaign_intel:
+            return content
+        tags_now = list(re.finditer(r"#[^\s#]+", content))
+        if len(tags_now) >= 3:
+            return content
+        have = {mm.group(0)[1:].lower() for mm in tags_now}
+        for tag in campaign_intel.get("active_tags") or []:
+            tag = str(tag).strip()
+            if not tag.startswith("#") or tag[1:].lower() in have:
+                continue
+            if tag[1:].lower() in ("write2earn", "binancesquare"):
+                continue
+            return content.rstrip() + f" {tag}"
+        return content
+
     @staticmethod
     def _ensure_token_widget(content: str, ensure_tokens: Optional[List[str]]) -> str:
         """
@@ -2678,7 +3082,7 @@ class SquarePublisher(BasePublisher):
         """
         if not ensure_tokens:
             return content
-        existing = re.findall(r"\$([A-Za-z0-9]{2,10})\b", content)
+        existing = re.findall(r"\$([A-Za-z0-9]{2,10})(?![A-Za-z0-9])", content)
         valid_symbols = SymbolValidator.get_valid_symbols()
         if any(t.upper() in valid_symbols for t in existing):
             return content
@@ -2689,15 +3093,39 @@ class SquarePublisher(BasePublisher):
             return content + f"\n\n${primary}"
         return content[:idx].rstrip() + f"\n\n${primary} " + content[idx:]
 
+    # 把正文里"裸写的代币名"织成句内 $ 挂件（仿爆款：'$PEPE 和 $WIF 这俩老牌山寨'）。
+    # 交易挂件只渲染 $ 前缀 cashtag，模型写纯名（PEPE 和 WIF）就丢返佣抓手。
+    # 歧义代码（NEAR/LINK 等撞名词）仅当原文全大写才织入，防误伤普通英文。
+    @classmethod
+    def _weave_cashtags(cls, content: str, ensure_tokens: Optional[List[str]]) -> str:
+        if not ensure_tokens:
+            return content
+        valid_symbols = SymbolValidator.get_valid_symbols()
+        for tok in sorted({t.upper() for t in ensure_tokens if t and t.upper() in valid_symbols},
+                          key=len, reverse=True):
+            flags = 0 if tok in AMBIGUOUS_TICKERS else re.IGNORECASE
+            pattern = re.compile(
+                rf"(?<![A-Za-z0-9$#]){re.escape(tok)}(?![A-Za-z0-9])", flags)
+            content = pattern.sub(f"${tok}", content)
+        return content
+
     def publish(self, content: str, image_url: Optional[str] = None,
-                ensure_tokens: Optional[List[str]] = None) -> bool:
+                ensure_tokens: Optional[List[str]] = None,
+                campaign_intel: Optional[Dict[str, Any]] = None) -> bool:
+        # 每次调用先清空上次残留的错误状态：本实例在整个发帖循环里复用，
+        # 不清就会被下一条新闻读到（Round 5）。
+        self.last_error = None
+        self.last_error_code = None
         if not self.api_key:
             logger.error("未配置 SQUARE_API_KEY，无法发布到币安广场！")
+            self.last_error = "未配置 SQUARE_API_KEY，无法发布到币安广场！"
             return False
 
-        # 严格清洗合规 + 交易挂件保底
+        # 严格清洗合规 + 代币名织挂件 + 挂件保底 + 活动标签
         content = self._sanitize_content(content)
+        content = self._weave_cashtags(content, ensure_tokens)
         content = self._ensure_token_widget(content, ensure_tokens)
+        content = self._inject_campaign_tag(content, campaign_intel)
         if len(content) < 15:
             logger.error(f"发帖内容过短 ({len(content)} 字符)，拒绝发布以防被系统封禁")
             return False
@@ -2794,6 +3222,7 @@ class SquarePublisher(BasePublisher):
                     return self.publish(content, image_url=None)
                 diagnosis = self._classify_publish_error(status_code, resp_json)
                 self.last_error = diagnosis
+                self.last_error_code = str(resp_json.get("code", "") or "")
                 logger.error(f"币安广场返回业务错误: {diagnosis} | 原始: {json.dumps(resp_json, ensure_ascii=False)[:300]}")
                 # 内容被风控拦截（20002/20022）≠ 网络故障，不重置熔断，但值得提醒
                 if str(resp_json.get("code", "")) in ("20002", "20022"):
@@ -2835,10 +3264,14 @@ class OKXDraftExporter(BasePublisher):
 
     def publish(self, content: str, image_url: Optional[str] = None,
                 ensure_tokens: Optional[List[str]] = None, meta: Optional[Dict[str, Any]] = None) -> bool:
+        self.skipped_reason = None
         try:
             meta = meta or {}
             if self._draft_exists(meta.get("news_id", "")):
                 logger.info(f"📝 该新闻已有草稿（此前币安失败待重试），跳过重复导出: {meta.get('title', '')[:40]}")
+                # 仍返回 False（保持"未产生新动作"的语义），但显式标记为幂等跳过，
+                # 交由主流程按"已投递"处理，不再计入失败与熔断。
+                self.skipped_reason = IDEMPOTENT_SKIP
                 return False
             # 跨平台内容适配：净化 + 剥离币安专属标签（#Write2Earn 等）
             content = self._prepare_cross_platform_content(content)
@@ -2953,6 +3386,7 @@ class TelegramChannelPublisher(BasePublisher):
 
     def publish(self, content: str, image_url: Optional[str] = None,
                 ensure_tokens: Optional[List[str]] = None, meta: Optional[Dict[str, Any]] = None) -> bool:
+        self.skipped_reason = None
         token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
         # 频道 ID 独立于报警用的 TELEGRAM_CHAT_ID；未单设时回退复用
         channel = os.getenv("TELEGRAM_MIRROR_CHANNEL_ID", "").strip() or os.getenv("TELEGRAM_CHAT_ID", "").strip()
@@ -2964,6 +3398,7 @@ class TelegramChannelPublisher(BasePublisher):
         meta = meta or {}
         if self._tg_already_sent(meta.get("news_id", "")):
             logger.info(f"📢 该新闻此前已镜像到 Telegram，跳过重复发布: {meta.get('title', '')[:40]}")
+            self.skipped_reason = IDEMPOTENT_SKIP
             return False
 
         api_base = f"https://api.telegram.org/bot{token}"
@@ -3027,28 +3462,45 @@ class Notifier:
     _ALERT_THROTTLE_HOURS = 12
 
     @classmethod
-    def _alert_throttled(cls, title: str) -> bool:
-        """返回 True 表示该报警在冷却期内，应跳过发送"""
+    def _alert_in_cooldown(cls, title: str) -> bool:
+        """只读判断：该标题是否仍在冷却期内（不写任何状态）"""
         key = hashlib.sha256(title.encode("utf-8")).hexdigest()[:16]
-        now = datetime.now(timezone.utc)
         state = intel_state_get("_alert_state", {})
         if not isinstance(state, dict):
-            state = {}
+            return False
 
         last = state.get(key)
         if last:
             try:
                 last_dt = datetime.fromisoformat(str(last).replace("Z", "+00:00"))
-                if (now - last_dt).total_seconds() < cls._ALERT_THROTTLE_HOURS * 3600:
+                if (datetime.now(timezone.utc) - last_dt).total_seconds() < cls._ALERT_THROTTLE_HOURS * 3600:
                     logger.info(f"报警已节流（{cls._ALERT_THROTTLE_HOURS}h 内不重复推送）: {title}")
                     return True
             except Exception:
                 pass
+        return False
 
-        state[key] = now.isoformat()
+    @classmethod
+    def _alert_mark(cls, title: str) -> None:
+        """记录该报警已发出（供冷却期判断）。
+
+        必须在投递**成功之后**才调用：旧实现在发送前就写节流状态，一旦所有渠道都投递
+        失败（系统出故障时恰恰最可能发生），这条报警会在 12h 内被永久吞掉（Round 5）。"""
+        key = hashlib.sha256(title.encode("utf-8")).hexdigest()[:16]
+        state = intel_state_get("_alert_state", {})
+        if not isinstance(state, dict):
+            state = {}
+        state[key] = datetime.now(timezone.utc).isoformat()
         # 只保留最近 32 条报警记录，防状态膨胀
         state = dict(sorted(state.items(), key=lambda kv: kv[1])[-32:])
         intel_state_set("_alert_state", state)
+
+    @classmethod
+    def _alert_throttled(cls, title: str) -> bool:
+        """返回 True 表示该报警在冷却期内，应跳过发送（未冷却则顺带登记为已发）"""
+        if cls._alert_in_cooldown(title):
+            return True
+        cls._alert_mark(title)
         return False
 
     @staticmethod
@@ -3107,10 +3559,12 @@ class Notifier:
             logger.info(f"[通知未配置渠道，跳过推送] {title}")
             return
 
-        # 错误报警 12h 同题节流（成功通知不去重，每条成功都有价值）
-        if is_error and Notifier._alert_throttled(title):
+        # 错误报警 12h 同题节流（成功通知不去重，每条成功都有价值）。
+        # 只判断不登记：登记推迟到确认至少一个渠道投递成功之后。
+        if is_error and Notifier._alert_in_cooldown(title):
             return
 
+        delivered_any = False
         prefix = "🚨 【异常报警】" if is_error else "📢 【发帖成功】"
         full_title = f"{prefix} {title}"
         message = Notifier._clip(message)
@@ -3133,6 +3587,7 @@ class Notifier:
 
             if Notifier._deliver("Server酱", _send_serverchan):
                 logger.info("已发送 Server酱 微信通知。")
+                delivered_any = True
 
         # 2. 微信推送：PushPlus (推送加，成功业务码 code==200)
         pushplus_token = os.getenv("PUSHPLUS_TOKEN", "").strip()
@@ -3147,6 +3602,7 @@ class Notifier:
 
             if Notifier._deliver("PushPlus", _send_pushplus):
                 logger.info("已发送 PushPlus 微信通知。")
+                delivered_any = True
 
         # 3. iOS 推送：Bark —— URL 路径必须做编码，否则中文/空格/斜杠会破坏请求（成功业务码 code==200）
         bark_key = os.getenv("BARK_KEY", "").strip()
@@ -3162,6 +3618,7 @@ class Notifier:
 
             if Notifier._deliver("Bark", _send_bark):
                 logger.info("已发送 Bark iOS 推送。")
+                delivered_any = True
 
         # 4. Telegram 通知 —— MarkdownV1 对 _ [ * 等字符敏感，改用纯文本模式并保留加粗语义
         tg_bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
@@ -3178,6 +3635,7 @@ class Notifier:
 
             if Notifier._deliver("Telegram", _send_tg):
                 logger.info("已发送 Telegram 状态通知。")
+                delivered_any = True
 
         # 5. 通用 Webhook (钉钉 / 飞书 / 企微 / Discord)：各家成功语义不一，只验 HTTP 2xx
         webhook_url = os.getenv("WEBHOOK_URL", "").strip()
@@ -3190,6 +3648,11 @@ class Notifier:
 
             if Notifier._deliver("Webhook", _send_webhook):
                 logger.info("已发送 Webhook 状态通知。")
+                delivered_any = True
+
+        # 报警投递确认后才登记冷却：全部渠道失败时不占用 12h 内的报警额度
+        if is_error and delivered_any:
+            Notifier._alert_mark(title)
 
 
 # ---------------------------------------------------------------------------
@@ -3510,6 +3973,17 @@ def _run_main():
             Notifier.send_notification("RSS 数据源全线故障", msg, is_error=True)
             write_github_step_summary(fetcher, fng_index, campaign_intel, [], dry_run)
             sys.exit(1)
+        # 所有源都"有效 RSS 但 0 条目"：不是今天没新闻，而是源被集体降级/风控。
+        # 旧实现把空 feed 计为健康源，这类故障会伪装成"未检测到热点"静默退出（Round 5）。
+        if (not fetcher.stats["feeds_failed"] and fetcher.stats["feeds_ok"] == 0
+                and fetcher.stats["feeds_empty"]):
+            msg = (f"全部 {fetcher.stats['feeds_empty']} 个数据源均返回有效 RSS 但 0 条目"
+                   f"（疑似被风控降级）: {', '.join(fetcher.stats['feeds_empty_sources'])}")
+            logger.error(f"🚨 {msg}")
+            Notifier.send_notification("RSS 数据源集体返回空内容", msg, is_error=True)
+            write_github_step_summary(fetcher, fng_index, campaign_intel, [], dry_run)
+            # 空 feed 不等于硬故障（也可能是源方短暂维护），不标红 Actions，靠报警暴露
+            sys.exit(0)
         logger.info("✅ 未检测到新的未发布热点，安全退出。")
         write_github_step_summary(fetcher, fng_index, campaign_intel, [], dry_run)
         sys.exit(0)
@@ -3560,7 +4034,10 @@ def _run_main():
             # 单代币 24h 限流：BTC 热点刷屏会拉低账号垂直度画像
             if TOKEN_DAILY_LIMIT > 0:
                 capped = [t for t in detected_tokens if cache_mgr.token_posts_since(t, 24) >= TOKEN_DAILY_LIMIT]
-                if capped and all(t in capped for t in detected_tokens):
+                # 任一命中代币触顶即跳过。旧写法要求"全部代币都触顶"才跳过，
+                # 于是"同时提到 BTC 和某个冷门小币"的新闻会让已满额的 BTC 继续发，
+                # TOKEN_DAILY_LIMIT 形同虚设（Round 5）。
+                if capped:
                     logger.info(f"代币 {capped} 24h 内已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)，为避免刷屏跳过本条: {title}")
                     continue
 
@@ -3601,6 +4078,13 @@ def _run_main():
             if not llm_result:
                 consecutive_llm_failures += 1
                 logger.warning(f"AI 生成失败，跳过: {title} (连续失败 {consecutive_llm_failures} 次)")
+                # 失败留痕：此前只有"活下来的稿子"进遥测，无法回答"高热新闻是否被
+                # 模型池系统性饿死"（Round 5，与 Round 2 的拒单遥测互补）。
+                append_metrics({
+                    "title": title[:60], "source": source, "tokens": detected_tokens,
+                    "impact_score": score, "age_hours": item.get("age_hours"),
+                    "outcome": "llm_failed",
+                })
                 if consecutive_llm_failures >= 3:
                     logger.error("🛑 模型池连续 3 次全部不可用，触发熔断提前终止，防止无效重试浪费运行时长。")
                     Notifier.send_notification(
@@ -3612,7 +4096,9 @@ def _run_main():
                 continue
             consecutive_llm_failures = 0
             post_content = llm_result["content"]
-            post_tokens = llm_result["tokens"]
+            # LLM 未回报标的时回落到新闻本体识别结果：空 tokens 写进缓存会让这条记录
+            # 永久绕开单币限流（Round 5）。
+            post_tokens = llm_result["tokens"] or detected_tokens
 
             logger.info("生成内容预览:\n" + post_content)
 
@@ -3650,7 +4136,8 @@ def _run_main():
 
                 if binance_enabled:
                     t_pub_start = time.time()
-                    success = publisher.publish(post_content, image_url=uploaded_image_url, ensure_tokens=post_tokens)
+                    success = publisher.publish(post_content, image_url=uploaded_image_url,
+                                                ensure_tokens=post_tokens, campaign_intel=campaign_intel)
                     publish_elapsed = time.time() - t_pub_start
                     stage_timings["publish"] += publish_elapsed
                 else:
@@ -3663,24 +4150,37 @@ def _run_main():
                                             ensure_tokens=post_tokens, meta=draft_meta):
                         drafts_count += 1
                         draft_exported = True
+                    elif getattr(okx_exporter, "skipped_reason", None) == IDEMPOTENT_SKIP:
+                        # 幂等跳过 ≠ 失败：草稿此前已导出过，投递事实上已完成。
+                        # 旧实现一律按失败计，副平台-only 模式下连中 3 次就误报"通道熔断"（Round 5）。
+                        logger.info("📝 OKX 草稿此前已导出，按已投递处理（幂等）。")
+                        draft_exported = True
 
                 telegram_exported = False
                 if "telegram" in PUBLISH_PLATFORMS:
-                    telegram_exported = telegram_mirror.publish(
-                        post_content, image_url=uploaded_image_url,
-                        ensure_tokens=post_tokens, meta=draft_meta)
+                    if telegram_mirror.publish(
+                            post_content, image_url=uploaded_image_url,
+                            ensure_tokens=post_tokens, meta=draft_meta):
+                        telegram_exported = True
+                    elif getattr(telegram_mirror, "skipped_reason", None) == IDEMPOTENT_SKIP:
+                        logger.info("📢 该新闻此前已镜像到 Telegram，按已投递处理（幂等）。")
+                        telegram_exported = True
 
                 if success:
                     consecutive_publish_failures = 0
                     publisher._publish_record(news_id, ok=True)  # 清掉可能存在的停放记次
-                    cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
+                    # 落盘结果必须回看：帖子已真实发出而缓存没写上，下一轮必然重复发同一条
+                    persisted = cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
                     posted_titles_this_run.append(title)
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
+                        "model": llm_result.get("model"),
+                        "tokens_used": llm_result.get("tokens_used"),
+                        "llm_latency_sec": llm_result.get("latency_sec"),
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
-                        "outcome": "binance_published",
+                        "outcome": "binance_published" if persisted else "binance_published_cache_failed",
                     })
                     posted_records.append({
                         "title": title, "source": source,
@@ -3689,19 +4189,33 @@ def _run_main():
                         "elapsed_sec": round(publish_elapsed, 1),
                     })
                     posted_count += 1
+                    if not persisted:
+                        # 去重链已断：继续发只会制造更多无法登记的重复帖，立即止损并大声报警
+                        logger.error("🛑 去重缓存落盘失败（已重试），本轮停止后续发帖以避免重复发布。")
+                        Notifier.send_notification(
+                            "去重缓存写入失败",
+                            f"新闻 [{title}] 已发布成功，但 {os.path.basename(CACHE_FILE)} 写入失败。"
+                            f"本轮已停止后续发帖。请检查仓库写入权限 / Actions 的 Read-Write 权限配置，"
+                            f"否则下一轮会重复发布同一内容。",
+                            is_error=True,
+                        )
+                        break
                     Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}\n\n{post_content[:200]}...")
                 elif not binance_enabled and (draft_exported or telegram_exported):
                     # 仅副平台模式：任一平台完成投递即入缓存，防止每 20 分钟重复处理同一新闻
                     delivered = _delivered_platforms(False, draft_exported, telegram_exported)
                     delivered_by = "+".join(delivered)
-                    cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
+                    persisted = cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
                     posted_titles_this_run.append(title)
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
+                        "model": llm_result.get("model"),
+                        "tokens_used": llm_result.get("tokens_used"),
+                        "llm_latency_sec": llm_result.get("latency_sec"),
                         "platforms": delivered,
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
-                        "outcome": f"{delivered_by}_delivered",
+                        "outcome": f"{delivered_by}_delivered" if persisted else f"{delivered_by}_delivered_cache_failed",
                     })
                     posted_records.append({
                         "title": title, "source": source,
@@ -3712,6 +4226,15 @@ def _run_main():
                     posted_count += 1
                     consecutive_mirror_failures = 0
                     logger.info(f"📮 副平台投递完成 ({delivered_by}): {title}")
+                    if not persisted:
+                        logger.error("🛑 去重缓存落盘失败（已重试），本轮停止后续投递以避免重复。")
+                        Notifier.send_notification(
+                            "去重缓存写入失败",
+                            f"新闻 [{title}] 已投递到 {delivered_by}，但 {os.path.basename(CACHE_FILE)} 写入失败。"
+                            f"本轮已停止后续投递，请检查仓库写入权限，否则下一轮会重复处理同一内容。",
+                            is_error=True,
+                        )
+                        break
                 elif not binance_enabled:
                     # 副平台-only 模式下所有平台都投递失败：不能无限静默空转
                     consecutive_mirror_failures += 1
@@ -3730,9 +4253,24 @@ def _run_main():
                 else:
                     consecutive_publish_failures += 1
                     logger.error(f"发帖失败，本次暂不记录缓存以供下次重试: {title} (发布链路连续失败 {consecutive_publish_failures} 次)")
-                    detail = publisher.last_error or "发布接口返回异常"
-                    # 风控拦截（20002/20022）重试无意义：内容不变结果不变，记入否认名单永久跳过
-                    if "20002" in detail or "20022" in detail:
+                    detail = str(publisher.last_error or "发布接口返回异常")
+                    code_hint = getattr(publisher, "last_error_code", None)
+                    append_metrics({
+                        "title": title[:60], "source": source, "tokens": post_tokens,
+                        "impact_score": score, "provider": llm_result["provider"],
+                        "model": llm_result.get("model"),
+                        "tokens_used": llm_result.get("tokens_used"),
+                        "llm_latency_sec": llm_result.get("latency_sec"),
+                        "platforms": _delivered_platforms(False, draft_exported, telegram_exported),
+                        "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
+                        "outcome": "publish_failed", "error": detail[:200],
+                        # 必须转成 str：非字符串类型会让 json.dumps 整条遥测失败被吞掉
+                        "error_code": str(code_hint) if code_hint else None,
+                    })
+                    # 风控拦截（20002/20022）重试无意义：内容不变结果不变，记入否认名单永久跳过。
+                    # 判定必须用结构化错误码：last_error 是跨条目复用的实例属性，
+                    # 字符串包含匹配会拿上一次的残留值误杀本条（Round 5）。
+                    if str(getattr(publisher, "last_error_code", "")) in ("20002", "20022"):
                         def _mark_blocked(state):
                             state = dict(state or {})
                             state[news_id] = datetime.now(timezone.utc).isoformat()
@@ -3774,6 +4312,15 @@ def _run_main():
     logger.info("==================================================")
     logger.info(f"🎯 任务完成！本次成功处理/发布: {posted_count} 篇")
     logger.info("==================================================")
+
+    # 遥测文件规模治理：每轮结束收敛 metrics.jsonl 到上限，避免无界增长
+    # （Round 2 引入的遥测 + Round 3 调度器整文件重读，需配套轮转）。冷路径，异常无害。
+    try:
+        trimmed = rotate_metrics_if_needed()
+        if trimmed:
+            logger.info(f"🧹 metrics.jsonl 已轮转裁剪 {trimmed} 行（保留最近上限）")
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":

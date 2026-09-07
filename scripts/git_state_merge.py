@@ -73,6 +73,24 @@ def load_obj(path):
         return None
 
 
+def _pick_scalar(va, vb):
+    """标量择优：可比较取较大；异构类型（int vs str）取 str 化后较大者。
+
+    py3 的 max() 比较异构类型直接抛 TypeError，而本脚本在 workflow 里是
+    状态落盘的最后一道防线——它一崩，整轮的 sent_cache / 断路器状态全丢，
+    下轮必然重复发帖。故比较必须永不抛异常且结果确定（可复现地选同一侧）。
+    """
+    try:
+        return max(va, vb)
+    except TypeError:
+        return max((va, vb), key=lambda x: str(x))
+
+
+def _sort_key(value) -> str:
+    """排序键一律字符串化：脏数据里的 None/int 混进时间戳列会 TypeError 崩脚本"""
+    return str(value or "")
+
+
 def merge_state(a: dict, b: dict) -> dict:
     """递归深合并：dict 递归，None 让位给非 None，标量按"较大者优先"（ISO 时间戳字典序==时间序）"""
     out = {}
@@ -87,7 +105,7 @@ def merge_state(a: dict, b: dict) -> dict:
         elif isinstance(va, list) or isinstance(vb, list):
             out[k] = va if (va is not None and (not isinstance(vb, list) or len(va) >= len(vb or []))) else vb
         else:
-            out[k] = max(va, vb)
+            out[k] = _pick_scalar(va, vb)
     return out
 
 
@@ -97,7 +115,7 @@ def merge_sent_cache(local_snapshot_path: str, remote_path: str) -> int:
     for item in load_list(remote_path) + load_list(local_snapshot_path):
         if isinstance(item, dict) and item.get("id"):
             union[item["id"]] = item
-    merged = sorted(union.values(), key=lambda x: x.get("sent_at", ""))[-MAX_CACHE_KEEP:]
+    merged = sorted(union.values(), key=lambda x: _sort_key(x.get("sent_at")))[-MAX_CACHE_KEEP:]
     atomic_write_text(remote_path, json.dumps(merged, ensure_ascii=False, indent=2))
     return len(merged)
 
@@ -107,7 +125,7 @@ def merge_intel(local_snapshot_path: str, remote_path: str) -> bool:
     versions = [v for v in (load_obj(remote_path), load_obj(local_snapshot_path)) if v]
     if not versions:
         return False
-    best = dict(max(versions, key=lambda d: d.get("last_updated", "")))
+    best = dict(max(versions, key=lambda d: _sort_key(d.get("last_updated"))))
     states = [{k: v for k, v in ver.items() if k.startswith("_")} for ver in versions]
     merged_state = merge_state(states[0], states[1] if len(states) > 1 else {})
     best.update(merged_state)
