@@ -24,9 +24,21 @@
       "fails": 1
     }
   },
-  "_intel_refresh_fail": {},
+  "_intel_refresh_fail": {
+    "cooldown_until": "2026-09-07T22:47:04.112875+00:00"
+  },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260907/dcf48e05172a4202bc97922d56752434.jpg",
-    "date": "2026-09-07"
+    "date": "2026-09-07",
+    "url": "https://public.bnbstatic.com/image/pgc/20260907/dcf48e05172a4202bc97922d56752434.jpg"
+  },
+  "_llm_breaker": {
+    "Preset-openrouter": {
+      "fails": 3,
+      "cooldown_until": "2026-09-07T21:27:18.170719+00:00"
+    },
+    "Preset-b.ai": {
+      "fails": 3,
+      "cooldown_until": "2026-09-07T21:27:24.539546+00:00"
+    }
   }
 }
