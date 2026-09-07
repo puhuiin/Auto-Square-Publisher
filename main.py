@@ -3929,6 +3929,13 @@ def _run_main():
     okx_exporter = OKXDraftExporter()
     telegram_mirror = TelegramChannelPublisher()
 
+    # 2.1 无 LLM 提供商快速失败：不配任何 Key 时与其跑完抓取/行情再熔断（白烧 1~2 分钟
+    # 与全量 RSS 请求），不如在此一步明确报错。DRY_RUN 除外——链路验证正是其目的。
+    if not dry_run and not llm_engine.providers:
+        logger.error("❌ 未配置任何 LLM 提供商（LLM_API_KEY / LLM_PROVIDERS_CONFIG / 各平台 Key 全空）。"
+                     "AI 提炼不可能成功，本轮快速失败。请先在仓库 Secrets 配置至少一个模型 Key。")
+        sys.exit(1)
+
     # 2.5 防刷屏配额：24 小时滚动窗口内已发数量达到上限则本轮直接静默退出
     if not dry_run and MAX_DAILY_POSTS > 0:
         sent_24h = cache_mgr.count_since(24)
@@ -3998,6 +4005,7 @@ def _run_main():
     valid_symbols = SymbolValidator.get_valid_symbols() or set()
     posted_titles_this_run: List[str] = []  # 本轮已处理的标题，防同批次近似变体连发
     drafts_count = 0  # 本轮 OKX 草稿导出数（运行报告用）
+    run_failed: Optional[str] = None  # 熔断/致命原因；非 None 时进程以非零码退出让 Actions 面板标红
 
     for item in candidates:
         if posted_count >= max_posts:
@@ -4092,6 +4100,7 @@ def _run_main():
                         "已连续 3 次遍历完所有 LLM 提供商均生成失败，请检查 API Key 是否过期或额度耗尽。",
                         is_error=True,
                     )
+                    run_failed = "模型池熔断: 全部 LLM 提供商连续失败"
                     break
                 continue
             consecutive_llm_failures = 0
@@ -4248,6 +4257,7 @@ def _run_main():
                             f"连续 3 篇均未能投递到任何启用平台。最近诊断: {detail}\n请检查平台凭证与配置。",
                             is_error=True,
                         )
+                        run_failed = f"副平台投递熔断: {detail}"
                         break
                     continue
                 else:
@@ -4289,6 +4299,7 @@ def _run_main():
                             f"连续 3 篇发帖失败。最近诊断: {detail}\n请人工核查 Square API Key 有效性与账号风控状态。",
                             is_error=True,
                         )
+                        run_failed = f"币安发布通道熔断: {detail}"
                         break
                     # 没发出去就别装"人工间隔"：底部的 sleep 是成功发帖之间的拟人 pacing，
                     # 失败 fall-through 下去会白等 3~8s（副平台失败分支/异常分支都有 continue 跳过此处）
@@ -4310,6 +4321,9 @@ def _run_main():
                 f"LLM={stage_timings['llm']:.1f}s / 配图={stage_timings['image']:.1f}s / 发布={stage_timings['publish']:.1f}s")
 
     logger.info("==================================================")
+    if run_failed:
+        logger.error(f"🛑 任务异常终止: {run_failed}（此前已发布 {posted_count} 篇）——本轮以非零码退出，Actions 面板将标红。")
+        sys.exit(1)
     logger.info(f"🎯 任务完成！本次成功处理/发布: {posted_count} 篇")
     logger.info("==================================================")
 
