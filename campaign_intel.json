@@ -25,20 +25,20 @@
     }
   },
   "_intel_refresh_fail": {
-    "cooldown_until": "2026-09-07T22:47:04.112875+00:00"
+    "cooldown_until": "2026-09-08T01:20:08.982019+00:00"
   },
   "_fallback_image": {
-    "date": "2026-09-07",
-    "url": "https://public.bnbstatic.com/image/pgc/20260907/dcf48e05172a4202bc97922d56752434.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260907/dcf48e05172a4202bc97922d56752434.jpg",
+    "date": "2026-09-07"
   },
   "_llm_breaker": {
-    "Preset-openrouter": {
-      "fails": 3,
-      "cooldown_until": "2026-09-07T21:27:18.170719+00:00"
-    },
     "Preset-b.ai": {
-      "fails": 3,
-      "cooldown_until": "2026-09-07T21:27:24.539546+00:00"
+      "fails": 6,
+      "cooldown_until": "2026-09-08T03:20:51.843558+00:00"
+    },
+    "Preset-openrouter": {
+      "fails": 6,
+      "cooldown_until": "2026-09-08T03:20:35.880900+00:00"
     }
   }
 }
