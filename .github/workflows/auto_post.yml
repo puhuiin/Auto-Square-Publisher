@@ -53,6 +53,7 @@ jobs:
           cache: 'pip'
 
       - name: 安装项目依赖
+        id: install
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -78,6 +79,7 @@ jobs:
           echo "============================================================"
 
       - name: 执行自动化发帖脚本 (支持多模型故障转移)
+        id: poster
         env:
           SQUARE_API_KEY: ${{ secrets.SQUARE_API_KEY }}
           
@@ -199,3 +201,21 @@ jobs:
 
           echo "❌ 多次重试后仍推送失败，本次缓存仅保留在运行沙箱中，下次运行会自动兜底。"
           exit 1
+
+      - name: 主流程失败兜底通报 (不依赖项目依赖)
+        # 前面任何一步失败都会到这里（checkout/pip/主脚本/同步任一挂掉）。
+        # 主脚本内的 Notifier 指望不上（依赖可能都没装好），故调纯标准库脚本，
+        # 不 import 仓库任何代码。用 python3 而非 python：setup-python 本身挂掉时
+        # 前者是 runner 自带解释器，后者可能根本不存在。成功运行时跳过。
+        if: failure()
+        env:
+          SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+          BARK_KEY: ${{ secrets.BARK_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          EVENT_NAME: ${{ github.event_name }}
+          INSTALL_RESULT: ${{ steps.install.conclusion }}
+          POSTER_RESULT: ${{ steps.poster.conclusion }}
+        run: python3 scripts/notify_fallback.py

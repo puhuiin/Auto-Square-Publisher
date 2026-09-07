@@ -9,6 +9,7 @@ import os
 import re
 import sys
 import unittest
+from unittest.mock import patch
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKFLOWS = [
@@ -97,6 +98,145 @@ class TestAnnotationResolvable(unittest.TestCase):
             except Exception as e:
                 bad.append(f"{name}: {e}")
         self.assertEqual(bad, [], "注解含未定义名（3.11 下 import 即炸）")
+
+
+def _load_fallback():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "notify_fallback",
+        os.path.join(REPO_ROOT, "scripts", "notify_fallback.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+class _FakeResp:
+    """可重用的 urllib 假响应（status + body 可配，支持 with 语句）"""
+
+    def __init__(self, status=200, body=b"{}"):
+        self.status = status
+        self._body = body
+
+    def read(self, n=-1):
+        return self._body if n is None or n < 0 else self._body[:n]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+def _router_ok(request, *args, **kwargs):
+    url = request.full_url if hasattr(request, "full_url") else str(request)
+    if "sctapi.ftqq.com" in url:
+        return _FakeResp(200, b'{"code":0,"message":""}')
+    if "pushplus" in url:
+        return _FakeResp(200, b'{"code":200,"msg":"ok"}')
+    if "api.day.app" in url:
+        return _FakeResp(200, b'{"code":200,"message":"ok"}')
+    if "api.telegram.org" in url:
+        return _FakeResp(200, b'{"ok":true,"result":{}}')
+    return _FakeResp(204, b"")
+
+
+FULL_ENV = {
+    "SERVERCHAN_KEY": "k1", "PUSHPLUS_TOKEN": "k2", "BARK_KEY": "k3",
+    "TELEGRAM_BOT_TOKEN": "k4", "TELEGRAM_CHAT_ID": "k5",
+    "WEBHOOK_URL": "https://hooks.example/x",
+}
+CHANNEL_KEYS = tuple(FULL_ENV)
+
+
+class TestFallbackNotifier(unittest.TestCase):
+    """兜底通报器：纯标准库、各通道独立成败、业务码也要验"""
+
+    def test_all_channels_attempted_and_reported(self):
+        mod = _load_fallback()
+        with patch("urllib.request.urlopen", side_effect=_router_ok) as mock_open:
+            results = mod.send_fallback("t", "m", env=dict(FULL_ENV))
+        self.assertEqual(results, {"Server酱": True, "PushPlus": True, "Bark": True,
+                                   "Telegram": True, "Webhook": True})
+        self.assertEqual(mock_open.call_count, 5)
+
+    def test_single_failure_does_not_block_others(self):
+        import urllib.error
+        mod = _load_fallback()
+
+        def _flaky(request, *args, **kwargs):
+            url = request.full_url if hasattr(request, "full_url") else str(request)
+            if "sctapi.ftqq.com" in url:
+                raise urllib.error.URLError("dns blip")
+            return _router_ok(request)
+
+        with patch("urllib.request.urlopen", side_effect=_flaky):
+            results = mod.send_fallback("t", "m", env=dict(FULL_ENV))
+        self.assertFalse(results["Server酱"])
+        self.assertTrue(all(v for k, v in results.items() if k != "Server酱"))
+
+    def test_business_code_mismatch_counts_as_failure(self):
+        mod = _load_fallback()
+        bad = _FakeResp(200, b'{"code":1,"message":"bad key"}')
+        with patch("urllib.request.urlopen", return_value=bad):
+            results = mod.send_fallback("t", "m", env={"SERVERCHAN_KEY": "k"})
+        self.assertEqual(results, {"Server酱": False})
+
+    def test_no_channels_configured(self):
+        mod = _load_fallback()
+        with patch("urllib.request.urlopen") as mock_open:
+            self.assertEqual(mod.send_fallback("t", "m", env={}), {})
+        mock_open.assert_not_called()
+
+    def test_main_exit_zero_with_fake_env(self):
+        mod = _load_fallback()
+        saved = {k: os.environ.pop(k, None) for k in CHANNEL_KEYS}
+        try:
+            with patch.dict(os.environ, {
+                    **FULL_ENV,
+                    "GITHUB_SERVER_URL": "https://github.com",
+                    "GITHUB_REPOSITORY": "a/b", "GITHUB_RUN_ID": "42",
+                    "EVENT_NAME": "schedule"}), \
+                 patch("urllib.request.urlopen", side_effect=_router_ok):
+                self.assertEqual(mod.main([]), 0)
+        finally:
+            for k, v in saved.items():
+                if v is not None:
+                    os.environ[k] = v
+
+
+class TestFailureNotifyWiring(unittest.TestCase):
+    """auto_post 兜底步骤接线：id、failure 条件、密钥透传缺一不可"""
+
+    def _steps(self):
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("未安装 pyyaml（仅 CI 校验需要）")
+        path = os.path.join(REPO_ROOT, ".github", "workflows", "auto_post.yml")
+        with open(path, encoding="utf-8") as f:
+            doc = yaml.safe_load(f)
+        return doc["jobs"]["run-poster"]["steps"]
+
+    def test_step_ids_present(self):
+        steps = self._steps()
+        by_id = {s.get("id"): s.get("name", "") for s in steps if isinstance(s, dict)}
+        self.assertIn("install", by_id)
+        self.assertIn("poster", by_id)
+
+    def test_failure_step_wired(self):
+        steps = self._steps()
+        cands = [s for s in steps
+                 if isinstance(s, dict) and s.get("if") == "failure()"]
+        self.assertEqual(len(cands), 1, "有且仅有一个 failure 兜底步骤")
+        step = cands[0]
+        self.assertIn("notify_fallback.py", step.get("run", ""))
+        env = step.get("env", {})
+        for k in ("SERVERCHAN_KEY", "PUSHPLUS_TOKEN", "BARK_KEY",
+                  "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "WEBHOOK_URL",
+                  "EVENT_NAME", "INSTALL_RESULT", "POSTER_RESULT"):
+            self.assertIn(k, env, f"兜底步骤缺环境变量 {k}")
+        self.assertIn("steps.poster.conclusion", env["POSTER_RESULT"])
+        self.assertIn("steps.install.conclusion", env["INSTALL_RESULT"])
 
 
 if __name__ == "__main__":
