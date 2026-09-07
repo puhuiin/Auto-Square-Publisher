@@ -34,7 +34,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: 语法编译检查
-        run: python -m py_compile main.py tests/test_core.py scripts/git_state_merge.py scripts/validate_workflows.py
+        run: python -m py_compile main.py tests/test_core.py tests/test_metrics_report.py scripts/git_state_merge.py scripts/validate_workflows.py scripts/metrics_report.py
 
       - name: Workflow YAML 与内嵌 Bash 语法校验
         # workflow 文件变更会触发本 CI，但单测覆盖不到它们：YAML 手滑或 run 块少个 fi
@@ -44,4 +44,6 @@ jobs:
           python scripts/validate_workflows.py
 
       - name: 运行离线回归测试套件
-        run: python tests/test_core.py
+        run: |
+          python tests/test_core.py
+          python tests/test_metrics_report.py
