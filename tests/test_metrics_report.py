@@ -88,6 +88,10 @@ class TestMetricsReport(unittest.TestCase):
     def test_missing_file_exit_2(self):
         self.assertEqual(mr.main([os.path.join(self.tmpdir, "nope.jsonl")]), 2)
 
+    def test_unreadable_path_exit_2_without_traceback(self):
+        # 传目录/无权限路径：给人话 exit 2，而不是 traceback
+        self.assertEqual(mr.main([self.tmpdir]), 2)
+
     def test_json_mode_is_parseable(self):
         _write(self.path, self._sample())
         buf = io.StringIO()

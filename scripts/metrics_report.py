@@ -173,7 +173,12 @@ def main(argv=None):
     if not os.path.exists(path):
         print(f"遥测文件尚不存在: {path}（有过投递/拦截后自动产生）", file=sys.stderr)
         return 2
-    rows, bad = load_rows(path)
+    try:
+        rows, bad = load_rows(path)
+    except OSError as e:
+        # 目录/权限等打不开的情况：给人话，不抛 traceback（定时任务日志里全是堆栈最烦人）
+        print(f"无法读取遥测文件 {path}: {e}", file=sys.stderr)
+        return 2
     if bad:
         print(f"跳过坏行 {bad} 行（不影响其余统计）", file=sys.stderr)
     s = summarize(rows)
