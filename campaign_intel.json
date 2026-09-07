@@ -2,8 +2,8 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#TradingCompetition",
     "#TradingTournament",
+    "#BinanceAlpha",
     "#Airdrop"
   ],
   "incentivized_tokens": [
@@ -11,12 +11,13 @@
     "$SAHARA",
     "$ZKC",
     "$COLLECT",
+    "$USD1",
+    "$USDC",
     "$BNB",
-    "$USDT",
-    "$USDC"
+    "$USDT"
   ],
-  "strategy_guidance": "结合Binance Alpha交易竞赛与Trading Tournament热点，发布代币分析并附上交易链接，引导用户参与竞赛，同时利用Write2Earn获取返佣。",
-  "last_updated": "2026-09-06T00:24:55.322463Z",
+  "strategy_guidance": "将日快讯与Alpha交易赛、SAHARA/ZKC锦标赛及USD1空投延期强关联，引导用户通过参与指定币种交易或完成新手任务获取代金券与返佣，同步嵌入钱包足球赛与区域专属福利扩大受众覆盖。",
+  "last_updated": "2026-09-07T03:13:49.583957Z",
   "_feed_health": {},
   "_intel_refresh_fail": {}
 }
