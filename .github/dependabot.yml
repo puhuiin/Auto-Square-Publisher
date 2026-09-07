@@ -1,0 +1,16 @@
+# Dependabot 自动跟进上游更新（Actions 已 pin 到 SHA，此处防止锁定腐烂）。
+# 更新 PR 会正常触发 ci.yml（单测 + workflow 校验），绿了再合。
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
