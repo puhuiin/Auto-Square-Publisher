@@ -88,6 +88,39 @@ class TestMetricsReport(unittest.TestCase):
     def test_missing_file_exit_2(self):
         self.assertEqual(mr.main([os.path.join(self.tmpdir, "nope.jsonl")]), 2)
 
+    def test_bom_file_first_row_survives(self):
+        import json
+        with open(self.path, "w", encoding="utf-8-sig") as f:
+            f.write(json.dumps({"ts": "2026-09-06T01:00:00+00:00",
+                                "outcome": "binance_published",
+                                "platforms": ["binance"]}) + "\n")
+        rows, bad = mr.load_rows(self.path)
+        self.assertEqual(len(rows), 1, "BOM 不得吃掉首行")
+        self.assertEqual(bad, 0)
+
+    def test_nan_inf_rejected_from_aggregates(self):
+        import json
+        with open(self.path, "w", encoding="utf-8") as f:
+            f.write(json.dumps({"provider": "P", "tokens_used": float("nan"),
+                                "llm_latency_sec": float("inf")}) + "\n")
+            f.write(json.dumps({"provider": "P", "tokens_used": 800,
+                                "llm_latency_sec": 10.0}) + "\n")
+        rows, bad = mr.load_rows(self.path)
+        self.assertEqual((len(rows), bad), (2, 0), "NaN 是合法 JSON 字面量，必须读进来再过滤")
+        s = mr.summarize(rows)
+        self.assertEqual(s["tokens_by_provider"]["P"]["total"], 800)
+        self.assertEqual(s["latency_by_provider"]["P"], 10.0)
+
+    def test_token_avg_is_int(self):
+        import json
+        with open(self.path, "w", encoding="utf-8") as f:
+            for n in (800, 1000):
+                f.write(json.dumps({"provider": "P", "tokens_used": n}) + "\n")
+        rows, _ = mr.load_rows(self.path)
+        avg = mr.summarize(rows)["tokens_by_provider"]["P"]["avg"]
+        self.assertEqual(avg, 900)
+        self.assertIsInstance(avg, int)
+
     def test_unreadable_path_exit_2_without_traceback(self):
         # 传目录/无权限路径：给人话 exit 2，而不是 traceback
         self.assertEqual(mr.main([self.tmpdir]), 2)

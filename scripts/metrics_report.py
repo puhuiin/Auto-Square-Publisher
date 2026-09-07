@@ -15,6 +15,7 @@
 """
 import collections
 import json
+import math
 import os
 import sys
 
@@ -24,23 +25,28 @@ TOP_N = 8
 
 
 def _num(v):
-    """宽容数字：int/float/数字字符串 -> float，否则 None"""
+    """宽容数字：int/float/数字字符串 -> float，否则 None。
+    NaN/inf 一律拒收（JSON 的 NaN 非标准但能解析，放进来会毒化整组平均数）。"""
     if isinstance(v, bool):
         return None
+    f = None
     if isinstance(v, (int, float)):
-        return float(v)
-    if isinstance(v, str):
+        f = float(v)
+    elif isinstance(v, str):
         try:
-            return float(v.strip())
+            f = float(v.strip())
         except (ValueError, AttributeError):
             return None
-    return None
+    if f is None or not math.isfinite(f):
+        return None
+    return f
 
 
 def load_rows(path):
-    """返回 (rows, bad_lines)：坏行跳过计数"""
+    """返回 (rows, bad_lines)：坏行跳过计数。
+    utf-8-sig：Windows 下编辑器手碰过的文件常带 BOM，不吃掉它首行必被判坏。"""
     rows, bad = [], 0
-    with open(path, encoding="utf-8") as f:
+    with open(path, encoding="utf-8-sig") as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -128,7 +134,7 @@ def summarize(rows):
         s["latency_by_provider"][prov] = round(sum(vals) / len(vals), 1)
     for prov, vals in tok_tmp.items():
         s["tokens_by_provider"][prov] = {
-            "avg": round(sum(vals) / len(vals), 0),
+            "avg": int(round(sum(vals) / len(vals), 0)),
             "total": int(sum(vals)),
         }
     return s
