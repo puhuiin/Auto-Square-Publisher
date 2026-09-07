@@ -25,14 +25,26 @@ TEST_SYMBOL_UNIVERSE = {"BTC", "ETH", "XRP", "PEPE", "SOL", "DOGE"}
 _ORIG_SYMBOL_CACHE = None
 
 
+_ORIG_METRICS_FILE: list = []
+
+
 def setUpModule():
     global _ORIG_SYMBOL_CACHE
     _ORIG_SYMBOL_CACHE = m.SymbolValidator._valid_symbols_cache
     m.SymbolValidator._valid_symbols_cache = set(TEST_SYMBOL_UNIVERSE)
+    # 遥测隔离兜底：任何用例直接调 _log_reject/append_metrics 而未自行重定向
+    # METRICS_FILE 时，会把 stub/假数据写进真实 metrics.jsonl——生产遥测与
+    # 成本分析被永久污染（本仓实测发生过：12/12 条全是测试写入的 stub 记录）。
+    # 模块级先重定向到临时文件；个别需要读写自身文件的用例再自行覆盖并还原。
+    import tempfile
+    _ORIG_METRICS_FILE.append(m.METRICS_FILE)
+    m.METRICS_FILE = os.path.join(tempfile.mkdtemp(prefix="metrics_test_"), "metrics.jsonl")
 
 
 def tearDownModule():
     m.SymbolValidator._valid_symbols_cache = _ORIG_SYMBOL_CACHE
+    if _ORIG_METRICS_FILE:
+        m.METRICS_FILE = _ORIG_METRICS_FILE[0]
 
 
 class TestFreshnessFilter(unittest.TestCase):

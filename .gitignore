@@ -20,4 +20,3 @@ ENV/
 *.swp
 .workbuddy/
 OPTIMIZATION_ROUND_*.md
-metrics.jsonl
