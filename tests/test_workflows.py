@@ -204,6 +204,40 @@ class TestFallbackNotifier(unittest.TestCase):
                     os.environ[k] = v
 
 
+class TestImportHealth(unittest.TestCase):
+    """解释器级导入健康：前向引用注解在 3.11 下炸 import，在 3.14 下静默。
+
+    2026-09-05 起一个后定义类写进函数注解，本地 3.14 全绿、线上/CI 全红，
+    定时任务连跪到用户贴日志才发现。用子进程真实 import（非 get_type_hints，
+    后者在模块加载完后求值，查不出前向引用），在 CI 的 3.11 上就是真刀真枪。
+    """
+
+    def _check_import(self, relpath):
+        import subprocess
+        code = ("import runpy; runpy.run_path(%r, run_name='__not_main__')"
+                % relpath.replace("\\", "/"))
+        r = subprocess.run([sys.executable, "-c", code], cwd=REPO_ROOT,
+                           capture_output=True, text=True, timeout=120)
+        self.assertEqual(
+            r.returncode, 0,
+            f"{relpath} 子进程导入失败:\n{(r.stderr or '')[-800:]}")
+
+    def test_main_imports_clean(self):
+        self._check_import("main.py")
+
+    def test_scripts_import_clean(self):
+        for rel in ("scripts/validate_workflows.py", "scripts/git_state_merge.py",
+                    "scripts/notify_fallback.py", "scripts/metrics_report.py"):
+            with self.subTest(script=rel):
+                self._check_import(rel)
+
+    def test_future_annotations_present_in_main(self):
+        # 治本：注解惰性化后，前向引用在任何版本都安全；此行被删必须红灯
+        with open(os.path.join(REPO_ROOT, "main.py"), encoding="utf-8") as f:
+            head = "".join(f.readline() for _ in range(60))
+        self.assertIn("from __future__ import annotations", head)
+
+
 class TestFailureNotifyWiring(unittest.TestCase):
     """auto_post 兜底步骤接线：id、failure 条件、密钥透传缺一不可"""
 
