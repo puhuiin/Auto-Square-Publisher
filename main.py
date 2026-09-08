@@ -2375,7 +2375,8 @@ class MultiLLMEngine:
                 logger.info(f"🎉 模型 [{provider.name}] 生成成功！(识别标的: {valid_tokens})"
                             f" | 耗时 {latency_sec}s / tokens {tokens_used or '?'}")
                 return {"content": content, "tokens": valid_tokens, "provider": provider.name,
-                        "model": provider.model, "tokens_used": tokens_used, "latency_sec": latency_sec}
+                        "model": provider.model, "tokens_used": tokens_used, "latency_sec": latency_sec,
+                        "persona": persona["name"]}
 
             except _QualityGateRejection as e:
                 # 内容跑偏是模型质量问题，换一个模型重试；但不计入跨运行断路器
@@ -4452,6 +4453,7 @@ def _run_main():
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
                         "model": llm_result.get("model"),
+                        "persona": llm_result.get("persona"),
                         "tokens_used": llm_result.get("tokens_used"),
                         "llm_latency_sec": llm_result.get("latency_sec"),
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
@@ -4487,6 +4489,7 @@ def _run_main():
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
                         "model": llm_result.get("model"),
+                        "persona": llm_result.get("persona"),
                         "tokens_used": llm_result.get("tokens_used"),
                         "llm_latency_sec": llm_result.get("latency_sec"),
                         "platforms": delivered,
@@ -4536,6 +4539,7 @@ def _run_main():
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
                         "model": llm_result.get("model"),
+                        "persona": llm_result.get("persona"),
                         "tokens_used": llm_result.get("tokens_used"),
                         "llm_latency_sec": llm_result.get("latency_sec"),
                         "platforms": _delivered_platforms(False, draft_exported, telegram_exported),
