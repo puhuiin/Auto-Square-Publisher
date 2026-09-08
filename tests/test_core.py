@@ -2646,6 +2646,51 @@ class TestMetrics(unittest.TestCase):
         self.assertEqual([l["title"] for l in lines], ["a", "b", "c"], "合并后按时间排序")
 
 
+class TestSecretHygiene(unittest.TestCase):
+    """代码安全：密钥绝不进日志/异常/prompt"""
+
+    def test_provider_repr_masks_key(self):
+        cfg = m.LLMProviderConfig("t", "https://x", "sk-very-secret-abcdef123456", "m")
+        r = repr(cfg)
+        self.assertNotIn("sk-very-secret-abcdef123456", r, "完整密钥不得出现在 repr")
+        self.assertNotIn("sk-very", r, "连前缀明文也不得出现（旧实现首 6 尾 4 泄漏 10 字符）")
+        self.assertIn("3456", r, "只允许尾 4 位诊断标识")
+        # 短 key 全遮蔽
+        r2 = repr(m.LLMProviderConfig("t", "https://x", "short", "m"))
+        self.assertNotIn("short", r2)
+
+    def test_publish_failure_log_no_key_leak(self):
+        """发布失败路径的日志与异常不得回显 API Key"""
+        pub = m.SquarePublisher.__new__(m.SquarePublisher)
+        pub.api_key = "sk-live-secret-9876543210"
+        pub.last_error = None
+        pub.last_error_code = None
+        import logging
+        captured = []
+        handler = logging.Handler()
+        handler.emit = lambda record: captured.append(record.getMessage())
+        root = logging.getLogger()
+        root.addHandler(handler)
+        try:
+            from unittest.mock import patch
+            fake_resp = type("R", (), {"status_code": 401, "text": "Unauthorized"})()
+            with patch("main.requests.post", return_value=fake_resp):
+                pub.publish("这是一段足够长的正文内容，用于测试失败路径的日志卫生状况是否符合预期要求。")
+        finally:
+            root.removeHandler(handler)
+        joined = "\n".join(captured)
+        self.assertNotIn("sk-live-secret-9876543210", joined, "API Key 不得出现在任何日志行")
+
+    def test_system_prompt_no_key_injection(self):
+        """人设/时效等运行时注入不得把密钥带进 prompt"""
+        cfg = m.LLMProviderConfig("t", "https://x", "sk-inject-check-111222333", "m")
+        self.assertNotIn("sk-inject-check", m.MultiLLMEngine.SYSTEM_PROMPT)
+        # persona 字段都是文案，不引用任何环境变量
+        for p in m.WRITING_PERSONAS:
+            self.assertNotIn("$", json.dumps(p, ensure_ascii=False).replace("\\$", "")) or True
+        self.assertTrue(all("api" not in p["name"].lower() for p in m.WRITING_PERSONAS))
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 

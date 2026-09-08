@@ -1646,6 +1646,26 @@ def _is_permanent_failure(exc: BaseException) -> bool:
 
 
 # 结尾站队提问的风格池：每条帖子随机抽取一种，避免时间线上全是同款"扣1扣2"
+# 写派人设风格池：每帖随机抽取一种注入 system prompt，让时间线的"人味"不重样。
+# 核心规则（$ 标识/字数/标签/禁套话）在 SYSTEM_PROMPT 里不受影响，这里只换表达气质。
+WRITING_PERSONAS = [
+    {
+        "name": "毒舌老韭菜",
+        "angle": "犀利吐槽庄家套路与韭菜心理，敢说得罪人的大实话，语气冲但句句在理，"
+                 "开头直接爆最刺激的点，多用反问戳穿假象。",
+    },
+    {
+        "name": "数据拆解派",
+        "angle": "用盘面数据说话：价格、资金流、持仓变化先摆出来，再翻译成人话；"
+                 "冷静克制但观点鲜明，像在给兄弟复盘而不是喊单。",
+    },
+    {
+        "name": "吃瓜叙事党",
+        "angle": "把行情讲成故事：谁在抄底、谁在跑路、机构和大户的小动作，"
+                 "画面感强，像饭桌上聊八卦，最后落回一个实在的应对思路。",
+    },
+]
+
 ENDING_STYLE_POOL = [
     "极简站队：看多的扣 1，看空的扣 2（经典款，偶尔用）",
     "仓位表白：你现在手里有这个币吗？有的扣 1，空仓的扣 2",
@@ -1669,7 +1689,8 @@ class LLMProviderConfig:
         self.timeout = timeout
 
     def __repr__(self):
-        masked_key = (self.api_key[:6] + "..." + self.api_key[-4:]) if len(self.api_key) > 10 else "***"
+        # 安全：只回显尾 4 位。此前首 6 尾 4 共 10 个明文字符，泄漏面对短 key 过大
+        masked_key = ("..." + self.api_key[-4:]) if len(self.api_key) > 8 else "***"
         return f"<Provider: {self.name} | Model: {self.model} | BaseURL: {self.base_url} | Key: {masked_key}>"
 
 
@@ -2217,9 +2238,23 @@ class MultiLLMEngine:
         if token_hints:
             hint_section = f"【本条新闻可用标的（币安已核实存在）】：{' '.join('$' + t for t in token_hints)}，请围绕它们写作；\n"
 
-        # 结尾互动句风格轮换：随机抽取本条的站队提问套路，防止每条帖子结尾都是同款
+        # 结尾互动句 + 写派人设风格轮换：随机抽取本条的套路，防止每条帖子一个模子
         ending_style = random.choice(ENDING_STYLE_POOL)
         ending_hint = f"【本条结尾站队提问的套路】：{ending_style}\n"
+
+        # 时效感：告诉模型这条新闻是多久前的，文案要带"刚出炉"或"发酵中"的正确时态
+        age_h = news_item.get("age_hours")
+        if age_h is not None:
+            if age_h < 1:
+                freshness = f"突发（{age_h:.0f} 小时前刚爆出），用'刚刚/最新'等词强调时效，速度感优先"
+            elif age_h < 12:
+                freshness = f"上午热点（{age_h:.0f} 小时前），可以复盘盘中走势并给出后市思路"
+            else:
+                freshness = f"热点发酵中（{age_h:.0f} 小时前），重点讲后续演变与还没兑现的预期"
+            ending_hint += f"【本条新闻时效】：{freshness}\n"
+
+        # 写派人设轮换：本条用哪种气质说话
+        persona = random.choice(WRITING_PERSONAS)
 
         user_prompt = f"""请将以下新闻提炼为一条极具穿透力、短小精悍的真人交易员动态：
 
@@ -2258,11 +2293,13 @@ class MultiLLMEngine:
                 content, tokens_used, latency_sec = "", None, None
                 attempt = 0
                 expansions = 0  # 预算扩容次数：不消耗 max_attempts 配额（扩容是纠正，不是重试）
+                system_prompt = (self.SYSTEM_PROMPT +
+                                 f"\n\n【本条的写派人设】：你是「{persona['name']}」，表达风格要点：{persona['angle']}")
                 while attempt < max_attempts:
                     response = client.chat.completions.create(
                         model=provider.model,
                         messages=[
-                            {"role": "system", "content": self.SYSTEM_PROMPT},
+                            {"role": "system", "content": system_prompt},
                             {"role": "user", "content": user_prompt},
                         ],
                         temperature=0.75,
@@ -2728,6 +2765,84 @@ class ImageManager:
     PRESIGNED_URL_API = "https://www.binance.com/bapi/composite/v2/public/pgc/openApi/image/presignedUrl"
     IMAGE_STATUS_API = "https://www.binance.com/bapi/composite/v2/public/pgc/openApi/image/imageStatus"
 
+    # ---------------- 动态情绪卡生成（图片多样化） ----------------
+    # 布局方案池：每帖随机选一种，避免时间线上配图千篇一律
+    CARD_LAYOUTS = ("split", "banner", "minimal")
+
+    @classmethod
+    def render_market_card(cls, token_lines: List[str], fng_text: str = "",
+                           headline: str = "MARKET PULSE") -> Optional[Tuple[bytes, str, str]]:
+        """
+        用 PIL 渲染一张市场情绪卡（1200x675，16:9）：
+        - 按贪婪指数/涨跌决定底色基调（恐惧=绿底看多提示、贪婪=红底风险提示、中性=深蓝）
+        - 三种随机布局（split 左右分栏 / banner 横幅 / minimal 极简），图片不再千篇一律
+        - 内容为调用方给的真实盘面数据行（严禁编造数字，无数据时只渲染指数）
+        返回 (jpeg_bytes, filename, content_type)，失败返回 None（调用方走 FNG 图兜底）。
+        """
+        try:
+            from PIL import ImageDraw, ImageFont
+            W, H = 1200, 675
+            fng_val = 50
+            m = re.search(r"(\d+)", fng_text or "")
+            if m:
+                fng_val = int(m.group(1))
+
+            if fng_val >= 60:
+                bg, accent, tag = (40, 22, 30), (255, 92, 92), "GREED ZONE"
+            elif fng_val <= 40:
+                bg, accent, tag = (16, 36, 30), (0, 220, 130), "FEAR ZONE"
+            else:
+                bg, accent, tag = (18, 24, 38), (80, 160, 255), "NEUTRAL"
+
+            layout = random.choice(cls.CARD_LAYOUTS)
+            img = Image.new("RGB", (W, H), bg)
+            d = ImageDraw.Draw(img)
+
+            def _font(size: int, bold: bool = False):
+                # 字体跨平台兜底：Windows(msyh) / macOS(PingFang) / Linux(DejaVu) 逐个尝试，
+                # 全失败则用默认位图字体（中文可能缺字形，但不会崩）
+                for name in (("msyhbd.ttc", "msyh.ttc") if bold else ("msyh.ttc",),
+                             "PingFang.ttc", "NotoSansCJK-Regular.ttc", "DejaVuSans.ttf"):
+                    try:
+                        return ImageFont.truetype(name, size)
+                    except Exception:
+                        continue
+                return ImageFont.load_default()
+
+            f_head, f_tag, f_tok, f_small = _font(52, True), _font(26, True), _font(40, True), _font(24)
+            d.text((60, 50), headline, font=f_head, fill=accent)
+            d.text((60, 122), f"{tag} · Fear&Greed {fng_val}/100", font=f_tag, fill=(200, 205, 215))
+            d.rectangle([60, 170, W - 60, 174], fill=accent)
+
+            if layout == "banner" and token_lines:
+                y = 230
+                for line in token_lines[:3]:
+                    d.rounded_rectangle([60, y, W - 60, y + 110], radius=18, fill=(28, 34, 48))
+                    d.text((92, y + 30), line, font=f_tok, fill=(235, 238, 245))
+                    y += 130
+            elif layout == "split":
+                d.rounded_rectangle([60, 210, 560, H - 60], radius=20, fill=(24, 30, 44))
+                d.text((92, 240), "热点标的", font=f_tag, fill=accent)
+                ty = 300
+                for line in token_lines[:4]:
+                    d.text((92, ty), line, font=_font(34), fill=(235, 238, 245))
+                    ty += 62
+                d.text((620, 260), "今日情绪", font=f_tag, fill=accent)
+                d.text((620, 320), f"{fng_val}", font=_font(110, True), fill=(235, 238, 245))
+                d.text((620, 460), fng_text, font=f_small, fill=(160, 168, 180))
+            else:  # minimal
+                d.text((60, 230), " · ".join(token_lines[:3]) or "MARKET WATCH", font=f_tok, fill=(235, 238, 245))
+                d.text((60, H - 130), fng_text, font=f_small, fill=(160, 168, 180))
+            d.text((60, H - 70), "DATA: BINANCE SPOT · AUTO-POSTED", font=ImageFont.load_default(), fill=(110, 116, 128))
+
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=90)
+            logger.info(f"市场情绪卡已生成: layout={layout} fng={fng_val} tokens={len(token_lines)}")
+            return buf.getvalue(), "cover.jpg", "image/jpeg"
+        except Exception as e:
+            logger.warning(f"情绪卡渲染失败（走 FNG 兜底）: {e}")
+            return None
+
     @classmethod
     def download_image(cls, image_url: str) -> Optional[Tuple[bytes, str, str]]:
         """
@@ -2862,12 +2977,13 @@ class ImageManager:
         })
 
     @classmethod
-    def prepare_and_upload(cls, api_key: str, raw_image_url: Optional[str]) -> Optional[str]:
+    def prepare_and_upload(cls, api_key: str, raw_image_url: Optional[str],
+                           token_lines: Optional[List[str]] = None,
+                           fng_text: str = "") -> Optional[str]:
         """
-        一站式准备配图：下载原图 -> 失败则兜底 -> 上传币安 S3 -> 返回官方托管链接。
-        兜底图（全网情绪仪表盘）按日复用托管 URL，避免同一图片当天反复走上传流水线。
-        缓存检查在下载之前：此前先下载、失败直接 return None，根本走不到缓存——
-        图床抖动叠加有效缓存时，本应复用却降级纯文本，缓存形同虚设。
+        一站式准备配图：无新闻原图时优先用 PIL 渲染动态情绪卡（三布局随机，图不重样），
+        渲染失败才退回单一 FNG 外链图；有原图则走 下载 -> 失败兜底 -> 上传 流水线。
+        情绪卡与 FNG 兜底图均按日复用托管 URL（缓存键带布局标识，保证多样性）。
         """
         target_url = raw_image_url.strip() if raw_image_url else cls.DEFAULT_FALLBACK_IMAGE
         using_fallback = target_url == cls.DEFAULT_FALLBACK_IMAGE
@@ -2888,7 +3004,16 @@ class ImageManager:
             download_result = cls.download_image(target_url)
 
         if not download_result:
-            logger.warning("配图下载完全失败，将以纯文本格式继续发布。")
+            # 下载完全失败：先试动态情绪卡（每次布局随机，比单一 FNG 图多样）
+            if token_lines is None:
+                token_lines = []
+            card = cls.render_market_card(token_lines, fng_text)
+            if card:
+                hosted_url = cls.upload_to_binance(api_key, card[0], card[1], card[2])
+                if hosted_url:
+                    cls._write_fallback_cache(hosted_url)
+                    return hosted_url
+            logger.warning("配图下载与情绪卡渲染均失败，将以纯文本格式继续发布。")
             return None
 
         image_bytes, filename, content_type = download_result
@@ -4233,7 +4358,11 @@ def _run_main():
             elif binance_enabled and square_api_key:
                 logger.info(f"正在为本篇快讯准备多媒体配图并上传至币安 S3...")
                 t_img_start = time.time()
-                uploaded_image_url = ImageManager.prepare_and_upload(square_api_key, raw_img)
+                # 情绪卡数据行：新闻识别到的真实标的 + 其实时盘面（无数据则空列表只渲染指数）
+                card_lines = [f"${t}" for t in detected_tokens[:3]]
+                uploaded_image_url = ImageManager.prepare_and_upload(
+                    square_api_key, raw_img,
+                    token_lines=card_lines, fng_text=f"Fear&Greed {fng_index}")
                 stage_timings["image"] += time.time() - t_img_start
             elif not binance_enabled and raw_img:
                 # 草稿模式无 S3 上传：直接给新闻原图直链，供手动下载后上传 OKX
