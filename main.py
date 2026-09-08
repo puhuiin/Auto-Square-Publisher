@@ -2765,6 +2765,57 @@ class ImageManager:
     PRESIGNED_URL_API = "https://www.binance.com/bapi/composite/v2/public/pgc/openApi/image/presignedUrl"
     IMAGE_STATUS_API = "https://www.binance.com/bapi/composite/v2/public/pgc/openApi/image/imageStatus"
 
+    @staticmethod
+    def _is_safe_image_url(url: str) -> bool:
+        """
+        SSRF 防护：配图 URL 来自外部 RSS（不可信输入），恶意源可投喂
+        云元数据端点（169.254.169.254）/ 内网地址 / file:// 等，download_image
+        会无防护拉取。只放行 http(s) 且解析结果为公网地址的目标。
+        注意必须做 DNS 解析后校验 IP——域名可以解析到内网（DNS rebinding 变体）。
+        """
+        try:
+            from urllib.parse import urlparse
+            import ipaddress
+            p = urlparse(url)
+            if p.scheme not in ("http", "https") or not p.hostname:
+                return False
+            # 云元数据主机名黑名单（域名级）：fake-ip/自定义 DNS 环境下解析结果
+            # 不可信，必须在解析之前按主机名拦截
+            if p.hostname.lower() in ("metadata.google.internal", "metadata.goog",
+                                      "metadata.azure.com", "instance-data"):
+                return False
+            # 纯 IP 字面量直接判；域名走解析（单个解析结果打内网即拒绝）
+            try:
+                ip = ipaddress.ip_address(p.hostname)
+                hosts = [ip]
+            except ValueError:
+                import socket
+                infos = socket.getaddrinfo(p.hostname, p.port or (443 if p.scheme == "https" else 80),
+                                           proto=socket.IPPROTO_TCP)
+                hosts = [ipaddress.ip_address(i[4][0]) for i in infos]
+            # 198.18.0.0/15 是 IANA benchmark 保留段，不可路由到真实内网；
+            # 本机代理（Clash/Mihomo）的 fake-ip 模式会把所有域名解析到该段——
+            # 真实目标由代理隧道出网。该段属于【放行白名单】而非拒绝集，
+            # 否则代理环境下所有配图域名全灭（实测踩过：private=True 导致全拒）。
+            fake_ip_net = ipaddress.ip_network("198.18.0.0/15")
+            for ip in hosts:
+                if ip in fake_ip_net:
+                    continue  # 代理 fake-ip：由隧道出公网，无 SSRF 面
+                if (ip.is_loopback or ip.is_link_local or ip.is_multicast
+                        or ip.is_reserved or ip.is_unspecified):
+                    return False
+                # RFC1918 私网/CGNAT 单独判（is_private 会把 fake-ip 段也算进去）
+                for net in (ipaddress.ip_network("10.0.0.0/8"),
+                            ipaddress.ip_network("172.16.0.0/12"),
+                            ipaddress.ip_network("192.168.0.0/16"),
+                            ipaddress.ip_network("169.254.0.0/16"),
+                            ipaddress.ip_network("100.64.0.0/10")):
+                    if ip in net:
+                        return False
+            return True
+        except Exception:
+            return False
+
     # ---------------- 动态情绪卡生成（图片多样化） ----------------
     # 布局方案池：每帖随机选一种，避免时间线上配图千篇一律
     CARD_LAYOUTS = ("split", "banner", "minimal")
@@ -2986,6 +3037,10 @@ class ImageManager:
         情绪卡与 FNG 兜底图均按日复用托管 URL（缓存键带布局标识，保证多样性）。
         """
         target_url = raw_image_url.strip() if raw_image_url else cls.DEFAULT_FALLBACK_IMAGE
+        # SSRF 门禁：配图 URL 来自不可信 RSS，内网/元数据/file 等一律拒绝并静默降级
+        if target_url != cls.DEFAULT_FALLBACK_IMAGE and not cls._is_safe_image_url(target_url):
+            logger.warning(f"配图 URL 未通过 SSRF 安全校验（内网/非 http(s)/解析异常），拒绝拉取: {target_url[:80]}")
+            target_url = cls.DEFAULT_FALLBACK_IMAGE
         using_fallback = target_url == cls.DEFAULT_FALLBACK_IMAGE
         if using_fallback:
             cached_url = cls._read_fallback_cache()

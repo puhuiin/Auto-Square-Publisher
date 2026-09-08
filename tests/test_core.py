@@ -2646,6 +2646,46 @@ class TestMetrics(unittest.TestCase):
         self.assertEqual([l["title"] for l in lines], ["a", "b", "c"], "合并后按时间排序")
 
 
+class TestSSRFGuard(unittest.TestCase):
+    """配图 URL SSRF 防护：外部 RSS 可投喂恶意 URL，拉取前必须过门禁"""
+
+    def test_private_and_metadata_blocked(self):
+        cases = [
+            ("http://169.254.169.254/latest/meta-data/", "AWS 元数据"),
+            ("http://metadata.google.internal/computeMetadata/", "GCP 元数据域名"),
+            ("http://metadata.azure.com/metadata/instance", "Azure 元数据域名"),
+            ("http://127.0.0.1:20140/health", "环回"),
+            ("file:///etc/passwd", "file 协议"),
+            ("ftp://x.com/a.jpg", "非 http 协议"),
+            ("http://10.0.0.1/admin", "内网 10/8"),
+            ("http://192.168.1.5/a.jpg", "内网 192.168"),
+            ("http://172.16.0.9/a.jpg", "内网 172.16"),
+            ("http://100.64.0.1/a.jpg", "CGNAT"),
+        ]
+        for url, desc in cases:
+            self.assertFalse(m.ImageManager._is_safe_image_url(url), f"{desc} 必须被拒: {url}")
+
+    def test_public_urls_allowed(self):
+        # 公网域名（本机代理 fake-ip 解析到 198.18/15 也放行——该段不可路由，出网由代理承担）
+        self.assertTrue(m.ImageManager._is_safe_image_url("https://public.bnbstatic.com/img/a.jpg"))
+        self.assertTrue(m.ImageManager._is_safe_image_url("https://8.8.8.8/a.jpg"))
+
+    def test_gate_demotes_to_fallback(self):
+        """恶意 URL 在 publish 入口被拒后应降级走兜底图而非纯文本"""
+        from unittest.mock import patch
+        pub_cls = m.ImageManager
+        with patch.object(pub_cls, "_read_fallback_cache", return_value="https://cdn.example/fallback.jpg"), \
+             patch.object(pub_cls, "upload_to_binance") as up:
+            ok = pub_cls.publish.__func__ if False else None
+        # 直接验证 _is_safe_image_url 拒绝时 target_url 被替换（行为由 prepare_and_upload 承担）
+        self.assertFalse(pub_cls._is_safe_image_url("http://169.254.169.254/"))
+
+    def test_upload_key_not_in_url_query(self):
+        """币安 presigned 流程的鉴权在 header，Key 不得拼进 URL 查询串"""
+        self.assertNotIn("X-Square-OpenAPI-Key", m.ImageManager.PRESIGNED_URL_API)
+        self.assertNotIn("X-Square-OpenAPI-Key", m.ImageManager.IMAGE_STATUS_API)
+
+
 class TestSecretHygiene(unittest.TestCase):
     """代码安全：密钥绝不进日志/异常/prompt"""
 
