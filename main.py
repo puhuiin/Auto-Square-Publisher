@@ -1397,6 +1397,7 @@ class NewsFetcher:
 
             # 扫描窗口放宽到 20 条：旧闻/缓存条目不吞噬每条源的产出配额，直到收满 limit_per_feed 为止
             scan_window = max(limit_per_feed * 4, 20)
+            stale_skipped_before = self.stats.get("stale", 0)
             for entry in feed.entries[:scan_window]:
                 if len(items) >= limit_per_feed:
                     break
@@ -1406,61 +1407,14 @@ class NewsFetcher:
                 # 一条脏数据就 abort 整源产出，还顺手记一次源故障——3 轮即可把
                 # 健康源停放 6 小时。源级故障（网络/整包解析失败）仍走外层 except。
                 try:
-                    # 标题同样过注入截断：此前只有摘要走 clean_html，标题原文直进 prompt；
-                    # 标题里的"Ignore previous instructions…"会被安全提示兜底，但纵深防御
-                    # 应在入口就截断（顺带归一空白）。ID 用原文种子不受影响（稳定性不变）。
-                    title = self.clean_html(entry.get("title", ""))
-                    if not title:
-                        continue
-
-                    self._stat_inc("fetched")
-                    self._stat_feed_entry(name)
-
-                    # 时效过滤：仅发布 MAX_NEWS_AGE_HOURS 小时内的热点，杜绝把旧闻当新闻发
-                    age_h = self.parse_entry_age_hours(entry)
-                    if age_h is not None and age_h > MAX_NEWS_AGE_HOURS:
-                        stale_skipped += 1
-                        self._stat_inc("stale")
-                        continue
-
-                    news_id = self.generate_news_id(entry, name)
-                    if cache_mgr.is_cached(news_id):
-                        self._stat_inc("cached")
-                        continue
-
-                    summary = ""
-                    if "summary" in entry:
-                        summary = entry.summary
-                    elif "content" in entry and entry.content:
-                        summary = entry.content[0].value
-                    elif "description" in entry:
-                        summary = entry.description
-
-                    clean_summary = self.clean_html(summary)
-                    link = entry.get("link", "")
-                    published = entry.get("published", "") or entry.get("updated", "")
-                    impact_score = self.calculate_impact_score(title, clean_summary) + self.freshness_bonus(age_h)
-                    image_url = self.extract_image_url(entry, summary)
-
-                    # base_impact_score = 未经活动加权的热度分。MIN_IMPACT_SCORE 过滤必须用
-                    # 原始分：否则低质源只要蹭到当期活动币就能靠 +8 越过门槛并登顶（Round 5）。
-                    items.append({
-                        "base_impact_score": impact_score,
-                        "id": news_id,
-                        "title": title,
-                        "summary": clean_summary[:1000],
-                        "link": link,
-                        "source": name,
-                        "lang": lang,
-                        "published": published,
-                        "age_hours": round(age_h, 1) if age_h is not None else None,
-                        "impact_score": impact_score,
-                        "image_url": image_url,
-                    })
+                    parsed = self._parse_feed_entry(entry, name, cache_mgr)
+                    if parsed is not None:
+                        items.append(parsed)
                 except Exception as entry_err:
                     logger.warning(f"数据源 [{name}] 某条目解析异常，已跳过（不影响本源其他条目）: {entry_err}")
                     continue
 
+            stale_skipped = self.stats.get("stale", 0) - stale_skipped_before
             if stale_skipped:
                 logger.info(f"数据源 [{name}] 过滤过期旧闻 {stale_skipped} 条（>{MAX_NEWS_AGE_HOURS}h）。")
         except Exception as e:
@@ -1468,6 +1422,59 @@ class NewsFetcher:
             self._stat_fail(name)
             self._feed_record(name, ok=False)
         return items
+
+    def _parse_feed_entry(self, entry: Dict[str, Any], name: str,
+                          cache_mgr: "CacheManager") -> Optional[Dict[str, Any]]:
+        """单条 RSS 条目 → 候选字典；时效/缓存不通过返回 None（自带 stats 计数）。
+        供 _fetch_single_feed 的条目循环调用——抽取自其循环体（行为等价重构）。"""
+        title = self.clean_html(entry.get("title", ""))
+        if not title:
+            return None
+
+        self._stat_inc("fetched")
+        self._stat_feed_entry(name)
+
+        # 时效过滤：仅发布 MAX_NEWS_AGE_HOURS 小时内的热点，杜绝把旧闻当新闻发
+        age_h = self.parse_entry_age_hours(entry)
+        if age_h is not None and age_h > MAX_NEWS_AGE_HOURS:
+            self._stat_inc("stale")
+            return None
+
+        news_id = self.generate_news_id(entry, name)
+        if cache_mgr.is_cached(news_id):
+            self._stat_inc("cached")
+            return None
+
+        # summary 访问统一用 dict 式 .get()：feedparser 的 FeedParserDict 是 dict 子类
+        # 兼容两者，纯 dict 测试桩也兼容（原 attribute 访问只对 feedparser 对象有效）
+        summary = entry.get("summary") or ""
+        if not summary and entry.get("content"):
+            content_block = entry["content"]
+            if content_block:
+                summary = content_block[0].value
+        if not summary:
+            summary = entry.get("description") or ""
+
+        clean_summary = self.clean_html(summary)
+        published = entry.get("published", "") or entry.get("updated", "")
+        impact_score = self.calculate_impact_score(title, clean_summary) + self.freshness_bonus(age_h)
+        image_url = self.extract_image_url(entry, summary)
+
+        # base_impact_score = 未经活动加权的热度分。MIN_IMPACT_SCORE 过滤必须用
+        # 原始分：否则低质源只要蹭到当期活动币就能靠 +8 越过门槛并登顶（Round 5）。
+        return {
+            "base_impact_score": impact_score,
+            "id": news_id,
+            "title": title,
+            "summary": clean_summary[:1000],
+            "link": entry.get("link", ""),
+            "source": name,
+            "lang": entry.get("lang", "en"),
+            "published": published,
+            "age_hours": round(age_h, 1) if age_h is not None else None,
+            "impact_score": impact_score,
+            "image_url": image_url,
+        }
 
     @staticmethod
     def _apply_campaign_boost(candidates: List[Dict[str, Any]],

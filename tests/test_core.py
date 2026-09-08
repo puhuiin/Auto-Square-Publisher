@@ -68,6 +68,57 @@ class TestFreshnessFilter(unittest.TestCase):
         self.assertIsNone(m.NewsFetcher.parse_entry_age_hours({"title": "t"}))
 
 
+class TestParseFeedEntry(unittest.TestCase):
+    """_parse_feed_entry 抽取自 _fetch_single_feed 循环体（行为等价重构），单独锁定"""
+
+    def setUp(self):
+        m.SymbolValidator._valid_symbols_cache = set(TEST_SYMBOL_UNIVERSE)
+        self.f = m.NewsFetcher()
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        import json
+        with open(self.tmp, "w", encoding="utf-8") as fh:
+            json.dump([], fh)
+        self._orig_cache = m.CACHE_FILE
+        m.CACHE_FILE = self.tmp
+        self.mgr = m.CacheManager(self.tmp)
+
+    def tearDown(self):
+        m.SymbolValidator._valid_symbols_cache = self._orig_cache
+        m.CACHE_FILE = self._orig_cache
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _entry(self, title="BTC breaks $100K", summary="Big rally"):
+        from time import struct_time
+        import time as _t
+        ts = _t.gmtime()
+        return {"title": title, "summary": summary, "link": "https://x/1",
+                "published_parsed": ts}
+
+    def test_valid_entry_parsed(self):
+        out = self.f._parse_feed_entry(self._entry(), "TestFeed", self.mgr)
+        self.assertIsNotNone(out)
+        self.assertEqual(out["title"], "BTC breaks $100K")
+        self.assertEqual(out["source"], "TestFeed")
+        self.assertIn("impact_score", out)
+
+    def test_stale_entry_returns_none(self):
+        old = (datetime.now(timezone.utc) - timedelta(hours=200)).timetuple()
+        e = self._entry()
+        e["published_parsed"] = old
+        self.assertIsNone(self.f._parse_feed_entry(e, "TestFeed", self.mgr))
+
+    def test_cached_entry_returns_none(self):
+        self.mgr.cached_items.append({"id": m.NewsFetcher.generate_news_id(
+            self._entry(), "TestFeed"), "title": "t", "source": "s", "sent_at": datetime.now(timezone.utc).isoformat()})
+        self.mgr.cached_ids = {i["id"] for i in self.mgr.cached_items}
+        self.assertIsNone(self.f._parse_feed_entry(self._entry(), "TestFeed", self.mgr))
+
+    def test_empty_title_returns_none(self):
+        self.assertIsNone(self.f._parse_feed_entry(self._entry(title=""), "TestFeed", self.mgr))
+
+
 class TestNearDuplicateDetection(unittest.TestCase):
     """跨源近似去重：同一事件多源报道只发一次"""
 
