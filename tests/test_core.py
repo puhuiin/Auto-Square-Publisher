@@ -4268,6 +4268,51 @@ class TestEmptyContentRetry(unittest.TestCase):
         self.assertIn("$BTC", out["content"])
         self.assertEqual(client.chat.completions.create.call_count, 2)
 
+    def test_finish_length_empty_dynamic_budget_expansion(self):
+        """思考链吃满预算（finish=length + 空 content）→ 预算动态扩容重试而非放弃。
+        生产实证 glm-5.3-flash 空包耗用最高 2264 token > 固定 1500 预算。"""
+        eng = self._engine()
+        client = MagicMock()
+
+        def _mk(content, finish):
+            r = self._resp(content)
+            r.choices[0].finish_reason = finish
+            return r
+
+        # 第 1 次：finish=length 空包（思考链吃满）→ 应扩容重试；第 2 次：length 空包继续扩容；
+        # 第 3 次：正常出稿
+        client.chat.completions.create.side_effect = [
+            _mk(None, "length"), _mk(None, "length"), _mk(self._good_body(), "stop"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        self.assertEqual(client.chat.completions.create.call_count, 3)
+        budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
+        # 初始 1500（推理通道 stub 命中 model 无关键词？stub 非 Reasonix 名——验证非推理基线也扩容）
+        self.assertEqual(budgets[0], 600)
+        self.assertGreater(budgets[1], budgets[0], "finish=length 空包后预算必须扩容")
+        self.assertGreaterEqual(budgets[2], budgets[1], "再次 length 空包应继续扩容或保持")
+
+    def test_finish_stop_empty_does_not_expand(self):
+        """finish=stop 的空包是上游抽风而非预算问题 → 不扩容，走原即时重试路径"""
+        eng = self._engine()
+        client = MagicMock()
+
+        def _mk(content, finish):
+            r = self._resp(content)
+            r.choices[0].finish_reason = finish
+            return r
+
+        client.chat.completions.create.side_effect = [
+            _mk(None, "stop"), _mk(self._good_body(), "stop"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
+        self.assertEqual(len(set(budgets)), 1, "finish=stop 空包不应触发预算扩容")
+
     def test_exhausted_retry_skips_breaker(self):
         eng = self._engine()
         client = MagicMock()

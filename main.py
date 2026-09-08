@@ -2256,7 +2256,9 @@ class MultiLLMEngine:
                 # 否则（首挂，偶发可能性大）即时重试一次。
                 max_attempts = 1 if self._fail_counts.get(provider.name, 0) else 2
                 content, tokens_used, latency_sec = "", None, None
-                for attempt in range(max_attempts):
+                attempt = 0
+                expansions = 0  # 预算扩容次数：不消耗 max_attempts 配额（扩容是纠正，不是重试）
+                while attempt < max_attempts:
                     response = client.chat.completions.create(
                         model=provider.model,
                         messages=[
@@ -2270,10 +2272,25 @@ class MultiLLMEngine:
                     tokens_used = _extract_usage_tokens(response)
                     if response.choices and response.choices[0].message:
                         content = (response.choices[0].message.content or "").strip()
+                        # 思考链吃满预算的特征：finish_reason=length 且 content 为空。
+                        # 生产实证 glm-5.3-flash 空包耗用 1035~2264 token，固定 1500 仍可能不够。
+                        # 命中即动态扩容重试（+1500，封顶 4000）：比 failover 换提供商便宜，
+                        # 也不污染健康度计数；扩容后若下次空回 finish 不为 length，
+                        # 则是上游抽风而非预算问题，走原有空回路径。
+                        finish = getattr(response.choices[0], "finish_reason", "") or ""
+                        if not content and finish == "length" and effective_max_tokens < 4000:
+                            expansions += 1
+                            effective_max_tokens = min(effective_max_tokens + 1500, 4000)
+                            logger.warning(f"提供商 [{provider.name}] 空回且 finish=length"
+                                           f"（思考链耗 {tokens_used or '?'} token），预算动态扩容至 {effective_max_tokens} 重试"
+                                           f"（第 {expansions} 次扩容，不占重试配额）")
+                            continue
                     if content:
                         break
-                    logger.warning(f"提供商 [{provider.name}] 第 {attempt + 1}/{max_attempts} 次返回空内容"
-                                   f"（累计耗时 {latency_sec}s）...")
+                    attempt += 1
+                    if attempt < max_attempts:
+                        logger.warning(f"提供商 [{provider.name}] 第 {attempt}/{max_attempts} 次返回空内容"
+                                       f"（累计耗时 {latency_sec}s）...")
                 if not content:
                     raise _EmptyContentError(
                         "模型返回了空内容（已即时重试 1 次）" if max_attempts > 1
