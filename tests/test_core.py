@@ -3413,6 +3413,11 @@ class TestRunMainSemantics(unittest.TestCase):
             "tokens": ["BTC"], "provider": "stub"}
         _start(patch.object(m, "MultiLLMEngine", return_value=engine))
         self._engine = engine  # 供跳过类断言检查 LLM 是否被调用
+        # 拟人间隔 90-240s（Round 38）：不 mock 会把单测拖成分钟级（实测 158s）。
+        # 捕获 sleep 调用供个别用例断言间隔参数。
+        self.sleep_calls = []
+        _start(patch.object(m.time, "sleep",
+                            side_effect=lambda s: self.sleep_calls.append(s)))
         return started
 
     def _teardown(self, patches, tmpdir):
@@ -3622,6 +3627,9 @@ class TestRunMainSemantics(unittest.TestCase):
         try:
             m._run_main()
             self.assertEqual(self._engine.summarize.call_count, 1)
+            # 拟人间隔断言：唯一一次发帖后应有 90-240s 的 sleep（不再 3-8s 指纹）
+            self.assertEqual(len(self.sleep_calls), 1)
+            self.assertGreaterEqual(self.sleep_calls[0], 90)
             self.assertEqual(pub.publish.call_count, 1)
             records = self._read_json(paths["cache"], [])
             self.assertEqual([r["id"] for r in records], ["news-1"])
