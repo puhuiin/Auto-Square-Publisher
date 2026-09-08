@@ -134,8 +134,9 @@ jobs:
           # CI 环境无 localhost，显式关闭 Reasonix 本地网关探测（本地跑时自动启用）
           REASONIX_GW_OFF: "1"
 
-          # 运行参数
-          MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts }}
+          # 运行参数（schedule 无 inputs 时取后者：定时默认 2，调度缺口下自动追赶，
+          # 仍受日配额/单币种限流/质量门约束；手动触发沿用 inputs 默认 1）
+          MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts || '2' }}
           DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: |
           python main.py
