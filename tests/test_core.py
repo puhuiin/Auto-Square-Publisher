@@ -4244,5 +4244,90 @@ class TestEmptyContentRetry(unittest.TestCase):
         self.assertIn("stub", eng._breaker_state())
 
 
+class TestPermanentFailure(unittest.TestCase):
+    """永久失败快道：404/模型下架直接 24h 冷却 + 拒因打标；瞬时故障仍走指数退避"""
+
+    def setUp(self):
+        import tempfile
+        self.intel_tmp = tempfile.mktemp(suffix=".json")
+        with open(self.intel_tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        self._orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.intel_tmp
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig_intel
+        if os.path.exists(self.intel_tmp):
+            os.remove(self.intel_tmp)
+
+    def _engine(self):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.providers = [m.LLMProviderConfig("stub", "https://x", "k", "mm")]
+        return eng
+
+    def _item(self):
+        return {"title": "BTC news", "summary": "Bitcoin surged", "source": "U.Today"}
+
+    def test_permanent_matrix(self):
+        true_cases = [
+            "Error code: 404 - {'error': {'message': 'This model is unavailable for free.}}",
+            "This model is unavailable for free",
+            "model was deleted",
+            "No such model: foo-bar",
+            "The model has been decommissioned",
+            "Endpoint does not exist",
+        ]
+        for msg in true_cases:
+            self.assertTrue(m._is_permanent_failure(RuntimeError(msg)), msg)
+        e = RuntimeError("not found wrapper")
+        e.status_code = 404
+        self.assertTrue(m._is_permanent_failure(e))
+        false_cases = [
+            "service unavailable",
+            "timeout after 30s",
+            "Error code: 429 - rate limit",
+            "Error code: 500 - internal error",
+            "boom",
+            "",
+        ]
+        for msg in false_cases:
+            self.assertFalse(m._is_permanent_failure(RuntimeError(msg)), msg)
+
+    def _cooldown_hours(self, eng, name="stub"):
+        until = datetime.fromisoformat(eng._breaker_state()[name]["cooldown_until"])
+        return (until - datetime.now(until.tzinfo or timezone.utc)).total_seconds() / 3600
+
+    def test_404_gets_24h_cooldown_and_tag(self):
+        eng = self._engine()
+        client = MagicMock()
+        client.chat.completions.create.side_effect = RuntimeError(
+            "Error code: 404 - {'error': {'message': 'This model is unavailable for free.}}")
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics") as mock_metrics:
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        self.assertGreater(self._cooldown_hours(eng), 20)
+        self.assertTrue(eng._breaker_state()["stub"].get("permanent"))
+        reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
+                   if c.args and isinstance(c.args[0], dict)]
+        self.assertTrue(any(r.startswith("[permanent 24h]") for r in reasons), reasons)
+
+    def test_transient_stays_short_cooldown(self):
+        eng = self._engine()
+        client = MagicMock()
+        client.chat.completions.create.side_effect = RuntimeError("boom")
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics") as mock_metrics:
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        self.assertLess(self._cooldown_hours(eng), 1)
+        self.assertNotIn("permanent", eng._breaker_state()["stub"])
+        reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
+                   if c.args and isinstance(c.args[0], dict)]
+        self.assertTrue(any(r == "boom" for r in reasons), reasons)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

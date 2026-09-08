@@ -1630,6 +1630,21 @@ class _EmptyContentError(ValueError):
     pass
 
 
+def _is_permanent_failure(exc: BaseException) -> bool:
+    """永久失败判定：HTTP 404 / 模型下架/删除/不存在。命中即日内不再试，省故事省配额。
+    只认高置信信号：401/429/5xx/超时/"service unavailable" 一律按瞬时故障走指数退避。
+    注意 "unavailable" 必须带 "for" 后缀才算（"service unavailable" 是瞬时过载，不能误杀）。"""
+    if getattr(exc, "status_code", None) == 404:
+        return True
+    msg = str(exc or "")
+    if re.search(r"\b404\b", msg):
+        return True
+    return bool(re.search(
+        r"unavailable for|decommissioned|no such model|does not exist"
+        r"|model[^.]{0,30}(deleted|removed)",
+        msg, re.IGNORECASE))
+
+
 # 结尾站队提问的风格池：每条帖子随机抽取一种，避免时间线上全是同款"扣1扣2"
 ENDING_STYLE_POOL = [
     "极简站队：看多的扣 1，看空的扣 2（经典款，偶尔用）",
@@ -1813,6 +1828,23 @@ class MultiLLMEngine:
 
         intel_state_update(self._BREAKER_STATE_KEY, _clear, default={})
         logger.info(f"提供商 [{name}] 冷却解除，恢复正常调度")
+
+    def _breaker_record_permanent(self, name: str):
+        """永久失败长冷却（模型下架/404）：直接冷却 24 小时，当天不再拿故事试错。
+        不复用指数退避——404 不会自己好转，按瞬时故障每次冷却到期试一次只是空烧
+        （生产：免费模型下架当天空烧 8 个故事）。与 _breaker_record_failure 并列，
+        不改其逻辑；_is_cooled 只读 cooldown_until，成功清除路径同样兼容。"""
+        def _record(state):
+            state = dict(state or {})
+            info = dict(state.get(name, {"fails": 0}))
+            info["fails"] = int(info.get("fails", 0)) + 1
+            info["cooldown_until"] = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
+            info["permanent"] = True
+            state[name] = info
+            return state
+
+        intel_state_update(self._BREAKER_STATE_KEY, _record, default={})
+        logger.warning(f"提供商 [{name}] 永久失败（模型下架/404），进入 24 小时节约冷却")
 
     def _get_client(self, provider: LLMProviderConfig) -> OpenAI:
         """按提供商缓存 OpenAI 客户端；带 HTTP-Referer/X-Title 头以兼容 OpenRouter 等要求来源识别的平台。
@@ -2319,14 +2351,19 @@ class MultiLLMEngine:
             except Exception as e:
                 err_msg = str(e)
                 self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
-                self._breaker_record_failure(provider.name)
+                if _is_permanent_failure(e):
+                    # 永久失败快道：模型下架/404 不会自愈，走 24h 长冷却，当天不再试
+                    self._breaker_record_permanent(provider.name)
+                    fail_reason = f"[permanent 24h] {err_msg}"
+                else:
+                    self._breaker_record_failure(provider.name)
+                    fail_reason = err_msg
                 # 传输层失败同样要记耗时：超时型故障靠 latency 才能定位
-                self._log_reject(news_item, provider.name, "transport", err_msg,
+                self._log_reject(news_item, provider.name, "transport", fail_reason,
                                  latency_sec=round(time.perf_counter() - t_call, 3),
                                  model=provider.model)
-                fail_reason = err_msg
                 enter_breaker = True
-                logger.warning(f"提供商 [{provider.name}] 请求失败: {err_msg} (本次运行连续失败 {self._fail_counts[provider.name]} 次)")
+                logger.warning(f"提供商 [{provider.name}] 请求失败: {fail_reason} (本次运行连续失败 {self._fail_counts[provider.name]} 次)")
 
             # 统一出口：切换展示 + 退避
             if index < len(ordered) - 1:
