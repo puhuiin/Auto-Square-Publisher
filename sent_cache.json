@@ -181,5 +181,24 @@
     "tokens": [
       "XRP"
     ]
+  },
+  {
+    "id": "c7321d571e78c99b",
+    "title": "Solana (SOL) to Triple Transaction Size as Major Upgrade Goes Live",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-09-08T12:18:52.053602+00:00",
+    "tokens": [
+      "SOL"
+    ]
+  },
+  {
+    "id": "2709777895b250fc",
+    "title": "Bitcoin slips to $78,800 as BNB and DeFi tokens buck the selloff",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-09-08T12:22:52.789974+00:00",
+    "tokens": [
+      "BNB",
+      "BTC"
+    ]
   }
 ]
