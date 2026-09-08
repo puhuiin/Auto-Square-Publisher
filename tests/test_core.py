@@ -4030,5 +4030,145 @@ class TestAlertThrottleAfterDelivery(unittest.TestCase):
         self.assertTrue(m.Notifier._alert_throttled("旧接口报警"))
 
 
+class TestFullwidthNormalization(unittest.TestCase):
+    """NFKC 全角归一：全角币标识/金额必须变半角，否则挂件与金额保护全 miss"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls._orig = m.SymbolValidator._valid_symbols_cache
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "LINK"}
+
+    @classmethod
+    def tearDownClass(cls):
+        m.SymbolValidator._valid_symbols_cache = cls._orig
+
+    def test_fullwidth_token_becomes_widget(self):
+        s = m.SquarePublisher._sanitize_content("看多＄ＢＴＣ，目标＄１２００００")
+        self.assertIn("$BTC", s)
+        self.assertIn("$120000", s)
+        self.assertNotIn("＄", s)
+
+    def test_fullwidth_entities_decoded(self):
+        out = m.NewsFetcher.clean_html("＆lt;b＆gt;加粗＆lt;/b＆gt;")
+        self.assertEqual(out, "加粗")
+
+
+class TestTokenDesparay(unittest.TestCase):
+    """去散射：超出新闻标的 2 个及以上有效币剥壳摘除；恰好 1 个保留"""
+
+    def setUp(self):
+        self._orig = m.SymbolValidator._valid_symbols_cache
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "SOL", "DOGE", "LINK"}
+        import tempfile
+        self.intel_tmp = tempfile.mktemp(suffix=".json")
+        with open(self.intel_tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        self._orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.intel_tmp
+
+    def tearDown(self):
+        m.SymbolValidator._valid_symbols_cache = self._orig
+        m.CAMPAIGN_INTEL_FILE = self._orig_intel
+        if os.path.exists(self.intel_tmp):
+            os.remove(self.intel_tmp)
+
+    def _engine_with(self, content):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.providers = [m.LLMProviderConfig("stub", "https://x", "k", "mm")]
+        fake_msg = MagicMock(content=content)
+        fake_resp = MagicMock(choices=[MagicMock(message=fake_msg)])
+        client = MagicMock()
+        client.chat.completions.create.return_value = fake_resp
+        return eng, client
+
+    def _body(self, tickers):
+        return ("比特币放量突破关键位，短线情绪转多" + "".join(" %s " % t for t in tickers)
+                + "回调就是上车机会，但别追高，等回踩确认支撑再进，"
+                  "仓位控制好，止损放在前低下方。")
+
+    def test_spray_stripped_from_content_and_tokens(self):
+        eng, client = self._engine_with(self._body(["$BTC", "$ETH", "$SOL", "$DOGE"]))
+        item = {"title": "BTC news", "summary": "Bitcoin surged", "source": "U.Today"}
+        with patch.object(eng, "_get_client", return_value=client):
+            out = eng.summarize(item, None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        self.assertIn("$BTC", out["content"])
+        for t in ("$ETH", "$SOL", "$DOGE"):
+            self.assertNotIn(t, out["content"])
+        self.assertIn("ETH", out["content"])
+        self.assertEqual(out["tokens"], ["BTC"])
+
+    def test_single_extra_preserved(self):
+        eng, client = self._engine_with(self._body(["$BTC", "$ETH"]))
+        item = {"title": "BTC news", "summary": "Bitcoin surged", "source": "U.Today"}
+        with patch.object(eng, "_get_client", return_value=client):
+            out = eng.summarize(item, None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        self.assertIn("$BTC", out["content"])
+        self.assertIn("$ETH", out["content"])
+        self.assertEqual(out["tokens"], ["BTC", "ETH"])
+
+    def test_amounts_untouched_by_despray(self):
+        eng, client = self._engine_with(
+            self._body(["$BTC"]) + " 目标 $120000，隔壁 $5B 的故事也值得看。")
+        item = {"title": "BTC news", "summary": "Bitcoin surged past $120000 on $5B volume",
+                "source": "U.Today"}
+        with patch.object(eng, "_get_client", return_value=client):
+            out = eng.summarize(item, None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        self.assertIn("$120000", out["content"])
+        self.assertIn("$5B", out["content"])
+
+
+class TestFallbackImageCache(unittest.TestCase):
+    """兜底图缓存前置：有缓存不下载；原图挂先查缓存再下兜底"""
+
+    def setUp(self):
+        import tempfile
+        self.intel_tmp = tempfile.mktemp(suffix=".json")
+        with open(self.intel_tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        self._orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.intel_tmp
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig_intel
+        if os.path.exists(self.intel_tmp):
+            os.remove(self.intel_tmp)
+
+    def test_cached_url_skips_download(self):
+        m.ImageManager._write_fallback_cache("https://cdn.example/cached.jpg")
+        with patch.object(m.ImageManager, "download_image") as mock_dl:
+            out = m.ImageManager.prepare_and_upload("k", None)
+        self.assertEqual(out, "https://cdn.example/cached.jpg")
+        mock_dl.assert_not_called()
+
+    def test_raw_failure_checks_cache_before_fallback_download(self):
+        m.ImageManager._write_fallback_cache("https://cdn.example/cached.jpg")
+        with patch.object(m.ImageManager, "download_image", return_value=None) as mock_dl:
+            out = m.ImageManager.prepare_and_upload("k", "https://news.example/a.jpg")
+        self.assertEqual(out, "https://cdn.example/cached.jpg")
+        self.assertEqual(mock_dl.call_count, 1)
+        self.assertEqual(mock_dl.call_args[0][0], "https://news.example/a.jpg")
+
+    def test_full_fallback_flow_caches_result(self):
+        blob = ("fake-jpeg-bytes-", "cover.jpg", "image/jpeg")
+        with patch.object(m.ImageManager, "download_image",
+                          side_effect=[None, blob]) as mock_dl, \
+             patch.object(m.ImageManager, "upload_to_binance",
+                          return_value="https://cdn.example/new.jpg") as mock_up:
+            out = m.ImageManager.prepare_and_upload("k", "https://news.example/a.jpg")
+        self.assertEqual(out, "https://cdn.example/new.jpg")
+        self.assertEqual(mock_dl.call_count, 2)
+        mock_up.assert_called_once()
+        self.assertEqual(m.ImageManager._read_fallback_cache(), "https://cdn.example/new.jpg")
+
+    def test_total_failure_returns_none(self):
+        with patch.object(m.ImageManager, "download_image", return_value=None):
+            self.assertIsNone(m.ImageManager.prepare_and_upload("k", "https://news.example/a.jpg"))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
