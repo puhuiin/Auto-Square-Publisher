@@ -499,8 +499,9 @@ def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) 
             inactive = fr.get("inactiveUpstreams") or []
             if inactive:
                 dead_note = f"（网关侧失效上游: {', '.join(str(i.get('upstream')) for i in inactive[:5])}…）"
-        except Exception:
-            pass
+        except Exception as e:
+            # 不静默：candidates 解析失败会让模型链退化成静态清单，排障时需要这条线索
+            logger.warning(f"网关 freeRouter 候选链解析失败，回退静态 preferred 清单: {e}")
 
         available: set = set()
         catalog_ok = False
@@ -512,8 +513,8 @@ def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) 
             if models_resp.status_code == 200:
                 available = {m.get("id", "") for m in models_resp.json().get("data", [])}
                 catalog_ok = True
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"网关模型目录拉取失败（备份链将退化单通道）: {type(e).__name__} {e}")
 
         if not catalog_ok:
             # 目录不可知：只保留默认 auto 路由（网关对无前缀 id 自动走 OmniRoute 兜底），
@@ -776,13 +777,19 @@ class MarketDataProvider:
             logger.debug(f"批量行情接口异常，降级为逐币查询: {e}")
 
         out = {}
+        failed = []
         for s in symbols:
             r = http_get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={s}USDT", timeout=4, retries=0)
             if r is not None and r.status_code == 200:
                 try:
                     out[s] = cls._format_ticker(s, r.json())
-                except Exception:
-                    pass
+                except Exception as e:
+                    failed.append(f"{s}({e})")
+            else:
+                failed.append(f"{s}({'网络' if r is None else r.status_code})")
+        if failed:
+            # 不静默：全部失败时 prompt 的盘面行会退化为"链上/全市场热点"，排障需知
+            logger.warning(f"逐币行情获取失败 {len(failed)}/{len(symbols)}: {', '.join(failed)}")
         return out
 
 
