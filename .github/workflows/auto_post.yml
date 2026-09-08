@@ -2,8 +2,10 @@ name: Binance Square Auto Poster Pro
 
 on:
   schedule:
-    # 定时自动触发 (每 20 分钟执行一次)
-    - cron: '*/20 * * * *'
+    # 定时自动触发 (每小时 3 次)。刻意避开整点：GitHub 高负载时段含每小时 0 分，
+    # 整点扎堆的 cron 会被限流丢弃（实测 */20 只能落 1~2 次/小时）；7/27/47 错峰，
+    # 声明频率不变，实际落点率更高。cron 只是心跳上限，业务不依赖具体分钟。
+    - cron: '7,27,47 * * * *'
   workflow_dispatch:
     # 支持在 GitHub 仓库界面手动一键触发与调试
     inputs:
@@ -134,10 +136,11 @@ jobs:
           # CI 环境无 localhost，显式关闭 Reasonix 本地网关探测（本地跑时自动启用）
           REASONIX_GW_OFF: "1"
 
-          # 运行参数（schedule 无 inputs 时取后者：定时默认 2，调度缺口下自动追赶，
-          # 仍受日配额/单币种限流/质量门约束；手动触发沿用 inputs 默认 1）
-          MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts || '2' }}
-          DRY_RUN: ${{ github.event.inputs.dry_run }}
+          # 运行参数（schedule 无 inputs 时取最后者：定时默认 2，调度缺口下自动追赶，
+          # 仍受日配额/单币种限流/质量门约束；手动触发沿用 inputs 默认；
+          # 外部 Cron 经 repository_dispatch 唤醒时可用 client_payload 透传同名参数）
+          MAX_POSTS_PER_RUN: ${{ github.event.inputs.max_posts || github.event.client_payload.max_posts || '2' }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || github.event.client_payload.dry_run }}
         run: |
           python main.py
 
