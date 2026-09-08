@@ -1873,6 +1873,24 @@ class TestNumberHallucinationGuard(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("24", reason)
 
+    def test_fullword_billion_with_space_accepted(self):
+        """生产误杀回放：新闻源写全拼 '$15.7 Billion'（空格+全拼），
+        正文换算 157亿 被误判幻觉。修复后同量级必须互通。"""
+        ok, _ = m.MultiLLMEngine._verify_numbers(
+            "BitMine 手里已经有 157 亿美元的资产",
+            "BitMine Now Holds $15.7 Billion in Various Assets")
+        self.assertTrue(ok)
+        ok2, _ = m.MultiLLMEngine._verify_numbers(
+            "流入 24 亿美元", "inflows of $2.4 billion")
+        self.assertTrue(ok2)
+
+    def test_plain_numbers_still_pass_after_unit_regex_change(self):
+        """单位组改全拼兼容后，普通纯数字/百分比场景不得回归（首版实现曾把
+        单位组做成必选，$119850 与 5.23% 全部失配 → 合法内容被误杀）。"""
+        ok, _ = m.MultiLLMEngine._verify_numbers(
+            "BTC 突破 $119,850，单日 +5.23%", "Bitcoin broke $119850, up 5.23% in 24h")
+        self.assertTrue(ok)
+
     def test_small_usd_passes(self):
         # 小额美元不校验（$100, $500 是人设常见口吻）
         ok, _ = m.MultiLLMEngine._verify_numbers("今天我的止盈 $500 落袋", "Bitcoin rises")

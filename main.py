@@ -2156,11 +2156,24 @@ class MultiLLMEngine:
 
         # 源文全部数字集合（识别 K/M/B 单位缩写：$2.4B = 2.4e9）
         source_nums: List[float] = []
-        # 形如 $2.4B / 5.6M / 100K
-        for m in re.finditer(r"\$?\s*([\d,]+(?:\.\d+)?)\s*([KkMmBb])?(?![A-Za-z])", source_text):
+        # 形如 $2.4B / 5.6M / 100K；生产误杀实锤：新闻源常用全拼
+        # "$15.7 Billion"（空格 + 全拼），旧正则只认紧邻单字母 → 只提到裸 15.7，
+        # 正文侧换算出的 157亿(1.57e10) 在源文集合里查无此数 → 合法数字被当幻觉拦掉。
+        # 现同时支持：单字母紧邻/空格、全拼 million/billion/trillion（大小写）。
+        for m in re.finditer(
+                r"\$?\s*([\d,]+(?:\.\d+)?)\s*(?:(?:([KkMmBb])(?![A-Za-z])"
+                r"|(millions?|billions?|trillions?))?)", source_text, re.IGNORECASE):
             num_str = m.group(1).replace(",", "")
-            scale_letter = (m.group(2) or "").upper()
-            scale = {"K": 1e3, "M": 1e6, "B": 1e9}.get(scale_letter, 1.0)
+            letter = (m.group(2) or "").upper()
+            full = (m.group(3) or "").lower()
+            if full.startswith("m"):
+                scale = 1e6
+            elif full.startswith("b"):
+                scale = 1e9
+            elif full.startswith("t"):
+                scale = 1e12
+            else:
+                scale = {"K": 1e3, "M": 1e6, "B": 1e9}.get(letter, 1.0)
             try:
                 source_nums.append(float(num_str) * scale)
             except ValueError:
