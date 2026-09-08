@@ -4606,9 +4606,13 @@ def _run_main():
             logger.error(f"处理候选 [{title}] 时发生意外异常，已隔离跳过: {e}\n{traceback.format_exc()[-500:]}")
             continue
 
-        # 模拟自然人工操作延迟（DRY_RUN 只验证链路，不睡：冒烟要快）
+        # 拟人间隔（DRY_RUN 只验证链路，不睡）：max_posts=2 时两篇仅隔 3~8 秒是明确的
+        # 机器人指纹（生产实测 04:50/04:51 连发两篇）。真人发帖间隔是分钟级，
+        # 升级为 90~240 秒随机；宁可运行时长增加，也不要账号行为画像裸奔。
+        # Actions 步骤 15 分钟超时内可容纳 2 篇（约 +4 分钟），余量充足。
         if not dry_run and posted_count < max_posts:
-            delay = random.randint(3, 8)
+            delay = random.randint(90, 240)
+            logger.info(f"⏳ 拟人间隔 {delay}s（模拟真人发帖节奏）...")
             time.sleep(delay)
 
     write_github_step_summary(fetcher, fng_index, campaign_intel, posted_records, dry_run,
