@@ -534,9 +534,12 @@ _DIRECT_SESSION.trust_env = False  # 不读 HTTP_PROXY 等环境变量，保证 
 
 def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) -> List[LLMProviderConfig]:
     """
-    探测本地 Reasonix 免费模型网关。存活时返回 [首选模型 + 最多 2 个备份模型] 的提供商链，
-    同一网关上游宕机时自动沿清单降级（auto/best-fast → omni/auto/best-free → gem/…），
-    不清零到外部收费路径。不可达返回空列表，静默跳过。
+    探测本地 Reasonix 免费模型网关。存活时返回 [首选模型 + 最多 4 个备份模型] 的提供商链，
+    同一网关上游宕机时自动沿清单降级，不清零到外部收费路径。不可达返回空列表，静默跳过。
+
+    模型清单的单一事实来源是网关的 /health?full=1 → freeRouter.candidates：
+    网关自身维护并做过可用性验证的精英候选链（free_model_updater 每日刷新 +
+    实时 cooldown 状态），发帖项目直接消费这份运营成果，不重复维护模型清单。
     """
     if os.getenv("REASONIX_GW_OFF", "").strip() in ("1", "true", "yes"):
         return []
@@ -549,7 +552,7 @@ def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) 
         health = None
         for attempt in (0, 1):
             try:
-                health = _DIRECT_SESSION.get(f"{root}/health", timeout=timeout)
+                health = _DIRECT_SESSION.get(f"{root}/health?full=1", timeout=timeout)
                 if health.status_code == 200:
                     break
             except Exception:
@@ -557,6 +560,23 @@ def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) 
                     time.sleep(0.5)
         if health is None or health.status_code != 200:
             return []
+
+        # 1. 模型清单：网关的 freeRouter.candidates = 实时验证过的精英候选链
+        #    （每条 {upstream, model}，网关的 free_model_updater 每日探活刷新）。
+        #    拼成聚合目录的完整 id（upstream/model）后与 /v1/models 实测目录取交集。
+        gw_pref: List[str] = []
+        dead_note = ""
+        try:
+            full = health.json()
+            fr = full.get("freeRouter") or {}
+            cands = fr.get("candidates") or []
+            gw_pref = [f"{c['upstream']}/{c['model']}"
+                       for c in cands if isinstance(c, dict) and c.get("upstream") and c.get("model")]
+            inactive = fr.get("inactiveUpstreams") or []
+            if inactive:
+                dead_note = f"（网关侧失效上游: {', '.join(str(i.get('upstream')) for i in inactive[:5])}…）"
+        except Exception:
+            pass
 
         available: set = set()
         catalog_ok = False
@@ -576,10 +596,16 @@ def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) 
             # 不能把全部 preferred 都注册成"可用"——那会注册一堆根本不存在的模型
             picked = ["auto/best-fast"]
         else:
-            picked = [mid for mid in REASONIX_PREFERRED_MODELS
-                      if mid in available or any(a.endswith("/" + mid) for a in available)][:3]
+            source = gw_pref or REASONIX_PREFERRED_MODELS
+            picked = [mid for mid in source
+                      if mid in available or any(a.endswith("/" + mid) for a in available)][:5]
             if not picked:
                 picked = ["auto/best-fast"]
+
+        if not catalog_ok:
+            # 目录不可知：只保留默认 auto 路由（网关对无前缀 id 自动走 OmniRoute 兜底），
+            # 不能把全部 preferred 都注册成"可用"——那会注册一堆根本不存在的模型
+            picked = ["auto/best-fast"]
 
         providers = [
             LLMProviderConfig(
@@ -592,7 +618,7 @@ def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) 
             for i, mid in enumerate(picked)
         ]
         logger.info(f"🌉 检测到本地 Reasonix 免费模型网关 ({gw_url})，置顶 {len(providers)} 个 LLM 通道: "
-                    f"{[p.model for p in providers]}")
+                    f"{[p.model for p in providers]}{dead_note}")
         return providers
     except Exception:
         return []
