@@ -2778,6 +2778,23 @@ class TestSecretHygiene(unittest.TestCase):
         self.assertTrue(all("api" not in p["name"].lower() for p in m.WRITING_PERSONAS))
 
 
+class TestShuffleBag(unittest.TestCase):
+    """洗牌袋：任意连续 N 次抽取内每个选项恰好出现一次（防扎堆）"""
+
+    def test_every_window_uniform(self):
+        bag = m.ShuffleBag(["A", "B", "C"])
+        draws = [bag.draw() for _ in range(9)]
+        for i in range(0, 9, 3):
+            self.assertEqual(sorted(draws[i:i + 3]), ["A", "B", "C"],
+                             f"窗口 {i}-{i+3} 出现扎堆: {draws}")
+
+    def test_never_repeats_within_window(self):
+        bag = m.ShuffleBag([p["name"] for p in m.WRITING_PERSONAS])
+        draws = [bag.draw() for _ in range(6)]
+        for i in range(0, 6, 3):
+            self.assertEqual(len(set(draws[i:i + 3])), 3)
+
+
 class TestRunLogUrl(unittest.TestCase):
     """通知附带 Actions 运行日志链接"""
 

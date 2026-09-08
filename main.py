@@ -1631,6 +1631,23 @@ WRITING_PERSONAS = [
     },
 ]
 
+class ShuffleBag:
+    """洗牌袋：每 N 次抽取保证 N 个选项恰好各出现一次（任意窗口内不扎堆）。
+    纯随机在 2~3 篇的小窗口里会扎堆（生产实测：连续两篇同 persona），
+    轮换类场景（写派人设/结尾套路）的正确姿势是消费式洗牌而非掷骰子。"""
+
+    def __init__(self, items: List[str]):
+        self._items = list(items)
+        self._bag: List[str] = []
+        self._lock = threading.Lock()
+
+    def draw(self) -> str:
+        with self._lock:
+            if not self._bag:
+                self._bag = random.sample(self._items, len(self._items))
+            return self._bag.pop()
+
+
 ENDING_STYLE_POOL = [
     "极简站队：看多的扣 1，看空的扣 2（经典款，偶尔用）",
     "仓位表白：你现在手里有这个币吗？有的扣 1，空仓的扣 2",
@@ -1641,6 +1658,10 @@ ENDING_STYLE_POOL = [
     "情绪表态：这消息你信几分？全信扣 1，将信将疑扣 2，纯看戏扣 3",
     "对比站队：这个赛道你更看好龙头还是补涨？龙头扣 1，补涨扣 2",
 ]
+
+# 轮换洗牌袋：人设与结尾套路各一个（保证每 N 篇均匀出现，窗口内不扎堆）
+_PERSONA_BAG = ShuffleBag([p["name"] for p in WRITING_PERSONAS])
+_ENDING_BAG = ShuffleBag(ENDING_STYLE_POOL)
 
 
 class LLMProviderConfig:
@@ -2225,7 +2246,7 @@ class MultiLLMEngine:
             hint_section = f"【本条新闻可用标的（币安已核实存在）】：{' '.join('$' + t for t in token_hints)}，请围绕它们写作；\n"
 
         # 结尾互动句 + 写派人设风格轮换：随机抽取本条的套路，防止每条帖子一个模子
-        ending_style = random.choice(ENDING_STYLE_POOL)
+        ending_style = _ENDING_BAG.draw()
         ending_hint = f"【本条结尾站队提问的套路】：{ending_style}\n"
 
         # 时效感：告诉模型这条新闻是多久前的，文案要带"刚出炉"或"发酵中"的正确时态
@@ -2240,7 +2261,7 @@ class MultiLLMEngine:
             ending_hint += f"【本条新闻时效】：{freshness}\n"
 
         # 写派人设轮换：本条用哪种气质说话
-        persona = random.choice(WRITING_PERSONAS)
+        persona_name = _PERSONA_BAG.draw(); persona = next(p for p in WRITING_PERSONAS if p["name"] == persona_name)
 
         user_prompt = f"""请将以下新闻提炼为一条极具穿透力、短小精悍的真人交易员动态：
 
