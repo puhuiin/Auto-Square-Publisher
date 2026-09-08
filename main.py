@@ -2184,6 +2184,10 @@ class MultiLLMEngine:
         返回 {"content": 正文, "tokens": 有效代币, "provider": 成功模型名}，全部失败返回 None。
         提供商按本次运行内的连续失败次数升序尝试（健康度优先调度）。
         """
+        # 故事级死亡原因透出（_run_main 的 llm_failed 记录此前无 reason，只能靠标题关联
+        # provider 级记录）：各 return None 前必赋值；此处默认值覆盖"无提供商"早退路径，
+        # 循环内/循环后路径在下面另行赋值（fail_reason 同理，空链时避免引用未绑定）。
+        self.last_fail_reason = "无可用 LLM 提供商配置"
         if not self.providers:
             logger.error("没有任何可用的 LLM 提供商配置！")
             # 空链也留痕：否则"连续 3 次失败熔断"在遥测里看不到任何前因，
@@ -2226,6 +2230,9 @@ class MultiLLMEngine:
 
         # 遍历提供商链进行容灾尝试（按本次运行连续失败数升序，健康节点优先）
         ordered = self._ordered_providers()
+        # fail_reason 缺省覆盖"全冷却空链"路径（循环一次不执行，避免引用未绑定）；
+        # last_fail_reason 入口已赋默认值，其余 return None 前逐一覆写。
+        fail_reason = "全部提供商处于冷却期，无可用通道"
         for index, provider in enumerate(ordered):
             logger.info(f"[{index + 1}/{len(ordered)}] 正在尝试使用提供商 [{provider.name}] (模型: {provider.model})...")
             # 计时起点放在 try 之前：连 _get_client 构造失败也要能记出耗时
@@ -2236,11 +2243,12 @@ class MultiLLMEngine:
                 # Reasonix 网关后端的 auto/best-* 是推理模型，前几百 token 全消耗在思考链
                 # 里不给足预算 → content 直接 None。网关全系通道（含备份）一律抬到 1500 才稳。
                 effective_max_tokens = _summarize_max_tokens(provider.name)
-                # 空回即时重试：生产 6/25 死于"模型返回了空内容"（网关截断/代理空包，
-                # 推理通道预算吞思考链也会静默空包）。同提供商立刻再打一次：成本约等于
-                # 一次调用，比直接切下一家（再花 5~18s）便宜；两次都空才认失败走 failover。
+                # 空回政策 v2（生产 01:15 窗口实证：b.ai 系统性吐空，重试零救回还翻倍延迟）：
+                # 同运行内该提供商已有失败记录 = 连挂窗口，直接认失败走 failover；
+                # 否则（首挂，偶发可能性大）即时重试一次。
+                max_attempts = 1 if self._fail_counts.get(provider.name, 0) else 2
                 content, tokens_used, latency_sec = "", None, None
-                for attempt in (0, 1):
+                for attempt in range(max_attempts):
                     response = client.chat.completions.create(
                         model=provider.model,
                         messages=[
@@ -2256,11 +2264,12 @@ class MultiLLMEngine:
                         content = (response.choices[0].message.content or "").strip()
                     if content:
                         break
-                    logger.warning(f"提供商 [{provider.name}] 第 {attempt + 1} 次返回空内容"
-                                   f"（累计耗时 {latency_sec}s），"
-                                   f"{'即时重试一次' if attempt == 0 else '重试已耗尽'}...")
+                    logger.warning(f"提供商 [{provider.name}] 第 {attempt + 1}/{max_attempts} 次返回空内容"
+                                   f"（累计耗时 {latency_sec}s）...")
                 if not content:
-                    raise _EmptyContentError("模型返回了空内容（已即时重试 1 次）")
+                    raise _EmptyContentError(
+                        "模型返回了空内容（已即时重试 1 次）" if max_attempts > 1
+                        else "模型返回了空内容（同运行连挂窗口，不再重试）")
 
                 # 0. 质量门：过短/过长/跑偏英文输出一律视为失败并切换下一模型
                 passed, fail_reason = self._passes_quality_gate(content)
@@ -2319,6 +2328,7 @@ class MultiLLMEngine:
                         self._log_reject(news_item, provider.name, "no_valid_token",
                                          "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光",
                                          tokens_used, latency_sec, provider.model)
+                        self.last_fail_reason = "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光"
                         return None
 
                 # 2. 标签保底处理（仅保留干净的 3 个标签，绝不附带机械化广告标语）
@@ -2341,13 +2351,20 @@ class MultiLLMEngine:
                 fail_reason = f"质量门: {e}"
                 enter_breaker = False
             except _EmptyContentError as e:
-                # 空回不进跨运行断路器：通道本身没死，只切下一家（同 quality 门逻辑）
-                self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
+                # 孤立空回原谅一次（不计入断路器）；同运行连挂≥2 个故事 = 通道系统性吐空，
+                # 回填熔断使其冷却（生产：b.ai 连挂窗口本应被冷却，而非每条烧两次调用）。
+                # 注 _fail_counts 与 quality 门共用：连挂定义 = 连续故事失败（任何原因），
+                # 连续挂两个故事的通道进冷却是合理的。
+                fails = self._fail_counts.get(provider.name, 0) + 1
+                self._fail_counts[provider.name] = fails
                 self._log_reject(news_item, provider.name, "transport", str(e),
                                  tokens_used, latency_sec, provider.model)
                 fail_reason = str(e)
-                enter_breaker = False
-                logger.warning(f"提供商 [{provider.name}] 空回重试耗尽: {e}（不计入断路器）")
+                enter_breaker = fails >= 2
+                if enter_breaker:
+                    self._breaker_record_failure(provider.name)
+                logger.warning(f"提供商 [{provider.name}] 空回: {e}"
+                               f"（{'已计入断路器' if enter_breaker else '孤立事件，不计入断路器'}）")
             except Exception as e:
                 err_msg = str(e)
                 self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
@@ -2371,6 +2388,7 @@ class MultiLLMEngine:
                 time.sleep(1)
 
         logger.error("所有已配置的 LLM 提供商均调用失败！")
+        self.last_fail_reason = fail_reason
         return None
 
 
@@ -4159,6 +4177,7 @@ def _run_main():
                 append_metrics({
                     "title": title[:60], "source": source, "tokens": detected_tokens,
                     "impact_score": score, "age_hours": item.get("age_hours"),
+                    "reason": (getattr(llm_engine, "last_fail_reason", "") or "")[:80],
                     "outcome": "llm_failed",
                 })
                 if consecutive_llm_failures >= 3:
