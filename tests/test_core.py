@@ -1527,6 +1527,47 @@ class TestGitStateMerge(unittest.TestCase):
         merged = self.merger.merge_state(a, b)
         self.assertEqual(merged, {"x": {"y": 1, "z": 2}})
 
+    def test_breaker_expiry_gc(self):
+        from datetime import timedelta
+        now = datetime.now(timezone.utc)
+        past = (now - timedelta(hours=1)).isoformat()
+        future = (now + timedelta(hours=20)).isoformat()
+        state = {
+            "dead": {"fails": 9, "cooldown_until": past},
+            "sick": {"fails": 2, "cooldown_until": future},
+            "dirty": {"fails": 1, "cooldown_until": "not-a-time"},
+            "naive": {"fails": 1, "cooldown_until": "2026-01-01T00:00:00"},
+            "odd": "not-a-dict",
+        }
+        out = self.merger._gc_expired_breaker(state, now=now)
+        self.assertNotIn("dead", out)
+        self.assertIn("sick", out)
+        self.assertIn("dirty", out)
+        self.assertIn("naive", out)
+        self.assertEqual(out["odd"], "not-a-dict")
+
+    def test_merge_intel_drops_expired_breaker(self):
+        from datetime import timedelta
+        now = datetime.now(timezone.utc)
+        past = (now - timedelta(hours=5)).isoformat()
+        future = (now + timedelta(hours=20)).isoformat()
+        remote = {
+            "last_updated": "2026-09-04T10:00:00Z",
+            "_llm_breaker": {
+                "gone": {"fails": 6, "cooldown_until": past},
+                "live": {"fails": 1, "cooldown_until": future},
+            },
+        }
+        local = {"last_updated": "2026-09-05T10:00:00Z"}  # 本地清过熔断、无 breaker 键
+        remote_p = self._write("campaign_intel.json", remote)
+        local_p = self._write("local_intel.json", local)
+        self.assertTrue(self.merger.merge_intel(local_p, remote_p))
+        import json
+        with open(remote_p, encoding="utf-8") as f:
+            merged = json.load(f)
+        self.assertNotIn("gone", merged["_llm_breaker"])
+        self.assertIn("live", merged["_llm_breaker"])
+
     def test_merge_drafts_adds_new_and_skips_dup_slug(self):
         import shutil
         snap_day = os.path.join(self.dir, "snap", "local_drafts", "2026-09-06")

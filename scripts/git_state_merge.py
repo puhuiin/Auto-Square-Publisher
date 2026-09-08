@@ -28,12 +28,44 @@ Git 状态同步合并器（GPIO: 用于 GitHub Actions workflow 的 push 前预
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 CACHE_FILE = "sent_cache.json"
 INTEL_FILE = "campaign_intel.json"
 METRICS_FILE = "metrics.jsonl"
 MAX_CACHE_KEEP = 500
+_BREAKER_KEY = "_llm_breaker"
+
+
+def _gc_expired_breaker(state: dict, now=None) -> dict:
+    """熔断过期 GC：cooldown_until 已过的条目不再有调度意义（_is_cooled 已判 False），
+    合并时丢弃。否则 _llm_breaker 的键只增不减——success-clear 也会被远端旧值并集
+    复活（生产实证：b.ai 成功后其过期条目仍躺在同步结果里），fails 计数无限累积。
+    只清"已确定过期"：时间戳解析失败的保留（看不懂的不删）；未过期的远端条目保留
+    （并发运行的冷却不能丢，安全方向）。"""
+    now = now or datetime.now(timezone.utc)
+    out = {}
+    for name, info in (state or {}).items():
+        if not isinstance(info, dict):
+            out[name] = info
+            continue
+        try:
+            until = datetime.fromisoformat(str(info.get("cooldown_until", "")))
+        except Exception:
+            out[name] = info  # 脏时间戳看不懂，保留
+            continue
+        if until.tzinfo is None:
+            out[name] = info  # naive 时间不擅自解释时区（与主模块 _is_cooled 同策略），保留
+            continue
+        try:
+            expired = now >= until
+        except Exception:
+            out[name] = info
+            continue
+        if not expired:
+            out[name] = info
+    return out
 
 
 def atomic_write_text(path, text: str) -> None:
@@ -128,6 +160,8 @@ def merge_intel(local_snapshot_path: str, remote_path: str) -> bool:
     best = dict(max(versions, key=lambda d: _sort_key(d.get("last_updated"))))
     states = [{k: v for k, v in ver.items() if k.startswith("_")} for ver in versions]
     merged_state = merge_state(states[0], states[1] if len(states) > 1 else {})
+    if isinstance(merged_state.get(_BREAKER_KEY), dict):
+        merged_state[_BREAKER_KEY] = _gc_expired_breaker(merged_state[_BREAKER_KEY])
     best.update(merged_state)
     atomic_write_text(remote_path, json.dumps(best, ensure_ascii=False, indent=2))
     return True
