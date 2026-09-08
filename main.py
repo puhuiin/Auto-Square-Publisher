@@ -2590,14 +2590,23 @@ class CampaignScanner:
                     latency_sec = round(time.perf_counter() - t_call, 3)
                     tokens_used = _extract_usage_tokens(resp)
                     raw_res = (resp.choices[0].message.content or "").strip()
+                    if not raw_res:
+                        # 空回单独归类：与 JSON 解析失败不同根因（思考链吃满预算 vs 输出不含 JSON）
+                        raise ValueError(f"模型返回空内容（思考链疑似吃满预算 {effective_max_tokens}）")
+                    finish = getattr(resp.choices[0], "finish_reason", "") or ""
                     clean_res = re.sub(r"^```json\s*", "", raw_res, flags=re.IGNORECASE)
                     clean_res = re.sub(r"^```\s*", "", clean_res)
                     clean_res = re.sub(r"\s*```$", "", clean_res).strip()
                     # 模型常在 JSON 前后夹说明文字（"以下是分析结果:"），截取首个 { 到末个 } 再解析
                     brace_start, brace_end = clean_res.find("{"), clean_res.rfind("}")
-                    if brace_start != -1 and brace_end > brace_start:
-                        clean_res = clean_res[brace_start:brace_end + 1]
-                    data = json.loads(clean_res)
+                    if brace_start == -1 or brace_end <= brace_start:
+                        raise ValueError(f"输出中找不到 JSON 对象（finish={finish or '未知'}，"
+                                         f"前 80 字符: {raw_res[:80]!r}）")
+                    clean_res = clean_res[brace_start:brace_end + 1]
+                    try:
+                        data = json.loads(clean_res)
+                    except json.JSONDecodeError as je:
+                        raise ValueError(f"JSON 解析失败（{je}），片段: {clean_res[:80]!r}") from je
                     if CampaignScanner._valid_intel_shape(data):
                         data["last_updated"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
                         append_metrics({
