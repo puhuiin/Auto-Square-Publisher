@@ -1696,18 +1696,26 @@ def _extract_usage_tokens(response: Any) -> Optional[int]:
         return None
 
 
-def _is_reasoning_channel(provider_name: str) -> bool:
+def _is_reasoning_channel(provider_name: str, model: str = "") -> bool:
     """推理模型通道判定（Reasonix 网关全系）：思考链吃掉前几百 token，必须给大预算。
     三处预算逻辑共用此谓词——此前各处手写 startswith/==，曾漏掉备份通道酿成实祸，
-    下次加新推理渠道只改这一处。"""
-    return provider_name.startswith("Reasonix-GW")
+    下次加新推理渠道只改这一处。
+    Preset-b.ai（glm-5.3-flash 系思考模型）：生产实证空包 tokens_used 1035~2264，
+    600 预算全被思考链吃掉导致 content 系统性 None，与网关推理通道同等 1500。
+    model 关键词兜底：未来新接思考模型（名含 thinking/reasoning）免改代码自动大预算。"""
+    if provider_name.startswith("Reasonix-GW"):
+        return True
+    if provider_name == "Preset-b.ai":
+        return True
+    ml = (model or "").lower()
+    return "thinking" in ml or "reasoning" in ml
 
 
-def _summarize_max_tokens(provider_name: str) -> int:
+def _summarize_max_tokens(provider_name: str, model: str = "") -> int:
     """提炼预算：Reasonix 网关全系（含 -GW-1/-GW-2 备份）皆为推理模型，
     前几百 token 全消耗在思考链里，预算不足则 content 直接 None。
     此前 summarize 用 == 精确匹配，仅首选通道拿到 1500，备份链名存实亡。"""
-    return 1500 if _is_reasoning_channel(provider_name) else 600
+    return 1500 if _is_reasoning_channel(provider_name, model) else 600
 
 
 class MultiLLMEngine:
@@ -2242,7 +2250,7 @@ class MultiLLMEngine:
 
                 # Reasonix 网关后端的 auto/best-* 是推理模型，前几百 token 全消耗在思考链
                 # 里不给足预算 → content 直接 None。网关全系通道（含备份）一律抬到 1500 才稳。
-                effective_max_tokens = _summarize_max_tokens(provider.name)
+                effective_max_tokens = _summarize_max_tokens(provider.name, provider.model)
                 # 空回政策 v2（生产 01:15 窗口实证：b.ai 系统性吐空，重试零救回还翻倍延迟）：
                 # 同运行内该提供商已有失败记录 = 连挂窗口，直接认失败走 failover；
                 # 否则（首挂，偶发可能性大）即时重试一次。
@@ -2506,7 +2514,7 @@ class CampaignScanner:
                 try:
                     client = llm_engine._get_client(provider)
                     # 推理型渠道（Reasonix 网关）思考链就吃几百 token，400 预算会静默产出空内容
-                    effective_max_tokens = 1200 if _is_reasoning_channel(provider.name) else 400
+                    effective_max_tokens = 1200 if _is_reasoning_channel(provider.name, provider.model) else 400
                     resp = client.chat.completions.create(
                         model=provider.model,
                         messages=[{"role": "user", "content": prompt}],
@@ -3884,7 +3892,7 @@ def run_healthcheck():
             try:
                 client = eng._get_client(p)
                 # 推理渠道思考链吃预算，与 summarize 同规则
-                budget = 1500 if _is_reasoning_channel(p.name) else 50
+                budget = 1500 if _is_reasoning_channel(p.name, p.model) else 50
                 resp = client.chat.completions.create(
                     model=p.model,
                     messages=[{"role": "user", "content": "收到请只回复两个字: 正常"}],

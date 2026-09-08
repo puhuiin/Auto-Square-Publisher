@@ -2741,6 +2741,13 @@ class TestReasoningChannel(unittest.TestCase):
         for name in ("Primary-LLM", "Preset-openrouter", "", "reasonix-gw"):
             self.assertFalse(m._is_reasoning_channel(name), repr(name))
 
+    def test_thinking_provider_and_model_keyword(self):
+        # Preset-b.ai 实证思考吞噬：600 预算下 tokens_used 上千只吐空包
+        self.assertTrue(m._is_reasoning_channel("Preset-b.ai", "glm-5.3-flash"))
+        # 未来新思考模型免改代码自动大预算；普通模型不受影响
+        self.assertTrue(m._is_reasoning_channel("Preset-x", "qwen-thinking-plus"))
+        self.assertFalse(m._is_reasoning_channel("Preset-x", "gpt-4o-mini"))
+
     def test_budget_helpers_share_predicate(self):
         # 预算函数必须与谓词一致（改谓词即全局生效，不断链）
         self.assertEqual(m._summarize_max_tokens("Reasonix-GW-9"), 1500)
@@ -3024,6 +3031,9 @@ class TestSummarizeTokenBudget(unittest.TestCase):
     def test_external_providers_keep_small_budget(self):
         self.assertEqual(m._summarize_max_tokens("Primary-LLM"), 600)
         self.assertEqual(m._summarize_max_tokens("Preset-openrouter"), 600)
+
+    def test_thinking_channel_gets_reasoning_budget(self):
+        self.assertEqual(m._summarize_max_tokens("Preset-b.ai", "glm-5.3-flash"), 1500)
 
 
 class TestDownloadImageGate(unittest.TestCase):
