@@ -200,5 +200,23 @@
       "BNB",
       "BTC"
     ]
+  },
+  {
+    "id": "5f55dd2de219e542",
+    "title": "Bitcoin faces key support test at $78.3K as US crude oil hits three-month high",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-09-08T16:48:36.183790+00:00",
+    "tokens": [
+      "BTC"
+    ]
+  },
+  {
+    "id": "a76efb52f0222213",
+    "title": "The fight over Ethereum’s supply is forcing a choice between high staking yields and the value of your ETH",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-09-08T16:51:14.222723+00:00",
+    "tokens": [
+      "ETH"
+    ]
   }
 ]

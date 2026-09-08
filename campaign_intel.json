@@ -3,20 +3,21 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#BinanceAlpha",
-    "#MegaFest"
+    "#Futures",
+    "#BinanceAlpha"
   ],
   "incentivized_tokens": [
-    "$XPIN",
-    "$ZKC",
-    "$SAHARA",
     "$BNB",
+    "$SAHARA",
+    "$ZKC",
+    "$CP",
+    "$XPIN",
     "$USDT",
-    "$USDC",
-    "$USD1"
+    "$BTC",
+    "$SOL"
   ],
-  "strategy_guidance": "快讯发帖优先绑定 $XPIN Alpha 交易赛（$200K 奖池）、$ZKC 与 $SAHARA 交易锦标赛及美股 MegaFest（$500K 奖池）等高奖金活动，将行情解读写成参赛攻略并引导读者交易瓜分奖池，以最大化 Write to Earn 交易返佣；同时穿插 USDT 理财 7% APR、USD1 空投延期与新用户礼金等低门槛福利话题，提升阅读转化与互动流量。",
-  "last_updated": "2026-09-08T02:26:40.763913Z",
+  "strategy_guidance": "以Binance Traders League S4（$4M奖池）、Alpha交易竞赛（$CP、$XPIN）及SAHARA、ZKC交易锦标赛为内容主线，将日常行情快讯改写成参赛攻略与奖池瓜分教程，并叠加Binance Earn USDT 7% APR和Lite Loan五折等刚需福利话题引流。发帖时引导读者通过合约/现货链接参与当期竞赛，最大化Write to Earn交易返佣与官方活动流量曝光。",
+  "last_updated": "2026-09-08T16:47:21.836497Z",
   "_feed_health": {
     "CryptoSlate (新赛道与代币经济)": {
       "last_fail": "2026-09-07T13:09:36.111460+00:00",
@@ -30,8 +31,8 @@
   "_llm_breaker": {
     "Preset-openrouter": {
       "cooldown_until": "2026-09-09T12:18:32.269050+00:00",
-      "permanent": true,
-      "fails": 15
+      "fails": 15,
+      "permanent": true
     }
   },
   "_intel_refresh_fail": {
