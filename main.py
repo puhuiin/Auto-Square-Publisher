@@ -2190,7 +2190,7 @@ class MultiLLMEngine:
     @staticmethod
     def _log_reject(news_item: Dict[str, Any], provider: str, stage: str, reason: str,
                     tokens_used: Optional[int] = None, latency_sec: Optional[float] = None,
-                    model: Optional[str] = None) -> None:
+                    model: Optional[str] = None, persona: Optional[str] = None) -> None:
         """拒单遥测：每次 LLM 尝试被丢弃都记一行（stage=quality/numbers/transport）。
         投递遥测只记录成功，失败全黑盒会导致未来调优只看得到"活下来的稿子"
         （幸存者偏差：高热新闻是否系统性被质量门误杀，无数据回答不了）。
@@ -2199,6 +2199,7 @@ class MultiLLMEngine:
         append_metrics({
             "title": (news_item.get("title") or "")[:60],
             "source": news_item.get("source"),
+            "persona": persona,
             "impact_score": news_item.get("impact_score"),
             "provider": provider,
             "model": model,
@@ -2345,7 +2346,7 @@ class MultiLLMEngine:
                 passed, fail_reason = self._passes_quality_gate(content)
                 if not passed:
                     self._log_reject(news_item, provider.name, "quality", fail_reason,
-                                     tokens_used, latency_sec, provider.model)
+                                     tokens_used, latency_sec, provider.model, persona=persona_name)
                     raise _QualityGateRejection(fail_reason)
 
                 # 0.1 数字幻觉软校验：编造精确百分比/大额金额的内容直接拦截
@@ -2397,7 +2398,8 @@ class MultiLLMEngine:
                     else:
                         self._log_reject(news_item, provider.name, "no_valid_token",
                                          "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光",
-                                         tokens_used, latency_sec, provider.model)
+                                         tokens_used, latency_sec, provider.model,
+                                         persona=persona_name)
                         self.last_fail_reason = "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光"
                         return None
 
@@ -2429,7 +2431,8 @@ class MultiLLMEngine:
                 fails = self._fail_counts.get(provider.name, 0) + 1
                 self._fail_counts[provider.name] = fails
                 self._log_reject(news_item, provider.name, "transport", str(e),
-                                 tokens_used, latency_sec, provider.model)
+                                 tokens_used, latency_sec, provider.model,
+                                 persona=persona_name)
                 fail_reason = str(e)
                 enter_breaker = fails >= 2
                 if enter_breaker:
@@ -2447,7 +2450,7 @@ class MultiLLMEngine:
                     self._breaker_record_failure(provider.name)
                     fail_reason = err_msg
                 # 传输层失败同样要记耗时：超时型故障靠 latency 才能定位
-                self._log_reject(news_item, provider.name, "transport", fail_reason,
+                self._log_reject(news_item, provider.name, "transport", fail_reason, persona=persona_name,
                                  latency_sec=round(time.perf_counter() - t_call, 3),
                                  model=provider.model)
                 enter_breaker = True
