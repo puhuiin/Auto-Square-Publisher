@@ -24,14 +24,18 @@
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260907/dcf48e05172a4202bc97922d56752434.jpg",
-    "date": "2026-09-07"
+    "url": "https://public.bnbstatic.com/image/pgc/20260908/d1155331c1804f3fb43f3930a400b1a7.jpg",
+    "date": "2026-09-08"
   },
   "_llm_breaker": {
     "Preset-openrouter": {
-      "fails": 10,
-      "cooldown_until": "2026-09-09T02:26:41.349092+00:00",
-      "permanent": true
+      "permanent": true,
+      "cooldown_until": "2026-09-09T07:33:06.510938+00:00",
+      "fails": 13
+    },
+    "Preset-b.ai": {
+      "fails": 3,
+      "cooldown_until": "2026-09-08T08:13:12.108147+00:00"
     }
   },
   "_intel_refresh_fail": {
