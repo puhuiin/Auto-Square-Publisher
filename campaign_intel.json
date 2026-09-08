@@ -32,13 +32,13 @@
     "date": "2026-09-07"
   },
   "_llm_breaker": {
+    "Preset-openrouter": {
+      "fails": 9,
+      "cooldown_until": "2026-09-08T05:16:19.273641+00:00"
+    },
     "Preset-b.ai": {
       "fails": 6,
       "cooldown_until": "2026-09-08T03:20:51.843558+00:00"
-    },
-    "Preset-openrouter": {
-      "fails": 6,
-      "cooldown_until": "2026-09-08T03:20:35.880900+00:00"
     }
   }
 }
