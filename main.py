@@ -428,82 +428,6 @@ def http_get(url: str, **kwargs) -> Optional[requests.Response]:
 def http_post(url: str, **kwargs) -> Optional[requests.Response]:
     return http_request("POST", url, **kwargs)
 
-# ---------------------------------------------------------------------------
-# 常用预置模型提供商模板
-# ---------------------------------------------------------------------------
-PRESET_PROVIDERS = {
-    "openrouter": {
-        "name": "OpenRouter (免费模型池)",
-        "base_url": "https://openrouter.ai/api/v1",
-        "default_models": [
-            "minimax/minimax-m3:free",
-            "qwen/qwen-2.5-72b-instruct:free",
-            "meta-llama/llama-3.3-70b-instruct:free",
-            "deepseek/deepseek-r1:free",
-            "google/gemini-2.0-flash-exp:free",
-        ],
-    },
-    "b.ai": {
-        "name": "B.ai",
-        "base_url": "https://api.b.ai/v1",
-        "default_models": [
-            "glm-5.3-flash",
-            "deepseek-v4-flash",
-            "qwen3.8-flash",
-            "deepseek-v4-flash-vision-exp",
-        ],
-    },
-    "deepseek": {
-        "name": "DeepSeek 官方",
-        "base_url": "https://api.deepseek.com",
-        "default_models": ["deepseek-chat"],
-    },
-    "xkiro": {
-        "name": "xkiro (免费模型)",
-        "base_url": "https://api.xkiro.com/v1",
-        "default_models": [
-            "qwen/qwen3.8-max:free",
-            "minimax/minimax-m3:free",
-        ],
-    },
-    "aihubmix": {
-        "name": "aihubmix (免费模型)",
-        "base_url": "https://aihubmix.com/v1",
-        "default_models": [
-            "coding-glm-5.3-flash-free",
-            "gemini-3.7-flash-free",
-            "minimax-m3-free",
-            "coding-kimi-k3-free",
-        ],
-    },
-    "inferera": {
-        "name": "inferera (免费模型)",
-        "base_url": "https://api.inferera.com/v1",
-        "default_models": [
-            "coding-kimi-k3-free",
-            "gemini-3.7-flash-free",
-            "minimax-m3-free",
-            "coding-glm-5.3-flash-free",
-        ],
-    },
-    "tokenrouter": {
-        "name": "TokenRouter (免费模型)",
-        "base_url": "https://api.tokenrouter.com/v1",
-        "default_models": [
-            "qwen/qwen3.8-max-free",
-            "z-ai/glm-5.3-free",
-        ],
-    },
-    "siliconflow": {
-        "name": "SiliconFlow (硅基流动)",
-        "base_url": "https://api.siliconflow.cn/v1",
-        "default_models": [
-            "deepseek-ai/DeepSeek-V3",
-            "Qwen/Qwen2.5-7B-Instruct",
-            "THUDM/glm-4-9b-chat",
-        ],
-    },
-}
 
 # ---------------------------------------------------------------------------
 # Reasonix 本地免费模型聚合网关集成
@@ -2056,7 +1980,10 @@ class MultiLLMEngine:
             "openrouter": (
                 os.getenv("OPENROUTER_API_KEY", "").strip(),
                 "https://openrouter.ai/api/v1",
-                os.getenv("OPENROUTER_MODEL", "").strip() or "minimax/minimax-m3:free",
+                # 默认用 OpenRouter 官方聚合免费路由 openrouter/free：官方按可用性
+                # 自动路由到存活的 :free 模型，单个免费模型下架（生产实证 minimax-m3:free
+                # 已 404）不会让 preset 通道整体报废。想固定单模型仍可用 OPENROUTER_MODEL 覆盖。
+                os.getenv("OPENROUTER_MODEL", "").strip() or "openrouter/free",
             ),
             "b.ai": (
                 os.getenv("BAI_API_KEY", "").strip(),
