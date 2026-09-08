@@ -4170,5 +4170,79 @@ class TestFallbackImageCache(unittest.TestCase):
             self.assertIsNone(m.ImageManager.prepare_and_upload("k", "https://news.example/a.jpg"))
 
 
+class TestEmptyContentRetry(unittest.TestCase):
+    """空回即时重试：第一次空包同提供商再打一次；两次都空才认失败，且不进跨运行熔断"""
+
+    def setUp(self):
+        self._orig = m.SymbolValidator._valid_symbols_cache
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH"}
+        import tempfile
+        self.intel_tmp = tempfile.mktemp(suffix=".json")
+        with open(self.intel_tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        self._orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.intel_tmp
+
+    def tearDown(self):
+        m.SymbolValidator._valid_symbols_cache = self._orig
+        m.CAMPAIGN_INTEL_FILE = self._orig_intel
+        if os.path.exists(self.intel_tmp):
+            os.remove(self.intel_tmp)
+
+    def _engine(self):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.providers = [m.LLMProviderConfig("stub", "https://x", "k", "mm")]
+        return eng
+
+    def _resp(self, content):
+        return MagicMock(choices=[MagicMock(message=MagicMock(content=content))])
+
+    def _good_body(self):
+        return ("比特币放量突破关键位，$BTC 短线情绪转多，"
+                "回调就是上车机会，但别追高，等回踩确认支撑再进，"
+                "仓位控制好，止损放在前低下方。")
+
+    def _item(self):
+        return {"title": "BTC news", "summary": "Bitcoin surged", "source": "U.Today"}
+
+    def test_retry_saves_story(self):
+        eng = self._engine()
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [self._resp(None), self._resp(self._good_body())]
+        with patch.object(eng, "_get_client", return_value=client):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        self.assertIn("$BTC", out["content"])
+        self.assertEqual(client.chat.completions.create.call_count, 2)
+
+    def test_exhausted_retry_skips_breaker(self):
+        eng = self._engine()
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [self._resp(None), self._resp("")]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics") as mock_metrics:
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        self.assertEqual(client.chat.completions.create.call_count, 2)
+        # 同运行计数+1（照常切下一家），但跨运行断路器无记录
+        self.assertEqual(eng._fail_counts.get("stub"), 1)
+        self.assertNotIn("stub", eng._breaker_state())
+        reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
+                   if c.args and isinstance(c.args[0], dict)]
+        self.assertTrue(any("即时重试" in r for r in reasons), reasons)
+
+    def test_transport_error_still_enters_breaker(self):
+        eng = self._engine()
+        client = MagicMock()
+        client.chat.completions.create.side_effect = RuntimeError("boom")
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        self.assertIn("stub", eng._breaker_state())
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

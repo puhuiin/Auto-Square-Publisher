@@ -1623,6 +1623,13 @@ class _QualityGateRejection(ValueError):
     pass
 
 
+class _EmptyContentError(ValueError):
+    """空回专用异常：网关截断/代理空包/推理预算吞思考链导致的 200 空包。
+    同质量门处理——切下一家但不计入跨运行断路器（通道没死，只是这一次没吐东西；
+    否则健康通道会被偶发空包误伤进冷却）"""
+    pass
+
+
 # 结尾站队提问的风格池：每条帖子随机抽取一种，避免时间线上全是同款"扣1扣2"
 ENDING_STYLE_POOL = [
     "极简站队：看多的扣 1，看空的扣 2（经典款，偶尔用）",
@@ -2197,25 +2204,31 @@ class MultiLLMEngine:
                 # Reasonix 网关后端的 auto/best-* 是推理模型，前几百 token 全消耗在思考链
                 # 里不给足预算 → content 直接 None。网关全系通道（含备份）一律抬到 1500 才稳。
                 effective_max_tokens = _summarize_max_tokens(provider.name)
-                response = client.chat.completions.create(
-                    model=provider.model,
-                    messages=[
-                        {"role": "system", "content": self.SYSTEM_PROMPT},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    temperature=0.75,
-                    max_tokens=effective_max_tokens,
-                )
-                latency_sec = round(time.perf_counter() - t_call, 3)
-                tokens_used = _extract_usage_tokens(response)
-
-                if not response.choices or not response.choices[0].message:
-                    raise ValueError("模型返回的 choices 为空")
-
-                raw_msg_content = response.choices[0].message.content or ""
-                content = raw_msg_content.strip()
+                # 空回即时重试：生产 6/25 死于"模型返回了空内容"（网关截断/代理空包，
+                # 推理通道预算吞思考链也会静默空包）。同提供商立刻再打一次：成本约等于
+                # 一次调用，比直接切下一家（再花 5~18s）便宜；两次都空才认失败走 failover。
+                content, tokens_used, latency_sec = "", None, None
+                for attempt in (0, 1):
+                    response = client.chat.completions.create(
+                        model=provider.model,
+                        messages=[
+                            {"role": "system", "content": self.SYSTEM_PROMPT},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        temperature=0.75,
+                        max_tokens=effective_max_tokens,
+                    )
+                    latency_sec = round(time.perf_counter() - t_call, 3)
+                    tokens_used = _extract_usage_tokens(response)
+                    if response.choices and response.choices[0].message:
+                        content = (response.choices[0].message.content or "").strip()
+                    if content:
+                        break
+                    logger.warning(f"提供商 [{provider.name}] 第 {attempt + 1} 次返回空内容"
+                                   f"（累计耗时 {latency_sec}s），"
+                                   f"{'即时重试一次' if attempt == 0 else '重试已耗尽'}...")
                 if not content:
-                    raise ValueError("模型返回了空内容")
+                    raise _EmptyContentError("模型返回了空内容（已即时重试 1 次）")
 
                 # 0. 质量门：过短/过长/跑偏英文输出一律视为失败并切换下一模型
                 passed, fail_reason = self._passes_quality_gate(content)
@@ -2295,6 +2308,14 @@ class MultiLLMEngine:
                 logger.warning(f"提供商 [{provider.name}] 质量门拦截: {e}")
                 fail_reason = f"质量门: {e}"
                 enter_breaker = False
+            except _EmptyContentError as e:
+                # 空回不进跨运行断路器：通道本身没死，只切下一家（同 quality 门逻辑）
+                self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
+                self._log_reject(news_item, provider.name, "transport", str(e),
+                                 tokens_used, latency_sec, provider.model)
+                fail_reason = str(e)
+                enter_breaker = False
+                logger.warning(f"提供商 [{provider.name}] 空回重试耗尽: {e}（不计入断路器）")
             except Exception as e:
                 err_msg = str(e)
                 self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
