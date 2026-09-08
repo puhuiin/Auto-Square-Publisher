@@ -1815,21 +1815,39 @@ class MultiLLMEngine:
         return self._is_cooled(self._breaker_state(), name)
 
     def _breaker_record_failure(self, name: str):
-        result_msg = []
+        """瞬时故障冷却：指数退避 10min→20min→…→封顶 240min（fails 自增驱动）。"""
+        new_fails_holder: List[int] = []
 
         def _record(state):
             state = dict(state or {})
             info = dict(state.get(name, {"fails": 0}))
             info["fails"] = int(info.get("fails", 0)) + 1
+            new_fails_holder.append(info["fails"])
             cooldown_min = min(self._BREAKER_BASE_MIN * (2 ** (info["fails"] - 1)), self._BREAKER_MAX_MIN)
             info["cooldown_until"] = (datetime.now(timezone.utc) + timedelta(minutes=cooldown_min)).isoformat()
             state[name] = info
-            result_msg.append(f"提供商 [{name}] 累计失败 {info['fails']} 次，进入冷却 {cooldown_min} 分钟")
             return state
 
         intel_state_update(self._BREAKER_STATE_KEY, _record, default={})
-        if result_msg:
-            logger.warning(result_msg[0])
+        new_fails = new_fails_holder[-1] if new_fails_holder else 1
+        logger.warning(f"提供商 [{name}] 累计失败 {new_fails} 次，进入冷却 "
+                       f"{min(self._BREAKER_BASE_MIN * (2 ** (new_fails - 1)), self._BREAKER_MAX_MIN)} 分钟")
+
+    def _breaker_record_permanent(self, name: str):
+        """永久失败长冷却（模型下架/404）：直接冷却 24 小时，当天不再拿故事试错。
+        不复用指数退避——404 不会自己好转，按瞬时故障每次冷却到期试一次只是空烧
+        （生产：免费模型下架当天空烧 8 个故事）。"""
+        def _record(state):
+            state = dict(state or {})
+            info = dict(state.get(name, {"fails": 0}))
+            info["fails"] = int(info.get("fails", 0)) + 1
+            info["cooldown_until"] = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
+            info["permanent"] = True
+            state[name] = info
+            return state
+
+        intel_state_update(self._BREAKER_STATE_KEY, _record, default={})
+        logger.warning(f"提供商 [{name}] 永久失败（模型下架/404），进入 24 小时节约冷却")
 
     def _breaker_record_success(self, name: str):
         had_entry = name in self._breaker_state()
@@ -1843,23 +1861,6 @@ class MultiLLMEngine:
 
         intel_state_update(self._BREAKER_STATE_KEY, _clear, default={})
         logger.info(f"提供商 [{name}] 冷却解除，恢复正常调度")
-
-    def _breaker_record_permanent(self, name: str):
-        """永久失败长冷却（模型下架/404）：直接冷却 24 小时，当天不再拿故事试错。
-        不复用指数退避——404 不会自己好转，按瞬时故障每次冷却到期试一次只是空烧
-        （生产：免费模型下架当天空烧 8 个故事）。与 _breaker_record_failure 并列，
-        不改其逻辑；_is_cooled 只读 cooldown_until，成功清除路径同样兼容。"""
-        def _record(state):
-            state = dict(state or {})
-            info = dict(state.get(name, {"fails": 0}))
-            info["fails"] = int(info.get("fails", 0)) + 1
-            info["cooldown_until"] = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
-            info["permanent"] = True
-            state[name] = info
-            return state
-
-        intel_state_update(self._BREAKER_STATE_KEY, _record, default={})
-        logger.warning(f"提供商 [{name}] 永久失败（模型下架/404），进入 24 小时节约冷却")
 
     def _get_client(self, provider: LLMProviderConfig) -> OpenAI:
         """按提供商缓存 OpenAI 客户端；带 HTTP-Referer/X-Title 头以兼容 OpenRouter 等要求来源识别的平台。
