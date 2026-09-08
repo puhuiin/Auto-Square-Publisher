@@ -4,28 +4,24 @@
     "#BinanceSquare",
     "#TradingTournament",
     "#BinanceAlpha",
-    "#Airdrop"
+    "#MegaFest"
   ],
   "incentivized_tokens": [
     "$XPIN",
-    "$SAHARA",
     "$ZKC",
-    "$COLLECT",
-    "$USD1",
-    "$USDC",
+    "$SAHARA",
     "$BNB",
-    "$USDT"
+    "$USDT",
+    "$USDC",
+    "$USD1"
   ],
-  "strategy_guidance": "将日快讯与Alpha交易赛、SAHARA/ZKC锦标赛及USD1空投延期强关联，引导用户通过参与指定币种交易或完成新手任务获取代金券与返佣，同步嵌入钱包足球赛与区域专属福利扩大受众覆盖。",
-  "last_updated": "2026-09-07T03:13:49.583957Z",
+  "strategy_guidance": "快讯发帖优先绑定 $XPIN Alpha 交易赛（$200K 奖池）、$ZKC 与 $SAHARA 交易锦标赛及美股 MegaFest（$500K 奖池）等高奖金活动，将行情解读写成参赛攻略并引导读者交易瓜分奖池，以最大化 Write to Earn 交易返佣；同时穿插 USDT 理财 7% APR、USD1 空投延期与新用户礼金等低门槛福利话题，提升阅读转化与互动流量。",
+  "last_updated": "2026-09-08T02:26:40.763913Z",
   "_feed_health": {
     "CryptoSlate (新赛道与代币经济)": {
       "last_fail": "2026-09-07T13:09:36.111460+00:00",
       "fails": 1
     }
-  },
-  "_intel_refresh_fail": {
-    "cooldown_until": "2026-09-08T01:20:08.982019+00:00"
   },
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20260907/dcf48e05172a4202bc97922d56752434.jpg",
@@ -33,12 +29,16 @@
   },
   "_llm_breaker": {
     "Preset-openrouter": {
-      "fails": 9,
-      "cooldown_until": "2026-09-08T05:16:19.273641+00:00"
+      "cooldown_until": "2026-09-09T02:26:41.349092+00:00",
+      "fails": 10,
+      "permanent": true
     },
     "Preset-b.ai": {
       "fails": 6,
       "cooldown_until": "2026-09-08T03:20:51.843558+00:00"
     }
+  },
+  "_intel_refresh_fail": {
+    "cooldown_until": "2026-09-08T01:20:08.982019+00:00"
   }
 }
