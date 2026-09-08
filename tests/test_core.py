@@ -1367,6 +1367,35 @@ class TestHealthcheck(unittest.TestCase):
                 os.remove(intel_tmp)
 
 
+class TestTimeoutBudgetCoupling(unittest.TestCase):
+    """超时与预算联动：推理通道 1500 预算配 90s 超时，非推理 600/25s。
+    生产实证：b.ai 高峰期单次 50~79s，25s 默认把生成到一半的调用掐死（timeout 拒单）。"""
+
+    def _build(self, env_keys):
+        saved = {}
+        for k, v in env_keys.items():
+            saved[k] = os.environ.get(k)
+            os.environ[k] = v
+        try:
+            return m.MultiLLMEngine()._build_provider_chain()
+        finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+    def test_reasoning_preset_gets_long_timeout(self):
+        chain = self._build({"BAI_API_KEY": "k1"})
+        bai = next(p for p in chain if p.name == "Preset-b.ai")
+        self.assertEqual(bai.timeout, 90.0, "推理通道 Preset-b.ai 应与 Reasonix 同级 90s")
+
+    def test_non_reasoning_preset_keeps_short_timeout(self):
+        chain = self._build({"OPENROUTER_API_KEY": "k2"})
+        orp = next(p for p in chain if p.name == "Preset-openrouter")
+        self.assertEqual(orp.timeout, 25.0, "非推理通道不应被抬超时")
+
+
 class TestReasonixGateway(unittest.TestCase):
     """Reasonix 本地免费模型网关集成"""
 

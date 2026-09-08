@@ -2066,7 +2066,12 @@ class MultiLLMEngine:
 
         for name, (k, url, m) in extra_keys.items():
             if k and not any(p.api_key == k for p in chain):
-                chain.append(LLMProviderConfig(name=f"Preset-{name}", base_url=url, api_key=k, model=m))
+                # 超时与预算规则联动：推理通道（思考链吃 1000~2300 token，高峰期实测单次
+                # 挂 50~79s）按默认 25s 会在生成到一半时被掐死——timeout 拒单烧掉整次调用。
+                # 凡是按推理通道给 1500 预算的提供商，超时同样抬到 90s（同一谓词判定）。
+                chain.append(LLMProviderConfig(
+                    name=f"Preset-{name}", base_url=url, api_key=k, model=m,
+                    timeout=90.0 if _is_reasoning_channel(f"Preset-{name}", m) else 25.0))
 
         # 4. 本地 Reasonix 免费模型网关：存活则置顶（返回首选+备份模型链，网关自身再兜底上游）
         gw_cfgs = probe_reasonix_gateway()
