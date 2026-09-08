@@ -601,6 +601,14 @@ RSS_FEEDS = [
 
 # 重磅热点与高流量山寨打分关键词加权字典
 IMPACT_KEYWORDS = {
+    # 突发热点专用（用户要求"追最新热点"）：这些词几乎只出现在快讯标题里，命中即顶格追
+    "breaking": 14,
+    "just in": 14,
+    "urgent": 10,
+    "急报": 14,
+    "突发": 14,
+    "刚刚": 8,
+    "最新消息": 10,
     # 爆款山寨与 Meme 赛道
     "meme": 10,
     "memecoin": 10,
@@ -2999,6 +3007,10 @@ class ImageManager:
             "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         })
 
+    # 图片管线失败原因细分（遥测：image_fail_reason 字段），用于定位
+    # 下载失败/SSRF 拒绝/S3 上传失败/渲染失败各占多少——配图是账号观感核心
+    IMAGE_FAIL_REASONS = ("download_failed", "ssrf_blocked", "upload_failed", "render_failed")
+
     @classmethod
     def prepare_and_upload(cls, api_key: str, raw_image_url: Optional[str],
                            token_lines: Optional[List[str]] = None,
@@ -3007,7 +3019,9 @@ class ImageManager:
         一站式准备配图：无新闻原图时优先用 PIL 渲染动态情绪卡（三布局随机，图不重样），
         渲染失败才退回单一 FNG 外链图；有原图则走 下载 -> 失败兜底 -> 上传 流水线。
         情绪卡与 FNG 兜底图均按日复用托管 URL（缓存键带布局标识，保证多样性）。
+        失败时把细分原因写进 self.last_image_fail_reason 供遥测采集。
         """
+        cls.last_image_fail_reason = None
         target_url = raw_image_url.strip() if raw_image_url else cls.DEFAULT_FALLBACK_IMAGE
         # SSRF 门禁：配图 URL 来自不可信 RSS，内网/元数据/file 等一律拒绝并静默降级
         if target_url != cls.DEFAULT_FALLBACK_IMAGE and not cls._is_safe_image_url(target_url):
@@ -3032,6 +3046,7 @@ class ImageManager:
 
         if not download_result:
             # 下载完全失败：先试动态情绪卡（每次布局随机，比单一 FNG 图多样）
+            cls.last_image_fail_reason = "download_failed"
             if token_lines is None:
                 token_lines = []
             card = cls.render_market_card(token_lines, fng_text)
@@ -3040,11 +3055,16 @@ class ImageManager:
                 if hosted_url:
                     cls._write_fallback_cache(hosted_url)
                     return hosted_url
+                cls.last_image_fail_reason = "upload_failed"
+            else:
+                cls.last_image_fail_reason = "render_failed"
             logger.warning("配图下载与情绪卡渲染均失败，将以纯文本格式继续发布。")
             return None
 
         image_bytes, filename, content_type = download_result
         hosted_url = cls.upload_to_binance(api_key, image_bytes, filename, content_type)
+        if not hosted_url:
+            cls.last_image_fail_reason = "upload_failed"
 
         if hosted_url and using_fallback:
             cls._write_fallback_cache(hosted_url)
@@ -4391,6 +4411,7 @@ def _run_main():
                     square_api_key, raw_img,
                     token_lines=card_lines, fng_text=f"Fear&Greed {fng_index}")
                 stage_timings["image"] += time.time() - t_img_start
+                image_fail_reason = getattr(ImageManager, "last_image_fail_reason", None)
             elif not binance_enabled and raw_img:
                 # 草稿模式无 S3 上传：直接给新闻原图直链，供手动下载后上传 OKX
                 uploaded_image_url = raw_img
@@ -4458,6 +4479,7 @@ def _run_main():
                         "llm_latency_sec": llm_result.get("latency_sec"),
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
+                        "image_fail_reason": image_fail_reason,
                         "outcome": "binance_published" if persisted else "binance_published_cache_failed",
                     })
                     posted_records.append({
@@ -4494,6 +4516,7 @@ def _run_main():
                         "llm_latency_sec": llm_result.get("latency_sec"),
                         "platforms": delivered,
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
+                        "image_fail_reason": image_fail_reason,
                         "outcome": f"{delivered_by}_delivered" if persisted else f"{delivered_by}_delivered_cache_failed",
                     })
                     posted_records.append({
@@ -4544,6 +4567,7 @@ def _run_main():
                         "llm_latency_sec": llm_result.get("latency_sec"),
                         "platforms": _delivered_platforms(False, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
+                        "image_fail_reason": image_fail_reason,
                         "outcome": "publish_failed", "error": detail[:200],
                         # 必须转成 str：非字符串类型会让 json.dumps 整条遥测失败被吞掉
                         "error_code": str(code_hint) if code_hint else None,
