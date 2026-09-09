@@ -199,6 +199,8 @@ python main.py
   | `MAX_DAILY_POSTS` | `12` | 24 小时发帖配额上限，防刷屏保账号权重（0 表示不限） |
   | `ACTIVE_HOURS_BEIJING` | 空 | 北京时间活跃窗口，支持跨夜，例 `8-23` 或 `22-7`（空 = 全天） |
   | `TOKEN_DAILY_LIMIT` | `3` | 同一代币 24h 内最多发帖篇数（0 = 不限） |
+  | `ARTICLE_PER_DAY` | `1` | 每日深度长文开关：当天首个高热帖升级为长文（contentType=2，TITLE+500~800 字正文），打专业垂直度与长尾流量 |
+  | `ARTICLE_MIN_IMPACT` | `20` | 长文选稿门槛：榜首热度分低于此值则当天不发长文（全发短讯） |
 - **CI 回归防线**：`tests/test_core.py` 内置百余个离线回归测试（含断路器/源停放/报错分类/通知编码/跨语言去重/行情缓存/同步契约），`.github/workflows/ci.yml` 在每次 push/PR 时自动编译、校验 workflow 语法并跑测试，防止守护逻辑被后续改动悄悄破坏。
   - **workflow 内嵌脚本校验的环境降级**：`scripts/validate_workflows.py` 只在确认本机 bash **真能执行** `bash -n -c true` 时才校验内嵌 shell；PATH 上只有 WSL 启动器、或 bash 被安全策略拒绝时，一律跳过并说明原因，**绝不把环境故障伪装成 workflow 语法错误**。需强制指定时用环境变量 `BASH_PATH=/path/to/bash`。
 

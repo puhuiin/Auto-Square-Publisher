@@ -3531,6 +3531,86 @@ class TestSquarePublisherSession(unittest.TestCase):
             self.assertIn("$XRP", payload["bodyTextOnly"])
 
 
+class TestArticlePipeline(unittest.TestCase):
+    """每日深度长文管线（R58）：contentType=2 语义 + TITLE 门 + 篇幅门"""
+
+    def test_parse_article_happy_path(self):
+        body = "一、发生了什么\n" + "资金面正在起变化，盘面给出的信号已经很明确，短线情绪结构修复。" * 28
+        content = "TITLE: ETH 资金面异动深度复盘\n\n" + body
+        ok, reason, title, parsed_body = m.MultiLLMEngine._parse_article(content)
+        self.assertTrue(ok, reason)
+        self.assertEqual(title, "ETH 资金面异动深度复盘")
+        self.assertIn("一、发生了什么", parsed_body)
+        self.assertNotIn("TITLE:", parsed_body)
+
+    def test_parse_article_missing_title_rejected(self):
+        ok, reason, _, _ = m.MultiLLMEngine._parse_article("没有标题行直接开写正文。" * 60)
+        self.assertFalse(ok)
+        self.assertIn("TITLE", reason)
+
+    def test_parse_article_body_too_short(self):
+        ok, reason, _, _ = m.MultiLLMEngine._parse_article("TITLE: 一个足够长的合格标题\n\n正文太短了。")
+        self.assertFalse(ok)
+        self.assertIn("过短", reason)
+
+    def test_publish_article_payload_content_type_2(self):
+        """长文发布：contentType=2 + title + cover（image_url 转 cover，绝无 imageList）"""
+        pub = m.SquarePublisher(api_key="k")
+        fake_resp = MagicMock(status_code=200, text='{"code":"000000"}')
+        fake_resp.json.return_value = {"code": "000000", "data": {"contentId": "c1"}}
+        content = "一、背景\n" + "这是一段足够长的长文正文内容，用于验证长文发布载荷结构。" * 10
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.return_value = fake_resp
+            self.assertTrue(pub.publish(content, image_url="https://cdn.example/cover.jpg",
+                                        ensure_tokens=["BTC"], title="BTC 行情深度复盘标题"))
+            payload = mock_sess.post.call_args.kwargs["json"]
+            self.assertEqual(payload["contentType"], 2)
+            self.assertEqual(payload["title"], "BTC 行情深度复盘标题")
+            self.assertEqual(payload["cover"], "https://cdn.example/cover.jpg")
+            self.assertNotIn("imageList", payload)
+
+    def test_publish_short_post_payload_unchanged(self):
+        """短讯不传 title：维持 contentType=1 + imageList（回归守卫）"""
+        pub = m.SquarePublisher(api_key="k")
+        fake_resp = MagicMock(status_code=200, text='{"code":"000000"}')
+        fake_resp.json.return_value = {"code": "000000", "data": {"contentId": "c2"}}
+        content = "这是一段超过十五个中文字符的短讯内容，带 $BTC 挂件 #Write2Earn"
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.return_value = fake_resp
+            self.assertTrue(pub.publish(content, image_url="https://cdn.example/img.jpg",
+                                        ensure_tokens=["BTC"]))
+            payload = mock_sess.post.call_args.kwargs["json"]
+            self.assertEqual(payload["contentType"], 1)
+            self.assertNotIn("title", payload)
+            self.assertEqual(payload["imageList"], ["https://cdn.example/img.jpg"])
+
+    def test_summarize_article_mode_parses_title(self):
+        """article=True 生成模式：TITLE 行被剥离出正文并进返回值 title 字段"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.providers = [m.LLMProviderConfig("stub", "https://x", "k", "mm")]
+        article_body = ("TITLE: ETH 资金面异动深度复盘\n\n一、发生了什么\n"
+                        + "盘面给出的信号已经比较明确，资金在悄悄换仓。" * 20
+                        + "\n\n#Write2Earn #BinanceSquare #ETH")
+        client = MagicMock()
+        client.chat.completions.create.return_value = MagicMock(
+            choices=[MagicMock(message=MagicMock(content=article_body), finish_reason="stop")],
+            usage=MagicMock(total_tokens=2000))
+        item = {"title": "ETH news", "summary": "ETH flows", "source": "U.Today"}
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"ETH"}), \
+             patch.object(m, "append_metrics"):
+            out = eng.summarize(item, None, market_context="", token_hints=["ETH"], article=True)
+        self.assertIsNotNone(out)
+        self.assertEqual(out["title"], "ETH 资金面异动深度复盘")
+        self.assertNotIn("TITLE:", out["content"])
+        self.assertIn("一、发生了什么", out["content"])
+
+
 class TestRunMainSemantics(unittest.TestCase):
     """_run_main 投递语义集成锁：DRY 零副作用（设计红线第 2 条）+ 正式投递守卫
     （幂等/配额/限流/批内去重）。此前全套件无任何测试触碰 _run_main，全靠自觉；
