@@ -2431,10 +2431,13 @@ class TestOKXDraftExporter(unittest.TestCase):
             content = f.read()
         self.assertIn("【ETH 资金面异动深度复盘】", content)
         self.assertIn("深度长文", content)
-        # 短讯草稿不受影响
+        # 短讯草稿不受影响（按 news_id 后缀选文件：glob 顺序随文件系统而异，
+        # Linux 上 [-1] 可能拿到长文那份造成误判）
         self.exp.publish("短讯内容草稿。", meta={"news_id": "short-001"})
-        with open(glob.glob(os.path.join(self.tmpdir, "**", "*.md"), recursive=True)[-1],
-                  encoding="utf-8") as f:
+        shorts = [p for p in glob.glob(os.path.join(self.tmpdir, "**", "*.md"), recursive=True)
+                  if p.endswith("_short-001.md")]
+        self.assertEqual(len(shorts), 1)
+        with open(shorts[0], encoding="utf-8") as f:
             self.assertNotIn("【", f.read())
 
     def test_prune_keeps_limit(self):
@@ -5174,7 +5177,8 @@ class TestImageTier(unittest.TestCase):
 
     def test_raw_tier(self):
         blob = ("jpeg-bytes", "cover.jpg", "image/jpeg")
-        with patch.object(m.ImageManager, "download_image", return_value=blob), \
+        with patch.object(m.ImageManager, "_is_safe_image_url", return_value=True), \
+             patch.object(m.ImageManager, "download_image", return_value=blob), \
              patch.object(m.ImageManager, "render_market_card") as mock_card, \
              patch.object(m.ImageManager, "upload_to_binance", return_value="https://cdn/r.jpg"):
             out = self._prepare(raw_image_url="https://news.example/a.jpg")
