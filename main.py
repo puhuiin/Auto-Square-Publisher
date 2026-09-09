@@ -3369,8 +3369,12 @@ class ImageManager:
           每帖一图不重样）——此前走 FNG 外链图的当日缓存 URL，全天一张图，是
           "配图千篇一律"的根因。卡片渲染/托管失败才降级 FNG 外链（当日缓存复用）。
         失败时把细分原因写进 self.last_image_fail_reason 供遥测采集。
+        成功时把实际生效的图源层级写进 self.last_image_tier
+       （raw=新闻原图 / chart=48H 走势卡 / card=市场情绪卡 / fng=兜底仪表盘 / none=纯文本），
+        供遥测回答"配图是否单一"——此前成功行只有 image:true，无从区分。
         """
         cls.last_image_fail_reason = None
+        cls.last_image_tier = None
         target_url = raw_image_url.strip() if raw_image_url else cls.DEFAULT_FALLBACK_IMAGE
         # SSRF 门禁：配图 URL 来自不可信 RSS，内网/元数据/file 等一律拒绝并静默降级
         if target_url != cls.DEFAULT_FALLBACK_IMAGE and not cls._is_safe_image_url(target_url):
@@ -3402,6 +3406,7 @@ class ImageManager:
                 if chart:
                     hosted_url = cls.upload_to_binance(api_key, chart[0], chart[1], chart[2])
                     if hosted_url:
+                        cls.last_image_tier = "chart"
                         return hosted_url
                     fail_stage = "upload_failed"
                     break  # 走势卡上传失败不连续换标的重试（S3 故障时换图也没用）
@@ -3410,6 +3415,7 @@ class ImageManager:
                 if card:
                     hosted_url = cls.upload_to_binance(api_key, card[0], card[1], card[2])
                     if hosted_url:
+                        cls.last_image_tier = "card"
                         return hosted_url
                     fail_stage = "upload_failed"
                 else:
@@ -3417,20 +3423,28 @@ class ImageManager:
             # 情绪卡不可用：降级 FNG 情绪仪表盘外链（先看当日缓存，零额外下载/上传）
             cached_url = cls._read_fallback_cache()
             if cached_url:
+                cls.last_image_tier = "fng"
                 return cached_url
             download_result = cls.download_image(cls.DEFAULT_FALLBACK_IMAGE)
             if download_result:
                 fail_stage = None  # 兜底图交付成功
+                cls.last_image_tier = "fng"
 
         if not download_result:
             cls.last_image_fail_reason = fail_stage or "download_failed"
+            cls.last_image_tier = "none"
             logger.warning("配图全链路失败（原图/走势卡/情绪卡/FNG 外链），将以纯文本格式继续发布。")
             return None
 
+        # 原图直达与 FNG 现下共用上传尾巴：层级以实际生效者为准，
+        # FNG 分支上已赋值则不再覆盖（原图失败转 FNG 时 using_fallback 为 False）。
+        if cls.last_image_tier is None:
+            cls.last_image_tier = "fng" if using_fallback else "raw"
         image_bytes, filename, content_type = download_result
         hosted_url = cls.upload_to_binance(api_key, image_bytes, filename, content_type)
         if not hosted_url:
             cls.last_image_fail_reason = "upload_failed"
+            cls.last_image_tier = "none"  # 上传失败 = 最终无图（覆盖上游已赋的尝试层级）
 
         if hosted_url and using_fallback:
             cls._write_fallback_cache(hosted_url)
@@ -4856,6 +4870,7 @@ def _run_main():
                     token_lines=card_lines, fng_text=f"Fear&Greed {fng_index}")
                 stage_timings["image"] += time.time() - t_img_start
                 image_fail_reason = getattr(ImageManager, "last_image_fail_reason", None)
+                image_tier = getattr(ImageManager, "last_image_tier", None) or "none"
             elif not binance_enabled and raw_img:
                 # 草稿模式无 S3 上传：直接给新闻原图直链，供手动下载后上传 OKX
                 uploaded_image_url = raw_img
@@ -4944,7 +4959,7 @@ def _run_main():
                         "final_preview": final_preview,
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
-                        "image_fail_reason": image_fail_reason,
+                        "image_fail_reason": image_fail_reason, "image_tier": image_tier,
                         "outcome": "binance_published" if persisted else "binance_published_cache_failed",
                     })
                     posted_records.append({
@@ -4986,7 +5001,7 @@ def _run_main():
                         "llm_latency_sec": llm_result.get("latency_sec"),
                         "platforms": delivered,
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
-                        "image_fail_reason": image_fail_reason,
+                        "image_fail_reason": image_fail_reason, "image_tier": image_tier,
                         "outcome": f"{delivered_by}_delivered" if persisted else f"{delivered_by}_delivered_cache_failed",
                     })
                     posted_records.append({
@@ -5037,7 +5052,7 @@ def _run_main():
                         "llm_latency_sec": llm_result.get("latency_sec"),
                         "platforms": _delivered_platforms(False, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
-                        "image_fail_reason": image_fail_reason,
+                        "image_fail_reason": image_fail_reason, "image_tier": image_tier,
                         "outcome": "publish_failed", "error": detail[:200],
                         # 必须转成 str：非字符串类型会让 json.dumps 整条遥测失败被吞掉
                         "error_code": str(code_hint) if code_hint else None,

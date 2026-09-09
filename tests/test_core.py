@@ -5129,5 +5129,69 @@ class TestLastFailReason(unittest.TestCase):
         self.assertIn("无可用", eng.last_fail_reason)
 
 
+class TestImageTier(unittest.TestCase):
+    """配图层级遥测：成功行必须标明实际生效的图源（raw/chart/card/fng/none）"""
+
+    def _prepare(self, **kw):
+        kw.setdefault("token_lines", ["$BTC: $67234 (24H: +2.35%)"])
+        kw.setdefault("fng_text", "Fear&Greed 74/100")
+        return m.ImageManager.prepare_and_upload("k", **kw)
+
+    def test_chart_tier(self):
+        blob = ("jpeg-bytes", "cover.jpg", "image/jpeg")
+        with patch.object(m.ImageManager, "download_image", return_value=None), \
+             patch.object(m.MarketDataProvider, "get_kline_closes", return_value=[1.0] * 48), \
+             patch.object(m.ImageManager, "render_chart_card", return_value=blob) as mock_chart, \
+             patch.object(m.ImageManager, "render_market_card") as mock_card, \
+             patch.object(m.ImageManager, "upload_to_binance", return_value="https://cdn/x.jpg"):
+            out = self._prepare(raw_image_url=None)
+        self.assertEqual(out, "https://cdn/x.jpg")
+        self.assertEqual(m.ImageManager.last_image_tier, "chart")
+        mock_chart.assert_called_once()
+        mock_card.assert_not_called()
+
+    def test_card_tier(self):
+        blob = ("jpeg-bytes", "cover.jpg", "image/jpeg")
+        with patch.object(m.ImageManager, "download_image", return_value=None), \
+             patch.object(m.MarketDataProvider, "get_kline_closes", return_value=[]), \
+             patch.object(m.ImageManager, "render_market_card", return_value=blob), \
+             patch.object(m.ImageManager, "upload_to_binance", return_value="https://cdn/y.jpg"):
+            out = self._prepare(raw_image_url=None)
+        self.assertEqual(out, "https://cdn/y.jpg")
+        self.assertEqual(m.ImageManager.last_image_tier, "card")
+
+    def test_fng_cached_tier_skips_work(self):
+        with patch.object(m.ImageManager, "download_image", return_value=None) as mock_dl, \
+             patch.object(m.MarketDataProvider, "get_kline_closes", return_value=[]), \
+             patch.object(m.ImageManager, "render_market_card", return_value=None), \
+             patch.object(m.ImageManager, "_read_fallback_cache", return_value="https://cdn/cached.jpg"), \
+             patch.object(m.ImageManager, "upload_to_binance") as mock_up:
+            out = self._prepare(raw_image_url=None)
+        self.assertEqual(out, "https://cdn/cached.jpg")
+        self.assertEqual(m.ImageManager.last_image_tier, "fng")
+        mock_dl.assert_not_called()
+        mock_up.assert_not_called()
+
+    def test_raw_tier(self):
+        blob = ("jpeg-bytes", "cover.jpg", "image/jpeg")
+        with patch.object(m.ImageManager, "download_image", return_value=blob), \
+             patch.object(m.ImageManager, "render_market_card") as mock_card, \
+             patch.object(m.ImageManager, "upload_to_binance", return_value="https://cdn/r.jpg"):
+            out = self._prepare(raw_image_url="https://news.example/a.jpg")
+        self.assertEqual(out, "https://cdn/r.jpg")
+        self.assertEqual(m.ImageManager.last_image_tier, "raw")
+        mock_card.assert_not_called()
+
+    def test_none_tier(self):
+        with patch.object(m.ImageManager, "download_image", return_value=None), \
+             patch.object(m.MarketDataProvider, "get_kline_closes", return_value=[]), \
+             patch.object(m.ImageManager, "render_market_card", return_value=None), \
+             patch.object(m.ImageManager, "_read_fallback_cache", return_value=None):
+            out = self._prepare(raw_image_url=None)
+        self.assertIsNone(out)
+        self.assertEqual(m.ImageManager.last_image_tier, "none")
+        self.assertIsNotNone(m.ImageManager.last_image_fail_reason)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
