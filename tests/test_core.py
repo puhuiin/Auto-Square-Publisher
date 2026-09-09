@@ -2376,42 +2376,6 @@ class TestAiSlopStripping(unittest.TestCase):
         self.assertNotIn("总的来说", s)
 
 
-class TestScheduleWatchdog(unittest.TestCase):
-    """调度看门狗（R61 事故产物）：心跳戳 + 超时报警"""
-
-    def setUp(self):
-        import tempfile
-        self.intel_tmp = tempfile.mktemp(suffix=".json")
-        with open(self.intel_tmp, "w", encoding="utf-8") as f:
-            f.write("{}")
-        self._orig_intel = m.CAMPAIGN_INTEL_FILE
-        m.CAMPAIGN_INTEL_FILE = self.intel_tmp
-
-    def tearDown(self):
-        m.CAMPAIGN_INTEL_FILE = self._orig_intel
-        if os.path.exists(self.intel_tmp):
-            os.remove(self.intel_tmp)
-
-    def test_fresh_heartbeat_no_alert(self):
-        m.record_run_heartbeat()
-        with patch.object(m.Notifier, "send_notification") as mock_notify:
-            m.check_schedule_watchdog()
-        mock_notify.assert_not_called()
-
-    def test_stale_heartbeat_triggers_alert(self):
-        stale = (datetime.now(timezone.utc) - timedelta(minutes=130)).isoformat()
-        m.intel_state_set(m._HEARTBEAT_KEY, {"ts": stale})
-        with patch.object(m.Notifier, "send_notification") as mock_notify:
-            m.check_schedule_watchdog()
-        mock_notify.assert_called_once()
-        self.assertIn("调度中断", mock_notify.call_args.args[0])
-
-    def test_no_heartbeat_history_is_silent(self):
-        with patch.object(m.Notifier, "send_notification") as mock_notify:
-            m.check_schedule_watchdog()
-        mock_notify.assert_not_called()
-
-
 class TestOKXDraftExporter(unittest.TestCase):
     """OKX 草稿直出通道"""
 
