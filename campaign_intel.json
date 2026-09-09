@@ -31,11 +31,15 @@
   "_llm_breaker": {
     "Preset-openrouter": {
       "permanent": true,
-      "fails": 17,
-      "cooldown_until": "2026-09-09T19:43:42.702886+00:00"
+      "cooldown_until": "2026-09-09T19:43:42.702886+00:00",
+      "fails": 17
     }
   },
   "_intel_refresh_fail": {
-    "cooldown_until": "2026-09-08T01:20:08.982019+00:00"
-  }
+    "cooldown_until": "2026-09-09T06:58:27.268882+00:00"
+  },
+  "_last_run_heartbeat": {
+    "ts": "2026-09-09T04:58:10.596250+00:00"
+  },
+  "_article_sent_date": "2026-09-09"
 }
