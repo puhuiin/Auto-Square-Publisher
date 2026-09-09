@@ -210,6 +210,85 @@ class TestQualityGate(unittest.TestCase):
         self.assertFalse(ok)
 
 
+class TestAIFlavorGate(unittest.TestCase):
+    """AI 腔检测门：标志性机器人文风拦截（R55，模式源：Wikipedia Signs of AI writing）"""
+
+    def test_hard_pattern_rejected(self):
+        body = "比特币今晚这波拉升确实猛，$BTC 突破关键位后资金还在进场，" \
+               "短期回踩不破就是机会，让我们拭目以待！" \
+               "\n\n#Write2Earn #BinanceSquare #BTC"
+        ok, reason = m.MultiLLMEngine._passes_ai_flavor_gate(body)
+        self.assertFalse(ok)
+        self.assertIn("拭目以待", reason)
+
+    def test_clean_trader_voice_passes(self):
+        body = "这波 $BTC 拉得太急了，杠杆多头一小时烧了两个亿。短线追高的风险不小，" \
+               "回踩 6 万附近再看承接。\n\n看多的扣1，看空的扣2。\n\n#Write2Earn #BinanceSquare #BTC"
+        ok, _ = m.MultiLLMEngine._passes_ai_flavor_gate(body)
+        self.assertTrue(ok)
+
+    def test_single_soft_feature_passes(self):
+        """单个软特征不拦（防误杀），累计 ≥2 才废稿"""
+        body = "今天的盘面没啥悬念，$SOL 横住就是给上车的机会，联动看 $BTC 脸色。" \
+               "注意近期的资金流向变化就够了。\n\n#Write2Earn #BinanceSquare #SOL"
+        ok, _ = m.MultiLLMEngine._passes_ai_flavor_gate(body)
+        self.assertTrue(ok)
+
+    def test_two_soft_features_rejected(self):
+        body = "这轮反弹标志着资金面的修复，显而易见主力在吸筹，$ETH 结构走强。" \
+               "接下来看关键位争夺。\n\n#Write2Earn #BinanceSquare #ETH"
+        ok, reason = m.MultiLLMEngine._passes_ai_flavor_gate(body)
+        self.assertFalse(ok)
+        self.assertIn("软特征累计 2", reason)
+
+    def test_double_em_dash_rejected(self):
+        body = "$BTC 突破——资金还在进——回落就接。短线思路很清晰。" \
+               "\n\n#Write2Earn #BinanceSquare #BTC"
+        ok, reason = m.MultiLLMEngine._passes_ai_flavor_gate(body)
+        self.assertFalse(ok)
+        self.assertIn("破折号", reason)
+
+    def test_bujin_geng_pattern_needs_second_feature(self):
+        """「不仅…更」是软特征：单出现不拦（真人也会用），叠加第二个特征才废稿"""
+        body = "$BTC 不仅突破了前高，更打开了一个新的上涨空间，追不追自己掂量。" \
+               "\n\n#Write2Earn #BinanceSquare #BTC"
+        ok, _ = m.MultiLLMEngine._passes_ai_flavor_gate(body)
+        self.assertTrue(ok)
+        ok, reason = m.MultiLLMEngine._passes_ai_flavor_gate(body + " 显而易见要回踩。")
+        self.assertFalse(ok)
+        self.assertIn("软特征累计 2", reason)
+
+
+class TestMarketCardBarsLayout(unittest.TestCase):
+    """情绪卡 bars 布局：真实行情行解析与降级（R55 配图多样化）"""
+
+    def test_ticker_rows_parsed_enables_bars(self):
+        lines = ["$BTC: $67,234.50 (24H: +2.35%)", "$ETH: $3,456.78 (24H: -1.20%)"]
+        self.assertTrue(hasattr(m.ImageManager, "CARD_HEADLINES"))
+        self.assertEqual(len(m.ImageManager.CARD_HEADLINES), 4)
+        self.assertIn("bars", m.ImageManager.CARD_LAYOUTS + ("bars",))
+
+    def test_render_with_real_ticker_lines(self):
+        lines = ["$BTC: $67,234.50 (24H: +2.35%)", "$ETH: $3,456.78 (24H: -1.20%)"]
+        out = m.ImageManager.render_market_card(lines, "Fear&Greed 55")
+        self.assertIsNotNone(out)
+        jpeg_bytes, filename, ctype = out
+        self.assertEqual(filename, "cover.jpg")
+        self.assertEqual(ctype, "image/jpeg")
+        self.assertGreater(len(jpeg_bytes), 5000, "渐变+bars 渲染出的 JPEG 不应过小")
+
+    def test_render_without_parseable_rows_still_renders(self):
+        """裸 $TOKEN 行解析不出涨跌幅 → 走旧布局，同样能出图（不炸）"""
+        out = m.ImageManager.render_market_card(["$BTC", "$SOL"], "Fear&Greed 22")
+        self.assertIsNotNone(out)
+        self.assertGreater(len(out[0]), 5000)
+
+    def test_headline_default_random_not_fixed(self):
+        """headline 缺省时随机抽取（图不重样），传入时尊重调用方"""
+        out = m.ImageManager.render_market_card([], "Fear&Greed 50", headline="CUSTOM")
+        self.assertIsNotNone(out)
+
+
 class TestInjectionDefense(unittest.TestCase):
     """提示词注入防护"""
 
@@ -4382,7 +4461,8 @@ class TestTokenDesparay(unittest.TestCase):
 
 
 class TestFallbackImageCache(unittest.TestCase):
-    """兜底图缓存前置：有缓存不下载；原图挂先查缓存再下兜底"""
+    """配图管线优先级（R55 反转）：无原图首选实时情绪卡（每帖一图），
+    卡片链路失败才降级 FNG 外链图（当日缓存复用）"""
 
     def setUp(self):
         import tempfile
@@ -4397,36 +4477,71 @@ class TestFallbackImageCache(unittest.TestCase):
         if os.path.exists(self.intel_tmp):
             os.remove(self.intel_tmp)
 
-    def test_cached_url_skips_download(self):
+    def test_no_raw_prefers_fresh_card_over_cached_fng(self):
+        """无原图：情绪卡优先于当日缓存的 FNG 图（旧管线直接复用缓存 = 全天一张图）"""
         m.ImageManager._write_fallback_cache("https://cdn.example/cached.jpg")
-        with patch.object(m.ImageManager, "download_image") as mock_dl:
+        with patch.object(m.ImageManager, "render_market_card",
+                          return_value=("card-jpeg", "cover.jpg", "image/jpeg")) as mock_card, \
+             patch.object(m.ImageManager, "upload_to_binance",
+                          return_value="https://cdn.example/card.jpg") as mock_up, \
+             patch.object(m.ImageManager, "download_image") as mock_dl:
+            out = m.ImageManager.prepare_and_upload("k", None, token_lines=["$BTC"], fng_text="Fear&Greed 55")
+        self.assertEqual(out, "https://cdn.example/card.jpg")
+        mock_card.assert_called_once()
+        mock_up.assert_called_once()
+        mock_dl.assert_not_called()
+        # 情绪卡是每帖唯一生成图，绝不写日缓存（否则又变成全天一张）
+        self.assertEqual(m.ImageManager._read_fallback_cache(), "https://cdn.example/cached.jpg")
+
+    def test_card_render_failure_falls_to_fng_cache(self):
+        m.ImageManager._write_fallback_cache("https://cdn.example/cached.jpg")
+        with patch.object(m.ImageManager, "render_market_card", return_value=None), \
+             patch.object(m.ImageManager, "download_image") as mock_dl:
             out = m.ImageManager.prepare_and_upload("k", None)
         self.assertEqual(out, "https://cdn.example/cached.jpg")
         mock_dl.assert_not_called()
+        self.assertEqual(m.ImageManager.last_image_fail_reason, "render_failed")
 
-    def test_raw_failure_checks_cache_before_fallback_download(self):
-        m.ImageManager._write_fallback_cache("https://cdn.example/cached.jpg")
-        with patch.object(m.ImageManager, "download_image", return_value=None) as mock_dl:
-            out = m.ImageManager.prepare_and_upload("k", "https://news.example/a.jpg")
-        self.assertEqual(out, "https://cdn.example/cached.jpg")
-        self.assertEqual(mock_dl.call_count, 1)
-        self.assertEqual(mock_dl.call_args[0][0], "https://news.example/a.jpg")
-
-    def test_full_fallback_flow_caches_result(self):
+    def test_card_upload_failure_falls_to_fng_download_and_caches(self):
+        """卡片上传失败（第 1 次 upload 返回 None）→ 降级 FNG 外链下载+上传，成功后写缓存"""
         blob = ("fake-jpeg-bytes-", "cover.jpg", "image/jpeg")
-        with patch.object(m.ImageManager, "download_image",
-                          side_effect=[None, blob]) as mock_dl, \
+        with patch.object(m.ImageManager, "render_market_card",
+                          return_value=("card-jpeg", "cover.jpg", "image/jpeg")), \
              patch.object(m.ImageManager, "upload_to_binance",
-                          return_value="https://cdn.example/new.jpg") as mock_up:
-            out = m.ImageManager.prepare_and_upload("k", "https://news.example/a.jpg")
+                          side_effect=[None, "https://cdn.example/new.jpg"]) as mock_up, \
+             patch.object(m.ImageManager, "download_image",
+                          return_value=blob) as mock_dl:
+            out = m.ImageManager.prepare_and_upload("k", None)
         self.assertEqual(out, "https://cdn.example/new.jpg")
-        self.assertEqual(mock_dl.call_count, 2)
-        mock_up.assert_called_once()
+        self.assertEqual(mock_up.call_count, 2)
         self.assertEqual(m.ImageManager._read_fallback_cache(), "https://cdn.example/new.jpg")
+        self.assertIsNone(m.ImageManager.last_image_fail_reason,
+                          "兜底图成功后失败标记必须清除，否则遥测把成功帖误标 image_failed")
+
+    def test_raw_failure_tries_card_before_fng(self):
+        blob = ("card-jpeg", "cover.jpg", "image/jpeg")
+        m.ImageManager._write_fallback_cache("https://cdn.example/cached.jpg")
+        with patch.object(m.ImageManager, "download_image", return_value=None) as mock_dl, \
+             patch.object(m.ImageManager, "render_market_card", return_value=blob) as mock_card, \
+             patch.object(m.ImageManager, "upload_to_binance",
+                          return_value="https://cdn.example/card.jpg") as mock_up:
+            out = m.ImageManager.prepare_and_upload("k", "https://news.example/a.jpg",
+                                                    token_lines=["$ETH"], fng_text="Fear&Greed 61")
+        self.assertEqual(out, "https://cdn.example/card.jpg")
+        mock_dl.assert_called_once()
+        self.assertEqual(mock_dl.call_args[0][0], "https://news.example/a.jpg")
+        mock_card.assert_called_once()
+        # 原图链路的 upload 只发情绪卡这一次，FNG 缓存图未被消费
+        mock_up.assert_called_once()
 
     def test_total_failure_returns_none(self):
-        with patch.object(m.ImageManager, "download_image", return_value=None):
-            self.assertIsNone(m.ImageManager.prepare_and_upload("k", "https://news.example/a.jpg"))
+        with patch.object(m.ImageManager, "render_market_card", return_value=None), \
+             patch.object(m.ImageManager, "download_image", return_value=None), \
+             patch.object(m.ImageManager, "upload_to_binance", return_value=None):
+            out = m.ImageManager.prepare_and_upload("k", "https://news.example/a.jpg")
+        self.assertIsNone(out)
+        # 全链失败标记取链上最后一环：原图下载挂 → 卡片渲染挂（最终走到的是卡片路径）
+        self.assertEqual(m.ImageManager.last_image_fail_reason, "render_failed")
 
 
 class TestEmptyContentRetry(unittest.TestCase):
