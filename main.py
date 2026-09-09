@@ -669,7 +669,30 @@ IMPACT_KEYWORDS = {
     "whale": 8,
     "巨鲸": 8,
     "融资": 7,
-    "黑客": 8,
+    # 安全与法务事件（round 56 补缺，对照外部 crypto-news-aggregator 评分器：
+    # 我们此前只有"黑客"8 分，被盗/攻击/诉讼/破产/下架等市场级利空全部漏采）
+    "黑客": 12,
+    "hack": 12,
+    "exploit": 12,
+    "breach": 10,
+    "stolen": 10,
+    "hacked": 12,
+    "attack": 9,
+    "被盗": 12,
+    "攻击": 9,
+    "lawsuit": 10,
+    "sued": 10,
+    "诉讼": 10,
+    "起诉": 10,
+    "bankruptcy": 12,
+    "insolvency": 12,
+    "破产": 12,
+    "delist": 11,
+    "下架": 11,
+    "清退": 10,
+    "settlement": 8,
+    "freeze": 9,
+    "冻结": 9,
 }
 
 # ASCII 关键词必须整词匹配：否则 ai→命中 "said"、ton→命中 "Washington"、fed→命中 "federal"，分数全面通胀。
@@ -690,6 +713,35 @@ class MarketDataProvider:
     _PRICE_CACHE_TTL_SEC = 90          # 同一轮内行情缓存窗口
     _price_cache: Dict[str, Tuple[float, str]] = {}  # symbol -> (timestamp, formatted)
     _fng_cache: Tuple[float, str] = (0.0, "")        # 恐慌贪婪指数同样缓存
+    _kline_cache: Dict[str, Tuple[float, List[float]]] = {}  # symbol -> (ts, closes)
+
+    @classmethod
+    def get_kline_closes(cls, symbol: str, points: int = 48) -> Optional[List[float]]:
+        """
+        拉取代币 48 小时逐时收盘价（1h K线），供走势卡渲染真实价格曲线。
+        逐币 10min TTL 缓存（走势图对 freshness 不敏感，避免每帖重拉）。
+        失败返回 None（调用方降级 bars/其他布局）。
+        """
+        sym = symbol.replace("$", "").upper()
+        if not sym:
+            return None
+        now = time.time()
+        ts, cached = cls._kline_cache.get(sym, (0.0, None))
+        if cached and (now - ts) < 600:
+            return cached
+        try:
+            r = http_get(f"https://api.binance.com/api/v3/klines?symbol={sym}USDT"
+                         f"&interval=1h&limit={points}", timeout=5, retries=1)
+            if r is not None and r.status_code == 200:
+                data = r.json()
+                if isinstance(data, list) and len(data) >= 12:
+                    closes = [float(k[4]) for k in data if len(k) > 4]
+                    if len(closes) >= 12:
+                        cls._kline_cache[sym] = (now, closes)
+                        return closes
+        except Exception as e:
+            logger.debug(f"K线拉取失败 [{sym}]: {e}")
+        return None
 
     @classmethod
     def get_fear_and_greed(cls) -> str:
@@ -2298,9 +2350,10 @@ class MultiLLMEngine:
 【核心要求】：
 1. 彻底去 AI 味！模仿真人老韭菜/交易员在社区发帖的极简口吻。禁用词（出现即废稿）：拭目以待/未来可期/保驾护航/谱写/新篇章/扬帆起航/值得注意的是/综上所述/让我们一起/毋庸置疑。禁句式：不仅…更…、首先…其次…、排比三连（X、Y、Z 三连发同一语气）。破折号最多用 1 次。
 2. 篇幅严格控制在 160~240 字之间，分 3~4 个短段落，短句为主，每段 1~2 句话。长短句交错，别每句都一个节奏。
-3. 每次提到代币一律用 $大写 形式（如 $PEPE、$WIF），并织在句子里（首段点名异动标的、后文至少再提一次核心标的）——这是交易挂件与创作激励返佣的生命线，严禁只写裸名或只在文末补一个。严禁在 ETF/SEC/AI/CEO/FED 等非代币词前加 $。
-4. 结尾设计一句极简的站队提问（如“看多的扣1，看空的扣2”），最后附带 3 个标签：#Write2Earn #BinanceSquare #核心代币。
-5. 所有数字（价格/涨跌幅/资金量/贪婪指数）只能来自上面给的资料，一个都不许编造。
+3. 【首两行定生死】信息流只展示前两行，第一段必须放钩子：一个反差结论、一个具体数字、或一个悬念（如"4.7 亿直接把盘面砸活了""全网贪婪都 65 了还在喊多"）。严禁"最近/今天聊聊/家人们"式慢热铺垫开场。
+4. 每次提到代币一律用 $大写 形式（如 $PEPE、$WIF），并织在句子里（首段点名异动标的、后文至少再提一次核心标的）——这是交易挂件与创作激励返佣的生命线，严禁只写裸名或只在文末补一个。严禁在 ETF/SEC/AI/CEO/FED 等非代币词前加 $。
+5. 结尾设计一句极简的站队提问（如“看多的扣1，看空的扣2”），最后附带 3~4 个标签：#Write2Earn #BinanceSquare #核心代币，再按内容板块加 1 个垂直标签（Meme 帖 #MemeCoin、合约帖 #Futures、ETF 帖 #ETF、公链帖用公链名），精准标签比泛流量标签更容易进对的信息流。
+6. 所有数字（价格/涨跌幅/资金量/贪婪指数）只能来自上面给的资料，一个都不许编造。
 直接输出正文，不要任何开场白或多余解释："""
         return user_prompt, persona
 
@@ -3010,6 +3063,82 @@ class ImageManager:
             return None
 
     @classmethod
+    def render_chart_card(cls, symbol: str, closes: List[float],
+                          fng_text: str = "") -> Optional[Tuple[bytes, str, str]]:
+        """
+        48H 价格走势卡：币安 1h K线收盘价画真实曲线（1200x675）。
+        - 涨绿跌红 + 曲线下方同色渐变面积，一眼读出趋势方向
+        - 大字现价与区间涨跌幅，全部来自真实 K 线（严禁编造数字）
+        - 比 bars 布局更强的眼钩：时间线上的连续形态是行情帖最强视觉
+        失败返回 None（调用方降级情绪卡/ FNG 外链）。
+        """
+        try:
+            from PIL import ImageDraw, ImageFont
+            if len(closes) < 12:
+                return None
+            W, H = 1200, 675
+            up = closes[-1] >= closes[0]
+            accent = (0, 220, 130) if up else (255, 92, 92)
+            bg = (13, 17, 26)
+
+            img = Image.new("RGB", (W, H), bg)
+            d = ImageDraw.Draw(img)
+            for y in range(H):
+                ratio = y / H
+                tone = tuple(min(255, int(c * (1 + 0.15 * (1 - ratio)))) for c in bg)
+                d.line([(0, y), (W, y)], fill=tone)
+
+            def _font(size: int, bold: bool = False):
+                for name in (("msyhbd.ttc", "msyh.ttc") if bold else ("msyh.ttc",),
+                             "PingFang.ttc", "NotoSansCJK-Regular.ttc", "DejaVuSans.ttf"):
+                    try:
+                        return ImageFont.truetype(name, size)
+                    except Exception:
+                        continue
+                return ImageFont.load_default()
+
+            sym = symbol.replace("$", "").upper()
+            lo, hi = min(closes), max(closes)
+            span = (hi - lo) or 1.0
+            # 曲线绘制区：左右留白 70px，垂直 260~520（顶部留头两行文字）
+            x0, x1, y_top, y_bot = 70, W - 70, 260, 520
+            step = (x1 - x0) / (len(closes) - 1)
+            pts = [(x0 + i * step, y_bot - (c - lo) / span * (y_bot - y_top))
+                   for i, c in enumerate(closes)]
+
+            # 曲线下方渐变面积：RGBA 合成，弱化到 22% 透明度垫底
+            overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            od = ImageDraw.Draw(overlay)
+            od.polygon(pts + [(x1, y_bot + 24), (x0, y_bot + 24)], fill=accent + (56,))
+            img = Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
+            d = ImageDraw.Draw(img)
+            d.line(pts, fill=accent, width=5, joint="curve")
+            last_pt = pts[-1]
+            d.ellipse([last_pt[0] - 9, last_pt[1] - 9, last_pt[0] + 9, last_pt[1] + 9], fill=accent)
+
+            last = closes[-1]
+            price_str = (f"${last:,.2f}" if last > 100 else
+                         f"${last:.4f}" if last > 1 else f"${last:.6f}")
+            chg = (last / closes[0] - 1) * 100
+            chg_str = f"{'+' if chg >= 0 else ''}{chg:.2f}%"
+
+            f_head, f_price, f_chg, f_small = _font(48, True), _font(64, True), _font(48, True), _font(24)
+            d.text((60, 46), f"${sym} · 48H", font=f_head, fill=accent)
+            d.text((60, 118), price_str, font=f_price, fill=(240, 242, 248))
+            d.text((470, 128), chg_str, font=f_chg, fill=accent)
+            d.rectangle([60, 212, W - 60, 216], fill=accent)
+            foot = " · ".join(x for x in (fng_text, "DATA: BINANCE SPOT 1H KLINE") if x)
+            d.text((60, H - 66), foot, font=f_small, fill=(120, 128, 140))
+
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=90)
+            logger.info(f"48H 走势卡已生成: {sym} {chg_str} ({len(closes)} 点)")
+            return buf.getvalue(), "cover.jpg", "image/jpeg"
+        except Exception as e:
+            logger.warning(f"走势卡渲染失败: {e}")
+            return None
+
+    @classmethod
     def download_image(cls, image_url: str) -> Optional[Tuple[bytes, str, str]]:
         """
         安全下载图片，返回 (图片二进制, 文件名, Content-Type)
@@ -3166,37 +3295,53 @@ class ImageManager:
             target_url = cls.DEFAULT_FALLBACK_IMAGE
         using_fallback = target_url == cls.DEFAULT_FALLBACK_IMAGE
 
-        # 无原图不先抓 FNG 外链图：情绪卡是每帖唯一的本地生成图，优先级最高
+        # 无原图不先抓 FNG 外链图：本地生成图优先（每帖唯一）
         download_result = None if using_fallback else cls.download_image(target_url)
 
         if not download_result:
-            # 原图缺席/下载失败：首选市场情绪卡（每帖唯一），卡片链路全败才退 FNG 外链图
-            if not using_fallback:
-                cls.last_image_fail_reason = "download_failed"
-                logger.info("新闻原图无法抓取，改用实时渲染的市场情绪卡配图...")
+            # 原图缺席/下载失败：首选 48H 走势卡（主标的真实 K 线曲线，最强眼钩），
+            # 行情缺席时退市场情绪卡（bars/随机布局），卡片链路全败才退 FNG 外链图。
+            # 失败标记只在终局赋值一次（reason 非空 ⟺ 最终无图），成功路径零残留。
+            fail_stage = None if using_fallback else "download_failed"
+            logger.info("新闻原图缺席或抓取失败，改用本地渲染走势卡/情绪卡配图...")
             if token_lines is None:
                 token_lines = []
-            card = cls.render_market_card(token_lines, fng_text)
-            if card:
-                hosted_url = cls.upload_to_binance(api_key, card[0], card[1], card[2])
-                if hosted_url:
-                    return hosted_url
-                cls.last_image_fail_reason = "upload_failed"
-            else:
-                cls.last_image_fail_reason = "render_failed"
+            hosted_url = None
+            # 走势卡主标的：数据行里第一个能拉到 K 线的标的（最多试 3 个）
+            for line in token_lines[:3]:
+                m_sym = re.match(r"\$([A-Za-z0-9]+)", line.strip())
+                if not m_sym:
+                    continue
+                closes = MarketDataProvider.get_kline_closes(m_sym.group(1))
+                if not closes:
+                    continue
+                chart = cls.render_chart_card(m_sym.group(1), closes, fng_text)
+                if chart:
+                    hosted_url = cls.upload_to_binance(api_key, chart[0], chart[1], chart[2])
+                    if hosted_url:
+                        return hosted_url
+                    fail_stage = "upload_failed"
+                    break  # 走势卡上传失败不连续换标的重试（S3 故障时换图也没用）
+            if not hosted_url:
+                card = cls.render_market_card(token_lines, fng_text)
+                if card:
+                    hosted_url = cls.upload_to_binance(api_key, card[0], card[1], card[2])
+                    if hosted_url:
+                        return hosted_url
+                    fail_stage = "upload_failed"
+                else:
+                    fail_stage = "render_failed"
             # 情绪卡不可用：降级 FNG 情绪仪表盘外链（先看当日缓存，零额外下载/上传）
             cached_url = cls._read_fallback_cache()
             if cached_url:
                 return cached_url
             download_result = cls.download_image(cls.DEFAULT_FALLBACK_IMAGE)
             if download_result:
-                # 兜底图成功即清中间失败标记，避免遥测把成功帖误标为 image_failed
-                cls.last_image_fail_reason = None
+                fail_stage = None  # 兜底图交付成功
 
         if not download_result:
-            if not cls.last_image_fail_reason:
-                cls.last_image_fail_reason = "download_failed"
-            logger.warning("配图全链路失败（原图/情绪卡/FNG 外链），将以纯文本格式继续发布。")
+            cls.last_image_fail_reason = fail_stage or "download_failed"
+            logger.warning("配图全链路失败（原图/走势卡/情绪卡/FNG 外链），将以纯文本格式继续发布。")
             return None
 
         image_bytes, filename, content_type = download_result

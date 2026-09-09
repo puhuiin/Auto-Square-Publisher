@@ -4461,8 +4461,8 @@ class TestTokenDesparay(unittest.TestCase):
 
 
 class TestFallbackImageCache(unittest.TestCase):
-    """配图管线优先级（R55 反转）：无原图首选实时情绪卡（每帖一图），
-    卡片链路失败才降级 FNG 外链图（当日缓存复用）"""
+    """配图管线优先级（R56）：无原图首选 48H 走势卡（真实 K 线曲线），
+    K 线缺席退实时情绪卡（每帖一图），卡片链路失败才降级 FNG 外链图（当日缓存）"""
 
     def setUp(self):
         import tempfile
@@ -4480,7 +4480,8 @@ class TestFallbackImageCache(unittest.TestCase):
     def test_no_raw_prefers_fresh_card_over_cached_fng(self):
         """无原图：情绪卡优先于当日缓存的 FNG 图（旧管线直接复用缓存 = 全天一张图）"""
         m.ImageManager._write_fallback_cache("https://cdn.example/cached.jpg")
-        with patch.object(m.ImageManager, "render_market_card",
+        with patch.object(m.MarketDataProvider, "get_kline_closes", return_value=None), \
+             patch.object(m.ImageManager, "render_market_card",
                           return_value=("card-jpeg", "cover.jpg", "image/jpeg")) as mock_card, \
              patch.object(m.ImageManager, "upload_to_binance",
                           return_value="https://cdn.example/card.jpg") as mock_up, \
@@ -4493,19 +4494,58 @@ class TestFallbackImageCache(unittest.TestCase):
         # 情绪卡是每帖唯一生成图，绝不写日缓存（否则又变成全天一张）
         self.assertEqual(m.ImageManager._read_fallback_cache(), "https://cdn.example/cached.jpg")
 
+    def test_chart_card_preferred_when_kline_available(self):
+        """K 线可用：走势卡是首选图（行情帖最强眼钩），情绪卡不再被调用"""
+        with patch.object(m.MarketDataProvider, "get_kline_closes",
+                          return_value=[100.0 + i for i in range(48)]) as mock_k, \
+             patch.object(m.ImageManager, "render_chart_card",
+                          return_value=("chart-jpeg", "cover.jpg", "image/jpeg")) as mock_chart, \
+             patch.object(m.ImageManager, "render_market_card") as mock_card, \
+             patch.object(m.ImageManager, "upload_to_binance",
+                          return_value="https://cdn.example/chart.jpg"), \
+             patch.object(m.ImageManager, "download_image") as mock_dl:
+            out = m.ImageManager.prepare_and_upload("k", None,
+                                                    token_lines=["$BTC: $67,000 (24H: +1.5%)"],
+                                                    fng_text="Fear&Greed 55")
+        self.assertEqual(out, "https://cdn.example/chart.jpg")
+        mock_k.assert_called_once_with("BTC")
+        mock_chart.assert_called_once()
+        mock_card.assert_not_called()
+        mock_dl.assert_not_called()
+
+    def test_chart_upload_failure_tries_market_card_not_next_symbol(self):
+        """走势卡上传失败：不换标的连续重试（S3 故障换图也没用），降级情绪卡"""
+        with patch.object(m.MarketDataProvider, "get_kline_closes",
+                          return_value=[100.0 + i for i in range(48)]), \
+             patch.object(m.ImageManager, "render_chart_card",
+                          return_value=("chart-jpeg", "cover.jpg", "image/jpeg")) as mock_chart, \
+             patch.object(m.ImageManager, "render_market_card",
+                          return_value=("card-jpeg", "cover.jpg", "image/jpeg")) as mock_card, \
+             patch.object(m.ImageManager, "upload_to_binance",
+                          side_effect=[None, "https://cdn.example/card.jpg"]) as mock_up:
+            out = m.ImageManager.prepare_and_upload("k", None,
+                                                    token_lines=["$BTC", "$ETH", "$SOL"],
+                                                    fng_text="Fear&Greed 55")
+        self.assertEqual(out, "https://cdn.example/card.jpg")
+        self.assertEqual(mock_chart.call_count, 1, "走势卡上传失败后不得换标的重试")
+        self.assertEqual(mock_up.call_count, 2)
+
     def test_card_render_failure_falls_to_fng_cache(self):
         m.ImageManager._write_fallback_cache("https://cdn.example/cached.jpg")
-        with patch.object(m.ImageManager, "render_market_card", return_value=None), \
+        with patch.object(m.MarketDataProvider, "get_kline_closes", return_value=None), \
+             patch.object(m.ImageManager, "render_market_card", return_value=None), \
              patch.object(m.ImageManager, "download_image") as mock_dl:
             out = m.ImageManager.prepare_and_upload("k", None)
         self.assertEqual(out, "https://cdn.example/cached.jpg")
         mock_dl.assert_not_called()
-        self.assertEqual(m.ImageManager.last_image_fail_reason, "render_failed")
+        # R56 语义：reason 非空 ⟺ 最终无图。FNG 日缓存交付成功 → 无失败标记
+        self.assertIsNone(m.ImageManager.last_image_fail_reason)
 
     def test_card_upload_failure_falls_to_fng_download_and_caches(self):
         """卡片上传失败（第 1 次 upload 返回 None）→ 降级 FNG 外链下载+上传，成功后写缓存"""
         blob = ("fake-jpeg-bytes-", "cover.jpg", "image/jpeg")
-        with patch.object(m.ImageManager, "render_market_card",
+        with patch.object(m.MarketDataProvider, "get_kline_closes", return_value=None), \
+             patch.object(m.ImageManager, "render_market_card",
                           return_value=("card-jpeg", "cover.jpg", "image/jpeg")), \
              patch.object(m.ImageManager, "upload_to_binance",
                           side_effect=[None, "https://cdn.example/new.jpg"]) as mock_up, \
@@ -4521,7 +4561,8 @@ class TestFallbackImageCache(unittest.TestCase):
     def test_raw_failure_tries_card_before_fng(self):
         blob = ("card-jpeg", "cover.jpg", "image/jpeg")
         m.ImageManager._write_fallback_cache("https://cdn.example/cached.jpg")
-        with patch.object(m.ImageManager, "download_image", return_value=None) as mock_dl, \
+        with patch.object(m.MarketDataProvider, "get_kline_closes", return_value=None), \
+             patch.object(m.ImageManager, "download_image", return_value=None) as mock_dl, \
              patch.object(m.ImageManager, "render_market_card", return_value=blob) as mock_card, \
              patch.object(m.ImageManager, "upload_to_binance",
                           return_value="https://cdn.example/card.jpg") as mock_up:
@@ -4535,7 +4576,8 @@ class TestFallbackImageCache(unittest.TestCase):
         mock_up.assert_called_once()
 
     def test_total_failure_returns_none(self):
-        with patch.object(m.ImageManager, "render_market_card", return_value=None), \
+        with patch.object(m.MarketDataProvider, "get_kline_closes", return_value=None), \
+             patch.object(m.ImageManager, "render_market_card", return_value=None), \
              patch.object(m.ImageManager, "download_image", return_value=None), \
              patch.object(m.ImageManager, "upload_to_binance", return_value=None):
             out = m.ImageManager.prepare_and_upload("k", "https://news.example/a.jpg")
