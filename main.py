@@ -359,6 +359,50 @@ def intel_state_update(key: str, mutate_fn, default=None):
             return None
 
 
+# ---------------- 调度看门狗（R61 事故产物） ----------------
+# 背景：GitHub schedule 是最不可靠的触发面——2026-09-09 00:08Z 起 cron 被静默吞掉
+# 4.5 小时（13 个调度点零投递，无日志无报警，workflow state 仍 active）。机器人
+# 自己"没跑"时无法自报警，唯一能发声的位置是【下一次侥幸活下来的运行的开头】。
+# 因此：每轮真实运行开头盖心跳戳；发现距上次心跳超过 WATCHDOG_MAX_AGE_MIN 即推送报警。
+_HEARTBEAT_KEY = "_last_run_heartbeat"
+WATCHDOG_MAX_AGE_MIN = _env_int("WATCHDOG_MAX_AGE_MIN", 50)  # cron 20min 间隔，2 次连续丢点即触发
+
+
+def record_run_heartbeat() -> None:
+    """盖心跳戳：真实运行开头调用（DRY_RUN 不写，零副作用）。失败静默（冷路径）。"""
+    try:
+        intel_state_set(_HEARTBEAT_KEY, {
+            "ts": datetime.now(timezone.utc).isoformat(),
+        })
+    except Exception:
+        pass
+
+
+def check_schedule_watchdog() -> None:
+    """检查上次心跳距今是否超过阈值；超时说明中间有调度点被 GitHub 吞掉。
+    报警自带 12h 节流（Notifier 通用语义），不会连环轰炸。"""
+    try:
+        state = intel_state_get(_HEARTBEAT_KEY, {}) or {}
+        ts_raw = str(state.get("ts", "") or "")
+        if not ts_raw:
+            return  # 首轮无历史心跳，无从判断，静默
+        last = datetime.fromisoformat(ts_raw)
+        age_min = (datetime.now(timezone.utc) - last).total_seconds() / 60
+        if age_min < WATCHDOG_MAX_AGE_MIN:
+            return
+        # 本轮能跑到这里 = 调度已恢复；报警说明"中间丢了 N 轮"
+        Notifier.send_notification(
+            "发帖机器人调度中断恢复",
+            f"本次运行距上次成功运行 {age_min:.0f} 分钟（阈值 {WATCHDOG_MAX_AGE_MIN}，"
+            f"正常间隔 20 分钟）。中间约 {int(age_min // 20)} 轮 cron 被 GitHub 调度器"
+            f"静默吞掉——机器人自身无日志可查（没跑就没有日志）。若反复出现，"
+            f"考虑改用第三方 cron（cron-job.org 等）回调 workflow_dispatch 触发。",
+            is_error=True,
+        )
+    except Exception as e:
+        logger.debug(f"调度看门狗检查异常 (不影响主流程): {e}")
+
+
 # 与英文单词撞名的真实代币代码：原文必须全大写(NEAR)或带 $ 前缀($NEAR) 才采信，防止误判
 AMBIGUOUS_TICKERS = {
     "NEAR", "NOT", "ONE", "APT", "APE", "SAND", "MANA", "MASK", "PEOPLE",
@@ -4592,6 +4636,14 @@ def _run_main():
     logger.info(f"   发布平台: {' / '.join(PUBLISH_PLATFORMS)}")
     logger.info(f"   新闻时效窗口: {MAX_NEWS_AGE_HOURS}h | 去重阈值: {DUP_SIMILARITY_THRESHOLD}")
     logger.info("==================================================")
+
+    # 调度看门狗（R61 事故产物）：真实运行开头盖心跳戳；距上次心跳超阈值说明
+    # 中间有调度点被 GitHub 静默吞掉——趁本轮"还活着"赶紧报警。设了活跃窗口时
+    # 夜间合法停跑会制造长间隔，看门狗只服务 24h 全天模式。
+    if not dry_run:
+        record_run_heartbeat()
+        if not ACTIVE_HOURS_BEIJING:
+            check_schedule_watchdog()
 
     # 1. 生产模式必要参数检查（仅 binance 启用时强制要求 Square Key）
     if not dry_run and "binance" in PUBLISH_PLATFORMS and not square_api_key:
