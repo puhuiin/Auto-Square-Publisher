@@ -16,6 +16,9 @@ from unittest.mock import patch, MagicMock
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import main as m
+# 在任何 patch 之前捕获真实现：TestRunMainSemantics 会把 m.NewsFetcher 整类 mock 成
+# MagicMock，届时类属性取不到原始方法（R74 清单文截断测试需要真实提取逻辑）
+_REAL_EXTRACT_TOKENS = m.NewsFetcher.extract_tokens  # staticmethod → 直接是函数对象
 
 
 # 套件级 hermetic 符号表：_sanitize_content 等逻辑无条件调用 get_valid_symbols，
@@ -3870,6 +3873,35 @@ class TestRunMainSemantics(unittest.TestCase):
             self.assertFalse(os.path.exists(paths["cache"]), "DRY 不得写去重缓存")
             self.assertFalse(os.path.exists(paths["metrics"]), "DRY 不得记遥测")
             self.assertEqual(self._draft_files(paths["drafts"]), [], "DRY 不得导草稿")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_listicle_tokens_truncated_to_per_post_cap(self):
+        """R74：清单式行情日评提取 5+ 个币 → 截断到 MAX_TOKENS_PER_POST（前 3）。
+        否则单帖挂 N 个 $ 挂件：视觉闹、叙事散、一次吃掉 N 个币的日限流额度。"""
+        tmpdir, paths = self._iso_files()
+        listicle = dict(self._candidate(),
+                        title="Price Analysis: BTC holds, ETH dips, SOL rallies, "
+                              "DOGE pumps, PEPE moon",
+                        summary="")
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[listicle])
+        # extract_tokens 真实跑：_base_patches 先构造好 NewsFetcher mock（其
+        # extract_tokens.return_value=["BTC"]），且 SymbolValidator.get_valid_symbols
+        # 也被 mock 成 {"BTC"}——两者都委托不出去，直接喂常量标的池
+        m.NewsFetcher.extract_tokens.side_effect = lambda text, vs: _REAL_EXTRACT_TOKENS(
+            text, TEST_SYMBOL_UNIVERSE)
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            m._run_main()
+            # 截断发生在提取后：token_hints（传给 summarize 的新闻侧标的）= 前 3 个
+            hints = self._engine.summarize.call_args.kwargs.get("token_hints") or []
+            self.assertEqual(hints, ["BTC", "ETH", "SOL"],
+                             f"新闻侧标的必须按标题出现序截断到 {m.MAX_TOKENS_PER_POST} 个")
         finally:
             self._teardown(patches, tmpdir)
 

@@ -156,6 +156,7 @@ DUP_SIMILARITY_THRESHOLD = _clamp01("DUP_SIMILARITY_THRESHOLD", _env_float("DUP_
 MIN_IMPACT_SCORE = _env_int("MIN_IMPACT_SCORE", 0)                 # 最低热度分过滤，0 表示不过滤
 MAX_DAILY_POSTS = _env_int("MAX_DAILY_POSTS", 12)                  # 24h 滚动发帖配额，0 表示不限制
 TOKEN_DAILY_LIMIT = _env_int("TOKEN_DAILY_LIMIT", 3)               # 同一代币 24h 内最多发布篇数，0 表示不限制
+MAX_TOKENS_PER_POST = _env_int("MAX_TOKENS_PER_POST", 3)           # 单帖挂件标的上限（清单式行情日评可提取 9+ 币）
 # 每日深度长文（contentType=2）：每天首帖若热度达标即升级长文（ARTICLE_PER_DAY=0 关闭）
 ARTICLE_PER_DAY = os.getenv("ARTICLE_PER_DAY", "1").strip()
 ARTICLE_MIN_IMPACT = _env_int("ARTICLE_MIN_IMPACT", 20)            # 长文选稿门槛：榜首热度低于此值不发长文
@@ -4823,6 +4824,14 @@ def _run_main():
             # 歧义代码（NEAR/LINK/MASK 等）仅当原文为全大写或带 $ 前缀时才采信
             combined_text = title + " " + item["summary"]
             detected_tokens = NewsFetcher.extract_tokens(combined_text, valid_symbols)
+
+            # 单帖挂件上限（R74）：清单式行情日评（"Price Analysis: BTC…ETH…SOL…"
+            # 系列）能把 9 个币全量带进挂件链路——视觉闹、叙事散，还一次性吃掉 9 个
+            # 币的 24h 限流额度。标题出现顺序即显著度顺序，截断到 MAX_TOKENS_PER_POST。
+            if len(detected_tokens) > MAX_TOKENS_PER_POST:
+                logger.info(f"识别标的 {detected_tokens} 超出单帖上限，截断保留前 "
+                            f"{MAX_TOKENS_PER_POST} 个（按标题出现序=显著度序）: {title[:50]}")
+                detected_tokens = detected_tokens[:MAX_TOKENS_PER_POST]
 
             # 新闻全文无任何币安真实标的 → 缺乏 Write2Earn 抓手，强行挂 $BTC 是无关曝光，直接跳过
             if not detected_tokens:
