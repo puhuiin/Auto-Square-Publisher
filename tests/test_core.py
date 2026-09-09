@@ -4789,6 +4789,36 @@ class TestPermanentFailure(unittest.TestCase):
                    if c.args and isinstance(c.args[0], dict)]
         self.assertTrue(any(r == "boom" for r in reasons), reasons)
 
+    def test_force_restart_skips_permanent_cooled(self):
+        """全量冷却强制重启只救瞬时故障：permanent（404 下架）不复活陪烧。
+        生产实证（R57 遥测）：b.ai 超时进冷却 → 全员重启拉回已下架的 minimax
+        → 24h 内烧 12 次 404。修复后强制重启只含非 permanent 提供商。"""
+        eng = self._engine()
+        p_transient = m.LLMProviderConfig("P-transient", "https://x", "k", "m1")
+        p_dead = m.LLMProviderConfig("P-dead", "https://x", "k", "m2")
+        eng.providers = [p_transient, p_dead]
+        future = (datetime.now(timezone.utc) + timedelta(hours=5)).isoformat()
+        state = {
+            "P-transient": {"fails": 1, "cooldown_until": future},
+            "P-dead": {"fails": 3, "cooldown_until": future, "permanent": True},
+        }
+        with patch.object(eng, "_breaker_state", return_value=state), \
+             patch.object(eng, "_provider_cost_latency_scores", return_value={}):
+            ordered = eng._ordered_providers()
+        self.assertEqual([p.name for p in ordered], ["P-transient"],
+                         "permanent 冷却商不得被全员重启复活")
+
+    def test_force_restart_empty_when_all_permanent(self):
+        """全员 permanent：宁可空链快速失败（无 HTTP 成本），也不再试错"""
+        eng = self._engine()
+        eng.providers = [m.LLMProviderConfig("P-dead", "https://x", "k", "m2")]
+        future = (datetime.now(timezone.utc) + timedelta(hours=5)).isoformat()
+        state = {"P-dead": {"fails": 3, "cooldown_until": future, "permanent": True}}
+        with patch.object(eng, "_breaker_state", return_value=state), \
+             patch.object(eng, "_provider_cost_latency_scores", return_value={}):
+            ordered = eng._ordered_providers()
+        self.assertEqual(ordered, [])
+
 
 class TestEmptyPolicyV2(unittest.TestCase):
     """空回政策 v2：首挂才重试；连挂窗口直接认；同运行连挂≥2 进熔断；成功清零"""

@@ -2026,8 +2026,19 @@ class MultiLLMEngine:
         if cooled:
             logger.info(f"⚡ 断路器跳过冷却中提供商: {[p.name for p in cooled]}")
         if not active:
-            logger.warning("所有提供商均在冷却期，强制全员重启尝试。")
-            active = list(self.providers)
+            # 全量冷却强制重启只救瞬时故障：permanent 标记（404 模型下架）不复活。
+            # 生产实证（9/7-9/8 遥测）：minimax 下架进 24h 长冷却后，每当 b.ai 超时
+            # 进冷却，"全员重启"就把 minimax 拉回陪烧 404——12 次 404 几乎全是这条
+            # 漏洞烧的（每次白烧 1 故事 × 2 次调用）。全员 permanent 时宁可空链快败。
+            transient = [p for p in self.providers
+                         if not (state.get(p.name) or {}).get("permanent")]
+            if transient:
+                logger.warning(f"所有提供商均在冷却期，仅重启非永久失败提供商: {[p.name for p in transient]}")
+                active = transient
+            else:
+                logger.error("所有提供商均在冷却期且带 permanent 标记（模型下架/404），"
+                             "本轮不再试错，空链快速失败。")
+                active = []
         # 无遥测时 scores 为空 → 二级键恒 +inf → 退化为纯 fail-count 排序（稳定，保配置序）
         scores = self._provider_cost_latency_scores()
         rank_key = lambda p: (self._fail_counts.get(p.name, 0), scores.get(p.name, float("inf")))
@@ -4326,7 +4337,15 @@ def run_healthcheck():
         if eng.providers:
             names = []
             for p in eng.providers:
-                cooled = "❄️冷却中" if eng._breaker_cooled_down(p.name) else "✔"
+                # 瞬时冷却 ❄️ 与永久失败 💀（模型下架 24h 长冷却）分开展示：
+                # 💀 是"等也没用"（除非 24h 到期自动复活），提示运维换模型而非干等
+                info = (eng._breaker_state() or {}).get(p.name) or {}
+                if info.get("permanent"):
+                    cooled = "💀permanent"
+                elif eng._breaker_cooled_down(p.name):
+                    cooled = "❄️冷却中"
+                else:
+                    cooled = "✔"
                 names.append(f"{p.name}({p.model}){cooled}")
             checks.append(("LLM 提供商链", "✔", f"{len(eng.providers)} 个: " + ", ".join(names)))
         else:
