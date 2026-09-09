@@ -4402,7 +4402,6 @@ def _run_main():
             if "binance" in PUBLISH_PLATFORMS and publisher._publish_parked(news_id):
                 logger.info(f"⏸️ 该新闻发布连续失败已被停放，跳过等待恢复: {title[:50]}")
                 continue
-
             live_market_data = MarketDataProvider.get_token_market_data(detected_tokens[:3])
             # 时段人设：让文案与发布时间自然对齐（凌晨的帖说"早间策略"一眼假）
             bj_hour = datetime.now(timezone(timedelta(hours=8))).hour
@@ -4435,6 +4434,11 @@ def _run_main():
                     "reason": (getattr(llm_engine, "last_fail_reason", "") or "")[:80],
                     "outcome": "llm_failed",
                 })
+                # 故事级停放（LLM 版）：同篇新闻的质量门/幻觉门系统性拒稿，重试也大概率
+                # 再被拒（生产实证：BitMine 同篇 5 次烧 5984 tokens）。复用发布停放计数
+                # ——LLM 失败也记 ok=False，达 2 次进 6h 停放，到期自动重试。
+                if "binance" in PUBLISH_PLATFORMS:
+                    publisher._publish_record(news_id, ok=False)
                 if consecutive_llm_failures >= 3:
                     logger.error("🛑 模型池连续 3 次全部不可用，触发熔断提前终止，防止无效重试浪费运行时长。")
                     Notifier.send_notification(
