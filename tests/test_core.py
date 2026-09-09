@@ -84,7 +84,10 @@ class TestParseFeedEntry(unittest.TestCase):
         self.mgr = m.CacheManager(self.tmp)
 
     def tearDown(self):
-        m.SymbolValidator._valid_symbols_cache = self._orig_cache
+        # 修复：旧代码把 CACHE_FILE 路径字符串赋给标的池缓存（变量名串位），
+        # 让后续所有 filter_valid_tokens 把 "D:/.../sent_cache.json" 当标的集合 → 返回 []。
+        # setUpModule/tearDownModule 统一保管真实原值，这里只需恢复约定池。
+        m.SymbolValidator._valid_symbols_cache = set(TEST_SYMBOL_UNIVERSE)
         m.CACHE_FILE = self._orig_cache
         if os.path.exists(self.tmp):
             os.remove(self.tmp)
@@ -161,6 +164,24 @@ class TestTokenExtraction(unittest.TestCase):
     def test_dedup_preserves_order(self):
         out = m.NewsFetcher.extract_tokens("$SOL and $SOL again then $ETH", self.VALID)
         self.assertEqual(out, ["SOL", "ETH"])
+
+    def test_ai_ticker_requires_cashtag(self):
+        """R69：AI 是首字母缩写词（永远全大写），全大写启发式对它零信号。
+        裸 AI（技术语境 99%）不提取；$AI 显式引用才采信。"""
+        # 技术语境实弹实录（R68）：Cardano 创始人谈 AI 数学进步 → 被硬挂 $AI 代币
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "Cardano Founder Stunned by AI's Mathematical Progress",
+            self.VALID | {"AI"}), [])
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "AI Regulation Passes Senate", self.VALID | {"AI"}), [])
+        # 显式 $AI = 真在说 Sleepless AI 代币，放行
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "Sleepless AI ($AI) Announces Season 2 mint", self.VALID | {"AI"}), ["AI"])
+
+    def test_filter_valid_tokens_drops_ai_self_report(self):
+        """模型自报的 $AI 也不采信（模型有挂件返佣动机硬蹭），两道口子一起堵。
+        新闻侧 token_hints 不过滤：真 AI 代币新闻仍能发。"""
+        self.assertEqual(m.SymbolValidator.filter_valid_tokens(["AI", "BTC"]), ["BTC"])
 
 
 class TestSymbolValidatorFallback(unittest.TestCase):

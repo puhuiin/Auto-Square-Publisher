@@ -900,9 +900,14 @@ class SymbolValidator:
         summarize 内被调用——那里 token_hints 恒非空（_run_main 前置过滤保证），
         旧的 BTC 兜底属于永不可达的死代码。空结果交由调用方决定（summarize 会
         显式跳过并留痕，或按 BINANCE_FORCE_BTC_FALLBACK 显式兜底）。
+
+        "AI" 特判（R69）：模型常把 AI 技术新闻的 $AI 织进正文（交易挂件 = 返佣
+        生命线，模型有动机硬蹭），但 AI 币（Sleepless AI）与 AI 技术话题几乎无关
+        ——新闻侧 extract_tokens 已拒收裸 AI，模型自报的 $AI 同样不采信，
+        两道口子一起堵死"AI 技术新闻误挂 AI 币"的整条链路。
         """
         valid_set = cls.get_valid_symbols()
-        return [t for t in tokens if t.upper() in valid_set]
+        return [t for t in tokens if t.upper() in valid_set and t.upper() != "AI"]
 
 
 # ---------------------------------------------------------------------------
@@ -1156,14 +1161,21 @@ class NewsFetcher:
     @staticmethod
     def extract_tokens(text: str, valid_symbols: Set[str]) -> List[str]:
         """从新闻文本中识别真实代币代码。
-        歧义代码（NEAR/LINK/MASK 等英文单词撞名币）仅当原文为全大写或带 $ 前缀时才采信。"""
+        歧义代码（NEAR/LINK/MASK 等英文单词撞名币）仅当原文为全大写或带 $ 前缀时才采信。
+        特例 "AI"：它是首字母缩写词，永远全大写，全大写启发式对它零信号——且加密新闻里
+        99% 的 AI 是技术词而非 Sleepless AI 代币（R69 实弹实录：OpenAI/Cardano 的 AI
+        技术新闻被硬挂 $AI，生成出"自家代币的 AI 进步"式事实错乱）。故 AI 只认 $ 前缀
+        显式引用；裸 AI 一律不提取（该类新闻本就无直接挂钩标的，跳过比编造叙事诚实）。"""
         detected: List[str] = []
         for m in re.finditer(r"\$?([A-Za-z0-9]{2,10})\b", text):
             word = m.group(1)
             upper_w = word.upper()
             if upper_w in IGNORE_WORDS or upper_w not in valid_symbols:
                 continue
-            if upper_w in AMBIGUOUS_TICKERS and not (m.group(0).startswith("$") or word.isupper()):
+            if upper_w == "AI":
+                if not m.group(0).startswith("$"):
+                    continue
+            elif upper_w in AMBIGUOUS_TICKERS and not (m.group(0).startswith("$") or word.isupper()):
                 continue
             if upper_w not in detected:
                 detected.append(upper_w)
