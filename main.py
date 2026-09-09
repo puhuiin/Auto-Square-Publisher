@@ -3766,6 +3766,11 @@ class SquarePublisher(BasePublisher):
         # 不清就会被下一条新闻读到（Round 5）。
         self.last_error = None
         self.last_error_code = None
+        # 发布产物回执：contentId（帖子永久标识，未来审计/分析用）与
+        # 最终发布文本（净化+织挂件+标签之后的版本——质量门只见 LLM 原稿，
+        # 发出去的实际是这份改写稿，遥测必须记它而非原稿）
+        self.last_content_id: Optional[str] = None
+        self.last_final_content: Optional[str] = None
         if not self.api_key:
             logger.error("未配置 SQUARE_API_KEY，无法发布到币安广场！")
             self.last_error = "未配置 SQUARE_API_KEY，无法发布到币安广场！"
@@ -3847,6 +3852,7 @@ class SquarePublisher(BasePublisher):
             # 处理币安偶发 504 网关超时（官方客户端标准：内容已受理入库）
             if status_code == 504:
                 logger.warning("币安接口返回 504 Gateway Timeout（内容已进入后台发布队列，按成功处理，杜绝重复发帖）")
+                self.last_final_content = content
                 return True
 
             if status_code != 200:
@@ -3872,8 +3878,10 @@ class SquarePublisher(BasePublisher):
 
             if code == "000000" or success is True or code == 0:
                 data = resp_json.get("data") or {}
-                content_id = data.get("contentId") or data.get("id") or "成功"
-                logger.info(f"🎉 成功发布到币安广场！Content ID: {content_id}")
+                content_id = str(data.get("contentId") or data.get("id") or "")
+                self.last_content_id = content_id or None
+                self.last_final_content = content
+                logger.info(f"🎉 成功发布到币安广场！Content ID: {content_id or '未返回'}")
                 return True
             else:
                 # 若带图发布返回业务错误且为图片处理异常，自动降级纯文本重发
@@ -4369,8 +4377,8 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
                 lines.append(f"- **耗时画像**: {'  '.join(parts)}")
         lines.append("")
         if posted_records:
-            lines += ["| # | 热点新闻 | 形态 | 时效 | 来源 | 模型 | 配图 | 耗时 |",
-                      "|---|---|---|---|---|---|---|---|"]
+            lines += ["| # | 热点新闻 | 形态 | 时效 | 来源 | 模型 | 配图 | 帖子 | 耗时 |",
+                      "|---|---|---|---|---|---|---|---|---|"]
             for i, r in enumerate(posted_records, 1):
                 safe_title = r["title"][:48].replace("|", "\\|")
                 # 长文行第二列展示生成的文章标题（比新闻标题更有信息量）
@@ -4379,10 +4387,13 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
                     form += f"《{str(r['article_title'])[:18]}》"
                 elapsed = r.get("elapsed_sec")
                 age = r.get("age_hours")
+                # contentId（纯数字）即广场帖子 URL id：直链供人工点开复核
+                cid = r.get("content_id")
+                link = f"[帖](https://www.binance.com/zh-CN/square/post/{cid})" if cid else "—"
                 lines.append(
                     f"| {i} | {safe_title} | {form} | "
                     f"{f'{age}h前' if age is not None else '—'} | "
-                    f"{r['source']} | {r['provider']} | {'🖼️' if r['image'] else '—'} | "
+                    f"{r['source']} | {r['provider']} | {'🖼️' if r['image'] else '—'} | {link} | "
                     f"{f'{elapsed:.1f}s' if elapsed is not None else '—'} |"
                 )
         with open(summary_path, "a", encoding="utf-8") as f:
@@ -4911,6 +4922,12 @@ def _run_main():
                         # 否则第二个故事再看旧快照会再发一篇长文（R60 修复的双长文 bug）
                         intel_state_set("_article_sent_date", today_utc)
                         article_done_today = True
+                    # 发布回执提取（isinstance 守卫：测试用 Mock publisher 时降级 None，
+                    # 直塞 Mock 进 json.dumps 会让 append_metrics 整行静默丢弃）
+                    raw_cid = getattr(publisher, "last_content_id", None)
+                    final_content = getattr(publisher, "last_final_content", None)
+                    content_id = raw_cid if isinstance(raw_cid, str) else None
+                    final_preview = final_content[:120] if isinstance(final_content, str) else ""
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
@@ -4921,6 +4938,10 @@ def _run_main():
                         "article": bool(llm_result.get("title")),
                         # 生成的长文标题单列（与新闻 title 区分）：事后做标题质量/眼钩分析
                         "article_title": (llm_result.get("title") or "")[:40],
+                        # 发布回执：contentId 是帖子永久标识（未来拉互动数据时做 join 键）；
+                        # final_preview 记净化/织挂件/标签注入后的实际发布文本（质量门只见原稿）
+                        "content_id": content_id,
+                        "final_preview": final_preview,
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason,
@@ -4931,6 +4952,7 @@ def _run_main():
                         "provider": llm_result["provider"], "image": bool(uploaded_image_url),
                         "article": bool(llm_result.get("title")),
                         "article_title": llm_result.get("title") or "",
+                        "content_id": content_id,
                         "age_hours": item.get("age_hours"),
                         "elapsed_sec": round(publish_elapsed, 1),
                     })
@@ -4946,7 +4968,9 @@ def _run_main():
                             is_error=True,
                         )
                         break
-                    Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}\n\n{post_content[:200]}...")
+                    # 成功通知预览用最终发布文本（净化/织挂件后）——原稿预览会误导排障
+                    notify_preview = final_preview if final_preview else post_content[:120]
+                    Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}\nContent ID: {content_id or '未返回'}\n\n{notify_preview}...")
                 elif not binance_enabled and (draft_exported or telegram_exported):
                     # 仅副平台模式：任一平台完成投递即入缓存，防止每 20 分钟重复处理同一新闻
                     delivered = _delivered_platforms(False, draft_exported, telegram_exported)

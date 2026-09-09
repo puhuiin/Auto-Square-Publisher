@@ -3536,6 +3536,25 @@ class TestSquarePublisherSession(unittest.TestCase):
             mock_sess.post.return_value = fake_resp
             self.assertTrue(pub.publish(content, ensure_tokens=["BTC"]))
             mock_sess.post.assert_called_once()
+        # R63 发布回执：contentId 与最终文本必须在成功后可取（遥测/审计数据源）
+        self.assertEqual(pub.last_content_id, "cid1")
+        # 最终文本 = 净化/织挂件后的版本（应含保底挂件），且是 str
+        self.assertIsInstance(pub.last_final_content, str)
+        self.assertIn("$BTC", pub.last_final_content)
+
+    def test_publish_failure_clears_receipt(self):
+        """失败后回执必须为 None：复用实例发第二帖不能读到上一帖的 contentId"""
+        pub = m.SquarePublisher(api_key="k")
+        pub.last_content_id = "stale-cid"
+        pub.last_final_content = "stale"
+        fake_resp = MagicMock(status_code=200)
+        fake_resp.json.return_value = {"code": "20002", "success": False, "message": "敏感词"}
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.return_value = fake_resp
+            self.assertFalse(pub.publish("这段内容会触发风控拦截的测试文本 $BTC"))
+        self.assertIsNone(pub.last_content_id)
+        self.assertIsNone(pub.last_final_content)
 
     def test_widget_inserted_into_payload(self):
         # 挂件接线：正文无有效 $ 时，发出载荷里必须有保底 $TOKEN（光测静态函数不够）
