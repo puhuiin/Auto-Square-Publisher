@@ -3765,6 +3765,49 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_second_post_same_run_falls_back_to_short(self):
+        """R60 修复锁：同运行发完长文后第二个帖子必须回短讯。
+        旧 bug：article_done_today 是循环外快照，发完长文不更新 → max_posts=2 时
+        workflow 默认配置下同一天连发两篇长文。"""
+        tmpdir, paths = self._iso_files()
+        c1 = self._candidate()
+        c2 = dict(self._candidate(), id="news-2", title="ETH follows BTC higher")
+        patches = self._base_patches(tmpdir, paths, dry=False, max_posts="2",
+                                     candidates=[c1, c2])
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+
+        article_payload = ("TITLE: BTC 行情深度复盘测试标题\n\n一、发生了什么\n"
+                           + "盘面信号明确，资金正在悄悄换仓，结构修复需要时间。" * 25)
+        short_payload = "BTC 放量突破关键位，短线情绪转多，注意回踩确认再进。"
+
+        def _summarize(item, campaign_intel=None, market_context="", token_hints=None, article=False):
+            if article:
+                return {"content": article_payload, "tokens": ["BTC"], "provider": "stub",
+                        "title": "BTC 行情深度复盘测试标题"}
+            return {"content": short_payload, "tokens": ["BTC"], "provider": "stub",
+                    "title": None}
+
+        self._engine.summarize.side_effect = _summarize
+        try:
+            m._run_main()
+            self.assertEqual(self._engine.summarize.call_count, 2)
+            self.assertTrue(self._engine.summarize.call_args_list[0].kwargs.get("article"),
+                            "当日首帖（热度达标）应走长文模式")
+            self.assertFalse(self._engine.summarize.call_args_list[1].kwargs.get("article"),
+                             "同运行第二帖必须回退短讯模式")
+            self.assertEqual(pub.publish.call_count, 2)
+            self.assertEqual(pub.publish.call_args_list[0].kwargs.get("title"),
+                             "BTC 行情深度复盘测试标题")
+            self.assertIsNone(pub.publish.call_args_list[1].kwargs.get("title"),
+                              "同运行第二帖发布不得带 title（contentType=1 短讯）")
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_failed_publish_records_park_entry(self):
         # 失败记次接线：币安发布失败必须调用停放记录（否则 R47 的跨轮止损无从谈起）
         tmpdir, paths = self._iso_files()

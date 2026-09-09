@@ -4896,8 +4896,11 @@ def _run_main():
                     persisted = cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
                     posted_titles_this_run.append(title)
                     if use_article:
-                        # 长文当日额度核销：仅在真实发布成功后标记（DRY_RUN 不写，零副作用）
+                        # 长文当日额度核销：仅在真实发布成功后标记（DRY_RUN 不写，零副作用）。
+                        # 本地快照同步置位：同运行后续帖子（max_posts=2）立即回到短讯，
+                        # 否则第二个故事再看旧快照会再发一篇长文（R60 修复的双长文 bug）
                         intel_state_set("_article_sent_date", today_utc)
+                        article_done_today = True
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
