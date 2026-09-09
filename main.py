@@ -2217,29 +2217,12 @@ class MultiLLMEngine:
             "outcome": "llm_rejected",
         })
 
-    def summarize(
-        self,
-        news_item: Dict[str, Any],
-        campaign_intel: Optional[Dict[str, Any]] = None,
-        market_context: str = "",
-        token_hints: Optional[List[str]] = None,
-    ) -> Optional[Dict[str, Any]]:
-        """
-        结合最新币安官方活动情报与实时行情进行高收益转化提炼。
-        返回 {"content": 正文, "tokens": 有效代币, "provider": 成功模型名}，全部失败返回 None。
-        提供商按本次运行内的连续失败次数升序尝试（健康度优先调度）。
-        """
-        # 故事级死亡原因透出（_run_main 的 llm_failed 记录此前无 reason，只能靠标题关联
-        # provider 级记录）：各 return None 前必赋值；此处默认值覆盖"无提供商"早退路径，
-        # 循环内/循环后路径在下面另行赋值（fail_reason 同理，空链时避免引用未绑定）。
-        self.last_fail_reason = "无可用 LLM 提供商配置"
-        if not self.providers:
-            logger.error("没有任何可用的 LLM 提供商配置！")
-            # 空链也留痕：否则"连续 3 次失败熔断"在遥测里看不到任何前因，
-            # 事后只能猜是没配 Key 还是模型全挂
-            self._log_reject(news_item, "-", "no_provider", "无可用 LLM 提供商（Key 未配或网关离线）")
-            return None
-
+    def _build_user_prompt(self, news_item: Dict[str, Any],
+                           campaign_intel: Optional[Dict[str, Any]],
+                           market_context: str,
+                           token_hints: Optional[List[str]]) -> Tuple[str, Dict[str, str]]:
+        """组装提炼用 user prompt（输入→prompt 文本 + 选中的写派人设）。
+        抽取自 summarize：prompt 组装与提供商容灾循环职责分离，组装规则可独立测试。"""
         # 组织活动背景提示（仅作为潜意识背景，避免生搬硬套非相关代币）
         intel_section = ""
         if campaign_intel and campaign_intel.get("strategy_guidance"):
@@ -2270,7 +2253,8 @@ class MultiLLMEngine:
             ending_hint += f"【本条新闻时效】：{freshness}\n"
 
         # 写派人设轮换：本条用哪种气质说话
-        persona_name = _PERSONA_BAG.draw(); persona = next(p for p in WRITING_PERSONAS if p["name"] == persona_name)
+        persona_name = _PERSONA_BAG.draw()
+        persona = next(p for p in WRITING_PERSONAS if p["name"] == persona_name)
 
         user_prompt = f"""请将以下新闻提炼为一条极具穿透力、短小精悍的真人交易员动态：
 
@@ -2286,6 +2270,32 @@ class MultiLLMEngine:
 4. 结尾设计一句极简的站队提问（如“看多的扣1，看空的扣2”），最后附带 3 个标签：#Write2Earn #BinanceSquare #核心代币。
 5. 所有数字（价格/涨跌幅/资金量/贪婪指数）只能来自上面给的资料，一个都不许编造。
 直接输出正文，不要任何开场白或多余解释："""
+        return user_prompt, persona
+
+    def summarize(
+        self,
+        news_item: Dict[str, Any],
+        campaign_intel: Optional[Dict[str, Any]] = None,
+        market_context: str = "",
+        token_hints: Optional[List[str]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        结合最新币安官方活动情报与实时行情进行高收益转化提炼。
+        返回 {"content": 正文, "tokens": 有效代币, "provider": 成功模型名}，全部失败返回 None。
+        提供商按本次运行内的连续失败次数升序尝试（健康度优先调度）。
+        """
+        # 故事级死亡原因透出（_run_main 的 llm_failed 记录此前无 reason，只能靠标题关联
+        # provider 级记录）：各 return None 前必赋值；此处默认值覆盖"无提供商"早退路径，
+        # 循环内/循环后路径在下面另行赋值（fail_reason 同理，空链时避免引用未绑定）。
+        self.last_fail_reason = "无可用 LLM 提供商配置"
+        if not self.providers:
+            logger.error("没有任何可用的 LLM 提供商配置！")
+            # 空链也留痕：否则"连续 3 次失败熔断"在遥测里看不到任何前因，
+            # 事后只能猜是没配 Key 还是模型全挂
+            self._log_reject(news_item, "-", "no_provider", "无可用 LLM 提供商（Key 未配或网关离线）")
+            return None
+
+        user_prompt, persona = self._build_user_prompt(news_item, campaign_intel, market_context, token_hints)
 
         # 遍历提供商链进行容灾尝试（按本次运行连续失败数升序，健康节点优先）
         ordered = self._ordered_providers()
@@ -2353,7 +2363,7 @@ class MultiLLMEngine:
                 passed, fail_reason = self._passes_quality_gate(content)
                 if not passed:
                     self._log_reject(news_item, provider.name, "quality", fail_reason,
-                                     tokens_used, latency_sec, provider.model, persona=persona_name)
+                                     tokens_used, latency_sec, provider.model, persona=persona["name"])
                     raise _QualityGateRejection(fail_reason)
 
                 # 0.1 数字幻觉软校验：编造精确百分比/大额金额的内容直接拦截
@@ -2406,7 +2416,7 @@ class MultiLLMEngine:
                         self._log_reject(news_item, provider.name, "no_valid_token",
                                          "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光",
                                          tokens_used, latency_sec, provider.model,
-                                         persona=persona_name)
+                                         persona=persona["name"])
                         self.last_fail_reason = "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光"
                         return None
 
@@ -2439,7 +2449,7 @@ class MultiLLMEngine:
                 self._fail_counts[provider.name] = fails
                 self._log_reject(news_item, provider.name, "transport", str(e),
                                  tokens_used, latency_sec, provider.model,
-                                 persona=persona_name)
+                                 persona=persona["name"])
                 fail_reason = str(e)
                 enter_breaker = fails >= 2
                 if enter_breaker:
@@ -2457,7 +2467,7 @@ class MultiLLMEngine:
                     self._breaker_record_failure(provider.name)
                     fail_reason = err_msg
                 # 传输层失败同样要记耗时：超时型故障靠 latency 才能定位
-                self._log_reject(news_item, provider.name, "transport", fail_reason, persona=persona_name,
+                self._log_reject(news_item, provider.name, "transport", fail_reason, persona=persona["name"],
                                  latency_sec=round(time.perf_counter() - t_call, 3),
                                  model=provider.model)
                 enter_breaker = True
