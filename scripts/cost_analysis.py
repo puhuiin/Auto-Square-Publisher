@@ -48,7 +48,7 @@ def _parse_ts(ts: str) -> datetime | None:
         return None
 
 
-def load_records(days: int | None) -> list[dict]:
+def load_records(days: int | None, include_dry: bool = False) -> list[dict]:
     if not os.path.exists(METRICS_FILE):
         return []
     cutoff = None
@@ -66,6 +66,38 @@ def load_records(days: int | None) -> list[dict]:
                 continue
             stage = rec.get("stage")
             if stage not in ("summarize", "campaign_intel"):
+                continue
+            # R66 引入 DRY 打标：报表默认排除本地试跑数据（正式投递才计入成本）
+            if not include_dry and rec.get("dry"):
+                continue
+            if cutoff is not None:
+                ts = _parse_ts(rec.get("ts", ""))
+                if ts is None or ts < cutoff:
+                    continue
+            rows.append(rec)
+    return rows
+
+
+def load_published(days: int | None, include_dry: bool = False) -> list[dict]:
+    """加载投递遥测（outcome=binance_published*），供形态/配图/拒稿漏斗分析。"""
+    if not os.path.exists(METRICS_FILE):
+        return []
+    cutoff = None
+    if days is not None:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    rows: list[dict] = []
+    with open(METRICS_FILE, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = json.loads(line)
+            except Exception:
+                continue
+            if not str(rec.get("outcome", "")).startswith("binance_published"):
+                continue
+            if not include_dry and rec.get("dry"):
                 continue
             if cutoff is not None:
                 ts = _parse_ts(rec.get("ts", ""))
@@ -113,6 +145,41 @@ def aggregate(rows: list[dict], price: dict) -> dict:
     return out
 
 
+def render_publish_funnel(published: list[dict], rejected: list[dict]) -> str:
+    """运营驾驶舱第二段：内容形态对比 + 配图来源分布 + 拒稿漏斗。"""
+    from collections import Counter
+    lines = ["\n## 内容形态与配图（投递遥测）"]
+    if not published:
+        return "\n".join(lines) + "\n\n| _无投递记录_ |\n|---|"
+    articles = [r for r in published if r.get("article")]
+    shorts = [r for r in published if not r.get("article")]
+
+    def _avg(rows, key):
+        vals = [r.get(key) for r in rows if isinstance(r.get(key), (int, float))]
+        return round(sum(vals) / len(vals), 1) if vals else 0
+
+    lines.append("\n| 形态 | 篇数 | 平均 tokens | 平均延迟(s) |")
+    lines.append("|---|---:|---:|---:|")
+    for name, rows in (("📄 长文", articles), ("⚡ 短讯", shorts)):
+        if rows:
+            lines.append(f"| {name} | {len(rows)} | {_avg(rows, 'tokens_used'):,} | {_avg(rows, 'llm_latency_sec')} |")
+    if articles and shorts:
+        a_tok, s_tok = _avg(articles, "tokens_used"), _avg(shorts, "tokens_used")
+        ratio = f"{a_tok / s_tok:.1f}x" if s_tok else "—"
+        lines.append(f"\n长文单篇成本约为短讯的 **{ratio}**（每天 1 篇，观察互动回报再调门槛）")
+
+    tiers = Counter(r.get("image_tier") or ("有图" if r.get("image") else "无图") for r in published)
+    lines.append("\n**配图来源分布**: " + " · ".join(f"{k} ×{v}" for k, v in tiers.most_common()))
+
+    if rejected:
+        stages = Counter(r.get("stage") or "transport" for r in rejected)
+        lines.append("\n**拒稿漏斗（stage 分布）**: " + " · ".join(f"{k} ×{v}" for k, v in stages.most_common()))
+        persons = Counter(r.get("persona") for r in published if r.get("persona"))
+        if persons:
+            lines.append("\n**人设分布（投递）**: " + " · ".join(f"{k} ×{v}" for k, v in persons.most_common()))
+    return "\n".join(lines)
+
+
 def render_markdown(agg: dict) -> str:
     header = ("| Provider | 成功 | 拒单 | 总 Token | 平均延迟(s) | 最大延迟(s) | 估算成本($) |\n"
               "|----------|-----:|-----:|----------:|------------:|------------:|------------:|")
@@ -130,10 +197,11 @@ def render_markdown(agg: dict) -> str:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="LLM 成本/延迟对比分析")
+    ap = argparse.ArgumentParser(description="LLM 成本/延迟对比 + 运营漏斗分析")
     ap.add_argument("--days", type=int, default=None, help="只看最近 N 天")
     ap.add_argument("--json", action="store_true", help="输出 JSON 而非 Markdown 表")
     ap.add_argument("--price", type=str, default=None, help="单价 JSON 路径（覆盖默认示意价）")
+    ap.add_argument("--include-dry", action="store_true", help="包含 DRY_RUN 打标的记录（默认排除）")
     args = ap.parse_args()
 
     price = DEFAULT_PRICE
@@ -144,19 +212,23 @@ def main() -> int:
         except Exception as e:
             print(f"[warn] 读取单价文件失败，沿用默认示意价: {e}", file=sys.stderr)
 
-    rows = load_records(args.days)
-    if not rows:
+    rows = load_records(args.days, include_dry=args.include_dry)
+    published = load_published(args.days, include_dry=args.include_dry)
+    if not rows and not published:
         print("metrics.jsonl 不存在或无 LLM 遥测记录（stage=summarize/campaign_intel）。")
         print("提示：先跑一次带 --llm-live 的真实调用，或本地单元测试会写入示例遥测。")
         return 0
 
     agg = aggregate(rows, price)
     if args.json:
-        print(json.dumps(agg, ensure_ascii=False, indent=2))
+        print(json.dumps({"providers": agg, "published_n": len(published)},
+                         ensure_ascii=False, indent=2))
     else:
-        print(f"# LLM 成本 / 延迟对比（共 {len(rows)} 条遥测记录）\n")
+        print(f"# LLM 成本 / 延迟对比（LLM 遥测 {len(rows)} 条，投递 {len(published)} 篇）\n")
         print(render_markdown(agg))
-        print("\n注：单价为示意值，请按官方价目更新；usage 缺失的记录不计入 token 总量。")
+        print(render_publish_funnel(published, rows))
+        print("\n注：单价为示意值，请按官方价目更新；usage 缺失的记录不计入 token 总量；"
+              "DRY_RUN 记录默认排除（--include-dry 查看）。")
     return 0
 
 
