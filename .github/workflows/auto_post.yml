@@ -82,10 +82,9 @@ jobs:
 
       - name: 调度看门狗（上轮 schedule 运行距今超阈值则报警）
         # 背景（2026-09-09 事故）：GitHub 调度器静默吞掉 4.5 小时的 cron 投递，
-        # 无日志无报警——没跑就没有任何日志。本步骤直接查 GitHub API 的运行历史
-        # （真相源，不依赖任何落盘状态）：本次 schedule 运行的"上一轮 schedule"
-        # 距今超过 50 分钟（>2 个 cron 间隔）即推送报警。仅查报警不 exit 非零，
-        # 发帖主流程不受影响；通知渠道复用发帖报警的同一套 Secrets。
+        # 无日志无报警——没跑就没有任何日志。逻辑在 scripts/schedule_watchdog.py
+        # （独立脚本可单元测试）：查 gh run list（真相源），上一轮 schedule 距今
+        # 超 50 分钟（>2 个 cron 间隔）即报警。只报警不 exit 非零，发帖不受影响。
         env:
           GH_TOKEN: ${{ github.token }}
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
@@ -95,48 +94,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           ACTIVE_HOURS_BEIJING: ${{ vars.ACTIVE_HOURS_BEIJING }}
-        run: |
-          python - << 'PYEOF'
-          import json, os, subprocess, sys
-          from datetime import datetime, timezone, timedelta
-
-          # 活跃窗口模式（ACTIVE_HOURS_BEIJING 非空）下夜间合法停跑会造成长间隔，
-          # 看门狗只服务 24h 全天模式，避免误报
-          if os.getenv("ACTIVE_HOURS_BEIJING", "").strip():
-              print("活跃窗口模式已配置，看门狗跳过（仅 24h 模式启用）。")
-              sys.exit(0)
-
-          try:
-              out = subprocess.run(
-                  ["gh", "run", "list", "--workflow=auto_post.yml", "--limit", "10",
-                   "--json", "createdAt,event"],
-                  capture_output=True, text=True, check=True, timeout=30)
-              runs = json.loads(out.stdout or "[]")
-          except Exception as e:
-              print(f"查询运行历史失败（不影响主流程）: {e}")
-              sys.exit(0)
-
-          sched = [r for r in runs if r.get("event") == "schedule"]
-          if len(sched) < 2:
-              print("schedule 历史不足两条，跳过看门狗判断。")
-              sys.exit(0)
-          prev = datetime.fromisoformat(sched[1]["createdAt"].replace("Z", "+00:00"))
-          age_min = (datetime.now(timezone.utc) - prev).total_seconds() / 60
-          print(f"上一轮 schedule 运行: {prev.isoformat()}（距今 {age_min:.0f} 分钟）")
-          if age_min <= 50:
-              sys.exit(0)
-
-          missed = int(age_min // 20)
-          from main import Notifier
-          Notifier.send_notification(
-              "发帖机器人调度中断恢复",
-              f"本次运行距上一轮 schedule 运行 {age_min:.0f} 分钟（正常 20 分钟），"
-              f"中间约 {missed} 轮 cron 被 GitHub 调度器静默吞掉。机器人没跑就没有日志，"
-              f"此报警由本次恢复后的运行代发。若反复出现，建议改用外部 cron "
-              f"（cron-job.org 等）定时回调 workflow_dispatch 触发。",
-              is_error=True,
-          )
-          PYEOF
+        run: python scripts/schedule_watchdog.py
 
       - name: 执行自动化发帖脚本 (支持多模型故障转移)
         id: poster

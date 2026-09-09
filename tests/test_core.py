@@ -139,6 +139,38 @@ class TestNearDuplicateDetection(unittest.TestCase):
         self.assertIsNone(m.NewsFetcher._find_near_duplicate("BTC breaks out", []))
 
 
+class TestScheduleWatchdogScript(unittest.TestCase):
+    """调度看门狗判定函数（R71 抽出为 scripts/schedule_watchdog.py 后可离线测试）"""
+
+    def _runs(self, prev_minutes_ago):
+        from datetime import datetime, timedelta, timezone
+        now = datetime.now(timezone.utc)
+        return [
+            {"event": "schedule", "createdAt": now.isoformat()},
+            {"event": "schedule", "createdAt": (now - timedelta(minutes=prev_minutes_ago)).isoformat()},
+        ]
+
+    def test_normal_gap_silent(self):
+        import importlib
+        wd = importlib.import_module("scripts.schedule_watchdog")
+        self.assertEqual(wd.evaluate(self._runs(20), datetime.now(timezone.utc)), "")
+
+    def test_stale_gap_alerts(self):
+        import importlib
+        wd = importlib.import_module("scripts.schedule_watchdog")
+        msg = wd.evaluate(self._runs(130), datetime.now(timezone.utc))
+        self.assertIn("静默吞掉", msg)
+        self.assertIn("130", msg)
+
+    def test_insufficient_history_silent(self):
+        import importlib
+        wd = importlib.import_module("scripts.schedule_watchdog")
+        from datetime import datetime, timezone
+        self.assertEqual(wd.evaluate([{"event": "schedule",
+                                       "createdAt": datetime.now(timezone.utc).isoformat()}],
+                                      datetime.now(timezone.utc)), "")
+
+
 class TestTokenExtraction(unittest.TestCase):
     """代币识别：歧义代码守护 + IGNORE 词表过滤"""
 
