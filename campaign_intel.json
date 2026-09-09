@@ -28,13 +28,7 @@
     "date": "2026-09-09",
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
-  "_llm_breaker": {
-    "Preset-openrouter": {
-      "cooldown_until": "2026-09-09T19:43:42.702886+00:00",
-      "fails": 17,
-      "permanent": true
-    }
-  },
+  "_llm_breaker": {},
   "_last_run_heartbeat": {
     "ts": "2026-09-09T04:58:10.596250+00:00"
   },
