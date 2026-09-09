@@ -754,6 +754,12 @@ class MarketDataProvider:
         失败返回 None（调用方降级 bars/其他布局）。
         """
         sym = symbol.replace("$", "").upper()
+        # 字符类守卫（R78 defense-in-depth）：sym 直接拼进 klines URL 查询串，
+        # 上游链路（extract_tokens/行情行解析）虽已约束 [A-Za-z0-9]，这里对齐
+        # 同一字符类——非法字符一律拒绝，不赌上游永远正确
+        if not re.fullmatch(r"[A-Z0-9]{2,10}", sym):
+            logger.debug(f"K线请求拒绝非法标的字符: {symbol[:40]!r}")
+            return None
         if not sym:
             return None
         now = time.time()
