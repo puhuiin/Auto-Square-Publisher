@@ -4997,6 +4997,8 @@ def _run_main():
                 posted_records.append({
                     "title": title, "source": source,
                     "provider": llm_result["provider"], "image": bool(uploaded_image_url),
+                    "article": bool(llm_result.get("title")),
+                    "article_title": llm_result.get("title") or "",
                     "age_hours": item.get("age_hours"),
                     "elapsed_sec": None,
                 })
@@ -5128,6 +5130,8 @@ def _run_main():
                     posted_records.append({
                         "title": title, "source": source,
                         "provider": delivered_by, "image": bool(uploaded_image_url),
+                        "article": bool(llm_result.get("title")),
+                        "article_title": llm_result.get("title") or "",
                         "age_hours": item.get("age_hours"),
                         "elapsed_sec": None,
                     })
