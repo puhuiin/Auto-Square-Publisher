@@ -2478,6 +2478,7 @@ class MultiLLMEngine:
                 # 否则（首挂，偶发可能性大）即时重试一次。
                 max_attempts = 1 if self._fail_counts.get(provider.name, 0) else 2
                 content, tokens_used, latency_sec = "", None, None
+                final_finish = ""  # 最后一次响应的 finish_reason（扩容判定 + 残句拒稿都要用）
                 attempt = 0
                 expansions = 0  # 预算扩容次数：不消耗 max_attempts 配额（扩容是纠正，不是重试）
                 system_prompt = (self.SYSTEM_PROMPT +
@@ -2502,11 +2503,17 @@ class MultiLLMEngine:
                         # 也不污染健康度计数；扩容后若下次空回 finish 不为 length，
                         # 则是上游抽风而非预算问题，走原有空回路径。
                         finish = getattr(response.choices[0], "finish_reason", "") or ""
-                        if not content and finish == "length" and effective_max_tokens < 4000:
+                        final_finish = finish
+                        # R68 实弹验证抓到第二种截断：content 非空但 finish=length——
+                        # 句子写到一半被掐（"想博波"直接挂在时间线上）。残句能过所有
+                        # 质量门（长度/中文字数全达标），必须同样走扩容重试；预算到顶
+                        # 仍截断时宁可拒稿，也不能把半句话发出去。
+                        if finish == "length" and effective_max_tokens < 4000:
                             expansions += 1
                             effective_max_tokens = min(effective_max_tokens + 1500, 4000)
-                            logger.warning(f"提供商 [{provider.name}] 空回且 finish=length"
-                                           f"（思考链耗 {tokens_used or '?'} token），预算动态扩容至 {effective_max_tokens} 重试"
+                            logger.warning(f"提供商 [{provider.name}] finish=length 截断"
+                                           f"（{'空回' if not content else f'残句 {len(content)} 字符'}，"
+                                           f"耗 {tokens_used or '?'} token），预算动态扩容至 {effective_max_tokens} 重试"
                                            f"（第 {expansions} 次扩容，不占重试配额）")
                             continue
                     if content:
@@ -2519,6 +2526,10 @@ class MultiLLMEngine:
                     raise _EmptyContentError(
                         "模型返回了空内容（已即时重试 1 次）" if max_attempts > 1
                         else "模型返回了空内容（同运行连挂窗口，不再重试）")
+                # 预算到顶（4000）仍截断：残句宁可拒稿走 failover，也不能发半句话
+                if final_finish == "length":
+                    raise _EmptyContentError(
+                        f"预算 {effective_max_tokens} 到顶仍 finish=length 截断（残句 {len(content)} 字符），拒稿换提供商")
 
                 # 0. 质量门：短讯走通用门；长文走专属门（TITLE 行 + 500~800 字正文）
                 article_title: Optional[str] = None

@@ -4887,6 +4887,55 @@ class TestEmptyContentRetry(unittest.TestCase):
         budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
         self.assertEqual(len(set(budgets)), 1, "finish=stop 空包不应触发预算扩容")
 
+    def test_truncated_partial_content_expands_and_succeeds(self):
+        """R68 残句截断：content 非空但 finish=length → 同样扩容重试，不得带伤发布。
+        实弹实录：'……想博波' 挂在句中直接过了五道质量门。"""
+        eng = self._engine()
+        client = MagicMock()
+
+        def _mk(content, finish):
+            r = self._resp(content)
+            r.choices[0].finish_reason = finish
+            return r
+
+        partial = ("OpenAI 前工程师离职开炮，$AI 盘面稳得像老狗，这波末日言论属实抽象。"
+                   "造轮子的吓得跑路，贪婪指数 66 的韭菜还在冲锋，想博波")  # 句中截断
+        client.chat.completions.create.side_effect = [
+            _mk(partial, "length"), _mk(self._good_body(), "stop"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        self.assertIn("回踩确认支撑", out["content"], "必须用重试后的完整稿，不得用残句")
+        budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
+        self.assertGreater(budgets[1], budgets[0], "残句截断必须触发预算扩容")
+
+    def test_truncated_at_budget_cap_rejected_not_published(self):
+        """预算到顶仍截断：残句拒稿走 failover，绝不发半句话"""
+        eng = self._engine()
+        client = MagicMock()
+
+        def _mk(content, finish):
+            r = self._resp(content)
+            r.choices[0].finish_reason = finish
+            return r
+
+        partial = "残句开头" + "盘面信号明确。" * 30
+        # 非推理基线 600 起步：600→2100→3600→4000 四次调用，第 4 次后到顶拒稿
+        client.chat.completions.create.side_effect = [
+            _mk(partial, "length"), _mk(partial, "length"),
+            _mk(partial, "length"), _mk(partial, "length"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out, "到顶截断必须拒稿")
+        budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
+        self.assertEqual(budgets, [600, 2100, 3600, 4000], "扩容序列必须精确，到顶即停")
+        self.assertEqual(client.chat.completions.create.call_count, 4)
+
     def test_exhausted_retry_skips_breaker(self):
         eng = self._engine()
         client = MagicMock()
