@@ -4702,6 +4702,9 @@ class TestFallbackImageCache(unittest.TestCase):
                           "兜底图成功后失败标记必须清除，否则遥测把成功帖误标 image_failed")
 
     def test_raw_failure_tries_card_before_fng(self):
+        # URL 用保留 IP 字面量（203.0.113.0/24 TEST-NET-3，公网属性、非内网段）：
+        # 域名形式（news.example）在 CI 真实 DNS 下解析失败 → SSRF 门 fail-closed
+        # 拒绝 → 静默走兜底分支，断言全灭。本机代理 fake-ip 才会解析成功（环境依赖）。
         blob = ("card-jpeg", "cover.jpg", "image/jpeg")
         m.ImageManager._write_fallback_cache("https://cdn.example/cached.jpg")
         with patch.object(m.MarketDataProvider, "get_kline_closes", return_value=None), \
@@ -4709,11 +4712,11 @@ class TestFallbackImageCache(unittest.TestCase):
              patch.object(m.ImageManager, "render_market_card", return_value=blob) as mock_card, \
              patch.object(m.ImageManager, "upload_to_binance",
                           return_value="https://cdn.example/card.jpg") as mock_up:
-            out = m.ImageManager.prepare_and_upload("k", "https://news.example/a.jpg",
+            out = m.ImageManager.prepare_and_upload("k", "https://203.0.113.77/a.jpg",
                                                     token_lines=["$ETH"], fng_text="Fear&Greed 61")
         self.assertEqual(out, "https://cdn.example/card.jpg")
         mock_dl.assert_called_once()
-        self.assertEqual(mock_dl.call_args[0][0], "https://news.example/a.jpg")
+        self.assertEqual(mock_dl.call_args[0][0], "https://203.0.113.77/a.jpg")
         mock_card.assert_called_once()
         # 原图链路的 upload 只发情绪卡这一次，FNG 缓存图未被消费
         mock_up.assert_called_once()
@@ -4723,7 +4726,7 @@ class TestFallbackImageCache(unittest.TestCase):
              patch.object(m.ImageManager, "render_market_card", return_value=None), \
              patch.object(m.ImageManager, "download_image", return_value=None), \
              patch.object(m.ImageManager, "upload_to_binance", return_value=None):
-            out = m.ImageManager.prepare_and_upload("k", "https://news.example/a.jpg")
+            out = m.ImageManager.prepare_and_upload("k", "https://203.0.113.77/a.jpg")
         self.assertIsNone(out)
         # 全链失败标记取链上最后一环：原图下载挂 → 卡片渲染挂（最终走到的是卡片路径）
         self.assertEqual(m.ImageManager.last_image_fail_reason, "render_failed")
