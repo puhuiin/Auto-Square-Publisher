@@ -5098,9 +5098,15 @@ def _run_main():
                             is_error=True,
                         )
                         break
-                    # 成功通知预览用最终发布文本（净化/织挂件后）——原稿预览会误导排障
+                    # 成功通知预览用最终发布文本（净化/织挂件后）——原稿预览会误导排障；
+                    # 帖子直链让手机推送一键点开复核实际效果（contentId 即广场 URL id）
                     notify_preview = final_preview if final_preview else post_content[:120]
-                    Notifier.send_notification("币安广场自动发帖成功", f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}\nContent ID: {content_id or '未返回'}\n\n{notify_preview}...")
+                    post_link = (f"\n帖子: https://www.binance.com/zh-CN/square/post/{content_id}"
+                                 if content_id else "")
+                    Notifier.send_notification(
+                        "币安广场自动发帖成功",
+                        f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}"
+                        f"{'｜长文' if use_article else ''}{post_link}\n\n{notify_preview}...")
                 elif not binance_enabled and (draft_exported or telegram_exported):
                     # 仅副平台模式：任一平台完成投递即入缓存，防止每 20 分钟重复处理同一新闻
                     delivered = _delivered_platforms(False, draft_exported, telegram_exported)
