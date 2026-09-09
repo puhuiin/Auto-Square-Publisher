@@ -84,12 +84,17 @@ def summarize(rows):
         "latency_by_provider": {},
         "tokens_by_provider": {},
         "errors": collections.Counter(),
+        "dry_skipped": 0,
         "ts_min": None,
         "ts_max": None,
     }
     lat_tmp, tok_tmp = collections.defaultdict(list), collections.defaultdict(list)
     for r in rows:
         if not isinstance(r, dict):
+            continue
+        if r.get("dry_run") is True:
+            # DRY 试运行行只计数不聚合：沙盒延迟/成功率不得毒化生产调优（打标见 append_metrics）
+            s["dry_skipped"] += 1
             continue
         s["by_outcome"][str(r.get("outcome", "unknown"))] += 1
         ts = r.get("ts")
@@ -149,7 +154,8 @@ def render_text(s):
     lines = [
         "## metrics 遥测简报",
         f"- 样本: {s['total']} 行"
-        + (f"（时间跨度 {s['ts_min'][:16]} → {s['ts_max'][:16]}）" if s["ts_min"] else "（尚无带时间戳样本）"),
+        + (f"（时间跨度 {s['ts_min'][:16]} → {s['ts_max'][:16]}）" if s["ts_min"] else "（尚无带时间戳样本）")
+        + (f"，其中 {s['dry_skipped']} 行 dry-run 已排除" if s["dry_skipped"] else ""),
         f"- outcome 分布: {dict(s['by_outcome']) or '—'}",
     ]
     n_pub = sum(s["by_provider"].values())

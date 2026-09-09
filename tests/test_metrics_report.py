@@ -125,6 +125,24 @@ class TestMetricsReport(unittest.TestCase):
         # 传目录/无权限路径：给人话 exit 2，而不是 traceback
         self.assertEqual(mr.main([self.tmpdir]), 2)
 
+    def test_dry_rows_excluded_from_aggregates(self):
+        _write(self.path, [
+            {"ts": "2026-09-06T01:00:00+00:00", "provider": "P", "tokens_used": 9999,
+             "llm_latency_sec": 99.0, "platforms": ["binance"], "tokens": ["BTC"],
+             "outcome": "binance_published"},
+            {"ts": "2026-09-06T02:00:00+00:00", "provider": "P", "tokens_used": 1,
+             "llm_latency_sec": 0.1, "platforms": ["binance"], "tokens": ["ETH"],
+             "outcome": "binance_published", "dry_run": True},
+        ])
+        rows, bad = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(s["total"], 2)
+        self.assertEqual(s["dry_skipped"], 1)
+        self.assertEqual(sum(s["by_provider"].values()), 1)
+        self.assertEqual(s["tokens_by_provider"]["P"]["total"], 9999)
+        self.assertNotIn("ETH", dict(s["by_token"]))
+        self.assertIn("dry-run", mr.render_text(s))
+
     def test_json_mode_is_parseable(self):
         _write(self.path, self._sample())
         buf = io.StringIO()

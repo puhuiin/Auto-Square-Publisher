@@ -2822,6 +2822,18 @@ class TestMetrics(unittest.TestCase):
         self.assertIn("weekday_bj", lines[0])
         self.assertNotIn("provider", lines[1])   # record 里显式 None 的字段不落盘
 
+    def test_dry_run_rows_tagged(self):
+        from unittest.mock import patch
+        with patch.dict(os.environ, {"DRY_RUN": "true"}):
+            m.append_metrics({"title": "t-dry"})
+        with patch.dict(os.environ, {"DRY_RUN": "false"}):
+            m.append_metrics({"title": "t-live"})
+        import json
+        with open(m.METRICS_FILE, encoding="utf-8") as f:
+            lines = [json.loads(l) for l in f if l.strip()]
+        self.assertTrue(lines[0].get("dry_run") is True)
+        self.assertNotIn("dry_run", lines[1])    # 生产行不加键，历史数据与旧断言零影响
+
     def test_merge_metrics_dedupes(self):
         # 动态加载合并脚本
         import importlib.util

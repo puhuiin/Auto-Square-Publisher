@@ -176,6 +176,11 @@ def append_metrics(record: Dict[str, Any]) -> None:
             "weekday_bj": bj_now.weekday(),  # 0=周一
         }
         base.update({k: v for k, v in record.items() if v is not None})
+        if os.getenv("DRY_RUN", "false").strip().lower() in ("true", "1", "yes"):
+            # DRY 试运行同样写遥测（链路可观测），但打标隔离：报表默认只看生产行，
+            # 否则沙盒/验收数据会毒化延迟与成功率聚合（生产实证：DRY 行与无 key 本地
+            # 运行行曾混入 metrics.jsonl）。只在 True 时加键，历史行与旧断言零影响。
+            base["dry_run"] = True
         with open(METRICS_FILE, "a", encoding="utf-8") as f:
             f.write(json.dumps(base, ensure_ascii=False) + "\n")
     except Exception as e:
