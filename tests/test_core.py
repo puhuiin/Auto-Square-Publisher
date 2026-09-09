@@ -2119,6 +2119,35 @@ class TestIntelSchema(unittest.TestCase):
         self.assertEqual(intel["incentivized_tokens"], ["$BTC"])
         self.assertIn("last_updated", intel)
 
+    def test_truncated_output_retried_same_provider(self):
+        """情报 finish=length 即时重试（R67）：glm 冗长 JSON 被 max_tokens 掐断是
+        生产二连实录（04:58Z/07:43Z），同渠道重试一次常收敛到更短输出。
+        首次截断 + 重试成功 = 收情报，且两次调用都发给了同一提供商。"""
+        good = MagicMock(choices=[MagicMock(
+            message=MagicMock(content='{"active_tags": ["#A"], "incentivized_tokens": ["$BTC"], '
+                                    '"strategy_guidance": "guide"}'),
+            finish_reason="stop")])
+        truncated = MagicMock(choices=[MagicMock(
+            message=MagicMock(content='{"active_tags": ["#Write2Earn", "#Bin'),
+            finish_reason="length")])
+        eng = self._stub_engine("ignored")
+        fake_client = eng._get_client.return_value
+        fake_client.chat.completions.create.side_effect = [truncated, good]
+        intel = m.CampaignScanner.analyze_with_ai(eng, ["t1"])
+        self.assertIsNotNone(intel)
+        self.assertEqual(fake_client.chat.completions.create.call_count, 2)
+
+    def test_truncated_twice_gives_up_to_next_provider(self):
+        """重试仍截断：raise ValueError 走原有 failover（换下一家，不无限烧）"""
+        truncated = MagicMock(choices=[MagicMock(
+            message=MagicMock(content='{"active_tags": ["#Write2Earn"'),
+            finish_reason="length")])
+        eng = self._stub_engine("ignored")
+        fake_client = eng._get_client.return_value
+        fake_client.chat.completions.create.side_effect = [truncated, truncated]
+        self.assertIsNone(m.CampaignScanner.analyze_with_ai(eng, ["t1"]))
+        self.assertEqual(fake_client.chat.completions.create.call_count, 2)
+
 
 class TestStaleIntelBody(unittest.TestCase):
     """存量脏正文：schema 门必须同样拦加载路径，且 _ 状态键不受牵连"""

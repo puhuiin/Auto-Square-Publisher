@@ -2775,17 +2775,24 @@ class CampaignScanner:
                 tokens_used = None
                 try:
                     client = llm_engine._get_client(provider)
-                    # 推理型渠道（Reasonix 网关）思考链就吃几百 token，固定预算会静默产出空内容；
-                    # R55 guidance 要求 2~3 句 + 截止时间分析，400 已贴上限，抬到 700 留余量
-                    # R55 抬到 700 后生产仍见 finish=length 截断（04:58Z 实录：glm 的
-                    # 冗长 JSON 写到一半被掐）→ 白烧一次调用退老情报。抬到 900 留足余量
+                    # 推理型渠道（Reasonix 网关）思考链就吃几百 token，固定预算会静默产出空内容
+                    # 情报 JSON 截断史（勿再抬数字，治本在即时重试）：R55 700 → R62 900，
+                    # 生产仍二连截断（04:58Z/07:43Z，glm 的 usage 2500+ 说明该模型思考链+输出
+                    # 总耗 2500 左右，抬到 1200 也可能不够且更贵）。现在 finish=length 即时
+                    # 同渠道重试一次（temperature 0.3 下重试常收敛到更短输出）。
                     effective_max_tokens = 1600 if _is_reasoning_channel(provider.name, provider.model) else 900
-                    resp = client.chat.completions.create(
-                        model=provider.model,
-                        messages=[{"role": "user", "content": prompt}],
-                        temperature=0.3,
-                        max_tokens=effective_max_tokens,
-                    )
+                    resp = None
+                    for _intel_attempt in (0, 1):
+                        resp = client.chat.completions.create(
+                            model=provider.model,
+                            messages=[{"role": "user", "content": prompt}],
+                            temperature=0.3,
+                            max_tokens=effective_max_tokens,
+                        )
+                        _fin = getattr(resp.choices[0], "finish_reason", "") or ""
+                        if _fin != "length":
+                            break
+                        logger.warning(f"情报输出被 max_tokens 截断（finish=length），即时重试 {_intel_attempt + 1}/1...")
                     latency_sec = round(time.perf_counter() - t_call, 3)
                     tokens_used = _extract_usage_tokens(resp)
                     raw_res = (resp.choices[0].message.content or "").strip()
