@@ -2417,6 +2417,26 @@ class TestOKXDraftExporter(unittest.TestCase):
             content = f.read()
         self.assertNotIn("配图直链", content)
 
+    def test_draft_article_title_prepended(self):
+        """长文草稿：文章标题前置进正文（TITLE 已从正文剥离，粘贴时不能丢标题）"""
+        ok = self.exp.publish(
+            "一、发生了什么\n资金面异动复盘正文。",
+            meta={"news_id": "art-001", "title": "news title", "source": "U.Today",
+                  "article_title": "ETH 资金面异动深度复盘"},
+        )
+        self.assertTrue(ok)
+        import glob
+        files = glob.glob(os.path.join(self.tmpdir, "**", "*.md"), recursive=True)
+        with open(files[0], encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("【ETH 资金面异动深度复盘】", content)
+        self.assertIn("深度长文", content)
+        # 短讯草稿不受影响
+        self.exp.publish("短讯内容草稿。", meta={"news_id": "short-001"})
+        with open(glob.glob(os.path.join(self.tmpdir, "**", "*.md"), recursive=True)[-1],
+                  encoding="utf-8") as f:
+            self.assertNotIn("【", f.read())
+
     def test_prune_keeps_limit(self):
         for i in range(m.OKXDraftExporter.KEEP_DRAFTS + 5):
             self.exp.publish(f"草稿 {i}", meta={"news_id": f"n{i}"})

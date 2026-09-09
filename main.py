@@ -3939,18 +3939,25 @@ class OKXDraftExporter(BasePublisher):
             title = meta.get("title", "")
             link = meta.get("link", "")
             tokens = " ".join(f"${t}" for t in (ensure_tokens or []))
+            # 长文（contentType=2）发布时 TITLE 已从正文剥离，草稿需补回文章标题行，
+            # 否则手动粘贴到 OKX 时会丢标题（OKX App 文章与动态是两种形态）
+            article_title = str(meta.get("article_title") or "").strip()
+            paste_body = content
+            if article_title:
+                paste_body = f"【{article_title}】\n\n{content}"
 
             lines = [
                 f"# OKX 广场发帖草稿 · {now_str}",
                 "",
-                f"> 来源: {source} ｜ 标的: {tokens or '—'} ｜ 热度: {meta.get('impact_score', '—')}",
+                f"> 来源: {source} ｜ 标的: {tokens or '—'} ｜ 热度: {meta.get('impact_score', '—')}"
+                + (" ｜ 形态: 深度长文" if article_title else ""),
                 f"> 原文: {link or '—'}",
                 "",
                 "## 正文（整段复制 → OKX App 广场发帖）",
                 "",
                 "---",
                 "",
-                content,
+                paste_body,
                 "",
                 "---",
                 "",
@@ -4058,6 +4065,10 @@ class TelegramChannelPublisher(BasePublisher):
         api_base = f"https://api.telegram.org/bot{token}"
         # 跨平台内容适配：净化 + 剥离币安专属标签
         content = self._prepare_cross_platform_content(content)
+        # 长文形态：标题前置（Telegram 无文章形态，标题是最重要的导航信息）
+        article_title = str(meta.get("article_title") or "").strip()
+        if article_title:
+            content = f"📄 {article_title}\n\n{content}"
         # caption 上限 1024，正文清洗后 ≤900，安全
         if len(content) > 1020:
             content = content[:1020].rsplit("\n", 1)[0] + "…"
@@ -4341,7 +4352,9 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
         if productive:
             top = " / ".join(f"{name.split(' ')[0]} {kept}条" for name, kept, _ in productive[:5])
             lines.append(f"- **源产出 TOP**: {top}")
-        lines.append(f"- **本次发布**: {len(posted_records)} 篇")
+        lines.append(f"- **本次发布**: {len(posted_records)} 篇"
+                     + (f"（含深度长文 {sum(1 for r in posted_records if r.get('article'))} 篇）"
+                        if any(r.get("article") for r in posted_records) else ""))
         if drafts_count:
             lines.append(f"- **OKX 草稿**: {drafts_count} 份（drafts/ 目录，App 内粘贴即发）")
         if timings:
@@ -4350,13 +4363,15 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
                 lines.append(f"- **耗时画像**: {'  '.join(parts)}")
         lines.append("")
         if posted_records:
-            lines += ["| # | 热点新闻 | 时效 | 来源 | 模型 | 配图 | 耗时 |", "|---|---|---|---|---|---|---|"]
+            lines += ["| # | 热点新闻 | 形态 | 时效 | 来源 | 模型 | 配图 | 耗时 |",
+                      "|---|---|---|---|---|---|---|---|"]
             for i, r in enumerate(posted_records, 1):
                 safe_title = r["title"][:48].replace("|", "\\|")
                 elapsed = r.get("elapsed_sec")
                 age = r.get("age_hours")
                 lines.append(
-                    f"| {i} | {safe_title} | {f'{age}h前' if age is not None else '—'} | "
+                    f"| {i} | {safe_title} | {'📄长文' if r.get('article') else '⚡短讯'} | "
+                    f"{f'{age}h前' if age is not None else '—'} | "
                     f"{r['source']} | {r['provider']} | {'🖼️' if r['image'] else '—'} | "
                     f"{f'{elapsed:.1f}s' if elapsed is not None else '—'} |"
                 )
@@ -4837,7 +4852,8 @@ def _run_main():
                 posted_count += 1
             else:
                 draft_meta = {"news_id": news_id, "title": title, "source": source,
-                              "link": item.get("link", ""), "impact_score": score}
+                              "link": item.get("link", ""), "impact_score": score,
+                              "article_title": llm_result.get("title") or ""}
                 draft_exported = False
 
                 if binance_enabled:

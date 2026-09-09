@@ -130,6 +130,10 @@ jobs:
           #   LOG_LEVEL:               日志级别 (默认 INFO；诊断时可设 DEBUG)
           #   PUBLISH_PLATFORMS:       发布平台组合，逗号分隔 (默认 binance；可加 okx_draft 草稿直出 / telegram 频道镜像)
           TOKEN_DAILY_LIMIT: ${{ vars.TOKEN_DAILY_LIMIT }}
+          #   ARTICLE_PER_DAY:         每日深度长文开关 (默认 1；0 = 全发短讯)
+          #   ARTICLE_MIN_IMPACT:      长文选稿门槛：榜首热度低于此值当天不发长文 (默认 20)
+          ARTICLE_PER_DAY: ${{ vars.ARTICLE_PER_DAY }}
+          ARTICLE_MIN_IMPACT: ${{ vars.ARTICLE_MIN_IMPACT }}
           LOG_LEVEL: ${{ vars.LOG_LEVEL }}
           PUBLISH_PLATFORMS: ${{ vars.PUBLISH_PLATFORMS }}
 
