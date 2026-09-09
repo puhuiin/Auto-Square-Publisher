@@ -30,9 +30,9 @@
   },
   "_llm_breaker": {
     "Preset-openrouter": {
-      "permanent": true,
       "cooldown_until": "2026-09-09T19:43:42.702886+00:00",
-      "fails": 17
+      "fails": 17,
+      "permanent": true
     }
   },
   "_last_run_heartbeat": {
