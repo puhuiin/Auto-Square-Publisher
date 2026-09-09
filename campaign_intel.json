@@ -25,13 +25,13 @@
     }
   },
   "_fallback_image": {
-    "date": "2026-09-08",
-    "url": "https://public.bnbstatic.com/image/pgc/20260908/d1155331c1804f3fb43f3930a400b1a7.jpg"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {
     "Preset-openrouter": {
-      "fails": 17,
       "permanent": true,
+      "fails": 17,
       "cooldown_until": "2026-09-09T19:43:42.702886+00:00"
     }
   },
