@@ -149,9 +149,11 @@ class TestTokenExtraction(unittest.TestCase):
         self.assertNotIn("NEAR",
                          m.NewsFetcher.extract_tokens("Bitcoin is near breakout above 100K", self.VALID))
 
-    def test_ambiguous_uppercase_accepted(self):
-        self.assertIn("NEAR",
-                      m.NewsFetcher.extract_tokens("NEAR protocol pumps 30% today", self.VALID))
+    def test_ambiguous_uppercase_needs_cashtag_now(self):
+        """R70 语义升级：通用大写闸 + 严格词表后，NEAR 全大写也不足采信
+        （'CLARITY ACT'/'OG.com' 全大写误判实录），必须 $ 显式引用"""
+        self.assertEqual(m.NewsFetcher.extract_tokens("NEAR protocol pumps 30% today", self.VALID), [])
+        self.assertEqual(m.NewsFetcher.extract_tokens("whales buy $NEAR today", self.VALID), ["NEAR"])
 
     def test_cashtag_accepted(self):
         self.assertIn("LINK",
@@ -182,6 +184,19 @@ class TestTokenExtraction(unittest.TestCase):
         """模型自报的 $AI 也不采信（模型有挂件返佣动机硬蹭），两道口子一起堵。
         新闻侧 token_hints 不过滤：真 AI 代币新闻仍能发。"""
         self.assertEqual(m.SymbolValidator.filter_valid_tokens(["AI", "BTC"]), ["BTC"])
+
+    def test_finance_context_words_require_cashtag(self):
+        """R70 实弹补充：BANK/BLOCK 等金融语境高频词进歧义表——
+        'Bank of England'/'Builders Bank' 的 Title Case 普通名词曾直接被当挂件标的
+        发出去（$BANK 伊朗帖实录）。$ 前缀显式引用仍放行。"""
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "Jack Dorsey's Block Applies for Bank Charter to Custody Bitcoin",
+            self.VALID | {"BANK", "BLOCK"}), [])
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "The Bank of England hikes rates", self.VALID | {"BANK"}), [])
+        # $ 前缀 = 真在说该代币
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "BANK token lists on new exchange ($BANK)", self.VALID | {"BANK"}), ["BANK"])
 
 
 class TestSymbolValidatorFallback(unittest.TestCase):

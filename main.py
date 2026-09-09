@@ -365,11 +365,33 @@ def intel_state_update(key: str, mutate_fn, default=None):
 
 
 # 与英文单词撞名的真实代币代码：原文必须全大写(NEAR)或带 $ 前缀($NEAR) 才采信，防止误判
-AMBIGUOUS_TICKERS = {
+# 严格词表（R70 语料扫描定案）：英语常用词/缩写词撞名币，全大写也不足采信
+# （OG.com、CLARITY ACT、AI 首字母缩写实录），必须 $ 显式引用。
+# 取代旧 AMBIGUOUS_TICKERS（"全大写或 $ 前缀"语义被通用大写闸取代，此表只剩严格档）。
+STRICT_TICKERS = {
+    # 旧歧义表：全大写仍可能误伤的常用词（NEAR protocol 全大写标题实录——保留严格档）
     "NEAR", "NOT", "ONE", "APT", "APE", "SAND", "MANA", "MASK", "PEOPLE",
     "CAKE", "RAY", "SPELL", "ATOM", "GALA", "LIT", "DATA", "KEY", "FUN",
     "WAVES", "OCEAN", "DOCK", "HARD", "DENT", "WING", "FARM", "ALPHA", "TIME",
     "LINK", "FLOW", "BLUR", "ROSE", "NEO", "GAS", "SUSHI",
+    # R69/R70 实弹实锤：AI 技术语境（OpenAI/Cardano 新闻硬挂 $AI）
+    "AI",
+    # 金融语境（Bank of England/Builders Bank → $BANK 伊朗帖实录）
+    "BANK", "BLOCK", "ALT", "MOVE", "FORM", "GAME", "STORY", "COOKIE",
+    "MAJOR", "RISK", "SAFE", "TOWER", "CITY", "LIGHT", "POWER", "SIREN",
+    # R70 语料扫描新实锤（每条都是生产 feed 实测命中）：
+    "HOME",    # "earnings home in crypto"（伊朗帖）/ "home network"（LG 电视帖）
+    "QUICK",   # "quick retrace could be..."（行情分析帖）
+    "AUDIO",   # "capturing microphone audio"（LG 电视帖）
+    "LAYER",   # "layer 1"/"trust layer"（以太坊 L1 帖）
+    "OPEN",    # "to Open Institutional..."（XRP 基金帖）
+    "RED",     # "3 Red Flags..."（Chainlink 帖）
+    "ACT",     # "CLARITY Act"（监管法案帖 ×2）
+    "OG",      # "OG.com" 域名（Robinhood 帖，全大写仍误判）
+    "SIGN",    # "warning sign for a local top"（Decrypt 帖）
+    "SUN",     # URL slug "justin-sun-trx"（BlockTempo 帖）
+    "VIRTUAL", # URL slug "virtual-asset-forum"（繁中帖）
+    "IO",      # 图片域名 ctmedia.io（Cointelegraph 每帖 ×25，预清洗前最大误报源）
 }
 
 # 全大写缩写噪音词：永远不当代币识别
@@ -1160,22 +1182,34 @@ class NewsFetcher:
 
     @staticmethod
     def extract_tokens(text: str, valid_symbols: Set[str]) -> List[str]:
-        """从新闻文本中识别真实代币代码。
-        歧义代码（NEAR/LINK/MASK 等英文单词撞名币）仅当原文为全大写或带 $ 前缀时才采信。
-        特例 "AI"：它是首字母缩写词，永远全大写，全大写启发式对它零信号——且加密新闻里
-        99% 的 AI 是技术词而非 Sleepless AI 代币（R69 实弹实录：OpenAI/Cardano 的 AI
-        技术新闻被硬挂 $AI，生成出"自家代币的 AI 进步"式事实错乱）。故 AI 只认 $ 前缀
-        显式引用；裸 AI 一律不提取（该类新闻本就无直接挂钩标的，跳过比编造叙事诚实）。"""
+        """从新闻文本中识别真实代币代码。三层防线（R70 语料扫描定案）：
+        ① 预清洗：剥 HTML 标签与 URL——图片域名（ctmedia.io → $IO × 25/轮实录）
+           和 URL slug（justin-sun-trx → $SUN）是最大误报源；
+        ② 通用大写闸：任何标的需要 $ 前缀或全大写——小写英文词（earnings home、
+           quick retrace、layer 1）与 Title Case（to Open、Red Flags、CLARITY Act）
+           曾直接被当挂件标的；
+        ③ 严格词表 STRICT_TICKERS：英语常用词撞名币（AI/BANK/HOME/OG/ACT 等），
+           全大写也不足采信（OG.com、CLARITY ACT 全大写实录），必须 $ 显式引用。
+        特例 AI 归入③：首字母缩写词永远全大写，大写启发式零信号。"""
+        # ① 预清洗
+        text = re.sub(r"<[^>]+>", " ", text)                      # HTML 标签
+        text = re.sub(r"https?://\S+", " ", text)                 # 完整 URL
+        text = re.sub(r"\b[\w.-]+@(?:\w+\.)+[a-z]{2,}\b", " ", text, flags=re.I)  # 邮箱
+        text = re.sub(r"(?<![\w$])[\w-]+\.(?:com|net|io|org|xyz|app|finance|me|tv)\b\S*",
+                      " ", text, flags=re.I)                      # 裸域名（含 www.x.com/a/b）
         detected: List[str] = []
         for m in re.finditer(r"\$?([A-Za-z0-9]{2,10})\b", text):
             word = m.group(1)
             upper_w = word.upper()
             if upper_w in IGNORE_WORDS or upper_w not in valid_symbols:
                 continue
-            if upper_w == "AI":
-                if not m.group(0).startswith("$"):
+            starts_with_dollar = m.group(0).startswith("$")
+            if upper_w in STRICT_TICKERS:
+                # ③ 常用词撞名：只认 $ 显式引用
+                if not starts_with_dollar:
                     continue
-            elif upper_w in AMBIGUOUS_TICKERS and not (m.group(0).startswith("$") or word.isupper()):
+            elif not (starts_with_dollar or word.isupper()):
+                # ② 通用大写闸
                 continue
             if upper_w not in detected:
                 detected.append(upper_w)
@@ -3801,7 +3835,7 @@ class SquarePublisher(BasePublisher):
         valid_symbols = SymbolValidator.get_valid_symbols()
         for tok in sorted({t.upper() for t in ensure_tokens if t and t.upper() in valid_symbols},
                           key=len, reverse=True):
-            flags = 0 if tok in AMBIGUOUS_TICKERS else re.IGNORECASE
+            flags = 0 if tok in STRICT_TICKERS else re.IGNORECASE
             pattern = re.compile(
                 rf"(?<![A-Za-z0-9$#]){re.escape(tok)}(?![A-Za-z0-9])", flags)
             content = pattern.sub(f"${tok}", content)
