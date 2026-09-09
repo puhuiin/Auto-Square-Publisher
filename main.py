@@ -2392,6 +2392,36 @@ class MultiLLMEngine:
             "outcome": "llm_rejected",
         })
 
+    def _recent_openers(self, limit: int = 3) -> List[str]:
+        """读取最近 N 篇已发布文本的开场句（final_preview 首句，倒序）。
+        供 prompt 注入"近期开场禁复用"——生产实录：相邻两帖同用"先泼盆冷水"比喻，
+        跨帖措辞复用是 ShuffleBag（只管人设/结尾）覆盖不到的时间线级指纹。
+        metrics 缺失/无记录时返回空表（冷启动无约束）。"""
+        openers: List[str] = []
+        try:
+            if not os.path.exists(METRICS_FILE):
+                return openers
+            with open(METRICS_FILE, "r", encoding="utf-8") as f:
+                lines = f.readlines()[-60:]  # 只回看尾部，文件可能几千行
+            for line in reversed(lines):
+                try:
+                    r = json.loads(line)
+                except Exception:
+                    continue
+                if not str(r.get("outcome", "")).startswith("binance_published"):
+                    continue
+                preview = (r.get("final_preview") or "").strip()
+                if not preview:
+                    continue  # R63 之前的帖子无回执，跳过
+                first_sentence = re.split(r"[。\n]", preview)[0].strip()
+                if first_sentence:
+                    openers.append(first_sentence[:60])
+                if len(openers) >= limit:
+                    break
+        except Exception as e:
+            logger.debug(f"读取近期开场白失败 (不影响主流程): {e}")
+        return openers
+
     def _build_user_prompt(self, news_item: Dict[str, Any],
                            campaign_intel: Optional[Dict[str, Any]],
                            market_context: str,
@@ -2417,6 +2447,13 @@ class MultiLLMEngine:
         # 结尾互动句 + 写派人设风格轮换：随机抽取本条的套路，防止每条帖子一个模子
         ending_style = _ENDING_BAG.draw()
         ending_hint = f"【本条结尾站队提问的套路】：{ending_style}\n"
+
+        # 跨帖开场去重（R75）：ShuffleBag 只管人设/结尾套路，管不到开场比喻——
+        # 生产实录：相邻两帖同用"先泼盆冷水"。把近期开场句列进禁用区。
+        recent_openers = self._recent_openers()
+        if recent_openers:
+            ending_hint += ("【近期已用过的开场句（禁止再用同款比喻/句式开头）】："
+                            + " / ".join(f"“{o}”" for o in recent_openers) + "\n")
 
         # 时效感：告诉模型这条新闻是多久前的，文案要带"刚出炉"或"发酵中"的正确时态
         # （短讯拼进 ending_hint，长文独立一行——两种形态都需要正确的时态框架）

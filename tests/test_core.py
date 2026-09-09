@@ -174,6 +174,56 @@ class TestScheduleWatchdogScript(unittest.TestCase):
                                       datetime.now(timezone.utc)), "")
 
 
+class TestRecentOpeners(unittest.TestCase):
+    """跨帖开场去重（R75）：相邻两帖同用"先泼盆冷水"比喻的时间线级指纹"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".jsonl")
+        self._orig = m.METRICS_FILE
+        m.METRICS_FILE = self.tmp
+        self._eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+
+    def tearDown(self):
+        m.METRICS_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _append(self, rows):
+        with open(self.tmp, "a", encoding="utf-8") as f:
+            for r in rows:
+                f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+    def test_openers_read_in_reverse_order(self):
+        self._append([
+            {"outcome": "binance_published", "final_preview": "先泼盆冷水，贪婪指数 66 了。后续内容略。"},
+            {"outcome": "llm_failed", "final_preview": "失败帖不算开场", "title": "x"},
+            {"outcome": "binance_published_cache_failed", "final_preview": "孙宇晨又抢头条了。后续略。"},
+            {"outcome": "binance_published", "final_preview": ""},
+        ])
+        openers = self._eng._recent_openers()
+        self.assertEqual(len(openers), 2)
+        # 倒序：最后写入（最新）在前
+        self.assertIn("孙宇晨", openers[0])
+        self.assertIn("先泼盆冷水", openers[1])
+        # llm_failed 行与空 preview 行被跳过
+
+    def test_missing_file_returns_empty(self):
+        m.METRICS_FILE = self.tmp + ".nonexistent"
+        self.assertEqual(self._eng._recent_openers(), [])
+
+    def test_prompt_carries_banned_openers(self):
+        self._append([{"outcome": "binance_published",
+                       "final_preview": "先泼盆冷水，贪婪指数 66 了。"}])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        user_prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        self.assertIn("禁止再用同款比喻", user_prompt)
+        self.assertIn("先泼盆冷水", user_prompt)
+
+
 class TestTokenExtraction(unittest.TestCase):
     """代币识别：歧义代码守护 + IGNORE 词表过滤"""
 
