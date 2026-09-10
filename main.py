@@ -1719,22 +1719,34 @@ class NewsFetcher:
         }
 
     @staticmethod
+    def _candidate_hits_tokens(item: Dict[str, Any], tickers: Set[str]) -> bool:
+        """候选文本是否命中指定 ticker 集合——必须复用 extract_tokens 四层防线。
+        禁止 text_upper 大写匹配：热搜/活动池里全是 PUMP/PENGU/MOVE 这类词形
+        ticker，"Solana pumps 10%" 经 .upper() 后会被 \\bPUMP\\b 误命中，假加权
+        污染选题质量（R70 大写闸教训在加权层的重演，R95 生产复核时发现）。
+        extract_tokens 自带预清洗/大写闸/严格词表/别名四层。"""
+        if not tickers:
+            return False
+        text = (item.get("title") or "") + " " + (item.get("summary") or "")
+        detected = NewsFetcher.extract_tokens(text, SymbolValidator.get_valid_symbols())
+        return bool(tickers.intersection(detected))
+
+    @staticmethod
     def _apply_campaign_boost(candidates: List[Dict[str, Any]],
                               priority_tokens: Optional[List[str]]) -> None:
-        """币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布（正则一次性预编译）。
+        """币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布。
         非字符串条目直接丢弃——脏情报里的 dict/数字走到 t.replace 会炸掉整轮；
-        存量脏文件由 get_campaign_intel 拦截，这里是消费侧第二道门。"""
+        存量脏文件由 get_campaign_intel 拦截，这里是消费侧第二道门。
+        R95：命中判定改走 _candidate_hits_tokens（四层防线），词形活动币
+        （MOVE/FORM 等严格词表成员）不再误boost普通英文标题。"""
         if not priority_tokens:
             return
-        boost_patterns = [
-            re.compile(rf"\b{re.escape(t.replace('$', '').upper())}\b")
-            for t in priority_tokens if isinstance(t, str) and t
-        ]
-        if not boost_patterns:
+        campaign_set = {t.replace("$", "").strip().upper()
+                        for t in priority_tokens if isinstance(t, str) and t.strip()}
+        if not campaign_set:
             return
         for item in candidates:
-            text_upper = (item["title"] + " " + item["summary"]).upper()
-            if any(p.search(text_upper) for p in boost_patterns):
+            if NewsFetcher._candidate_hits_tokens(item, campaign_set):
                 item["impact_score"] += CAMPAIGN_TOKEN_BOOST
 
     @staticmethod
@@ -1743,7 +1755,9 @@ class NewsFetcher:
         """全网热搜标的加权（借鉴 Easel 热榜发现层）：CoinGecko Trending 里
         正在被搜索的币，其相关热点优先发布——市场注意力是比新闻时效更强的
         热点信号。与活动加权同纪律：只影响排序不影响准入，base_impact_score
-        不动（MIN_IMPACT_SCORE 过滤已按原始分完成）。空表 = 零行为变化。"""
+        不动（MIN_IMPACT_SCORE 过滤已按原始分完成）。空表 = 零行为变化。
+        R95：命中判定走 _candidate_hits_tokens 四层防线——热搜榜全是 PUMP/
+        PENGU 词形 ticker，text_upper 匹配会把 "pumps" 误当 $PUMP。"""
         if not trending_symbols:
             return
         trend_set = {t.strip().upper().replace("$", "")
@@ -1751,8 +1765,7 @@ class NewsFetcher:
         if not trend_set:
             return
         for item in candidates:
-            text_upper = (item["title"] + " " + item["summary"]).upper()
-            if any(re.search(rf"\b{re.escape(t)}\b", text_upper) for t in trend_set):
+            if NewsFetcher._candidate_hits_tokens(item, trend_set):
                 item["impact_score"] += TREND_TOKEN_BOOST
 
     def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5,

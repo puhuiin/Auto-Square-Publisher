@@ -24,7 +24,7 @@ _REAL_EXTRACT_TOKENS = m.NewsFetcher.extract_tokens  # staticmethod → 直接�
 # 套件级 hermetic 符号表：_sanitize_content 等逻辑无条件调用 get_valid_symbols，
 # 缓存为空时会打真实币安 API（"离线单测"名存实亡：顺断网、有网慢，且结果不可复现）。
 # 此处预设与 TestContentSanitizer 一致的最小宇宙，各测试仍可自行覆盖/打补丁。
-TEST_SYMBOL_UNIVERSE = {"BTC", "ETH", "XRP", "PEPE", "SOL", "DOGE"}
+TEST_SYMBOL_UNIVERSE = {"BTC", "ETH", "XRP", "PEPE", "SOL", "DOGE", "BNB"}
 _ORIG_SYMBOL_CACHE = None
 
 
@@ -664,6 +664,13 @@ class TestContentSanitizer(unittest.TestCase):
         # 测试环境不请求网络，直接注入符号表
         m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP", "PEPE", "SOL", "DOGE"}
 
+    @classmethod
+    def tearDownClass(cls):
+        # R95：必须恢复模块级标的池——setUpClass 覆盖后若不还原，池污染会
+        # 顺着定义顺序影响后续依赖 get_valid_symbols 的加权测试（潜伏 bug，
+        # 加权命中判定改走标的池后才暴露）
+        m.SymbolValidator._valid_symbols_cache = set(TEST_SYMBOL_UNIVERSE)
+
     def test_fake_token_stripped_real_kept(self):
         s = m.SquarePublisher._sanitize_content("ETF 利好 $FAKECOIN 起飞，$BTC 跟涨")
         self.assertNotIn("$FAKECOIN", s)
@@ -792,6 +799,11 @@ class TestTokenWidgetEnforcement(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP"}
+
+    @classmethod
+    def tearDownClass(cls):
+        # R95：同 TestContentSanitizer——用后恢复模块级标的池
+        m.SymbolValidator._valid_symbols_cache = set(TEST_SYMBOL_UNIVERSE)
 
     def test_missing_widget_inserted_before_tags(self):
         out = m.SquarePublisher._ensure_token_widget(
@@ -2683,7 +2695,15 @@ class TestStaleIntelBody(unittest.TestCase):
 
 
 class TestCampaignBoost(unittest.TestCase):
-    """活动加权消费侧：非字符串条目直接丢弃，不得炸轮"""
+    """活动加权消费侧：非字符串条目直接丢弃，不得炸轮；
+    R95：词形活动币（MOVE）不得误 boost 普通英文标题"""
+
+    def setUp(self):
+        self._orig_syms = m.SymbolValidator._valid_symbols_cache
+        m.SymbolValidator._valid_symbols_cache = {"BNB", "MOVE"}
+
+    def tearDown(self):
+        m.SymbolValidator._valid_symbols_cache = self._orig_syms
 
     def test_mixed_junk_ignored_real_tokens_boost(self):
         cands = [{"title": "BNB breaks out strongly", "summary": "", "impact_score": 5},
@@ -2698,6 +2718,19 @@ class TestCampaignBoost(unittest.TestCase):
         m.NewsFetcher._apply_campaign_boost(cands, [])
         m.NewsFetcher._apply_campaign_boost(cands, [{"x": 1}])
         self.assertEqual(cands[0]["impact_score"], 5)
+
+    def test_wordlike_campaign_token_needs_real_mention(self):
+        """R95：MOVE 在严格词表（撞名词），'market moves higher' 大写化后
+        不得被 \\bMOVE\\b 误命中——命中判定必须走 extract_tokens 四层防线"""
+        cands = [{"title": "Market moves higher as Fed speakers line up",
+                  "summary": "", "impact_score": 7}]
+        m.NewsFetcher._apply_campaign_boost(cands, ["$MOVE"])
+        self.assertEqual(cands[0]["impact_score"], 7, "普通英文 moves 不得命中 MOVE")
+        cands2 = [{"title": "$MOVE listing confirmed for Friday", "summary": "",
+                   "impact_score": 7}]
+        m.NewsFetcher._apply_campaign_boost(cands2, ["$MOVE"])
+        self.assertEqual(cands2[0]["impact_score"], 7 + m.CAMPAIGN_TOKEN_BOOST,
+                         "显式 $MOVE 才是真命中")
 
 
 class TestIntelRefreshBackoff(unittest.TestCase):
@@ -3035,6 +3068,11 @@ class TestCrossPlatformContentAdaptation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP"}
+
+    @classmethod
+    def tearDownClass(cls):
+        # R95：同 TestContentSanitizer——用后恢复模块级标的池
+        m.SymbolValidator._valid_symbols_cache = set(TEST_SYMBOL_UNIVERSE)
 
     def test_full_adaptation(self):
         raw = ("大盘反弹。<think>思考过程</think>假如 $FAKECOIN 起飞。"
@@ -4007,9 +4045,12 @@ class TestTrendBoost(unittest.TestCase):
     def setUp(self):
         self._orig_cache = m.MarketDataProvider._trend_cache
         m.MarketDataProvider._trend_cache = (0.0, [])
+        self._orig_syms = m.SymbolValidator._valid_symbols_cache
+        m.SymbolValidator._valid_symbols_cache = {"SOL", "BTC", "PUMP"}
 
     def tearDown(self):
         m.MarketDataProvider._trend_cache = self._orig_cache
+        m.SymbolValidator._valid_symbols_cache = self._orig_syms
 
     def _resp(self, payload):
         return type("R", (), {"status_code": 200, "headers": {},
@@ -4056,6 +4097,19 @@ class TestTrendBoost(unittest.TestCase):
         m.NewsFetcher.apply_trend_boost(cands, ["", None, 42, "$BTC"])
         self.assertEqual(cands[0]["impact_score"], 5 + m.TREND_TOKEN_BOOST,
                          "脏条目丢弃，$ 前缀归一后仍生效")
+
+    def test_wordlike_trending_token_no_false_boost(self):
+        """R95：热搜榜全是词形 ticker（PUMP/PENGU），'Solana pumps 10%'
+        经 text_upper 会被 \\bPUMP\\b 误命中——命中判定必须走四层防线"""
+        cands = [{"title": "Solana pumps 10% as inflows rise", "summary": "",
+                  "impact_score": 9, "base_impact_score": 9}]
+        m.NewsFetcher.apply_trend_boost(cands, ["PUMP"])
+        self.assertEqual(cands[0]["impact_score"], 9, "普通英文 pumps 不得命中 PUMP")
+        cands2 = [{"title": "PUMP token completes migration today", "summary": "",
+                   "impact_score": 9, "base_impact_score": 9}]
+        m.NewsFetcher.apply_trend_boost(cands2, ["PUMP"])
+        self.assertEqual(cands2[0]["impact_score"], 9 + m.TREND_TOKEN_BOOST,
+                         "真 PUMP 标题才命中")
 
     def test_run_summary_carries_trending(self):
         """run_summary 必须记录当轮热搜标的（事后做加权效果相关分析）"""
