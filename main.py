@@ -2078,6 +2078,11 @@ class MultiLLMEngine:
                         r = json.loads(line)
                     except Exception:
                         continue
+                    if r.get("dry_run") is True:
+                        # R85：DRY 行不进调度评分——它们会随状态同步被提交（CI 手动
+                        # dry_run 触发即产生），不过滤会把本地沙盒的延迟/token 灌进
+                        # 生产提供商排序（R84 闸门只封了状态写，遥测行是设计内落盘）
+                        continue
                     if r.get("stage") not in ("summarize", "campaign_intel"):
                         continue
                     name = r.get("provider")

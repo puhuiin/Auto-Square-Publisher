@@ -3601,6 +3601,21 @@ class TestCostObservability(unittest.TestCase):
         with open(m.METRICS_FILE, encoding="utf-8") as f:
             return [json.loads(l) for l in f if l.strip()]
 
+    def test_scheduler_scores_exclude_dry_rows(self):
+        """R85：调度评分必须排除 dry 行——dry 遥测会随状态同步被提交（CI 手动
+        dry_run 触发即产生），不过滤会把本地沙盒延迟/token 灌进生产提供商排序。"""
+        import json
+        with open(m.METRICS_FILE, "w", encoding="utf-8") as f:
+            f.write(json.dumps({"stage": "summarize", "provider": "Sandbox-GW",
+                                "llm_latency_sec": 99.0, "tokens_used": 9999,
+                                "dry_run": True}) + "\n")
+            f.write(json.dumps({"stage": "summarize", "provider": "Fast",
+                                "llm_latency_sec": 1.0, "tokens_used": 100}) + "\n")
+        # 缓存按 路径+mtime+size 失效：tmp 路径唯一，首查即 fresh
+        scores = m.MultiLLMEngine._provider_cost_latency_scores()
+        self.assertNotIn("Sandbox-GW", scores, "dry 行不得进入调度评分")
+        self.assertIn("Fast", scores)
+
     # ---- _extract_usage_tokens 提取鲁棒性 ----
     def test_extract_total_tokens(self):
         resp = SimpleNamespace(usage=SimpleNamespace(total_tokens=1234))
