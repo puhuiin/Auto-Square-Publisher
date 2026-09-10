@@ -3917,8 +3917,10 @@ class TestRunMainSemantics(unittest.TestCase):
         patches = self._base_patches(tmpdir, paths, dry=True)
         try:
             # DRY_RUN 标记日志证明流程真正走到了试运行分支（否则文件断言是空转通过）
-            with self.assertLogs("SquarePosterUltimate", level="INFO") as logs:
-                m._run_main()
+            with patch.object(m.ImageManager, "prepare_and_upload",
+                              side_effect=AssertionError("DRY_RUN 不得调用图片上传")):
+                with self.assertLogs("SquarePosterUltimate", level="INFO") as logs:
+                    m._run_main()
             self.assertTrue(any("DRY_RUN" in o for o in logs.output), "必须真正走到试运行分支")
             self.assertFalse(os.path.exists(paths["cache"]), "DRY 不得写去重缓存")
             self.assertFalse(os.path.exists(paths["metrics"]), "DRY 不得记遥测")
