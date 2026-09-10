@@ -28,8 +28,8 @@
   "_intel_refresh_fail": {},
   "_publish_park": {
     "ecf15f2f21e0da35": {
-      "fails": 1,
-      "last_fail": "2026-09-10T12:48:33.386727+00:00"
+      "last_fail": "2026-09-10T12:48:33.386727+00:00",
+      "fails": 1
     }
   }
 }
