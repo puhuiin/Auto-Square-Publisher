@@ -308,6 +308,14 @@ def _atomic_write_text(path: str, text: str) -> None:
 _INTEL_STATE_LOCK = threading.Lock()  # RSS 抓取是 10 线程并发，多个线程会同时改 _feed_health 等键
 
 
+def _intel_writes_enabled() -> bool:
+    """DRY_RUN 状态写闸门：试运行必须零副作用（用户红线），但 intel 读路径
+    （断路器/停放/健康度判定）必须照常工作，否则试运行测不出真实调度行为。
+    实锤：DRY 冒烟经 _feed_record(ok=True) 清掉了生产 _feed_health 里的故障
+    计数——试运行破坏了源健康度跟踪（R55 同类 bug 在 RSS 通道复发）。"""
+    return os.getenv("DRY_RUN", "false").strip().lower() not in ("true", "1", "yes")
+
+
 def _read_intel_file(quiet: bool = False) -> dict:
     """读整份 intel：文件损坏/内容非对象时自愈为空 dict。
     此前 load 失败直接抛，导致其后写入被整段跳过——手改改坏一次 JSON，
@@ -339,6 +347,8 @@ def intel_state_get(key: str, default=None):
 
 def intel_state_set(key: str, value) -> None:
     try:
+        if not _intel_writes_enabled():
+            return  # DRY_RUN 零副作用：状态写入静默跳过（读路径不受影响）
         # 读-改-写整把锁：并发写入若不加锁会读旧源、部分覆盖，甚至截断成半个 JSON
         with _INTEL_STATE_LOCK:
             intel = _read_intel_file()
@@ -352,7 +362,10 @@ def intel_state_update(key: str, mutate_fn, default=None):
     """
     原子读-改-写：mutate_fn(current_value) -> new_value。
     并发场景下 get+set 分两次拿锁仍会撞车，此 API 保证整个变更过程原子。
+    DRY_RUN 时静默跳过（返回 default，不触碰文件）。
     """
+    if not _intel_writes_enabled():
+        return default
     with _INTEL_STATE_LOCK:
         try:
             intel = _read_intel_file()
@@ -3119,12 +3132,16 @@ class CampaignScanner:
                             "_intel_refresh_fail", CampaignScanner._EMPTY_STREAK_KEY):
                         intel[k] = v
             intel["_intel_refresh_fail"] = {}
-            # 仅当 AI 产出了真实分析结果才落盘持久化
-            try:
-                _atomic_write_text(CAMPAIGN_INTEL_FILE, json.dumps(intel, ensure_ascii=False, indent=2))
-                logger.info("最新币安活动情报已写入本地文件: campaign_intel.json")
-            except Exception as e:
-                logger.error(f"保存 campaign_intel.json 失败: {e}")
+            # 仅当 AI 产出了真实分析结果才落盘持久化（DRY_RUN 零副作用：跳过落盘，
+            # 本轮内存返回新鲜情报，不把试运行的刷新写进生产状态）
+            if _intel_writes_enabled():
+                try:
+                    _atomic_write_text(CAMPAIGN_INTEL_FILE, json.dumps(intel, ensure_ascii=False, indent=2))
+                    logger.info("最新币安活动情报已写入本地文件: campaign_intel.json")
+                except Exception as e:
+                    logger.error(f"保存 campaign_intel.json 失败: {e}")
+            else:
+                logger.info("【DRY_RUN】活动情报刷新结果仅本轮生效，不落盘。")
             return intel
 
         # 分析失败：有过期情报就续用，没有才返回静态兜底（且不落盘，下轮自动重试）

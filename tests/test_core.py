@@ -311,6 +311,68 @@ class TestOrphanStateKeyCleanup(unittest.TestCase):
         self.assertEqual(os.path.getmtime(self.tmp), before, "干净文件不得重写")
 
 
+class TestDryRunStateWriteGate(unittest.TestCase):
+    """R84：DRY_RUN 状态写闸门——试运行零副作用覆盖 intel 全部写通道。
+    实锤：DRY 冒烟经 _feed_record(ok=True) 清掉生产 _feed_health 故障计数，
+    源健康度跟踪被试运行破坏（R55 同类 bug 在 RSS 通道复发）。读路径不受影响。"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        self._orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig_intel
+        os.environ.pop("DRY_RUN", None)
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _mtime(self):
+        return os.path.getmtime(self.tmp)
+
+    def test_dry_set_and_update_are_silent_noops(self):
+        import json, time
+        os.environ["DRY_RUN"] = "true"
+        before = self._mtime()
+        time.sleep(0.01)  # mtime 分辨率兜底
+        m.intel_state_set("k", "v")
+        self.assertIsNone(m.intel_state_update("k2", lambda cur: "x"))
+        self.assertEqual(self._mtime(), before, "DRY 下任何状态写不得触碰文件")
+        doc = json.load(open(self.tmp, encoding="utf-8"))
+        self.assertEqual(doc, {}, "文件内容不得变化")
+
+    def test_dry_reads_still_work(self):
+        import json
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"k": "v"}, f)
+        os.environ["DRY_RUN"] = "true"
+        self.assertEqual(m.intel_state_get("k"), "v", "DRY 只封写不封读")
+
+    def test_real_run_writes_normally(self):
+        os.environ["DRY_RUN"] = "false"
+        m.intel_state_set("k", {"a": 1})
+        doc = json.load(open(self.tmp, encoding="utf-8"))
+        self.assertEqual(doc["k"], {"a": 1}, "正式模式写路径不得被误伤")
+        out = m.intel_state_update("k", lambda cur: dict(cur, b=2))
+        self.assertEqual(out, {"a": 1, "b": 2})
+
+    def test_feed_health_not_clobbered_under_dry(self):
+        """复现原事故路径：DRY 下 RSS 抓取成功的 _feed_record(ok=True) 不得
+        清掉已有故障计数"""
+        import json
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"_feed_health": {"Src": {"fails": 1,
+                                                "last_fail": "2026-09-07"}}}, f)
+        os.environ["DRY_RUN"] = "true"
+        fetcher = m.NewsFetcher()
+        fetcher._feed_record("Src", ok=True)
+        doc = json.load(open(self.tmp, encoding="utf-8"))
+        self.assertEqual(doc["_feed_health"]["Src"]["fails"], 1, "故障计数必须保留")
+
+
 class TestTokenExtraction(unittest.TestCase):
     """代币识别：歧义代码守护 + IGNORE 词表过滤"""
 
