@@ -2050,6 +2050,44 @@ class TestGitStateMerge(unittest.TestCase):
         self.assertIn("live", merged["_alert_state"])
         self.assertIn("dirty", merged["_alert_state"])
 
+    def test_merge_intel_gcs_expired_refresh_fail(self):
+        """R93：情报刷新失败退避是最后一个未 GC 的冷却型 _ 键——生产实证
+        05:23Z 刷新成功后文件里仍躺着 05:05Z 的过期冷却值（并集复活实锤）。
+        未过期的冷却复活会让机器人明明能刷新却沿用陈旧情报 2 小时。"""
+        now = datetime.now(timezone.utc)
+        remote = {
+            "last_updated": "2026-09-10T05:23:54Z",
+            "_intel_refresh_fail": {"cooldown_until":
+                (now - timedelta(hours=2)).isoformat()},          # 已过期：清零
+        }
+        # 本地刚成功刷新：无 _intel_refresh_fail 键（成功路径已清）
+        local = {"last_updated": "2026-09-10T05:24:00Z"}
+        remote_p = self._write("campaign_intel.json", remote)
+        local_p = self._write("local_intel.json", local)
+        self.assertTrue(self.merger.merge_intel(local_p, remote_p))
+        import json
+        with open(remote_p, encoding="utf-8") as f:
+            merged = json.load(f)
+        self.assertEqual(merged.get("_intel_refresh_fail"), {}, "过期冷却必须清零")
+
+    def test_merge_intel_keeps_live_refresh_fail(self):
+        # 未过期的冷却必须保留（并发运行确实在退避期）；畸形时间戳看懂才删
+        now = datetime.now(timezone.utc)
+        remote = {
+            "last_updated": "2026-09-10T05:23:54Z",
+            "_intel_refresh_fail": {"cooldown_until":
+                (now + timedelta(hours=1)).isoformat()},
+        }
+        local = {"last_updated": "2026-09-10T05:24:00Z"}
+        remote_p = self._write("campaign_intel.json", remote)
+        local_p = self._write("local_intel.json", local)
+        self.assertTrue(self.merger.merge_intel(local_p, remote_p))
+        import json
+        with open(remote_p, encoding="utf-8") as f:
+            merged = json.load(f)
+        self.assertIn("cooldown_until", merged.get("_intel_refresh_fail", {}),
+                      "未过期冷却必须保留")
+
     def test_merge_state_recursive(self):
         a = {"x": {"y": 1}}
         b = {"x": {"z": 2}}

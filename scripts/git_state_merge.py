@@ -132,6 +132,25 @@ def _gc_alert_state(state, window_hours: int, now=None) -> dict:
     return out
 
 
+def _gc_refresh_fail(entry, now=None) -> dict:
+    """情报刷新失败退避的合并侧 GC：cooldown_until 已过的条目清零。
+    并集会让成功刷新后的本地清空被远端旧值复活——未过期的冷却复活会让机器人
+    明明能刷新却继续沿用陈旧情报 2 小时（生产实证：05:23Z 刷新成功后文件里
+    仍躺着 05:05Z 的过期冷却值，即并集复活的实锤）。看不懂的时间戳保留。"""
+    now = now or datetime.now(timezone.utc)
+    if not isinstance(entry, dict):
+        return entry
+    try:
+        until = datetime.fromisoformat(str(entry.get("cooldown_until", "")))
+        if until.tzinfo is None:
+            until = until.replace(tzinfo=timezone.utc)
+        if now >= until:
+            return {}  # 已过期：清零（等价于成功刷新后的状态）
+    except Exception:
+        pass  # 看不懂：保留
+    return entry
+
+
 def atomic_write_text(path, text: str) -> None:
     """崩溃安全写盘：同目录 tmp + os.replace（与 main._atomic_write_text 同语义，
     此脚本独立运行不 import 主模块，故小段重复）。
@@ -236,6 +255,12 @@ def merge_intel(local_snapshot_path: str, remote_path: str) -> bool:
             merged_state[key] = _gc_streak_state(merged_state[key], _STREAK_GC_HOURS)
     if isinstance(merged_state.get("_alert_state"), dict):
         merged_state["_alert_state"] = _gc_alert_state(merged_state["_alert_state"], _ALERT_GC_HOURS)
+    # R93：情报刷新失败退避是最后一个未 GC 的冷却型 _ 键——过期的冷却值被
+    # 并集复活虽不改变"已过期"的判定结果，但会永久滞留文件误导排障；
+    # 未过期的复活则会让机器人明明能刷新却沿用陈旧情报 2 小时。
+    if "_intel_refresh_fail" in merged_state:
+        merged_state["_intel_refresh_fail"] = _gc_refresh_fail(
+            merged_state["_intel_refresh_fail"])
     best.update(merged_state)
     # R87：孤儿键必须同时从 best 移除——best 是较新版本的完整拷贝，update()
     # 只能覆盖不能删除，仅 pop merged_state 挡不住 best 自带的键（生产实证
