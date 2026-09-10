@@ -2563,6 +2563,10 @@ class MultiLLMEngine:
                 effective_max_tokens = _summarize_max_tokens(provider.name, provider.model)
                 if article:
                     effective_max_tokens = 3500 if effective_max_tokens >= 1500 else 1800
+                # 扩容封顶按模式区分（R80 生产实录 00:25Z：长文起点 3500，一次扩容本应
+                # 到 5000 却被全局 4000 卡死，残句 362 字符拒稿——思考链 1000~2300 +
+                # 800 字正文，4000 对推理模型的长文系统性不够）。短讯维持 4000 不变。
+                budget_cap = 6000 if article else 4000
                 # 空回政策 v2（生产 01:15 窗口实证：b.ai 系统性吐空，重试零救回还翻倍延迟）：
                 # 同运行内该提供商已有失败记录 = 连挂窗口，直接认失败走 failover；
                 # 否则（首挂，偶发可能性大）即时重试一次。
@@ -2598,9 +2602,9 @@ class MultiLLMEngine:
                         # 句子写到一半被掐（"想博波"直接挂在时间线上）。残句能过所有
                         # 质量门（长度/中文字数全达标），必须同样走扩容重试；预算到顶
                         # 仍截断时宁可拒稿，也不能把半句话发出去。
-                        if finish == "length" and effective_max_tokens < 4000:
+                        if finish == "length" and effective_max_tokens < budget_cap:
                             expansions += 1
-                            effective_max_tokens = min(effective_max_tokens + 1500, 4000)
+                            effective_max_tokens = min(effective_max_tokens + 1500, budget_cap)
                             logger.warning(f"提供商 [{provider.name}] finish=length 截断"
                                            f"（{'空回' if not content else f'残句 {len(content)} 字符'}，"
                                            f"耗 {tokens_used or '?'} token），预算动态扩容至 {effective_max_tokens} 重试"
@@ -2616,10 +2620,11 @@ class MultiLLMEngine:
                     raise _EmptyContentError(
                         "模型返回了空内容（已即时重试 1 次）" if max_attempts > 1
                         else "模型返回了空内容（同运行连挂窗口，不再重试）")
-                # 预算到顶（4000）仍截断：残句宁可拒稿走 failover，也不能发半句话
+                # 预算到顶仍截断：残句宁可拒稿走 failover，也不能发半句话
                 if final_finish == "length":
                     raise _EmptyContentError(
-                        f"预算 {effective_max_tokens} 到顶仍 finish=length 截断（残句 {len(content)} 字符），拒稿换提供商")
+                        f"预算 {effective_max_tokens}（封顶 {budget_cap}）到顶仍 finish=length 截断"
+                        f"（残句 {len(content)} 字符），拒稿换提供商")
 
                 # 0. 质量门：短讯走通用门；长文走专属门（TITLE 行 + 500~800 字正文）
                 article_title: Optional[str] = None
@@ -2891,9 +2896,14 @@ class CampaignScanner:
                             max_tokens=effective_max_tokens,
                         )
                         _fin = getattr(resp.choices[0], "finish_reason", "") or ""
-                        if _fin != "length":
+                        _raw = (resp.choices[0].message.content or "").strip()
+                        if _fin != "length" and _raw:
                             break
-                        logger.warning(f"情报输出被 max_tokens 截断（finish=length），即时重试 {_intel_attempt + 1}/1...")
+                        # R80：空回与截断同权即时重试——生产实录 00:44Z 连续两窗
+                        # 空回（900/1600 预算全被思考链吞掉），R67 只救了 finish=length，
+                        # 空内容场景却直接 raise。temperature 0.3 下重试常收敛到更短思考链。
+                        logger.warning(f"情报输出{'空内容' if not _raw else '被截断'}（finish={_fin or '未知'}），"
+                                       f"即时重试 {_intel_attempt + 1}/1...")
                     latency_sec = round(time.perf_counter() - t_call, 3)
                     tokens_used = _extract_usage_tokens(resp)
                     raw_res = (resp.choices[0].message.content or "").strip()
