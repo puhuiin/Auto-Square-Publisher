@@ -4999,6 +4999,24 @@ def _run_main():
     )
     fetch_elapsed = time.time() - t_fetch_start
     if not candidates:
+        # R90：零候选轮同样记 run_summary——否则"没新闻"与"没跑"在遥测里
+        # 无法区分（该早退路径此前完全隐形）。字段与主路径同 schema。
+        append_metrics({
+            "outcome": "run_summary",
+            "candidates": 0,
+            "published": 0,
+            "drafts": 0,
+            "unprocessed": 0,
+            "skipped_batch_dup": 0,
+            "skipped_no_token": 0,
+            "skipped_token_limit": 0,
+            "skipped_risk_blocked": 0,
+            "skipped_parked": 0,
+            "skipped_exception": 0,
+            "feeds_ok": fetcher.stats.get("feeds_ok", 0),
+            "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
+            "feeds_parked": len(fetcher.stats.get("feeds_parked", [])),
+        })
         # 全源同时故障 = 基建级问题，必须报警而非静默默认"无事发生"
         if fetcher.stats["feeds_failed"] and fetcher.stats["feeds_ok"] == 0 or \
            len(fetcher.stats["feeds_parked"]) == len(RSS_FEEDS):
@@ -5452,18 +5470,25 @@ def _run_main():
 
     # R88：每轮一条运行摘要遥测（outcome=run_summary；dry 行由 append_metrics 自动
     # 打标并被报表/调度评分排除）——补齐"候选 → 各类跳过 → 投递"漏斗的隐形阶段，
-    # 零发帖窗口不再无从归因。
+    # 零发帖窗口不再无从归因。R90：补 unprocessed（配额触顶后未评估的候选）与
+    # 源健康快照，行内自洽：candidates = published + 各类跳过 + unprocessed。
+    unprocessed = max(0, candidates_seen - posted_count - exception_skipped
+                      - sum(skip_counts.values()))
     append_metrics({
         "outcome": "run_summary",
         "candidates": candidates_seen,
         "published": posted_count,
         "drafts": drafts_count,
+        "unprocessed": unprocessed,
         "skipped_batch_dup": skip_counts["batch_dup"],
         "skipped_no_token": skip_counts["no_token"],
         "skipped_token_limit": skip_counts["token_limit"],
         "skipped_risk_blocked": skip_counts["risk_blocked"],
         "skipped_parked": skip_counts["parked"],
         "skipped_exception": exception_skipped,
+        "feeds_ok": fetcher.stats.get("feeds_ok", 0),
+        "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
+        "feeds_parked": len(fetcher.stats.get("feeds_parked", [])),
     })
 
     write_github_step_summary(fetcher, fng_index, campaign_intel, posted_records, dry_run,

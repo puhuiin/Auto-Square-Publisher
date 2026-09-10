@@ -4346,6 +4346,7 @@ class TestRunMainSemantics(unittest.TestCase):
             self.assertEqual(s["candidates"], 1)
             self.assertEqual(s["skipped_no_token"], 1, "无标的跳过必须计数")
             self.assertEqual(s["published"], 0)
+            self.assertEqual(s["unprocessed"], 0, "无跳过遗漏时 unprocessed 为 0")
             self.assertEqual(s["dry_run"], True, "dry 行必须打标")
             self.assertTrue(all(r.get("dry_run") is True for r in rows))
         finally:
@@ -4364,6 +4365,31 @@ class TestRunMainSemantics(unittest.TestCase):
             self.assertEqual(s["published"], 1, "dry 模拟发布计入 published")
             self.assertEqual(s["skipped_no_token"], 0)
             self.assertEqual(s["skipped_batch_dup"], 0)
+            self.assertEqual(s["unprocessed"], 0)
+            # 行内自洽：candidates = published + 各类跳过 + unprocessed
+            self.assertEqual(
+                s["candidates"],
+                s["published"] + s["unprocessed"]
+                + sum(v for k, v in s.items() if k.startswith("skipped_")))
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_run_summary_written_on_zero_candidates(self):
+        """R90：零候选早退轮也必须记 run_summary——否则"没新闻"与"没跑"
+        在遥测里无法区分（该路径此前完全隐形）。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[])
+        try:
+            with self.assertRaises(SystemExit) as cm:
+                m._run_main()
+            self.assertEqual(cm.exception.code, 0)
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            s = [r for r in rows if r.get("outcome") == "run_summary"]
+            self.assertEqual(len(s), 1, "零候选轮恰好一条 run_summary")
+            self.assertEqual(s[0]["candidates"], 0)
+            self.assertEqual(s[0]["feeds_ok"], 9, "源健康快照必须随行")
         finally:
             self._teardown(patches, tmpdir)
 

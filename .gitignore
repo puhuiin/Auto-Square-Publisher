@@ -19,4 +19,5 @@ ENV/
 .idea/
 *.swp
 .workbuddy/
+.zcode/
 OPTIMIZATION_ROUND_*.md
