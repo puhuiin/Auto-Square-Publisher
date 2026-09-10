@@ -2,22 +2,22 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
+    "#BinanceAlpha",
     "#TradingTournament",
-    "#Alpha",
-    "#bStocks"
+    "#Futures"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$XPIN",
+    "$DEBIT",
     "$CP",
-    "$ZKC",
     "$SAHARA",
+    "$THE",
     "$HOLO",
-    "$RLUSD",
-    "$USD1"
+    "$RLUSD"
   ],
-  "strategy_guidance": "最紧迫的是9月4日截止的 $XPIN Alpha交易竞赛（20万美元奖池）与USD1空投延期活动，发帖机器人应优先以活动冲刺+抄作业角度追贴，教读者在最后窗口如何冲交易量排名与领取空投；随后接力9月8日 $CP Alpha竞赛、9月9日CRMB/HIMSB bStocks上线及牛来Seed Tag新币，再到9月11日截止的RLUSD理财活动，形成倒计时日历式连续追贴节奏。日常快讯务必捆绑当期高流量入口：HOLO/SAHARA/ZKC三大Trading Tournament、Traders League S4（400万美元池）、Futures双赛道赛与南亚美股MegaFest（50万美元池），用赛事复盘+榜单解读角度切入提升互动与转发。每篇文末统一引导读者通过文中链接注册并参与对应交易/理财/钱包活动，以最大化Write to Earn交易返佣与曝光加权。",
-  "last_updated": "2026-09-10T05:23:54.263200Z",
+  "strategy_guidance": "最紧迫的是 Binance Alpha 交易竞赛 $XPIN（2026-09-04 截止），发帖机器人应立即以'活动冲刺+抄作业'角度追贴，随后按 09-08 截止的 $CP 竞赛与 7% APR USDT 理财、09-10 的 $DEBIT 竞赛、09-11 的 RLUSD 理财形成连续追热节奏。日常快讯应捆绑大奖池长线活动（Traders League S4 $4M、Wallet Soccer Fever 10万USDT）与新上线的牛来 Seed Tag 及 CRMB/HIMSB bStocks 公告，用 #BinanceAlpha #TradingTournament 标签承接官方流量。每篇文末引导读者点击注册并参与对应交易竞赛，将阅读量转化为 Write to Earn 交易返佣。",
+  "last_updated": "2026-09-10T20:03:37.961959Z",
   "_feed_health": {},
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
@@ -25,6 +25,6 @@
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-09-10",
-  "_intel_refresh_fail": {},
-  "_publish_park": {}
+  "_publish_park": {},
+  "_intel_refresh_fail": {}
 }
