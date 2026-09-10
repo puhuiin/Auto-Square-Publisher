@@ -2899,10 +2899,15 @@ class CampaignScanner:
                         _raw = (resp.choices[0].message.content or "").strip()
                         if _fin != "length" and _raw:
                             break
-                        # R80：空回与截断同权即时重试——生产实录 00:44Z 连续两窗
-                        # 空回（900/1600 预算全被思考链吞掉），R67 只救了 finish=length，
-                        # 空内容场景却直接 raise。temperature 0.3 下重试常收敛到更短思考链。
+                        # R82：finish=length（截断或思考链吃满吐空）属确定性预算耗尽，
+                        # 同预算重试必现同款失败（生产实证 00:44Z/03:04Z：openrouter 实耗
+                        # 1916/预算 900、glm 实耗 2536/预算 1600，temperature 0.3 也救不了）。
+                        # 重试即扩容 +1200（封顶 2800 覆盖实测 2536）；仅第一跳已浪费后才
+                        # 付费升级，平均成本不受影响。finish=stop 的真·抽风空回仍同预算重试。
+                        if _fin == "length":
+                            effective_max_tokens = min(effective_max_tokens + 1200, 2800)
                         logger.warning(f"情报输出{'空内容' if not _raw else '被截断'}（finish={_fin or '未知'}），"
+                                       f"预算{'扩容至 ' + str(effective_max_tokens) if _fin == 'length' else '不变'}"
                                        f"即时重试 {_intel_attempt + 1}/1...")
                     latency_sec = round(time.perf_counter() - t_call, 3)
                     tokens_used = _extract_usage_tokens(resp)

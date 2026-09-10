@@ -2298,6 +2298,41 @@ class TestIntelSchema(unittest.TestCase):
         self.assertIsNone(m.CampaignScanner.analyze_with_ai(eng, ["t1"]))
         self.assertEqual(fake_client.chat.completions.create.call_count, 2)
 
+    def test_intel_length_retry_expands_budget(self):
+        """R82：finish=length（截断或思考链吃满吐空）是确定性预算耗尽，
+        同预算重试必现同款失败（生产实证：openrouter 实耗 1916/预算 900、
+        glm 实耗 2536/预算 1600，temperature 0.3 救不了）。重试即扩容 +1200。"""
+        empty_len = MagicMock(choices=[MagicMock(
+            message=MagicMock(content=""), finish_reason="length")])
+        good = MagicMock(choices=[MagicMock(
+            message=MagicMock(content='{"active_tags": ["#A"], "incentivized_tokens": ["$BTC"], '
+                                    '"strategy_guidance": "guide"}'),
+            finish_reason="stop")])
+        eng = self._stub_engine("ignored")  # stub 非推理通道：900 起步
+        fake_client = eng._get_client.return_value
+        fake_client.chat.completions.create.side_effect = [empty_len, good]
+        intel = m.CampaignScanner.analyze_with_ai(eng, ["t1"])
+        self.assertIsNotNone(intel, "扩容重试必须救回情报")
+        budgets = [c.kwargs.get("max_tokens")
+                   for c in fake_client.chat.completions.create.call_args_list]
+        self.assertEqual(budgets, [900, 2100], "length 空回重试必须扩容 +1200")
+
+    def test_intel_reasoning_expands_to_cap_2800(self):
+        """推理通道 1600 起步：扩容一次到 2800 封顶（覆盖 glm 思考链实测 2536）"""
+        empty_len = MagicMock(choices=[MagicMock(
+            message=MagicMock(content=""), finish_reason="length")])
+        eng = MagicMock()
+        cfg = m.LLMProviderConfig("Preset-b.ai", "https://x", "k", "glm-5.3-flash")
+        eng._ordered_providers.return_value = [cfg]
+        fake_client = MagicMock()
+        fake_client.chat.completions.create.side_effect = [empty_len, empty_len]
+        eng._get_client.return_value = fake_client
+        self.assertIsNone(m.CampaignScanner.analyze_with_ai(eng, ["t1"]))
+        budgets = [c.kwargs.get("max_tokens")
+                   for c in fake_client.chat.completions.create.call_args_list]
+        self.assertEqual(budgets, [1600, 2800], "推理通道扩容必须到 2800 封顶")
+        self.assertEqual(len(budgets), 2, "到顶后不得第三次尝试")
+
 
 class TestStaleIntelBody(unittest.TestCase):
     """存量脏正文：schema 门必须同样拦加载路径，且 _ 状态键不受牵连"""
