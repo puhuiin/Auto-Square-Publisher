@@ -375,5 +375,24 @@
       "XRP",
       "ETH"
     ]
+  },
+  {
+    "id": "3eaea121cde9fc42",
+    "title": "Bitwise Buys $107 Million of Solana in 20 Days",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-09-10T12:25:16.264096+00:00",
+    "tokens": [
+      "SOL"
+    ]
+  },
+  {
+    "id": "cd04ebea11876a28",
+    "title": "Bitcoin ETFs shed $167M after strongest three-week inflow run of 2026",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-09-10T12:29:36.710698+00:00",
+    "tokens": [
+      "BTC",
+      "SOL"
+    ]
   }
 ]
