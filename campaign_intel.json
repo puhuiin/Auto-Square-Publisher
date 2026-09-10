@@ -4,20 +4,20 @@
     "#BinanceSquare",
     "#TradingTournament",
     "#Alpha",
-    "#Futures"
+    "#bStocks"
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$ZKC",
     "$XPIN",
     "$CP",
+    "$ZKC",
     "$SAHARA",
     "$HOLO",
-    "$USD1",
-    "$PONS"
+    "$RLUSD",
+    "$USD1"
   ],
-  "strategy_guidance": "最紧迫的时间节点是 2026-09-04 双重截止：$XPIN Alpha 交易竞赛（$200K 奖池）与 USD1 空投延期活动同时收尾，发帖机器人应立即以'活动冲刺+抄作业'角度追贴，抢最后48小时的搜索与话题流量；随后无缝衔接 09-06 上线的 PONSUSDT/哈基米USDT 新合约，做首日行情复盘与开仓教程承接热度。日常快讯统一挂载 Traders League S4（$4M 总奖池）、US Stocks MegaFest（$500K）与 HOLO/SAHARA/ZKC 交易锦标赛的活动入口及邀请返佣链接，用'边看边赚、跟着榜单抄作业'的话术引导读者注册并交易，最大化 Write to Earn 交易返佣收益。",
-  "last_updated": "2026-09-09T12:24:10.221559Z",
+  "strategy_guidance": "最紧迫的是9月4日截止的 $XPIN Alpha交易竞赛（20万美元奖池）与USD1空投延期活动，发帖机器人应优先以活动冲刺+抄作业角度追贴，教读者在最后窗口如何冲交易量排名与领取空投；随后接力9月8日 $CP Alpha竞赛、9月9日CRMB/HIMSB bStocks上线及牛来Seed Tag新币，再到9月11日截止的RLUSD理财活动，形成倒计时日历式连续追贴节奏。日常快讯务必捆绑当期高流量入口：HOLO/SAHARA/ZKC三大Trading Tournament、Traders League S4（400万美元池）、Futures双赛道赛与南亚美股MegaFest（50万美元池），用赛事复盘+榜单解读角度切入提升互动与转发。每篇文末统一引导读者通过文中链接注册并参与对应交易/理财/钱包活动，以最大化Write to Earn交易返佣与曝光加权。",
+  "last_updated": "2026-09-10T05:23:54.263200Z",
   "_feed_health": {
     "CryptoSlate (新赛道与代币经济)": {
       "last_fail": "2026-09-07T13:09:36.111460+00:00",
@@ -29,11 +29,11 @@
     "date": "2026-09-09"
   },
   "_llm_breaker": {},
-  "_last_run_heartbeat": {
-    "ts": "2026-09-09T04:58:10.596250+00:00"
-  },
   "_article_sent_date": "2026-09-09",
   "_intel_refresh_fail": {
     "cooldown_until": "2026-09-10T05:05:06.702351+00:00"
+  },
+  "_last_run_heartbeat": {
+    "ts": "2026-09-09T04:58:10.596250+00:00"
   }
 }
