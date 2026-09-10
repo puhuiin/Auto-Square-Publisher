@@ -3338,6 +3338,14 @@ class ImageManager:
     def download_image(cls, image_url: str) -> Optional[Tuple[bytes, str, str]]:
         """
         安全下载图片，返回 (图片二进制, 文件名, Content-Type)
+
+        R79 安全设计：
+        - 手动跟随重定向：requests 自动重定向不经过任何校验，公网图床 302 到
+          内网/元数据端点即可绕过 prepare_and_upload 入口的 SSRF 门——跳转目标
+          逐跳重过 _is_safe_image_url（DNS 解析后校验 IP），最多 3 跳封顶；
+        - stream=True 流式读取 + Content-Length 预检：畸形服务器可谎报小体积
+          实际吐无限流，边读边计数，超 15MB 立即掐断，不再整包进内存后才判；
+        - 非 http(s) scheme 在下载层直接拒绝（防御绕过入口门禁的直调）。
         """
         headers = {
             "User-Agent": (
@@ -3346,43 +3354,95 @@ class ImageManager:
             ),
             "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         }
+        r: Optional[requests.Response] = None
         try:
-            r = http_get(image_url, headers=headers, timeout=6, retries=1)
-            if r is not None and r.status_code == 200 and len(r.content) > 1024:
-                # 内容类型门禁：200 也可能是 WAF 挑战页/JSON 错误体，早拒比晚炸好
-                #（此前无门禁：HTML 错误页会一路走到 S3 上传才失败，白烧 3 次 API 与轮询）
-                ctype = (r.headers.get("Content-Type", "") or "").split(";")[0].strip().lower()
-                if ctype and not (ctype.startswith("image/") or ctype == "application/octet-stream"):
-                    logger.warning(f"配图 Content-Type 非图片 ({ctype})，跳过")
+            from urllib.parse import urljoin, urlparse
+
+            max_bytes = 15 * 1024 * 1024
+            current_url = image_url
+            for redirect_count in range(4):
+                parsed = urlparse(current_url)
+                if parsed.scheme not in ("http", "https") or not parsed.hostname:
+                    logger.warning(f"配图 URL 非法 (scheme={parsed.scheme!r})，跳过")
                     return None
-
-                # 限制文件大小在 15MB 以内
-                if len(r.content) > 15 * 1024 * 1024:
-                    logger.warning("图片大小超出 15MB 上限，跳过")
+                # 跳转目标逐跳 SSRF 复检：首跳由 prepare_and_upload 把关，这里兜住 302 落点
+                if redirect_count > 0 and not cls._is_safe_image_url(current_url):
+                    logger.warning(f"配图重定向目标未通过 SSRF 校验，拒绝跟随: {current_url[:80]}")
                     return None
+                r = http_get(current_url, headers=headers, timeout=6, retries=1,
+                             allow_redirects=False, stream=True)
+                if r is None:
+                    return None
+                if r.status_code in (301, 302, 303, 307, 308):
+                    location = (r.headers.get("Location", "") or "").strip()
+                    r.close()
+                    r = None
+                    if not location or redirect_count == 3:
+                        logger.warning("配图重定向无有效目标或超过 3 跳上限，跳过")
+                        return None
+                    current_url = urljoin(current_url, location)
+                    continue
+                break
 
-                # 使用 Pillow 将任意格式（WebP, PNG, AVIF, GIF, LA, I;16 等）标准化转换为高质量 JPEG
-                try:
-                    raw_img = Image.open(io.BytesIO(r.content))
-                    if raw_img.mode != "RGB":
-                        raw_img = raw_img.convert("RGB")
+            if r is None or r.status_code != 200:
+                return None
 
-                    # 适当等比缩放超大图片，极大提升网络传输与币安处理速度
-                    if raw_img.width > 1920 or raw_img.height > 1080:
-                        raw_img.thumbnail((1920, 1080), Image.Resampling.LANCZOS)
+            ctype = (r.headers.get("Content-Type", "") or "").split(";")[0].strip().lower()
+            if ctype and not (ctype.startswith("image/") or ctype == "application/octet-stream"):
+                logger.warning(f"配图 Content-Type 非图片 ({ctype})，跳过")
+                return None
 
-                    buf = io.BytesIO()
-                    raw_img.save(buf, format="JPEG", quality=88, optimize=True)
-                    jpeg_bytes = buf.getvalue()
-                    logger.info(f"图片下载并标准化为 JPEG 成功: 原始 {len(r.content)} 字节 -> 转码 {len(jpeg_bytes)} 字节")
-                    return jpeg_bytes, "cover.jpg", "image/jpeg"
-                except Exception as conv_e:
-                    logger.warning(f"PIL 转码异常，回退使用原始数据: {conv_e}")
-                    # 如实标注原始类型：此前硬标 image/jpeg，SVG 等非 JPEG 会以错误类型进 S3
-                    return r.content, "cover.jpg", ctype or "image/jpeg"
+            try:
+                declared_size = int(r.headers.get("Content-Length", "") or 0)
+            except (TypeError, ValueError):
+                declared_size = 0
+            if declared_size > max_bytes:
+                logger.warning("图片 Content-Length 超出 15MB 上限，跳过")
+                return None
+
+            chunks: List[bytes] = []
+            total = 0
+            for chunk in r.iter_content(chunk_size=64 * 1024):
+                if not chunk:
+                    continue
+                total += len(chunk)
+                if total > max_bytes:
+                    logger.warning("图片流式下载超出 15MB 上限，中途掐断")
+                    return None
+                chunks.append(chunk)
+            content = b"".join(chunks)
+            if len(content) <= 1024:
+                return None
+
+            # 使用 Pillow 将任意格式（WebP, PNG, AVIF, GIF 等）标准化转换为高质量 JPEG
+            try:
+                raw_img = Image.open(io.BytesIO(content))
+                if raw_img.mode != "RGB":
+                    raw_img = raw_img.convert("RGB")
+
+                # 适当等比缩放超大图片，极大提升网络传输与币安处理速度
+                if raw_img.width > 1920 or raw_img.height > 1080:
+                    raw_img.thumbnail((1920, 1080), Image.Resampling.LANCZOS)
+
+                buf = io.BytesIO()
+                raw_img.save(buf, format="JPEG", quality=88, optimize=True)
+                jpeg_bytes = buf.getvalue()
+                logger.info(f"图片下载并标准化为 JPEG 成功: 原始 {len(content)} 字节 -> 转码 {len(jpeg_bytes)} 字节")
+                return jpeg_bytes, "cover.jpg", "image/jpeg"
+            except Exception as conv_e:
+                logger.warning(f"PIL 转码异常，回退使用原始数据: {conv_e}")
+                # 如实标注原始类型：此前硬标 image/jpeg，SVG 等非 JPEG 会以错误类型进 S3
+                return content, "cover.jpg", ctype or "image/jpeg"
         except Exception as e:
             logger.warning(f"下载配图失败 ({image_url}): {e}")
-        return None
+            return None
+        finally:
+            # stream=True 的响应必须显式关闭释放连接；redirect 分支已关并置 None
+            if r is not None:
+                try:
+                    r.close()
+                except Exception:
+                    pass
 
     @classmethod
     def upload_to_binance(cls, api_key: str, image_bytes: bytes, filename: str, content_type: str) -> Optional[str]:

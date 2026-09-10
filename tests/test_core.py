@@ -3542,12 +3542,24 @@ class TestSummarizeTokenBudget(unittest.TestCase):
 
 
 class TestDownloadImageGate(unittest.TestCase):
-    """配图下载门禁：非图片 Content-Type 早拒；转码失败回退如实标注类型"""
+    """配图下载门禁：非图片 Content-Type 早拒；转码失败回退如实标注类型；
+    R79 手动重定向逐跳 SSRF 复检 + 流式 15MB 上限 + Content-Length 预检"""
 
-    def _fake_resp(self, content, ctype):
+    def _fake_resp(self, content, ctype, **extra_headers):
+        headers = {"Content-Type": ctype}
+        headers.update(extra_headers)
+        chunks = [content[i:i + 65536] for i in range(0, len(content), 65536)]
         return type("R", (), {
-            "status_code": 200, "content": content,
-            "headers": {"Content-Type": ctype},
+            "status_code": 200, "content": content, "headers": headers,
+            "close": lambda self: None,
+            "iter_content": lambda self, chunk_size=None: iter(chunks),
+        })()
+
+    def _redirect_resp(self, location):
+        return type("R", (), {
+            "status_code": 302,
+            "headers": {"Content-Type": "text/html", "Location": location},
+            "close": lambda self: None,
         })()
 
     def test_html_error_page_rejected_early(self):
@@ -3568,6 +3580,58 @@ class TestDownloadImageGate(unittest.TestCase):
             out = m.ImageManager.download_image("https://x.example/cover.png")
         self.assertIsNotNone(out)
         self.assertEqual(out[2], "image/png")
+
+    def test_scheme_not_http_rejected_at_download_layer(self):
+        """下载层 scheme 门（防御绕过入口门禁的直调）：file/ftp 一律拒绝"""
+        for url in ("file:///etc/passwd", "ftp://x.example/a.jpg", "data:image/png;base64,AAAA"):
+            with patch.object(m, "http_get") as mock_get:
+                self.assertIsNone(m.ImageManager.download_image(url))
+                mock_get.assert_not_called(), f"{url} 不得发起任何请求"
+
+    def test_redirect_to_private_target_blocked(self):
+        """公网图床 302 → 内网/元数据：requests 自动重定向不经过任何校验，
+        必须手动逐跳复检——这是 R79 修复的核心绕过路径"""
+        with patch.object(m, "http_get", return_value=self._redirect_resp("http://169.254.169.254/latest/meta-data/")):
+            self.assertIsNone(m.ImageManager.download_image("https://cdn.example/cover.jpg"))
+
+    def test_redirect_chain_beyond_three_hops_blocked(self):
+        # 连续 3 跳后仍 302：第 4 跳不再跟随
+        with patch.object(m, "http_get", return_value=self._redirect_resp("https://x.example/next")):
+            self.assertIsNone(m.ImageManager.download_image("https://x.example/cover.jpg"))
+        # 空_location 同样拒绝
+        with patch.object(m, "http_get", return_value=self._redirect_resp("")):
+            self.assertIsNone(m.ImageManager.download_image("https://x.example/cover.jpg"))
+
+    def test_redirect_to_public_target_followed(self):
+        """合规重定向（公网→公网）必须照常跟随，防止把正常 CDN 加固成残废"""
+        png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 2048
+        final = self._fake_resp(png, "image/png")
+        with patch.object(m, "http_get", side_effect=[
+                self._redirect_resp("https://cdn.example/real.png"), final]):
+            out = m.ImageManager.download_image("https://x.example/cover")
+        self.assertIsNotNone(out)
+        self.assertEqual(out[2], "image/jpeg" if out[2] == "image/jpeg" else out[2])
+
+    def test_content_length_preflight_rejects_oversize(self):
+        # Content-Length 谎报 16MB：预检直接拒绝，不发起流式读取
+        with patch.object(m, "http_get",
+                          return_value=self._fake_resp(b"x" * 2048, "image/png",
+                                                       **{"Content-Length": str(16 * 1024 * 1024)})):
+            self.assertIsNone(m.ImageManager.download_image("https://x.example/cover.jpg"))
+
+    def test_streamed_body_over_cap_aborts_midway(self):
+        # 服务器谎报 Content-Length 而实吐超限流：边读边计数，超 15MB 中途掐断
+        big_chunk = b"x" * (64 * 1024)
+        class _StreamResp:
+            status_code = 200
+            headers = {"Content-Type": "image/png", "Content-Length": "1024"}
+            def iter_content(self, chunk_size=None):
+                while True:
+                    yield big_chunk
+            def close(self):
+                pass
+        with patch.object(m, "http_get", return_value=_StreamResp()):
+            self.assertIsNone(m.ImageManager.download_image("https://x.example/cover.jpg"))
 
 
 class TestAtomicWrite(unittest.TestCase):
