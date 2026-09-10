@@ -18,15 +18,10 @@
   ],
   "strategy_guidance": "最紧迫的是9月4日截止的 $XPIN Alpha交易竞赛（20万美元奖池）与USD1空投延期活动，发帖机器人应优先以活动冲刺+抄作业角度追贴，教读者在最后窗口如何冲交易量排名与领取空投；随后接力9月8日 $CP Alpha竞赛、9月9日CRMB/HIMSB bStocks上线及牛来Seed Tag新币，再到9月11日截止的RLUSD理财活动，形成倒计时日历式连续追贴节奏。日常快讯务必捆绑当期高流量入口：HOLO/SAHARA/ZKC三大Trading Tournament、Traders League S4（400万美元池）、Futures双赛道赛与南亚美股MegaFest（50万美元池），用赛事复盘+榜单解读角度切入提升互动与转发。每篇文末统一引导读者通过文中链接注册并参与对应交易/理财/钱包活动，以最大化Write to Earn交易返佣与曝光加权。",
   "last_updated": "2026-09-10T05:23:54.263200Z",
-  "_feed_health": {
-    "CryptoSlate (新赛道与代币经济)": {
-      "last_fail": "2026-09-07T13:09:36.111460+00:00",
-      "fails": 1
-    }
-  },
+  "_feed_health": {},
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
+    "date": "2026-09-09"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-09-09",
