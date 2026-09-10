@@ -4277,8 +4277,55 @@ class TestRunMainSemantics(unittest.TestCase):
                     m._run_main()
             self.assertTrue(any("DRY_RUN" in o for o in logs.output), "必须真正走到试运行分支")
             self.assertFalse(os.path.exists(paths["cache"]), "DRY 不得写去重缓存")
-            self.assertFalse(os.path.exists(paths["metrics"]), "DRY 不得记遥测")
+            # R88：run_summary 摘要行在 dry 下也写（设计内行为，R55：dry 遥测打标隔离），
+            # 但所有行必须带 dry_run 标记——生产聚合（报表/调度评分）据此排除
+            if os.path.exists(paths["metrics"]):
+                import json as _json
+                with open(paths["metrics"], encoding="utf-8") as f:
+                    rows = [_json.loads(l) for l in f if l.strip()]
+                self.assertTrue(rows, "dry 遥测行存在时不得为空")
+                self.assertTrue(all(r.get("dry_run") is True for r in rows),
+                                f"dry 运行的所有遥测行必须打 dry_run 标记: {rows[:2]}")
             self.assertEqual(self._draft_files(paths["drafts"]), [], "DRY 不得导草稿")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_run_summary_counts_tokenless_skips(self):
+        """R88：运行摘要遥测补齐隐形漏斗——无标的跳过此前零遥测，
+        零发帖窗口（生产实录 8.5h 空窗）完全无从归因。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True)
+        try:
+            # 覆盖 _base_patches 的默认 mock：本条新闻无任何有效标的
+            m.NewsFetcher.extract_tokens.return_value = []
+            m._run_main()
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            summaries = [r for r in rows if r.get("outcome") == "run_summary"]
+            self.assertEqual(len(summaries), 1, "每轮恰好一条 run_summary")
+            s = summaries[0]
+            self.assertEqual(s["candidates"], 1)
+            self.assertEqual(s["skipped_no_token"], 1, "无标的跳过必须计数")
+            self.assertEqual(s["published"], 0)
+            self.assertEqual(s["dry_run"], True, "dry 行必须打标")
+            self.assertTrue(all(r.get("dry_run") is True for r in rows))
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_run_summary_counts_published(self):
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True)
+        try:
+            m._run_main()
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            s = [r for r in rows if r.get("outcome") == "run_summary"][0]
+            self.assertEqual(s["candidates"], 1)
+            self.assertEqual(s["published"], 1, "dry 模拟发布计入 published")
+            self.assertEqual(s["skipped_no_token"], 0)
+            self.assertEqual(s["skipped_batch_dup"], 0)
         finally:
             self._teardown(patches, tmpdir)
 
@@ -4329,8 +4376,12 @@ class TestRunMainSemantics(unittest.TestCase):
             self.assertEqual([r["id"] for r in records], ["news-1"])
             with open(paths["metrics"], encoding="utf-8") as f:
                 rows = [json.loads(l) for l in f if l.strip()]
-            self.assertEqual(len(rows), 1)
+            self.assertEqual([r["outcome"] for r in rows],
+                             ["binance_published", "run_summary"],
+                             "投递行 + R88 运行摘要行")
             self.assertEqual(rows[0]["outcome"], "binance_published")
+            self.assertEqual(rows[1]["published"], 1)
+            self.assertEqual(rows[1]["candidates"], 1)
         finally:
             self._teardown(patches, tmpdir)
 
@@ -4512,7 +4563,13 @@ class TestRunMainSemantics(unittest.TestCase):
             with patch.object(m, "TOKEN_DAILY_LIMIT", 1):
                 m._run_main()
             self.assertEqual(self._engine.summarize.call_count, 0)
-            self.assertFalse(os.path.exists(paths["metrics"]))
+            # R88：限流跳过不得改写缓存，但 run_summary 行必须记下跳过原因
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            self.assertEqual([r["outcome"] for r in rows], ["run_summary"])
+            self.assertEqual(rows[0]["skipped_token_limit"], 1, "限流跳过必须计数")
+            self.assertEqual(rows[0]["published"], 0)
             self.assertEqual(len(self._read_json(paths["cache"], [])), 1, "限流跳过不得改写缓存")
         finally:
             self._teardown(patches, tmpdir)

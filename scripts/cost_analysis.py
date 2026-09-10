@@ -113,9 +113,11 @@ def aggregate(rows: list[dict], price: dict) -> dict:
         "latency_sum": 0.0, "latency_n": 0, "latency_max": 0.0,
     })
     for r in rows:
+        outcome = r.get("outcome")
+        if outcome == "run_summary":
+            continue  # R88：运行摘要行无 LLM 成本语义，不进提供商聚合
         p = r.get("provider", "unknown")
         a = agg[p]
-        outcome = r.get("outcome")
         if outcome == "llm_success":
             a["success"] += 1
         elif outcome == "llm_rejected":

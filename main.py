@@ -4977,6 +4977,13 @@ def _run_main():
     posted_titles_this_run: List[str] = []  # 本轮已处理的标题，防同批次近似变体连发
     drafts_count = 0  # 本轮 OKX 草稿导出数（运行报告用）
     run_failed: Optional[str] = None  # 熔断/致命原因；非 None 时进程以非零码退出让 Actions 面板标红
+    # R88：运行级漏斗计数——"无标的跳过/限流跳过/停放跳过"等静默跳过此前零遥测，
+    # 零发帖窗口完全无法归因（生产实录：00:26→09:05 空窗 8.5h，遥测只字未见）。
+    # 每轮收敛为一条 run_summary 行（≤3 行/小时），明细不膨胀。
+    candidates_seen = len(candidates)
+    skip_counts = {"batch_dup": 0, "no_token": 0, "token_limit": 0,
+                   "risk_blocked": 0, "parked": 0}
+    exception_skipped = 0
 
     # 每日深度长文（contentType=2）：当日本轮次未发过长文且榜首热度达标时，
     # 首帖升级为长文——短讯抢时效，长文打专业垂直度与长尾流量（平台算法对
@@ -5007,6 +5014,7 @@ def _run_main():
             dup_of = NewsFetcher._find_near_duplicate(title, posted_titles_this_run)
             if dup_of is not None:
                 logger.info(f"与本轮已发内容近似重复，跳过: {title[:50]} (≈ {dup_of[:50]})")
+                skip_counts["batch_dup"] += 1
                 continue
 
             # 动态全币种识别：提取标题与摘要中的所有潜在币种（主流 + 山寨 + Meme）
@@ -5025,6 +5033,7 @@ def _run_main():
             # 新闻全文无任何币安真实标的 → 缺乏 Write2Earn 抓手，强行挂 $BTC 是无关曝光，直接跳过
             if not detected_tokens:
                 logger.info(f"本条新闻未识别到任何币安真实交易标的，缺乏 Write2Earn 挂件抓手，跳过: {title}")
+                skip_counts["no_token"] += 1
                 continue
 
             # 单代币 24h 限流：BTC 热点刷屏会拉低账号垂直度画像
@@ -5035,12 +5044,14 @@ def _run_main():
                 # TOKEN_DAILY_LIMIT 形同虚设（Round 5）。
                 if capped:
                     logger.info(f"代币 {capped} 24h 内已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)，为避免刷屏跳过本条: {title}")
+                    skip_counts["token_limit"] += 1
                     continue
 
             # 风控拦截否认名单前置：20002/20022 拦过的内容重试大概率再被拦，
             # 此前该检查在 LLM+配图之后，每轮白烧一次生成（挪到前面，条件不变）
             if news_id in (intel_state_get("_risk_blocked", {}) or {}):
                 logger.info(f"⛔ 该新闻此前被币安风控拦截（20002/20022），跳过重试: {title[:50]}")
+                skip_counts["risk_blocked"] += 1
                 continue
 
             # 发布退避停放：同一故事连续发布失败达阈值后停放数小时。币安故障期
@@ -5048,6 +5059,7 @@ def _run_main():
             # 副平台-only 模式不走币安，无需查（也不写）停放记录。
             if "binance" in PUBLISH_PLATFORMS and publisher._publish_parked(news_id):
                 logger.info(f"⏸️ 该新闻发布连续失败已被停放，跳过等待恢复: {title[:50]}")
+                skip_counts["parked"] += 1
                 continue
             live_market_data = MarketDataProvider.get_token_market_data(detected_tokens[:3])
             # 时段人设：让文案与发布时间自然对齐（凌晨的帖说"早间策略"一眼假）
@@ -5365,6 +5377,7 @@ def _run_main():
             # 单条候选的意外异常（脏数据/上游结构变化/字段缺失）不允许炸掉整轮
             import traceback
             logger.error(f"处理候选 [{title}] 时发生意外异常，已隔离跳过: {e}\n{traceback.format_exc()[-500:]}")
+            exception_skipped += 1
             continue
 
         # 拟人间隔（DRY_RUN 只验证链路，不睡）：max_posts=2 时两篇仅隔 3~8 秒是明确的
@@ -5375,6 +5388,22 @@ def _run_main():
             delay = random.randint(90, 240)
             logger.info(f"⏳ 拟人间隔 {delay}s（模拟真人发帖节奏）...")
             time.sleep(delay)
+
+    # R88：每轮一条运行摘要遥测（outcome=run_summary；dry 行由 append_metrics 自动
+    # 打标并被报表/调度评分排除）——补齐"候选 → 各类跳过 → 投递"漏斗的隐形阶段，
+    # 零发帖窗口不再无从归因。
+    append_metrics({
+        "outcome": "run_summary",
+        "candidates": candidates_seen,
+        "published": posted_count,
+        "drafts": drafts_count,
+        "skipped_batch_dup": skip_counts["batch_dup"],
+        "skipped_no_token": skip_counts["no_token"],
+        "skipped_token_limit": skip_counts["token_limit"],
+        "skipped_risk_blocked": skip_counts["risk_blocked"],
+        "skipped_parked": skip_counts["parked"],
+        "skipped_exception": exception_skipped,
+    })
 
     write_github_step_summary(fetcher, fng_index, campaign_intel, posted_records, dry_run,
                               timings=stage_timings, drafts_count=drafts_count)
