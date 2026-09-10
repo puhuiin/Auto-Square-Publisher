@@ -356,5 +356,14 @@
       "XRP",
       "DOGE"
     ]
+  },
+  {
+    "id": "bfe2dea43d9f96c5",
+    "title": "Unicoin sues Uniswap Labs, seeks to cancel UNI registration",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-09-10T09:05:47.002171+00:00",
+    "tokens": [
+      "UNI"
+    ]
   }
 ]
