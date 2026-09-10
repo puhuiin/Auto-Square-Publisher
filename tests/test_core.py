@@ -1927,15 +1927,17 @@ class TestGitStateMerge(unittest.TestCase):
         self.assertEqual(n, 500)
 
     def test_intel_state_deep_merge(self):
+        _recent = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+        _recent2 = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
         remote = {
             "last_updated": "2026-09-04T10:00:00Z",
             "active_tags": ["#Write2Earn"],
-            "_alert_state": {"k1": "2026-09-04T10:00:00"},
-            "_feed_health": {"feedA": {"fails": 1, "last_fail": "2026-09-04T09:00:00"}},
+            "_alert_state": {"k1": _recent2},
+            "_feed_health": {"feedA": {"fails": 1, "last_fail": _recent}},
         }
         local = {
             "last_updated": "2026-09-03T10:00:00Z",  # 更旧的主体
-            "_alert_state": {"k1": "2026-09-05T09:00:00", "k2": "2026-09-05T08:00:00"},  # 新状态
+            "_alert_state": {"k1": _recent, "k2": _recent2},  # 新状态
             "_fallback_image": {"url": "http://x", "date": "2026-09-05"},  # 本地独有
         }
         remote_p = self._write("campaign_intel.json", remote)
@@ -1945,10 +1947,69 @@ class TestGitStateMerge(unittest.TestCase):
         with open(remote_p, encoding="utf-8") as f:
             merged = json.load(f)
         self.assertEqual(merged["last_updated"], "2026-09-04T10:00:00Z")  # 主体取较新
-        self.assertEqual(merged["_alert_state"]["k1"], "2026-09-05T09:00:00")  # 状态大值优先
+        self.assertEqual(merged["_alert_state"]["k1"], _recent)  # 状态大值优先
         self.assertIn("k2", merged["_alert_state"])  # 本地新增保留
         self.assertIn("_fallback_image", merged)      # 本地独有键保留
-        self.assertEqual(merged["_feed_health"]["feedA"]["fails"], 1)  # 远端独有保留
+        self.assertEqual(merged["_feed_health"]["feedA"]["fails"], 1)  # 窗口内远端独有保留
+
+    def test_merge_intel_drops_stale_streak_entries(self):
+        """R86：并集合并会让本地删除被远端复活（孤儿键清理后仍存在的根因）。
+        连续失败计数只在窗口内有效——恢复后的旧计数若不被 GC，下一次单点失败
+        就会立即触发停放（应为 3 次连续）。停放中的条目无条件保留。"""
+        now = datetime.now(timezone.utc)
+        remote = {
+            "last_updated": "2026-09-04T10:00:00Z",
+            "_feed_health": {
+                "recovered": {"fails": 2, "last_fail":
+                    (now - timedelta(days=3)).isoformat()},          # 旧计数：复活即害
+                "fresh_fail": {"fails": 1, "last_fail":
+                    (now - timedelta(hours=1)).isoformat()},          # 窗口内：保留
+                "parked": {"fails": 3, "last_fail":
+                    (now - timedelta(days=2)).isoformat(),
+                    "parked_until": (now + timedelta(hours=3)).isoformat()},  # 停放中：保留
+                "dirty": {"fails": 1, "last_fail": "not-a-time"},     # 看不懂：保留
+            },
+            "_last_run_heartbeat": {"ts": "2026-09-09T04:58:10"},     # 孤儿键：必须清除
+            "_publish_park": {
+                "old_story": {"fails": 2, "last_fail":
+                    (now - timedelta(days=5)).isoformat()},           # 旧计数：丢弃
+            },
+        }
+        local = {"last_updated": "2026-09-05T10:00:00Z"}  # 本地已清空全部状态
+        remote_p = self._write("campaign_intel.json", remote)
+        local_p = self._write("local_intel.json", local)
+        self.assertTrue(self.merger.merge_intel(local_p, remote_p))
+        import json
+        with open(remote_p, encoding="utf-8") as f:
+            merged = json.load(f)
+        self.assertNotIn("recovered", merged["_feed_health"], "超窗旧计数必须被 GC")
+        self.assertIn("fresh_fail", merged["_feed_health"])
+        self.assertIn("parked", merged["_feed_health"], "停放中的条目必须保留")
+        self.assertIn("dirty", merged["_feed_health"], "畸形时间戳看懂才删")
+        self.assertNotIn("_last_run_heartbeat", merged, "孤儿键必须被合并侧清除")
+        self.assertNotIn("old_story", merged["_publish_park"])
+
+    def test_merge_intel_gcs_expired_alert_throttle(self):
+        """R86：节流窗口外的报警时间戳被并集复活会让下一轮误判仍在节流"""
+        now = datetime.now(timezone.utc)
+        remote = {
+            "last_updated": "2026-09-04T10:00:00Z",
+            "_alert_state": {
+                "old": (now - timedelta(hours=20)).isoformat(),   # 超 12h：丢弃
+                "live": (now - timedelta(hours=2)).isoformat(),   # 窗口内：保留
+                "dirty": "not-a-time",                             # 看不懂：保留
+            },
+        }
+        local = {"last_updated": "2026-09-05T10:00:00Z"}
+        remote_p = self._write("campaign_intel.json", remote)
+        local_p = self._write("local_intel.json", local)
+        self.assertTrue(self.merger.merge_intel(local_p, remote_p))
+        import json
+        with open(remote_p, encoding="utf-8") as f:
+            merged = json.load(f)
+        self.assertNotIn("old", merged["_alert_state"])
+        self.assertIn("live", merged["_alert_state"])
+        self.assertIn("dirty", merged["_alert_state"])
 
     def test_merge_state_recursive(self):
         a = {"x": {"y": 1}}

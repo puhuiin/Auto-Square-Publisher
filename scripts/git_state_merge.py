@@ -28,7 +28,7 @@ Git 状态同步合并器（GPIO: 用于 GitHub Actions workflow 的 push 前预
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 CACHE_FILE = "sent_cache.json"
@@ -36,6 +36,17 @@ INTEL_FILE = "campaign_intel.json"
 METRICS_FILE = "metrics.jsonl"
 MAX_CACHE_KEEP = 500
 _BREAKER_KEY = "_llm_breaker"
+
+# 连续失败/节流状态的合并侧 GC 窗口（小时）。必须与 main.py 同名常量保持一致：
+# FEED_PARK_HOURS / PUBLISH_PARK_HOURS = 6（停放窗口）、Notifier._ALERT_THROTTLE_HOURS = 12。
+# 语义：连续失败计数只在窗口内有效——并集合并会让本地删除被远端复活，恢复后的
+# 旧计数若不被 GC，下一次单点失败就会立即停放（应为 3 次连续）；过期报警时间戳
+# 复活会延长节流（生产实证：孤儿键清理后仍存在，即合并侧复活）。
+_STREAK_GC_HOURS = 6
+_ALERT_GC_HOURS = 12
+# 已废弃状态键（与 main.py 的 _ORPHAN_STATE_KEYS 保持同步）：本地清理会被
+# 远端并集无限复活，必须在合并侧同步丢弃。
+_ORPHAN_STATE_KEYS = ("_last_run_heartbeat",)
 
 
 def _gc_expired_breaker(state: dict, now=None) -> dict:
@@ -65,6 +76,59 @@ def _gc_expired_breaker(state: dict, now=None) -> dict:
             continue
         if not expired:
             out[name] = info
+    return out
+
+
+def _gc_streak_state(state, window_hours: int, now=None) -> dict:
+    """连续失败型状态（_feed_health / _publish_park）合并后 GC：
+    - 停放中的条目（parked_until 在未来）无条件保留——停放状态必须跨合并存活；
+    - 未停放且 last_fail 超过窗口的条目丢弃："连续失败"只在窗口内有意义，
+      恢复后的旧计数被并集复活会让下一次单点失败立即触发停放；
+    - 时间戳解析失败的保留（与 _gc_expired_breaker 同策略：看懂才删）。"""
+    now = now or datetime.now(timezone.utc)
+    out = {}
+    for name, info in (state or {}).items():
+        if not isinstance(info, dict):
+            out[name] = info
+            continue
+        parked = False
+        try:
+            until = datetime.fromisoformat(str(info.get("parked_until", "")))
+            if until.tzinfo is None:
+                until = until.replace(tzinfo=timezone.utc)
+            parked = now < until
+        except Exception:
+            parked = False
+        if parked:
+            out[name] = info
+            continue
+        try:
+            last_fail = datetime.fromisoformat(str(info.get("last_fail", "")))
+            if last_fail.tzinfo is None:
+                last_fail = last_fail.replace(tzinfo=timezone.utc)
+            if now - last_fail > timedelta(hours=window_hours):
+                continue  # 超窗旧计数：丢弃
+        except Exception:
+            pass  # 看不懂的时间戳：保留
+        out[name] = info
+    return out
+
+
+def _gc_alert_state(state, window_hours: int, now=None) -> dict:
+    """报警节流状态合并后 GC：时间戳超过节流窗口的条目丢弃。
+    节流窗口外的记录已无冷却意义，被并集复活会让下一轮误判仍在节流。"""
+    now = now or datetime.now(timezone.utc)
+    out = {}
+    for key, ts in (state or {}).items():
+        try:
+            dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            if now - dt > timedelta(hours=window_hours):
+                continue
+        except Exception:
+            pass
+        out[key] = ts
     return out
 
 
@@ -162,6 +226,16 @@ def merge_intel(local_snapshot_path: str, remote_path: str) -> bool:
     merged_state = merge_state(states[0], states[1] if len(states) > 1 else {})
     if isinstance(merged_state.get(_BREAKER_KEY), dict):
         merged_state[_BREAKER_KEY] = _gc_expired_breaker(merged_state[_BREAKER_KEY])
+    # R86：并集语义会让本地删除被远端复活（孤儿键清理后仍存在的根因）。
+    # 断路器此前已有 _gc_expired_breaker 同款教训，这里补齐其余状态通道：
+    # 废弃键直接丢弃；连续失败/节流状态按窗口 GC（停放中的条目无条件保留）。
+    for orphan in _ORPHAN_STATE_KEYS:
+        merged_state.pop(orphan, None)
+    for key in ("_feed_health", "_publish_park"):
+        if isinstance(merged_state.get(key), dict):
+            merged_state[key] = _gc_streak_state(merged_state[key], _STREAK_GC_HOURS)
+    if isinstance(merged_state.get("_alert_state"), dict):
+        merged_state["_alert_state"] = _gc_alert_state(merged_state["_alert_state"], _ALERT_GC_HOURS)
     best.update(merged_state)
     atomic_write_text(remote_path, json.dumps(best, ensure_ascii=False, indent=2))
     return True
