@@ -2113,6 +2113,48 @@ class MultiLLMEngine:
         logger.warning(f"提供商 [{name}] 累计失败 {new_fails} 次，进入冷却 "
                        f"{min(self._BREAKER_BASE_MIN * (2 ** (new_fails - 1)), self._BREAKER_MAX_MIN)} 分钟")
 
+    _RATE_LIMIT_MIN_SEC = 30        # Retry-After 缺失/畸形时的默认限流冷却
+    _RATE_LIMIT_MAX_SEC = 4 * 3600  # 服务端可要求更长，但不能无限信任
+
+    @classmethod
+    def _rate_limit_cooldown_sec(cls, exc: BaseException) -> Optional[int]:
+        """从限流异常提取服务端 Retry-After 秒数（R96 专项：生产 4/4 的 429 全来自
+        b.ai 且集中在发帖突发期）。通用指数退避对 429 是错配——Retry-After=30s
+        会被跳过整整 10 分钟（白白让位副选），Retry-After=1h 却 10 分钟就重撞。
+        钳制 [30s, 4h]；非 429 或读不到头返回 None（回落既有指数退避）。"""
+        status = getattr(exc, "status_code", None)
+        if status != 429 and "429" not in str(exc)[:200]:
+            return None
+        resp = getattr(exc, "response", None)
+        headers = getattr(resp, "headers", None) or {}
+        raw = ""
+        try:
+            raw = str(headers.get("retry-after") or headers.get("Retry-After") or "").strip()
+        except Exception:
+            return None
+        if not raw:
+            return None
+        try:
+            sec = int(float(raw))
+        except ValueError:
+            return None  # HTTP-date 格式不解析：不猜
+        return max(cls._RATE_LIMIT_MIN_SEC, min(sec, cls._RATE_LIMIT_MAX_SEC))
+
+    def _breaker_record_rate_limit(self, name: str, cooldown_sec: int):
+        """限流专用冷却：按服务端 Retry-After 跳到指定时刻，不计 fails——
+        限流是"别打太快"不是"通道坏了"，不应驱动指数升级。"""
+        def _record(state):
+            state = dict(state or {})
+            info = dict(state.get(name, {"fails": 0}))
+            info["cooldown_until"] = (datetime.now(timezone.utc)
+                                      + timedelta(seconds=cooldown_sec)).isoformat()
+            state[name] = info
+            return state
+
+        intel_state_update(self._BREAKER_STATE_KEY, _record, default={})
+        logger.warning(f"提供商 [{name}] 触发限流 429，按服务端 Retry-After 冷却 "
+                       f"{cooldown_sec} 秒（不升级指数退避）")
+
     def _breaker_record_permanent(self, name: str):
         """永久失败长冷却（模型下架/404）：直接冷却 24 小时，当天不再拿故事试错。
         不复用指数退避——404 不会自己好转，按瞬时故障每次冷却到期试一次只是空烧
@@ -2932,6 +2974,11 @@ class MultiLLMEngine:
                     # 永久失败快道：模型下架/404 不会自愈，走 24h 长冷却，当天不再试
                     self._breaker_record_permanent(provider.name)
                     fail_reason = f"[permanent 24h] {err_msg}"
+                elif (rl_sec := self._rate_limit_cooldown_sec(e)) is not None:
+                    # R96 限流专项：429 按服务端 Retry-After 精确冷却（30s~4h 钳制），
+                    # 不计 fails——限流是节奏问题不是健康问题，不驱动指数升级
+                    self._breaker_record_rate_limit(provider.name, rl_sec)
+                    fail_reason = f"[rate-limit {rl_sec}s] {err_msg}"
                 else:
                     self._breaker_record_failure(provider.name)
                     fail_reason = err_msg

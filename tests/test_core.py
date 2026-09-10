@@ -1304,6 +1304,59 @@ class TestLLMBreaker(unittest.TestCase):
         expected2 = dt.now(tz.utc) + timedelta(minutes=20)
         self.assertLess(abs((until2 - expected2).total_seconds()), 30)
 
+    def _rl_exc(self, retry_after=None, status=429, msg="Error code: 429 - rate limited"):
+        # 必须继承 Exception：否则 mock 把实例当返回值而非抛出，真正抛出的是
+        # 后续的 AttributeError（无 status_code），测试就失真了
+        resp = type("R", (), {"headers": {"retry-after": retry_after} if retry_after is not None else {}})()
+        return type("E", (Exception,), {"status_code": status, "response": resp,
+                                        "__str__": lambda self: msg})()
+
+    def test_rate_limit_cooldown_sec_parses_retry_after(self):
+        self.assertEqual(m.MultiLLMEngine._rate_limit_cooldown_sec(self._rl_exc("120")), 120)
+        self.assertEqual(m.MultiLLMEngine._rate_limit_cooldown_sec(self._rl_exc("5")),
+                         30, "低于下限钳制到 30s")
+        self.assertEqual(m.MultiLLMEngine._rate_limit_cooldown_sec(self._rl_exc("999999")),
+                         4 * 3600, "高于上限钳制到 4h")
+
+    def test_rate_limit_cooldown_sec_none_cases(self):
+        self.assertIsNone(m.MultiLLMEngine._rate_limit_cooldown_sec(self._rl_exc(None)),
+                          "无 Retry-After 头回落指数退避")
+        self.assertIsNone(m.MultiLLMEngine._rate_limit_cooldown_sec(
+            self._rl_exc("Wed, 21 Oct 2026 07:28:00 GMT")), "HTTP-date 不解析不猜")
+        self.assertIsNone(m.MultiLLMEngine._rate_limit_cooldown_sec(
+            self._rl_exc("60", status=500, msg="gateway error")),
+            "非 429 且消息无 429 字样不适用")
+
+    def test_rate_limit_uses_retry_after_not_exponential(self):
+        """R96：429 按服务端 Retry-After 冷却且不升级指数——限流是节奏问题不是
+        健康问题（生产 4/4 的 429 全来自 b.ai 且集中在发帖突发期）"""
+        from datetime import datetime as dt, timezone as tz
+        self.eng._breaker_record_rate_limit("dead", 120)
+        info = m.intel_state_get("_llm_breaker")["dead"]
+        until = dt.fromisoformat(info["cooldown_until"])
+        expected = dt.now(tz.utc) + timedelta(seconds=120)
+        self.assertLess(abs((until - expected).total_seconds()), 30,
+                        "冷却必须按 Retry-After 120s，而非指数 10min")
+        self.assertEqual(info.get("fails", 0), 0, "限流不得计入 fails 驱动指数升级")
+
+    def test_rate_limit_flows_through_summarize(self):
+        """summarize 传输异常分支：429+Retry-After → 专项冷却（reason 打标）"""
+        exc = self._rl_exc("90")
+        client = MagicMock()
+        client.chat.completions.create.side_effect = exc
+        item = {"title": "t", "summary": "s", "source": "X"}
+        with patch.object(self.eng, "_get_client", return_value=client), \
+             patch.object(self.eng, "_ordered_providers", return_value=self.eng.providers[:1]), \
+             patch.object(m, "append_metrics"):
+            self.assertIsNone(self.eng.summarize(item, None, market_context="", token_hints=["BTC"]))
+        from datetime import datetime as dt, timezone as tz
+        info = m.intel_state_get("_llm_breaker")["dead"]
+        until = dt.fromisoformat(info["cooldown_until"])
+        self.assertLess((until - dt.now(tz.utc)).total_seconds(), 90 + 30,
+                        "冷却应约 90s 而非 10min")
+        self.assertGreater((until - dt.now(tz.utc)).total_seconds(), 30,
+                           "冷却不得短于 Retry-After 下限")
+
 
 class TestFeedParking(unittest.TestCase):
     """RSS 源连续失败自动停放"""
