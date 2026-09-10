@@ -2615,7 +2615,10 @@ class MultiLLMEngine:
             if not os.path.exists(METRICS_FILE):
                 return openers
             with open(METRICS_FILE, "r", encoding="utf-8") as f:
-                lines = f.readlines()[-60:]  # 只回看尾部，文件可能几千行
+                # 回看 200 行：R88 run_summary（~72 行/天）+ 拒稿行上线后遥测密度
+                # 涨到 ~85 行/天，旧的 60 行回看只剩不足 1 天——开场去重窗口被
+                # 静默稀释。200 行 ≈ 2 天密度，覆盖 12 篇/天的开场召回绰绰有余。
+                lines = f.readlines()[-200:]
             for line in reversed(lines):
                 try:
                     r = json.loads(line)
@@ -4995,6 +4998,16 @@ def run_healthcheck():
     # ---- 6. 恐慌贪婪指数 ----
     fng = MarketDataProvider.get_fear_and_greed()
     checks.append(("恐慌贪婪指数", "✔" if "中立" not in fng else "⚠", fng))
+
+    # ---- 6.5 全网热搜源（CoinGecko，R94 新外部依赖）----
+    # 拉取失败时加权静默降级为零行为（by design），但健康检查必须让它可见——
+    # 热搜加权长期失效等于"追随热点趋势"的核心信号悄然失明。
+    trending_syms = MarketDataProvider.get_trending_symbols()
+    if trending_syms:
+        checks.append(("全网热搜源", "✔", f"在线（{len(trending_syms)} 个热搜标的: "
+                                         f"{', '.join(trending_syms[:5])}…）"))
+    else:
+        checks.append(("全网热搜源", "⚠", "CoinGecko Trending 拉取失败（加权已降级为零行为）"))
 
     # ---- 7. 发布通道级开关 ----
     checks.append(("运行策略", "ℹ", f"日配额={MAX_DAILY_POSTS} | 单币种限流={TOKEN_DAILY_LIMIT} | "

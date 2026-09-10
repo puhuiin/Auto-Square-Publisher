@@ -223,6 +223,20 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("禁止再用同款比喻", user_prompt)
         self.assertIn("先泼盆冷水", user_prompt)
 
+    def test_openers_survive_dense_run_summary_noise(self):
+        """R97：R88 run_summary（~72 行/天）上线后遥测密度涨到 ~85 行/天——
+        旧的 60 行回看窗口只剩不足 1 天，开场去重被静默稀释。发布行必须在
+        密集噪声下仍可召回（回看扩到 200 行）。"""
+        noise = [{"outcome": "run_summary", "candidates": 44, "published": 0,
+                  "skipped_no_token": 40} for _ in range(150)]
+        # 发布行在最前面：距文件尾 150 行，旧 60 行回看完全看不见
+        self._append([{"outcome": "binance_published",
+                       "final_preview": "全网都在喊拐点，我劝各位冷静。后续略。"}]
+                     + noise)
+        openers = self._eng._recent_openers()
+        self.assertEqual(len(openers), 1, "150 行噪声后的发布行必须仍被召回")
+        self.assertIn("全网都在喊拐点", openers[0])
+
 
 class TestIntelFreshnessInPrompt(unittest.TestCase):
     """R83：过期情报正文注入 prompt 必须降权——生产实录 09-10 仍喂
