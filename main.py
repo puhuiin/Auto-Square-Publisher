@@ -4931,6 +4931,15 @@ def _run_main():
     # 北京时间活跃时段窗口：窗口外整轮静默退出，避免低流量时段发帖稀释账号权重
     if ACTIVE_HOURS_BEIJING and not within_active_hours():
         logger.info(f"⏰ 当前不在北京时间活跃窗口 ({ACTIVE_HOURS_BEIJING}) 内，本轮静默退出。")
+        # R91：静默退出也留痕——"每个 dispatch 恰好一条 run_summary"的完备性
+        # 不变量（否则活跃窗口配置的效果在遥测里不可验证）
+        append_metrics({
+            "outcome": "run_summary",
+            "candidates": 0, "published": 0, "drafts": 0, "unprocessed": 0,
+            "skipped_batch_dup": 0, "skipped_no_token": 0, "skipped_token_limit": 0,
+            "skipped_risk_blocked": 0, "skipped_parked": 0, "skipped_exception": 0,
+            "active_hours_blocked": True,
+        })
         return
 
     logger.info("==================================================")
@@ -4973,6 +4982,17 @@ def _run_main():
         sent_24h = cache_mgr.count_since(24)
         if sent_24h >= MAX_DAILY_POSTS:
             logger.warning(f"🛑 24 小时内已发布 {sent_24h} 篇，达到配额上限 ({MAX_DAILY_POSTS})，本轮自动静默以保护账号权重。")
+            # R91：配额饱和轮留痕（生产实录：12/12 满额后连续多轮静默，遥测完全
+            # 不可见）——quota_blocked 计数是"配额是否该调"的决策输入
+            append_metrics({
+                "outcome": "run_summary",
+                "candidates": 0, "published": 0, "drafts": 0, "unprocessed": 0,
+                "skipped_batch_dup": 0, "skipped_no_token": 0, "skipped_token_limit": 0,
+                "skipped_risk_blocked": 0, "skipped_parked": 0, "skipped_exception": 0,
+                "quota_blocked": True,
+                "sent_24h": sent_24h,
+                "max_daily_posts": MAX_DAILY_POSTS,
+            })
             write_github_step_summary(NewsFetcher(), "配额满跳过抓取", {}, [], dry_run)
             sys.exit(0)
         remaining_quota = MAX_DAILY_POSTS - sent_24h

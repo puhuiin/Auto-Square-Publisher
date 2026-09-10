@@ -4595,7 +4595,8 @@ class TestRunMainSemantics(unittest.TestCase):
                     os.remove(p)
 
     def test_quota_exit_is_silent(self):
-        # 配额用尽整轮静默退出：不调 LLM、不写任何状态、exit 0
+        # 配额用尽整轮静默退出：不调 LLM、不改缓存、exit 0；
+        # R91：静默轮必须留 run_summary 痕迹（quota_blocked），否则饱和期不可见
         tmpdir, paths = self._iso_files()
         patches = self._base_patches(tmpdir, paths, dry=False)
         try:
@@ -4609,8 +4610,33 @@ class TestRunMainSemantics(unittest.TestCase):
                     m._run_main()
             self.assertEqual(cm.exception.code, 0)
             self.assertEqual(self._engine.summarize.call_count, 0)
-            self.assertFalse(os.path.exists(paths["metrics"]))
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            self.assertEqual([r["outcome"] for r in rows], ["run_summary"])
+            self.assertIs(rows[0].get("quota_blocked"), True)
+            self.assertEqual(rows[0]["sent_24h"], 1)
+            self.assertEqual(rows[0]["max_daily_posts"], 1)
             self.assertEqual(len(self._read_json(paths["cache"], [])), 1, "配额轮不得改写缓存")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_active_hours_exit_writes_summary(self):
+        """R91：活跃时段外的静默退出也留痕——"每个 dispatch 恰好一条
+        run_summary"的完备性不变量，窗口配置的效果在遥测里可验证。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        try:
+            with patch.object(m, "within_active_hours", return_value=False), \
+                 patch.object(m, "ACTIVE_HOURS_BEIJING", "8-23"):
+                m._run_main()
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            s = [r for r in rows if r.get("outcome") == "run_summary"]
+            self.assertEqual(len(s), 1, "活跃时段外退出恰好一条 run_summary")
+            self.assertIs(s[0].get("active_hours_blocked"), True)
+            self.assertEqual(s[0]["published"], 0)
         finally:
             self._teardown(patches, tmpdir)
 
