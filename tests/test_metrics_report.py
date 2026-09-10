@@ -255,6 +255,51 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("发布成功率: 1/2 篇", text)
         self.assertIn("50.0%", text)
 
+    def test_run_summary_section_aggregates(self):
+        """R92：run_summary 行的报表端消费——配额饱和/零候选/跳过分布不再需要
+        手写临时脚本回答（R90/R91 分析实录）。"""
+        _write(self.path, [
+            {"ts": "2026-09-10T11:00:00Z", "outcome": "run_summary",
+             "candidates": 44, "published": 0, "unprocessed": 0,
+             "skipped_no_token": 40, "skipped_token_limit": 4},
+            {"ts": "2026-09-10T12:00:00Z", "outcome": "run_summary",
+             "candidates": 43, "published": 2, "unprocessed": 41},
+            {"ts": "2026-09-10T14:00:00Z", "outcome": "run_summary",
+             "candidates": 0, "published": 0, "unprocessed": 0,
+             "quota_blocked": True, "sent_24h": 12},
+            {"ts": "2026-09-10T15:00:00Z", "outcome": "run_summary",
+             "candidates": 0, "published": 0, "unprocessed": 0,
+             "active_hours_blocked": True},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        runs = s["runs"]
+        self.assertEqual(runs["n"], 4)
+        self.assertEqual(runs["quota_blocked"], 1)
+        self.assertEqual(runs["active_hours_blocked"], 1)
+        self.assertEqual(runs["zero_candidates"], 2)
+        self.assertEqual(runs["candidates"], 87)
+        self.assertEqual(runs["published"], 2)
+        self.assertEqual(runs["unprocessed"], 41)
+        self.assertEqual(runs["skips"]["no_token"], 40)
+        self.assertEqual(runs["skips"]["token_limit"], 4)
+        text = mr.render_text(s, rows)
+        self.assertIn("运行摘要（4 轮）", text)
+        self.assertIn("配额饱和 1 轮", text)
+        self.assertIn("累计候选 87 → 发布 2", text)
+        self.assertIn("no_token", text)
+
+    def test_run_summary_dry_rows_excluded(self):
+        # dry 的 run_summary 行不得进运行聚合（与其它聚合同一隔离纪律）
+        _write(self.path, [
+            {"outcome": "run_summary", "candidates": 5, "published": 1, "dry_run": True},
+            {"outcome": "run_summary", "candidates": 3, "published": 0},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        runs = mr.summarize(rows)["runs"]
+        self.assertEqual(runs["n"], 1)
+        self.assertEqual(runs["candidates"], 3)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -86,8 +86,15 @@ def summarize(rows):
         "tokens_by_provider": {},
         "errors": collections.Counter(),
         "dry_skipped": 0,
+        "runs": {},
         "ts_min": None,
         "ts_max": None,
+    }
+    lat_tmp, tok_tmp = collections.defaultdict(list), collections.defaultdict(list)
+    runs_tmp = {
+        "n": 0, "quota_blocked": 0, "active_hours_blocked": 0, "zero_candidates": 0,
+        "candidates": 0, "published": 0, "unprocessed": 0,
+        "skips": collections.Counter(),
     }
     lat_tmp, tok_tmp = collections.defaultdict(list), collections.defaultdict(list)
     for r in rows:
@@ -145,6 +152,29 @@ def summarize(rows):
         tok = _num(r.get("tokens_used"))
         if tok is not None:
             tok_tmp[str(prov)].append(tok)
+        # R92：run_summary 行聚合——饱和/零候选/跳过分布的报表端消费，
+        # 不再需要手写临时脚本回答"配额是否该调"（R90/R91 分析实录）
+        if outcome == "run_summary":
+            runs_tmp["n"] += 1
+            if r.get("quota_blocked") is True:
+                runs_tmp["quota_blocked"] += 1
+            if r.get("active_hours_blocked") is True:
+                runs_tmp["active_hours_blocked"] += 1
+            cand = int(_num(r.get("candidates")) or 0)
+            pub = int(_num(r.get("published")) or 0)
+            unproc = int(_num(r.get("unprocessed")) or 0)
+            runs_tmp["candidates"] += cand
+            runs_tmp["published"] += pub
+            runs_tmp["unprocessed"] += unproc
+            if cand == 0 and pub == 0:
+                runs_tmp["zero_candidates"] += 1
+            for k, v in r.items():
+                if k.startswith("skipped_") and isinstance(v, (int, float)):
+                    runs_tmp["skips"][k[len("skipped_"):]] += int(v)
+    s["runs"] = {
+        **{k: v for k, v in runs_tmp.items() if k != "skips"},
+        "skips": dict(runs_tmp["skips"]),
+    }
     for prov, vals in lat_tmp.items():
         s["latency_by_provider"][prov] = round(sum(vals) / len(vals), 1)
     for prov, vals in tok_tmp.items():
@@ -192,6 +222,16 @@ def render_text(s, rows=None):
         if f["attempted"]:
             lines.append(f"- 发布成功率: {f['delivered']}/{f['attempted']} 篇"
                          f"（{f['rate'] * 100:.1f}%，分母=进入 LLM 尝试的故事）")
+    runs = s.get("runs") or {}
+    if runs.get("n"):
+        parts = [f"配额饱和 {runs['quota_blocked']} 轮", f"零候选 {runs['zero_candidates']} 轮"]
+        if runs.get("active_hours_blocked"):
+            parts.append(f"时段外 {runs['active_hours_blocked']} 轮")
+        lines.append(f"- 运行摘要（{runs['n']} 轮）: {' / '.join(parts)}"
+                     f"，累计候选 {runs['candidates']} → 发布 {runs['published']}"
+                     + (f"（未处理 {runs['unprocessed']}）" if runs.get("unprocessed") else ""))
+        if runs.get("skips"):
+            lines.append(f"  跳过分布 {runs['skips']}")
     n_pub = sum(s["by_provider"].values())
     if n_pub:
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")
