@@ -419,13 +419,51 @@ class TestTokenExtraction(unittest.TestCase):
         新闻侧 token_hints 不过滤：真 AI 代币新闻仍能发。"""
         self.assertEqual(m.SymbolValidator.filter_valid_tokens(["AI", "BTC"]), ["BTC"])
 
+    def test_full_name_alias_rescues_prose(self):
+        """R89：英文媒体正文写全名（Bitcoin/Ethereum）而非 $ticker——生产
+        run_summary 实录 44 候选 40 条无标的跳过。无歧义全名直接映射 ticker，
+        按出现顺序排列。"""
+        out = m.NewsFetcher.extract_tokens(
+            "Bitcoin rallies as Ethereum ETF momentum builds", self.VALID)
+        self.assertEqual(out, ["BTC", "ETH"])
+
+    def test_cjk_full_name_alias(self):
+        # 中文源（BlockTempo）写"比特币/以太坊"——CJK 无词边界，子串匹配
+        out = m.NewsFetcher.extract_tokens("比特币突破关键阻力位，以太坊紧随其后", self.VALID)
+        self.assertEqual(out, ["BTC", "ETH"])
+
+    def test_alias_respects_valid_symbols(self):
+        # 别名不给幻觉币开洞：stellar 映射 XLM，但池子里没有 XLM 就不得出现
+        self.assertEqual(m.NewsFetcher.extract_tokens("Stellar network upgrade ships", self.VALID), [])
+
+    def test_alias_dedup_with_explicit_cashtag(self):
+        out = m.NewsFetcher.extract_tokens("$SOL leads while Solana ecosystem grows", self.VALID)
+        self.assertEqual(out, ["SOL"], "显式 $ 优先，别名去重")
+
+    def test_alias_order_follows_appearance(self):
+        out = m.NewsFetcher.extract_tokens("Ethereum whales accumulate as Bitcoin dips", self.VALID)
+        self.assertEqual(out, ["ETH", "BTC"], "别名按出现序而非字典序")
+
+    def test_alias_word_boundary(self):
+        # Bitcoiner/BitcoinTalk 类派生词不得误匹配（\b 整词边界）
+        self.assertEqual(
+            m.NewsFetcher.extract_tokens("Bitcoiners are stacking sats on BitcoinTalk", self.VALID), [])
+
+    def test_chainlink_full_name_bypasses_strict(self):
+        # LINK 本体是撞名词需 $ 显式（R70），但全名 chainlink 无歧义——别名独立于严格词表
+        self.assertEqual(
+            m.NewsFetcher.extract_tokens("Chainlink CCIP powers cross-chain transfers", {"LINK"}),
+            ["LINK"])
+
     def test_finance_context_words_require_cashtag(self):
         """R70 实弹补充：BANK/BLOCK 等金融语境高频词进歧义表——
         'Bank of England'/'Builders Bank' 的 Title Case 普通名词曾直接被当挂件标的
         发出去（$BANK 伊朗帖实录）。$ 前缀显式引用仍放行。"""
         self.assertEqual(m.NewsFetcher.extract_tokens(
             "Jack Dorsey's Block Applies for Bank Charter to Custody Bitcoin",
-            self.VALID | {"BANK", "BLOCK"}), [])
+            self.VALID | {"BANK", "BLOCK"}), ["BTC"])
+        # ^ R89：BANK/BLOCK 仍零误报（R70 意图不变），但句尾 Bitcoin 是真实标的——
+        #   "托管比特币"的新闻挂 $BTC 是正确归因，全名别名召回
         self.assertEqual(m.NewsFetcher.extract_tokens(
             "The Bank of England hikes rates", self.VALID | {"BANK"}), [])
         # $ 前缀 = 真在说该代币

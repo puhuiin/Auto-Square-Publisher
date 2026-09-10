@@ -933,10 +933,13 @@ class SymbolValidator:
             return cls._valid_symbols_cache
 
         valid_set = {
-            "BTC", "ETH", "BNB", "SOL", "DOGE", "XRP", "PEPE", "SHIB", "WIF", "SUI", 
+            "BTC", "ETH", "BNB", "SOL", "DOGE", "XRP", "PEPE", "SHIB", "WIF", "SUI",
             "NEAR", "APT", "AVAX", "LINK", "TRX", "ADA", "TAO", "RENDER", "FET", "POPCAT",
             "BONK", "FLOKI", "SEI", "TIA", "ENA", "NOT", "DOGS", "TURBO", "NEIRO", "PNUT",
-            "BOME", "MEME", "ORDI", "SATS", "LTC", "BCH", "DOT", "UNI", "AAVE", "AR", "FIL"
+            "BOME", "MEME", "ORDI", "SATS", "LTC", "BCH", "DOT", "UNI", "AAVE", "AR", "FIL",
+            # R89：exchangeInfo 拉取失败时的兜底池曾漏主流币——XLM 类标的在故障窗口
+            # 全部漏召回。补齐高市值常客（真实币安现货标的，与别名表无重叠冲突）。
+            "XLM", "ATOM", "ETC", "HBAR", "VET", "ALGO",
         }
         cls._valid_symbols_cache = valid_set
 
@@ -1091,6 +1094,48 @@ class CacheManager:
 # ---------------------------------------------------------------------------
 # 模块四：多源热点抓取、清洗与价值打分 (NewsFetcher & Scorer)
 # ---------------------------------------------------------------------------
+# R89：无歧义全名 → ticker 别名表。生产 run_summary 实录：44 候选 40 条无标的
+# 跳过——英文媒体正文写 "Bitcoin/Ethereum" 这类全名，只认 $/大写 ticker 的提取
+# 全部漏掉。只收录"全名即项目本名"的无歧义词（Bitcoin/Solana 不会是别的意思）；
+# STRICT_TICKERS 里的撞名词（NEAR/LINK/ACT/AI…）严禁进表——那是 R70 打地鼠的
+# 战场，别名表不走大写启发式，全名本身即强信号。命中仍须过 valid_symbols 校验
+# （别名不给幻觉币开洞），且排在显式 $ 引用之后（显式提及显著度更高）。
+TOKEN_NAME_ALIASES = {
+    "bitcoin": "BTC",
+    "ethereum": "ETH",
+    "solana": "SOL",
+    "dogecoin": "DOGE",
+    "ripple": "XRP",
+    "cardano": "ADA",
+    "litecoin": "LTC",
+    "stellar": "XLM",
+    "polkadot": "DOT",
+    "chainlink": "LINK",   # LINK 本体在 STRICT_TICKERS，但全名 chainlink 无歧义
+    "uniswap": "UNI",
+    "avalanche": "AVAX",
+    "tron": "TRX",
+    "shiba": "SHIB",
+    "dogwifhat": "WIF",
+    "pepe": "PEPE",
+}
+# 别名词预编译（ASCII 用 \b 整词边界，防 Bitcoiner/ethereum-killer 误匹配）
+_TOKEN_ALIAS_PATTERNS = {
+    name: (re.compile(rf"\b{re.escape(name)}\b", re.IGNORECASE), ticker)
+    for name, ticker in TOKEN_NAME_ALIASES.items()
+}
+# CJK 全名别名：中文媒体（BlockTempo 等）写"比特币/以太坊"——同样漏召回。
+# CJK 无词边界概念，与 IMPACT_KEYWORDS 中文词同策略用子串匹配。
+_TOKEN_CJK_ALIASES = {
+    "比特币": "BTC",
+    "以太坊": "ETH",
+    "索拉纳": "SOL",
+    "狗狗币": "DOGE",
+    "瑞波币": "XRP",
+    "莱特币": "LTC",
+    "波场": "TRX",
+}
+
+
 class NewsFetcher:
     """多源资讯抓取与重磅热点打分排序"""
 
@@ -1226,7 +1271,7 @@ class NewsFetcher:
 
     @staticmethod
     def extract_tokens(text: str, valid_symbols: Set[str]) -> List[str]:
-        """从新闻文本中识别真实代币代码。三层防线（R70 语料扫描定案）：
+        """从新闻文本中识别真实代币代码。四层防线（R70 定案 + R89 别名召回）：
         ① 预清洗：剥 HTML 标签与 URL——图片域名（ctmedia.io → $IO × 25/轮实录）
            和 URL slug（justin-sun-trx → $SUN）是最大误报源；
         ② 通用大写闸：任何标的需要 $ 前缀或全大写——小写英文词（earnings home、
@@ -1234,6 +1279,9 @@ class NewsFetcher:
            曾直接被当挂件标的；
         ③ 严格词表 STRICT_TICKERS：英语常用词撞名币（AI/BANK/HOME/OG/ACT 等），
            全大写也不足采信（OG.com、CLARITY ACT 全大写实录），必须 $ 显式引用。
+        ④ 全名别名（R89）：Bitcoin/Solana 等无歧义项目全名直接映射 ticker——
+           生产 run_summary 实录 44 候选 40 条因正文只用全名而零标的。别名不进
+           ②③ 的闸（全名即强信号），但仍须过 valid_symbols 校验。
         特例 AI 归入③：首字母缩写词永远全大写，大写启发式零信号。"""
         # ① 预清洗
         text = re.sub(r"<[^>]+>", " ", text)                      # HTML 标签
@@ -1257,6 +1305,19 @@ class NewsFetcher:
                 continue
             if upper_w not in detected:
                 detected.append(upper_w)
+        # ④ 全名别名召回：按出现顺序追加（排在显式 $ 引用之后），同样去重
+        alias_hits: List[Tuple[int, str]] = []
+        for name, (pattern, ticker) in _TOKEN_ALIAS_PATTERNS.items():
+            m = pattern.search(text)
+            if m:
+                alias_hits.append((m.start(), ticker))
+        for name, ticker in _TOKEN_CJK_ALIASES.items():
+            pos = text.find(name)
+            if pos >= 0:
+                alias_hits.append((pos, ticker))
+        for _pos, ticker in sorted(alias_hits):
+            if ticker not in detected and ticker in valid_symbols:
+                detected.append(ticker)
         return detected
 
     @staticmethod
