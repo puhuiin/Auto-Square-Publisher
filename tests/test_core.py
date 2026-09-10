@@ -224,6 +224,93 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("先泼盆冷水", user_prompt)
 
 
+class TestIntelFreshnessInPrompt(unittest.TestCase):
+    """R83：过期情报正文注入 prompt 必须降权——生产实录 09-10 仍喂
+    "09-04 双重截止抢最后48小时"（已过期 6 天），模型照写 = 发布过期事实。
+    代币/标签加权不受影响（那只影响排序，不进正文事实）。"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        self._orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig_intel
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _eng(self):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        return eng
+
+    def _ts(self, hours_ago):
+        return (datetime.now(timezone.utc) - timedelta(hours=hours_ago)).isoformat()
+
+    def test_fresh_intel_injected_normally(self):
+        intel = {"strategy_guidance": "结合当期新合约引导交易",
+                 "last_updated": self._ts(2)}
+        prompt, _ = self._eng()._build_user_prompt(
+            {"title": "t", "summary": "s"}, intel, "", ["BTC"])
+        self.assertIn("【官方活动风向参考】", prompt)
+        self.assertIn("结合当期新合约引导交易", prompt)
+        self.assertNotIn("仅作背景感知", prompt)
+
+    def test_stale_intel_demoted_with_no_dates_warning(self):
+        intel = {"strategy_guidance": "09-04 双重截止，抢最后48小时",
+                 "last_updated": self._ts(30)}  # > 12h 过期
+        prompt, _ = self._eng()._build_user_prompt(
+            {"title": "t", "summary": "s"}, intel, "", ["BTC"])
+        self.assertIn("仅作背景感知", prompt)
+        self.assertIn("严禁在正文中引用其中的任何具体日期", prompt)
+
+    def test_stale_intel_without_timestamp_also_demoted(self):
+        # last_updated 缺失/畸形：fail-closed 按过期处理，不冒险当新鲜
+        intel = {"strategy_guidance": "guidance text"}
+        prompt, _ = self._eng()._build_user_prompt(
+            {"title": "t", "summary": "s"}, intel, "", ["BTC"])
+        self.assertIn("仅作背景感知", prompt)
+
+
+class TestOrphanStateKeyCleanup(unittest.TestCase):
+    """R83：孤儿状态键一次性清理（R61 看门狗 v1 遗体 _last_run_heartbeat）"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        self._orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig_intel
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def test_orphan_key_removed_and_file_rewritten(self):
+        import json
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"_last_run_heartbeat": {"ts": "2026-09-09"},
+                       "active_tags": ["#A"]}, f, ensure_ascii=False)
+        n = m._cleanup_orphan_state_keys()
+        self.assertEqual(n, 1)
+        doc = json.load(open(self.tmp, encoding="utf-8"))
+        self.assertNotIn("_last_run_heartbeat", doc)
+        self.assertEqual(doc["active_tags"], ["#A"], "正常键不受影响")
+
+    def test_clean_file_not_rewritten(self):
+        # 无孤儿键时零写盘：避免每轮制造无意义 git 变更噪音
+        import json
+        before = os.path.getmtime(self.tmp)
+        self.assertEqual(m._cleanup_orphan_state_keys(), 0)
+        self.assertEqual(os.path.getmtime(self.tmp), before, "干净文件不得重写")
+
+
 class TestTokenExtraction(unittest.TestCase):
     """代币识别：歧义代码守护 + IGNORE 词表过滤"""
 

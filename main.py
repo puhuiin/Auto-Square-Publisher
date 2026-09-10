@@ -365,6 +365,30 @@ def intel_state_update(key: str, mutate_fn, default=None):
             return None
 
 
+# 已废弃的状态键：代码已不再读写，但残留在 intel 文件里会被整文件状态通道无限续命。
+# R61 看门狗 v1（心跳写 intel）被 v2（查 runs list）取代后代码删除，键却留在生产文件。
+_ORPHAN_STATE_KEYS = ("_last_run_heartbeat",)
+
+
+def _cleanup_orphan_state_keys() -> int:
+    """从 intel 状态文件移除已废弃键（一次性迁移清理）。返回清除的键数。
+    文件不存在/无孤儿键时不写盘（避免每轮制造无意义 git 变更噪音）。"""
+    try:
+        with _INTEL_STATE_LOCK:
+            intel = _read_intel_file(quiet=True)
+            found = [k for k in _ORPHAN_STATE_KEYS if k in intel]
+            if not found:
+                return 0
+            for k in found:
+                intel.pop(k, None)
+            _atomic_write_text(CAMPAIGN_INTEL_FILE, json.dumps(intel, ensure_ascii=False, indent=2))
+        logger.info(f"🧹 已清理遗留的孤儿状态键: {', '.join(found)}（旧版本实现遗体）。")
+        return len(found)
+    except Exception as e:
+        logger.warning(f"清理孤儿状态键失败 (不影响主流程): {e}")
+        return 0
+
+
 # 与英文单词撞名的真实代币代码：原文必须全大写(NEAR)或带 $ 前缀($NEAR) 才采信，防止误判
 # 严格词表（R70 语料扫描定案）：英语常用词/缩写词撞名币，全大写也不足采信
 # （OG.com、CLARITY ACT、AI 首字母缩写实录），必须 $ 显式引用。
@@ -2436,10 +2460,29 @@ class MultiLLMEngine:
         """组装提炼用 user prompt（输入→prompt 文本 + 选中的写派人设）。
         抽取自 summarize：prompt 组装与提供商容灾循环职责分离，组装规则可独立测试。
         article=True 走深度长文模板（800~1200 字，contentType=2），否则短讯模板。"""
-        # 组织活动背景提示（仅作为潜意识背景，避免生搬硬套非相关代币）
+        # 组织活动背景提示（仅作为潜意识背景，避免生搬硬套非相关代币）。
+        # R83 时效标注：情报正文可能沿用过期缓存（刷新失败退避最长 2h+，正文却引用
+        # 具体截止日期——生产实录：09-10 仍在喂"09-04 双重截止，抢最后48小时"，已过期
+        # 6 天。模型照它写帖 = 把过期活动当事实发布，违反"事件严禁编造"红线）。
+        # fresh（<12h）正常注入；过期正文降权为"仅背景参考、严禁引用其中的日期与
+        # 倒计时"，代币与标签加权不受影响（那只影响排序，不进正文事实）。
         intel_section = ""
         if campaign_intel and campaign_intel.get("strategy_guidance"):
-            intel_section = f"【官方活动风向参考】：{campaign_intel.get('strategy_guidance')}（若与本条新闻无关则切勿生硬提及）。\n"
+            intel_fresh = False
+            try:
+                _lu = str(campaign_intel.get("last_updated") or "")
+                if _lu:
+                    _dt = datetime.fromisoformat(_lu.replace("Z", "+00:00"))
+                    intel_fresh = (datetime.now(_dt.tzinfo or timezone.utc) - _dt).total_seconds() < INTEL_EXPIRE_HOURS * 3600
+            except Exception:
+                intel_fresh = False
+            if intel_fresh:
+                intel_section = f"【官方活动风向参考】：{campaign_intel.get('strategy_guidance')}（若与本条新闻无关则切勿生硬提及）。\n"
+            else:
+                intel_section = (f"【官方活动风向参考（已过缓存期，仅作背景感知）】："
+                                 f"{campaign_intel.get('strategy_guidance')}"
+                                 "（⚠️ 以上活动信息可能已过期：严禁在正文中引用其中的任何具体日期、"
+                                 "截止时间或倒计时，只可化用代币与话题方向，且若与本条新闻无关则切勿提及）。\n")
 
         market_section = ""
         if market_context:
@@ -4815,6 +4858,12 @@ def _run_main():
     logger.info(f"   发布平台: {' / '.join(PUBLISH_PLATFORMS)}")
     logger.info(f"   新闻时效窗口: {MAX_NEWS_AGE_HOURS}h | 去重阈值: {DUP_SIMILARITY_THRESHOLD}")
     logger.info("==================================================")
+
+    # R83：清理孤儿状态键（R61 看门狗 v1 遗体——v2 改查 runs list 后代码删除，
+    # 但文件里的旧键被整文件读改写的状态通道无限续命）。DRY_RUN 不动状态文件
+    # （零副作用契约），正式运行启动时一次性清除。
+    if not dry_run:
+        _cleanup_orphan_state_keys()
 
     # 1. 生产模式必要参数检查（仅 binance 启用时强制要求 Square Key）
     if not dry_run and "binance" in PUBLISH_PLATFORMS and not square_api_key:
