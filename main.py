@@ -251,6 +251,8 @@ def _delivered_platforms(binance_ok: bool = False, draft_ok: bool = False,
     return out
 ACTIVE_HOURS_BEIJING = os.getenv("ACTIVE_HOURS_BEIJING", "").strip()  # 活跃时段(北京时间)，如 "8-23"；空 = 全天
 CAMPAIGN_TOKEN_BOOST = 8                                           # 命中官方活动重点代币的热度加权
+TREND_TOKEN_BOOST = 6                                              # 命中全网热搜标的的加权（借鉴 Easel 热榜发现层：
+                                                                   # 市场正在搜索的币是比新闻时效更强的热点信号，仅影响排序）
 FRESHNESS_BOOST_RULES = ((3, 10), (12, 6), (24, 3))                # (新闻不超过 N 小时, 加分)
 
 
@@ -782,6 +784,35 @@ class MarketDataProvider:
     _price_cache: Dict[str, Tuple[float, str]] = {}  # symbol -> (timestamp, formatted)
     _fng_cache: Tuple[float, str] = (0.0, "")        # 恐慌贪婪指数同样缓存
     _kline_cache: Dict[str, Tuple[float, List[float]]] = {}  # symbol -> (ts, closes)
+    _TREND_CACHE_TTL_SEC = 300        # 热搜缓存 5min：CoinGecko 数据 5-10 分钟刷新，且限频礼貌（借鉴 Easel 热榜纪律）
+    _trend_cache: Tuple[float, List[str]] = (0.0, [])
+
+    @classmethod
+    def get_trending_symbols(cls) -> List[str]:
+        """拉取 CoinGecko 全网热搜标的（免费无 Key，市场"正在搜什么"的实时信号）。
+        借鉴 Easel 热榜发现层：单源失败静默降级为空表（不.boost，零行为变化），
+        5min TTL 缓存避免高频调用（CoinGecko 免费档限频严格）。
+        返回原始大写 ticker 列表（未过滤），由调用方对照 valid_symbols 消费。"""
+        now = time.time()
+        ts, cached = cls._trend_cache
+        if cached is not None and (now - ts) < cls._TREND_CACHE_TTL_SEC:
+            return cached
+        symbols: List[str] = []
+        try:
+            r = http_get("https://api.coingecko.com/api/v3/search/trending",
+                         timeout=6, retries=1)
+            if r is not None and r.status_code == 200:
+                data = r.json().get("coins") or []
+                for c in data:
+                    item = c.get("item") if isinstance(c, dict) else None
+                    sym = (item or {}).get("symbol")
+                    if isinstance(sym, str) and sym.strip():
+                        symbols.append(sym.strip().upper())
+        except Exception as e:
+            logger.debug(f"CoinGecko 热搜拉取失败（降级为无加权）: {e}")
+        symbols = symbols[:15]
+        cls._trend_cache = (now, symbols)
+        return symbols
 
     @classmethod
     def get_kline_closes(cls, symbol: str, points: int = 48) -> Optional[List[float]]:
@@ -1705,6 +1736,24 @@ class NewsFetcher:
             text_upper = (item["title"] + " " + item["summary"]).upper()
             if any(p.search(text_upper) for p in boost_patterns):
                 item["impact_score"] += CAMPAIGN_TOKEN_BOOST
+
+    @staticmethod
+    def apply_trend_boost(candidates: List[Dict[str, Any]],
+                          trending_symbols: Optional[List[str]]) -> None:
+        """全网热搜标的加权（借鉴 Easel 热榜发现层）：CoinGecko Trending 里
+        正在被搜索的币，其相关热点优先发布——市场注意力是比新闻时效更强的
+        热点信号。与活动加权同纪律：只影响排序不影响准入，base_impact_score
+        不动（MIN_IMPACT_SCORE 过滤已按原始分完成）。空表 = 零行为变化。"""
+        if not trending_symbols:
+            return
+        trend_set = {t.strip().upper().replace("$", "")
+                     for t in trending_symbols if isinstance(t, str) and t.strip()}
+        if not trend_set:
+            return
+        for item in candidates:
+            text_upper = (item["title"] + " " + item["summary"]).upper()
+            if any(re.search(rf"\b{re.escape(t)}\b", text_upper) for t in trend_set):
+                item["impact_score"] += TREND_TOKEN_BOOST
 
     def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5,
                          priority_tokens: Optional[List[str]] = None) -> List[Dict[str, Any]]:
@@ -5065,6 +5114,18 @@ def _run_main():
         write_github_step_summary(fetcher, fng_index, campaign_intel, [], dry_run)
         sys.exit(0)
 
+    # 5.5 全网热搜加权（借鉴 Easel 热榜发现层）：CoinGecko Trending 里正在被
+    # 搜索的币，相关热点排序前移——"追随热点趋势"的市场注意力信号。
+    # 只影响排序不影响准入；空表（API 失败）零行为变化。加权后重排同键。
+    trending_symbols = MarketDataProvider.get_trending_symbols()
+    valid_symbols_early = SymbolValidator.get_valid_symbols()
+    trending_valid = [t for t in trending_symbols if t in valid_symbols_early]
+    if trending_valid:
+        NewsFetcher.apply_trend_boost(candidates, trending_valid)
+        candidates.sort(key=lambda x: (-x["impact_score"],
+                                        x["age_hours"] if x.get("age_hours") is not None else float("inf")))
+        logger.info(f"🔥 全网热搜标的（币安在架）: {trending_valid[:8]}，相关候选已加权 +{TREND_TOKEN_BOOST}")
+
     # 6. 执行发帖循环
     posted_count = 0
     posted_records: List[Dict[str, Any]] = []  # 供运行报告输出
@@ -5173,7 +5234,11 @@ def _run_main():
                 daypart = "晚间（美盘主战场，互动黄金期）"
             else:
                 daypart = "深夜（全球夜猫子时段，短线客在线）"
-            market_context_str = (f"全网情绪指数: {fng_index}\n涉及标的实时盘面: {live_market_data if live_market_data else '链上/全市场热点'}\n"
+            trend_note = ""
+            if trending_valid:
+                trend_note = f"\n全网热搜标的（CoinGecko Trending，市场正高度关注）: {' '.join('$' + t for t in trending_valid[:5])}"
+            market_context_str = (f"全网情绪指数: {fng_index}\n涉及标的实时盘面: {live_market_data if live_market_data else '链上/全市场热点'}"
+                                  f"{trend_note}\n"
                                   f"发布时段: 北京时间 {bj_hour} 点（{daypart}），语气与节奏请贴合该时段读者状态")
 
             # AI 结合活动情报与实时盘面进行高质量提炼（注入已校验真实标的提示）。
@@ -5509,6 +5574,8 @@ def _run_main():
         "feeds_ok": fetcher.stats.get("feeds_ok", 0),
         "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
         "feeds_parked": len(fetcher.stats.get("feeds_parked", [])),
+        # R94：当轮热搜标的快照——事后做"热搜加权是否带来更好选题"的相关分析
+        "trending": " ".join(trending_valid[:8]) if trending_valid else None,
     })
 
     write_github_step_summary(fetcher, fng_index, campaign_intel, posted_records, dry_run,

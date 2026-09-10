@@ -4000,7 +4000,82 @@ class TestDownloadImageGate(unittest.TestCase):
             self.assertIsNone(m.ImageManager.download_image("https://x.example/cover.jpg"))
 
 
-class TestAtomicWrite(unittest.TestCase):
+class TestTrendBoost(unittest.TestCase):
+    """R94：全网热搜加权（借鉴 Easel 热榜发现层）——市场注意力是热点信号。
+    CoinGecko Trending 免费无 Key；只影响排序不影响准入；API 失败零行为变化。"""
+
+    def setUp(self):
+        self._orig_cache = m.MarketDataProvider._trend_cache
+        m.MarketDataProvider._trend_cache = (0.0, [])
+
+    def tearDown(self):
+        m.MarketDataProvider._trend_cache = self._orig_cache
+
+    def _resp(self, payload):
+        return type("R", (), {"status_code": 200, "headers": {},
+                              "content": b"{}", "close": lambda self: None,
+                              "json": lambda self: payload})()
+
+    def test_parse_and_cache(self):
+        payload = {"coins": [
+            {"item": {"symbol": "BTC", "name": "Bitcoin"}},
+            {"item": {"symbol": "sol"}},           # 小写归一
+            {"item": {"name": "no-symbol"}},        # 缺 symbol 跳过
+            "garbage",                              # 脏条目跳过
+        ]}
+        with patch.object(m, "http_get", return_value=self._resp(payload)) as mock_get:
+            first = m.MarketDataProvider.get_trending_symbols()
+            second = m.MarketDataProvider.get_trending_symbols()
+        self.assertEqual(first, ["BTC", "SOL"])
+        self.assertEqual(second, ["BTC", "SOL"])
+        self.assertEqual(mock_get.call_count, 1, "5min TTL 内命中缓存不得二次请求")
+
+    def test_failure_degrades_to_empty(self):
+        with patch.object(m, "http_get", return_value=None):
+            self.assertEqual(m.MarketDataProvider.get_trending_symbols(), [])
+        with patch.object(m, "http_get", side_effect=RuntimeError("boom")):
+            self.assertEqual(m.MarketDataProvider.get_trending_symbols(), [])
+
+    def test_boost_applies_and_base_untouched(self):
+        cands = [
+            {"title": "Solana DeFi TVL hits new high", "summary": "SOL ecosystem",
+             "impact_score": 10, "base_impact_score": 10},
+            {"title": "Regulation hearing scheduled", "summary": "SEC meeting",
+             "impact_score": 8, "base_impact_score": 8},
+        ]
+        m.NewsFetcher.apply_trend_boost(cands, ["SOL"])
+        self.assertEqual(cands[0]["impact_score"], 10 + m.TREND_TOKEN_BOOST)
+        self.assertEqual(cands[0]["base_impact_score"], 10, "准入分不得被加权污染")
+        self.assertEqual(cands[1]["impact_score"], 8)
+
+    def test_boost_empty_noop_and_dirty_symbols(self):
+        cands = [{"title": "BTC rally", "summary": "", "impact_score": 5,
+                  "base_impact_score": 5}]
+        m.NewsFetcher.apply_trend_boost(cands, [])
+        self.assertEqual(cands[0]["impact_score"], 5, "空热搜表零行为变化")
+        m.NewsFetcher.apply_trend_boost(cands, ["", None, 42, "$BTC"])
+        self.assertEqual(cands[0]["impact_score"], 5 + m.TREND_TOKEN_BOOST,
+                         "脏条目丢弃，$ 前缀归一后仍生效")
+
+    def test_run_summary_carries_trending(self):
+        """run_summary 必须记录当轮热搜标的（事后做加权效果相关分析）"""
+        harness = TestRunMainSemantics()
+        tmpdir, paths = harness._iso_files()
+        patches = harness._base_patches(tmpdir, paths, dry=True)
+        try:
+            with patch.object(m.MarketDataProvider, "get_trending_symbols",
+                              return_value=["BTC"]):
+                m._run_main()
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            s = [r for r in rows if r.get("outcome") == "run_summary"][0]
+            self.assertEqual(s.get("trending"), "BTC", "run_summary 必须记录当轮热搜")
+        finally:
+            harness._teardown(patches, tmpdir)
+
+
+
     """崩溃安全写盘：写半截被杀不得留下损坏的状态文件"""
 
     def test_helper_roundtrip_and_no_tmp_residue(self):
@@ -4295,6 +4370,8 @@ class TestRunMainSemantics(unittest.TestCase):
                             return_value={"active_tags": [], "incentivized_tokens": []}))
         _start(patch.object(m.MarketDataProvider, "get_fear_and_greed", return_value="50/100"))
         _start(patch.object(m.MarketDataProvider, "get_token_market_data", return_value=""))
+        # R94：热搜拉取走真实网络，集成测试一律 mock 为空（加权链路另有单测）
+        _start(patch.object(m.MarketDataProvider, "get_trending_symbols", return_value=[]))
         _start(patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}))
         # 配图上传走真实网络（超时重试可达十几秒）：此处只测投递语义，图片管线另有单测
         _start(patch.object(m.ImageManager, "prepare_and_upload", return_value=None))
