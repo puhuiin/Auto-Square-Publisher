@@ -78,6 +78,7 @@ def summarize(rows):
         "by_provider": collections.Counter(),
         "by_token": collections.Counter(),
         "images": 0,
+        "image_tiers": collections.Counter(),
         "reject_by_stage": collections.Counter(),
         "reject_by_provider": collections.Counter(),
         "reject_reasons": collections.Counter(),
@@ -96,7 +97,8 @@ def summarize(rows):
             # DRY 试运行行只计数不聚合：沙盒延迟/成功率不得毒化生产调优（打标见 append_metrics）
             s["dry_skipped"] += 1
             continue
-        s["by_outcome"][str(r.get("outcome", "unknown"))] += 1
+        outcome = str(r.get("outcome", "unknown"))
+        s["by_outcome"][outcome] += 1
         ts = r.get("ts")
         if isinstance(ts, str) and ts:
             if s["ts_min"] is None or ts < s["ts_min"]:
@@ -104,8 +106,6 @@ def summarize(rows):
             if s["ts_max"] is None or ts > s["ts_max"]:
                 s["ts_max"] = ts
         err = r.get("error") or r.get("error_code")
-        if err:
-            s["errors"][str(err)[:60]] += 1
         prov = r.get("provider") or "unknown"
         model = r.get("model")
         who = f"{prov}/{model}" if model else str(prov)
@@ -124,11 +124,21 @@ def summarize(rows):
                 s["by_token"][str(toks[0])] += 1
             if r.get("image"):
                 s["images"] += 1
-        elif r.get("outcome") == "llm_rejected":
+            tier = r.get("image_tier")
+            if tier:
+                s["image_tiers"][str(tier)] += 1
+        elif outcome == "llm_rejected":
             s["reject_by_stage"][str(r.get("stage", "unknown"))] += 1
             s["reject_by_provider"][who] += 1
             if r.get("reason"):
                 s["reject_reasons"][str(r["reason"])[:60]] += 1
+        # 失败行（llm_failed / 无 stage 的异常行）的 reason 是错误诊断的唯一载体——
+        # 生产遥测里 404/超时/空回全写在 reason，error 字段几乎恒空。没写 stage 的
+        # reject 行同样兜进 errors，避免"错误面板空但原因字段一大堆"的失真报表。
+        if outcome == "llm_failed" and not err:
+            err = r.get("reason")
+        if err:
+            s["errors"][str(err)[:60]] += 1
         lat = _num(r.get("llm_latency_sec"))
         if lat is not None:
             lat_tmp[str(prov)].append(lat)
@@ -145,11 +155,30 @@ def summarize(rows):
     return s
 
 
+def funnel(rows):
+    """发布成功率漏斗：分母用"真正进入 LLM 尝试的故事"——
+    llm_rejected + llm_failed + llm_success + 任意投递成功。拒稿必记、
+    成功只在投递时记（append_metrics 语义），所以 success 行与 delivered 行
+    不会重复计数同一故事：一个故事要么在质量/传输层被拦（rejected/failed），
+    要么走到投递（此时只有投递行、没有 success 行）。"""
+    delivered = sum(1 for r in rows
+                    if isinstance(r, dict) and r.get("dry_run") is not True and _is_delivered(r))
+    attempted = delivered
+    for r in rows:
+        if not isinstance(r, dict) or r.get("dry_run") is True:
+            continue
+        outcome = str(r.get("outcome", ""))
+        if outcome in ("llm_rejected", "llm_failed", "llm_success") and not _is_delivered(r):
+            attempted += 1
+    return {"attempted": attempted, "delivered": delivered,
+            "rate": round(delivered / attempted, 3) if attempted else None}
+
+
 def _top(counter, n=TOP_N):
     return counter.most_common(n)
 
 
-def render_text(s):
+def render_text(s, rows=None):
     """人类可读简报"""
     lines = [
         "## metrics 遥测简报",
@@ -158,11 +187,18 @@ def render_text(s):
         + (f"，其中 {s['dry_skipped']} 行 dry-run 已排除" if s["dry_skipped"] else ""),
         f"- outcome 分布: {dict(s['by_outcome']) or '—'}",
     ]
+    if rows is not None:
+        f = funnel(rows)
+        if f["attempted"]:
+            lines.append(f"- 发布成功率: {f['delivered']}/{f['attempted']} 篇"
+                         f"（{f['rate'] * 100:.1f}%，分母=进入 LLM 尝试的故事）")
     n_pub = sum(s["by_provider"].values())
     if n_pub:
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")
         lines.append(f"  模型 {_top(s['by_provider'])} / 首标的 {_top(s['by_token'])} / 配图率 "
                      f"{s['images']}/{n_pub}")
+        if s["image_tiers"]:
+            lines.append(f"  配图层级 {dict(s['image_tiers'])}")
     n_rej = sum(s["reject_by_stage"].values())
     if n_rej:
         lines.append(f"- 拦截 {n_rej} 次：阶段 {_top(s['reject_by_stage'])} / 模型 {_top(s['reject_by_provider'])}")
@@ -195,9 +231,11 @@ def main(argv=None):
         print(f"跳过坏行 {bad} 行（不影响其余统计）", file=sys.stderr)
     s = summarize(rows)
     if as_json:
-        print(json.dumps(s, ensure_ascii=False, indent=2, default=str))
+        doc = dict(s)
+        doc["funnel"] = funnel(rows)
+        print(json.dumps(doc, ensure_ascii=False, indent=2, default=str))
     else:
-        print(render_text(s))
+        print(render_text(s, rows))
     return 0
 
 

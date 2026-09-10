@@ -154,6 +154,106 @@ class TestMetricsReport(unittest.TestCase):
             sys.stdout = old
         doc = json.loads(buf.getvalue())
         self.assertEqual(doc["total"], 4)
+        self.assertIn("funnel", doc, "JSON 模式必须带成功率漏斗")
+
+    def test_llm_failed_reason_feeds_error_panel(self):
+        """R81：llm_failed 的 reason 是错误诊断唯一载体（404/超时全在里面），
+        此前 errors 面板只认 error/error_code 字段恒空，报表失真"""
+        _write(self.path, [
+            {"ts": "2026-09-10T00:00:00Z", "provider": "Preset-b.ai",
+             "reason": "Error code: 404 - model gone", "outcome": "llm_failed"},
+            {"ts": "2026-09-10T00:01:00Z", "provider": "Preset-b.ai",
+             "reason": "Request timed out.", "outcome": "llm_failed"},
+            {"ts": "2026-09-10T00:02:00Z", "provider": "X",
+             "reason": "空回", "stage": "transport", "outcome": "llm_rejected"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(s["errors"]["Error code: 404 - model gone"], 1)
+        self.assertEqual(s["errors"]["Request timed out."], 1)
+        # llm_rejected 的 reason 仍走 reject_reasons，不重复进 errors
+        self.assertEqual(s["reject_reasons"]["空回"], 1)
+        self.assertNotIn("空回", dict(s["errors"]))
+        text = mr.render_text(s, rows)
+        self.assertIn("404", text)
+
+    def test_explicit_error_field_wins_over_reason(self):
+        # error 字段存在时不被 reason 覆盖（显式优先）
+        _write(self.path, [
+            {"provider": "P", "error": "explicit-err", "reason": "reason-err",
+             "outcome": "llm_failed"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(s["errors"]["explicit-err"], 1)
+        self.assertNotIn("reason-err", dict(s["errors"]))
+
+    def test_success_rate_funnel(self):
+        """发布成功率漏斗：分母 = 投递成功 + llm_rejected/failed/success（去重）"""
+        _write(self.path, [
+            # 2 篇投递成功（platforms 非空）
+            {"platforms": ["binance"], "outcome": "binance_published"},
+            {"platforms": ["binance", "telegram"], "outcome": "binance_published",
+             "dry_run": True},  # dry 行不算
+            # 3 次 LLM 层失败/拒稿（各算一次尝试）
+            {"outcome": "llm_rejected", "stage": "quality"},
+            {"outcome": "llm_failed", "stage": "transport"},
+            {"outcome": "llm_success"},  # 无投递行伴随时也计入尝试
+            # 未知 outcome 不进分母
+            {"outcome": "mystery_future"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        f = mr.funnel(rows)
+        self.assertEqual(f["delivered"], 1)
+        self.assertEqual(f["attempted"], 4)
+        self.assertEqual(f["rate"], 0.25)
+
+    def test_delivered_rows_not_double_counted(self):
+        # success 行若带投递字段（旧 schema 混写），按投递行计——delivered+1，
+        # 不再进尝试分母（denominator 去重）；纯 llm_success 无投递字段才计尝试
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published"},
+            {"outcome": "llm_success", "platforms": ["binance"]},  # 带投递字段的 success 行
+        ])
+        rows, _ = mr.load_rows(self.path)
+        f = mr.funnel(rows)
+        self.assertEqual(f["delivered"], 2, "两行都有投递字段，都按投递计")
+        self.assertEqual(f["attempted"], 2, "带投递字段的行不得同时计入尝试（去重）")
+
+    def test_image_tier_distribution(self):
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "image": True, "image_tier": "card"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "image": True, "image_tier": "raw"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "image": True},  # 旧 schema 无 tier：不进分布也不崩
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(dict(s["image_tiers"]), {"card": 1, "raw": 1})
+        text = mr.render_text(s, rows)
+        self.assertIn("配图层级", text)
+
+    def test_dry_rows_excluded_from_funnel(self):
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published", "dry_run": True},
+            {"outcome": "llm_rejected", "dry_run": True},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        f = mr.funnel(rows)
+        self.assertEqual(f["attempted"], 0)
+        self.assertIsNone(f["rate"])
+
+    def test_success_rate_line_rendered(self):
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published"},
+            {"outcome": "llm_rejected", "stage": "quality"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("发布成功率: 1/2 篇", text)
+        self.assertIn("50.0%", text)
 
 
 if __name__ == "__main__":
