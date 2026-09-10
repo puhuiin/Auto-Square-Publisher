@@ -1975,7 +1975,8 @@ class TestGitStateMerge(unittest.TestCase):
                     (now - timedelta(days=5)).isoformat()},           # 旧计数：丢弃
             },
         }
-        local = {"last_updated": "2026-09-05T10:00:00Z"}  # 本地已清空全部状态
+        local = {"last_updated": "2026-09-05T10:00:00Z",  # 较新：best 取自本地
+                 "_last_run_heartbeat": {"ts": "2026-09-09T04:58:10"}}  # R87：best 自带孤儿键
         remote_p = self._write("campaign_intel.json", remote)
         local_p = self._write("local_intel.json", local)
         self.assertTrue(self.merger.merge_intel(local_p, remote_p))
@@ -1986,7 +1987,7 @@ class TestGitStateMerge(unittest.TestCase):
         self.assertIn("fresh_fail", merged["_feed_health"])
         self.assertIn("parked", merged["_feed_health"], "停放中的条目必须保留")
         self.assertIn("dirty", merged["_feed_health"], "畸形时间戳看懂才删")
-        self.assertNotIn("_last_run_heartbeat", merged, "孤儿键必须被合并侧清除")
+        self.assertNotIn("_last_run_heartbeat", merged, "孤儿键必须被合并侧清除（含 best 携带的）")
         self.assertNotIn("old_story", merged["_publish_park"])
 
     def test_merge_intel_gcs_expired_alert_throttle(self):

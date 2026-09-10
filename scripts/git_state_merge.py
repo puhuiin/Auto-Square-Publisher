@@ -237,6 +237,12 @@ def merge_intel(local_snapshot_path: str, remote_path: str) -> bool:
     if isinstance(merged_state.get("_alert_state"), dict):
         merged_state["_alert_state"] = _gc_alert_state(merged_state["_alert_state"], _ALERT_GC_HOURS)
     best.update(merged_state)
+    # R87：孤儿键必须同时从 best 移除——best 是较新版本的完整拷贝，update()
+    # 只能覆盖不能删除，仅 pop merged_state 挡不住 best 自带的键（生产实证
+    # 08:23Z：同一次合并里 _feed_health 被 GC 整值替换生效，心跳键却经 best
+    # 存活）。
+    for orphan in _ORPHAN_STATE_KEYS:
+        best.pop(orphan, None)
     atomic_write_text(remote_path, json.dumps(best, ensure_ascii=False, indent=2))
     return True
 
