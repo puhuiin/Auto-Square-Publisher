@@ -94,7 +94,7 @@ def summarize(rows):
     runs_tmp = {
         "n": 0, "quota_blocked": 0, "active_hours_blocked": 0, "zero_candidates": 0,
         "candidates": 0, "published": 0, "unprocessed": 0,
-        "skips": collections.Counter(),
+        "skips": collections.Counter(), "last_trending": "",
     }
     lat_tmp, tok_tmp = collections.defaultdict(list), collections.defaultdict(list)
     for r in rows:
@@ -156,9 +156,11 @@ def summarize(rows):
         # 不再需要手写临时脚本回答"配额是否该调"（R90/R91 分析实录）
         if outcome == "run_summary":
             runs_tmp["n"] += 1
-            if r.get("quota_blocked") is True:
+            quota_blocked = r.get("quota_blocked") is True
+            hours_blocked = r.get("active_hours_blocked") is True
+            if quota_blocked:
                 runs_tmp["quota_blocked"] += 1
-            if r.get("active_hours_blocked") is True:
+            if hours_blocked:
                 runs_tmp["active_hours_blocked"] += 1
             cand = int(_num(r.get("candidates")) or 0)
             pub = int(_num(r.get("published")) or 0)
@@ -166,8 +168,13 @@ def summarize(rows):
             runs_tmp["candidates"] += cand
             runs_tmp["published"] += pub
             runs_tmp["unprocessed"] += unproc
-            if cand == 0 and pub == 0:
+            # 零候选 = 真去抓了但没有候选。配额满/时段外的轮根本没抓（cand=0
+            # 只是"没看"），混入会让饱和期被双重标记成"配额饱和 N 轮 / 零候选 N 轮"
+            if cand == 0 and pub == 0 and not quota_blocked and not hours_blocked:
                 runs_tmp["zero_candidates"] += 1
+            tr = r.get("trending")
+            if isinstance(tr, str) and tr.strip():
+                runs_tmp["last_trending"] = tr
             for k, v in r.items():
                 if k.startswith("skipped_") and isinstance(v, (int, float)):
                     runs_tmp["skips"][k[len("skipped_"):]] += int(v)
@@ -230,6 +237,8 @@ def render_text(s, rows=None):
         lines.append(f"- 运行摘要（{runs['n']} 轮）: {' / '.join(parts)}"
                      f"，累计候选 {runs['candidates']} → 发布 {runs['published']}"
                      + (f"（未处理 {runs['unprocessed']}）" if runs.get("unprocessed") else ""))
+        if runs.get("last_trending"):
+            lines.append(f"  最近热搜 [{runs['last_trending']}]")
         if runs.get("skips"):
             lines.append(f"  跳过分布 {runs['skips']}")
     n_pub = sum(s["by_provider"].values())

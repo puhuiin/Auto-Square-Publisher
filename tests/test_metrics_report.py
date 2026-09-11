@@ -257,13 +257,18 @@ class TestMetricsReport(unittest.TestCase):
 
     def test_run_summary_section_aggregates(self):
         """R92：run_summary 行的报表端消费——配额饱和/零候选/跳过分布不再需要
-        手写临时脚本回答（R90/R91 分析实录）。"""
+        手写临时脚本回答（R90/R91 分析实录）。R99：零候选与配额/时段外去混淆
+        （"没去找"≠"没找到"），trending 快照入报表。"""
         _write(self.path, [
             {"ts": "2026-09-10T11:00:00Z", "outcome": "run_summary",
              "candidates": 44, "published": 0, "unprocessed": 0,
-             "skipped_no_token": 40, "skipped_token_limit": 4},
+             "skipped_no_token": 40, "skipped_token_limit": 4,
+             "trending": "NEAR UNI TAO"},
             {"ts": "2026-09-10T12:00:00Z", "outcome": "run_summary",
              "candidates": 43, "published": 2, "unprocessed": 41},
+            {"ts": "2026-09-10T13:00:00Z", "outcome": "run_summary",
+             "candidates": 0, "published": 0, "unprocessed": 0,
+             "skipped_no_token": 0},  # 真零候选：抓了但没货
             {"ts": "2026-09-10T14:00:00Z", "outcome": "run_summary",
              "candidates": 0, "published": 0, "unprocessed": 0,
              "quota_blocked": True, "sent_24h": 12},
@@ -274,20 +279,24 @@ class TestMetricsReport(unittest.TestCase):
         rows, _ = mr.load_rows(self.path)
         s = mr.summarize(rows)
         runs = s["runs"]
-        self.assertEqual(runs["n"], 4)
+        self.assertEqual(runs["n"], 5)
         self.assertEqual(runs["quota_blocked"], 1)
         self.assertEqual(runs["active_hours_blocked"], 1)
-        self.assertEqual(runs["zero_candidates"], 2)
+        self.assertEqual(runs["zero_candidates"], 1,
+                         "只有真去抓了没货的轮才算零候选；配额满/时段外不得混入")
         self.assertEqual(runs["candidates"], 87)
         self.assertEqual(runs["published"], 2)
         self.assertEqual(runs["unprocessed"], 41)
         self.assertEqual(runs["skips"]["no_token"], 40)
         self.assertEqual(runs["skips"]["token_limit"], 4)
+        self.assertEqual(runs["last_trending"], "NEAR UNI TAO")
         text = mr.render_text(s, rows)
-        self.assertIn("运行摘要（4 轮）", text)
+        self.assertIn("运行摘要（5 轮）", text)
         self.assertIn("配额饱和 1 轮", text)
+        self.assertIn("零候选 1 轮", text)
         self.assertIn("累计候选 87 → 发布 2", text)
         self.assertIn("no_token", text)
+        self.assertIn("最近热搜 [NEAR UNI TAO]", text)
 
     def test_run_summary_dry_rows_excluded(self):
         # dry 的 run_summary 行不得进运行聚合（与其它聚合同一隔离纪律）
