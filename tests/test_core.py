@@ -527,6 +527,37 @@ class TestTokenExtraction(unittest.TestCase):
             m.NewsFetcher.extract_tokens("Chainlink CCIP powers cross-chain transfers", {"LINK"}),
             ["LINK"])
 
+    def test_defi_full_name_aliases(self):
+        """R118：生产实锤——"Rising Aave borrow rates threaten to flip
+        Ethena's USDe yield loops" 因 AAVE/ENA 全名别名缺失被 no_token 跳过。
+        DeFi/L1 项目全名（非撞常用词）增补进别名表。"""
+        pool = self.VALID | {"AAVE", "ENA", "ARB", "TIA", "FIL", "APT", "HBAR", "WLD", "ONDO"}
+        out = m.NewsFetcher.extract_tokens(
+            "Rising Aave borrow rates threaten to flip Ethena's USDe yield loops", pool)
+        self.assertEqual(out, ["AAVE", "ENA"])
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "Arbitrum airdrop rumors return as Celestia fees drop", pool), ["ARB", "TIA"])
+
+    def test_common_word_project_names_still_rejected(self):
+        """R118 红线复查：项目名撞常用词的（cosmos/polygon/optimism/stacks/
+        maker/sei）继续拒收别名表——全名即项目本名是唯一准入标准。"""
+        pool = self.VALID | {"ATOM", "POL", "OP", "STX", "MKR", "SEI"}
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "Optimism returns to equity markets as inflation cools", pool), [])
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "The polygon has five sides in geometry class", pool), [])
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "Scientists observe the cosmos with a new telescope", pool), [])
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "Modern tech stacks and render pipelines improve", pool), [])
+
+    def test_cjk_alias_expansion(self):
+        """R118：中文媒体常用币种全名补全（艾达币/波卡/柴犬币/币安币）。"""
+        pool = self.VALID | {"ADA", "DOT", "SHIB", "BNB"}
+        out = m.NewsFetcher.extract_tokens("艾达币今日大涨，波卡跟涨，柴犬币突破", pool)
+        self.assertEqual(out, ["ADA", "DOT", "SHIB"])
+        self.assertEqual(m.NewsFetcher.extract_tokens("币安币走势强劲", pool), ["BNB"])
+
     def test_finance_context_words_require_cashtag(self):
         """R70 实弹补充：BANK/BLOCK 等金融语境高频词进歧义表——
         'Bank of England'/'Builders Bank' 的 Title Case 普通名词曾直接被当挂件标的

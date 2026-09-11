@@ -1153,6 +1153,19 @@ TOKEN_NAME_ALIASES = {
     "shiba": "SHIB",
     "dogwifhat": "WIF",
     "pepe": "PEPE",
+    # R118 增补：DeFi/L1 全名（生产实证 "Rising Aave borrow rates threaten to
+    # flip Ethena's USDe yield loops" 因无别名被 no_token 跳过，AAVE+ENA 双漏）。
+    # 仅收"全名即项目本名"且在标的池内（HYPE/TON/MKR 不在池，加了也过不了校验）；
+    # 撞常用词的（cosmos/polygon/optimism/stacks/render/maker/sei）继续拒收。
+    "aave": "AAVE",
+    "ethena": "ENA",
+    "filecoin": "FIL",
+    "aptos": "APT",
+    "hedera": "HBAR",
+    "arbitrum": "ARB",
+    "worldcoin": "WLD",
+    "celestia": "TIA",
+    "ondo": "ONDO",
 }
 # 别名词预编译（ASCII 用 \b 整词边界，防 Bitcoiner/ethereum-killer 误匹配）
 _TOKEN_ALIAS_PATTERNS = {
@@ -1169,6 +1182,11 @@ _TOKEN_CJK_ALIASES = {
     "瑞波币": "XRP",
     "莱特币": "LTC",
     "波场": "TRX",
+    # R118 增补：中文媒体常用币种全名（BlockTempo/动区写"艾达币/波卡"走 CJK 通道）
+    "艾达币": "ADA",
+    "波卡": "DOT",
+    "柴犬币": "SHIB",
+    "币安币": "BNB",
 }
 
 
