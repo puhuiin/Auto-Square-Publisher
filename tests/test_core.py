@@ -4066,20 +4066,32 @@ class TestDownloadImageGate(unittest.TestCase):
             self.assertIsNone(m.ImageManager.download_image("https://cdn.example/cover.jpg"))
 
     def test_redirect_chain_beyond_three_hops_blocked(self):
-        # 连续 3 跳后仍 302：第 4 跳不再跟随
-        with patch.object(m, "http_get", return_value=self._redirect_resp("https://x.example/next")):
-            self.assertIsNone(m.ImageManager.download_image("https://x.example/cover.jpg"))
+        """连续 3 跳后仍 302：第 4 跳不再跟随。全部用公网 IP 字面量（R98：
+        域名形式在 CI 真实 DNS 下被 SSRF 门拒绝，测试退化成空洞通过——
+        DNS 拒绝也返回 None，断言碰巧成立而跳数从未被验证）。"""
+        calls = {"n": 0}
+
+        def _hop(url, **kwargs):
+            calls["n"] += 1
+            return self._redirect_resp(f"https://8.8.8.8/hop{calls['n']}.png")
+
+        with patch.object(m, "http_get", side_effect=_hop):
+            self.assertIsNone(m.ImageManager.download_image("https://8.8.8.8/cover.jpg"))
+        self.assertEqual(calls["n"], 4, "必须跟随 3 跳（共 4 次请求）后到顶放弃")
         # 空_location 同样拒绝
         with patch.object(m, "http_get", return_value=self._redirect_resp("")):
-            self.assertIsNone(m.ImageManager.download_image("https://x.example/cover.jpg"))
+            self.assertIsNone(m.ImageManager.download_image("https://8.8.8.8/cover.jpg"))
 
     def test_redirect_to_public_target_followed(self):
-        """合规重定向（公网→公网）必须照常跟随，防止把正常 CDN 加固成残废"""
+        """合规重定向（公网→公网）必须照常跟随，防止把正常 CDN 加固成残废。
+        目标必须用公网 IP 字面量（8.8.8.8）：域名形式在 CI 真实 DNS 下解析失败
+        → SSRF 门 fail-closed 拒绝，而本地 Clash fake-ip 又解析成功——R61 教训
+        在 R79 重演，CI 因此连红 18+ 轮而本地全绿（R98 修复）。"""
         png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 2048
         final = self._fake_resp(png, "image/png")
         with patch.object(m, "http_get", side_effect=[
-                self._redirect_resp("https://cdn.example/real.png"), final]):
-            out = m.ImageManager.download_image("https://x.example/cover")
+                self._redirect_resp("https://8.8.8.8/real.png"), final]):
+            out = m.ImageManager.download_image("https://8.8.8.8/cover")
         self.assertIsNotNone(out)
         self.assertEqual(out[2], "image/jpeg" if out[2] == "image/jpeg" else out[2])
 
