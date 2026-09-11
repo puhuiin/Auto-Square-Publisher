@@ -189,6 +189,9 @@ python main.py
 
 # 5. 运营驾驶舱：成本/延迟/形态对比/拒稿漏斗/人设分布一屏看全
 python scripts/cost_analysis.py --days 2
+
+# 6. 遥测简报：发布成功率/运行摘要（配额饱和轮数/零候选/跳过分布/热搜快照）
+python scripts/metrics_report.py
 ```
 
 ---
@@ -207,9 +210,17 @@ python scripts/cost_analysis.py --days 2
   | `MAX_DAILY_POSTS` | `12` | 24 小时发帖配额上限，防刷屏保账号权重（0 表示不限） |
   | `ACTIVE_HOURS_BEIJING` | 空 | 北京时间活跃窗口，支持跨夜，例 `8-23` 或 `22-7`（空 = 全天） |
   | `TOKEN_DAILY_LIMIT` | `3` | 同一代币 24h 内最多发帖篇数（0 = 不限） |
+  | `MAX_TOKENS_PER_POST` | `3` | 单帖 $ 挂件标的上限（清单式行情日评可提取 9+ 币，截断保留显著度前 N） |
   | `ARTICLE_PER_DAY` | `1` | 每日深度长文开关：当天首个高热帖升级为长文（contentType=2，TITLE+500~800 字正文），打专业垂直度与长尾流量 |
   | `ARTICLE_MIN_IMPACT` | `20` | 长文选稿门槛：榜首热度分低于此值则当天不发长文（全发短讯） |
+  | `PUBLISH_PLATFORMS` | `binance` | 发布平台组合（逗号分隔）：`binance` 官方 API / `okx_draft` OKX 草稿直出 / `telegram` 频道镜像 |
+  | `LOG_LEVEL` | `INFO` | 日志级别（排障时可设 `DEBUG`） |
+  | `MAX_POSTS_PER_RUN` | `2` | 单次运行最大发帖数（workflow 运行参数；配额剩余不足时自动收敛） |
+- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `BAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL`——想把某平台固定到指定模型时设置。
+- **报警通知渠道**（全部可选，多渠道并发）：`SERVERCHAN_KEY`（Server酱微信）/ `PUSHPLUS_TOKEN`（PushPlus 微信）/ `BARK_KEY`（iOS Bark）/ `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`（Telegram）/ `WEBHOOK_URL`（钉钉/飞书/企微/Discord 通用）。同一错误报警 12 小时同题节流，投递成功才计额度。
 - **CI 回归防线**：`tests/test_core.py` 内置百余个离线回归测试（含断路器/源停放/报错分类/通知编码/跨语言去重/行情缓存/同步契约），`.github/workflows/ci.yml` 在每次 push/PR 时自动编译、校验 workflow 语法并跑测试，防止守护逻辑被后续改动悄悄破坏。
   - **workflow 内嵌脚本校验的环境降级**：`scripts/validate_workflows.py` 只在确认本机 bash **真能执行** `bash -n -c true` 时才校验内嵌 shell；PATH 上只有 WSL 启动器、或 bash 被安全策略拒绝时，一律跳过并说明原因，**绝不把环境故障伪装成 workflow 语法错误**。需强制指定时用环境变量 `BASH_PATH=/path/to/bash`。
 
-- **DRY_RUN 语义**：手动触发选择 `dry_run=true` 时，完整跑通抓取/打分/AI/配图流水线，但不真实发帖也**不写入去重缓存**，适合验收。
+- **DRY_RUN 语义**：手动触发选择 `dry_run=true` 时，完整跑通抓取/打分/AI/配图流水线，但不真实发帖也**不写入去重缓存**，适合验收。（DRY 遥测行自动打标隔离，报表与调度评分默认排除。）
+- **热点感知三路信号**：① 新闻时效与关键词打分（基础排序）；② 币安官方活动重点代币加权（+8，参与创作者激励的入口）；③ CoinGecko 全网热搜加权（+6，市场"正在搜什么"的实时注意力信号，5 分钟缓存、失败静默降级）。标的识别带全名别名召回（Bitcoin/比特币→$BTC 等无歧义全名直接映射，覆盖英文媒体正文只用全名的场景）与四层防误报防线（预清洗/大写闸/严格词表/别名）。
+- **运行漏斗遥测**：每次运行（含配额满/时段外/零候选等所有静默退出路径）恰好一条 `run_summary` 遥测行——候选数、发布数、六类跳过计数、未处理数、源健康快照与当轮热搜快照，`python scripts/metrics_report.py` 一键直读。

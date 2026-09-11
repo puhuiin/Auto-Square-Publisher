@@ -273,5 +273,32 @@ class TestFailureNotifyWiring(unittest.TestCase):
         self.assertIn("steps.install.conclusion", env["INSTALL_RESULT"])
 
 
+class TestReadmeEnvCoverage(unittest.TestCase):
+    """R102 文档防漂移：main.py 读取的每个用户可配置环境变量都必须在 README
+    出现——40+ 轮迭代里 MAX_POSTS_PER_RUN/LOG_LEVEL/通知渠道/模型覆盖等
+    16 个变量静默失文档。新增 env 读取时本测试强制同步文档。"""
+
+    def test_all_user_facing_env_vars_documented(self):
+        import re
+        code_path = os.path.join(REPO_ROOT, "main.py")
+        with open(code_path, encoding="utf-8") as f:
+            code = f.read()
+        used = set()
+        for pat in (r'os\.getenv\(\s*"([A-Z][A-Z0-9_]+)"',
+                    r'_env_int\(\s*"([A-Z][A-Z0-9_]+)"',
+                    r'_env_float\(\s*"([A-Z][A-Z0-9_]+)"'):
+            used |= set(re.findall(pat, code))
+        # CI 内部注入（Actions 运行器提供，非用户配置面）
+        internal = {v for v in used if v.startswith("GITHUB_")}
+        user_facing = used - internal
+        self.assertTrue(user_facing, "正则失效：至少应识别出运行参数")
+        readme_path = os.path.join(REPO_ROOT, "README.md")
+        with open(readme_path, encoding="utf-8") as f:
+            readme = f.read()
+        missing = sorted(v for v in user_facing if v not in readme)
+        self.assertEqual(missing, [],
+                         f"以下环境变量已实现但 README 未文档化: {missing}")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
