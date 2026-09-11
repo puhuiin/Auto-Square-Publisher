@@ -961,6 +961,18 @@ class TestTokenWidgetEnforcement(unittest.TestCase):
         original = "纯情绪分析"
         self.assertEqual(m.SquarePublisher._ensure_token_widget(original, []), original)
 
+    def test_count_valid_widgets_lifecycle(self):
+        """R123：Write2Earn 生命线度量——全文有效挂件计数。只认币安真实标的：
+        裸全名（Solana）不算、幻觉 ticker 不算、$ 前缀真实标的才算。"""
+        count = m.SquarePublisher._count_valid_widgets
+        self.assertEqual(count("刚刚 $BTC 起飞 $ETH 跟涨"), 2)
+        self.assertEqual(count("刚 Solana 链上爆了新代币，Pump.fun 印钞"), 0,
+                         "裸全名不产生挂件，计数必须为 0")
+        self.assertEqual(count("$FAKECOIN 与 $XRP"), 1, "幻觉标的不得计入")
+        self.assertEqual(count(""), 0)
+        # 词边界：$BTCX 不算 BTC，$BTC 算
+        self.assertEqual(count("$BTCX 和 $BTC"), 1)
+
 
 class TestProviderHealthScheduling(unittest.TestCase):
     """模型健康度调度：连续失败的提供商沉底"""

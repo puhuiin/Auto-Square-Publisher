@@ -131,6 +131,7 @@ def summarize(rows):
         "by_token": collections.Counter(),
         "images": 0,
         "image_tiers": collections.Counter(),
+        "zero_widget_posts": 0,
         "reject_by_stage": collections.Counter(),
         "reject_by_provider": collections.Counter(),
         "reject_reasons": collections.Counter(),
@@ -187,6 +188,11 @@ def summarize(rows):
             tier = r.get("image_tier")
             if tier:
                 s["image_tiers"][str(tier)] += 1
+            # R123：Write2Earn 生命线度量——全文零有效挂件的帖子数（保底机制
+            # 失守的直接信号；预览区无 $ 只可能是截断伪影，不看全文计数会误报）
+            wc = r.get("widget_count")
+            if wc == 0:
+                s["zero_widget_posts"] += 1
         elif outcome == "llm_rejected":
             s["reject_by_stage"][str(r.get("stage", "unknown"))] += 1
             s["reject_by_provider"][who] += 1
@@ -353,6 +359,9 @@ def render_text(s, rows=None):
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")
         lines.append(f"  模型 {_top(s['by_provider'])} / 首标的 {_top(s['by_token'])} / 配图率 "
                      f"{s['images']}/{n_pub}")
+        # R123：全文零挂件帖 = Write2Earn 生命线失守（保底机制被绕过）的直接信号
+        if s.get("zero_widget_posts"):
+            lines.append(f"  ⚠️ 全文零有效挂件 {s['zero_widget_posts']}/{n_pub} 篇——保底机制被绕过，需排查")
         if s["image_tiers"]:
             lines.append(f"  配图层级 {dict(s['image_tiers'])}")
     n_rej = sum(s["reject_by_stage"].values())

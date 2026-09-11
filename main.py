@@ -4272,6 +4272,12 @@ class SquarePublisher(BasePublisher):
         return content
 
     @staticmethod
+    def _count_valid_widgets(content: str) -> int:
+        """统计正文中币安真实标的的 $ 挂件数（Write2Earn 生命线度量）。"""
+        return sum(1 for t in re.findall(r"\$([A-Za-z0-9]{2,10})(?![A-Za-z0-9])", content or "")
+                   if t.upper() in SymbolValidator.get_valid_symbols())
+
+    @staticmethod
     def _ensure_token_widget(content: str, ensure_tokens: Optional[List[str]]) -> str:
         """
         交易挂件保底：若正文没有任何有效 $TOKEN，自动把首个有效代币插到标签区之前，
@@ -4319,6 +4325,7 @@ class SquarePublisher(BasePublisher):
         # 发出去的实际是这份改写稿，遥测必须记它而非原稿）
         self.last_content_id: Optional[str] = None
         self.last_final_content: Optional[str] = None
+        self.last_widget_count: Optional[int] = None
         if not self.api_key:
             logger.error("未配置 SQUARE_API_KEY，无法发布到币安广场！")
             self.last_error = "未配置 SQUARE_API_KEY，无法发布到币安广场！"
@@ -4328,6 +4335,10 @@ class SquarePublisher(BasePublisher):
         content = self._sanitize_content(content)
         content = self._weave_cashtags(content, ensure_tokens)
         content = self._ensure_token_widget(content, ensure_tokens)
+        # 回执：全文有效挂件计数。挂件保底保证的是"全文 ≥1 个 $TOKEN"，而
+        # final_preview 只存前 200 字钩子区——模型把挂件写在正文尾部时预览区
+        # 看不到 $，不记全文计数就无法区分"截断伪影"与"真实丢挂件"。
+        self.last_widget_count = self._count_valid_widgets(content)
         content = self._inject_campaign_tag(content, campaign_intel)
         if len(content) < 15:
             logger.error(f"发帖内容过短 ({len(content)} 字符)，拒绝发布以防被系统封禁")
@@ -5642,6 +5653,10 @@ def _run_main():
                     # 直塞 Mock 进 json.dumps 会让 append_metrics 整行静默丢弃）
                     raw_cid = getattr(publisher, "last_content_id", None)
                     final_content = getattr(publisher, "last_final_content", None)
+                    # 防御性强转：非 int 值（Mock 替身/异常状态）会让 json.dumps
+                    # 整条遥测失败被吞（与 error_code 的 str() 同款模式）
+                    _wc = getattr(publisher, "last_widget_count", None)
+                    widget_count = _wc if isinstance(_wc, int) else None
                     content_id = raw_cid if isinstance(raw_cid, str) else None
                     # R106：回执 120→200 字——FNG 锚定常出现在第二段（生产实录
                     # 命中点最远 ~110 字，仅贴着旧截断线），合规巡检的覆盖盲区
@@ -5661,6 +5676,7 @@ def _run_main():
                         # final_preview 记净化/织挂件/标签注入后的实际发布文本（质量门只见原稿）
                         "content_id": content_id,
                         "final_preview": final_preview,
+                        "widget_count": widget_count,
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,
@@ -5763,6 +5779,9 @@ def _run_main():
                         "tokens_used": llm_result.get("tokens_used"),
                         "llm_latency_sec": llm_result.get("latency_sec"),
                         "platforms": _delivered_platforms(False, draft_exported, telegram_exported),
+                        # 失败分支的 widget_count 单独取（成功分支的局部变量此处未定义）
+                        "widget_count": (lambda _w: _w if isinstance(_w, int) else None)(
+                            getattr(publisher, "last_widget_count", None)),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,
                         "outcome": "publish_failed", "error": detail[:200],

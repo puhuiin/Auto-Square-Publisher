@@ -561,6 +561,23 @@ class TestMetricsReport(unittest.TestCase):
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("FNG锚:", text)
 
+    def test_zero_widget_posts_surfaced(self):
+        """R123：全文零有效挂件 = Write2Earn 生命线失守——保底机制被绕过的
+        直接信号，报表必须显性告警。预览区无 $ 不算（可能是截断伪影）。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "widget_count": 2, "final_preview": "x"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "widget_count": 0, "final_preview": "y"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "z"},  # 旧 schema 无字段：不计入
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(s["zero_widget_posts"], 1, "仅 widget_count==0 的行计入")
+        text = mr.render_text(s, rows)
+        self.assertIn("全文零有效挂件 1/3 篇", text)
+
 
 class TestQualityPatternSync(unittest.TestCase):
     """R106：质量模式双份维护的同步守卫——main.py（防线本体）与 metrics_report
