@@ -196,6 +196,7 @@ def summarize(rows):
         "candidates": 0, "published": 0, "unprocessed": 0,
         "skips": collections.Counter(), "last_trending": "",
         "trend_freq": collections.Counter(),
+        "elapsed": [],  # R126：单轮耗时样本（秒），聚平均/最长
     }
     lat_tmp, tok_tmp = collections.defaultdict(list), collections.defaultdict(list)
     for r in rows:
@@ -266,6 +267,9 @@ def summarize(rows):
         # 不再需要手写临时脚本回答"配额是否该调"（R90/R91 分析实录）
         if outcome == "run_summary":
             runs_tmp["n"] += 1
+            _el = _num(r.get("run_elapsed_sec"))
+            if _el is not None:
+                runs_tmp["elapsed"].append(_el)
             quota_blocked = r.get("quota_blocked") is True
             hours_blocked = r.get("active_hours_blocked") is True
             if quota_blocked:
@@ -298,10 +302,14 @@ def summarize(rows):
                 if k.startswith("skipped_") and isinstance(v, (int, float)):
                     runs_tmp["skips"][k[len("skipped_"):]] += int(v)
     s["runs"] = {
-        **{k: v for k, v in runs_tmp.items() if k not in ("skips", "trend_freq")},
+        **{k: v for k, v in runs_tmp.items() if k not in ("skips", "trend_freq", "elapsed")},
         "skips": dict(runs_tmp["skips"]),
         "trend_freq": dict(runs_tmp["trend_freq"].most_common(8)),
     }
+    # R126：单轮耗时聚合——平均/最长（秒），20 分钟节奏下的堆积预警
+    if runs_tmp["elapsed"]:
+        s["runs"]["avg_elapsed_sec"] = round(sum(runs_tmp["elapsed"]) / len(runs_tmp["elapsed"]), 1)
+        s["runs"]["max_elapsed_sec"] = round(max(runs_tmp["elapsed"]), 1)
     for prov, vals in lat_tmp.items():
         s["latency_by_provider"][prov] = round(sum(vals) / len(vals), 1)
     for prov, vals in tok_tmp.items():
@@ -396,6 +404,11 @@ def render_text(s, rows=None):
             freq_str = " / ".join(f"{k}×{v}" for k, v in
                                   list(runs["trend_freq"].items())[:5])
             lines.append(f"  热搜持续度 {freq_str}")
+        # R126：单轮耗时——逼近 20 分钟回调节奏时即为堆积预警
+        if runs.get("avg_elapsed_sec") is not None:
+            warn = " ⚠️逼近回调节奏" if runs.get("max_elapsed_sec", 0) > 1100 else ""
+            lines.append(f"  ⏱️ 单轮耗时: 平均 {runs['avg_elapsed_sec']}s / "
+                         f"最长 {runs['max_elapsed_sec']}s（回调节奏 1200s）{warn}")
         if runs.get("skips"):
             lines.append(f"  跳过分布 {runs['skips']}")
     if rows is not None:

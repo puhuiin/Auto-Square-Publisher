@@ -596,6 +596,28 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("全文零标签 1/3 篇", text)
         self.assertIn("返佣归因丢失", text)
 
+    def test_run_elapsed_aggregated(self):
+        """R126：单轮耗时——20 分钟外部回调节奏下的堆积预警指标。
+        平均/最长聚合进 runs 段，最长逼近 1200s 时渲染告警。"""
+        _write(self.path, [
+            {"outcome": "run_summary", "run_elapsed_sec": 95.2},
+            {"outcome": "run_summary", "run_elapsed_sec": 143.8},
+            {"outcome": "run_summary"},  # 旧 schema 无字段：不进样本
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["avg_elapsed_sec"], 119.5)
+        self.assertEqual(s["runs"]["max_elapsed_sec"], 143.8)
+        text = mr.render_text(s, rows)
+        self.assertIn("单轮耗时: 平均 119.5s / 最长 143.8s", text)
+        self.assertNotIn("逼近回调节奏", text)
+
+    def test_run_elapsed_near_cadence_warns(self):
+        _write(self.path, [{"outcome": "run_summary", "run_elapsed_sec": 1180.0}])
+        rows, _ = mr.load_rows(self.path)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("逼近回调节奏", text)
+
 
 class TestOpenerFingerprintRadar(unittest.TestCase):
     """R124：开场指纹雷达——把 R104/R121 的人工发现过程产品化，共享前缀

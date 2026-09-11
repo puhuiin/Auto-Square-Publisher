@@ -5211,6 +5211,10 @@ def run_healthcheck():
 
 
 def _run_main():
+    # R126：单轮耗时基线——外部回调 20 分钟一次，若全管线（情报刷新 + LLM 链
+    # 容灾 + 配图上传 + 发布）耗时逼近节奏，下一轮就会排队堆积；此前的盲区
+    # 让"变慢"只能在 CI 日志里人肉翻。遥测进 run_summary 后报表可聚合监控。
+    t_run_start = time.time()
     square_api_key = os.getenv("SQUARE_API_KEY", "").strip()
     max_posts_raw = os.getenv("MAX_POSTS_PER_RUN", "").strip() or "1"
     max_posts = int(max_posts_raw) if max_posts_raw.isdigit() else 1
@@ -5227,6 +5231,7 @@ def _run_main():
             "skipped_batch_dup": 0, "skipped_no_token": 0, "skipped_token_limit": 0,
             "skipped_risk_blocked": 0, "skipped_parked": 0, "skipped_exception": 0,
             "active_hours_blocked": True,
+            "run_elapsed_sec": round(time.time() - t_run_start, 1),
         })
         return
 
@@ -5304,6 +5309,7 @@ def _run_main():
                 "max_daily_posts": MAX_DAILY_POSTS,
                 "next_slot_frees": next_frees_iso or None,
                 "next_slot_frees_min": next_frees_min,
+                "run_elapsed_sec": round(time.time() - t_run_start, 1),
             })
             # R114：Step Summary 也带估算——Actions 运行页直接可见下一槽时间
             quota_msg = f"配额满跳过抓取（{sent_24h}/{MAX_DAILY_POSTS}）"
@@ -5352,6 +5358,7 @@ def _run_main():
             "feeds_ok": fetcher.stats.get("feeds_ok", 0),
             "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
             "feeds_parked": len(fetcher.stats.get("feeds_parked", [])),
+            "run_elapsed_sec": round(time.time() - t_run_start, 1),
         })
         # 全源同时故障 = 基建级问题，必须报警而非静默默认"无事发生"
         if fetcher.stats["feeds_failed"] and fetcher.stats["feeds_ok"] == 0 or \
@@ -5865,6 +5872,8 @@ def _run_main():
         "feeds_parked": len(fetcher.stats.get("feeds_parked", [])),
         # R94：当轮热搜标的快照——事后做"热搜加权是否带来更好选题"的相关分析
         "trending": " ".join(trending_valid[:8]) if trending_valid else None,
+        # R126：单轮总耗时（秒）——20 分钟外部回调节奏下的堆积预警指标
+        "run_elapsed_sec": round(time.time() - t_run_start, 1),
     })
 
     write_github_step_summary(fetcher, fng_index, campaign_intel, posted_records, dry_run,
