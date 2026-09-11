@@ -17,11 +17,57 @@ import collections
 import json
 import math
 import os
+import re
 import sys
 
 DEFAULT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                             "metrics.jsonl")
 TOP_N = 8
+
+# R105：内容合规巡检模式（与 main.py 同步——脚本独立运行不 import 主模块）。
+# prompt 级禁令是软约束，模型可能不遵守——合规度此前零度量，全靠人工读帖。
+# 注意：final_preview 只存前 120 字符，巡检覆盖的是"前两行钩子区"（算法首屏
+# 所在），非全文。
+_FNG_ANCHOR_RE = re.compile(
+    r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^。！？\n]{0,8}\d{2}")
+_OVERUSED_DEVICES = ("先泼盆冷水",)  # main._OVERUSED_OPENING_DEVICES
+_AI_FLAVOR_HARD = (  # main.MultiLLMEngine._AI_FLAVOR_HARD
+    "拭目以待", "未来可期", "保驾护航", "谱写", "新篇章", "扬帆起航",
+    "值得注意的是", "值得一提的是", "综上所述", "总而言之", "让我们一起",
+    "毋庸置疑", "不言而喻", "共同见证",
+)
+QUALITY_SCAN_WINDOW = 20  # 最近 N 篇发布帖做合规扫描
+
+
+def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
+    """对最近 N 篇发布帖的 final_preview 做禁令合规扫描（信息性，非门禁）。
+    返回 {"scanned", "fng_anchor", "banned_device", "ai_flavor", "offenders": {...}}。
+    R101 前的历史帖命中 FNG 属预期（防线尚未上线），解读时对照时间线。"""
+    previews = []
+    for r in rows:
+        if not isinstance(r, dict) or r.get("dry_run") is True:
+            continue
+        if not str(r.get("outcome", "")).startswith("binance_published"):
+            continue
+        pv = (r.get("final_preview") or "").strip()
+        if pv:
+            previews.append(pv)
+    previews = previews[-window:]
+    out = {"scanned": len(previews), "fng_anchor": 0, "banned_device": 0,
+           "ai_flavor": 0, "offenders": collections.Counter()}
+    for pv in previews:
+        if _FNG_ANCHOR_RE.search(pv):
+            out["fng_anchor"] += 1
+        for dev in _OVERUSED_DEVICES:
+            if dev in pv:
+                out["banned_device"] += 1
+                out["offenders"][f"装置:{dev}"] += 1
+        for w in _AI_FLAVOR_HARD:
+            if w in pv:
+                out["ai_flavor"] += 1
+                out["offenders"][f"AI腔:{w}"] += 1
+    out["offenders"] = dict(out["offenders"])
+    return out
 
 
 def _num(v):
@@ -246,6 +292,13 @@ def render_text(s, rows=None):
             lines.append(f"  最近热搜 [{runs['last_trending']}]")
         if runs.get("skips"):
             lines.append(f"  跳过分布 {runs['skips']}")
+    if rows is not None:
+        q = quality_scan(rows)
+        if q["scanned"]:
+            violations = q["fng_anchor"] + q["banned_device"] + q["ai_flavor"]
+            status = "全部通过" if not violations else f"{violations} 处命中"
+            lines.append(f"- 内容合规巡检（最近 {q['scanned']} 篇前 120 字）: {status}"
+                         + (f" {q['offenders']}" if q["offenders"] else ""))
     n_pub = sum(s["by_provider"].values())
     if n_pub:
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")
@@ -287,6 +340,7 @@ def main(argv=None):
     if as_json:
         doc = dict(s)
         doc["funnel"] = funnel(rows)
+        doc["quality_scan"] = quality_scan(rows)
         print(json.dumps(doc, ensure_ascii=False, indent=2, default=str))
     else:
         print(render_text(s, rows))

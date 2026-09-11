@@ -328,6 +328,45 @@ class TestMetricsReport(unittest.TestCase):
         self.assertEqual(runs["n"], 1)
         self.assertEqual(runs["candidates"], 3)
 
+    def test_quality_scan_counts_violations(self):
+        """R105：prompt 级禁令是软约束，合规度必须可度量——此前全靠人工读帖。
+        巡检覆盖 final_preview 前 120 字（钩子区）。R101 前历史帖命中 FNG 属预期。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "全网贪婪指数都 69 了，还在喊多。"},  # FNG 锚定
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "先泼盆冷水，烧稳定币跟烧 XRP 是两码事。"},  # 永久禁用装置
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "这波行情值得拭目以待。"},  # AI 腔硬词
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "盘面放量突破，资金持续流入，结构健康。"},  # 干净
+        ])
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["scanned"], 4)
+        self.assertEqual(q["fng_anchor"], 1)
+        self.assertEqual(q["banned_device"], 1)
+        self.assertEqual(q["ai_flavor"], 1)
+        self.assertIn("装置:先泼盆冷水", q["offenders"])
+        self.assertIn("AI腔:拭目以待", q["offenders"])
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("内容合规巡检（最近 4 篇", text)
+        self.assertIn("3 处命中", text)
+
+    def test_quality_scan_clean_and_dry_excluded(self):
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "资金持续流入，主力建仓迹象明显。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "全网贪婪指数都 69 了", "dry_run": True},  # dry 不算
+        ])
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["scanned"], 1)
+        self.assertEqual(q["fng_anchor"], 0, "dry 行不得进合规扫描")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("全部通过", text)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
