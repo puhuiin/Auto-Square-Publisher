@@ -377,6 +377,19 @@ class TestRecentOpeners(unittest.TestCase):
         banned = self._banned_leadins()
         self.assertEqual(banned, {"刚刚"}, f"静态表与聚簇去重合并，实际 {banned}")
 
+    def test_freshness_line_not_suggesting_banned_leadin(self):
+        """R138：<1h 时效行曾建议"用'刚刚/最新'等词强调时效"——与 R121 守卫、
+        R132 联锁自相矛盾（一边递开手册一边禁用），"刚刚"指纹正是 <1h 高频期
+        的产物。时效行必须用不撞禁令的表述。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 0.4}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        self.assertNotIn("用'刚刚/最新'", prompt, "时效行不得再建议被禁领词")
+        self.assertIn("最新/刚出炉/几分钟前", prompt)
+        self.assertIn("开头不得用被禁的领句", prompt)
+
 
 class TestIntelFreshnessInPrompt(unittest.TestCase):
     """R83：过期情报正文注入 prompt 必须降权——生产实录 09-10 仍喂
