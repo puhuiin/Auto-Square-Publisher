@@ -176,6 +176,7 @@ pip install -r requirements.txt
 # 2. 全链路健康自检（强烈推荐每次部署/改配置后先跑一下）
 python main.py --healthcheck
 #   → 一键检查 SQUARE_API_KEY、LLM 链路、Reasonix 网关、RSS 源、币安接口、通知渠道
+#   → 含 24h 发帖配额状态与下一槽释放估算（配额满时直接告诉你还要等多久）
 #   → 退出码 0 = 可放心运行，1 = 有硬性故障需先修
 
 # 3. DRY_RUN 完整演练（不发帖不写缓存）
@@ -190,9 +191,23 @@ python main.py
 # 5. 运营驾驶舱：成本/延迟/形态对比/拒稿漏斗/人设分布一屏看全
 python scripts/cost_analysis.py --days 2
 
-# 6. 遥测简报：发布成功率/运行摘要（配额饱和轮数/零候选/跳过分布/热搜快照）
-python scripts/metrics_report.py
+# 6. 遥测简报：发布成功率/运行摘要/内容合规巡检（FNG 锚定/禁用装置/AI 腔）
+python scripts/metrics_report.py --days 1
+#   --days N 只看最近 N 天（全量口径会稀释近期改善信号）
+#   配额满时显示"⏳ 下一配额槽: HH:MM UTC（约 N 分钟）"
 ```
+
+### 🎬 手动视频发布
+
+把视频文件放到仓库 `assets/videos/` 目录，然后在 GitHub → Actions → **Video Publish (Manual)** → Run workflow：
+
+- 填入视频路径（如 `assets/videos/lp-pool-explainer.mp4`）
+- 标题和正文留空则用脚本内置默认文案
+- 勾选 `dry_run` 可先只上传验证转码，不发帖
+- SQUARE_API_KEY 自动从 Secrets 读取
+- 双发守卫：同标题帖子已存在时自动拦截（`--force` 跳过）
+
+本地运行：`SQUARE_API_KEY=xxx python scripts/publish_video.py assets/videos/lp-pool-explainer.mp4`
 
 ---
 
