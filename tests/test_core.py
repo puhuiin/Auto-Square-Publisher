@@ -4946,13 +4946,15 @@ class TestRunMainSemantics(unittest.TestCase):
     def test_quota_exit_is_silent(self):
         # 配额用尽整轮静默退出：不调 LLM、不改缓存、exit 0；
         # R91：静默轮必须留 run_summary 痕迹（quota_blocked），否则饱和期不可见
+        # R112：配额释放估算——next_slot_frees 告诉运营者下一帖何时能发
         tmpdir, paths = self._iso_files()
         patches = self._base_patches(tmpdir, paths, dry=False)
         try:
             import json
+            oldest_ts = datetime.now(timezone.utc) - timedelta(hours=10)
             with open(paths["cache"], "w", encoding="utf-8") as f:
                 json.dump([{"id": "old", "title": "t", "source": "s",
-                            "sent_at": datetime.now(timezone.utc).isoformat(),
+                            "sent_at": oldest_ts.isoformat(),
                             "tokens": ["BTC"]}], f)
             with patch.object(m, "MAX_DAILY_POSTS", 1):
                 with self.assertRaises(SystemExit) as cm:
@@ -4966,6 +4968,15 @@ class TestRunMainSemantics(unittest.TestCase):
             self.assertIs(rows[0].get("quota_blocked"), True)
             self.assertEqual(rows[0]["sent_24h"], 1)
             self.assertEqual(rows[0]["max_daily_posts"], 1)
+            # R112：最早一篇 10h 前发 → 24h 窗口滚出还剩 14h
+            self.assertIsNotNone(rows[0].get("next_slot_frees"),
+                                 "配额行必须带释放时间戳")
+            self.assertIsNotNone(rows[0].get("next_slot_frees_min"))
+            expected_min = 14 * 60  # 24h - 10h = 14h = 840 min
+            actual = rows[0]["next_slot_frees_min"]
+            self.assertGreater(actual, expected_min - 10,
+                               f"释放估算应约 {expected_min} 分钟，实际 {actual}")
+            self.assertLess(actual, expected_min + 10)
             self.assertEqual(len(self._read_json(paths["cache"], [])), 1, "配额轮不得改写缓存")
         finally:
             self._teardown(patches, tmpdir)

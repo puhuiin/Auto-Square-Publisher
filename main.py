@@ -5189,6 +5189,28 @@ def _run_main():
         sent_24h = cache_mgr.count_since(24)
         if sent_24h >= MAX_DAILY_POSTS:
             logger.warning(f"🛑 24 小时内已发布 {sent_24h} 篇，达到配额上限 ({MAX_DAILY_POSTS})，本轮自动静默以保护账号权重。")
+            # R112：配额释放估算——找到 24h 窗口内最早一篇，算出它何时滚出窗口
+            # （= 下一帖何时能发）。运营者看 run_summary 不再需要手算。
+            next_frees_iso = ""
+            next_frees_min = None
+            try:
+                cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+                oldest = None
+                for item in cache_mgr.cached_items:
+                    try:
+                        ts = datetime.fromisoformat(
+                            str(item.get("sent_at", "")).replace("Z", "+00:00"))
+                    except Exception:
+                        continue
+                    if ts >= cutoff and (oldest is None or ts < oldest):
+                        oldest = ts
+                if oldest is not None:
+                    frees_at = oldest + timedelta(hours=24)
+                    next_frees_iso = frees_at.isoformat()
+                    next_frees_min = round((frees_at - datetime.now(timezone.utc)).total_seconds() / 60, 0)
+                    logger.info(f"⏳ 下一配额槽释放: {frees_at.strftime('%H:%M')} UTC（约 {next_frees_min:.0f} 分钟后）")
+            except Exception:
+                pass  # 估算失败不影响配额退出语义
             # R91：配额饱和轮留痕（生产实录：12/12 满额后连续多轮静默，遥测完全
             # 不可见）——quota_blocked 计数是"配额是否该调"的决策输入
             append_metrics({
@@ -5199,6 +5221,8 @@ def _run_main():
                 "quota_blocked": True,
                 "sent_24h": sent_24h,
                 "max_daily_posts": MAX_DAILY_POSTS,
+                "next_slot_frees": next_frees_iso or None,
+                "next_slot_frees_min": next_frees_min,
             })
             write_github_step_summary(NewsFetcher(), "配额满跳过抓取", {}, [], dry_run)
             sys.exit(0)
