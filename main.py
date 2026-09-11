@@ -5094,6 +5094,36 @@ def run_healthcheck():
     else:
         checks.append(("全网热搜源", "⚠", "CoinGecko Trending 拉取失败（加权已降级为零行为）"))
 
+    # ---- 6.7 24h 发帖配额（R115：一键体检直接看配额位与下一槽时间）----
+    if MAX_DAILY_POSTS > 0:
+        try:
+            cache_mgr = CacheManager(CACHE_FILE)
+            sent_24h = cache_mgr.count_since(24)
+            if sent_24h >= MAX_DAILY_POSTS:
+                # 配额满：找最早一篇算下一槽释放
+                cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+                oldest = None
+                for item in cache_mgr.cached_items:
+                    try:
+                        ts = datetime.fromisoformat(
+                            str(item.get("sent_at", "")).replace("Z", "+00:00"))
+                    except Exception:
+                        continue
+                    if ts >= cutoff and (oldest is None or ts < oldest):
+                        oldest = ts
+                if oldest:
+                    frees_min = int(round((oldest + timedelta(hours=24)
+                                           - datetime.now(timezone.utc)).total_seconds() / 60))
+                    checks.append(("24h 发帖配额", "⊘",
+                                   f"已满（{sent_24h}/{MAX_DAILY_POSTS}），下一槽约 {frees_min} 分钟后释放"))
+                else:
+                    checks.append(("24h 发帖配额", "⊘", f"已满（{sent_24h}/{MAX_DAILY_POSTS}）"))
+            else:
+                checks.append(("24h 发帖配额", "✔",
+                               f"正常（{sent_24h}/{MAX_DAILY_POSTS}，剩余 {MAX_DAILY_POSTS - sent_24h}）"))
+        except Exception:
+            checks.append(("24h 发帖配额", "⚠", "无法读取 sent_cache（缓存文件异常）"))
+
     # ---- 7. 发布通道级开关 ----
     checks.append(("运行策略", "ℹ", f"日配额={MAX_DAILY_POSTS} | 单币种限流={TOKEN_DAILY_LIMIT} | "
                                   f"时效={MAX_NEWS_AGE_HOURS}h | 去重={DUP_SIMILARITY_THRESHOLD} | "
