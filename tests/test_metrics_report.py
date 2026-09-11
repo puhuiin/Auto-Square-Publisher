@@ -579,6 +579,54 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("全文零有效挂件 1/3 篇", text)
 
 
+class TestOpenerFingerprintRadar(unittest.TestCase):
+    """R124：开场指纹雷达——把 R104/R121 的人工发现过程产品化，共享前缀
+    ≥3/10 预警。只预警不禁令（自动禁令有误杀风险）。"""
+
+    @staticmethod
+    def _rows(opener_texts):
+        return [{"outcome": "binance_published", "final_preview": t}
+                for t in opener_texts]
+
+    def test_cluster_detected(self):
+        rows = self._rows(["刚刚,$SHIB 筹码变化。后续。",
+                           "刚刚 Solana 链上爆量。后续。",
+                           "刚刚 $BTC 跌破关口。后续。",
+                           "Bitwise 把 ETF 关了。后续。",
+                           "1500万枚 RLUSD 烧了。后续。"])
+        fp = mr.opener_fingerprint(rows)
+        self.assertEqual(fp["scanned"], 5)
+        self.assertEqual(fp["alerts"].get("刚刚"), 3)
+
+    def test_no_alert_when_diverse(self):
+        rows = self._rows(["Bitwise 把 ETF 关了。", "1500万枚 RLUSD 烧了。",
+                           "量子攻击成本被砍。", "2691% 爆仓比。", "3610 亿枚被吞。"])
+        fp = mr.opener_fingerprint(rows)
+        self.assertEqual(fp["alerts"], {})
+
+    def test_article_headers_skipped(self):
+        """长文分节头不是开场句（与 main._recent_openers R121 同语义）。"""
+        rows = self._rows(["一、发生了什么\n\nBitwise 把 ETF 关了。后续。",
+                           "一、发生了什么\n\n1500万枚 RLUSD 烧了。后续。",
+                           "一、发生了什么\n\n量子攻击成本被砍。后续。"])
+        fp = mr.opener_fingerprint(rows)
+        self.assertEqual(fp["alerts"], {}, "分节头不得被当成开场句聚簇")
+
+    def test_four_char_cluster_suppresses_two_char_subcluster(self):
+        # 同簇只报最长前缀："先泼盆冷"×3 也意味着"先泼"×3，只报前者
+        rows = self._rows(["先泼盆冷水,贪婪 66。", "先泼盆冷水,别追高。",
+                           "先泼盆冷水,稳住。", "Bitwise 关 ETF。", "RLUSD 烧了。"])
+        fp = mr.opener_fingerprint(rows)
+        self.assertIn("先泼盆冷", fp["alerts"])
+        self.assertNotIn("先泼", fp["alerts"], "被 4 字簇包含的 2 字簇不重复报")
+
+    def test_render_line_present(self):
+        rows = self._rows(["刚刚 A。", "刚刚 B。", "刚刚 C。", "其他 D。"])
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("开场指纹预警", text)
+        self.assertIn("刚刚", text)
+
+
 class TestQualityPatternSync(unittest.TestCase):
     """R106：质量模式双份维护的同步守卫——main.py（防线本体）与 metrics_report
     （合规巡检）各有一份禁用装置/AI 腔/FNG 模式，静默漂移会让巡检度量失真

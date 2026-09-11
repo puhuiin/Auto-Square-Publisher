@@ -76,6 +76,52 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     return out
 
 
+# R124：开场指纹雷达——把 R104（"先泼盆冷水"三犯）与 R121（"刚刚"10 帖 3 次）
+# 的人工发现过程产品化：自动扫描近期开场句的共享前缀，新指纹成形前预警。
+# 只产预警不做禁令（自动禁令有误杀风险，禁令仍走 main.py 的窗口/永久机制）。
+_FINGERPRINT_WINDOW = 10
+_FINGERPRINT_MIN_HITS = 3
+_ARTICLE_HEADER_RE = re.compile(r"^[一二三四五六七八九十]、")
+
+
+def opener_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_MIN_HITS):
+    """抽最近 N 帖开场句的首 2/4 字前缀，同一前缀 ≥min_hits 次即报预警。
+    长文分节头（"一、发生了什么"）不是开场句，跳过取正文段（与 main.py
+    _recent_openers 的 R121 修复同语义）。返回 {"scanned", "alerts": {前缀: 次数}}。"""
+    openers = []
+    for r in reversed(rows if isinstance(rows, list) else []):
+        if not isinstance(r, dict) or r.get("dry_run") is True:
+            continue
+        if not str(r.get("outcome", "")).startswith("binance_published"):
+            continue
+        pv = (r.get("final_preview") or "").strip()
+        if not pv:
+            continue
+        opener = ""
+        for seg in (s.strip() for s in re.split(r"[。\n]", pv)):
+            if not seg:
+                continue
+            if _ARTICLE_HEADER_RE.match(seg):
+                continue
+            opener = seg
+            break
+        if opener:
+            openers.append(opener)
+        if len(openers) >= window:
+            break
+    # 4 字簇优先，2 字簇仅在其不是任何 4 字簇前缀时才报（去重：同簇只报最长）
+    from collections import Counter
+    alerts = {}
+    clusters4 = {p: c for p, c in
+                 Counter(o[:4] for o in openers if len(o) >= 4).items() if c >= min_hits}
+    alerts.update(clusters4)
+    for p, c in Counter(o[:2] for o in openers if len(o) >= 2).items():
+        if c >= min_hits and not any(p4.startswith(p) for p4 in clusters4):
+            alerts[p] = c
+    return {"scanned": len(openers), "alerts": dict(sorted(alerts.items(),
+                                                           key=lambda kv: -kv[1]))}
+
+
 def _num(v):
     """宽容数字：int/float/数字字符串 -> float，否则 None。
     NaN/inf 一律拒收（JSON 的 NaN 非标准但能解析，放进来会毒化整组平均数）。"""
@@ -354,6 +400,12 @@ def render_text(s, rows=None):
             status = "全部通过" if not violations else f"{violations} 处命中"
             lines.append(f"- 内容合规巡检（最近 {q['scanned']} 篇回执文本）: {status}"
                          + (f" {q['offenders']}" if q["offenders"] else ""))
+        # R124：开场指纹雷达——共享前缀 ≥3/10 即预警（禁令仍走 main.py 机制，
+        # 这里只负责让新指纹在成形期可见，不再依赖人工抽样发现）
+        fp = opener_fingerprint(rows)
+        if fp["alerts"]:
+            detail = "、".join(f"“{p}…”×{c}" for p, c in fp["alerts"].items())
+            lines.append(f"  🔭 开场指纹预警（近 {fp['scanned']} 帖开场共享前缀）: {detail}")
     n_pub = sum(s["by_provider"].values())
     if n_pub:
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")
