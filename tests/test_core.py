@@ -208,6 +208,25 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("先泼盆冷水", openers[1])
         # llm_failed 行与空 preview 行被跳过
 
+    def test_opener_window_extended_to_eight(self):
+        """R104：窗口 3→8——12 篇/天节奏下 3 条只覆盖几小时，跨天复用管不住。
+        5 篇历史必须全部召回（旧默认会在第 3 条截断）。"""
+        self._append([{"outcome": "binance_published",
+                       "final_preview": f"第{i}篇开场白，各不相同。"} for i in range(5)])
+        openers = self._eng._recent_openers()
+        self.assertEqual(len(openers), 5, "8 条窗口内不得截断")
+
+    def test_permanent_opening_device_ban(self):
+        """R104："先泼盆冷水"三犯（R75×2 + R104×1）升级为永久禁令——
+        不依赖窗口，冷启动（无历史 opener）也必须注入"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "t", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        self.assertIn("永久禁用的开场装置", prompt)
+        self.assertIn("先泼盆冷水", prompt)
+
     def test_missing_file_returns_empty(self):
         m.METRICS_FILE = self.tmp + ".nonexistent"
         self.assertEqual(self._eng._recent_openers(), [])

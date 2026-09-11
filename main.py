@@ -1943,6 +1943,10 @@ ENDING_STYLE_POOL = [
 _PERSONA_BAG = ShuffleBag([p["name"] for p in WRITING_PERSONAS])
 _ENDING_BAG = ShuffleBag(ENDING_STYLE_POOL)
 
+# R104：永久禁用的开场装置——生产三次实录同一比喻（R75 两次 + R104 一次），
+# 窗口式去重管不住跨天复用，升级为硬禁令（与 AI 腔硬清单同语义）
+_OVERUSED_OPENING_DEVICES = ("先泼盆冷水",)
+
 
 class LLMProviderConfig:
     """单个 LLM 模型提供商配置"""
@@ -2641,11 +2645,14 @@ class MultiLLMEngine:
             logger.debug(f"读取近期情绪指数引用失败 (不影响主流程): {e}")
             return 0
 
-    def _recent_openers(self, limit: int = 3) -> List[str]:
+    def _recent_openers(self, limit: int = 8) -> List[str]:
         """读取最近 N 篇已发布文本的开场句（final_preview 首句，倒序）。
         供 prompt 注入"近期开场禁复用"——生产实录：相邻两帖同用"先泼盆冷水"比喻，
         跨帖措辞复用是 ShuffleBag（只管人设/结尾）覆盖不到的时间线级指纹。
-        metrics 缺失/无记录时返回空表（冷启动无约束）。"""
+        metrics 缺失/无记录时返回空表（冷启动无约束）。
+        R104：窗口 3→8——12 篇/天的产出节奏下 3 条窗口只覆盖几小时，
+        "先泼盆冷水"在 R75 两次复发后于 R104 第三次出现（窗口早已滚过）。
+        8 条 ≈ 16-20 小时；跨天惯犯由 _OVERUSED_OPENING_DEVICES 永久禁令兜底。"""
         openers: List[str] = []
         try:
             if not os.path.exists(METRICS_FILE):
@@ -2731,6 +2738,10 @@ class MultiLLMEngine:
         if recent_openers:
             ending_hint += ("【近期已用过的开场句（禁止再用同款比喻/句式开头）】："
                             + " / ".join(f"“{o}”" for o in recent_openers) + "\n")
+        # R104：跨天惯犯的永久禁令——窗口滚过也不得复用（"先泼盆冷水"三犯实录）
+        if _OVERUSED_OPENING_DEVICES:
+            ending_hint += ("【永久禁用的开场装置（历史上已过度使用，任何时候都不得再用）】："
+                            + "、".join(_OVERUSED_OPENING_DEVICES) + "\n")
 
         # R101：情绪指数锚点去重——连续 6 帖全引"贪婪指数 69"的模板指纹。
         # 近期 ≥2 篇用过该反差框架即禁用，逼模型换资金流/链上/时间节点角度。
