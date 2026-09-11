@@ -543,6 +543,24 @@ class TestMetricsReport(unittest.TestCase):
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("全部通过", text)
 
+    def test_fng_anchor_hits_listed_in_offenders(self):
+        """R122：FNG 命中此前只计数不落 offenders 明细——报表报 16 处命中但
+        breakdown 只见装置/AI腔，FNG 锚点命中无处可查（生产实录）。命中必须
+        按具体匹配短语分组进明细。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "贪婪指数都 69 了，还在喊多。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "情绪还挂在 69 的贪婪区，接盘热情高涨。"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["fng_anchor"], 2)
+        self.assertTrue(any(k.startswith("FNG锚:") for k in q["offenders"]),
+                        "FNG 命中必须出现在 offenders 明细里")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("FNG锚:", text)
+
 
 class TestQualityPatternSync(unittest.TestCase):
     """R106：质量模式双份维护的同步守卫——main.py（防线本体）与 metrics_report

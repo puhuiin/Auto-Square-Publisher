@@ -57,8 +57,13 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     out = {"scanned": len(previews), "fng_anchor": 0, "banned_device": 0,
            "ai_flavor": 0, "offenders": collections.Counter()}
     for pv in previews:
-        if _FNG_ANCHOR_RE.search(pv):
+        m_fng = _FNG_ANCHOR_RE.search(pv)
+        if m_fng:
             out["fng_anchor"] += 1
+            # R122：命中明细必须进 offenders——此前 FNG 只计数不落明细，
+            # 报表 breakdown 里"装置/AI腔"可见而 FNG 隐身（生产实录：巡检报
+            # 16 处命中但明细只有冷水×3，6 个 FNG 锚点命中无处可查）
+            out["offenders"][f"FNG锚:{m_fng.group(0)[:12]}"] += 1
         for dev in _OVERUSED_DEVICES:
             if dev in pv:
                 out["banned_device"] += 1
