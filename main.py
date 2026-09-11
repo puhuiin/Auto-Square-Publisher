@@ -5207,7 +5207,7 @@ def _run_main():
                 if oldest is not None:
                     frees_at = oldest + timedelta(hours=24)
                     next_frees_iso = frees_at.isoformat()
-                    next_frees_min = round((frees_at - datetime.now(timezone.utc)).total_seconds() / 60, 0)
+                    next_frees_min = int(round((frees_at - datetime.now(timezone.utc)).total_seconds() / 60))
                     logger.info(f"⏳ 下一配额槽释放: {frees_at.strftime('%H:%M')} UTC（约 {next_frees_min:.0f} 分钟后）")
             except Exception:
                 pass  # 估算失败不影响配额退出语义
@@ -5224,7 +5224,11 @@ def _run_main():
                 "next_slot_frees": next_frees_iso or None,
                 "next_slot_frees_min": next_frees_min,
             })
-            write_github_step_summary(NewsFetcher(), "配额满跳过抓取", {}, [], dry_run)
+            # R114：Step Summary 也带估算——Actions 运行页直接可见下一槽时间
+            quota_msg = f"配额满跳过抓取（{sent_24h}/{MAX_DAILY_POSTS}）"
+            if next_frees_iso:
+                quota_msg += f"，下一槽 {next_frees_iso[:16]} UTC（约 {next_frees_min} 分钟）"
+            write_github_step_summary(NewsFetcher(), quota_msg, {}, [], dry_run)
             sys.exit(0)
         remaining_quota = MAX_DAILY_POSTS - sent_24h
         if remaining_quota < max_posts:
