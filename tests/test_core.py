@@ -7,6 +7,7 @@
 """
 import json
 import os
+import re
 import sys
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -329,6 +330,52 @@ class TestRecentOpeners(unittest.TestCase):
         item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
         self.assertNotIn("领句", prompt)
+
+    def _banned_leadins(self):
+        prompt, _ = self._eng_prompt()
+        for line in prompt.split("\n"):
+            if "已用过" in line and "领句" in line:
+                return set(re.findall(r"已用过 (.+?) 领句", line)[0].split("、"))
+        return set()
+
+    def _eng_prompt(self):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        return prompt, eng
+
+    def test_radar_interlock_auto_bans_emerging_leadin(self):
+        """R132：雷达联锁——静态领词表外的新兴领词（生产实录'刚刚'当年靠人工
+        发现）达 3/8 词边界聚簇即自动进本轮禁令，检测→执法闭环。"""
+        self._append([
+            {"outcome": "binance_published", "final_preview": "盘面放量突破，结构健康。"},
+            {"outcome": "binance_published", "final_preview": "盘面显示主力吸筹。"},
+            {"outcome": "binance_published", "final_preview": "盘面走弱注意防守。"},
+            {"outcome": "binance_published", "final_preview": "Bitwise 关了 ETF。"},
+        ])
+        self.assertEqual(self._banned_leadins(), {"盘面"})
+
+    def test_radar_interlock_ignores_entity_prefix(self):
+        # Bitwise/BitGo/Bitcoin 共享"Bi"只是不同实体词前半（无词边界），不得禁
+        self._append([
+            {"outcome": "binance_published", "final_preview": "Bitwise 把 ETF 关了。"},
+            {"outcome": "binance_published", "final_preview": "BitGo 钱包被端。"},
+            {"outcome": "binance_published", "final_preview": "Bitcoin 突破关口。"},
+            {"outcome": "binance_published", "final_preview": "RLUSD 烧了。"},
+        ])
+        self.assertEqual(self._banned_leadins(), set())
+
+    def test_radar_interlock_merges_with_static_list(self):
+        # 静态表命中与自动聚簇合并且去重：两表同词只注入一次
+        self._append([
+            {"outcome": "binance_published", "final_preview": "刚刚,$BTC 起飞。"},
+            {"outcome": "binance_published", "final_preview": "刚刚 Solana 爆量。"},
+            {"outcome": "binance_published", "final_preview": "刚刚 ETH 跟涨。"},
+        ])
+        banned = self._banned_leadins()
+        self.assertEqual(banned, {"刚刚"}, f"静态表与聚簇去重合并，实际 {banned}")
 
 
 class TestIntelFreshnessInPrompt(unittest.TestCase):

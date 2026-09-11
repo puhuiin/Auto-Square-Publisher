@@ -2800,11 +2800,28 @@ class MultiLLMEngine:
             ending_hint += ("【永久禁用的开场装置（历史上已过度使用，任何时候都不得再用）】："
                             + "、".join(_OVERUSED_OPENING_DEVICES) + "\n")
         # R121：泛化领词频次守卫——整句禁令的盲区（句子不同但领词同），窗口内
-        # 出现过即禁用，把同款领词的复现频率压到 8 帖窗口最多 1 次
-        used_leadins = [w for w in _GENERIC_LEADINS
-                        if any(o.startswith(w) for o in recent_openers)]
+        # 出现过即禁用，把同款领词的复现频率压到 8 帖窗口最多 1 次。
+        # R132：雷达联锁——静态表覆盖不到新涌现的领词（"刚刚"当年就是人工发现
+        # 的）。把 R124 的词边界聚簇语义搬进 prompt：近 8 帖开场同一 2 字前缀
+        # （第 3 字符非 ASCII 字母数字 = 完整词，实体名前半不算）≥3 次即自动
+        # 并入禁令——检测到执法的闭环不再依赖人工。CJK 跟随算边界。
+        used_leadins = {w for w in _GENERIC_LEADINS
+                        if any(o.startswith(w) for o in recent_openers)}
+        for w in {o[:2] for o in recent_openers if len(o) >= 2}:
+            if w in used_leadins:
+                continue
+            hit = 0
+            for o in recent_openers:
+                if not o.startswith(w):
+                    continue
+                nxt = o[2:3]
+                if nxt == "" or not (nxt.isascii() and nxt.isalnum()):
+                    hit += 1
+            if hit >= 3:
+                used_leadins.add(w)
+                logger.info(f"🔭 雷达联锁：开场领词「{w}」近 8 帖出现 {hit} 次，本轮自动禁用")
         if used_leadins:
-            ending_hint += (f"【近期开场已用过 {'、'.join(used_leadins)} 领句——本篇严禁"
+            ending_hint += (f"【近期开场已用过 {'、'.join(sorted(used_leadins))} 领句——本篇严禁"
                             f"以这些词开头，直接从事实、数据或当事人切入】\n")
 
         # R101：情绪指数锚点去重——连续 6 帖全引"贪婪指数 69"的模板指纹。
