@@ -3602,6 +3602,49 @@ class TestSecretHygiene(unittest.TestCase):
             self.assertNotIn("$", json.dumps(p, ensure_ascii=False).replace("\\$", "")) or True
         self.assertTrue(all("api" not in p["name"].lower() for p in m.WRITING_PERSONAS))
 
+    def test_notifier_failure_log_masks_url_embedded_key(self):
+        """R107 安全复扫：requests 异常 str 自带完整 URL，而 Server酱/Bark 的
+        密钥就在 URL 里——渠道失败的异常回显会把密钥泄进 Actions 日志。
+        _deliver 必须用 secrets 遮蔽。"""
+        import logging as _logging
+        key = "SCT1234567890abcdefKEY"
+        captured = []
+        handler = _logging.Handler()
+        handler.emit = lambda record: captured.append(record.getMessage())
+        root = _logging.getLogger("SquarePosterUltimate")
+        root.addHandler(handler)
+        old_env = os.environ.get("SERVERCHAN_KEY")
+        os.environ["SERVERCHAN_KEY"] = key
+        try:
+            # 模拟真实 requests 行为：异常消息含密钥承载 URL
+            def _boom():
+                raise RuntimeError(
+                    f"403 Client Error: Forbidden for url: https://sctapi.ftqq.com/{key}.send")
+            delivered = m.Notifier._deliver("Server酱", _boom, secrets=(key,))
+        finally:
+            root.removeHandler(handler)
+            if old_env is None:
+                os.environ.pop("SERVERCHAN_KEY", None)
+            else:
+                os.environ["SERVERCHAN_KEY"] = old_env
+        self.assertFalse(delivered)
+        joined = "\n".join(captured)
+        self.assertNotIn(key, joined, "渠道失败日志不得回显密钥")
+        self.assertIn("***", joined, "密钥必须被遮蔽占位替换")
+
+    def test_sanitize_exc_edge_cases(self):
+        # 短密钥（<8 位）不遮蔽：避免把普通短串误替换
+        self.assertEqual(m.Notifier._sanitize_exc(
+            RuntimeError("url with SHORT inside"), ("SHORT",)),
+            "url with SHORT inside")
+        # 长密钥 + 元组里混 None/空串：正常遮蔽且不炸
+        self.assertEqual(m.Notifier._sanitize_exc(
+            RuntimeError("url with LONGSECRET123 inside"), (None, "", "LONGSECRET123")),
+            "url with *** inside")
+        # 无 secrets 时原样返回
+        self.assertEqual(m.Notifier._sanitize_exc(
+            RuntimeError("plain"), ()), "plain")
+
 
 class TestShuffleBag(unittest.TestCase):
     """洗牌袋：任意连续 N 次抽取内每个选项恰好出现一次（防扎堆）"""

@@ -36,41 +36,51 @@ def _check(status, body, want=None):
 
 
 def send_fallback(title, message, env=None):
-    """经所有已配置渠道各发一次；返回 {channel: bool}，绝不抛异常。"""
+    """经所有已配置渠道各发一次；返回 {channel: bool}，绝不抛异常。
+    R107：异常文本遮蔽——urllib 的部分异常 str 含请求 URL，而 Server酱/Bark/
+    Telegram 的密钥就在 URL 里，失败回显会泄进 Actions 日志。"""
     env = env if env is not None else os.environ
     get = lambda k: (env.get(k, "") or "").strip()
     results = {}
 
-    def _try(name, fn):
+    def _sanitize(e, *secrets):
+        msg = str(e)
+        for s in secrets:
+            if s and len(s) >= 8:
+                msg = msg.replace(s, "***")
+        return msg
+
+    def _try(name, fn, secrets=()):
         try:
             fn()
             results[name] = True
         except Exception as e:
             results[name] = False
-            print(f"兜底通报失败 [{name}]: {str(e)[:150]}")
+            print(f"兜底通报失败 [{name}]: {_sanitize(e, *secrets)[:150]}")
 
     if (k := get("SERVERCHAN_KEY")):
         _try("Server酱", lambda _k=k: _check(*_post(
             f"https://sctapi.ftqq.com/{_k}.send",
-            {"title": title, "desp": message}), '"code":0'))
+            {"title": title, "desp": message}), '"code":0'), secrets=(k,))
     if (k := get("PUSHPLUS_TOKEN")):
         _try("PushPlus", lambda _k=k: _check(*_post(
             "http://www.pushplus.plus/send",
             {"token": _k, "title": title, "content": message,
-             "template": "markdown"}), '"code":200'))
+             "template": "markdown"}), '"code":200'), secrets=(k,))
     if (k := get("BARK_KEY")):
         _try("Bark", lambda _k=k: _check(*_post(
             f"https://api.day.app/{_k}/{quote(title, safe='')}/{quote(message, safe='')}"),
-            '"code":200'))
+            '"code":200'), secrets=(k,))
     if (bt := get("TELEGRAM_BOT_TOKEN")) and (cid := get("TELEGRAM_CHAT_ID")):
         _try("Telegram", lambda _bt=bt, _cid=cid: _check(*_post(
             f"https://api.telegram.org/bot{_bt}/sendMessage",
-            {"chat_id": _cid, "text": f"{title}\n\n{message}"}), '"ok":true'))
+            {"chat_id": _cid, "text": f"{title}\n\n{message}"}), '"ok":true'),
+            secrets=(bt,))
     if (k := get("WEBHOOK_URL")):
         # 通用 Webhook 各家成功语义不一，只验 HTTP 2xx
         _try("Webhook", lambda _k=k: _check(*_post(
             _k, {"msgtype": "text",
-                 "text": {"content": f"{title}\n\n{message}"}})))
+                 "text": {"content": f"{title}\n\n{message}"}})), secrets=(k,))
     return results
 
 

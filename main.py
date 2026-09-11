@@ -936,6 +936,11 @@ class MarketDataProvider:
         out = {}
         failed = []
         for s in symbols:
+            # R107 defense-in-depth（对齐 klines 的 R78 守卫）：s 直接拼进 URL 查询串，
+            # 上游链路虽已约束 [A-Z0-9]，但同族接口不应一处有守卫一处裸拼
+            if not re.fullmatch(r"[A-Z0-9]{2,10}", s):
+                logger.debug(f"逐币行情拒绝非法标的字符: {s[:40]!r}")
+                continue
             r = http_get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={s}USDT", timeout=4, retries=0)
             if r is not None and r.status_code == 200:
                 try:
@@ -4716,22 +4721,36 @@ class Notifier:
         return text[:limit - 30] + "\n... [内容过长已截断]"
 
     @staticmethod
-    def _deliver(channel: str, send_fn) -> bool:
+    def _sanitize_exc(e: BaseException, secrets: tuple) -> str:
+        """R107 安全复扫发现：requests 异常的 str(e) 自带完整 URL（如
+        "403 Client Error: Forbidden for url: https://sctapi.ftqq.com/KEY.send"），
+        而 Server酱/Bark 的密钥就在 URL 里——渠道失败时异常文本回显会把密钥
+        泄进 Actions 日志（R45 扫的是直接输出，漏了异常回显路径）。
+        用各渠道已配置的密钥原值做替换遮蔽。"""
+        msg = str(e)
+        for s in secrets:
+            if s and len(s) >= 8:
+                msg = msg.replace(s, "***")
+        return msg
+
+    @staticmethod
+    def _deliver(channel: str, send_fn, secrets: tuple = ()) -> bool:
         """单通道投递带一次重试：此前各通道 fire-and-forget，抖动丢包或业务码
         异常（HTTP 200 但 code != 成功）都只记一条 warning——而报警恰恰在系统
         出故障时发送，此时网络本就可疑，丢一条关键报警的代价远大于多一次请求。
-        send_fn 负责把"HTTP 非 2xx / 业务码不对"转成异常，本函数只管重试与日志。"""
+        send_fn 负责把"HTTP 非 2xx / 业务码不对"转成异常，本函数只管重试与日志。
+        secrets：该渠道的密钥元组，用于异常文本遮蔽（密钥在 URL 的渠道必传）。"""
         try:
             send_fn()
             return True
         except Exception as e:
-            logger.debug(f"{channel}首次投递失败，2s 后重试一次: {e}")
+            logger.debug(f"{channel}首次投递失败，2s 后重试一次: {Notifier._sanitize_exc(e, secrets)}")
         time.sleep(2)
         try:
             send_fn()
             return True
         except Exception as e:
-            logger.warning(f"发送{channel}失败(已重试): {e}")
+            logger.warning(f"发送{channel}失败(已重试): {Notifier._sanitize_exc(e, secrets)}")
             return False
 
     @staticmethod
@@ -4767,7 +4786,7 @@ class Notifier:
                 if r.json().get("code") != 0:
                     raise ValueError(f"Server酱业务码异常: {r.text[:150]}")
 
-            if Notifier._deliver("Server酱", _send_serverchan):
+            if Notifier._deliver("Server酱", _send_serverchan, secrets=(serverchan_key,)):
                 logger.info("已发送 Server酱 微信通知。")
                 delivered_any = True
 
@@ -4782,7 +4801,7 @@ class Notifier:
                 if r.json().get("code") != 200:
                     raise ValueError(f"PushPlus业务码异常: {r.text[:150]}")
 
-            if Notifier._deliver("PushPlus", _send_pushplus):
+            if Notifier._deliver("PushPlus", _send_pushplus, secrets=(pushplus_token,)):
                 logger.info("已发送 PushPlus 微信通知。")
                 delivered_any = True
 
@@ -4798,7 +4817,7 @@ class Notifier:
                 if r.json().get("code") != 200:
                     raise ValueError(f"Bark业务码异常: {r.text[:150]}")
 
-            if Notifier._deliver("Bark", _send_bark):
+            if Notifier._deliver("Bark", _send_bark, secrets=(bark_key,)):
                 logger.info("已发送 Bark iOS 推送。")
                 delivered_any = True
 
@@ -4815,7 +4834,7 @@ class Notifier:
                 if not r.json().get("ok"):
                     raise ValueError(f"Telegram业务异常: {r.text[:150]}")
 
-            if Notifier._deliver("Telegram", _send_tg):
+            if Notifier._deliver("Telegram", _send_tg, secrets=(tg_bot_token,)):
                 logger.info("已发送 Telegram 状态通知。")
                 delivered_any = True
 
@@ -4828,7 +4847,7 @@ class Notifier:
                 r = requests.post(webhook_url, json=payload, timeout=8)
                 r.raise_for_status()
 
-            if Notifier._deliver("Webhook", _send_webhook):
+            if Notifier._deliver("Webhook", _send_webhook, secrets=(webhook_url,)):
                 logger.info("已发送 Webhook 状态通知。")
                 delivered_any = True
 
