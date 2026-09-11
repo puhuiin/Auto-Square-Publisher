@@ -64,7 +64,7 @@ def send_fallback(title, message, env=None):
             {"title": title, "desp": message}), '"code":0'), secrets=(k,))
     if (k := get("PUSHPLUS_TOKEN")):
         _try("PushPlus", lambda _k=k: _check(*_post(
-            "http://www.pushplus.plus/send",
+            "https://www.pushplus.plus/send",
             {"token": _k, "title": title, "content": message,
              "template": "markdown"}), '"code":200'), secrets=(k,))
     if (k := get("BARK_KEY")):

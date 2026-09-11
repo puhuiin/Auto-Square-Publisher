@@ -4923,7 +4923,7 @@ class Notifier:
         # 2. 微信推送：PushPlus (推送加，成功业务码 code==200)
         pushplus_token = os.getenv("PUSHPLUS_TOKEN", "").strip()
         if pushplus_token:
-            url = "http://www.pushplus.plus/send"
+            url = "https://www.pushplus.plus/send"
 
             def _send_pushplus():
                 r = requests.post(url, json={"token": pushplus_token, "title": full_title, "content": message, "template": "markdown"}, timeout=8)

@@ -3778,6 +3778,17 @@ class TestSSRFGuard(unittest.TestCase):
 class TestSecretHygiene(unittest.TestCase):
     """代码安全：密钥绝不进日志/异常/prompt"""
 
+    def test_pushplus_channel_is_https(self):
+        """R139：PushPlus 通道曾走 http:// 明文——token 随请求体裸奔在网络上。
+        main.py 与 notify_fallback.py 两处都必须 https，源码扫描锁死防回退。"""
+        for path in ("main.py", os.path.join("scripts", "notify_fallback.py")):
+            with open(path, encoding="utf-8") as f:
+                src = f.read()
+            self.assertNotIn("http://www.pushplus.plus", src,
+                             f"{path} 的 PushPlus 通道必须走 https（token 明文防护）")
+            self.assertIn("https://www.pushplus.plus", src,
+                          f"{path} 应存在 https 的 PushPlus 端点")
+
     def test_provider_repr_masks_key(self):
         cfg = m.LLMProviderConfig("t", "https://x", "sk-very-secret-abcdef123456", "m")
         r = repr(cfg)
