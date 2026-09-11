@@ -4672,15 +4672,18 @@ class Notifier:
         """记录该报警已发出（供冷却期判断）。
 
         必须在投递**成功之后**才调用：旧实现在发送前就写节流状态，一旦所有渠道都投递
-        失败（系统出故障时恰恰最可能发生），这条报警会在 12h 内被永久吞掉（Round 5）。"""
+        失败（系统出故障时恰恰最可能发生），这条报警会在 12h 内被永久吞掉（Round 5）。
+        R108：get+set 改原子 update——两次拿锁在并发下会互相覆盖（R5 文档语义，
+        notify_fallback 与主流程理论上可并发触发通知）。"""
         key = hashlib.sha256(title.encode("utf-8")).hexdigest()[:16]
-        state = intel_state_get("_alert_state", {})
-        if not isinstance(state, dict):
-            state = {}
-        state[key] = datetime.now(timezone.utc).isoformat()
-        # 只保留最近 32 条报警记录，防状态膨胀
-        state = dict(sorted(state.items(), key=lambda kv: kv[1])[-32:])
-        intel_state_set("_alert_state", state)
+
+        def _mark(state):
+            state = dict(state) if isinstance(state, dict) else {}
+            state[key] = datetime.now(timezone.utc).isoformat()
+            # 只保留最近 32 条报警记录，防状态膨胀
+            return dict(sorted(state.items(), key=lambda kv: kv[1])[-32:])
+
+        intel_state_update("_alert_state", _mark, default={})
 
     @classmethod
     def _alert_throttled(cls, title: str) -> bool:

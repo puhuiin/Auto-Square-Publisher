@@ -367,7 +367,8 @@ class TestOrphanStateKeyCleanup(unittest.TestCase):
                        "active_tags": ["#A"]}, f, ensure_ascii=False)
         n = m._cleanup_orphan_state_keys()
         self.assertEqual(n, 1)
-        doc = json.load(open(self.tmp, encoding="utf-8"))
+        with open(self.tmp, encoding="utf-8") as f:
+            doc = json.load(f)
         self.assertNotIn("_last_run_heartbeat", doc)
         self.assertEqual(doc["active_tags"], ["#A"], "正常键不受影响")
 
@@ -409,7 +410,8 @@ class TestDryRunStateWriteGate(unittest.TestCase):
         m.intel_state_set("k", "v")
         self.assertIsNone(m.intel_state_update("k2", lambda cur: "x"))
         self.assertEqual(self._mtime(), before, "DRY 下任何状态写不得触碰文件")
-        doc = json.load(open(self.tmp, encoding="utf-8"))
+        with open(self.tmp, encoding="utf-8") as f:
+            doc = json.load(f)
         self.assertEqual(doc, {}, "文件内容不得变化")
 
     def test_dry_reads_still_work(self):
@@ -422,7 +424,8 @@ class TestDryRunStateWriteGate(unittest.TestCase):
     def test_real_run_writes_normally(self):
         os.environ["DRY_RUN"] = "false"
         m.intel_state_set("k", {"a": 1})
-        doc = json.load(open(self.tmp, encoding="utf-8"))
+        with open(self.tmp, encoding="utf-8") as f:
+            doc = json.load(f)
         self.assertEqual(doc["k"], {"a": 1}, "正式模式写路径不得被误伤")
         out = m.intel_state_update("k", lambda cur: dict(cur, b=2))
         self.assertEqual(out, {"a": 1, "b": 2})
@@ -437,7 +440,8 @@ class TestDryRunStateWriteGate(unittest.TestCase):
         os.environ["DRY_RUN"] = "true"
         fetcher = m.NewsFetcher()
         fetcher._feed_record("Src", ok=True)
-        doc = json.load(open(self.tmp, encoding="utf-8"))
+        with open(self.tmp, encoding="utf-8") as f:
+            doc = json.load(f)
         self.assertEqual(doc["_feed_health"]["Src"]["fails"], 1, "故障计数必须保留")
 
 
