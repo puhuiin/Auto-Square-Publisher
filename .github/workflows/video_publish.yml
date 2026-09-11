@@ -1,0 +1,84 @@
+name: Video Publish (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_path:
+        description: '视频文件在仓库中的路径 (如 assets/videos/lp.mp4)'
+        required: true
+        type: string
+      title:
+        description: '帖子标题（留空用脚本默认文案）'
+        required: false
+        default: ''
+        type: string
+      body:
+        description: '正文文本（留空用脚本默认文案）'
+        required: false
+        default: ''
+        type: string
+      dry_run:
+        description: 'DRY 模式（只上传不发帖）'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  publish-video:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 检出仓库代码
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1（SHA 锁定防投毒）
+
+      - name: 配置 Python 环境
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 安装项目依赖
+        run: pip install -r requirements.txt
+
+      - name: 验证视频文件存在
+        run: |
+          if [ ! -f "${{ github.event.inputs.video_path }}" ]; then
+            echo "::error::视频文件不存在: ${{ github.event.inputs.video_path }}"
+            echo "请先把视频文件推送到仓库（建议放 assets/videos/ 目录）"
+            exit 1
+          fi
+          echo "视频文件确认存在: ${{ github.event.inputs.video_path }}"
+          ls -lh "${{ github.event.inputs.video_path }}"
+
+      - name: 上传并发布视频
+        env:
+          SQUARE_API_KEY: ${{ secrets.SQUARE_API_KEY }}
+          REASONIX_GW_OFF: "1"
+        run: |
+          ARGS="${{ github.event.inputs.video_path }}"
+          if [ -n "${{ github.event.inputs.title }}" ]; then
+            ARGS="$ARGS --title \"${{ github.event.inputs.title }}\""
+          fi
+          if [ -n "${{ github.event.inputs.body }}" ]; then
+            ARGS="$ARGS --body \"${{ github.event.inputs.body }}\""
+          fi
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry"
+          fi
+          eval python scripts/publish_video.py $ARGS
+
+      - name: 发布失败兜底通报
+        if: failure()
+        env:
+          SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+          BARK_KEY: ${{ secrets.BARK_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: python3 scripts/notify_fallback.py
