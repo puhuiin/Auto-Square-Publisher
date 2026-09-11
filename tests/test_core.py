@@ -336,6 +336,34 @@ class TestIntelFreshnessInPrompt(unittest.TestCase):
     "09-04 双重截止抢最后48小时"（已过期 6 天），模型照写 = 发布过期事实。
     代币/标签加权不受影响（那只影响排序，不进正文事实）。"""
 
+
+class TestPastDateRefs(unittest.TestCase):
+    """R127：情报 guidance 过期日期引用检测——09:23Z 新鲜刷新的情报仍在
+    指导追 09-04 截止的 XPIN 竞赛（目录页并列返回过期活动，AI 不知道
+    今天日期）。prompt 侧注入日期+判别红线，此函数是度量侧。"""
+
+    NOW = datetime(2026, 9, 11, 12, 0, tzinfo=timezone.utc)
+
+    def test_all_three_formats_detected(self):
+        text = "XPIN 竞赛 2026-09-04 截止，CP 竞赛 9/8 截止，RLUSD 9月4日 截止"
+        refs = m._past_date_refs(text, self.NOW)
+        self.assertEqual(refs, ["2026-09-04", "9/8", "9月4日"])
+
+    def test_today_and_recent_not_flagged(self):
+        # 36h 阈值：今天/昨天写进的引用不算残留（跨日边界防误报）
+        text = "RLUSD 9月11日 截止，DEBIT 9/10 截止，KGST 2026-09-13 截止"
+        self.assertEqual(m._past_date_refs(text, self.NOW), [])
+
+    def test_numbers_and_seasons_not_dates(self):
+        # 40,000 / Season 4 / 7% 不得误报；非法日期（9/31）静默跳过
+        text = "Share 40,000 USDC, Season 4, 7% APR, 无效日期 9/31 与 2月30日"
+        self.assertEqual(m._past_date_refs(text, self.NOW), [])
+
+    def test_empty_and_none_safe(self):
+        self.assertEqual(m._past_date_refs(""), [])
+        self.assertEqual(m._past_date_refs(None), [])
+
+
     def setUp(self):
         import tempfile
         self.tmp = tempfile.mktemp(suffix=".json")

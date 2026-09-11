@@ -3113,6 +3113,33 @@ class MultiLLMEngine:
 # ---------------------------------------------------------------------------
 # 模块六：币安官方创作者活动智能扫描与理解 (CampaignScanner)
 # ---------------------------------------------------------------------------
+def _past_date_refs(text: str, now: Optional[datetime] = None) -> List[str]:
+    """R127：提取文本中早于昨天的日期引用（YYYY-MM-DD / M月D日 / M/D）。
+    用于度量情报 guidance 是否残留过期活动日期（软约束的度量侧）。
+    阈值 36h：跨日边界写到"昨天"的引用不算过期残留，避免误报。"""
+    now = now or datetime.now(timezone.utc)
+    refs: List[str] = []
+    for m in re.finditer(
+            r"(\d{4})-(\d{1,2})-(\d{1,2})"
+            r"|(\d{1,2})月(\d{1,2})日"
+            r"|(?<![/\d])(\d{1,2})/(\d{1,2})(?![/\d])", text or ""):
+        try:
+            if m.group(1):
+                d = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)),
+                             tzinfo=timezone.utc)
+            elif m.group(4):
+                d = datetime(now.year, int(m.group(4)), int(m.group(5)),
+                             tzinfo=timezone.utc)
+            else:
+                d = datetime(now.year, int(m.group(6)), int(m.group(7)),
+                             tzinfo=timezone.utc)
+        except (ValueError, TypeError):
+            continue
+        if (now - d).total_seconds() > 36 * 3600:
+            refs.append(m.group(0))
+    return refs
+
+
 class CampaignScanner:
     """自动扫描币安官方最新活动、竞赛与上线公告，并交由 AI 理解提炼活动策略"""
 
@@ -3199,8 +3226,12 @@ class CampaignScanner:
             return None
 
         titles_text = "\n".join([f"- {t}" for t in raw_titles[:24]])
+        # R127：过期活动防御——目录页把已截止竞赛与现役活动并列返回（生产实录：
+        # 09-11 刷新的情报仍在指导追 09-04 截止的 XPIN 竞赛）。根因是 AI 不知道
+        # 今天日期且把目录里所有标题都当现役。注入当前日期 + 两类日期判别规则。
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         prompt = f"""你是一名精通币安创作者激励与生态活动的策略总监。
-以下是币安官方最新正在进行的活动、竞赛与上线公告列表：
+以下是币安官方最新正在进行的活动、竞赛与上线公告列表（今天是 {today}，UTC）：
 
 {titles_text}
 
@@ -3208,6 +3239,8 @@ class CampaignScanner:
 1. "active_tags": 3~5 个当前最有流量、最匹配官方活动的标签（必须包含 #Write2Earn #BinanceSquare，以及 1~3 个当期活动词如 #Futures #TradingTournament #Megadrop 等）；
 2. "incentivized_tokens": 4~8 个当期有活动奖励、交易竞赛或新上线的焦点代币（大写加$，如 $BNB, $SOL, $BTC 等）；
 3. "strategy_guidance": 2~3 句话指导发帖机器人：如何将日常快讯与当前币安官方活动/合约/产品结合以最大化获取曝光和 Write to Earn 交易返佣。注意：若标题可见"截止/倒计时/限时/最后X天/即将结束"等时间压力信号，要点明最紧迫的一个活动及其节奏，提醒发帖机器人优先追贴，并说明用哪种角度切入（活动冲刺/复盘/抄作业）。
+
+【日期判别红线】标题里的日期分两类：竞赛/理财/奖励分享类标题的日期是截止日，早于今天（{today}）的已过期，一律忽略且绝不能出现在 strategy_guidance 里；"Will Add / Adds / List / 上线"类标题的日期是公告日，不算过期仍可作背景。只围绕尚未截止或无日期的活动制定策略。
 
 请严格仅返回纯 JSON 字符串（不要输出 markdown 代码块）：
 {{
@@ -3273,6 +3306,12 @@ class CampaignScanner:
                         raise ValueError(f"JSON 解析失败（{je}），片段: {clean_res[:80]!r}") from je
                     if CampaignScanner._valid_intel_shape(data):
                         data["last_updated"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+                        # R127：软约束的度量侧——prompt 已明令剔除过期活动，模型可能
+                        # 不遵守；guidance 里残留过期日期引用即记入遥测供巡检
+                        stale_refs = _past_date_refs(str(data.get("strategy_guidance") or ""))
+                        if stale_refs:
+                            logger.warning(f"⚠️ 情报 guidance 残留过期日期引用 {stale_refs}"
+                                           f"（模型未完全遵守剔除指令，注意甄别）")
                         append_metrics({
                             "provider": provider.name,
                             "model": provider.model,
@@ -3280,6 +3319,7 @@ class CampaignScanner:
                             "llm_latency_sec": latency_sec,
                             "stage": "campaign_intel",
                             "outcome": "llm_success",
+                            "stale_date_refs": len(stale_refs),
                         })
                         logger.info(f"🎉 币安活动情报分析完成: {data.get('strategy_guidance')}")
                         return data
