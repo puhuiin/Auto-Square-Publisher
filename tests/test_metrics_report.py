@@ -578,6 +578,24 @@ class TestMetricsReport(unittest.TestCase):
         text = mr.render_text(s, rows)
         self.assertIn("全文零有效挂件 1/3 篇", text)
 
+    def test_zero_tag_posts_surfaced(self):
+        """R125：零标签帖 = #Write2Earn 返佣归因丢失——标签全在正文尾部，
+        预览区不可见，必须靠回执的 tag_count 度量。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tag_count": 3, "campaign_tag_count": 1, "final_preview": "x"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tag_count": 0, "campaign_tag_count": 0, "final_preview": "y"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "z"},  # 旧 schema：不计入
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(s["zero_tag_posts"], 1)
+        text = mr.render_text(s, rows)
+        self.assertIn("全文零标签 1/3 篇", text)
+        self.assertIn("返佣归因丢失", text)
+
 
 class TestOpenerFingerprintRadar(unittest.TestCase):
     """R124：开场指纹雷达——把 R104/R121 的人工发现过程产品化，共享前缀

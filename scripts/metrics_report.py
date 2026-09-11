@@ -178,6 +178,7 @@ def summarize(rows):
         "images": 0,
         "image_tiers": collections.Counter(),
         "zero_widget_posts": 0,
+        "zero_tag_posts": 0,
         "reject_by_stage": collections.Counter(),
         "reject_by_provider": collections.Counter(),
         "reject_reasons": collections.Counter(),
@@ -239,6 +240,10 @@ def summarize(rows):
             wc = r.get("widget_count")
             if wc == 0:
                 s["zero_widget_posts"] += 1
+            # R125：返佣归因标签覆盖率——零标签帖 = #Write2Earn 归因丢失
+            tc = r.get("tag_count")
+            if tc == 0:
+                s["zero_tag_posts"] += 1
         elif outcome == "llm_rejected":
             s["reject_by_stage"][str(r.get("stage", "unknown"))] += 1
             s["reject_by_provider"][who] += 1
@@ -414,6 +419,9 @@ def render_text(s, rows=None):
         # R123：全文零挂件帖 = Write2Earn 生命线失守（保底机制被绕过）的直接信号
         if s.get("zero_widget_posts"):
             lines.append(f"  ⚠️ 全文零有效挂件 {s['zero_widget_posts']}/{n_pub} 篇——保底机制被绕过，需排查")
+        # R125：零标签帖 = #Write2Earn 返佣归因丢失
+        if s.get("zero_tag_posts"):
+            lines.append(f"  ⚠️ 全文零标签 {s['zero_tag_posts']}/{n_pub} 篇——返佣归因丢失，需排查")
         if s["image_tiers"]:
             lines.append(f"  配图层级 {dict(s['image_tiers'])}")
     n_rej = sum(s["reject_by_stage"].values())

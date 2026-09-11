@@ -5662,6 +5662,15 @@ def _run_main():
                     # 命中点最远 ~110 字，仅贴着旧截断线），合规巡检的覆盖盲区
                     # 直接削弱软禁令的度量价值。200 字覆盖前三段钩子区。
                     final_preview = final_content[:200] if isinstance(final_content, str) else ""
+                    # R125：标签回执——标签链路（#Write2Earn/#BinanceSquare 保底 +
+                    # 活动标签第 3 席）全部注入正文尾部，200 字预览永远看不到；
+                    # 返佣归因标签的覆盖率从此可度量（零标签帖 = 归因丢失）
+                    _tag_list = re.findall(r"#[^\s#]+", final_content) \
+                        if isinstance(final_content, str) else []
+                    tag_count = len(_tag_list)
+                    campaign_tag_count = sum(
+                        1 for t in _tag_list
+                        if t[1:].lower() not in ("write2earn", "binancesquare"))
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
@@ -5677,6 +5686,8 @@ def _run_main():
                         "content_id": content_id,
                         "final_preview": final_preview,
                         "widget_count": widget_count,
+                        "tag_count": tag_count,
+                        "campaign_tag_count": campaign_tag_count,
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,
