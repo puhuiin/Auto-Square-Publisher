@@ -27,8 +27,8 @@
   "_article_sent_date": "2026-09-11",
   "_publish_park": {
     "84b630b0be2e518e": {
-      "last_fail": "2026-09-11T12:48:06.673319+00:00",
-      "fails": 1
+      "fails": 1,
+      "last_fail": "2026-09-11T12:48:06.673319+00:00"
     }
   },
   "_intel_refresh_fail": {}
