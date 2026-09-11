@@ -109,13 +109,22 @@ def opener_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_M
             openers.append(opener)
         if len(openers) >= window:
             break
-    # 4 字簇优先，2 字簇仅在其不是任何 4 字簇前缀时才报（去重：同簇只报最长）
+    # 4 字簇优先，2 字簇仅在其不是任何 4 字簇前缀时才报（去重：同簇只报最长）。
+    # R131：2 字簇要求词边界——"Bitwise/BitGo"共享的"Bi"只是词的前半，不是
+    # 指纹；"刚刚,$SHIB"/"刚刚 Solana"的"刚刚"后接标点/空格才是完整领词。
+    # 生产实录：雷达报"Bi…"×3 实为两个不同实体名。边界=第 3 字符非 ASCII
+    # 字母数字（CJK 跟随算边界："刚刚看涨"就是"刚刚"领句）。
+    def _lead_word_boundary(opener: str) -> bool:
+        nxt = opener[2:3]
+        return nxt == "" or not (nxt.isascii() and nxt.isalnum())
+
     from collections import Counter
     alerts = {}
     clusters4 = {p: c for p, c in
                  Counter(o[:4] for o in openers if len(o) >= 4).items() if c >= min_hits}
     alerts.update(clusters4)
-    for p, c in Counter(o[:2] for o in openers if len(o) >= 2).items():
+    for p, c in Counter(o[:2] for o in openers
+                        if len(o) >= 2 and _lead_word_boundary(o)).items():
         if c >= min_hits and not any(p4.startswith(p) for p4 in clusters4):
             alerts[p] = c
     return {"scanned": len(openers), "alerts": dict(sorted(alerts.items(),

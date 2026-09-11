@@ -679,6 +679,19 @@ class TestOpenerFingerprintRadar(unittest.TestCase):
         self.assertIn("先泼盆冷", fp["alerts"])
         self.assertNotIn("先泼", fp["alerts"], "被 4 字簇包含的 2 字簇不重复报")
 
+    def test_entity_name_prefix_not_a_fingerprint(self):
+        """R131：2 字簇要求词边界——Bitwise/BitGo/Bitcoin 共享的"Bi"只是
+        不同实体的词前半（生产实录：雷达误报"Bi…"×3），不得聚簇报警。"""
+        rows = self._rows(["Bitwise 把 ETF 关了。", "BitGo 钱包被端。",
+                           "Bitcoin 突破关口。", "RLUSD 烧了。", "量子攻击。"])
+        self.assertEqual(mr.opener_fingerprint(rows)["alerts"], {})
+
+    def test_cjk_follower_counts_as_boundary(self):
+        # "刚刚看涨"的"看"是 CJK——非 ASCII 字母数字即词边界，正常聚簇
+        rows = self._rows(["刚刚看涨情绪升温。", "刚刚跌破关键位。",
+                           "刚刚放量突破。", "其他 A。", "其他 B。"])
+        self.assertEqual(mr.opener_fingerprint(rows)["alerts"].get("刚刚"), 3)
+
     def test_render_line_present(self):
         rows = self._rows(["刚刚 A。", "刚刚 B。", "刚刚 C。", "其他 D。"])
         text = mr.render_text(mr.summarize(rows), rows)
