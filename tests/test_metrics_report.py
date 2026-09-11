@@ -208,6 +208,25 @@ class TestMetricsReport(unittest.TestCase):
         self.assertEqual(f["attempted"], 4)
         self.assertEqual(f["rate"], 0.25)
 
+    def test_funnel_excludes_campaign_intel_rows(self):
+        """R100：情报刷新（stage=campaign_intel）不是发帖尝试——混入分母会把
+        成功率系统性稀释（生产实测 131 分母混着 15 条情报行）"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published"},
+            {"outcome": "llm_rejected", "stage": "quality"},
+            # 情报刷新三态：成功/截断拒稿/空回拒稿——全部不得进分母
+            {"outcome": "llm_success", "stage": "campaign_intel"},
+            {"outcome": "llm_rejected", "stage": "campaign_intel",
+             "reason": "输出中找不到 JSON 对象"},
+            {"outcome": "llm_rejected", "stage": "campaign_intel",
+             "reason": "模型返回空内容"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        f = mr.funnel(rows)
+        self.assertEqual(f["delivered"], 1)
+        self.assertEqual(f["attempted"], 2, "情报行不得计入发帖尝试分母")
+        self.assertEqual(f["rate"], 0.5)
+
     def test_delivered_rows_not_double_counted(self):
         # success 行若带投递字段（旧 schema 混写），按投递行计——delivered+1，
         # 不再进尝试分母（denominator 去重）；纯 llm_success 无投递字段才计尝试

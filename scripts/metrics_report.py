@@ -197,13 +197,18 @@ def funnel(rows):
     llm_rejected + llm_failed + llm_success + 任意投递成功。拒稿必记、
     成功只在投递时记（append_metrics 语义），所以 success 行与 delivered 行
     不会重复计数同一故事：一个故事要么在质量/传输层被拦（rejected/failed），
-    要么走到投递（此时只有投递行、没有 success 行）。"""
+    要么走到投递（此时只有投递行、没有 success 行）。
+    R100：stage=campaign_intel 的行是情报刷新（每 12h 一次的运营性 LLM 调用），
+    不是发帖尝试——混入分母会把成功率系统性稀释（生产实测：131 分母里
+    混着 15 条情报行）。"""
     delivered = sum(1 for r in rows
                     if isinstance(r, dict) and r.get("dry_run") is not True and _is_delivered(r))
     attempted = delivered
     for r in rows:
         if not isinstance(r, dict) or r.get("dry_run") is True:
             continue
+        if r.get("stage") == "campaign_intel":
+            continue  # 情报刷新不是发帖尝试
         outcome = str(r.get("outcome", ""))
         if outcome in ("llm_rejected", "llm_failed", "llm_success") and not _is_delivered(r):
             attempted += 1
