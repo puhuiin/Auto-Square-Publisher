@@ -1947,6 +1947,12 @@ _ENDING_BAG = ShuffleBag(ENDING_STYLE_POOL)
 # 窗口式去重管不住跨天复用，升级为硬禁令（与 AI 腔硬清单同语义）
 _OVERUSED_OPENING_DEVICES = ("先泼盆冷水",)
 
+# R101/R105：情绪指数锚定检测模式（覆盖生产六种真实措辞——一半不含"指数"字样，
+# 如"贪婪区"/"情绪还挂在 69"）。metrics_report.quality_scan 有同款副本，
+# TestQualityPatternSync 锁死两份一致——改这里必须同步改报表侧。
+_FNG_ANCHOR_RE = re.compile(
+    r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^。！？\n]{0,8}\d{2}")
+
 
 class LLMProviderConfig:
     """单个 LLM 模型提供商配置"""
@@ -2633,10 +2639,7 @@ class MultiLLMEngine:
                 if not preview:
                     continue
                 seen += 1
-                # 覆盖真实变体："贪婪指数 69"/"情绪还挂在 69 的贪婪区"/"全网情绪 69"
-                # （生产实录的六种措辞里一半不含"指数"字样——窄正则会漏检）
-                if re.search(r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区"
-                             r"|(?:贪婪|恐惧|情绪)[^。！？\n]{0,8}\d{2}", preview):
+                if _FNG_ANCHOR_RE.search(preview):
                     count += 1
                 if seen >= previews_limit:
                     break
@@ -5520,7 +5523,10 @@ def _run_main():
                     raw_cid = getattr(publisher, "last_content_id", None)
                     final_content = getattr(publisher, "last_final_content", None)
                     content_id = raw_cid if isinstance(raw_cid, str) else None
-                    final_preview = final_content[:120] if isinstance(final_content, str) else ""
+                    # R106：回执 120→200 字——FNG 锚定常出现在第二段（生产实录
+                    # 命中点最远 ~110 字，仅贴着旧截断线），合规巡检的覆盖盲区
+                    # 直接削弱软禁令的度量价值。200 字覆盖前三段钩子区。
+                    final_preview = final_content[:200] if isinstance(final_content, str) else ""
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],

@@ -13,6 +13,8 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import main as m  # noqa: E402  R106：模式同步守卫需要对照防线本体
+
 _spec = importlib.util.spec_from_file_location(
     "metrics_report",
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -366,6 +368,26 @@ class TestMetricsReport(unittest.TestCase):
         self.assertEqual(q["fng_anchor"], 0, "dry 行不得进合规扫描")
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("全部通过", text)
+
+
+class TestQualityPatternSync(unittest.TestCase):
+    """R106：质量模式双份维护的同步守卫——main.py（防线本体）与 metrics_report
+    （合规巡检）各有一份禁用装置/AI 腔/FNG 模式，静默漂移会让巡检度量失真
+    （README 防漂移测试的同款思路：双份事实源必须有锁）。"""
+
+    def test_overused_devices_in_sync(self):
+        self.assertEqual(tuple(mr._OVERUSED_DEVICES),
+                         tuple(m._OVERUSED_OPENING_DEVICES),
+                         "永久禁用装置清单两份不一致——改 main 必须同步 metrics_report")
+
+    def test_ai_flavor_hard_in_sync(self):
+        self.assertEqual(tuple(mr._AI_FLAVOR_HARD),
+                         tuple(m.MultiLLMEngine._AI_FLAVOR_HARD),
+                         "AI 腔硬清单两份不一致——改 main 必须同步 metrics_report")
+
+    def test_fng_anchor_pattern_in_sync(self):
+        self.assertEqual(mr._FNG_ANCHOR_RE.pattern, m._FNG_ANCHOR_RE.pattern,
+                         "FNG 锚定检测模式两份不一致——改 main 必须同步 metrics_report")
 
 
 if __name__ == "__main__":
