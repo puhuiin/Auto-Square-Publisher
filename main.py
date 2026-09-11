@@ -2107,6 +2107,8 @@ class MultiLLMEngine:
         self._fail_counts: Dict[str, int] = {}
         # 客户端缓存：同一提供商复用底层 httpx 连接池
         self._clients: Dict[str, OpenAI] = {}
+        # R130：最近一次 prompt 组装抽中的结尾套路（回执遥测用，验证轮换均匀性）
+        self.last_ending_style: Optional[str] = None
 
     # ---------------- 跨运行熔断持久化（网络抖动级降级到冷却级） ----------------
     _BREAKER_STATE_KEY = "_llm_breaker"
@@ -2783,6 +2785,8 @@ class MultiLLMEngine:
 
         # 结尾互动句 + 写派人设风格轮换：随机抽取本条的套路，防止每条帖子一个模子
         ending_style = _ENDING_BAG.draw()
+        # R130：回执遥测——验证 ShuffleBag 轮换均匀性（只存冒号前短标签便于聚合）
+        self.last_ending_style = ending_style.split("：")[0]
         ending_hint = f"【本条结尾站队提问的套路】：{ending_style}\n"
 
         # 跨帖开场去重（R75）：ShuffleBag 只管人设/结尾套路，管不到开场比喻——
@@ -5738,6 +5742,9 @@ def _run_main():
                     campaign_tag_count = sum(
                         1 for t in _tag_list
                         if t[1:].lower() not in ("write2earn", "binancesquare"))
+                    # R130：抽中的结尾套路标签（Mock 替身/异常态防御性降级 None）
+                    _es = getattr(llm_engine, "last_ending_style", None)
+                    ending_style_used = _es if isinstance(_es, str) else None
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
@@ -5755,6 +5762,7 @@ def _run_main():
                         "widget_count": widget_count,
                         "tag_count": tag_count,
                         "campaign_tag_count": campaign_tag_count,
+                        "ending_style": ending_style_used,
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,

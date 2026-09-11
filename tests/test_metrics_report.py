@@ -618,6 +618,25 @@ class TestMetricsReport(unittest.TestCase):
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("逼近回调节奏", text)
 
+    def test_ending_style_distribution(self):
+        """R130：结尾套路分布——验证 ShuffleBag 生产轮换均匀性的观测面。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "ending_style": "极简站队", "final_preview": "x"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "ending_style": "极简站队", "final_preview": "y"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "ending_style": "仓位表白", "final_preview": "z"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "w"},  # 旧 schema：不进分布
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(dict(s["by_ending"]), {"极简站队": 2, "仓位表白": 1})
+        text = mr.render_text(s, rows)
+        self.assertIn("结尾套路分布", text)
+        self.assertIn("极简站队 ×2", text)
+
 
 class TestOpenerFingerprintRadar(unittest.TestCase):
     """R124：开场指纹雷达——把 R104/R121 的人工发现过程产品化，共享前缀

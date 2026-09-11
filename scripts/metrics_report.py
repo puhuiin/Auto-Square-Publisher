@@ -179,6 +179,7 @@ def summarize(rows):
         "image_tiers": collections.Counter(),
         "zero_widget_posts": 0,
         "zero_tag_posts": 0,
+        "by_ending": collections.Counter(),
         "reject_by_stage": collections.Counter(),
         "reject_by_provider": collections.Counter(),
         "reject_reasons": collections.Counter(),
@@ -245,6 +246,9 @@ def summarize(rows):
             tc = r.get("tag_count")
             if tc == 0:
                 s["zero_tag_posts"] += 1
+            # R130：结尾套路分布——验证 ShuffleBag 生产轮换均匀性
+            if r.get("ending_style"):
+                s["by_ending"][str(r["ending_style"])] += 1
         elif outcome == "llm_rejected":
             s["reject_by_stage"][str(r.get("stage", "unknown"))] += 1
             s["reject_by_provider"][who] += 1
@@ -435,6 +439,10 @@ def render_text(s, rows=None):
         # R125：零标签帖 = #Write2Earn 返佣归因丢失
         if s.get("zero_tag_posts"):
             lines.append(f"  ⚠️ 全文零标签 {s['zero_tag_posts']}/{n_pub} 篇——返佣归因丢失，需排查")
+        # R130：结尾套路分布（验证 ShuffleBag 轮换均匀性；旧 schema 无字段则不渲染）
+        if s["by_ending"]:
+            ending_str = " · ".join(f"{k} ×{v}" for k, v in s["by_ending"].most_common(5))
+            lines.append(f"  结尾套路分布: {ending_str}")
         if s["image_tiers"]:
             lines.append(f"  配图层级 {dict(s['image_tiers'])}")
     n_rej = sum(s["reject_by_stage"].values())
