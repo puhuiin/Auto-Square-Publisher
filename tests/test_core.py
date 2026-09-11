@@ -410,6 +410,27 @@ class TestPastDateRefs(unittest.TestCase):
             {"title": "t", "summary": "s"}, intel, "", ["BTC"])
         self.assertIn("仅作背景感知", prompt)
 
+    def test_fresh_intel_with_stale_date_refs_annotated(self):
+        """R127 运行时守卫：新鲜缓存的 guidance 可能仍带着过期竞赛指导
+        （生产实录：XPIN 09-04 过期一周仍走正常注入）。命中过期日期引用
+        即追加禁提注记，新鲜路径不再无条件信任内容。"""
+        intel = {"strategy_guidance": "最紧迫的是 XPIN 竞赛（2026-09-04 截止），立即追贴",
+                 "last_updated": self._ts(2)}  # 2h 前刷新 = 新鲜
+        prompt, _ = self._eng()._build_user_prompt(
+            {"title": "t", "summary": "s"}, intel, "", ["BTC"])
+        self.assertIn("官方活动风向参考", prompt)
+        self.assertIn("已过期活动的日期", prompt, "过期引用必须触发禁提注记")
+        self.assertIn("2026-09-04", prompt)
+
+    def test_fresh_intel_clean_guidance_untouched(self):
+        # 干净 guidance：不得注入多余注记（prompt 干扰最小化）
+        intel = {"strategy_guidance": "结合 Traders League Season 4 引导交易",
+                 "last_updated": self._ts(2)}
+        prompt, _ = self._eng()._build_user_prompt(
+            {"title": "t", "summary": "s"}, intel, "", ["BTC"])
+        self.assertIn("官方活动风向参考", prompt)
+        self.assertNotIn("已过期活动的日期", prompt)
+
 
 class TestOrphanStateKeyCleanup(unittest.TestCase):
     """R83：孤儿状态键一次性清理（R61 看门狗 v1 遗体 _last_run_heartbeat）"""

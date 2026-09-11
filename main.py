@@ -2747,7 +2747,15 @@ class MultiLLMEngine:
             except Exception:
                 intel_fresh = False
             if intel_fresh:
+                # R127 运行时守卫：R127 修复只作用于下次刷新，当前缓存里的
+                # guidance 仍可能带着过期竞赛指导（生产实录：XPIN 09-04 已过期
+                # 一周仍因 last_updated 新鲜走正常注入）。注入前检测过期日期
+                # 引用，命中即追加禁提注记——新鲜路径不再无条件信任内容。
+                stale_refs = _past_date_refs(str(campaign_intel.get("strategy_guidance") or ""))
                 intel_section = f"【官方活动风向参考】：{campaign_intel.get('strategy_guidance')}（若与本条新闻无关则切勿生硬提及）。\n"
+                if stale_refs:
+                    intel_section += (f"⚠️ 上述参考中引用的 {'、'.join(stale_refs)} 均为已过期活动的日期，"
+                                      "严禁在正文中提及这些活动及其截止时间。\n")
             else:
                 intel_section = (f"【官方活动风向参考（已过缓存期，仅作背景感知）】："
                                  f"{campaign_intel.get('strategy_guidance')}"
