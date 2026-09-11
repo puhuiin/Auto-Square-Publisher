@@ -485,5 +485,23 @@
       "XRP",
       "ETH"
     ]
+  },
+  {
+    "id": "947f13a0ecca9d58",
+    "title": "Morning Minute: AI Agents Cut BTC Quantum Attack Benchmark by 86%",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-09-11T12:44:16.763083+00:00",
+    "tokens": [
+      "BTC"
+    ]
+  },
+  {
+    "id": "99b83ad25b925ab7",
+    "title": "125.3 Billion SHIB Moved to Fresh Wallet as Whale Activity Heats Up",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-09-11T12:48:51.417539+00:00",
+    "tokens": [
+      "SHIB"
+    ]
   }
 ]
