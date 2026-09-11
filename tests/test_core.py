@@ -291,6 +291,45 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("全网情绪指数: 69/100", prompt, "未触发禁令时数据行照常注入")
         self.assertIn("涉及标的实时盘面: x", prompt, "剥离逻辑不得误伤盘面行的其他内容")
 
+    def test_article_section_headers_skipped_in_openers(self):
+        """R121：长文回执以"一、发生了什么"分节头开头——分节头不是开场句，
+        直接取首段会让开场去重对全部长文失明。必须跳到首个正文段。"""
+        self._append([
+            {"outcome": "binance_published",
+             "final_preview": "一、发生了什么\n\nBitwise 把 $DOGE 那只 ETF 关了。后续略。\n二、这组数据怎么翻译\n\n再略。"},
+        ])
+        openers = self._eng._recent_openers()
+        self.assertEqual(len(openers), 1)
+        self.assertTrue(openers[0].startswith("Bitwise"), "必须取分节头后的正文段")
+        self.assertNotIn("一、", openers[0])
+
+    def test_generic_leadin_guard_injected(self):
+        """R121：泛化领词守卫——"刚刚"领句 10 帖 3 次的生产实录。领词在近期
+        开场窗口出现过即本轮禁用（整句比对对'句子不同领词同'永远放行）。"""
+        self._append([
+            {"outcome": "binance_published", "final_preview": "刚刚,$SHIB 出现强烈筹码变化。后续略。"},
+        ])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        self.assertIn("领句", prompt)
+        self.assertIn("刚刚", prompt)
+        self.assertIn("严禁", prompt)
+
+    def test_generic_leadin_guard_silent_when_clean(self):
+        # 近期开场无任何泛化领词：不得注入守卫（避免空转占 prompt）
+        self._append([
+            {"outcome": "binance_published", "final_preview": "Bitwise 把 $DOGE 那只 ETF 关了。"},
+        ])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        self.assertNotIn("领句", prompt)
+
 
 class TestIntelFreshnessInPrompt(unittest.TestCase):
     """R83：过期情报正文注入 prompt 必须降权——生产实录 09-10 仍喂

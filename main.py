@@ -1970,6 +1970,12 @@ _ENDING_BAG = ShuffleBag(ENDING_STYLE_POOL)
 # 窗口式去重管不住跨天复用，升级为硬禁令（与 AI 腔硬清单同语义）
 _OVERUSED_OPENING_DEVICES = ("先泼盆冷水",)
 
+# R121：泛化领词频次守卫——具象比喻有整句禁令+永久禁令兜底，但高频泛化领词
+# （刚刚/突发…）每次领的句子都不同，整句比对永远放行。生产实录：10 帖内
+# "刚刚"领句 3 次，正在形成下一个时间线级指纹。领词在近期开场窗口内出现过
+# 即本轮禁用（软约束，逼模型直接从事实/数据/当事人切入）。
+_GENERIC_LEADINS = ("刚刚", "突发", "重磅", "快讯", "注意")
+
 # R101/R105：情绪指数锚定检测模式（覆盖生产六种真实措辞——一半不含"指数"字样，
 # 如"贪婪区"/"情绪还挂在 69"）。metrics_report.quality_scan 有同款副本，
 # TestQualityPatternSync 锁死两份一致——改这里必须同步改报表侧。
@@ -2698,7 +2704,16 @@ class MultiLLMEngine:
                 preview = (r.get("final_preview") or "").strip()
                 if not preview:
                     continue  # R63 之前的帖子无回执，跳过
-                first_sentence = re.split(r"[。\n]", preview)[0].strip()
+                # R121：长文回执以"一、发生了什么"分节头开头——分节头不是开场句，
+                # 直接取首段会让开场去重对全部长文失明。跳过前导分节头取首个正文段。
+                first_sentence = ""
+                for seg in (s.strip() for s in re.split(r"[。\n]", preview)):
+                    if not seg:
+                        continue
+                    if re.match(r"^[一二三四五六七八九十]、", seg):
+                        continue  # 长文分节头
+                    first_sentence = seg
+                    break
                 if first_sentence:
                     openers.append(first_sentence[:60])
                 if len(openers) >= limit:
@@ -2768,6 +2783,13 @@ class MultiLLMEngine:
         if _OVERUSED_OPENING_DEVICES:
             ending_hint += ("【永久禁用的开场装置（历史上已过度使用，任何时候都不得再用）】："
                             + "、".join(_OVERUSED_OPENING_DEVICES) + "\n")
+        # R121：泛化领词频次守卫——整句禁令的盲区（句子不同但领词同），窗口内
+        # 出现过即禁用，把同款领词的复现频率压到 8 帖窗口最多 1 次
+        used_leadins = [w for w in _GENERIC_LEADINS
+                        if any(o.startswith(w) for o in recent_openers)]
+        if used_leadins:
+            ending_hint += (f"【近期开场已用过 {'、'.join(used_leadins)} 领句——本篇严禁"
+                            f"以这些词开头，直接从事实、数据或当事人切入】\n")
 
         # R101：情绪指数锚点去重——连续 6 帖全引"贪婪指数 69"的模板指纹。
         # 近期 ≥2 篇用过该反差框架即禁用，逼模型换资金流/链上/时间节点角度。
