@@ -3,21 +3,20 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Alpha",
-    "#Futures"
+    "#Futures",
+    "#Earn"
   ],
   "incentivized_tokens": [
-    "$BNB",
-    "$XPIN",
-    "$CP",
-    "$DEBIT",
     "$REZ",
-    "$SAHARA",
     "$THE",
-    "$HOLO"
+    "$HOLO",
+    "$BNB",
+    "$RLUSD",
+    "$KGST",
+    "$牛来"
   ],
-  "strategy_guidance": "最紧迫的是 XPIN Network ($XPIN) Alpha 交易竞赛（2026-09-04 截止），发帖机器人应立即以'活动冲刺+抄作业'角度追贴，给出交易量冲刺路径并引导读者通过贴内链接参与以锁定 Write to Earn 返佣；随后按节奏接力 CP（9/8 截止）与 DEBIT（9/10 截止）两场 $200K Alpha 竞赛，形成'倒计时系列贴'持续收割搜索流量。日常快讯统一挂靠 $4M 总奖池的 Traders League Season 4 与 Futures 双赛道（Crypto or TradFi 40,000 USDC）作为流量底座，并结合新上线 Seed Tag 代币牛来的高波动行情及 CRMB/HIMSB bStocks 新交易对输出交易策略复盘，将热点解析自然转化为竞赛参与和返佣转化。",
-  "last_updated": "2026-09-11T09:23:56.174957Z",
+  "strategy_guidance": "最紧迫的是 RLUSD 理财活动今日（2026-09-11）截止、KGST 14% APR 活动也将于 09-13 结束，发帖机器人应优先追贴，以'活动冲刺/最后上车'角度切入，引导读者立即申购 Flexible Products 并挂 Write to Earn 返佣入口。日常快讯可绑定 REZ（20万USDC）、THE 与 HOLO（各400 BNB）交易锦标赛、Traders League Season 4（$4M）及 40000 USDC 合约赛，用'抄作业'角度输出交易策略贴提升互动与返佣。同时借新上线 Seed Tag 代币牛来与 CRMB/HIMSB bStocks 公告热点做行情+活动组合贴，持续收割流量与曝光。",
+  "last_updated": "2026-09-11T22:44:00.955787Z",
   "_feed_health": {},
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
