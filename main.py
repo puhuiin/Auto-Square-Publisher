@@ -5262,6 +5262,32 @@ def run_healthcheck():
     sys.exit(0 if not n_err else 1)
 
 
+def _quota_next_slot_estimate(cache_mgr) -> tuple:
+    """R112/R129：配额释放估算——找 24h 窗口内最早一篇，算出它滚出窗口的时间
+    （= 下一帖何时能发）。返回 (iso 字符串 | None, 分钟数 | None)。
+    R129：此前只有配额饱和轮写入该字段，发帖后的运行不再更新——报表取
+    "最近一条配额行"会拿到数小时前的旧估算（生产实录 13:21Z 仍显示
+    "12:25 释放（约 2 分钟后）"）。发帖轮的收尾 run_summary 现在同样写入。"""
+    try:
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+        oldest = None
+        for item in cache_mgr.cached_items:
+            try:
+                ts = datetime.fromisoformat(
+                    str(item.get("sent_at", "")).replace("Z", "+00:00"))
+            except Exception:
+                continue
+            if ts >= cutoff and (oldest is None or ts < oldest):
+                oldest = ts
+        if oldest is None:
+            return None, None
+        frees_at = oldest + timedelta(hours=24)
+        minutes = int(round((frees_at - datetime.now(timezone.utc)).total_seconds() / 60))
+        return frees_at.isoformat(), minutes
+    except Exception:
+        return None, None  # 估算失败不影响配额退出语义
+
+
 def _run_main():
     # R126：单轮耗时基线——外部回调 20 分钟一次，若全管线（情报刷新 + LLM 链
     # 容灾 + 配图上传 + 发布）耗时逼近节奏，下一轮就会排队堆积；此前的盲区
@@ -5327,28 +5353,10 @@ def _run_main():
         sent_24h = cache_mgr.count_since(24)
         if sent_24h >= MAX_DAILY_POSTS:
             logger.warning(f"🛑 24 小时内已发布 {sent_24h} 篇，达到配额上限 ({MAX_DAILY_POSTS})，本轮自动静默以保护账号权重。")
-            # R112：配额释放估算——找到 24h 窗口内最早一篇，算出它何时滚出窗口
-            # （= 下一帖何时能发）。运营者看 run_summary 不再需要手算。
-            next_frees_iso = ""
-            next_frees_min = None
-            try:
-                cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
-                oldest = None
-                for item in cache_mgr.cached_items:
-                    try:
-                        ts = datetime.fromisoformat(
-                            str(item.get("sent_at", "")).replace("Z", "+00:00"))
-                    except Exception:
-                        continue
-                    if ts >= cutoff and (oldest is None or ts < oldest):
-                        oldest = ts
-                if oldest is not None:
-                    frees_at = oldest + timedelta(hours=24)
-                    next_frees_iso = frees_at.isoformat()
-                    next_frees_min = int(round((frees_at - datetime.now(timezone.utc)).total_seconds() / 60))
-                    logger.info(f"⏳ 下一配额槽释放: {frees_at.strftime('%H:%M')} UTC（约 {next_frees_min:.0f} 分钟后）")
-            except Exception:
-                pass  # 估算失败不影响配额退出语义
+            # R112：配额释放估算（R129 提为公共函数，发帖轮同样写入）
+            next_frees_iso, next_frees_min = _quota_next_slot_estimate(cache_mgr)
+            if next_frees_iso:
+                logger.info(f"⏳ 下一配额槽释放: {next_frees_iso[11:16]} UTC（约 {next_frees_min} 分钟后）")
             # R91：配额饱和轮留痕（生产实录：12/12 满额后连续多轮静默，遥测完全
             # 不可见）——quota_blocked 计数是"配额是否该调"的决策输入
             append_metrics({
@@ -5907,6 +5915,9 @@ def _run_main():
     # 源健康快照，行内自洽：candidates = published + 各类跳过 + unprocessed。
     unprocessed = max(0, candidates_seen - posted_count - exception_skipped
                       - sum(skip_counts.values()))
+    # R129：发帖轮同样写配额释放估算——报表取最近一条 run_summary，
+    # 旧实现只更新饱和轮，发帖后报表会显示数小时前的过期估算
+    _nf_iso, _nf_min = _quota_next_slot_estimate(cache_mgr)
     append_metrics({
         "outcome": "run_summary",
         "candidates": candidates_seen,
@@ -5926,6 +5937,8 @@ def _run_main():
         "trending": " ".join(trending_valid[:8]) if trending_valid else None,
         # R126：单轮总耗时（秒）——20 分钟外部回调节奏下的堆积预警指标
         "run_elapsed_sec": round(time.time() - t_run_start, 1),
+        "next_slot_frees": _nf_iso,
+        "next_slot_frees_min": _nf_min,
     })
 
     write_github_step_summary(fetcher, fng_index, campaign_intel, posted_records, dry_run,

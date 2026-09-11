@@ -5134,6 +5134,34 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_quota_next_slot_estimate_helper(self):
+        """R129：估算提为公共函数 _quota_next_slot_estimate——发帖轮的收尾
+        run_summary 同样写入，报表不再拿到数小时前的过期估算。"""
+        import tempfile
+        tmpdir = tempfile.mkdtemp()
+        cache_p = os.path.join(tmpdir, "sent_cache.json")
+        try:
+            with open(cache_p, "w", encoding="utf-8") as f:
+                json.dump([{"id": "a", "title": "t", "source": "s",
+                            "sent_at": (datetime.now(timezone.utc)
+                                        - timedelta(hours=10)).isoformat(),
+                            "tokens": ["BTC"]}],
+                          f, ensure_ascii=False)
+            cm = m.CacheManager(cache_p)
+            iso, minutes = m._quota_next_slot_estimate(cm)
+            self.assertIsNotNone(iso)
+            self.assertGreater(minutes, 14 * 60 - 10)
+            self.assertLess(minutes, 14 * 60 + 10)
+            # 空缓存：不估算
+            with open(cache_p, "w", encoding="utf-8") as f:
+                json.dump([], f)
+            cm2 = m.CacheManager(cache_p)
+            self.assertEqual(m._quota_next_slot_estimate(cm2), (None, None))
+        finally:
+            if os.path.exists(cache_p):
+                os.remove(cache_p)
+            os.rmdir(tmpdir)
+
     def test_active_hours_exit_writes_summary(self):
         """R91：活跃时段外的静默退出也留痕——"每个 dispatch 恰好一条
         run_summary"的完备性不变量，窗口配置的效果在遥测里可验证。"""
