@@ -23,6 +23,19 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import main as m  # noqa: E402
 
 
+def check_duplicate(title: str) -> bool:
+    """R111：双发守卫——sent_cache 里已有同标题的帖子时警告（不阻断，由人决定）。
+    视频是一次性手动操作，误触重跑是最常见的双发场景。"""
+    try:
+        cache = m.CacheManager(m.CACHE_FILE)
+        for item in cache.cached_items:
+            if isinstance(item, dict) and item.get("title", "").strip() == title.strip():
+                return True
+    except Exception:
+        pass
+    return False
+
+
 def upload_video(api_key: str, video_path: str) -> str | None:
     """上传视频到币安 S3，返回托管 URL（None = 失败）。"""
     with open(video_path, "rb") as f:
@@ -102,9 +115,7 @@ def publish(api_key: str, body: str, video_url: str | None, title: str | None = 
     else:
         payload["contentType"] = 1
         if video_url:
-            # 尝试 videoList（与 imageList 平行）；若 API 拒绝则降级
             payload["videoList"] = [video_url]
-            payload["imageList"] = [video_url]  # 部分版本 API 用同一字段
     print(f"📝 发布 payload 键: {list(payload.keys())}")
     res = m.http_post(m.BINANCE_SQUARE_API_URL, headers=headers, json=payload,
                       timeout=20, retries=1)
@@ -119,17 +130,23 @@ def publish(api_key: str, body: str, video_url: str | None, title: str | None = 
             print(f"   帖子链接: https://www.binance.com/zh-CN/square/post/{cid}")
         return True
     print(f"❌ 业务错误: {rj.get('message')} (code={rj.get('code')})")
-    # 如果 videoList 被拒，提示降级路径
-    if "videoList" in payload and "field" in str(rj.get("message", "")).lower():
-        print("💡 提示: videoList 字段可能不被支持，尝试只用 imageList...")
+    # R111：videoList 被拒时用 imageList 重试（任何错误都试一次降级，
+    # 不只匹配 "field" 关键词——API 错误消息格式不可预测）
+    if "videoList" in payload:
+        print("💡 尝试降级：移除 videoList，只用 imageList...")
         payload.pop("videoList", None)
+        payload["imageList"] = [video_url]
         res2 = m.http_post(m.BINANCE_SQUARE_API_URL, headers=headers, json=payload,
                            timeout=20, retries=1)
         if res2 is not None and res2.status_code == 200:
             rj2 = res2.json()
-            if rj2.get("code") == "000000":
-                print(f"🎉 降级发布成功！Content ID: {(rj2.get('data') or {}).get('contentId')}")
+            if rj2.get("code") == "000000" or rj2.get("success"):
+                cid2 = (rj2.get("data") or {}).get("contentId")
+                print(f"🎉 降级发布成功！Content ID: {cid2}")
+                if cid2:
+                    print(f"   帖子链接: https://www.binance.com/zh-CN/square/post/{cid2}")
                 return True
+            print(f"❌ 降级也失败: {rj2.get('message')} (code={rj2.get('code')})")
     return False
 
 
@@ -158,6 +175,7 @@ def main() -> int:
     parser.add_argument("--title", default=DEFAULT_TITLE, help="帖子标题（长文模式）")
     parser.add_argument("--body", default=DEFAULT_BODY, help="正文文本")
     parser.add_argument("--dry", action="store_true", help="DRY 模式：只上传不发帖")
+    parser.add_argument("--force", action="store_true", help="跳过双发守卫强制发布")
     args = parser.parse_args()
 
     api_key = os.getenv("SQUARE_API_KEY", "").strip()
@@ -174,6 +192,14 @@ def main() -> int:
     print(f"🎬 视频发布准备: {args.video}")
     print(f"   标题: {args.title[:40]}...")
     print(f"   正文: {args.body[:40]}...")
+
+    # R111：双发守卫——同标题帖子已存在时警告（不阻断，--force 跳过）
+    if check_duplicate(args.title):
+        print(f"\n⚠️ 警告: sent_cache 中已有同标题「{args.title[:30]}…」的帖子。")
+        if not args.force:
+            print("   可能是重复发布。加 --force 跳过此检查继续发布。\n")
+            return 1
+        print("   --force 已指定，继续发布。\n")
     print()
 
     # 上传视频

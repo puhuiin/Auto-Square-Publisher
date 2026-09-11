@@ -27,8 +27,8 @@ TOP_N = 8
 
 # R105：内容合规巡检模式（与 main.py 同步——脚本独立运行不 import 主模块）。
 # prompt 级禁令是软约束，模型可能不遵守——合规度此前零度量，全靠人工读帖。
-# 注意：final_preview 只存前 120 字符，巡检覆盖的是"前两行钩子区"（算法首屏
-# 所在），非全文。
+# 注意：final_preview 截断长度经历过 120→200（R106），巡检覆盖的是回执实际
+# 存储的钩子区文本（算法首屏所在），非全文。
 _FNG_ANCHOR_RE = re.compile(
     r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^。！？\n]{0,8}\d{2}")
 _OVERUSED_DEVICES = ("先泼盆冷水",)  # main._OVERUSED_OPENING_DEVICES
@@ -298,7 +298,7 @@ def render_text(s, rows=None):
         if q["scanned"]:
             violations = q["fng_anchor"] + q["banned_device"] + q["ai_flavor"]
             status = "全部通过" if not violations else f"{violations} 处命中"
-            lines.append(f"- 内容合规巡检（最近 {q['scanned']} 篇前 120 字）: {status}"
+            lines.append(f"- 内容合规巡检（最近 {q['scanned']} 篇回执文本）: {status}"
                          + (f" {q['offenders']}" if q["offenders"] else ""))
     n_pub = sum(s["by_provider"].values())
     if n_pub:
