@@ -2706,6 +2706,12 @@ class MultiLLMEngine:
                                  "（⚠️ 以上活动信息可能已过期：严禁在正文中引用其中的任何具体日期、"
                                  "截止时间或倒计时，只可化用代币与话题方向，且若与本条新闻无关则切勿提及）。\n")
 
+        # R101 情绪锚点禁令（R103 补全）：触发时必须同步把情绪行从盘面上下文
+        # 剥离——一边递数字一边禁用是自相矛盾的指令，且白占上下文。
+        fng_ban_active = self._recent_fng_hook_count() >= 2
+        if fng_ban_active and market_context:
+            market_context = re.sub(r"全网情绪指数:[^\n]*\n?", "", market_context)
+
         market_section = ""
         if market_context:
             market_section = f"【实时盘面情绪参考】：{market_context}\n"
@@ -2728,7 +2734,8 @@ class MultiLLMEngine:
 
         # R101：情绪指数锚点去重——连续 6 帖全引"贪婪指数 69"的模板指纹。
         # 近期 ≥2 篇用过该反差框架即禁用，逼模型换资金流/链上/时间节点角度。
-        if self._recent_fng_hook_count() >= 2:
+        # R103：数据行已在上方同步剥离（指令与输入一致）。
+        if fng_ban_active:
             ending_hint += ("【近期多篇已把\"贪婪/恐惧/情绪指数\"当反差梗——本篇禁止再引用"
                             "任何情绪指数数值，改用资金流向、链上数据、时间节点或盘面结构制造反差】\n")
 
