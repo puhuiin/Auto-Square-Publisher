@@ -390,6 +390,20 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("最新/刚出炉/几分钟前", prompt)
         self.assertIn("开头不得用被禁的领句", prompt)
 
+    def test_ending_style_stashed_on_engine(self):
+        """R130：抽取的结尾套路短标签要暂存到引擎（回执遥测读它验证轮换
+        均匀性），且必须是结尾池词条冒号前的合法标签。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        label = getattr(eng, "last_ending_style", None)
+        self.assertIsNotNone(label, "prompt 组装后引擎必须暂存结尾套路标签")
+        self.assertNotIn("：", label, "必须是短标签（不含冒号）")
+        pool_labels = {s.split("：")[0] for s in m.ENDING_STYLE_POOL}
+        self.assertIn(label, pool_labels, f"标签 {label} 必须来自结尾池")
+
 
 class TestIntelFreshnessInPrompt(unittest.TestCase):
     """R83：过期情报正文注入 prompt 必须降权——生产实录 09-10 仍喂
