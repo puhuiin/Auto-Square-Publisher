@@ -2605,6 +2605,42 @@ class MultiLLMEngine:
             "outcome": "llm_rejected",
         })
 
+    def _recent_fng_hook_count(self, previews_limit: int = 5) -> int:
+        """统计最近 N 篇已发布正文里用"(贪婪|恐惧|情绪)指数"当素材的篇数。
+        R101 生产实录：连续 6 帖全部拿"贪婪指数 69"当反差梗——market_context
+        每帖注入情绪指数，模型把它当最顺手的反差装置，成为时间线级模板指纹
+        （R75 开场去重修过的同类问题在数据锚点上的重演）。final_preview 截
+        120 字符足够覆盖该引用（通常出现在前两段）。读失败返回 0（无约束）。"""
+        try:
+            if not os.path.exists(METRICS_FILE):
+                return 0
+            with open(METRICS_FILE, "r", encoding="utf-8") as f:
+                lines = f.readlines()[-200:]
+            count = 0
+            seen = 0
+            for line in reversed(lines):
+                try:
+                    r = json.loads(line)
+                except Exception:
+                    continue
+                if not str(r.get("outcome", "")).startswith("binance_published"):
+                    continue
+                preview = (r.get("final_preview") or "").strip()
+                if not preview:
+                    continue
+                seen += 1
+                # 覆盖真实变体："贪婪指数 69"/"情绪还挂在 69 的贪婪区"/"全网情绪 69"
+                # （生产实录的六种措辞里一半不含"指数"字样——窄正则会漏检）
+                if re.search(r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区"
+                             r"|(?:贪婪|恐惧|情绪)[^。！？\n]{0,8}\d{2}", preview):
+                    count += 1
+                if seen >= previews_limit:
+                    break
+            return count
+        except Exception as e:
+            logger.debug(f"读取近期情绪指数引用失败 (不影响主流程): {e}")
+            return 0
+
     def _recent_openers(self, limit: int = 3) -> List[str]:
         """读取最近 N 篇已发布文本的开场句（final_preview 首句，倒序）。
         供 prompt 注入"近期开场禁复用"——生产实录：相邻两帖同用"先泼盆冷水"比喻，
@@ -2689,6 +2725,12 @@ class MultiLLMEngine:
         if recent_openers:
             ending_hint += ("【近期已用过的开场句（禁止再用同款比喻/句式开头）】："
                             + " / ".join(f"“{o}”" for o in recent_openers) + "\n")
+
+        # R101：情绪指数锚点去重——连续 6 帖全引"贪婪指数 69"的模板指纹。
+        # 近期 ≥2 篇用过该反差框架即禁用，逼模型换资金流/链上/时间节点角度。
+        if self._recent_fng_hook_count() >= 2:
+            ending_hint += ("【近期多篇已把\"贪婪/恐惧/情绪指数\"当反差梗——本篇禁止再引用"
+                            "任何情绪指数数值，改用资金流向、链上数据、时间节点或盘面结构制造反差】\n")
 
         # 时效感：告诉模型这条新闻是多久前的，文案要带"刚出炉"或"发酵中"的正确时态
         # （短讯拼进 ending_hint，长文独立一行——两种形态都需要正确的时态框架）

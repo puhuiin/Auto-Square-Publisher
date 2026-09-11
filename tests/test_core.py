@@ -237,6 +237,35 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertEqual(len(openers), 1, "150 行噪声后的发布行必须仍被召回")
         self.assertIn("全网都在喊拐点", openers[0])
 
+    def test_fng_ban_triggered_after_repeated_use(self):
+        """R101：连续多帖把"贪婪指数"当反差梗（生产实录 6/6 帖全引 69）——
+        prompt 必须注入禁用指令，逼模型换资金流/链上/时间角度"""
+        self._append([
+            {"outcome": "binance_published", "final_preview": "全网贪婪指数都 69 了，还在喊多。"},
+            {"outcome": "binance_published", "final_preview": "情绪还挂在 69 的贪婪区，接盘热情高涨。"},
+            {"outcome": "binance_published", "final_preview": "盘面跌破关键位，结构转弱。"},
+        ])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "全网情绪指数: 69/100\n", ["BTC"])
+        self.assertIn("禁止再引用任何情绪指数数值", prompt)
+        self.assertIn("资金流向", prompt)
+
+    def test_fng_ban_not_triggered_when_sparse(self):
+        # 近期 0-1 篇引用：不注入禁令（情绪指数仍是可用素材）
+        self._append([
+            {"outcome": "binance_published", "final_preview": "盘面放量突破，结构健康。"},
+            {"outcome": "binance_published", "final_preview": "资金持续流入，主力建仓迹象明显。"},
+        ])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "全网情绪指数: 69/100\n", ["BTC"])
+        self.assertNotIn("禁止再引用任何情绪指数数值", prompt)
+
 
 class TestIntelFreshnessInPrompt(unittest.TestCase):
     """R83：过期情报正文注入 prompt 必须降权——生产实录 09-10 仍喂
