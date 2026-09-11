@@ -158,6 +158,47 @@ class TestMetricsReport(unittest.TestCase):
         self.assertEqual(doc["total"], 4)
         self.assertIn("funnel", doc, "JSON 模式必须带成功率漏斗")
 
+    def test_days_filter_keeps_recent_only(self):
+        """R109：--days N 时间窗——全量口径混入数天前的防御前历史会稀释近期信号"""
+        from datetime import datetime, timezone, timedelta
+        now = datetime.now(timezone.utc)
+        old_ts = (now - timedelta(days=5)).isoformat()
+        new_ts = (now - timedelta(hours=2)).isoformat()
+        _write(self.path, [
+            {"ts": old_ts, "outcome": "binance_published", "platforms": ["binance"],
+             "final_preview": "五天前的旧帖"},
+            {"ts": new_ts, "outcome": "binance_published", "platforms": ["binance"],
+             "final_preview": "最近的干净帖"},
+            {"outcome": "binance_published", "platforms": ["binance"],
+             "final_preview": "无 ts 行（夹具），近期视图下丢弃"},
+        ])
+        buf = io.StringIO()
+        old = sys.stdout
+        sys.stdout = buf
+        try:
+            self.assertEqual(mr.main([self.path, "--days", "2", "--json"]), 0)
+        finally:
+            sys.stdout = old
+        doc = json.loads(buf.getvalue())
+        self.assertEqual(doc["total"], 1, "只保留 2 天内的 1 行（旧帖与无 ts 行均丢弃）")
+        # 质量扫描同样只扫近期行
+        self.assertEqual(doc["quality_scan"]["scanned"], 1)
+
+    def test_days_filter_unit_and_edge(self):
+        from datetime import datetime, timezone, timedelta
+        now = datetime.now(timezone.utc)
+        _write(self.path, [
+            {"ts": (now - timedelta(hours=1)).isoformat(), "outcome": "run_summary",
+             "candidates": 5, "published": 1},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        # 正常窗口保留
+        self.assertEqual(len(mr.filter_days(rows, "2")), 1)
+        # 非法/非正数 → None（不过滤，保持全量）
+        self.assertIsNone(mr.filter_days(rows, "abc"))
+        self.assertIsNone(mr.filter_days(rows, "0"))
+        self.assertIsNone(mr.filter_days(rows, None))
+
     def test_llm_failed_reason_feeds_error_panel(self):
         """R81：llm_failed 的 reason 是错误诊断唯一载体（404/超时全在里面），
         此前 errors 面板只认 error/error_code 字段恒空，报表失真"""

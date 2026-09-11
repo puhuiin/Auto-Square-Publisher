@@ -19,6 +19,7 @@ import math
 import os
 import re
 import sys
+from datetime import datetime, timedelta, timezone
 
 DEFAULT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                             "metrics.jsonl")
@@ -320,10 +321,37 @@ def render_text(s, rows=None):
     return "\n".join(lines)
 
 
+def filter_days(rows, days):
+    """R109：时间窗过滤（--days N）——遥测按 ~85 行/天积累，全量口径会日益
+    稀释近期信号（成功率/漏斗混入数天前的防御前历史）。保留 ts 在最近 N 天的行；
+    无 ts 的行丢弃（严格"近期视图"语义——生产行恒有 ts，缺 ts 只出现在手搓夹具）。
+    days 非正数或解析失败返回 None（不过滤，由调用方保持全量）。"""
+    if days is None:
+        return None
+    try:
+        days = float(days)
+    except (TypeError, ValueError):
+        return None
+    if days <= 0:
+        return None
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    return [r for r in rows
+            if isinstance(r.get("ts"), str) and r["ts"] >= cutoff]
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     as_json = "--json" in argv
-    paths = [a for a in argv if not a.startswith("-")]
+    days = None
+    if "--days" in argv:
+        i = argv.index("--days")
+        if i + 1 < len(argv):
+            days = argv[i + 1]
+        else:
+            print("--days 需要一个数字参数，例: --days 2", file=sys.stderr)
+            return 2
+    paths = [a for a in argv if not a.startswith("-")
+             and a != str(days)]
     path = paths[0] if paths else DEFAULT_PATH
     if not os.path.exists(path):
         print(f"遥测文件尚不存在: {path}（有过投递/拦截后自动产生）", file=sys.stderr)
@@ -336,6 +364,10 @@ def main(argv=None):
         return 2
     if bad:
         print(f"跳过坏行 {bad} 行（不影响其余统计）", file=sys.stderr)
+    filtered = filter_days(rows, days)
+    if filtered is not None:
+        rows = filtered
+        print(f"时间窗过滤: 仅统计最近 {days} 天（{len(rows)} 行）", file=sys.stderr)
     s = summarize(rows)
     if as_json:
         doc = dict(s)
