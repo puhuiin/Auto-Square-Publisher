@@ -251,27 +251,48 @@ def summarize(rows):
 
 
 def funnel(rows):
-    """发布成功率漏斗：分母用"真正进入 LLM 尝试的故事"——
-    llm_rejected + llm_failed + llm_success + 任意投递成功。拒稿必记、
-    成功只在投递时记（append_metrics 语义），所以 success 行与 delivered 行
-    不会重复计数同一故事：一个故事要么在质量/传输层被拦（rejected/failed），
-    要么走到投递（此时只有投递行、没有 success 行）。
-    R100：stage=campaign_intel 的行是情报刷新（每 12h 一次的运营性 LLM 调用），
-    不是发帖尝试——混入分母会把成功率系统性稀释（生产实测：131 分母里
-    混着 15 条情报行）。"""
-    delivered = sum(1 for r in rows
-                    if isinstance(r, dict) and r.get("dry_run") is not True and _is_delivered(r))
-    attempted = delivered
+    """发布成功率漏斗（R119 改故事口径）：分母 = "真正进入 LLM 尝试的故事"。
+    此前按行计数，但 failover 让一个故事落多行（生产实证 13:03Z：b.ai 429 拒一行
+    + openrouter 发布一行；12:48Z：拒一行 + 外层 failed 一行）——同一故事被算
+    两次尝试，4 天实测行口径 30.5% vs 故事口径 66.7%，failover 噪声把成功率腰斩。
+    故事键 = (日期, title)：拒稿行与投递行都带 title 截断（news_id 仅投递侧有，
+    title 是唯一全侧可用键）；跨日同题按不同故事计。无 title 孤儿行（异常路径）
+    退化为旧行计数，历史测试语义不变。
+    返回额外带 failover_rescued = 先拒稿后投递的故事数（failover/重试救回量，
+    衡量多提供商链的真实价值）。"""
+    delivered_stories: set = set()
+    rejected_stories: set = set()
+    attempted_stories: set = set()
+    orphan_attempted = 0
+    orphan_delivered = 0
     for r in rows:
         if not isinstance(r, dict) or r.get("dry_run") is True:
             continue
-        if r.get("stage") == "campaign_intel":
-            continue  # 情报刷新不是发帖尝试
         outcome = str(r.get("outcome", ""))
-        if outcome in ("llm_rejected", "llm_failed", "llm_success") and not _is_delivered(r):
-            attempted += 1
+        is_del = _is_delivered(r)
+        title = str(r.get("title") or "").strip()
+        if not title:
+            # 孤儿行退化为行计数
+            if is_del:
+                orphan_delivered += 1
+            elif outcome in ("llm_rejected", "llm_failed", "llm_success") \
+                    and r.get("stage") != "campaign_intel":
+                orphan_attempted += 1
+            continue
+        key = (str(r.get("ts", ""))[:10], title)
+        if is_del:
+            delivered_stories.add(key)
+            attempted_stories.add(key)
+        elif outcome in ("llm_rejected", "llm_failed", "llm_success") \
+                and r.get("stage") != "campaign_intel":
+            attempted_stories.add(key)
+            if outcome in ("llm_rejected", "llm_failed"):
+                rejected_stories.add(key)
+    delivered = len(delivered_stories) + orphan_delivered
+    attempted = len(attempted_stories) + orphan_attempted + orphan_delivered
     return {"attempted": attempted, "delivered": delivered,
-            "rate": round(delivered / attempted, 3) if attempted else None}
+            "rate": round(delivered / attempted, 3) if attempted else None,
+            "failover_rescued": len(rejected_stories & delivered_stories)}
 
 
 def _top(counter, n=TOP_N):
@@ -290,8 +311,10 @@ def render_text(s, rows=None):
     if rows is not None:
         f = funnel(rows)
         if f["attempted"]:
+            rescued = f.get("failover_rescued") or 0
             lines.append(f"- 发布成功率: {f['delivered']}/{f['attempted']} 篇"
-                         f"（{f['rate'] * 100:.1f}%，分母=进入 LLM 尝试的故事）")
+                         f"（{f['rate'] * 100:.1f}%，故事口径=同题多行去重，"
+                         f"failover 救回 {rescued} 篇）")
     runs = s.get("runs") or {}
     if runs.get("n"):
         parts = [f"配额饱和 {runs['quota_blocked']} 轮", f"零候选 {runs['zero_candidates']} 轮"]

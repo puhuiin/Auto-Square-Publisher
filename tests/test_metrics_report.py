@@ -307,6 +307,85 @@ class TestMetricsReport(unittest.TestCase):
         self.assertEqual(f["attempted"], 0)
         self.assertIsNone(f["rate"])
 
+    def test_funnel_dedupes_failover_story(self):
+        """R119：故事口径——同一故事 failover 落多行（b.ai 429 拒 + openrouter
+        发布）只算一次尝试。生产实证：行口径 30.5% vs 故事口径 66.7%。"""
+        _write(self.path, [
+            {"ts": "2026-09-10T13:03:00", "title": "Vitalik pushes plan",
+             "outcome": "llm_rejected", "stage": "transport", "reason": "429"},
+            {"ts": "2026-09-10T13:05:00", "title": "Vitalik pushes plan",
+             "platforms": ["binance"], "outcome": "binance_published"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        f = mr.funnel(rows)
+        self.assertEqual(f["attempted"], 1, "同日同题两行 = 一个故事一次尝试")
+        self.assertEqual(f["delivered"], 1)
+        self.assertEqual(f["rate"], 1.0)
+        self.assertEqual(f["failover_rescued"], 1, "先拒后发 = failover 救回")
+
+    def test_funnel_rejected_then_failed_same_story(self):
+        """R119：拒稿行 + 外层 failed 行同题同日也去重（12:48Z 实录双记）。"""
+        _write(self.path, [
+            {"ts": "2026-09-10T12:48:33", "title": "Story A",
+             "outcome": "llm_rejected", "stage": "quality", "reason": "内容过短"},
+            {"ts": "2026-09-10T12:48:33", "title": "Story A",
+             "outcome": "llm_failed", "reason": "质量门: 内容过短"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        f = mr.funnel(rows)
+        self.assertEqual(f["attempted"], 1)
+        self.assertEqual(f["delivered"], 0)
+        self.assertEqual(f["rate"], 0.0)
+        self.assertEqual(f["failover_rescued"], 0)
+
+    def test_funnel_same_title_different_dates(self):
+        """R119：跨日同题是不同故事（旧闻隔天重试/同名事件续报）。"""
+        _write(self.path, [
+            {"ts": "2026-09-10T13:05:00", "title": "Same title",
+             "platforms": ["binance"], "outcome": "binance_published"},
+            {"ts": "2026-09-11T09:10:00", "title": "Same title",
+             "outcome": "llm_failed", "reason": "超时"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        f = mr.funnel(rows)
+        self.assertEqual(f["attempted"], 2)
+        self.assertEqual(f["delivered"], 1)
+        self.assertEqual(f["rate"], 0.5)
+
+    def test_funnel_failover_rescued_multi_story(self):
+        """R119：failover_rescued 跨故事聚合。"""
+        _write(self.path, [
+            {"ts": "2026-09-10T12:43:00", "title": "Story X",
+             "outcome": "llm_rejected", "stage": "transport", "reason": "429"},
+            {"ts": "2026-09-10T12:46:00", "title": "Story X",
+             "platforms": ["binance"], "outcome": "binance_published"},
+            {"ts": "2026-09-10T13:03:00", "title": "Story Y",
+             "outcome": "llm_rejected", "stage": "transport", "reason": "429"},
+            {"ts": "2026-09-10T13:05:00", "title": "Story Y",
+             "platforms": ["binance"], "outcome": "binance_published"},
+            {"ts": "2026-09-10T14:00:00", "title": "Story Z",
+             "platforms": ["binance"], "outcome": "binance_published"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        f = mr.funnel(rows)
+        self.assertEqual(f["attempted"], 3)
+        self.assertEqual(f["delivered"], 3)
+        self.assertEqual(f["failover_rescued"], 2)
+
+    def test_funnel_renders_story_semantics(self):
+        """R119：报表行注明故事口径与 failover 救回数。"""
+        _write(self.path, [
+            {"ts": "2026-09-10T12:43:00", "title": "Story X",
+             "outcome": "llm_rejected", "stage": "transport", "reason": "429"},
+            {"ts": "2026-09-10T12:46:00", "title": "Story X",
+             "platforms": ["binance"], "outcome": "binance_published"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        text = mr.render_text(s, rows)
+        self.assertIn("故事口径", text)
+        self.assertIn("failover 救回 1 篇", text)
+
     def test_success_rate_line_rendered(self):
         _write(self.path, [
             {"platforms": ["binance"], "outcome": "binance_published"},
