@@ -207,6 +207,12 @@ def summarize(rows):
             hours_blocked = r.get("active_hours_blocked") is True
             if quota_blocked:
                 runs_tmp["quota_blocked"] += 1
+                # R113：取最近一条配额行的释放估算（行按时间序追加，
+                # 后写的覆盖先写的 = 最新值）
+                if r.get("next_slot_frees"):
+                    runs_tmp["next_slot_frees"] = r["next_slot_frees"]
+                if r.get("next_slot_frees_min") is not None:
+                    runs_tmp["next_slot_frees_min"] = int(r["next_slot_frees_min"])
             if hours_blocked:
                 runs_tmp["active_hours_blocked"] += 1
             cand = int(_num(r.get("candidates")) or 0)
@@ -289,6 +295,11 @@ def render_text(s, rows=None):
         lines.append(f"- 运行摘要（{runs['n']} 轮）: {' / '.join(parts)}"
                      f"，累计候选 {runs['candidates']} → 发布 {runs['published']}"
                      + (f"（未处理 {runs['unprocessed']}）" if runs.get("unprocessed") else ""))
+        # R113：配额释放估算直读——运营者不再需要查原始遥测
+        if runs.get("next_slot_frees"):
+            frees_min = runs.get("next_slot_frees_min")
+            frees_str = f"（约 {frees_min} 分钟后）" if frees_min is not None else ""
+            lines.append(f"  ⏳ 下一配额槽: {runs['next_slot_frees'][:16]} UTC{frees_str}")
         if runs.get("last_trending"):
             lines.append(f"  最近热搜 [{runs['last_trending']}]")
         if runs.get("skips"):

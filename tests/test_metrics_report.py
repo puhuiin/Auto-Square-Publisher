@@ -371,6 +371,36 @@ class TestMetricsReport(unittest.TestCase):
         self.assertEqual(runs["n"], 1)
         self.assertEqual(runs["candidates"], 3)
 
+    def test_quota_estimator_surfaced_in_report(self):
+        """R113：配额释放估算的报表端消费——运营者看报告即知下一帖何时能发"""
+        from datetime import datetime, timezone, timedelta
+        now = datetime.now(timezone.utc)
+        frees_iso = (now + timedelta(hours=3)).isoformat()
+        _write(self.path, [
+            {"outcome": "run_summary", "candidates": 0, "published": 0,
+             "quota_blocked": True, "sent_24h": 12, "max_daily_posts": 12,
+             "next_slot_frees": frees_iso, "next_slot_frees_min": 180},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        runs = s["runs"]
+        self.assertEqual(runs["quota_blocked"], 1)
+        self.assertIn("next_slot_frees", runs)
+        self.assertEqual(runs["next_slot_frees_min"], 180)
+        text = mr.render_text(s, rows)
+        self.assertIn("下一配额槽", text)
+        self.assertIn("180 分钟", text)
+
+    def test_quota_estimator_absent_when_no_blocked(self):
+        # 无配额满行时不渲染释放估算
+        _write(self.path, [
+            {"outcome": "run_summary", "candidates": 10, "published": 2},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        text = mr.render_text(s, rows)
+        self.assertNotIn("下一配额槽", text)
+
     def test_quality_scan_counts_violations(self):
         """R105：prompt 级禁令是软约束，合规度必须可度量——此前全靠人工读帖。
         巡检覆盖 final_preview 前 120 字（钩子区）。R101 前历史帖命中 FNG 属预期。"""
