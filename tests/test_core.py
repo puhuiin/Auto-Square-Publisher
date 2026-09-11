@@ -2679,6 +2679,28 @@ class TestNumberHallucinationGuard(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("24", reason)
 
+    def test_traditional_chinese_units_accepted(self):
+        """R128 生产误杀回放：TW 源（BlockTempo）标题"市值 2.8 億鎂"——
+        源文/正文两侧的繁体 億/萬 此前不被识别，正文引用 2.8 亿被两连误杀
+        （12:47Z STONK 实录）。繁简同权后必须互通，真编造仍拦截。"""
+        source = "STONK 市值 2.8 億鎂創新高,平台六成收入拿去回購"
+        ok, _ = m.MultiLLMEngine._verify_numbers(
+            "STONK 市值冲到 2.8 亿（≈280,000,000），平台拿六成收入回购", source)
+        self.assertTrue(ok, "简体正文引用繁体源文必须放行")
+        ok2, _ = m.MultiLLMEngine._verify_numbers(
+            "STONK 市值冲到 2.8 億鎂，回购凶猛", source)
+        self.assertTrue(ok2, "繁体正文引用繁体源文必须放行")
+        ok3, reason = m.MultiLLMEngine._verify_numbers(
+            "STONK 市值冲到 5.7 亿，回购凶猛", source)
+        self.assertFalse(ok3, "真编造不得借繁体修复放水")
+        self.assertIn("5.7", reason)
+
+    def test_traditional_wan_unit(self):
+        # 萬 同权：源文 350 萬，正文 350 万
+        ok, _ = m.MultiLLMEngine._verify_numbers(
+            "持有人数突破 350 万", "持有者已達 350 萬人")
+        self.assertTrue(ok)
+
     def test_fullword_billion_with_space_accepted(self):
         """生产误杀回放：新闻源写全拼 '$15.7 Billion'（空格+全拼），
         正文换算 157亿 被误判幻觉。修复后同量级必须互通。"""

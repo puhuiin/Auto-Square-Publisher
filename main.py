@@ -2576,9 +2576,12 @@ class MultiLLMEngine:
                 source_nums.append(float(num_str) * scale)
             except ValueError:
                 continue
-        # 中文单位：X万 / X亿（避免与英文缩写在同一正则在子串上歧义）
-        for m in re.finditer(r"(\d+(?:\.\d+)?)\s*(万|亿)", source_text):
-            scale = 1e4 if m.group(2) == "万" else 1e8
+        # 中文单位：X万 / X亿（避免与英文缩写在同一正则在子串上歧义）。
+        # R128：繁体 億/萬 必须同权——BlockTempo 等 TW 源是生产主力源之一，
+        # "市值 2.8 億鎂"只认简体时提取出裸 2.8，正文引用 2.8 亿(2.8e8) 被
+        # 误判"源文找不到"（生产实录 12:47Z STONK 一篇被两连误杀）
+        for m in re.finditer(r"(\d+(?:\.\d+)?)\s*(万|萬|亿|億)", source_text):
+            scale = 1e4 if m.group(2) in ("万", "萬") else 1e8
             try:
                 source_nums.append(float(m.group(1)) * scale)
             except ValueError:
@@ -2609,10 +2612,11 @@ class MultiLLMEngine:
             if not _in_source(val):
                 return False, f"正文给出精确金额 ${m.group(1)}，源文中找不到（疑似编造数据）"
 
-        # 中文大额单位金额（X亿 / X百万）：只查 ≥100万 的数额数据（"拿 5 万本金"这类口吻不校验）
-        for m in re.finditer(r"(\d+(?:\.\d+)?)\s*([亿万])\s*(?:美元|美刀|刀|U|u|USDT|usd|资金|美元计)?", content):
+        # 中文大额单位金额（X亿 / X百万）：只查 ≥100万 的数额数据（"拿 5 万本金"这类口吻不校验）。
+        # R128：繁体 億/萬 同权（模型从 TW 源转写时会继承繁体写法）
+        for m in re.finditer(r"(\d+(?:\.\d+)?)\s*([亿万萬億])\s*(?:美元|美刀|刀|U|u|USDT|usd|资金|美元计|鎂|镁)?", content):
             num = float(m.group(1))
-            scale = 1e8 if m.group(2) == "亿" else 1e4
+            scale = 1e4 if m.group(2) in ("万", "萬") else 1e8
             abs_val = num * scale
             if abs_val < 1e6:
                 continue
