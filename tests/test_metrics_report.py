@@ -401,6 +401,30 @@ class TestMetricsReport(unittest.TestCase):
         text = mr.render_text(s, rows)
         self.assertNotIn("下一配额槽", text)
 
+    def test_trending_frequency_aggregated(self):
+        """R117：热搜 token 频次——跨快照统计市场注意力的持续度"""
+        _write(self.path, [
+            {"outcome": "run_summary", "candidates": 40, "published": 1,
+             "trending": "NEAR BTC TAO"},
+            {"outcome": "run_summary", "candidates": 42, "published": 0,
+             "trending": "NEAR BTC ETH"},
+            {"outcome": "run_summary", "candidates": 41, "published": 1,
+             "trending": "NEAR XRP"},
+            {"outcome": "run_summary", "candidates": 0, "published": 0,
+             "quota_blocked": True},  # 无 trending
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        runs = s["runs"]
+        self.assertEqual(runs["trend_freq"]["NEAR"], 3,
+                         "NEAR 在 3 个快照中出现")
+        self.assertEqual(runs["trend_freq"]["BTC"], 2)
+        self.assertEqual(runs["trend_freq"]["TAO"], 1)
+        text = mr.render_text(s, rows)
+        self.assertIn("热搜持续度", text)
+        self.assertIn("NEAR×3", text)
+        self.assertIn("BTC×2", text)
+
     def test_quality_scan_counts_violations(self):
         """R105：prompt 级禁令是软约束，合规度必须可度量——此前全靠人工读帖。
         巡检覆盖 final_preview 前 120 字（钩子区）。R101 前历史帖命中 FNG 属预期。"""

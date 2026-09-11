@@ -142,6 +142,7 @@ def summarize(rows):
         "n": 0, "quota_blocked": 0, "active_hours_blocked": 0, "zero_candidates": 0,
         "candidates": 0, "published": 0, "unprocessed": 0,
         "skips": collections.Counter(), "last_trending": "",
+        "trend_freq": collections.Counter(),
     }
     lat_tmp, tok_tmp = collections.defaultdict(list), collections.defaultdict(list)
     for r in rows:
@@ -228,12 +229,16 @@ def summarize(rows):
             tr = r.get("trending")
             if isinstance(tr, str) and tr.strip():
                 runs_tmp["last_trending"] = tr
+                # R117：热搜 token 频次——跨快照统计市场注意力的持续度
+                for tok in tr.split():
+                    runs_tmp["trend_freq"][tok] += 1
             for k, v in r.items():
                 if k.startswith("skipped_") and isinstance(v, (int, float)):
                     runs_tmp["skips"][k[len("skipped_"):]] += int(v)
     s["runs"] = {
-        **{k: v for k, v in runs_tmp.items() if k != "skips"},
+        **{k: v for k, v in runs_tmp.items() if k not in ("skips", "trend_freq")},
         "skips": dict(runs_tmp["skips"]),
+        "trend_freq": dict(runs_tmp["trend_freq"].most_common(8)),
     }
     for prov, vals in lat_tmp.items():
         s["latency_by_provider"][prov] = round(sum(vals) / len(vals), 1)
@@ -302,6 +307,10 @@ def render_text(s, rows=None):
             lines.append(f"  ⏳ 下一配额槽: {runs['next_slot_frees'][:16]} UTC{frees_str}")
         if runs.get("last_trending"):
             lines.append(f"  最近热搜 [{runs['last_trending']}]")
+        if runs.get("trend_freq"):
+            freq_str = " / ".join(f"{k}×{v}" for k, v in
+                                  list(runs["trend_freq"].items())[:5])
+            lines.append(f"  热搜持续度 {freq_str}")
         if runs.get("skips"):
             lines.append(f"  跳过分布 {runs['skips']}")
     if rows is not None:
