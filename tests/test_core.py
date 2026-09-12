@@ -390,6 +390,26 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("最新/刚出炉/几分钟前", prompt)
         self.assertIn("开头不得用被禁的领句", prompt)
 
+    def test_freshness_line_drops_self_banned_words(self):
+        """R156：设计张力闭合——R138 推荐的'刚出炉'若被模型大量采纳成下一个
+        指纹（'最新'变'刚刚'重演），R132 联锁会自动禁用'刚出'——此时时效行
+        必须动态剔除该表述（禁令优先于推荐，防线不互相打架）。"""
+        self._append([
+            {"outcome": "binance_published", "final_preview": "刚出炉的消息 A。"},
+            {"outcome": "binance_published", "final_preview": "刚出炉的行情 B。"},
+            {"outcome": "binance_published", "final_preview": "刚出炉的数据 C。"},
+        ])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 0.4}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        fresh_line = next(l for l in prompt.split("\n") if "突发" in l)
+        self.assertIn("刚出", prompt, "联锁必须已禁用'刚出'")
+        self.assertNotIn("刚出炉", fresh_line.split("等表述")[0],
+                         f"时效行推荐词不得包含被禁表述: {fresh_line}")
+        self.assertIn("最新/几分钟前", fresh_line, "其余推荐词保留")
+
     def test_ending_style_stashed_on_engine(self):
         """R130：抽取的结尾套路短标签要暂存到引擎（回执遥测读它验证轮换
         均匀性），且必须是结尾池词条冒号前的合法标签。"""
@@ -5205,9 +5225,12 @@ class TestRunMainSemantics(unittest.TestCase):
                  patch.object(m, "_quota_next_slot_estimate",
                               return_value=("2026-01-01T00:03:00+00:00", 3)):
                 m._run_main()
-            self.assertEqual(len(slept), 1, "边界追赶应恰好等待一次")
-            self.assertGreaterEqual(slept[0], 3 * 60)
-            self.assertLessEqual(slept[0], 3 * 60 + 120)
+            # slept 可能混入发布重试的 2.5s 短睡（本测试不 mock publisher 网络路径），
+            # 追赶等待是唯一的长睡眠（>60s）
+            catchup_waits = [s for s in slept if s > 60]
+            self.assertEqual(len(catchup_waits), 1, "边界追赶应恰好等待一次")
+            self.assertGreaterEqual(catchup_waits[0], 3 * 60)
+            self.assertLessEqual(catchup_waits[0], 3 * 60 + 120)
             import json as _json
             with open(paths["metrics"], encoding="utf-8") as f:
                 rows = [_json.loads(l) for l in f if l.strip()]
