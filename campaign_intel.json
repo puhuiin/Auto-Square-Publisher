@@ -25,7 +25,5 @@
   "_llm_breaker": {},
   "_article_sent_date": "2026-09-12",
   "_publish_park": {},
-  "_intel_refresh_fail": {
-    "cooldown_until": "2026-09-12T14:46:58.229860+00:00"
-  }
+  "_intel_refresh_fail": {}
 }
