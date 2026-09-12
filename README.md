@@ -195,6 +195,11 @@ python scripts/cost_analysis.py --days 2
 python scripts/metrics_report.py --days 1
 #   --days N 只看最近 N 天（全量口径会稀释近期改善信号）
 #   配额满时显示"⏳ 下一配额槽: HH:MM UTC（约 N 分钟）"
+#   🔭 开场指纹预警：近 10 帖开场共享前缀 ≥3 即报（新模板指纹成形期可见）
+#   ⏱️ 单轮耗时：平均/最长（逼近 20 分钟回调节奏时告警）
+#   ⚠️ 全文零有效挂件 / 全文零标签：Write2Earn 返佣生命线失守的直接信号
+#   结尾套路分布：验证互动句式轮换均匀性
+#   发布成功率为故事口径（同题 failover 多行去重）并列 failover 救回数
 ```
 
 ### 🎬 手动视频发布
