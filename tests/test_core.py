@@ -5181,6 +5181,66 @@ class TestRunMainSemantics(unittest.TestCase):
                 if os.path.exists(p):
                     os.remove(p)
 
+    def test_quota_boundary_catchup_waits_and_proceeds(self):
+        """R154：边界追赶——槽释放 ≤4 分钟时原地等待重查。调度网格常在释放前
+        1~2 分钟撞上饱和（生产实录 20:03/09:23/22:23 三连空转），旧实现每个
+        饱和周期末尾浪费一整个调度机会。等待后配额腾出，运行继续（不再退出）。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        try:
+            import json
+            oldest_ts = datetime.now(timezone.utc) - timedelta(hours=23, minutes=57)
+            with open(paths["cache"], "w", encoding="utf-8") as f:
+                json.dump([{"id": "old", "title": "t", "source": "s",
+                            "sent_at": oldest_ts.isoformat(),
+                            "tokens": ["BTC"]}], f)
+            slept = []
+            # 时间无法在测试中真实推进（sleep 被 patch）：用 count_since 的调用
+            # 序列模拟"等待后最老帖滚出窗口"——首次查=1（满）、重查=0（腾出）
+            counts = iter([1, 0])
+            with patch.object(m, "MAX_DAILY_POSTS", 1), \
+                 patch.object(m.CacheManager, "count_since",
+                              side_effect=lambda *a, **k: next(counts)), \
+                 patch.object(m.time, "sleep", side_effect=lambda s: slept.append(s)), \
+                 patch.object(m, "_quota_next_slot_estimate",
+                              return_value=("2026-01-01T00:03:00+00:00", 3)):
+                m._run_main()
+            self.assertEqual(len(slept), 1, "边界追赶应恰好等待一次")
+            self.assertGreaterEqual(slept[0], 3 * 60)
+            self.assertLessEqual(slept[0], 3 * 60 + 120)
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            rs = [r for r in rows if r.get("outcome") == "run_summary"]
+            self.assertTrue(rs, "运行应继续到收尾写出 run_summary")
+            self.assertNotIn("quota_blocked", rs[0],
+                             "等待后配额腾出，不得再以 quota_blocked 退出")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_quota_no_catchup_when_slot_far(self):
+        # 槽释放 >4 分钟：不等待，照常饱和退出（避免空耗运行时长）
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        try:
+            import json
+            oldest_ts = datetime.now(timezone.utc) - timedelta(hours=10)
+            with open(paths["cache"], "w", encoding="utf-8") as f:
+                json.dump([{"id": "old", "title": "t", "source": "s",
+                            "sent_at": oldest_ts.isoformat(),
+                            "tokens": ["BTC"]}], f)
+            slept = []
+            with patch.object(m, "MAX_DAILY_POSTS", 1), \
+                 patch.object(m.time, "sleep", side_effect=lambda s: slept.append(s)), \
+                 patch.object(m, "_quota_next_slot_estimate",
+                              return_value=("2026-01-01T00:00:00+00:00", 61)):
+                with self.assertRaises(SystemExit) as cm:
+                    m._run_main()
+            self.assertEqual(cm.exception.code, 0)
+            self.assertEqual(slept, [], "远离释放窗口不得触发等待")
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_quota_exit_is_silent(self):
         # 配额用尽整轮静默退出：不调 LLM、不改缓存、exit 0；
         # R91：静默轮必须留 run_summary 痕迹（quota_blocked），否则饱和期不可见

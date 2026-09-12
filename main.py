@@ -5376,6 +5376,17 @@ def _run_main():
     if not dry_run and MAX_DAILY_POSTS > 0:
         sent_24h = cache_mgr.count_since(24)
         if sent_24h >= MAX_DAILY_POSTS:
+            # R154：边界追赶——调度网格(:03/:23/:43)常在槽释放前 1~2 分钟撞上饱和，
+            # 旧实现直接退出，每个饱和周期末尾浪费一整个调度机会（生产实录
+            # 20:03/09:23/22:23 三连）。槽释放 ≤4 分钟时原地等待重查（单次有界
+            # ≤330s，30 分钟 job 超时内余量充足），抢回该周期。
+            _, pre_min = _quota_next_slot_estimate(cache_mgr)
+            if pre_min is not None and 0 < pre_min <= 4:
+                wait_sec = pre_min * 60 + 90
+                logger.info(f"⏳ 配额槽 {pre_min} 分钟后释放，等待 {wait_sec}s 后重查（边界追赶）")
+                time.sleep(wait_sec)
+                sent_24h = cache_mgr.count_since(24)
+        if sent_24h >= MAX_DAILY_POSTS:
             logger.warning(f"🛑 24 小时内已发布 {sent_24h} 篇，达到配额上限 ({MAX_DAILY_POSTS})，本轮自动静默以保护账号权重。")
             # R112：配额释放估算（R129 提为公共函数，发帖轮同样写入）
             next_frees_iso, next_frees_min = _quota_next_slot_estimate(cache_mgr)
