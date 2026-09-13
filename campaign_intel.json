@@ -7,20 +7,21 @@
     "#Earn"
   ],
   "incentivized_tokens": [
-    "$BNB",
-    "$KGST",
     "$REZ",
+    "$KGST",
+    "$THE",
     "$HOLO",
-    "$SPCXB",
-    "$USDT",
-    "$NIU"
+    "$BNB",
+    "$牛来",
+    "$CRMB",
+    "$HIMSB"
   ],
-  "strategy_guidance": "Prioritize the KGST Flexible Earn campaign (limit ends today) in your posts – frame it as a sprint opportunity to capture high‑APR rewards and drive Write2Earn commissions. Combine this urgency with ongoing high‑traffic activities like the $BNB‑rich THE Trading Tournament, HOLO Trading Tournament, and Binance Traders League Season 4 to encourage diversified trading across futures, spot, and earn products. By linking daily market news to these active contracts and promotions, you maximize exposure and commission potential for both new and existing users.",
-  "last_updated": "2026-09-13T10:03:47.261540Z",
+  "strategy_guidance": "最紧迫的是 KGST 活期理财 14% APR 活动今日（2026-09-13）截止，发帖机器人应第一时间以「最后一天冲刺+抄作业」角度追贴，引导读者申购并植入交易返佣入口。日常快讯可围绕 REZ（20万 USDC）、THE/HOLO（各400 BNB）三场 Trading Tournament 与 $4M 奖池的 Traders League S4 做赛况复盘和参赛攻略，从 Futures 与 bStocks 双线切入。同时借新上线 Seed Tag 代币 牛来 及 CRMB/HIMSB bStocks 交易对上线做热点解析，统一带上 #Write2Earn #BinanceSquare 最大化曝光与返佣转化。",
+  "last_updated": "2026-09-13T22:48:56.925592Z",
   "_feed_health": {},
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-09-13",
