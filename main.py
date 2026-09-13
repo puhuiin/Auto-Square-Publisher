@@ -3844,7 +3844,9 @@ class ImageManager:
                 logger.warning("图片 Content-Length 超出 15MB 上限，跳过")
                 return None
 
-            chunks: List[bytes] = []
+            # 避免先保留分块列表、再由 join 分配第二份完整缓冲区，
+            # 降低接近 15MB 上限时的峰值内存占用。
+            content_buffer = io.BytesIO()
             total = 0
             for chunk in r.iter_content(chunk_size=64 * 1024):
                 if not chunk:
@@ -3853,8 +3855,8 @@ class ImageManager:
                 if total > max_bytes:
                     logger.warning("图片流式下载超出 15MB 上限，中途掐断")
                     return None
-                chunks.append(chunk)
-            content = b"".join(chunks)
+                content_buffer.write(chunk)
+            content = content_buffer.getvalue()
             if len(content) <= 1024:
                 return None
 

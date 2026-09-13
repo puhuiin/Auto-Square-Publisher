@@ -1293,6 +1293,52 @@ class TestEnvParsing(unittest.TestCase):
         self.assertEqual(m._positive_int("T", -5, 48), 48)
 
 
+class TestImageDownloadStreaming(unittest.TestCase):
+    """图片流式下载的实际体积限制与连接释放回归测试。"""
+
+    def test_actual_stream_limit_closes_response(self):
+        class FakeResponse:
+            status_code = 200
+            headers = {
+                "Content-Type": "image/png",
+                "Content-Length": "1024",
+            }
+
+            def __init__(self):
+                self.closed = False
+                self.chunk_size = None
+
+            def raise_for_status(self):
+                return None
+
+            def iter_content(self, chunk_size):
+                self.chunk_size = chunk_size
+                chunk = b"x" * chunk_size
+                for _ in range((15 * 1024 * 1024 // chunk_size) + 2):
+                    yield chunk
+
+            def close(self):
+                self.closed = True
+
+        response = FakeResponse()
+        with patch.object(
+            m.ImageManager,
+            "_is_safe_image_url",
+            return_value=True,
+        ), patch.object(m, "http_get", return_value=response) as get:
+            result = m.ImageManager.download_image(
+                "https://example.com/image.png"
+            )
+
+        self.assertIsNone(result)
+        self.assertTrue(response.closed)
+        self.assertEqual(response.chunk_size, 64 * 1024)
+        self.assertTrue(get.call_args.kwargs["stream"])
+        self.assertFalse(get.call_args.kwargs["allow_redirects"])
+        self.assertEqual(get.call_args.kwargs["timeout"], 6)
+        self.assertEqual(get.call_args.kwargs["retries"], 1)
+
+
 class TestDailyQuota(unittest.TestCase):
     """24h 滚动配额统计"""
 
