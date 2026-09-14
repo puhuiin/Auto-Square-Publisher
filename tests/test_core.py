@@ -3367,6 +3367,44 @@ class TestIntelRefreshBackoff(unittest.TestCase):
             # 成功后退避标记应被清空
             self.assertFalse(m.intel_state_get("_intel_refresh_fail", {}).get("cooldown_until"))
 
+    def test_default_intel_fallback_has_no_fake_fresh_timestamp(self):
+        """R179：无缓存 + 退避中 → 静态兜底。不得盖「现在」时间戳，
+        否则 _build_user_prompt 判定新鲜，R83 降权被绕过。"""
+        import os
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+        from unittest.mock import patch
+        cooldown = {"cooldown_until": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()}
+        # intel_state_get 读同一文件；mock 掉以免 state 写入又造出「历史」
+        with patch.object(m, "intel_state_get", return_value=cooldown), \
+             patch.object(m.CampaignScanner, "fetch_raw_campaigns") as mock_fetch:
+            intel = m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+            mock_fetch.assert_not_called()
+        self.assertEqual(intel.get("active_tags"), m.CampaignScanner.DEFAULT_INTEL["active_tags"])
+        self.assertNotIn("last_updated", intel,
+                         "静态兜底不得带 last_updated（无时间戳 = fail-closed 降权）")
+
+    def test_default_intel_on_failed_analysis_has_no_fake_timestamp(self):
+        """分析失败且无历史：同样不得盖假时间戳。"""
+        import os
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+        from unittest.mock import patch
+
+        def _state_get(key, default=None):
+            if key == "_intel_refresh_fail":
+                return {}
+            return 0 if default is None else default
+
+        with patch.object(m, "intel_state_get", side_effect=_state_get), \
+             patch.object(m, "intel_state_set"), \
+             patch.object(m, "intel_state_update", return_value=1), \
+             patch.object(m.CampaignScanner, "fetch_raw_campaigns", return_value=[]), \
+             patch.object(m.CampaignScanner, "analyze_with_ai", return_value=None):
+            intel = m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+        self.assertNotIn("last_updated", intel)
+        self.assertEqual(intel.get("active_tags"), m.CampaignScanner.DEFAULT_INTEL["active_tags"])
+
 
 class TestEmptyCatalogStreak(unittest.TestCase):
     """活动目录全空监控：连续多轮全空≈ catalogId 失效，必须升级报警而非永久静默"""

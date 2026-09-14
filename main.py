@@ -3612,8 +3612,9 @@ class CampaignScanner:
                     })
                     if usable_cache:
                         return usable_cache
-                    return dict(CampaignScanner.DEFAULT_INTEL,
-                                last_updated=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+                    # R179：静态兜底不得盖「现在」时间戳——会让 _build_user_prompt
+                    # 判定 intel_fresh=True，R83 降权路径被绕过（假新鲜）
+                    return dict(CampaignScanner.DEFAULT_INTEL)
             except Exception:
                 pass
 
@@ -3665,8 +3666,8 @@ class CampaignScanner:
             logger.warning("AI 活动分析失败，沿用上一份历史活动情报（稍后再自动重试）。")
             return usable_cache
         logger.warning("AI 活动分析失败且无历史情报，本次使用静态兜底配置（不落盘）。")
-        return dict(CampaignScanner.DEFAULT_INTEL,
-                    last_updated=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+        # R179：同上，静态兜底不盖假时间戳（无 last_updated → fail-closed 走降权注入）
+        return dict(CampaignScanner.DEFAULT_INTEL)
 
 
 # ---------------------------------------------------------------------------
