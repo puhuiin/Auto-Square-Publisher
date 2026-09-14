@@ -3288,16 +3288,31 @@ class TestIntelRefreshBackoff(unittest.TestCase):
 
     def test_backoff_skips_retry_within_window(self):
         from unittest.mock import patch
+        import tempfile, json as _json
         # 标记 2h 前刚失败
         m.intel_state_set("_intel_refresh_fail", {
             "cooldown_until": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
         })
-        with patch.object(m.CampaignScanner, "fetch_raw_campaigns") as mock_fetch, \
-             patch.object(m.CampaignScanner, "analyze_with_ai") as mock_ai:
-            intel = m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
-            mock_fetch.assert_not_called()
-            mock_ai.assert_not_called()
-            self.assertEqual(intel.get("active_tags"), ["#历史"], "退避期内应沿用历史情报")
+        metrics_tmp = tempfile.mkdtemp()
+        orig_metrics = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(metrics_tmp, "metrics.jsonl")
+        try:
+            with patch.object(m.CampaignScanner, "fetch_raw_campaigns") as mock_fetch, \
+                 patch.object(m.CampaignScanner, "analyze_with_ai") as mock_ai:
+                intel = m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+                mock_fetch.assert_not_called()
+                mock_ai.assert_not_called()
+                self.assertEqual(intel.get("active_tags"), ["#历史"], "退避期内应沿用历史情报")
+            # R175：退避跳过必须写遥测，否则报表分不清「配额早退」vs「被冷却挡」
+            with open(m.METRICS_FILE, encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            skips = [r for r in rows if r.get("outcome") == "intel_cooldown_skip"]
+            self.assertEqual(len(skips), 1)
+            self.assertIn("backoff_until", skips[0].get("reason", ""))
+        finally:
+            m.METRICS_FILE = orig_metrics
+            import shutil
+            shutil.rmtree(metrics_tmp, ignore_errors=True)
 
     def test_backoff_cleared_after_success(self):
         from unittest.mock import patch

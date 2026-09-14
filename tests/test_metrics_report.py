@@ -125,6 +125,23 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("降级(过期) 1", out)
         self.assertIn("新鲜 1", out)
 
+    def test_intel_cooldown_skip_counted(self):
+        """R175：退避跳过必须可见——区分「配额早退没刷」vs「想刷被 2h 冷却挡」"""
+        rows = [
+            {"ts": "2026-09-14T13:20:00+00:00", "outcome": "intel_cooldown_skip",
+             "stage": "campaign_intel", "reason": "backoff_until=2026-09-14T15:02:06"},
+            {"ts": "2026-09-14T13:40:00+00:00", "outcome": "intel_cooldown_skip",
+             "stage": "campaign_intel", "reason": "backoff_until=2026-09-14T15:02:06"},
+            {"ts": "2026-09-14T13:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "quality", "provider": "Preset-openrouter", "reason": "x"},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["intel_cooldown_skips"], 2)
+        # 不得污染拒稿面板
+        self.assertEqual(sum(s["reject_by_stage"].values()), 1)
+        out = mr.render_text(s)
+        self.assertIn("失败退避跳过 2 轮", out)
+
     def test_empty_file_renders(self):
         _write(self.path, [])
         rows, bad = mr.load_rows(self.path)

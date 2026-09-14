@@ -3572,6 +3572,15 @@ class CampaignScanner:
                 until_dt = datetime.fromisoformat(cooldown_until)
                 if datetime.now(until_dt.tzinfo or timezone.utc) < until_dt:
                     logger.warning(f"⏭️ 情报分析处于失败退避期（至 {cooldown_until}），本轮沿用历史/默认情报。")
+                    # R175：退避跳过留痕——生产实录 cooldown 至 15:02 而 R172 的
+                    # 4500 预算 13:07 已部署，报表此前只能看到 intel_degraded=true
+                    # 却不知「为何不刷」（配额早退 / 退避 / 刷新失败三选一）
+                    append_metrics({
+                        "stage": "campaign_intel",
+                        "outcome": "intel_cooldown_skip",
+                        "reason": f"backoff_until={cooldown_until}"[:80],
+                        "provider": None,
+                    })
                     if usable_cache:
                         return usable_cache
                     return dict(CampaignScanner.DEFAULT_INTEL,

@@ -203,6 +203,8 @@ def summarize(rows):
         # R173：过期情报注入计数——R171 写侧已直录，报表端同轮补齐（R92 纪律）
         "intel_degraded_posts": 0,
         "intel_fresh_posts": 0,
+        # R175：情报刷新被失败退避跳过的轮次（区分「配额早退没刷」vs「想刷被退避挡」）
+        "intel_cooldown_skips": 0,
         "reject_by_stage": collections.Counter(),
         "reject_by_provider": collections.Counter(),
         "reject_reasons": collections.Counter(),
@@ -279,6 +281,9 @@ def summarize(rows):
                 s["intel_degraded_posts"] += 1
             elif r.get("intel_degraded") is False:
                 s["intel_fresh_posts"] += 1
+        if outcome == "intel_cooldown_skip":
+            # R175：想刷新但被 2h 失败退避挡下——与配额早退（根本没走到这里）区分
+            s["intel_cooldown_skips"] += 1
         elif outcome == "llm_rejected":
             s["reject_by_stage"][str(r.get("stage", "unknown"))] += 1
             s["reject_by_provider"][who] += 1
@@ -500,6 +505,11 @@ def render_text(s, rows=None):
             lines.append(
                 f"  💡 情报注入{flag}: 新鲜 {s['intel_fresh_posts']} / "
                 f"降级(过期) {s['intel_degraded_posts']}（共 {n_intel_marked} 篇带标记）")
+    # R175：退避跳过独立于投递块（可能 0 篇投递时仍有退避轮次）
+    if s.get("intel_cooldown_skips"):
+        lines.append(
+            f"  ⏭️ 情报刷新被失败退避跳过 {s['intel_cooldown_skips']} 轮"
+            f"（2h 冷却期内沿用旧情报）")
     n_rej = sum(s["reject_by_stage"].values())
     if n_rej:
         lines.append(f"- 拦截 {n_rej} 次：阶段 {_top(s['reject_by_stage'])} / 模型 {_top(s['reject_by_provider'])}")
