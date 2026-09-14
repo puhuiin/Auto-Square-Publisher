@@ -4,20 +4,19 @@
     "#BinanceSquare",
     "#TradingTournament",
     "#Futures",
-    "#Earn"
+    "#bStocks"
   ],
   "incentivized_tokens": [
+    "$BNB",
     "$REZ",
-    "$KGST",
     "$THE",
     "$HOLO",
-    "$BNB",
+    "$BNCB",
     "$牛来",
-    "$CRMB",
-    "$HIMSB"
+    "$USDC"
   ],
-  "strategy_guidance": "最紧迫的是 KGST 活期理财 14% APR 活动今日（2026-09-13）截止，发帖机器人应第一时间以「最后一天冲刺+抄作业」角度追贴，引导读者申购并植入交易返佣入口。日常快讯可围绕 REZ（20万 USDC）、THE/HOLO（各400 BNB）三场 Trading Tournament 与 $4M 奖池的 Traders League S4 做赛况复盘和参赛攻略，从 Futures 与 bStocks 双线切入。同时借新上线 Seed Tag 代币 牛来 及 CRMB/HIMSB bStocks 交易对上线做热点解析，统一带上 #Write2Earn #BinanceSquare 最大化曝光与返佣转化。",
-  "last_updated": "2026-09-13T22:48:56.925592Z",
+  "strategy_guidance": "最紧迫的是U本位理财7% APR（VIP专享7.7%）活动于2026-09-15截止，仅剩最后1天，发帖机器人应立即以'活动冲刺+抄作业'角度追贴，引导读者抢末班车存入吃利息并挂返佣链接。同时围绕$REZ（20万USDC）、$THE、$HOLO三大交易锦标赛及Traders League S4（$4M总奖池）输出合约策略复盘与跟单'抄作业'内容，用#Futures #TradingTournament标签承接竞赛流量。日常快讯则绑定今日新上线的BNCB bStocks（新增抵押品+现货交易对）与Seed Tag新币牛来做'新币解析+活动导流'组合，并联动Stock Options限时手续费优惠、Word of the Day答题赢USDC及Wallet链上交易S6（$5万奖池）提升互动与Write to Earn返佣。",
+  "last_updated": "2026-09-14T15:25:39.814691Z",
   "_feed_health": {},
   "_fallback_image": {
     "date": "2026-09-09",
