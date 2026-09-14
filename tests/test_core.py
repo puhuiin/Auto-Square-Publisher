@@ -436,7 +436,49 @@ class TestRecentOpeners(unittest.TestCase):
 class TestIntelFreshnessInPrompt(unittest.TestCase):
     """R83：过期情报正文注入 prompt 必须降权——生产实录 09-10 仍喂
     "09-04 双重截止抢最后48小时"（已过期 6 天），模型照写 = 发布过期事实。
-    代币/标签加权不受影响（那只影响排序，不进正文事实）。"""
+    代币/标签加权不受影响（那只影响排序，不进正文事实）。
+    R171：last_intel_degraded 直录进发布回执，过期注入可聚合度量。"""
+
+    def _eng(self):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.providers = [m.LLMProviderConfig("stub", "https://x", "k", "mm")]
+        eng.last_ending_style = None
+        eng.last_fng_ban_active = None
+        eng.last_fng_hook_count = None
+        eng.last_fng_market_stripped = None
+        eng.last_intel_degraded = None
+        eng.last_attempted_provider = None
+        eng.last_attempted_model = None
+        return eng
+
+    def _item(self):
+        return {"title": "BTC news", "summary": "Bitcoin surged", "source": "U.Today"}
+
+    def test_fresh_intel_not_degraded(self):
+        eng = self._eng()
+        intel = {"strategy_guidance": "围绕 BTC 热点写作",
+                 "last_updated": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")}
+        prompt, _ = eng._build_user_prompt(self._item(), intel, "", ["BTC"])
+        self.assertFalse(eng.last_intel_degraded)
+        self.assertIn("官方活动风向参考", prompt)
+        self.assertNotIn("已过缓存期", prompt)
+
+    def test_stale_intel_marked_degraded(self):
+        eng = self._eng()
+        stale = (datetime.now(timezone.utc) - timedelta(hours=13)).isoformat().replace("+00:00", "Z")
+        intel = {"strategy_guidance": "追 KGST 截止活动",
+                 "last_updated": stale}
+        prompt, _ = eng._build_user_prompt(self._item(), intel, "", ["BTC"])
+        self.assertTrue(eng.last_intel_degraded)
+        self.assertIn("已过缓存期", prompt)
+
+    def test_no_intel_leaves_degraded_none(self):
+        eng = self._eng()
+        eng.last_intel_degraded = True  # 上一故事残留
+        eng._build_user_prompt(self._item(), None, "", ["BTC"])
+        self.assertIsNone(eng.last_intel_degraded)
 
 
 class TestPastDateRefs(unittest.TestCase):

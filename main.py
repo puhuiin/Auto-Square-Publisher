@@ -2126,6 +2126,9 @@ class MultiLLMEngine:
         self.last_fng_ban_active: Optional[bool] = None
         self.last_fng_hook_count: Optional[int] = None
         self.last_fng_market_stripped: Optional[bool] = None
+        # R171：情报降级注入状态——R83/R164 只在日志里可见，回执直录后
+        # "过期情报是否仍在喂稿"变成可聚合事实（同 FNG 三件套模式）
+        self.last_intel_degraded: Optional[bool] = None
         # R168：故事级 llm_failed 行此前只有 reason 无提供商——生产 31 条失败
         # 无法回答"最后撞的是谁"（质量门/超时原因里不带通道名）。
         self.last_attempted_provider: Optional[str] = None
@@ -2789,6 +2792,7 @@ class MultiLLMEngine:
         # fresh（<12h）正常注入；过期正文降权为"仅背景参考、严禁引用其中的日期与
         # 倒计时"，代币与标签加权不受影响（那只影响排序，不进正文事实）。
         intel_section = ""
+        self.last_intel_degraded = None
         if campaign_intel and campaign_intel.get("strategy_guidance"):
             intel_fresh = False
             try:
@@ -2798,6 +2802,9 @@ class MultiLLMEngine:
                     intel_fresh = (datetime.now(_dt.tzinfo or timezone.utc) - _dt).total_seconds() < INTEL_EXPIRE_HOURS * 3600
             except Exception:
                 intel_fresh = False
+            # R171：降级注入直录——配额饱和期跳过刷新导致 intel 可陈放 14h+，
+            # 此前只能靠日志推断"这帖是不是用过期情报写的"
+            self.last_intel_degraded = not intel_fresh
             if intel_fresh:
                 # R127 运行时守卫：R127 修复只作用于下次刷新，当前缓存里的
                 # guidance 仍可能带着过期竞赛指导（生产实录：XPIN 09-04 已过期
@@ -5898,6 +5905,9 @@ def _run_main():
                     fng_hook_count_used = _fhc if isinstance(_fhc, int) else None
                     _fms = getattr(llm_engine, "last_fng_market_stripped", None)
                     fng_market_stripped = _fms if isinstance(_fms, bool) else None
+                    # R171：情报降级注入——度量"过期情报是否仍在喂稿"
+                    _idg = getattr(llm_engine, "last_intel_degraded", None)
+                    intel_degraded = _idg if isinstance(_idg, bool) else None
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
@@ -5927,6 +5937,7 @@ def _run_main():
                         "fng_ban_active": fng_ban_used,
                         "fng_hook_count": fng_hook_count_used,
                         "fng_market_stripped": fng_market_stripped,
+                        "intel_degraded": intel_degraded,
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,
