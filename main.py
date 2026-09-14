@@ -2239,6 +2239,12 @@ class MultiLLMEngine:
                 api_key=provider.api_key,
                 base_url=provider.base_url,
                 timeout=provider.timeout,
+                # R166：关掉 SDK 层重试。我们已有三层容错（同提供商空回重试、
+                # 预算扩容、跨提供商 failover）+ 429 专项冷却；SDK 默认 max_retries=2
+                # 会与之叠乘——生产实锤 openrouter 单次 summarize 墙钟 724s /
+                # 459s（timeout 名义 25s），中位数却只有 15s，长尾正是重试×扩容
+                # 堆叠。SDK 只负责一次 HTTP 往返，失败语义交回上层。
+                max_retries=0,
                 default_headers={
                     "HTTP-Referer": "https://github.com/puhuiin/Auto-Square-Publisher",
                     "X-Title": "Binance Square Auto Poster",

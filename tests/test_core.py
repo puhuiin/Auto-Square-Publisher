@@ -2304,6 +2304,18 @@ class TestTimeoutBudgetCoupling(unittest.TestCase):
         orp = next(p for p in chain if p.name == "Preset-openrouter")
         self.assertEqual(orp.timeout, 25.0, "非推理通道不应被抬超时")
 
+    def test_openai_client_disables_sdk_retries(self):
+        """R166：SDK 默认 max_retries=2 与自有扩容/空回重试/failover 叠乘，
+        生产 openrouter 单次 summarize 墙钟曾达 724s（中位数仅 15s）。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._clients = {}
+        p = m.LLMProviderConfig("t", "https://api.example.com/v1", "k", "m", timeout=25.0)
+        client = eng._get_client(p)
+        self.assertEqual(client.max_retries, 0, "SDK 层不得再叠加重试")
+        self.assertEqual(client.timeout, 25.0)
+        # 缓存复用同一实例
+        self.assertIs(eng._get_client(p), client)
+
 
 class TestReasonixGateway(unittest.TestCase):
     """Reasonix 本地免费模型网关集成"""
