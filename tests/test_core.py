@@ -5642,12 +5642,37 @@ class TestRunMainSemantics(unittest.TestCase):
         try:
             m._run_main()
             self.assertEqual(self._engine.summarize.call_count, 1)
-            # 拟人间隔断言：唯一一次发帖后应有 90-240s 的 sleep（不再 3-8s 指纹）
-            self.assertEqual(len(self.sleep_calls), 1)
-            self.assertGreaterEqual(self.sleep_calls[0], 90)
+            # R178：拟人间隔前移到「第 2+ 篇发布门口」——本例 post2 被近似去重
+            # 挡在发布前，不应白等 90~240s（旧实现 post1 后立刻 sleep）
+            self.assertEqual(len(self.sleep_calls), 0,
+                             "未走到第 2 篇发布门口不得拟人等待")
             self.assertEqual(pub.publish.call_count, 1)
             records = self._read_json(paths["cache"], [])
             self.assertEqual([r["id"] for r in records], ["news-1"])
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_inter_post_sleep_only_before_second_publish(self):
+        """R178：两篇都成功时，第二次发布前必须 90~240s 拟人间隔（反连发指纹）"""
+        second = dict(self._candidate(), id="news-2",
+                      title="Bitcoin miners revenue hits a new monthly high",
+                      summary="Bitcoin BTC miner revenue")
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False, max_posts="2",
+                                      candidates=[self._candidate(), second],
+                                      real_near_dup=False)
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            m._run_main()
+            self.assertEqual(pub.publish.call_count, 2)
+            self.assertEqual(len(self.sleep_calls), 1, "两次发布之间恰好一次拟人间隔")
+            self.assertGreaterEqual(self.sleep_calls[0], 90)
+            self.assertLessEqual(self.sleep_calls[0], 240)
         finally:
             self._teardown(patches, tmpdir)
 

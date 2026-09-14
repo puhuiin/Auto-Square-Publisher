@@ -5884,6 +5884,16 @@ def _run_main():
                 draft_exported = False
 
                 if binance_enabled:
+                    # R178：拟人 pacing 挪到「即将发布第 2+ 篇」之前。
+                    # 旧实现 post1 成功后立刻 sleep，再扫剩余候选找 post2——
+                    # 生产 13:09/13:29/13:49 三轮 published=1 却 elapsed ~370s，
+                    # 其中 90~240s 是白等：token_limit 等把 post2 全挡了，sleep 已付。
+                    # 现在只有真的走到发布门口才睡，找不到 post2 则零等待。
+                    if not dry_run and posted_count > 0:
+                        delay = random.randint(90, 240)
+                        logger.info(f"⏳ 拟人间隔 {delay}s（第 {posted_count + 1} 篇发布前，模拟真人节奏）...")
+                        time.sleep(delay)
+                        sleep_total_sec += delay
                     t_pub_start = time.time()
                     success = publisher.publish(post_content, image_url=uploaded_image_url,
                                                 ensure_tokens=post_tokens, campaign_intel=campaign_intel,
@@ -6141,15 +6151,9 @@ def _run_main():
             exception_skipped += 1
             continue
 
-        # 拟人间隔（DRY_RUN 只验证链路，不睡）：max_posts=2 时两篇仅隔 3~8 秒是明确的
-        # 机器人指纹（生产实测 04:50/04:51 连发两篇）。真人发帖间隔是分钟级，
-        # 升级为 90~240 秒随机；宁可运行时长增加，也不要账号行为画像裸奔。
-        # Actions 步骤 15 分钟超时内可容纳 2 篇（约 +4 分钟），余量充足。
-        if not dry_run and posted_count < max_posts:
-            delay = random.randint(90, 240)
-            logger.info(f"⏳ 拟人间隔 {delay}s（模拟真人发帖节奏）...")
-            time.sleep(delay)
-            sleep_total_sec += delay
+        # R178：拟人间隔已前移到「第 2+ 篇发布门口」（见 publish 前）。
+        # 此处不再 sleep——旧位置在 post1 成功后、扫描 post2 之前，
+        # 常见结局是 post2 不存在，90~240s 纯浪费。
 
     # R88：每轮一条运行摘要遥测（outcome=run_summary；dry 行由 append_metrics 自动
     # 打标并被报表/调度评分排除）——补齐"候选 → 各类跳过 → 投递"漏斗的隐形阶段，
