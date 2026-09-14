@@ -6834,6 +6834,34 @@ class TestLastFailReason(unittest.TestCase):
             import shutil
             shutil.rmtree(tmp, ignore_errors=True)
 
+    def test_empty_content_reject_carries_finish_reason(self):
+        """R170：transport 空回也必须带 finish_reason——length=思考链吃满预算，
+        stop=上游真·空包；此前只有 quality 路径有（R163）。"""
+        import tempfile, json as _json
+        tmp = tempfile.mkdtemp()
+        orig_metrics = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(tmp, "metrics.jsonl")
+        try:
+            eng = self._engine()
+            resp = MagicMock()
+            resp.choices = [MagicMock(message=MagicMock(content=""),
+                                      finish_reason="stop")]
+            resp.usage = MagicMock(total_tokens=1200)
+            client = MagicMock()
+            client.chat.completions.create.return_value = resp
+            with patch.object(eng, "_get_client", return_value=client):
+                self.assertIsNone(eng.summarize(self._item(), None, market_context="",
+                                                token_hints=["BTC"]))
+            with open(m.METRICS_FILE, encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            rejects = [r for r in rows if r.get("stage") == "transport"]
+            self.assertTrue(rejects, "空回必须写 transport 拒稿行")
+            self.assertEqual(rejects[-1].get("finish_reason"), "stop")
+        finally:
+            m.METRICS_FILE = orig_metrics
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
     def test_no_valid_token_sets_reason(self):
         eng = self._engine()
         body = ("比特币放量突破关键位，短线情绪转多，回调就是上车机会，"

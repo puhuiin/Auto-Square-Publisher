@@ -3187,9 +3187,14 @@ class MultiLLMEngine:
                 # 连续挂两个故事的通道进冷却是合理的。
                 fails = self._fail_counts.get(provider.name, 0) + 1
                 self._fail_counts[provider.name] = fails
+                # R170：空回也带 finish_reason——区分「思考链吃满预算」(length)
+                # 与「上游真·空包」(stop)，与 R163 quality 快照对齐；
+                # Mock/异常态强转防 json.dumps 吞行（widget_count 同款坑）
+                _ff_empty = final_finish if isinstance(final_finish, str) else None
                 self._log_reject(news_item, provider.name, "transport", str(e),
                                  tokens_used, latency_sec, provider.model,
-                                 persona=persona["name"])
+                                 persona=persona["name"],
+                                 finish_reason=_ff_empty or None)
                 fail_reason = str(e)
                 enter_breaker = fails >= 2
                 if enter_breaker:
