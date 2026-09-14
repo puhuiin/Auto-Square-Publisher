@@ -2114,6 +2114,10 @@ class MultiLLMEngine:
         self.last_fng_ban_active: Optional[bool] = None
         self.last_fng_hook_count: Optional[int] = None
         self.last_fng_market_stripped: Optional[bool] = None
+        # R168：故事级 llm_failed 行此前只有 reason 无提供商——生产 31 条失败
+        # 无法回答"最后撞的是谁"（质量门/超时原因里不带通道名）。
+        self.last_attempted_provider: Optional[str] = None
+        self.last_attempted_model: Optional[str] = None
 
     # ---------------- 跨运行熔断持久化（网络抖动级降级到冷却级） ----------------
     _BREAKER_STATE_KEY = "_llm_breaker"
@@ -2953,6 +2957,8 @@ class MultiLLMEngine:
         # provider 级记录）：各 return None 前必赋值；此处默认值覆盖"无提供商"早退路径，
         # 循环内/循环后路径在下面另行赋值（fail_reason 同理，空链时避免引用未绑定）。
         self.last_fail_reason = "无可用 LLM 提供商配置"
+        self.last_attempted_provider = None
+        self.last_attempted_model = None
         if not self.providers:
             logger.error("没有任何可用的 LLM 提供商配置！")
             # 空链也留痕：否则"连续 3 次失败熔断"在遥测里看不到任何前因，
@@ -2972,6 +2978,8 @@ class MultiLLMEngine:
             logger.info(f"[{index + 1}/{len(ordered)}] 正在尝试使用提供商 [{provider.name}] (模型: {provider.model})...")
             # 计时起点放在 try 之前：连 _get_client 构造失败也要能记出耗时
             t_call = time.perf_counter()
+            self.last_attempted_provider = provider.name
+            self.last_attempted_model = provider.model
             try:
                 client = self._get_client(provider)
 
@@ -5716,6 +5724,10 @@ def _run_main():
                     "title": title[:60], "source": source, "tokens": detected_tokens,
                     "impact_score": score, "age_hours": item.get("age_hours"),
                     "reason": (getattr(llm_engine, "last_fail_reason", "") or "")[:80],
+                    # R168：全链失败时点名最后撞上的通道——此前 31 条 llm_failed
+                    # 只有 reason，"Request timed out" 无法归因到提供商
+                    "provider": getattr(llm_engine, "last_attempted_provider", None),
+                    "model": getattr(llm_engine, "last_attempted_model", None),
                     "outcome": "llm_failed",
                 })
                 # 故事级停放（LLM 版）：同篇新闻的质量门/幻觉门系统性拒稿，重试也大概率

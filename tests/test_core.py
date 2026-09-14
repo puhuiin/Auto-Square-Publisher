@@ -6763,6 +6763,47 @@ class TestLastFailReason(unittest.TestCase):
             out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
         self.assertIsNone(out)
         self.assertEqual(eng.last_fail_reason, "boom")
+        # R168：全链失败必须点名最后撞上的通道
+        self.assertEqual(eng.last_attempted_provider, "stub")
+        self.assertEqual(eng.last_attempted_model, "mm")
+
+    def test_last_attempted_cleared_between_stories(self):
+        eng = self._engine(providers=[])
+        eng.last_attempted_provider = "stale-from-previous-story"
+        with patch.object(m, "append_metrics"):
+            eng.summarize(self._item(), None, market_context="")
+        self.assertIsNone(eng.last_attempted_provider)
+
+    def test_llm_failed_metrics_carry_provider(self):
+        import tempfile, json as _json
+        tmp = tempfile.mkdtemp()
+        orig_metrics = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(tmp, "metrics.jsonl")
+        try:
+            eng = self._engine()
+            client = MagicMock()
+            client.chat.completions.create.side_effect = RuntimeError("boom")
+            with patch.object(eng, "_get_client", return_value=client):
+                self.assertIsNone(eng.summarize(self._item(), None, market_context="",
+                                                token_hints=["BTC"]))
+            # 模拟 _run_main 的故事级失败留痕（含 R168 字段）
+            m.append_metrics({
+                "title": "t", "source": "s", "tokens": ["BTC"],
+                "reason": (eng.last_fail_reason or "")[:80],
+                "provider": eng.last_attempted_provider,
+                "model": eng.last_attempted_model,
+                "outcome": "llm_failed",
+            })
+            with open(m.METRICS_FILE, encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            failed = [r for r in rows if r.get("outcome") == "llm_failed"]
+            self.assertEqual(len(failed), 1)
+            self.assertEqual(failed[0]["provider"], "stub")
+            self.assertEqual(failed[0]["model"], "mm")
+        finally:
+            m.METRICS_FILE = orig_metrics
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
 
     def test_no_valid_token_sets_reason(self):
         eng = self._engine()
