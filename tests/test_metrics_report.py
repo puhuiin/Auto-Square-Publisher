@@ -103,6 +103,28 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("拒稿快照", out)
         self.assertIn("finish=stop", out)
 
+    def test_intel_degraded_counted_and_rendered(self):
+        """R173：R171 写侧 intel_degraded 必须进报表——过期情报注入可聚合"""
+        rows = [
+            {"ts": "2026-09-14T13:00:00+00:00", "outcome": "binance_published",
+             "provider": "Preset-b.ai", "tokens": ["ADA"], "intel_degraded": True,
+             "platforms": ["binance"], "widget_count": 2, "tag_count": 3},
+            {"ts": "2026-09-14T13:10:00+00:00", "outcome": "binance_published",
+             "provider": "Preset-b.ai", "tokens": ["BTC"], "intel_degraded": False,
+             "platforms": ["binance"], "widget_count": 2, "tag_count": 3},
+            # 历史行无字段：不进分母
+            {"ts": "2026-09-14T10:00:00+00:00", "outcome": "binance_published",
+             "provider": "Preset-openrouter", "tokens": ["XRP"],
+             "platforms": ["binance"], "widget_count": 2, "tag_count": 3},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["intel_degraded_posts"], 1)
+        self.assertEqual(s["intel_fresh_posts"], 1)
+        out = mr.render_text(s)
+        self.assertIn("情报注入", out)
+        self.assertIn("降级(过期) 1", out)
+        self.assertIn("新鲜 1", out)
+
     def test_empty_file_renders(self):
         _write(self.path, [])
         rows, bad = mr.load_rows(self.path)
