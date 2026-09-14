@@ -51,6 +51,11 @@ jobs:
       - name: 检出仓库代码
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1（SHA 锁定防投毒，dependabot 负责跟进）
         with:
+          # R161 生产事故修复：并发组排队的运行若按默认事件 SHA 检出，拿到的是
+          # 入队时刻的旧 main——前一运行刚推送的 sent_cache 记录对它不可见，
+          # 同一 news_id 会重复发布（2026-09-14 01:33/01:36 SHIB 同条双发实录）。
+          # 检出 main 当前 tip，保证状态文件基线包含前一运行的最终推送。
+          ref: main
           fetch-depth: 1 # 浅克隆加速检出，回写步骤自带 fetch 对齐远端，无需完整历史
           persist-credentials: true
 

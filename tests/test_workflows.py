@@ -15,8 +15,15 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKFLOWS = [
     os.path.join(REPO_ROOT, ".github", "workflows", "auto_post.yml"),
     os.path.join(REPO_ROOT, ".github", "workflows", "ci.yml"),
+    os.path.join(REPO_ROOT, ".github", "workflows", "video_publish.yml"),
 ]
 PIN_RE = re.compile(r"@[0-9a-f]{40}\b")
+# R161：读写 sent_cache 等运行状态的"运行时"工作流（ci.yml 是回归测试用途，检出
+# 事件 SHA 恰当，不在其列）
+RUNTIME_WORKFLOWS = [
+    os.path.join(REPO_ROOT, ".github", "workflows", "auto_post.yml"),
+    os.path.join(REPO_ROOT, ".github", "workflows", "video_publish.yml"),
+]
 
 
 def _uses_value(line):
@@ -63,6 +70,51 @@ class TestActionPinning(unittest.TestCase):
         ecosystems = {u.get("package-ecosystem") for u in doc.get("updates", [])}
         self.assertIn("github-actions", ecosystems)
         self.assertIn("pip", ecosystems)
+
+
+class TestRuntimeWorkflowCheckoutRef(unittest.TestCase):
+    """R161：运行时工作流的 checkout 必须显式 ref: main。
+
+    生产事故（2026-09-14 01:33/01:36 SHIB 同 news_id 双发实录）：并发组
+    （cancel-in-progress: false）只串行化执行，不串行化状态基线——排队的
+    dispatch 运行按事件创建时刻的旧 SHA 检出，前一 schedule 运行刚推送的
+    sent_cache 记录对它不可见，is_cached 查空 → 同条目重复发布。检出
+    main 当前 tip 保证状态基线包含前一运行的最终推送。"""
+
+    def _checkout_steps(self, path):
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("未安装 pyyaml（仅 CI 校验需要）")
+        with open(path, encoding="utf-8") as f:
+            doc = yaml.safe_load(f)
+        steps = []
+        for job in (doc.get("jobs") or {}).values():
+            for step in job.get("steps") or []:
+                if str(step.get("uses", "")).startswith("actions/checkout"):
+                    steps.append(step)
+        return steps
+
+    def test_runtime_workflows_checkout_main_tip(self):
+        for path in RUNTIME_WORKFLOWS:
+            name = os.path.basename(path)
+            steps = self._checkout_steps(path)
+            self.assertTrue(steps, f"{name} 缺少 checkout 步骤")
+            for step in steps:
+                self.assertEqual(
+                    (step.get("with") or {}).get("ref"), "main",
+                    f"{name} checkout 必须显式 ref: main（排队运行按事件 SHA "
+                    f"检出会读到前一运行推送前的旧状态，R161 重复发布事故根因）")
+
+    def test_ci_checkout_stays_on_event_sha(self):
+        steps = self._checkout_steps(
+            os.path.join(REPO_ROOT, ".github", "workflows", "ci.yml"))
+        self.assertTrue(steps, "ci.yml 缺少 checkout 步骤")
+        for step in steps:
+            self.assertNotEqual(
+                (step.get("with") or {}).get("ref"), "main",
+                "ci.yml 应检出事件 SHA（测试被推送的那个提交），"
+                "运行时 ref:main 约束不适用于回归测试工作流")
 
 
 class TestAnnotationResolvable(unittest.TestCase):

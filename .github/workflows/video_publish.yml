@@ -34,6 +34,11 @@ jobs:
     steps:
       - name: 检出仓库代码
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1（SHA 锁定防投毒）
+        with:
+          # 与 auto_post 同理（R161）：双发守卫读 sent_cache 判断同标题是否已发，
+          # 必须基于 main 最新状态而非事件创建时刻的旧 SHA。
+          ref: main
+          fetch-depth: 1
 
       - name: 配置 Python 环境
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
