@@ -3408,11 +3408,14 @@ class CampaignScanner:
                 try:
                     client = llm_engine._get_client(provider)
                     # 推理型渠道（Reasonix 网关）思考链就吃几百 token，固定预算会静默产出空内容
-                    # 情报 JSON 截断史（勿再抬数字，治本在即时重试）：R55 700 → R62 900，
-                    # 生产仍二连截断（04:58Z/07:43Z，glm 的 usage 2500+ 说明该模型思考链+输出
-                    # 总耗 2500 左右，抬到 1200 也可能不够且更贵）。现在 finish=length 即时
-                    # 同渠道重试一次（temperature 0.3 下重试常收敛到更短输出）。
+                    # 情报 JSON 截断史：R55 700 → R62 900 → R82 封顶 2800（覆盖当时实测 2536）。
+                    # R172 生产实锤：2026-09-14T13:01Z 双通道在 2800 顶仍空回
+                    # （b.ai usage 3856 / openrouter 3223，思考链吃满 completion），
+                    # 情报连续 14h+ 无法刷新，发布只能走 intel_degraded 降级。
+                    # finish=length 属确定性预算耗尽——直接跳到新封顶 4500，不再 +1200 阶梯
+                    # （两次尝试的阶梯从 1600 只能到 2800，到不了新封顶）。
                     effective_max_tokens = 1600 if _is_reasoning_channel(provider.name, provider.model) else 900
+                    intel_budget_cap = 4500
                     resp = None
                     for _intel_attempt in (0, 1):
                         resp = client.chat.completions.create(
@@ -3425,13 +3428,11 @@ class CampaignScanner:
                         _raw = (resp.choices[0].message.content or "").strip()
                         if _fin != "length" and _raw:
                             break
-                        # R82：finish=length（截断或思考链吃满吐空）属确定性预算耗尽，
-                        # 同预算重试必现同款失败（生产实证 00:44Z/03:04Z：openrouter 实耗
-                        # 1916/预算 900、glm 实耗 2536/预算 1600，temperature 0.3 也救不了）。
-                        # 重试即扩容 +1200（封顶 2800 覆盖实测 2536）；仅第一跳已浪费后才
-                        # 付费升级，平均成本不受影响。finish=stop 的真·抽风空回仍同预算重试。
+                        # R82/R172：finish=length（截断或思考链吃满吐空）属确定性预算耗尽，
+                        # 同预算重试必现同款失败；扩容到封顶后再试一次。
+                        # finish=stop 的真·抽风空回仍同预算重试。
                         if _fin == "length":
-                            effective_max_tokens = min(effective_max_tokens + 1200, 2800)
+                            effective_max_tokens = intel_budget_cap
                         logger.warning(f"情报输出{'空内容' if not _raw else '被截断'}（finish={_fin or '未知'}），"
                                        f"预算{'扩容至 ' + str(effective_max_tokens) if _fin == 'length' else '不变'}"
                                        f"即时重试 {_intel_attempt + 1}/1...")

@@ -3149,10 +3149,11 @@ class TestIntelSchema(unittest.TestCase):
         self.assertIsNotNone(intel, "扩容重试必须救回情报")
         budgets = [c.kwargs.get("max_tokens")
                    for c in fake_client.chat.completions.create.call_args_list]
-        self.assertEqual(budgets, [900, 2100], "length 空回重试必须扩容 +1200")
+        self.assertEqual(budgets, [900, 4500], "length 空回重试必须扩容到情报封顶")
 
-    def test_intel_reasoning_expands_to_cap_2800(self):
-        """推理通道 1600 起步：扩容一次到 2800 封顶（覆盖 glm 思考链实测 2536）"""
+    def test_intel_reasoning_expands_to_cap_4500(self):
+        """R172：推理通道 1600 起步，length 时直接跳到 4500 封顶。
+        生产双通道在 2800 顶空回（usage 3223/3856），+1200 阶梯到不了新封顶。"""
         empty_len = MagicMock(choices=[MagicMock(
             message=MagicMock(content=""), finish_reason="length")])
         eng = MagicMock()
@@ -3164,7 +3165,7 @@ class TestIntelSchema(unittest.TestCase):
         self.assertIsNone(m.CampaignScanner.analyze_with_ai(eng, ["t1"]))
         budgets = [c.kwargs.get("max_tokens")
                    for c in fake_client.chat.completions.create.call_args_list]
-        self.assertEqual(budgets, [1600, 2800], "推理通道扩容必须到 2800 封顶")
+        self.assertEqual(budgets, [1600, 4500], "推理通道 length 扩容必须到 4500 封顶")
         self.assertEqual(len(budgets), 2, "到顶后不得第三次尝试")
 
 
