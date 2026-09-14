@@ -4608,6 +4608,16 @@ class TestDownloadImageGate(unittest.TestCase):
                 self.assertIsNone(m.ImageManager.download_image(url))
                 mock_get.assert_not_called(), f"{url} 不得发起任何请求"
 
+    def test_first_hop_private_ip_blocked_without_entry_gate(self):
+        """R174：download_image 公开类方法直调 IP 字面量内网地址，首跳即拒，
+        不再依赖 prepare_and_upload 入口门。"""
+        for url in ("http://169.254.169.254/latest/meta-data/",
+                    "http://127.0.0.1/secret.jpg",
+                    "http://10.0.0.5/x.png"):
+            with patch.object(m, "http_get") as mock_get:
+                self.assertIsNone(m.ImageManager.download_image(url))
+                mock_get.assert_not_called(), f"{url} 首跳不得发起请求"
+
     def test_redirect_to_private_target_blocked(self):
         """公网图床 302 → 内网/元数据：requests 自动重定向不经过任何校验，
         必须手动逐跳复检——这是 R79 修复的核心绕过路径"""

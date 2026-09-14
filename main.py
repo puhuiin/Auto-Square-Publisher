@@ -3910,6 +3910,7 @@ class ImageManager:
         r: Optional[requests.Response] = None
         try:
             from urllib.parse import urljoin, urlparse
+            import ipaddress
 
             max_bytes = 15 * 1024 * 1024
             current_url = image_url
@@ -3918,9 +3919,24 @@ class ImageManager:
                 if parsed.scheme not in ("http", "https") or not parsed.hostname:
                     logger.warning(f"配图 URL 非法 (scheme={parsed.scheme!r})，跳过")
                     return None
-                # 跳转目标逐跳 SSRF 复检：首跳由 prepare_and_upload 把关，这里兜住 302 落点
-                if redirect_count > 0 and not cls._is_safe_image_url(current_url):
-                    logger.warning(f"配图重定向目标未通过 SSRF 校验，拒绝跟随: {current_url[:80]}")
+                # SSRF 逐跳复检（R174 收紧）：
+                # - 重定向落点：始终全量校验（R79 核心）
+                # - 首跳：IP 字面量也校验——download_image 是公开类方法，直调
+                #   http://169.254.169.254/ 此前零防护（入口门在 prepare_and_upload，
+                #   挡不住直调）。域名首跳仍依赖入口门（测试夹具与生产 RSS 都
+                #   先过 prepare_and_upload；此处强做 DNS 会在离线测试里 fail-closed
+                #   误杀全部夹具域名）。
+                # DEFAULT_FALLBACK_IMAGE 硬编码可信，跳过。
+                host = parsed.hostname or ""
+                try:
+                    ipaddress.ip_address(host)
+                    first_hop_ip = True
+                except ValueError:
+                    first_hop_ip = False
+                needs_ssrf_check = (first_hop_ip or redirect_count > 0) \
+                    and current_url != cls.DEFAULT_FALLBACK_IMAGE
+                if needs_ssrf_check and not cls._is_safe_image_url(current_url):
+                    logger.warning(f"配图 URL 未通过 SSRF 校验，拒绝拉取: {current_url[:80]}")
                     return None
                 r = http_get(current_url, headers=headers, timeout=6, retries=1,
                              allow_redirects=False, stream=True)
