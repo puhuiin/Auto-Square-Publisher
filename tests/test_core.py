@@ -6597,6 +6597,35 @@ class TestPermanentFailure(unittest.TestCase):
                    if c.args and isinstance(c.args[0], dict)]
         self.assertTrue(any(r.startswith("[permanent 24h]") for r in reasons), reasons)
 
+    def test_router_model_404_not_permanent(self):
+        """R169：openrouter/free 是聚合路由，404=当前路由目标挂了，不是通道死亡。
+        生产 8 次 permanent 404 全打在 Preset-openrouter 上，把整通道砍 24h，
+        与「免费路由自动换存活模型」的设计注释直接矛盾。"""
+        self.assertTrue(m._is_router_model("openrouter/free"))
+        self.assertTrue(m._is_router_model("ORouter/Free"))
+        self.assertFalse(m._is_router_model("qwen/qwen3.8-max:free"), "具体模型 ID 仍走 permanent")
+        self.assertFalse(m._is_router_model("glm-5.3-flash"))
+        self.assertFalse(m._is_router_model(""))
+
+        eng = self._engine()
+        eng.providers = [m.LLMProviderConfig(
+            "Preset-openrouter", "https://openrouter.ai/api/v1", "k", "openrouter/free")]
+        client = MagicMock()
+        client.chat.completions.create.side_effect = RuntimeError(
+            "Error code: 404 - {'error': {'message': 'This model is unavailable for free.}}")
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics") as mock_metrics:
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        state = eng._breaker_state()["Preset-openrouter"]
+        self.assertNotIn("permanent", state, "聚合路由 404 不得标 permanent")
+        self.assertLess(self._cooldown_hours(eng, "Preset-openrouter"), 5,
+                        "走指数退避而非 24h")
+        reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
+                   if c.args and isinstance(c.args[0], dict)]
+        self.assertTrue(any(r.startswith("[router 404]") for r in reasons), reasons)
+        self.assertFalse(any(r.startswith("[permanent 24h]") for r in reasons), reasons)
+
     def test_transient_stays_short_cooldown(self):
         eng = self._engine()
         client = MagicMock()

@@ -1913,6 +1913,18 @@ def _is_permanent_failure(exc: BaseException) -> bool:
         msg, re.IGNORECASE))
 
 
+def _is_router_model(model: str) -> bool:
+    """聚合路由别名（非具体模型 ID）：单次 404 只是当前路由目标不可用，不代表通道死亡。
+
+    生产默认 OPENROUTER_MODEL=openrouter/free——官方按可用性自动路由到存活的
+    :free 模型，设计注释写明「单个免费模型下架不会让 preset 通道整体报废」。
+    但 _is_permanent_failure 把任意 404 判成 24h permanent，等于把聚合路由
+    整通道砍掉一天（生产 8 次 permanent 404 全打在 Preset-openrouter 上）。
+    只认 /free 路由后缀；具体模型 ID（含 :free 限定）仍走 permanent 快道。"""
+    ml = (model or "").strip().lower()
+    return ml.endswith("/free") or ml == "free"
+
+
 # 结尾站队提问的风格池：每条帖子随机抽取一种，避免时间线上全是同款"扣1扣2"
 # 写派人设风格池：每帖随机抽取一种注入 system prompt，让时间线的"人味"不重样。
 # 核心规则（$ 标识/字数/标签/禁套话）在 SYSTEM_PROMPT 里不受影响，这里只换表达气质。
@@ -3188,9 +3200,15 @@ class MultiLLMEngine:
                 err_msg = str(e)
                 self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
                 if _is_permanent_failure(e):
-                    # 永久失败快道：模型下架/404 不会自愈，走 24h 长冷却，当天不再试
-                    self._breaker_record_permanent(provider.name)
-                    fail_reason = f"[permanent 24h] {err_msg}"
+                    if _is_router_model(provider.model):
+                        # R169：聚合路由 404 = 当前路由目标挂了，不是通道死亡。
+                        # 走普通指数退避（可升级到 4h），勿 24h permanent 整通道报废。
+                        self._breaker_record_failure(provider.name)
+                        fail_reason = f"[router 404] {err_msg}"
+                    else:
+                        # 永久失败快道：具体模型下架/404 不会自愈，24h 长冷却
+                        self._breaker_record_permanent(provider.name)
+                        fail_reason = f"[permanent 24h] {err_msg}"
                 elif (rl_sec := self._rate_limit_cooldown_sec(e)) is not None:
                     # R96 限流专项：429 按服务端 Retry-After 精确冷却（30s~4h 钳制），
                     # 不计 fails——限流是节奏问题不是健康问题，不驱动指数升级
