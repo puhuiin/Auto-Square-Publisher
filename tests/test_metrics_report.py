@@ -80,6 +80,29 @@ class TestMetricsReport(unittest.TestCase):
         self.assertEqual(s["tokens_by_provider"]["B.ai"]["total"], 800)
         self.assertEqual(s["by_outcome"]["mystery_future"], 1)
 
+    def test_reject_previews_collected_and_capped(self):
+        """R163：质量拒稿的 content_preview/finish_reason 进报表，窗口只留最近 5 条"""
+        rows = [
+            {"ts": f"2026-09-14T01:0{i}:00+00:00", "outcome": "llm_rejected",
+             "stage": "quality", "provider": "Preset-openrouter",
+             "reason": f"内容过短 ({i + 10} 字符)",
+             "content_preview": f"stub-{i} " + "x" * 100,
+             "finish_reason": "stop"}
+            for i in range(7)
+        ]
+        # 无快照的旧拒稿行不得撑爆列表
+        rows.append({"ts": "2026-09-14T02:00:00+00:00", "outcome": "llm_rejected",
+                     "stage": "quality", "provider": "Preset-b.ai",
+                     "reason": "无快照旧行"})
+        s = mr.summarize(rows)
+        self.assertEqual(len(s["reject_previews"]), 5)
+        self.assertTrue(s["reject_previews"][-1]["preview"].startswith("stub-6"))
+        self.assertEqual(len(s["reject_previews"][-1]["preview"]), 80)
+        self.assertEqual(s["reject_previews"][-1]["finish_reason"], "stop")
+        out = mr.render_text(s)
+        self.assertIn("拒稿快照", out)
+        self.assertIn("finish=stop", out)
+
     def test_empty_file_renders(self):
         _write(self.path, [])
         rows, bad = mr.load_rows(self.path)

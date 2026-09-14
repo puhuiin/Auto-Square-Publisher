@@ -4322,6 +4322,32 @@ class TestCostObservability(unittest.TestCase):
         self.assertNotIn("tokens_used", row)
         self.assertNotIn("llm_latency_sec", row)
         self.assertNotIn("model", row)
+        self.assertNotIn("content_preview", row)
+        self.assertNotIn("finish_reason", row)
+
+    # ---- R163：拒稿正文快照 + finish_reason ----
+    def test_reject_preview_sanitizes_and_truncates(self):
+        raw = "  line one \n\n line\ttwo  " + "x" * 120
+        pv = m.MultiLLMEngine._reject_preview(raw)
+        self.assertTrue(pv.startswith("line one line two"))
+        self.assertEqual(len(pv), 80)
+        self.assertIsNone(m.MultiLLMEngine._reject_preview(None))
+        self.assertIsNone(m.MultiLLMEngine._reject_preview(""))
+        self.assertIsNone(m.MultiLLMEngine._reject_preview("   \n "))
+
+    def test_log_reject_carries_preview_and_finish(self):
+        # 生产 17 字符短回：只记长度分不清拒答/元回复，快照+finish 才能归因
+        m.MultiLLMEngine._log_reject(
+            {"title": "t", "source": "U.Today", "impact_score": 1},
+            "Preset-openrouter", "quality", "内容过短 (17 字符)",
+            tokens_used=2023, latency_sec=3.7, model="openrouter/free",
+            persona="毒舌老韭菜",
+            content_preview="I cannot assist with that.",
+            finish_reason="stop")
+        row = self._rows()[0]
+        self.assertEqual(row["content_preview"], "I cannot assist with that.")
+        self.assertEqual(row["finish_reason"], "stop")
+        self.assertEqual(row["stage"], "quality")
 
     # ---- summarize 成功路径透出成本字段 ----
     def _success_engine(self, usage_tokens):

@@ -203,6 +203,8 @@ def summarize(rows):
         "reject_by_stage": collections.Counter(),
         "reject_by_provider": collections.Counter(),
         "reject_reasons": collections.Counter(),
+        # R163：质量门拒稿正文快照（最近几条）——短回/拒答型故障只报长度无法归因
+        "reject_previews": [],
         "latency_by_provider": {},
         "tokens_by_provider": {},
         "errors": collections.Counter(),
@@ -274,6 +276,19 @@ def summarize(rows):
             s["reject_by_provider"][who] += 1
             if r.get("reason"):
                 s["reject_reasons"][str(r["reason"])[:60]] += 1
+            # R163：短回/质量拒稿的原文快照（有则收，窗口内只留最近 5 条）
+            pv = r.get("content_preview")
+            if isinstance(pv, str) and pv:
+                s["reject_previews"].append({
+                    "ts": r.get("ts"),
+                    "stage": r.get("stage"),
+                    "provider": who,
+                    "reason": (r.get("reason") or "")[:40],
+                    "finish_reason": r.get("finish_reason"),
+                    "preview": pv[:80],
+                })
+                if len(s["reject_previews"]) > 5:
+                    s["reject_previews"] = s["reject_previews"][-5:]
         # 失败行（llm_failed / 无 stage 的异常行）的 reason 是错误诊断的唯一载体——
         # 生产遥测里 404/超时/空回全写在 reason，error 字段几乎恒空。没写 stage 的
         # reject 行同样兜进 errors，避免"错误面板空但原因字段一大堆"的失真报表。
@@ -475,6 +490,13 @@ def render_text(s, rows=None):
         lines.append(f"- 拦截 {n_rej} 次：阶段 {_top(s['reject_by_stage'])} / 模型 {_top(s['reject_by_provider'])}")
         if s["reject_reasons"]:
             lines.append(f"  高频原因 {_top(s['reject_reasons'], 5)}")
+        if s.get("reject_previews"):
+            lines.append("  拒稿快照（最近）:")
+            for item in s["reject_previews"][-3:]:
+                lines.append(
+                    f"    [{item.get('stage')}/{item.get('provider')}] "
+                    f"finish={item.get('finish_reason') or '?'} "
+                    f"{item.get('preview', '')}")
     if s["latency_by_provider"]:
         lines.append(f"- 平均延迟(s) {dict(sorted(s['latency_by_provider'].items()))}")
     if s["tokens_by_provider"]:

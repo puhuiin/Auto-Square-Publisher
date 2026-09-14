@@ -2633,14 +2633,28 @@ class MultiLLMEngine:
         return True, ""
 
     @staticmethod
+    def _reject_preview(content: Optional[str], limit: int = 80) -> Optional[str]:
+        """拒稿正文快照：空白折叠后截断。生产实锤 openrouter/free 连续吐
+        「内容过短 (17 字符)」且耗 ~2000 token——只记长度看不到原文，分不清
+        拒答/元回复/特殊截断，根因无从下手。快照进遥测行，下一轮可直接判型。"""
+        if not content or not isinstance(content, str):
+            return None
+        cleaned = re.sub(r"\s+", " ", content).strip()
+        return cleaned[:limit] if cleaned else None
+
+    @staticmethod
     def _log_reject(news_item: Dict[str, Any], provider: str, stage: str, reason: str,
                     tokens_used: Optional[int] = None, latency_sec: Optional[float] = None,
-                    model: Optional[str] = None, persona: Optional[str] = None) -> None:
+                    model: Optional[str] = None, persona: Optional[str] = None,
+                    content_preview: Optional[str] = None,
+                    finish_reason: Optional[str] = None) -> None:
         """拒单遥测：每次 LLM 尝试被丢弃都记一行（stage=quality/numbers/transport）。
         投递遥测只记录成功，失败全黑盒会导致未来调优只看得到"活下来的稿子"
         （幸存者偏差：高热新闻是否系统性被质量门误杀，无数据回答不了）。
         与投递共用 metrics.jsonl（outcome=llm_rejected 区分，provider 字段可切分
-        本地 DRY_RUN 与线上），append_metrics 本身永不抛异常。"""
+        本地 DRY_RUN 与线上），append_metrics 本身永不抛异常。
+        R163：content_preview + finish_reason——质量门拒稿时正文即被丢弃，
+        Actions 日志只剩长度，短回/拒答型故障无法归因。"""
         append_metrics({
             "title": (news_item.get("title") or "")[:60],
             "source": news_item.get("source"),
@@ -2652,6 +2666,8 @@ class MultiLLMEngine:
             "llm_latency_sec": latency_sec,
             "stage": stage,
             "reason": (reason or "")[:80],
+            "content_preview": content_preview,
+            "finish_reason": finish_reason,
             "outcome": "llm_rejected",
         })
 
@@ -3021,18 +3037,31 @@ class MultiLLMEngine:
 
                 # 0. 质量门：短讯走通用门；长文走专属门（TITLE 行 + 500~800 字正文）
                 article_title: Optional[str] = None
+                preview = self._reject_preview(content)
+                # finish_reason 防御性强转：Mock 替身/异常态塞进 json.dumps 会让
+                # append_metrics 整行静默丢弃（与 widget_count 同款坑，测试实锤）
+                finish_for_telemetry = final_finish if isinstance(final_finish, str) else None
                 if article:
                     art_ok, art_reason, article_title, content = self._parse_article(content)
                     if not art_ok:
                         self._log_reject(news_item, provider.name, "quality", art_reason,
                                          tokens_used, latency_sec, provider.model,
-                                         persona=persona["name"])
+                                         persona=persona["name"],
+                                         content_preview=preview,
+                                         finish_reason=finish_for_telemetry)
+                        logger.warning(f"提供商 [{provider.name}] 长文门拦截，"
+                                       f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                         raise _QualityGateRejection(art_reason)
                 else:
                     passed, fail_reason = self._passes_quality_gate(content)
                     if not passed:
                         self._log_reject(news_item, provider.name, "quality", fail_reason,
-                                         tokens_used, latency_sec, provider.model, persona=persona["name"])
+                                         tokens_used, latency_sec, provider.model,
+                                         persona=persona["name"],
+                                         content_preview=preview,
+                                         finish_reason=finish_for_telemetry)
+                        logger.warning(f"提供商 [{provider.name}] 质量门拦截，"
+                                       f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                         raise _QualityGateRejection(fail_reason)
 
                 # 0.1 数字幻觉软校验：编造精确百分比/大额金额的内容直接拦截
@@ -3040,7 +3069,9 @@ class MultiLLMEngine:
                 nums_ok, nums_reason = self._verify_numbers(content, source_text)
                 if not nums_ok:
                     self._log_reject(news_item, provider.name, "numbers", nums_reason,
-                                     tokens_used, latency_sec, provider.model)
+                                     tokens_used, latency_sec, provider.model,
+                                     content_preview=self._reject_preview(content),
+                                     finish_reason=finish_for_telemetry)
                     raise _QualityGateRejection(nums_reason)
 
                 # 0.2 AI 腔门：标志性机器人文风直接判废换模型重写（发布出去等于自曝身份）
@@ -3048,7 +3079,9 @@ class MultiLLMEngine:
                 if not flavor_ok:
                     self._log_reject(news_item, provider.name, "ai_flavor", flavor_reason,
                                      tokens_used, latency_sec, provider.model,
-                                     persona=persona["name"])
+                                     persona=persona["name"],
+                                     content_preview=self._reject_preview(content),
+                                     finish_reason=finish_for_telemetry)
                     raise _QualityGateRejection(flavor_reason)
 
                 # 1. 提取代币：交易所校验过的 token_hints 拥有最高权重，模型自报的 $ 标的仅作补充
