@@ -5556,6 +5556,16 @@ def _run_main():
         sys.exit(1)
 
     # 2.5 防刷屏配额：24 小时滚动窗口内已发数量达到上限则本轮直接静默退出
+    # R182：情报刷新挪到配额检查之前——生产实录 intel 陈放 16.5h、冷却 15:02Z
+    # 已过期，但 15:03/15:07 等饱和轮在 get_campaign_intel 之前就 exit，
+    # 刷新被饿死到下一配额槽（18:04Z）。get_campaign_intel 自带新鲜/退避短路，
+    # 饱和期调用几乎零成本；仅当过期且冷却清空才真正烧 LLM（正是我们想刷的时刻）。
+    t_intel_start = time.time()
+    campaign_intel = CampaignScanner.get_campaign_intel(llm_engine)
+    intel_elapsed = time.time() - t_intel_start
+    logger.info(f"💡 当期币安重点活动标签: {campaign_intel.get('active_tags')}")
+    logger.info(f"🪙 当期重点扶持代币池: {campaign_intel.get('incentivized_tokens')}")
+
     if not dry_run and MAX_DAILY_POSTS > 0:
         sent_24h = cache_mgr.count_since(24)
         if sent_24h >= MAX_DAILY_POSTS:
@@ -5593,7 +5603,7 @@ def _run_main():
             quota_msg = f"配额满跳过抓取（{sent_24h}/{MAX_DAILY_POSTS}）"
             if next_frees_iso:
                 quota_msg += f"，下一槽 {next_frees_iso[:16]} UTC（约 {next_frees_min} 分钟）"
-            write_github_step_summary(NewsFetcher(), quota_msg, {}, [], dry_run)
+            write_github_step_summary(NewsFetcher(), quota_msg, campaign_intel, [], dry_run)
             sys.exit(0)
         remaining_quota = MAX_DAILY_POSTS - sent_24h
         if remaining_quota < max_posts:
@@ -5604,12 +5614,7 @@ def _run_main():
     fng_index = MarketDataProvider.get_fear_and_greed()
     logger.info(f"📊 当前全网情绪指数: {fng_index}")
 
-    # 4. 智能扫描与理解币安官方当期活动情报
-    t_intel_start = time.time()
-    campaign_intel = CampaignScanner.get_campaign_intel(llm_engine)
-    intel_elapsed = time.time() - t_intel_start
-    logger.info(f"💡 当期币安重点活动标签: {campaign_intel.get('active_tags')}")
-    logger.info(f"🪙 当期重点扶持代币池: {campaign_intel.get('incentivized_tokens')}")
+    # 4. 活动情报已在配额检查前刷新（R182），此处直接复用
 
     # 5. 获取待发布热点候选（按冲击力与山寨/Meme热度打分排序，结合官方活动代币加权 + 近似去重）
     t_fetch_start = time.time()

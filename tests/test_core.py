@@ -5619,6 +5619,9 @@ class TestRunMainSemantics(unittest.TestCase):
                     m._run_main()
             self.assertEqual(cm.exception.code, 0)
             self.assertEqual(self._engine.summarize.call_count, 0)
+            # R182：配额饱和轮仍要刷情报——生产 intel 陈放 16.5h、冷却已过期，
+            # 饱和轮在 get_campaign_intel 之前 exit 把刷新饿死到下一配额槽
+            m.CampaignScanner.get_campaign_intel.assert_called()
             import json as _json
             with open(paths["metrics"], encoding="utf-8") as f:
                 rows = [_json.loads(l) for l in f if l.strip()]
