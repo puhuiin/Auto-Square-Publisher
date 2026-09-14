@@ -203,6 +203,8 @@ def summarize(rows):
         # R173：过期情报注入计数——R171 写侧已直录，报表端同轮补齐（R92 纪律）
         "intel_degraded_posts": 0,
         "intel_fresh_posts": 0,
+        # R181：情报陈旧小时样本（有 last_updated 的帖才进）
+        "intel_age_hours": [],
         # R175：情报刷新被失败退避跳过的轮次（区分「配额早退没刷」vs「想刷被退避挡」）
         "intel_cooldown_skips": 0,
         "reject_by_stage": collections.Counter(),
@@ -283,6 +285,10 @@ def summarize(rows):
                 s["intel_degraded_posts"] += 1
             elif r.get("intel_degraded") is False:
                 s["intel_fresh_posts"] += 1
+            # R181：情报陈旧小时数
+            _iah = _num(r.get("intel_age_hours"))
+            if _iah is not None:
+                s["intel_age_hours"].append(_iah)
         if outcome == "intel_cooldown_skip":
             # R175：想刷新但被 2h 失败退避挡下——与配额早退（根本没走到这里）区分
             s["intel_cooldown_skips"] += 1
@@ -525,9 +531,14 @@ def render_text(s, rows=None):
         n_intel_marked = s["intel_degraded_posts"] + s["intel_fresh_posts"]
         if n_intel_marked:
             flag = " ⚠️" if s["intel_degraded_posts"] else ""
+            age_note = ""
+            ages = s.get("intel_age_hours") or []
+            if ages:
+                age_note = f"（陈旧均值 {round(sum(ages)/len(ages), 1)}h / 最长 {round(max(ages), 1)}h）"
             lines.append(
                 f"  💡 情报注入{flag}: 新鲜 {s['intel_fresh_posts']} / "
-                f"降级(过期) {s['intel_degraded_posts']}（共 {n_intel_marked} 篇带标记）")
+                f"降级(过期) {s['intel_degraded_posts']}{age_note}"
+                f"（共 {n_intel_marked} 篇带标记）")
     # R175：退避跳过独立于投递块（可能 0 篇投递时仍有退避轮次）
     if s.get("intel_cooldown_skips"):
         lines.append(

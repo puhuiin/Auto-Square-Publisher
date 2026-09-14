@@ -125,6 +125,24 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("降级(过期) 1", out)
         self.assertIn("新鲜 1", out)
 
+    def test_intel_age_hours_aggregated(self):
+        """R181：情报陈旧小时数进报表——bool 之外还要能量化多旧"""
+        rows = [
+            {"ts": "2026-09-14T13:00:00+00:00", "outcome": "binance_published",
+             "provider": "Preset-b.ai", "tokens": ["ADA"], "intel_degraded": True,
+             "intel_age_hours": 14.0, "platforms": ["binance"],
+             "widget_count": 2, "tag_count": 3},
+            {"ts": "2026-09-14T14:40:00+00:00", "outcome": "binance_published",
+             "provider": "Preset-b.ai", "tokens": ["LINK"], "intel_degraded": True,
+             "intel_age_hours": 16.0, "platforms": ["binance"],
+             "widget_count": 2, "tag_count": 3},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["intel_age_hours"], [14.0, 16.0])
+        out = mr.render_text(s)
+        self.assertIn("陈旧均值 15.0h", out)
+        self.assertIn("最长 16.0h", out)
+
     def test_intel_cooldown_skip_counted(self):
         """R175：退避跳过必须可见——区分「配额早退没刷」vs「想刷被 2h 冷却挡」"""
         rows = [

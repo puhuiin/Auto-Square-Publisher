@@ -487,6 +487,7 @@ class TestIntelFreshnessInPrompt(unittest.TestCase):
         eng.last_fng_hook_count = None
         eng.last_fng_market_stripped = None
         eng.last_intel_degraded = None
+        eng.last_intel_age_hours = None
         eng.last_attempted_provider = None
         eng.last_attempted_model = None
         return eng
@@ -515,8 +516,25 @@ class TestIntelFreshnessInPrompt(unittest.TestCase):
     def test_no_intel_leaves_degraded_none(self):
         eng = self._eng()
         eng.last_intel_degraded = True  # 上一故事残留
+        eng.last_intel_age_hours = 16.0
         eng._build_user_prompt(self._item(), None, "", ["BTC"])
         self.assertIsNone(eng.last_intel_degraded)
+        self.assertIsNone(eng.last_intel_age_hours)
+
+    def test_intel_age_hours_recorded(self):
+        """R181：bool 只说降级，age 说多旧——生产 14h→16h 在涨，可聚合"""
+        eng = self._eng()
+        stale = (datetime.now(timezone.utc) - timedelta(hours=16)).isoformat().replace("+00:00", "Z")
+        intel = {"strategy_guidance": "g", "last_updated": stale}
+        eng._build_user_prompt(self._item(), intel, "", ["BTC"])
+        self.assertTrue(eng.last_intel_degraded)
+        self.assertAlmostEqual(eng.last_intel_age_hours, 16.0, delta=0.2)
+
+        fresh = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        eng._build_user_prompt(self._item(), {"strategy_guidance": "g", "last_updated": fresh},
+                               "", ["BTC"])
+        self.assertFalse(eng.last_intel_degraded)
+        self.assertAlmostEqual(eng.last_intel_age_hours, 0.0, delta=0.1)
 
 
 class TestPastDateRefs(unittest.TestCase):
