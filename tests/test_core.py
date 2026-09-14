@@ -276,6 +276,10 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("资金流向", prompt)
         self.assertNotIn("全网情绪指数: 69/100", prompt,
                          "禁令触发时情绪数据行必须剥离，指令与输入一致")
+        # R162：禁令状态必须暂存到引擎（发布回执直录，R158 呼吸周期从推断变事实）
+        self.assertIs(eng.last_fng_ban_active, True)
+        self.assertEqual(eng.last_fng_hook_count, 2)
+        self.assertIs(eng.last_fng_market_stripped, True)
 
     def test_fng_ban_not_triggered_when_sparse(self):
         # 近期 0-1 篇引用：不注入禁令（情绪指数仍是可用素材），数据行保留
@@ -291,6 +295,10 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertNotIn("禁止再引用任何情绪指数数值", prompt)
         self.assertIn("全网情绪指数: 69/100", prompt, "未触发禁令时数据行照常注入")
         self.assertIn("涉及标的实时盘面: x", prompt, "剥离逻辑不得误伤盘面行的其他内容")
+        # R162：未武装状态同样要直录（报表分母需要 armed/unarmed 区分）
+        self.assertIs(eng.last_fng_ban_active, False)
+        self.assertEqual(eng.last_fng_hook_count, 0)
+        self.assertIs(eng.last_fng_market_stripped, False)
 
     def test_article_section_headers_skipped_in_openers(self):
         """R121：长文回执以"一、发生了什么"分节头开头——分节头不是开场句，

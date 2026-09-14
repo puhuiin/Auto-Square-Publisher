@@ -561,6 +561,48 @@ class TestMetricsReport(unittest.TestCase):
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("FNG锚:", text)
 
+    def test_quality_scan_fng_ban_compliance_counts(self):
+        """R162：fng_ban_active 直录后的禁令咬合度量——armed 篇中避开/违反
+        分计；未武装帖引用属呼吸周期合法区间；历史帖（无状态字段）不进分母。
+        violation>0 即模型无视禁令，是执法升级（拒稿重写）的实证依据。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "资金流向转变，主力悄然换仓。", "fng_ban_active": True},   # 武装+避开
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "全网贪婪指数都 69 了，还在喊多。", "fng_ban_active": True},  # 武装+违反
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "情绪还挂在 69 的贪婪区，接盘热情高涨。", "fng_ban_active": False},  # 未武装+引用（合法）
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "盘面放量突破，结构健康。"},  # 历史帖无字段：不进分母
+        ])
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["scanned"], 4)
+        self.assertEqual(q["fng_ban_armed"], 2)
+        self.assertEqual(q["fng_avoided"], 1)
+        self.assertEqual(q["fng_violation"], 1)
+        self.assertEqual(q["fng_anchor"], 2, "违反篇 + 未武装引用篇都计入锚定总数")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("FNG 禁令咬合", text)
+        self.assertIn("武装 2 篇中避开 1 / 违反 1", text)
+
+    def test_quality_scan_fng_ban_zero_violation_renders_clean(self):
+        """禁令咬合全避开时也输出度量行（呼吸周期的正向验证面），无 ⚠️ 标记。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "链上数据摆在这，巨鲸动向说话。", "fng_ban_active": True},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "时间节点临近，波动率收敛。", "fng_ban_active": True},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["fng_ban_armed"], 2)
+        self.assertEqual(q["fng_avoided"], 2)
+        self.assertEqual(q["fng_violation"], 0)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("武装 2 篇中避开 2 / 违反 0", text)
+        self.assertNotIn("⚠️", text.split("FNG 禁令咬合")[1].split("\n")[0])
+
     def test_zero_widget_posts_surfaced(self):
         """R123：全文零有效挂件 = Write2Earn 生命线失守——保底机制被绕过的
         直接信号，报表必须显性告警。预览区无 $ 不算（可能是截断伪影）。"""

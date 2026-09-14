@@ -42,8 +42,11 @@ QUALITY_SCAN_WINDOW = 20  # 最近 N 篇发布帖做合规扫描
 
 def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     """对最近 N 篇发布帖的 final_preview 做禁令合规扫描（信息性，非门禁）。
-    返回 {"scanned", "fng_anchor", "banned_device", "ai_flavor", "offenders": {...}}。
-    R101 前的历史帖命中 FNG 属预期（防线尚未上线），解读时对照时间线。"""
+    返回 {"scanned", "fng_anchor", "banned_device", "ai_flavor", "offenders": {...},
+          "fng_ban_armed", "fng_violation", "fng_avoided"}。
+    R101 前的历史帖命中 FNG 属预期（防线尚未上线），解读时对照时间线。
+    R162：fng_ban_active 直录后，"禁令武装 → 新帖避开"的咬合从推断变事实
+    （violation>0 即模型无视禁令，是执法升级的实证依据）。"""
     previews = []
     for r in rows:
         if not isinstance(r, dict) or r.get("dry_run") is True:
@@ -52,11 +55,12 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
             continue
         pv = (r.get("final_preview") or "").strip()
         if pv:
-            previews.append(pv)
+            previews.append((pv, r.get("fng_ban_active")))
     previews = previews[-window:]
     out = {"scanned": len(previews), "fng_anchor": 0, "banned_device": 0,
-           "ai_flavor": 0, "offenders": collections.Counter()}
-    for pv in previews:
+           "ai_flavor": 0, "offenders": collections.Counter(),
+           "fng_ban_armed": 0, "fng_violation": 0, "fng_avoided": 0}
+    for pv, ban_active in previews:
         m_fng = _FNG_ANCHOR_RE.search(pv)
         if m_fng:
             out["fng_anchor"] += 1
@@ -64,6 +68,13 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
             # 报表 breakdown 里"装置/AI腔"可见而 FNG 隐身（生产实录：巡检报
             # 16 处命中但明细只有冷水×3，6 个 FNG 锚点命中无处可查）
             out["offenders"][f"FNG锚:{m_fng.group(0)[:12]}"] += 1
+        # R162：禁令咬合度量——只统计显式记录了状态的帖子（None=历史帖无字段，不进分母）
+        if ban_active is True:
+            out["fng_ban_armed"] += 1
+            if m_fng:
+                out["fng_violation"] += 1
+            else:
+                out["fng_avoided"] += 1
         for dev in _OVERUSED_DEVICES:
             if dev in pv:
                 out["banned_device"] += 1
@@ -431,6 +442,11 @@ def render_text(s, rows=None):
             status = "全部通过" if not violations else f"{violations} 处命中"
             lines.append(f"- 内容合规巡检（最近 {q['scanned']} 篇回执文本）: {status}"
                          + (f" {q['offenders']}" if q["offenders"] else ""))
+            # R162：FNG 禁令咬合度量——armed 篇中避开 vs 违反（历史帖无状态字段不进分母）
+            if q["fng_ban_armed"]:
+                flag = " ⚠️" if q["fng_violation"] else ""
+                lines.append(f"  🚦 FNG 禁令咬合{flag}: 武装 {q['fng_ban_armed']} 篇中避开 "
+                             f"{q['fng_avoided']} / 违反 {q['fng_violation']}")
         # R124：开场指纹雷达——共享前缀 ≥3/10 即预警（禁令仍走 main.py 机制，
         # 这里只负责让新指纹在成形期可见，不再依赖人工抽样发现）
         fp = opener_fingerprint(rows)

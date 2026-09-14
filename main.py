@@ -2109,6 +2109,11 @@ class MultiLLMEngine:
         self._clients: Dict[str, OpenAI] = {}
         # R130：最近一次 prompt 组装抽中的结尾套路（回执遥测用，验证轮换均匀性）
         self.last_ending_style: Optional[str] = None
+        # R162：FNG 禁令状态遥测——R158 呼吸周期此前只能靠扫 preview 间接推断，
+        # 状态直录后"禁令武装 → 新帖避开"的咬合成为可度量事实（同 last_ending_style 模式）
+        self.last_fng_ban_active: Optional[bool] = None
+        self.last_fng_hook_count: Optional[int] = None
+        self.last_fng_market_stripped: Optional[bool] = None
 
     # ---------------- 跨运行熔断持久化（网络抖动级降级到冷却级） ----------------
     _BREAKER_STATE_KEY = "_llm_breaker"
@@ -2770,9 +2775,17 @@ class MultiLLMEngine:
 
         # R101 情绪锚点禁令（R103 补全）：触发时必须同步把情绪行从盘面上下文
         # 剥离——一边递数字一边禁用是自相矛盾的指令，且白占上下文。
-        fng_ban_active = self._recent_fng_hook_count() >= 2
+        # R162：状态同步暂存到实例，供发布回执直录（禁令是否武装/计数/是否剥离）。
+        hook_count = self._recent_fng_hook_count()
+        fng_ban_active = hook_count >= 2
+        fng_market_stripped = False
         if fng_ban_active and market_context:
-            market_context = re.sub(r"全网情绪指数:[^\n]*\n?", "", market_context)
+            stripped_ctx = re.sub(r"全网情绪指数:[^\n]*\n?", "", market_context)
+            fng_market_stripped = stripped_ctx != market_context
+            market_context = stripped_ctx
+        self.last_fng_ban_active = fng_ban_active
+        self.last_fng_hook_count = hook_count
+        self.last_fng_market_stripped = fng_market_stripped
 
         market_section = ""
         if market_context:
@@ -5785,6 +5798,14 @@ def _run_main():
                     # R130：抽中的结尾套路标签（Mock 替身/异常态防御性降级 None）
                     _es = getattr(llm_engine, "last_ending_style", None)
                     ending_style_used = _es if isinstance(_es, str) else None
+                    # R162：FNG 禁令状态直录（同款防御性降级）——R158 呼吸周期
+                    # 从"扫 preview 间接推断"升级为"每帖可查禁令是否武装/计数/剥离"
+                    _fba = getattr(llm_engine, "last_fng_ban_active", None)
+                    fng_ban_used = _fba if isinstance(_fba, bool) else None
+                    _fhc = getattr(llm_engine, "last_fng_hook_count", None)
+                    fng_hook_count_used = _fhc if isinstance(_fhc, int) else None
+                    _fms = getattr(llm_engine, "last_fng_market_stripped", None)
+                    fng_market_stripped = _fms if isinstance(_fms, bool) else None
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
@@ -5803,6 +5824,11 @@ def _run_main():
                         "tag_count": tag_count,
                         "campaign_tag_count": campaign_tag_count,
                         "ending_style": ending_style_used,
+                        # R162：禁令状态三件套——违反时（ban 武装+仍引用锚点）
+                        # 报表合规巡检可直接点名，执法升级（拒稿重写）待违规实证再议
+                        "fng_ban_active": fng_ban_used,
+                        "fng_hook_count": fng_hook_count_used,
+                        "fng_market_stripped": fng_market_stripped,
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,
