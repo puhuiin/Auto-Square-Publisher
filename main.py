@@ -3205,13 +3205,19 @@ class MultiLLMEngine:
 def _past_date_refs(text: str, now: Optional[datetime] = None) -> List[str]:
     """R127：提取文本中早于昨天的日期引用（YYYY-MM-DD / M月D日 / M/D）。
     用于度量情报 guidance 是否残留过期活动日期（软约束的度量侧）。
-    阈值 36h：跨日边界写到"昨天"的引用不算过期残留，避免误报。"""
+    阈值 36h：跨日边界写到"昨天"的引用不算过期残留，避免误报。
+    R164 补丁：「今日（YYYY-MM-DD）/今天(YYYY-MM-DD)」若所标日期并非
+    当前日历日则无条件命中——生产实录 guidance（last_updated=09-13T22:48Z）
+    写着「KGST…今日（2026-09-13）截止」，在 09-14 的 12h 新鲜窗内仍被
+    当作有效指导注入，而 36h 阈值要到 09-14 12:00Z 才开始标记，留下
+    ~11h 的「新鲜但日期已翻篇」漏洞。"""
     now = now or datetime.now(timezone.utc)
+    text = text or ""
     refs: List[str] = []
     for m in re.finditer(
             r"(\d{4})-(\d{1,2})-(\d{1,2})"
             r"|(\d{1,2})月(\d{1,2})日"
-            r"|(?<![/\d])(\d{1,2})/(\d{1,2})(?![/\d])", text or ""):
+            r"|(?<![/\d])(\d{1,2})/(\d{1,2})(?![/\d])", text):
         try:
             if m.group(1):
                 d = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)),
@@ -3226,6 +3232,15 @@ def _past_date_refs(text: str, now: Optional[datetime] = None) -> List[str]:
             continue
         if (now - d).total_seconds() > 36 * 3600:
             refs.append(m.group(0))
+    # 「今日（date）」自称今天却不是今天 → 立即命中（不受 36h 保护）
+    for m in re.finditer(r"(?:今日|今天)[（(](\d{4}-\d{1,2}-\d{1,2})[）)]", text):
+        raw = m.group(1)
+        try:
+            d = datetime.strptime(raw, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+        if d.date() != now.date() and raw not in refs:
+            refs.append(raw)
     return refs
 
 

@@ -465,6 +465,25 @@ class TestPastDateRefs(unittest.TestCase):
         self.assertEqual(m._past_date_refs(""), [])
         self.assertEqual(m._past_date_refs(None), [])
 
+    def test_today_claim_with_wrong_calendar_date_flagged(self):
+        """R164 生产实录：guidance（09-13T22:48Z 刷新）写「今日（2026-09-13）截止」，
+        09-14 的 12h 新鲜窗内 36h 阈值尚未触发，留下 ~11h 漏洞。
+        「今日（date）」若 date ≠ 当前日历日必须立即命中。"""
+        text = "最紧迫的是 KGST 活期理财 14% APR 活动今日（2026-09-13）截止"
+        # 09-14 任意时刻：36h 尚未到（09-13 00:00 起约 25~35h），旧逻辑返回 []
+        now = datetime(2026, 9, 14, 8, 0, tzinfo=timezone.utc)
+        self.assertEqual(m._past_date_refs(text, now), ["2026-09-13"])
+        # 当天自称今日且日期正确：不误报
+        ok = datetime(2026, 9, 13, 12, 0, tzinfo=timezone.utc)
+        self.assertEqual(m._past_date_refs(text, ok), [])
+        # 半角括号同样覆盖
+        self.assertEqual(
+            m._past_date_refs("活动今天(2026-09-13)截止", now), ["2026-09-13"])
+        # 无「今日」前缀的昨天日期维持 36h 软阈值（既有契约不回归）
+        self.assertEqual(m._past_date_refs("DEBIT 9/10 截止",
+                                           datetime(2026, 9, 11, 12, 0, tzinfo=timezone.utc)),
+                         [])
+
 
     def setUp(self):
         import tempfile
