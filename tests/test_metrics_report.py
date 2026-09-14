@@ -142,6 +142,30 @@ class TestMetricsReport(unittest.TestCase):
         out = mr.render_text(s)
         self.assertIn("失败退避跳过 2 轮", out)
 
+    def test_run_summary_stage_timings_aggregated(self):
+        """R177：sleep/llm 分段进报表——370s 总耗时的大头是拟人 pacing"""
+        rows = [
+            {"ts": "2026-09-14T13:09:00+00:00", "outcome": "run_summary",
+             "candidates": 40, "published": 1, "unprocessed": 39,
+             "run_elapsed_sec": 370.0, "sleep_elapsed_sec": 240.0,
+             "llm_elapsed_sec": 38.0},
+            {"ts": "2026-09-14T13:29:00+00:00", "outcome": "run_summary",
+             "candidates": 40, "published": 1, "unprocessed": 39,
+             "run_elapsed_sec": 360.0, "sleep_elapsed_sec": 120.0,
+             "llm_elapsed_sec": 30.0},
+            # 历史行无分段字段：不进分段聚合
+            {"ts": "2026-09-14T12:00:00+00:00", "outcome": "run_summary",
+             "candidates": 0, "published": 0, "quota_blocked": True,
+             "run_elapsed_sec": 0.0},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["avg_sleep_sec"], 180.0)
+        self.assertEqual(s["runs"]["max_sleep_sec"], 240.0)
+        self.assertEqual(s["runs"]["avg_llm_sec"], 34.0)
+        out = mr.render_text(s)
+        self.assertIn("耗时构成", out)
+        self.assertIn("拟人间隔", out)
+
     def test_empty_file_renders(self):
         _write(self.path, [])
         rows, bad = mr.load_rows(self.path)

@@ -225,6 +225,8 @@ def summarize(rows):
         "skips": collections.Counter(), "last_trending": "",
         "trend_freq": collections.Counter(),
         "elapsed": [],  # R126：单轮耗时样本（秒），聚平均/最长
+        "sleep_elapsed": [],  # R177：拟人 pacing 累计——解释 ~370s 总耗时
+        "llm_elapsed": [],
     }
     lat_tmp, tok_tmp = collections.defaultdict(list), collections.defaultdict(list)
     for r in rows:
@@ -353,8 +355,15 @@ def summarize(rows):
             for k, v in r.items():
                 if k.startswith("skipped_") and isinstance(v, (int, float)):
                     runs_tmp["skips"][k[len("skipped_"):]] += int(v)
+            # R177：分段耗时（有则收，历史行无字段不进）
+            _sl = _num(r.get("sleep_elapsed_sec"))
+            if _sl is not None and _sl > 0:
+                runs_tmp["sleep_elapsed"].append(_sl)
+            _llm = _num(r.get("llm_elapsed_sec"))
+            if _llm is not None and _llm > 0:
+                runs_tmp["llm_elapsed"].append(_llm)
     s["runs"] = {
-        **{k: v for k, v in runs_tmp.items() if k not in ("skips", "trend_freq", "elapsed")},
+        **{k: v for k, v in runs_tmp.items() if k not in ("skips", "trend_freq", "elapsed", "sleep_elapsed", "llm_elapsed")},
         "skips": dict(runs_tmp["skips"]),
         "trend_freq": dict(runs_tmp["trend_freq"].most_common(8)),
     }
@@ -362,6 +371,12 @@ def summarize(rows):
     if runs_tmp["elapsed"]:
         s["runs"]["avg_elapsed_sec"] = round(sum(runs_tmp["elapsed"]) / len(runs_tmp["elapsed"]), 1)
         s["runs"]["max_elapsed_sec"] = round(max(runs_tmp["elapsed"]), 1)
+    # R177：拟人 sleep 与 LLM 分段——总耗时 ~370s 的大头是 pacing 不是模型
+    if runs_tmp["sleep_elapsed"]:
+        s["runs"]["avg_sleep_sec"] = round(sum(runs_tmp["sleep_elapsed"]) / len(runs_tmp["sleep_elapsed"]), 1)
+        s["runs"]["max_sleep_sec"] = round(max(runs_tmp["sleep_elapsed"]), 1)
+    if runs_tmp["llm_elapsed"]:
+        s["runs"]["avg_llm_sec"] = round(sum(runs_tmp["llm_elapsed"]) / len(runs_tmp["llm_elapsed"]), 1)
     for prov, vals in lat_tmp.items():
         s["latency_by_provider"][prov] = round(sum(vals) / len(vals), 1)
     for prov, vals in tok_tmp.items():
@@ -461,6 +476,14 @@ def render_text(s, rows=None):
             warn = " ⚠️逼近回调节奏" if runs.get("max_elapsed_sec", 0) > 1100 else ""
             lines.append(f"  ⏱️ 单轮耗时: 平均 {runs['avg_elapsed_sec']}s / "
                          f"最长 {runs['max_elapsed_sec']}s（回调节奏 1200s）{warn}")
+        # R177：分段拆解——拟人 pacing 是总耗时大头，别误读成 LLM 变慢
+        if runs.get("avg_sleep_sec") is not None or runs.get("avg_llm_sec") is not None:
+            parts = []
+            if runs.get("avg_llm_sec") is not None:
+                parts.append(f"LLM {runs['avg_llm_sec']}s")
+            if runs.get("avg_sleep_sec") is not None:
+                parts.append(f"拟人间隔 {runs['avg_sleep_sec']}s(最长 {runs.get('max_sleep_sec', 0)}s)")
+            lines.append(f"  耗时构成（均值）: {' · '.join(parts)}")
         if runs.get("skips"):
             lines.append(f"  跳过分布 {runs['skips']}")
     if rows is not None:

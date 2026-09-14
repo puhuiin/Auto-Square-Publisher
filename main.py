@@ -5674,6 +5674,7 @@ def _run_main():
     consecutive_publish_failures = 0  # 发布链路熔断：币安侧持续故障时不再空烧 LLM
     consecutive_mirror_failures = 0  # 副平台-only 模式熔断：所有副平台持续失败时不再静默空转
     stage_timings: Dict[str, float] = {"fetch": fetch_elapsed, "intel": intel_elapsed, "llm": 0.0, "image": 0.0, "publish": 0.0}
+    sleep_total_sec = 0.0  # R177：拟人 pacing 累计——370s 总耗时里大头是它，不是 LLM
     valid_symbols = SymbolValidator.get_valid_symbols() or set()
     posted_titles_this_run: List[str] = []  # 本轮已处理的标题，防同批次近似变体连发
     drafts_count = 0  # 本轮 OKX 草稿导出数（运行报告用）
@@ -6148,6 +6149,7 @@ def _run_main():
             delay = random.randint(90, 240)
             logger.info(f"⏳ 拟人间隔 {delay}s（模拟真人发帖节奏）...")
             time.sleep(delay)
+            sleep_total_sec += delay
 
     # R88：每轮一条运行摘要遥测（outcome=run_summary；dry 行由 append_metrics 自动
     # 打标并被报表/调度评分排除）——补齐"候选 → 各类跳过 → 投递"漏斗的隐形阶段，
@@ -6172,6 +6174,14 @@ def _run_main():
         "skipped_exception": exception_skipped,
         "feeds_ok": fetcher.stats.get("feeds_ok", 0),
         "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
+        # R177：分段耗时进 run_summary——生产发帖轮 elapsed 稳定 ~370s，
+        # 其中 90~240s 是拟人 pacing；只记总时长会把 sleep 误读成 LLM 变慢
+        "fetch_elapsed_sec": round(stage_timings["fetch"], 1),
+        "intel_elapsed_sec": round(stage_timings["intel"], 1),
+        "llm_elapsed_sec": round(stage_timings["llm"], 1),
+        "image_elapsed_sec": round(stage_timings["image"], 1),
+        "publish_elapsed_sec": round(stage_timings["publish"], 1),
+        "sleep_elapsed_sec": round(sleep_total_sec, 1),
         "feeds_parked": len(fetcher.stats.get("feeds_parked", [])),
         # R94：当轮热搜标的快照——事后做"热搜加权是否带来更好选题"的相关分析
         "trending": " ".join(trending_valid[:8]) if trending_valid else None,
