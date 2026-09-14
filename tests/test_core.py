@@ -1257,6 +1257,42 @@ class TestCostAwareScheduling(unittest.TestCase):
             import shutil
             shutil.rmtree(tmp, ignore_errors=True)
 
+    def test_published_receipts_feed_scores_without_stage(self):
+        """R165：生产 binance_published 回执长期无 stage 字段，调度分只吃
+        campaign_intel——75 条发帖延迟/token 被静默排除。过滤器必须同时
+        接受 outcome 以 binance_published 开头的历史行。"""
+        import tempfile, json as _json
+        tmp = tempfile.mkdtemp()
+        orig = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(tmp, "metrics.jsonl")
+        with open(m.METRICS_FILE, "w", encoding="utf-8") as f:
+            # 历史回执：无 stage（R165 前的生产形态）
+            f.write(_json.dumps({"outcome": "binance_published", "provider": "slow",
+                                 "llm_latency_sec": 150.0, "tokens_used": 5000}) + "\n")
+            # 新回执：stage=summarize（R165 后）
+            f.write(_json.dumps({"outcome": "binance_published", "stage": "summarize",
+                                 "provider": "fast", "llm_latency_sec": 10.0,
+                                 "tokens_used": 800}) + "\n")
+            # 噪声：run_summary / 拒稿不得进分
+            f.write(_json.dumps({"outcome": "run_summary", "provider": "slow",
+                                 "llm_latency_sec": 1.0, "tokens_used": 10}) + "\n")
+            f.write(_json.dumps({"outcome": "llm_rejected", "stage": "quality",
+                                 "provider": "fast", "llm_latency_sec": 99.0,
+                                 "tokens_used": 9999}) + "\n")
+        try:
+            m._METRICS_AGG_CACHE.update({"key": None, "val": {}, "ts": 0.0})
+            scores = m.MultiLLMEngine._provider_cost_latency_scores()
+            self.assertEqual(set(scores), {"slow", "fast"})
+            self.assertLess(scores["fast"], scores["slow"],
+                            "发帖回执延迟必须进入调度分")
+            eng = self._engine_with(["slow", "fast"])
+            self.assertEqual([p.name for p in eng._ordered_providers()], ["fast", "slow"])
+        finally:
+            m.METRICS_FILE = orig
+            m._METRICS_AGG_CACHE.update({"key": None, "val": {}, "ts": 0.0})
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
     def test_fail_count_still_dominates(self):
         # 健康度(失败次数)是主排序键，成本只在同档内二次排序
         eng = self._engine_with(["cheap", "healthy_but_costly", "dead"])

@@ -2259,7 +2259,9 @@ class MultiLLMEngine:
         """从 metrics.jsonl 聚合每个 provider 的历史(平均延迟 + 平均 token)，
         合成一个「越小越优」的调度分数，供 _ordered_providers 在同健康档内二次排序。
 
-        - 仅统计 stage ∈ {summarize, campaign_intel} 的 LLM 遥测（承接 Round 2 成本可观测化）。
+        - 统计发帖主链路成本：stage ∈ {summarize, campaign_intel}，以及
+          outcome 以 binance_published 开头的历史回执（R165 前发帖回执无 stage，
+          75 条生产延迟/token 曾被本函数静默排除，排序只看情报刷新）。
         - 分数 = 平均延迟(s) + 0.001 × (平均 token / 1000)：token 是成本代理（无单价时足够排序）。
         - 无遥测 / 文件缺失 / 解析异常 → 返回空 dict，调用方保持原 fail-count 顺序（零副作用）。
         - 进程内缓存（按 路径+mtime+size 失效，TTL 120s）：同一运行内多次 _ordered_providers
@@ -2294,7 +2296,8 @@ class MultiLLMEngine:
                         # dry_run 触发即产生），不过滤会把本地沙盒的延迟/token 灌进
                         # 生产提供商排序（R84 闸门只封了状态写，遥测行是设计内落盘）
                         continue
-                    if r.get("stage") not in ("summarize", "campaign_intel"):
+                    if r.get("stage") not in ("summarize", "campaign_intel") and \
+                            not str(r.get("outcome") or "").startswith("binance_published"):
                         continue
                     name = r.get("provider")
                     if not name:
@@ -5861,6 +5864,12 @@ def _run_main():
                         "persona": llm_result.get("persona"),
                         "tokens_used": llm_result.get("tokens_used"),
                         "llm_latency_sec": llm_result.get("latency_sec"),
+                        # R165：调度分 _provider_cost_latency_scores 只认
+                        # stage∈(summarize,campaign_intel)。发帖回执此前无 stage，
+                        # 生产 75 条 binance_published 的延迟/token 全被排除，
+                        # 排序实际只看 ~25 条情报刷新——与「按发帖成本/延迟优选」
+                        # 的设计意图脱节。补 summarize 使既有过滤器如实吃到主信号。
+                        "stage": "summarize",
                         "article": bool(llm_result.get("title")),
                         # 生成的长文标题单列（与新闻 title 区分）：事后做标题质量/眼钩分析
                         "article_title": (llm_result.get("title") or "")[:40],
@@ -5925,6 +5934,7 @@ def _run_main():
                         "persona": llm_result.get("persona"),
                         "tokens_used": llm_result.get("tokens_used"),
                         "llm_latency_sec": llm_result.get("latency_sec"),
+                        "stage": "summarize",
                         "platforms": delivered,
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,
@@ -5978,6 +5988,7 @@ def _run_main():
                         "persona": llm_result.get("persona"),
                         "tokens_used": llm_result.get("tokens_used"),
                         "llm_latency_sec": llm_result.get("latency_sec"),
+                        "stage": "summarize",
                         "platforms": _delivered_platforms(False, draft_exported, telegram_exported),
                         # 失败分支的 widget_count 单独取（成功分支的局部变量此处未定义）
                         "widget_count": (lambda _w: _w if isinstance(_w, int) else None)(
