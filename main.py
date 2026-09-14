@@ -2732,6 +2732,31 @@ class MultiLLMEngine:
             logger.debug(f"读取近期情绪指数引用失败 (不影响主流程): {e}")
             return 0
 
+    def _recent_fng_ban_armed(self, limit: int = 5) -> bool:
+        """最近 N 篇发布里是否有 fng_ban_active=True（R176 非对称滞回用）。
+        读失败/无字段返回 False（无约束，与 hook_count 同安全方向）。"""
+        try:
+            if not os.path.exists(METRICS_FILE):
+                return False
+            with open(METRICS_FILE, "r", encoding="utf-8") as f:
+                lines = f.readlines()[-200:]
+            seen = 0
+            for line in reversed(lines):
+                try:
+                    r = json.loads(line)
+                except Exception:
+                    continue
+                if not str(r.get("outcome", "")).startswith("binance_published"):
+                    continue
+                if r.get("fng_ban_active") is True:
+                    return True
+                seen += 1
+                if seen >= limit:
+                    break
+            return False
+        except Exception:
+            return False
+
     def _recent_openers(self, limit: int = 8) -> List[str]:
         """读取最近 N 篇已发布文本的开场句（final_preview 首句，倒序）。
         供 prompt 注入"近期开场禁复用"——生产实录：相邻两帖同用"先泼盆冷水"比喻，
@@ -2825,7 +2850,11 @@ class MultiLLMEngine:
         # 剥离——一边递数字一边禁用是自相矛盾的指令，且白占上下文。
         # R162：状态同步暂存到实例，供发布回执直录（禁令是否武装/计数/是否剥离）。
         hook_count = self._recent_fng_hook_count()
-        fng_ban_active = hook_count >= 2
+        # R176：非对称滞回——对称阈值（≥2 武装 / <2 解除）在生产形成呼吸周期：
+        # 13:09Z hk=2 武装且干净 → 13:29Z hk=1 解除 → 同帖立刻回潮「情绪指数」。
+        # 武装条件不变（≥2）；解除要求窗口内零命中，或从未武装过。
+        recently_armed = self._recent_fng_ban_armed()
+        fng_ban_active = hook_count >= 2 or (recently_armed and hook_count >= 1)
         fng_market_stripped = False
         if fng_ban_active and market_context:
             stripped_ctx = re.sub(r"全网情绪指数:[^\n]*\n?", "", market_context)

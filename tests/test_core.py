@@ -300,6 +300,44 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertEqual(eng.last_fng_hook_count, 0)
         self.assertIs(eng.last_fng_market_stripped, False)
 
+    def test_fng_ban_hysteresis_stays_armed_at_hook_count_1(self):
+        """R176：对称阈值呼吸周期——13:09Z hk=2 武装干净 → 13:29Z hk=1 解除
+        → 同帖立刻回潮「情绪指数」。非对称滞回：最近武装过且窗口内仍有命中
+        （hk≥1）则保持武装；仅当零命中才解除。"""
+        self._append([
+            # 最近一篇：干净 + 武装过（触发 recently_armed）
+            {"outcome": "binance_published", "final_preview": "盘面放量突破，结构健康。",
+             "fng_ban_active": True},
+            # 再往前：FNG 命中（hk=1）
+            {"outcome": "binance_published", "final_preview": "情绪指数 57 还挂在贪婪区。"},
+            {"outcome": "binance_published", "final_preview": "资金持续流入。"},
+        ])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "全网情绪指数: 69/100\n", ["BTC"])
+        self.assertIs(eng.last_fng_ban_active, True, "hk=1 且最近武装过必须保持武装")
+        self.assertEqual(eng.last_fng_hook_count, 1)
+        self.assertIn("禁止再引用任何情绪指数数值", prompt)
+        self.assertNotIn("全网情绪指数: 69/100", prompt)
+
+    def test_fng_ban_disarms_only_at_zero_hooks(self):
+        """零命中才解除：最近武装过但窗口内已无 FNG → 解除。"""
+        self._append([
+            {"outcome": "binance_published", "final_preview": "盘面放量突破。",
+             "fng_ban_active": True},
+            {"outcome": "binance_published", "final_preview": "资金持续流入。"},
+            {"outcome": "binance_published", "final_preview": "结构健康。"},
+        ])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "全网情绪指数: 69/100\n", ["BTC"])
+        self.assertIs(eng.last_fng_ban_active, False, "hk=0 时必须解除")
+        self.assertIn("全网情绪指数: 69/100", prompt)
+
     def test_article_section_headers_skipped_in_openers(self):
         """R121：长文回执以"一、发生了什么"分节头开头——分节头不是开场句，
         直接取首段会让开场去重对全部长文失明。必须跳到首个正文段。"""
