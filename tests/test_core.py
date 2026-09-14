@@ -3112,6 +3112,34 @@ class TestIntelSchema(unittest.TestCase):
         self.assertEqual(intel["incentivized_tokens"], ["$BTC"])
         self.assertIn("last_updated", intel)
 
+    def test_intel_reject_carries_finish_reason(self):
+        """R180：情报空回拒稿也带 finish_reason（length=思考链吃满 / stop=真·空包）"""
+        import tempfile, json as _json
+        tmp = tempfile.mkdtemp()
+        orig = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(tmp, "metrics.jsonl")
+        try:
+            eng = MagicMock()
+            cfg = m.LLMProviderConfig("stub", "https://x", "k", "mm")
+            eng._ordered_providers.return_value = [cfg]
+            resp = MagicMock()
+            resp.choices = [MagicMock(message=MagicMock(content=""), finish_reason="stop")]
+            resp.usage = MagicMock(total_tokens=1000)
+            fake_client = MagicMock()
+            fake_client.chat.completions.create.return_value = resp
+            eng._get_client.return_value = fake_client
+            self.assertIsNone(m.CampaignScanner.analyze_with_ai(eng, ["t1"]))
+            with open(m.METRICS_FILE, encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            rejects = [r for r in rows if r.get("stage") == "campaign_intel"
+                       and r.get("outcome") == "llm_rejected"]
+            self.assertTrue(rejects)
+            self.assertEqual(rejects[-1].get("finish_reason"), "stop")
+        finally:
+            m.METRICS_FILE = orig
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
     def test_truncated_output_retried_same_provider(self):
         """情报 finish=length 即时重试（R67）：glm 冗长 JSON 被 max_tokens 掐断是
         生产二连实录（04:58Z/07:43Z），同渠道重试一次常收敛到更短输出。

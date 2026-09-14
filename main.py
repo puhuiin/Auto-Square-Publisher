@@ -3434,6 +3434,7 @@ class CampaignScanner:
             for provider in llm_engine._ordered_providers():
                 t_call = time.perf_counter()
                 tokens_used = None
+                _fin = ""
                 try:
                     client = llm_engine._get_client(provider)
                     # 推理型渠道（Reasonix 网关）思考链就吃几百 token，固定预算会静默产出空内容
@@ -3517,6 +3518,9 @@ class CampaignScanner:
                     })
                 except Exception as e:
                     # 情报分析失败同样记耗时/ token，便于定位是哪家 provider 在抖
+                    # R180：finish_reason——「思考链吃满预算」(length) 与真·空包 (stop)
+                    # 此前只在 reason 文本里，与 summarize 拒稿对齐
+                    _ff_intel = _fin if isinstance(_fin, str) else None
                     append_metrics({
                         "provider": provider.name,
                         "model": provider.model,
@@ -3524,6 +3528,7 @@ class CampaignScanner:
                         "llm_latency_sec": round(time.perf_counter() - t_call, 3),
                         "stage": "campaign_intel",
                         "reason": str(e)[:80],
+                        "finish_reason": _ff_intel or None,
                         "outcome": "llm_rejected",
                     })
                     logger.warning(f"使用提供商 [{provider.name}] 分析活动失败: {e}")
@@ -5884,17 +5889,15 @@ def _run_main():
                               "article_title": llm_result.get("title") or ""}
                 draft_exported = False
 
+                # R180：拟人 pacing 对所有启用平台生效（旧实现只在 binance 分支，
+                # okx_draft/telegram-only 双发会 3~8s 连发）。放在投递动作门口。
+                if not dry_run and posted_count > 0:
+                    delay = random.randint(90, 240)
+                    logger.info(f"⏳ 拟人间隔 {delay}s（第 {posted_count + 1} 篇发布前，模拟真人节奏）...")
+                    time.sleep(delay)
+                    sleep_total_sec += delay
+
                 if binance_enabled:
-                    # R178：拟人 pacing 挪到「即将发布第 2+ 篇」之前。
-                    # 旧实现 post1 成功后立刻 sleep，再扫剩余候选找 post2——
-                    # 生产 13:09/13:29/13:49 三轮 published=1 却 elapsed ~370s，
-                    # 其中 90~240s 是白等：token_limit 等把 post2 全挡了，sleep 已付。
-                    # 现在只有真的走到发布门口才睡，找不到 post2 则零等待。
-                    if not dry_run and posted_count > 0:
-                        delay = random.randint(90, 240)
-                        logger.info(f"⏳ 拟人间隔 {delay}s（第 {posted_count + 1} 篇发布前，模拟真人节奏）...")
-                        time.sleep(delay)
-                        sleep_total_sec += delay
                     t_pub_start = time.time()
                     success = publisher.publish(post_content, image_url=uploaded_image_url,
                                                 ensure_tokens=post_tokens, campaign_intel=campaign_intel,
