@@ -121,5 +121,54 @@ class TestIntelSeparation(unittest.TestCase):
         self.assertEqual(ca.render_intel_spend([]), "")
 
 
+class TestDryIsolation(unittest.TestCase):
+    """R167：DRY 隔离必须同时认 dry_run（R81 写侧）与 legacy dry（R66）。
+
+    append_metrics 自 R81 起统一写 dry_run=True；cost_analysis 三处 loader
+    仍只读 rec.get(\"dry\")——CI 手动 dry_run 产出的沙盒行会原样灌进成本面板。
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = os.path.join(self.tmp.name, "metrics.jsonl")
+        self.orig = ca.METRICS_FILE
+        ca.METRICS_FILE = self.path
+
+    def tearDown(self):
+        ca.METRICS_FILE = self.orig
+        self.tmp.cleanup()
+
+    def test_dry_run_field_excluded_by_default(self):
+        _write(self.path, [
+            {"outcome": "binance_published", "provider": "Sandbox",
+             "tokens_used": 9999, "llm_latency_sec": 99.0, "dry_run": True},
+            {"outcome": "binance_published", "provider": "Prod",
+             "tokens_used": 100, "llm_latency_sec": 10.0},
+            {"outcome": "llm_rejected", "provider": "Sandbox", "stage": "quality",
+             "dry_run": True},
+            {"outcome": "llm_success", "stage": "campaign_intel",
+             "provider": "Sandbox", "tokens_used": 50, "dry_run": True},
+        ])
+        self.assertEqual([r["provider"] for r in ca.load_records(None)], ["Prod"])
+        self.assertEqual(ca.load_intel_records(None), [])
+        self.assertEqual([r["provider"] for r in ca.load_published(None)], ["Prod"])
+
+    def test_legacy_dry_field_still_excluded(self):
+        _write(self.path, [
+            {"outcome": "binance_published", "provider": "OldDry",
+             "tokens_used": 1, "dry": True},
+            {"outcome": "binance_published", "provider": "Prod", "tokens_used": 2},
+        ])
+        self.assertEqual([r["provider"] for r in ca.load_records(None)], ["Prod"])
+
+    def test_include_dry_brings_them_back(self):
+        _write(self.path, [
+            {"outcome": "binance_published", "provider": "Sandbox",
+             "tokens_used": 9, "dry_run": True},
+        ])
+        self.assertEqual(len(ca.load_records(None, include_dry=True)), 1)
+        self.assertEqual(len(ca.load_published(None, include_dry=True)), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

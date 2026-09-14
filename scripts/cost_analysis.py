@@ -67,6 +67,13 @@ def _posting_row(rec: dict) -> bool:
     return False
 
 
+def _is_dry(rec: dict) -> bool:
+    """DRY 打标判定。R66 时代字段名是 dry；R81/R85 起 append_metrics 统一写
+    dry_run。只认旧名会让 CI 手动 dry_run 产出的沙盒延迟/token 灌进成本面板
+    （R165 同类：消费方字段名与写侧漂移）。两个名字都认，历史行不回归。"""
+    return rec.get("dry_run") is True or rec.get("dry") is True
+
+
 def load_records(days: int | None, include_dry: bool = False) -> list[dict]:
     if not os.path.exists(METRICS_FILE):
         return []
@@ -86,7 +93,7 @@ def load_records(days: int | None, include_dry: bool = False) -> list[dict]:
             if not _posting_row(rec):
                 continue
             # R66 引入 DRY 打标：报表默认排除本地试跑数据（正式投递才计入成本）
-            if not include_dry and rec.get("dry"):
+            if not include_dry and _is_dry(rec):
                 continue
             if cutoff is not None:
                 ts = _parse_ts(rec.get("ts", ""))
@@ -116,7 +123,7 @@ def load_intel_records(days: int | None, include_dry: bool = False) -> list[dict
                 continue
             if rec.get("stage") != "campaign_intel":
                 continue
-            if not include_dry and rec.get("dry"):
+            if not include_dry and _is_dry(rec):
                 continue
             if cutoff is not None:
                 ts = _parse_ts(rec.get("ts", ""))
@@ -145,7 +152,7 @@ def load_published(days: int | None, include_dry: bool = False) -> list[dict]:
                 continue
             if not str(rec.get("outcome", "")).startswith("binance_published"):
                 continue
-            if not include_dry and rec.get("dry"):
+            if not include_dry and _is_dry(rec):
                 continue
             if cutoff is not None:
                 ts = _parse_ts(rec.get("ts", ""))
