@@ -972,5 +972,14 @@
     "tokens": [
       "XRP"
     ]
+  },
+  {
+    "id": "decd44c22cfb754d",
+    "title": "ETH wallet exploit backfires as MEV bot captures $7.7M, Kelp freezes address",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-09-15T18:08:41.526874+00:00",
+    "tokens": [
+      "ETH"
+    ]
   }
 ]
