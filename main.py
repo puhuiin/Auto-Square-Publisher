@@ -895,6 +895,19 @@ class MarketDataProvider:
         return [w for w, _ in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))][:40]
 
     @classmethod
+    def _clean_hn_title(cls, t: str) -> str:
+        """剥掉 HN 展示噪音，留下真正的话题句。
+        - 前缀：Show HN: / Ask HN: / Tell HN: （13:19Z 生产实测「Show HN: An e-ink…」
+          直接进了 run_summary.hot_topics）
+        - 尾部：[Auth: …] / [Show HN] / [Ask HN]
+        剥完再用于展示与去重归一。"""
+        s = t.strip()
+        s = re.sub(r"^(?:Show|Ask|Tell)\s+HN\s*:\s*", "", s, flags=re.I).strip()
+        s = re.sub(r"\s*[\[\(](?:Auth|Show HN|Ask HN)[^\]\)]*[\]\)]\s*$",
+                   "", s, flags=re.I).strip()
+        return s
+
+    @classmethod
     def get_hot_topics(cls) -> List[str]:
         """全网实时热点标题列表（非加密专属）。
 
@@ -915,16 +928,15 @@ class MarketDataProvider:
                 feed = feedparser.parse(r.text)
                 seen_norm: set = set()
                 for e in (feed.entries or [])[:20]:
-                    t = (e.get("title") or "").strip()
+                    raw = (e.get("title") or "").strip()
+                    if not raw or len(raw) < 8:
+                        continue
+                    # R188/R189：剥 Show HN: 前缀与 [Auth] 尾缀后再展示/去重——
+                    # 生产实测同故事双席、以及「Show HN: …」整串进钩子列表
+                    t = cls._clean_hn_title(raw)
                     if not t or len(t) < 8:
                         continue
-                    # R188：HN 同一条会以「Title」和「Title [Auth: …]」两种形态出现，
-                    # 首帖 run_summary 实测同标题重复占两席，稀释钩子供给。
-                    # 归一：剥 [Auth:…]/(Show HN)/尾部空白，再大小写折叠去重。
-                    norm = re.sub(r"\s*[\[\(](?:Auth|Show HN|Ask HN)[^\]\)]*[\]\)]\s*$",
-                                  "", t, flags=re.I).strip().lower()
-                    if not norm:
-                        continue
+                    norm = t.lower()
                     if norm in seen_norm:
                         continue
                     seen_norm.add(norm)

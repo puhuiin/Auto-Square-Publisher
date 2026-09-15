@@ -5059,6 +5059,23 @@ class TestHotTopics(unittest.TestCase):
         self.assertEqual(titles[0], "25 Years of Mass Surveillance Is Enough")
         self.assertIn("OpenAI", titles[1])
 
+    def test_strip_show_hn_prefix(self):
+        """R189：13:19Z 生产实测「Show HN: An e-ink frame…」原样进钩子列表。
+        前缀剥离后展示的是话题本身，且与裸标题去重。"""
+        xml = """<?xml version="1.0"?><rss><channel>
+        <item><title>Show HN: An e-ink frame that hears birds and draws them</title></item>
+        <item><title>An e-ink frame that hears birds and draws them</title></item>
+        <item><title>Ask HN: What are you working on?</title></item>
+        </channel></rss>"""
+        with patch.object(m, "http_get", return_value=self._rss_resp(xml)):
+            titles = m.MarketDataProvider.get_hot_topics()
+        self.assertEqual(len(titles), 2)
+        self.assertEqual(titles[0], "An e-ink frame that hears birds and draws them")
+        self.assertEqual(titles[1], "What are you working on?")
+        for t in titles:
+            self.assertNotIn("Show HN", t)
+            self.assertNotIn("Ask HN", t)
+
     def test_failure_degrades_to_empty(self):
         with patch.object(m, "http_get", return_value=None):
             self.assertEqual(m.MarketDataProvider.get_hot_topics(), [])
