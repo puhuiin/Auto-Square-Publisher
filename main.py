@@ -253,6 +253,8 @@ ACTIVE_HOURS_BEIJING = os.getenv("ACTIVE_HOURS_BEIJING", "").strip()  # 活跃�
 CAMPAIGN_TOKEN_BOOST = 8                                           # 命中官方活动重点代币的热度加权
 TREND_TOKEN_BOOST = 6                                              # 命中全网热搜标的的加权（借鉴 Easel 热榜发现层：
                                                                    # 市场正在搜索的币是比新闻时效更强的热点信号，仅影响排序）
+HOT_TOPIC_BOOST = 4                                                # 命中全网实时热点关键词的加权（HN 等综合热榜：
+                                                                   # 提升点击率的跨域钩子，低于币种热搜/活动币，仅影响排序）
 FRESHNESS_BOOST_RULES = ((3, 10), (12, 6), (24, 3))                # (新闻不超过 N 小时, 加分)
 
 
@@ -844,6 +846,73 @@ class MarketDataProvider:
         symbols = symbols[:15]
         cls._trend_cache = (now, symbols)
         return symbols
+
+    # 全网实时热点标题（非币种热搜）：HN 前页 RSS。15min TTL，失败静默空表。
+    _hot_topic_cache: tuple = (0.0, None)  # (ts, List[str])
+    _HOT_TOPIC_TTL_SEC = 900
+    _HOT_TOPIC_STOPWORDS = frozenset("""
+        the and for with from that this will have been were was are you your not can
+        all any how what when who why which their there about into over than then
+        them they our out get got has had its it's more most new one two three
+        some such only also just very much many like make made after before
+        under between through during without within against toward towards
+        because while where there's don't doesn't didn't won't wouldn't
+        show ask hn ycombinator points comments hide login submit
+    """.split())
+
+    @classmethod
+    def _extract_hot_keywords(cls, titles: List[str]) -> List[str]:
+        """从热点标题抽「有辨识度」的词：$TICKER + 专有名词（标题里大写开头）。
+        小写普通词（pumps/buys 等）不收——防热点词误伤加密新闻里的常用动词。
+        过滤停用词与纯数字；按出现频次降序、去重。空表=零加权。"""
+        counts: Dict[str, int] = {}
+        for title in titles:
+            if not isinstance(title, str):
+                continue
+            for m in re.finditer(r"\$([A-Za-z0-9]{2,10})|([A-Z][A-Za-z0-9\-]{3,})", title):
+                if m.group(1):
+                    word = "$" + m.group(1).strip("-").upper()
+                else:
+                    word = m.group(2).strip("-").upper()
+                    if word.lower() in cls._HOT_TOPIC_STOPWORDS:
+                        continue
+                if not word or (not word.startswith("$") and (word.isdigit() or len(word) < 4)):
+                    continue
+                counts[word] = counts.get(word, 0) + 1
+        return [w for w, _ in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))][:40]
+
+    @classmethod
+    def get_hot_topics(cls) -> List[str]:
+        """全网实时热点标题列表（非加密专属）。
+
+        目标：让帖子能蹭上当下大众/科技圈注意力，提高广场点击率；与
+        CoinGecko 币种热搜互补（那边是「搜什么币」，这边是「聊什么」）。
+        源：Hacker News 前页 RSS（hnrss.org，免 Key、稳定）。
+        其余候选源评估（本轮未接）：Google Trends 页为 JS 壳且 RSS 404；
+        tophub/newsnow/sopilot/explodingtopics 无稳定免费 API 或需登录。
+        失败静默返回空表——调用方零行为变化。"""
+        now = time.time()
+        ts, cached = cls._hot_topic_cache
+        if cached is not None and (now - ts) < cls._HOT_TOPIC_TTL_SEC:
+            return cached
+        titles: List[str] = []
+        try:
+            r = http_get("https://hnrss.org/frontpage", timeout=8, retries=1)
+            if r is not None and r.status_code == 200:
+                feed = feedparser.parse(r.text)
+                for e in (feed.entries or [])[:20]:
+                    t = (e.get("title") or "").strip()
+                    if t and len(t) >= 8:
+                        titles.append(t[:120])
+        except Exception as e:
+            logger.debug(f"HN 热点拉取失败（降级为无热点钩子）: {e}")
+        cls._hot_topic_cache = (now, titles)
+        return titles
+
+    @classmethod
+    def get_hot_keywords(cls) -> List[str]:
+        """热点标题 → 关键词表（供候选加权）。走同一 15min 缓存。"""
+        return cls._extract_hot_keywords(cls.get_hot_topics())
 
     @classmethod
     def get_kline_closes(cls, symbol: str, points: int = 48) -> Optional[List[float]]:
@@ -1828,6 +1897,30 @@ class NewsFetcher:
         for item in candidates:
             if NewsFetcher._candidate_hits_tokens(item, trend_set):
                 item["impact_score"] += TREND_TOKEN_BOOST
+
+    @staticmethod
+    def apply_hot_topic_boost(candidates: List[Dict[str, Any]],
+                              hot_keywords: Optional[List[str]]) -> None:
+        """全网实时热点关键词加权：加密新闻标题/摘要命中当下大众/科技热点词
+        时前移排序（点击率钩子）。与趋势/活动加权同纪律：只影响排序不影响准入；
+        空表 = 零行为变化。ASCII 词用整词边界。"""
+        if not hot_keywords:
+            return
+        keys = {k.strip().upper() for k in hot_keywords if isinstance(k, str) and k.strip()}
+        if not keys:
+            return
+        for item in candidates:
+            text = ((item.get("title") or "") + " " + (item.get("summary") or "")).upper()
+            if not text:
+                continue
+            for kw in keys:
+                if kw.startswith("$"):
+                    if kw in text or re.search(r"\b" + re.escape(kw[1:]) + r"\b", text):
+                        item["impact_score"] += HOT_TOPIC_BOOST
+                        break
+                elif re.search(r"\b" + re.escape(kw) + r"\b", text):
+                    item["impact_score"] += HOT_TOPIC_BOOST
+                    break
 
     def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5,
                          priority_tokens: Optional[List[str]] = None) -> List[Dict[str, Any]]:
@@ -5738,6 +5831,17 @@ def _run_main():
                                         x["age_hours"] if x.get("age_hours") is not None else float("inf")))
         logger.info(f"🔥 全网热搜标的（币安在架）: {trending_valid[:8]}，相关候选已加权 +{TREND_TOKEN_BOOST}")
 
+    # 5.6 全网实时热点钩子（HN 等综合热榜）：加密新闻命中当下大众/科技热点词时
+    # 前移排序，并把标题注入 prompt 供模型找「能点进来」的跨域角度。
+    # 只影响排序不影响准入；抓取失败空表零行为变化。$ 挂件与活动标签要求不变。
+    hot_topics = MarketDataProvider.get_hot_topics()
+    hot_keywords = MarketDataProvider.get_hot_keywords()
+    if hot_keywords:
+        NewsFetcher.apply_hot_topic_boost(candidates, hot_keywords)
+        candidates.sort(key=lambda x: (-x["impact_score"],
+                                        x["age_hours"] if x.get("age_hours") is not None else float("inf")))
+        logger.info(f"🌐 全网热点关键词命中加权 +{HOT_TOPIC_BOOST}，热点样本: {hot_topics[:3]}")
+
     # 6. 执行发帖循环
     posted_count = 0
     posted_records: List[Dict[str, Any]] = []  # 供运行报告输出
@@ -5850,8 +5954,14 @@ def _run_main():
             trend_note = ""
             if trending_valid:
                 trend_note = f"\n全网热搜标的（CoinGecko Trending，市场正高度关注）: {' '.join('$' + t for t in trending_valid[:5])}"
+            hot_note = ""
+            if hot_topics:
+                short_hot = [t[:40] for t in hot_topics[:6]]
+                hot_note = ("\n全网实时热点话题（科技/大众注意力，可作跨域钩子提升点击率；"
+                            "若与本条加密新闻无关则禁止生硬提及）:\n- "
+                            + "\n- ".join(short_hot))
             market_context_str = (f"全网情绪指数: {fng_index}\n涉及标的实时盘面: {live_market_data if live_market_data else '链上/全市场热点'}"
-                                  f"{trend_note}\n"
+                                  f"{trend_note}{hot_note}\n"
                                   f"发布时段: 北京时间 {bj_hour} 点（{daypart}），语气与节奏请贴合该时段读者状态")
 
             # AI 结合活动情报与实时盘面进行高质量提炼（注入已校验真实标的提示）。
@@ -6266,6 +6376,7 @@ def _run_main():
         "feeds_parked": len(fetcher.stats.get("feeds_parked", [])),
         # R94：当轮热搜标的快照——事后做"热搜加权是否带来更好选题"的相关分析
         "trending": " ".join(trending_valid[:8]) if trending_valid else None,
+        "hot_topics": " | ".join(hot_topics[:5]) if hot_topics else None,
         # R126：单轮总耗时（秒）——20 分钟外部回调节奏下的堆积预警指标
         "run_elapsed_sec": round(time.time() - t_run_start, 1),
         "next_slot_frees": _nf_iso,

@@ -5015,7 +5015,81 @@ class TestTrendBoost(unittest.TestCase):
             harness._teardown(patches, tmpdir)
 
 
+class TestHotTopics(unittest.TestCase):
+    """全网实时热点钩子（HN）：提升点击率的跨域注意力信号。
+    与币种热搜互补；只影响排序；抓取失败零行为变化；$挂件/活动标签不变。"""
 
+    def setUp(self):
+        self._orig = m.MarketDataProvider._hot_topic_cache
+        m.MarketDataProvider._hot_topic_cache = (0.0, None)
+
+    def tearDown(self):
+        m.MarketDataProvider._hot_topic_cache = self._orig
+
+    def _rss_resp(self, body: str):
+        return type("R", (), {"status_code": 200, "headers": {}, "text": body,
+                              "content": body.encode("utf-8"),
+                              "close": lambda self: None,
+                              "json": lambda self: {}})()
+
+    def test_parse_hn_rss_titles_and_cache(self):
+        xml = """<?xml version="1.0"?><rss><channel>
+        <item><title>OpenAI buys camera maker for $300M</title></item>
+        <item><title>Short</title></item>
+        <item><title>US confirms space weapons deployment</title></item>
+        </channel></rss>"""
+        with patch.object(m, "http_get", return_value=self._rss_resp(xml)) as mock_get:
+            first = m.MarketDataProvider.get_hot_topics()
+            second = m.MarketDataProvider.get_hot_topics()
+        self.assertEqual(first[0], "OpenAI buys camera maker for $300M")
+        self.assertEqual(len(first), 2, "过短标题丢弃")
+        self.assertEqual(mock_get.call_count, 1, "15min TTL 命中缓存")
+
+    def test_failure_degrades_to_empty(self):
+        with patch.object(m, "http_get", return_value=None):
+            self.assertEqual(m.MarketDataProvider.get_hot_topics(), [])
+        with patch.object(m, "http_get", side_effect=RuntimeError("x")):
+            self.assertEqual(m.MarketDataProvider.get_hot_topics(), [])
+
+    def test_keyword_extract_proper_nouns_and_tickers_only(self):
+        keys = m.MarketDataProvider._extract_hot_keywords([
+            "OpenAI buys smartphone camera maker for $300M",
+            "The and for with from that this will have",
+        ])
+        self.assertIn("OPENAI", keys)
+        self.assertIn("$300M", keys)
+        self.assertNotIn("THE", keys)
+        self.assertNotIn("BUYS", keys, "小写普通词不进热点词表")
+        self.assertNotIn("SMARTPHONE", keys)
+
+    def test_hot_topic_boost_word_boundary(self):
+        cands = [
+            {"title": "OpenAI partnership fuels AI token narrative", "summary": "",
+             "impact_score": 10, "base_impact_score": 10},
+            {"title": "Routine altcoin roundup", "summary": "",
+             "impact_score": 8, "base_impact_score": 8},
+        ]
+        m.NewsFetcher.apply_hot_topic_boost(cands, ["OPENAI", "SPACE"])
+        self.assertEqual(cands[0]["impact_score"], 10 + m.HOT_TOPIC_BOOST)
+        self.assertEqual(cands[0]["base_impact_score"], 10)
+        self.assertEqual(cands[1]["impact_score"], 8)
+
+    def test_hot_topic_boost_empty_noop(self):
+        cands = [{"title": "BTC rally", "summary": "", "impact_score": 5,
+                  "base_impact_score": 5}]
+        m.NewsFetcher.apply_hot_topic_boost(cands, [])
+        m.NewsFetcher.apply_hot_topic_boost(cands, None)
+        self.assertEqual(cands[0]["impact_score"], 5)
+
+    def test_lowercase_verb_not_extracted(self):
+        """Solana pumps 10%：只收 SOLANA，不收小写 pumps。"""
+        keys = m.MarketDataProvider._extract_hot_keywords(
+            ["Solana pumps 10% as inflows rise"])
+        self.assertIn("SOLANA", keys)
+        self.assertNotIn("PUMPS", keys)
+
+
+class TestAtomicWrite(unittest.TestCase):
     """崩溃安全写盘：写半截被杀不得留下损坏的状态文件"""
 
     def test_helper_roundtrip_and_no_tmp_residue(self):
@@ -5312,6 +5386,8 @@ class TestRunMainSemantics(unittest.TestCase):
         _start(patch.object(m.MarketDataProvider, "get_token_market_data", return_value=""))
         # R94：热搜拉取走真实网络，集成测试一律 mock 为空（加权链路另有单测）
         _start(patch.object(m.MarketDataProvider, "get_trending_symbols", return_value=[]))
+        _start(patch.object(m.MarketDataProvider, "get_hot_topics", return_value=[]))
+        _start(patch.object(m.MarketDataProvider, "get_hot_keywords", return_value=[]))
         _start(patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}))
         # 配图上传走真实网络（超时重试可达十几秒）：此处只测投递语义，图片管线另有单测
         _start(patch.object(m.ImageManager, "prepare_and_upload", return_value=None))
