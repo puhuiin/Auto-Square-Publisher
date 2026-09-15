@@ -5978,6 +5978,39 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_quota_run_records_intel_age(self):
+        """R195：饱和轮也刷情报（R182），但此前只有发帖回执带 age/degraded——
+        80 轮/天的饱和轮对情报陈旧度完全不可见。"""
+        from datetime import datetime, timezone, timedelta
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        oldest_ts = datetime.now(timezone.utc) - timedelta(hours=10)
+        intel = {
+            "active_tags": [], "incentivized_tokens": [],
+            "strategy_guidance": "g",
+            "last_updated": (datetime.now(timezone.utc) - timedelta(hours=16)).isoformat().replace("+00:00", "Z"),
+        }
+        try:
+            import json
+            with open(paths["cache"], "w", encoding="utf-8") as f:
+                json.dump([{"id": "old", "title": "t", "source": "s",
+                            "sent_at": oldest_ts.isoformat(),
+                            "tokens": ["BTC"]}], f)
+            with patch.object(m, "MAX_DAILY_POSTS", 1), \
+                 patch.object(m.CampaignScanner, "get_campaign_intel",
+                              return_value=intel):
+                with self.assertRaises(SystemExit) as cm:
+                    m._run_main()
+            self.assertEqual(cm.exception.code, 0)
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            self.assertEqual(rows[0].get("quota_blocked"), True)
+            self.assertAlmostEqual(rows[0].get("intel_age_hours"), 16.0, delta=0.3)
+            self.assertIs(rows[0].get("intel_degraded"), True,
+                          "16h > 12h 新鲜窗必须标降级")
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_quota_next_slot_estimate_helper(self):
         """R129：估算提为公共函数 _quota_next_slot_estimate——发帖轮的收尾
         run_summary 同样写入，报表不再拿到数小时前的过期估算。"""

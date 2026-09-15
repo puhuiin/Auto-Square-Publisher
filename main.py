@@ -5685,6 +5685,31 @@ def _quota_next_slot_estimate(cache_mgr) -> tuple:
         return None, None  # 估算失败不影响配额退出语义
 
 
+def _intel_age_hours(campaign_intel: Optional[Dict[str, Any]]) -> Optional[float]:
+    """情报陈旧小时数（R195）。无 last_updated / 解析失败返回 None。
+    供 quota_blocked 与发帖 run_summary 共用——饱和轮也刷情报后，
+    只有回执带 age 会让 80 轮/天的饱和轮对情报状态不可见。"""
+    if not isinstance(campaign_intel, dict):
+        return None
+    try:
+        lu = str(campaign_intel.get("last_updated") or "")
+        if not lu:
+            return None
+        dt = datetime.fromisoformat(lu.replace("Z", "+00:00"))
+        return round((datetime.now(dt.tzinfo or timezone.utc) - dt).total_seconds() / 3600.0, 1)
+    except Exception:
+        return None
+
+
+def _intel_is_degraded(campaign_intel: Optional[Dict[str, Any]]) -> Optional[bool]:
+    """情报是否已过 12h 新鲜窗（R195）。无时间戳 → None（不猜）。
+    语义与 _build_user_prompt 的 intel_fresh 判定一致。"""
+    age = _intel_age_hours(campaign_intel)
+    if age is None:
+        return None
+    return age >= INTEL_EXPIRE_HOURS
+
+
 def _run_main():
     # R126：单轮耗时基线——外部回调 20 分钟一次，若全管线（情报刷新 + LLM 链
     # 容灾 + 配图上传 + 发布）耗时逼近节奏，下一轮就会排队堆积；此前的盲区
@@ -5796,6 +5821,10 @@ def _run_main():
                 # R183：情报刷新在配额检查前（R182），饱和轮也付了 intel 时间——
                 # 不记则 run_elapsed 里的刷新成本无法与「纯短路读缓存」区分
                 "intel_elapsed_sec": round(intel_elapsed, 1),
+                # R195：饱和轮的情报陈旧度——R182 后饱和轮也刷情报，但此前只有
+                # 发帖回执带 age/degraded，80 轮/天的饱和轮对情报状态完全不可见
+                "intel_age_hours": _intel_age_hours(campaign_intel),
+                "intel_degraded": _intel_is_degraded(campaign_intel),
                 # R184：等待后仍饱和 = 追赶失败（如估算偏差/槽未按时释放），
                 # 这笔等待同样是 run_elapsed 的一部分，单列才能对上账
                 "quota_wait_elapsed_sec": round(quota_wait_sec, 1),
