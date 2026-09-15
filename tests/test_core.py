@@ -5686,6 +5686,36 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_run_summary_records_boost_hits(self):
+        """R193：三路加权命中数进 run_summary——供给快照看不到是否真打中候选。
+        默认候选标题含 BTC；热搜/热点词表喂 BTC 则两路各 +1。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            with patch.object(m.MarketDataProvider, "get_trending_symbols",
+                              return_value=["BTC"]), \
+                 patch.object(m.SymbolValidator, "get_valid_symbols",
+                              return_value={"BTC", "ETH"}), \
+                 patch.object(m.MarketDataProvider, "get_hot_keywords",
+                              return_value=["BTC"]):
+                m._run_main()
+            import json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(run_row.get("trend_boost_hits"), 1)
+            self.assertEqual(run_row.get("hot_boost_hits"), 1)
+            self.assertEqual(run_row.get("campaign_boost_hits"), 0,
+                             "空活动币表不得记命中")
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_second_post_same_run_falls_back_to_short(self):
         """R60 修复锁：同运行发完长文后第二个帖子必须回短讯。
         旧 bug：article_done_today 是循环外快照，发完长文不更新 → max_posts=2 时
