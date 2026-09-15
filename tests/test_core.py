@@ -5088,6 +5088,26 @@ class TestHotTopics(unittest.TestCase):
         self.assertIn("SOLANA", keys)
         self.assertNotIn("PUMPS", keys)
 
+    def test_live_hn_titles_do_not_leak_common_words(self):
+        """R187：真实 HN 标题实测——ALTERNATIVES/ENOUGH/FAST 等标题腔普通词
+        会误加权几乎任意加密稿。只留专有名词与 $TICKER。"""
+        titles = [
+            "OpenAI buys smartphone camera maker Glass Imaging for $300M",
+            "25 Years of Mass Surveillance Is Enough",
+            "Alternatives to MinIO for single-node local S3",
+            "Dropping eBPF CPU Cost by About 90% with Memoization",
+            "I can't stop thinking about Papua New Guinea",
+        ]
+        keys = m.MarketDataProvider._extract_hot_keywords(titles)
+        self.assertIn("OPENAI", keys)
+        self.assertIn("$300M", keys)
+        self.assertIn("IMAGING", keys)
+        self.assertIn("MINIO", keys)
+        self.assertIn("MEMOIZATION", keys)
+        for bad in ("ALTERNATIVES", "ENOUGH", "SURVEILLANCE", "DROPPING",
+                    "COST", "YEARS", "THINKING", "GUINEA", "MASS"):
+            self.assertNotIn(bad, keys, f"{bad} 不得进热点词表")
+
 
 class TestAtomicWrite(unittest.TestCase):
     """崩溃安全写盘：写半截被杀不得留下损坏的状态文件"""

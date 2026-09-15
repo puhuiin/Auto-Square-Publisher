@@ -858,6 +858,19 @@ class MarketDataProvider:
         under between through during without within against toward towards
         because while where there's don't doesn't didn't won't wouldn't
         show ask hn ycombinator points comments hide login submit
+        alternatives applications enough classics distributed dropping
+        surveillance conjecture sabotage disruption smartphone camera maker
+        years months weeks days hours systems services products company
+        market prices price today yesterday tomorrow world people
+        first second third using used uses based based
+        guide rough beginning confirm confirms confirmed major minor
+        single local true false high low big small
+        built designed created launched announced released
+        hiring senior content engineer remote worldwide
+        think thinking stop start continue
+        chart charts chat cost fast slow
+        guinea papua mass
+        open source open-source
     """.split())
 
     @classmethod
