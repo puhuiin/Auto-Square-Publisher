@@ -1342,6 +1342,13 @@ _TOKEN_CJK_ALIASES = {
 }
 
 
+def _cjk_pool_symbols(valid_symbols: Set[str]) -> List[str]:
+    """池内非 ASCII 标的（币安中文 baseAsset：牛来/币安人生）。长代码优先，
+    避免短码先命中造成子串误切。"""
+    return sorted((s for s in valid_symbols if any(ord(c) > 127 for c in s)),
+                  key=len, reverse=True)
+
+
 class NewsFetcher:
     """多源资讯抓取与重磅热点打分排序"""
 
@@ -1530,6 +1537,12 @@ class NewsFetcher:
         for _pos, ticker in sorted(alias_hits):
             if ticker not in detected and ticker in valid_symbols:
                 detected.append(ticker)
+        # ⑤ CJK 标的（R203）：币安 SPOT 真有中文 baseAsset（牛来/币安人生，
+        # 2026-09-15 情报激励 $牛来）。ASCII 正则与别名表都看不见 → 活动加权/
+        # 挂件全链路对这类标的恒空。只匹配池内完整代码（子串），不发明新词。
+        for sym in _cjk_pool_symbols(valid_symbols):
+            if sym in text and sym not in detected:
+                detected.append(sym)
         return detected
 
     @staticmethod
@@ -4747,9 +4760,16 @@ class SquarePublisher(BasePublisher):
 
     @staticmethod
     def _count_valid_widgets(content: str) -> int:
-        """统计正文中币安真实标的的 $ 挂件数（Write2Earn 生命线度量）。"""
-        return sum(1 for t in re.findall(r"\$([A-Za-z0-9]{2,10})(?![A-Za-z0-9])", content or "")
-                   if t.upper() in SymbolValidator.get_valid_symbols())
+        """统计正文中币安真实标的的 $ 挂件数（Write2Earn 生命线度量）。
+        R203：中文标的（$牛来）不在 ASCII 正则里，必须单独计数。"""
+        content = content or ""
+        valid_symbols = SymbolValidator.get_valid_symbols()
+        n = sum(1 for t in re.findall(r"\$([A-Za-z0-9]{2,10})(?![A-Za-z0-9])", content)
+                if t.upper() in valid_symbols)
+        for sym in _cjk_pool_symbols(valid_symbols):
+            if f"${sym}" in content:
+                n += 1
+        return n
 
     @staticmethod
     def _ensure_token_widget(content: str, ensure_tokens: Optional[List[str]]) -> str:
@@ -4763,6 +4783,10 @@ class SquarePublisher(BasePublisher):
         valid_symbols = SymbolValidator.get_valid_symbols()
         if any(t.upper() in valid_symbols for t in existing):
             return content
+        # R203：已有 $牛来 等中文挂件时不得再插 ASCII 兜底
+        for sym in _cjk_pool_symbols(valid_symbols):
+            if f"${sym}" in content:
+                return content
 
         primary = ensure_tokens[0].upper()
         idx = content.find("#")

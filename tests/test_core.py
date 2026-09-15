@@ -901,6 +901,21 @@ class TestTokenExtraction(unittest.TestCase):
         self.assertEqual(out, ["ADA", "DOT", "SHIB"])
         self.assertEqual(m.NewsFetcher.extract_tokens("币安币走势强劲", pool), ["BNB"])
 
+    def test_cjk_pool_symbols_extracted(self):
+        """R203：币安 SPOT 真有中文 baseAsset（牛来/币安人生）。ASCII 正则
+        看不见它们 → 活动激励 $牛来 时 extract 恒空、加权/挂件全链路死信号。
+        只匹配池内完整代码，不得发明新中文词。"""
+        pool = self.VALID | {"牛来", "币安人生"}
+        self.assertEqual(
+            m.NewsFetcher.extract_tokens("币安上线牛来新币，社区热度很高", pool), ["牛来"])
+        self.assertEqual(
+            m.NewsFetcher.extract_tokens("看好 $牛来 后续走势", pool), ["牛来"])
+        self.assertEqual(
+            m.NewsFetcher.extract_tokens("币安人生话题冲上热榜", pool), ["币安人生"])
+        # 池外中文不得被提取
+        self.assertEqual(
+            m.NewsFetcher.extract_tokens("神秘新币龙卷风来袭", pool), [])
+
     def test_finance_context_words_require_cashtag(self):
         """R70 实弹补充：BANK/BLOCK 等金融语境高频词进歧义表——
         'Bank of England'/'Builders Bank' 的 Title Case 普通名词曾直接被当挂件标的
@@ -1375,6 +1390,23 @@ class TestTokenWidgetEnforcement(unittest.TestCase):
         self.assertEqual(count(""), 0)
         # 词边界：$BTCX 不算 BTC，$BTC 算
         self.assertEqual(count("$BTCX 和 $BTC"), 1)
+        # R203：中文标的挂件必须计入（ASCII 正则看不见）
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "牛来", "币安人生"}
+        try:
+            self.assertEqual(count("冲 $牛来 和 $BTC"), 2)
+            self.assertEqual(count("只有牛来俩字没有美元号"), 0)
+        finally:
+            m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP"}
+
+    def test_cjk_widget_blocks_fallback_insert(self):
+        """R203：正文已有 $牛来 时不得再插 $BTC 兜底挂件。"""
+        original = "今天聊聊牛来行情 $牛来 #Write2Earn"
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP", "牛来"}
+        try:
+            out = m.SquarePublisher._ensure_token_widget(original, ["BTC"])
+            self.assertEqual(out, original)
+        finally:
+            m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP"}
 
 
 class TestProviderHealthScheduling(unittest.TestCase):
@@ -3525,6 +3557,18 @@ class TestCampaignBoost(unittest.TestCase):
         m.NewsFetcher._apply_campaign_boost(cands_tag, ["$THE"])
         self.assertEqual(cands_tag[0]["impact_score"], 8 + m.CAMPAIGN_TOKEN_BOOST,
                          "显式 $THE 必须命中活动加权")
+
+    def test_cjk_campaign_token_hits_via_extract(self):
+        """R203：在池中文标的（牛来）必须走 extract 四层后命中活动加权——
+        旧实现 ASCII 正则提不出牛来，在池活动币变死信号。"""
+        m.SymbolValidator._valid_symbols_cache = {"BNB", "牛来"}
+        cands = [{"title": "币安上线牛来，Alpha 交易竞赛开启",
+                  "summary": "", "impact_score": 9},
+                 {"title": "Routine altcoin roundup", "summary": "",
+                  "impact_score": 9}]
+        m.NewsFetcher._apply_campaign_boost(cands, ["$牛来"])
+        self.assertEqual(cands[0]["impact_score"], 9 + m.CAMPAIGN_TOKEN_BOOST)
+        self.assertEqual(cands[1]["impact_score"], 9)
 
 
 class TestIntelRefreshBackoff(unittest.TestCase):
