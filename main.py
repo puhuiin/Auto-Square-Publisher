@@ -3351,8 +3351,11 @@ def _past_date_refs(text: str, now: Optional[datetime] = None) -> List[str]:
             continue
         if (now - d).total_seconds() > 36 * 3600:
             refs.append(m.group(0))
-    # 「今日（date）」自称今天却不是今天 → 立即命中（不受 36h 保护）
-    for m in re.finditer(r"(?:今日|今天)[（(](\d{4}-\d{1,2}-\d{1,2})[）)]", text):
+    # 「今日（date）」「今日 date」自称今天却不是今天 → 立即命中（不受 36h 保护）。
+    # R184：补空格形式——生产 guidance 实录「今日 2026-09-15 截止」（09-15T03:44Z
+    # 刷新），R164 只匹配括号，该句在次日 12h 新鲜窗内仍无注记。
+    for m in re.finditer(
+            r"(?:今日|今天)\s*[（(]?(\d{4}-\d{1,2}-\d{1,2})[）)]?", text):
         raw = m.group(1)
         try:
             d = datetime.strptime(raw, "%Y-%m-%d").replace(tzinfo=timezone.utc)

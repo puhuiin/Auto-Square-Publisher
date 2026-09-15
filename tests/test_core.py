@@ -582,6 +582,18 @@ class TestPastDateRefs(unittest.TestCase):
                                            datetime(2026, 9, 11, 12, 0, tzinfo=timezone.utc)),
                          [])
 
+    def test_today_space_separated_date_flagged(self):
+        """R184：生产 guidance「今日 2026-09-15 截止」（空格、无括号）——
+        R164 只匹配括号，次日 12h 新鲜窗内仍无注记。空格形式同样命中。"""
+        text = "Binance Earn U 活期 7% APR 今日 2026-09-15 截止，叠加 Stock Options 活动"
+        now = datetime(2026, 9, 16, 12, 0, tzinfo=timezone.utc)
+        self.assertEqual(m._past_date_refs(text, now), ["2026-09-15"])
+        # 当天自称今日且日期正确：不误报
+        self.assertEqual(m._past_date_refs(text, datetime(2026, 9, 15, 12, 0, tzinfo=timezone.utc)), [])
+        # 半角括号 / 全角括号 / 今天 仍覆盖
+        self.assertEqual(m._past_date_refs("今天(2026-09-15)截止", now), ["2026-09-15"])
+        self.assertEqual(m._past_date_refs("今日（2026-09-15）截止", now), ["2026-09-15"])
+
 
     def setUp(self):
         import tempfile
