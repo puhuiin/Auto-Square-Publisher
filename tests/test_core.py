@@ -3474,6 +3474,24 @@ class TestCampaignBoost(unittest.TestCase):
         self.assertEqual(cands2[0]["impact_score"], 7 + m.CAMPAIGN_TOKEN_BOOST,
                          "显式 $MOVE 才是真命中")
 
+    def test_off_pool_campaign_token_uses_word_boundary(self):
+        """R200：Alpha 上新如 PIEVERSE 不在标的池，extract_tokens 恒空 →
+        旧实现活动加权永不命中。改词边界匹配，且不得误伤普通句子。"""
+        # setUp 池只有 BNB/MOVE，PIEVERSE 属 off-pool
+        cands = [
+            {"title": "Binance Alpha: Pieverse (PIEVERSE) Trading Contest",
+             "summary": "", "impact_score": 10},
+            {"title": "Routine altcoin roundup", "summary": "",
+             "impact_score": 10},
+        ]
+        m.NewsFetcher._apply_campaign_boost(cands, ["$PIEVERSE"])
+        self.assertEqual(cands[0]["impact_score"], 10 + m.CAMPAIGN_TOKEN_BOOST)
+        self.assertEqual(cands[1]["impact_score"], 10)
+        # 在池币仍走四层：BNB 在池，标题含 BNB 命中
+        cands2 = [{"title": "BNB Chain TVL rises", "summary": "", "impact_score": 5}]
+        m.NewsFetcher._apply_campaign_boost(cands2, ["$BNB", "$PIEVERSE"])
+        self.assertEqual(cands2[0]["impact_score"], 5 + m.CAMPAIGN_TOKEN_BOOST)
+
 
 class TestIntelRefreshBackoff(unittest.TestCase):
     """情报刷新失败退避：2h 内不重复白烧 LLM"""

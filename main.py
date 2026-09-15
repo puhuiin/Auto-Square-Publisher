@@ -1912,19 +1912,41 @@ class NewsFetcher:
         返回命中的候选数（供 run_summary 度量四路信号供给）。
         非字符串条目直接丢弃——脏情报里的 dict/数字走到 t.replace 会炸掉整轮；
         存量脏文件由 get_campaign_intel 拦截，这里是消费侧第二道门。
-        R95：命中判定改走 _candidate_hits_tokens（四层防线），词形活动币
-        （MOVE/FORM 等严格词表成员）不再误boost普通英文标题。"""
+        R95：在池币命中判定走 _candidate_hits_tokens（四层防线），词形活动币
+        （MOVE/FORM 等严格词表成员）不再误boost普通英文标题。
+        R200：不在池的活动币（Alpha 上新如 PIEVERSE，09-15 生产实证
+        extract_tokens 恒空 → 加权永不命中）改词边界匹配，并打日志暴露
+        「活动币 off-pool」供给缺口。"""
         if not priority_tokens:
             return 0
         campaign_set = {t.replace("$", "").strip().upper()
                         for t in priority_tokens if isinstance(t, str) and t.strip()}
         if not campaign_set:
             return 0
+        universe = SymbolValidator.get_valid_symbols()
+        in_pool = {t for t in campaign_set if t in universe}
+        off_pool = campaign_set - in_pool
+        if off_pool:
+            # Alpha 上新/未入 SPOT 交易所列表的活动币：extract_tokens 四层防线
+            # 会恒空（不在 valid_symbols），旧实现等于给这些币的竞赛白挂权重
+            logger.info(f"🪙 活动币不在标的池（改词边界匹配）: {sorted(off_pool)}")
         hits = 0
         for item in candidates:
-            if NewsFetcher._candidate_hits_tokens(item, campaign_set):
+            if in_pool and NewsFetcher._candidate_hits_tokens(item, in_pool):
                 item["impact_score"] += CAMPAIGN_TOKEN_BOOST
                 hits += 1
+                continue
+            if off_pool:
+                text = ((item.get("title") or "") + " " + (item.get("summary") or "")).upper()
+                if not text:
+                    continue
+                for tok in off_pool:
+                    # 词边界：PIEVERSE 不得命中普通句子；Alpha 标题里的
+                    # 「Pieverse」大写化后 \bPIEVERSE\b 可命中
+                    if re.search(r"\b" + re.escape(tok) + r"\b", text):
+                        item["impact_score"] += CAMPAIGN_TOKEN_BOOST
+                        hits += 1
+                        break
         return hits
 
     @staticmethod
