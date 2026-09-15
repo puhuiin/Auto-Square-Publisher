@@ -236,6 +236,9 @@ def summarize(rows):
         "llm_elapsed": [],
         "intel_elapsed": [],  # R183：饱和轮也付情报时间（R182 前移后）
         "quota_wait_elapsed": [],  # R184：配额边界追赶等待（R154）单列
+        # R196：饱和轮情报陈旧度（R195 写侧）——80 轮/天的 quota_blocked 可见
+        "quota_intel_ages": [],
+        "quota_intel_degraded": 0,
     }
     lat_tmp, tok_tmp = collections.defaultdict(list), collections.defaultdict(list)
     for r in rows:
@@ -399,8 +402,15 @@ def summarize(rows):
             _qw = _num(r.get("quota_wait_elapsed_sec"))
             if _qw is not None and _qw > 0:
                 runs_tmp["quota_wait_elapsed"].append(_qw)
+            # R196：饱和轮情报陈旧度（仅 quota_blocked 轮，避免与发帖回执重复计）
+            if quota_blocked:
+                _ia = _num(r.get("intel_age_hours"))
+                if _ia is not None:
+                    runs_tmp["quota_intel_ages"].append(_ia)
+                if r.get("intel_degraded") is True:
+                    runs_tmp["quota_intel_degraded"] += 1
     s["runs"] = {
-        **{k: v for k, v in runs_tmp.items() if k not in ("skips", "trend_freq", "elapsed", "sleep_elapsed", "llm_elapsed", "intel_elapsed", "quota_wait_elapsed")},
+        **{k: v for k, v in runs_tmp.items() if k not in ("skips", "trend_freq", "elapsed", "sleep_elapsed", "llm_elapsed", "intel_elapsed", "quota_wait_elapsed", "quota_intel_ages")},
         "skips": dict(runs_tmp["skips"]),
         "trend_freq": dict(runs_tmp["trend_freq"].most_common(8)),
     }
@@ -421,6 +431,11 @@ def summarize(rows):
     if runs_tmp["quota_wait_elapsed"]:
         s["runs"]["avg_quota_wait_sec"] = round(
             sum(runs_tmp["quota_wait_elapsed"]) / len(runs_tmp["quota_wait_elapsed"]), 1)
+    # R196：饱和轮情报陈旧度
+    if runs_tmp["quota_intel_ages"]:
+        _qia = runs_tmp["quota_intel_ages"]
+        s["runs"]["avg_quota_intel_age_h"] = round(sum(_qia) / len(_qia), 1)
+        s["runs"]["max_quota_intel_age_h"] = round(max(_qia), 1)
     for prov, vals in lat_tmp.items():
         s["latency_by_provider"][prov] = round(sum(vals) / len(vals), 1)
     for prov, vals in tok_tmp.items():
@@ -526,6 +541,13 @@ def render_text(s, rows=None):
             lines.append(
                 f"  📈 加权命中（{runs.get('boost_runs', 0)} 轮）: "
                 f"活动 {bh.get('campaign', 0)} / 热搜 {bh.get('trend', 0)} / 热点 {bh.get('hot', 0)}")
+        # R196：饱和轮情报陈旧度——配额期实际在用多旧的情报
+        if runs.get("avg_quota_intel_age_h") is not None:
+            deg = runs.get("quota_intel_degraded") or 0
+            flag = " ⚠️" if deg else ""
+            lines.append(
+                f"  🧊 饱和轮情报{flag}: 均值 {runs['avg_quota_intel_age_h']}h / "
+                f"最长 {runs.get('max_quota_intel_age_h', 0)}h，降级 {deg} 轮")
         # R126：单轮耗时——逼近 20 分钟回调节奏时即为堆积预警
         if runs.get("avg_elapsed_sec") is not None:
             warn = " ⚠️逼近回调节奏" if runs.get("max_elapsed_sec", 0) > 1100 else ""

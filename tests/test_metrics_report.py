@@ -616,6 +616,26 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("活动 4", text)
         self.assertIn("热点 3", text)
 
+    def test_quota_intel_age_aggregated(self):
+        """R196：饱和轮情报陈旧度——R195 写侧已有，报表必须从 quota_blocked 聚合"""
+        rows = [
+            {"outcome": "run_summary", "quota_blocked": True, "intel_age_hours": 16.0,
+             "intel_degraded": True},
+            {"outcome": "run_summary", "quota_blocked": True, "intel_age_hours": 2.0,
+             "intel_degraded": False},
+            # 发帖轮的 age 不得混入饱和轮统计
+            {"outcome": "binance_published", "provider": "Preset-b.ai",
+             "platforms": ["binance"], "intel_age_hours": 99.0, "intel_degraded": True,
+             "widget_count": 1, "tag_count": 3},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["avg_quota_intel_age_h"], 9.0)
+        self.assertEqual(s["runs"]["max_quota_intel_age_h"], 16.0)
+        self.assertEqual(s["runs"]["quota_intel_degraded"], 1)
+        text = mr.render_text(s, rows)
+        self.assertIn("饱和轮情报", text)
+        self.assertIn("降级 1 轮", text)
+
     def test_quota_estimator_surfaced_in_report(self):
         """R113：配额释放估算的报表端消费——运营者看报告即知下一帖何时能发"""
         from datetime import datetime, timezone, timedelta
