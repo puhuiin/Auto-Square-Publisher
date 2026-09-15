@@ -1352,6 +1352,7 @@ class NewsFetcher:
         self.stats = {"fetched": 0, "stale": 0, "cached": 0, "near_dup": 0, "kept": 0,
                       "feeds_ok": 0, "feeds_failed": [], "feeds_parked": [],
                       "feeds_empty": 0, "feeds_empty_sources": [],
+                      "campaign_boost_hits": 0,  # R193：活动币加权命中候选数
                       "per_feed": {}}  # feed_name -> {"entries": 扫描, "kept": 入选}
         # _fetch_single_feed 跑在 10 线程池里：计数器 += 非原子，list.append/setdefault
         # 混用会丢增量，Step Summary 的吞吐数字对不上。工作线程一律走下面三个带锁 helper。
@@ -1906,52 +1907,61 @@ class NewsFetcher:
 
     @staticmethod
     def _apply_campaign_boost(candidates: List[Dict[str, Any]],
-                              priority_tokens: Optional[List[str]]) -> None:
+                              priority_tokens: Optional[List[str]]) -> int:
         """币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布。
+        返回命中的候选数（供 run_summary 度量四路信号供给）。
         非字符串条目直接丢弃——脏情报里的 dict/数字走到 t.replace 会炸掉整轮；
         存量脏文件由 get_campaign_intel 拦截，这里是消费侧第二道门。
         R95：命中判定改走 _candidate_hits_tokens（四层防线），词形活动币
         （MOVE/FORM 等严格词表成员）不再误boost普通英文标题。"""
         if not priority_tokens:
-            return
+            return 0
         campaign_set = {t.replace("$", "").strip().upper()
                         for t in priority_tokens if isinstance(t, str) and t.strip()}
         if not campaign_set:
-            return
+            return 0
+        hits = 0
         for item in candidates:
             if NewsFetcher._candidate_hits_tokens(item, campaign_set):
                 item["impact_score"] += CAMPAIGN_TOKEN_BOOST
+                hits += 1
+        return hits
 
     @staticmethod
     def apply_trend_boost(candidates: List[Dict[str, Any]],
-                          trending_symbols: Optional[List[str]]) -> None:
+                          trending_symbols: Optional[List[str]]) -> int:
         """全网热搜标的加权（借鉴 Easel 热榜发现层）：CoinGecko Trending 里
         正在被搜索的币，其相关热点优先发布——市场注意力是比新闻时效更强的
         热点信号。与活动加权同纪律：只影响排序不影响准入，base_impact_score
         不动（MIN_IMPACT_SCORE 过滤已按原始分完成）。空表 = 零行为变化。
+        返回命中的候选数（供 run_summary 度量）。
         R95：命中判定走 _candidate_hits_tokens 四层防线——热搜榜全是 PUMP/
         PENGU 词形 ticker，text_upper 匹配会把 "pumps" 误当 $PUMP。"""
         if not trending_symbols:
-            return
+            return 0
         trend_set = {t.strip().upper().replace("$", "")
                      for t in trending_symbols if isinstance(t, str) and t.strip()}
         if not trend_set:
-            return
+            return 0
+        hits = 0
         for item in candidates:
             if NewsFetcher._candidate_hits_tokens(item, trend_set):
                 item["impact_score"] += TREND_TOKEN_BOOST
+                hits += 1
+        return hits
 
     @staticmethod
     def apply_hot_topic_boost(candidates: List[Dict[str, Any]],
-                              hot_keywords: Optional[List[str]]) -> None:
+                              hot_keywords: Optional[List[str]]) -> int:
         """全网实时热点关键词加权：加密新闻标题/摘要命中当下大众/科技热点词
         时前移排序（点击率钩子）。与趋势/活动加权同纪律：只影响排序不影响准入；
-        空表 = 零行为变化。ASCII 词用整词边界。"""
+        空表 = 零行为变化。ASCII 词用整词边界。返回命中的候选数。"""
         if not hot_keywords:
-            return
+            return 0
         keys = {k.strip().upper() for k in hot_keywords if isinstance(k, str) and k.strip()}
         if not keys:
-            return
+            return 0
+        hits = 0
         for item in candidates:
             text = ((item.get("title") or "") + " " + (item.get("summary") or "")).upper()
             if not text:
@@ -1960,10 +1970,13 @@ class NewsFetcher:
                 if kw.startswith("$"):
                     if kw in text or re.search(r"\b" + re.escape(kw[1:]) + r"\b", text):
                         item["impact_score"] += HOT_TOPIC_BOOST
+                        hits += 1
                         break
                 elif re.search(r"\b" + re.escape(kw) + r"\b", text):
                     item["impact_score"] += HOT_TOPIC_BOOST
+                    hits += 1
                     break
+        return hits
 
     def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5,
                          priority_tokens: Optional[List[str]] = None) -> List[Dict[str, Any]]:
@@ -1995,7 +2008,7 @@ class NewsFetcher:
                     self._feed_record(feed_name, ok=False)
 
         # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布（只影响排序，不影响准入）
-        self._apply_campaign_boost(candidates, priority_tokens)
+        self.stats["campaign_boost_hits"] = self._apply_campaign_boost(candidates, priority_tokens)
 
         # 低热度新闻过滤（默认不过滤）：必须以「未加权原始分」判定。此前 boost 先加再过滤，
         # 低质源只要蹭到当期活动币就能靠 +8 越过门槛并压过真正的突发（Round 5）。
@@ -5869,10 +5882,12 @@ def _run_main():
     valid_symbols_early = SymbolValidator.get_valid_symbols()
     trending_valid = [t for t in trending_symbols if t in valid_symbols_early]
     if trending_valid:
-        NewsFetcher.apply_trend_boost(candidates, trending_valid)
+        trend_boost_hits = NewsFetcher.apply_trend_boost(candidates, trending_valid)
         candidates.sort(key=lambda x: (-x["impact_score"],
                                         x["age_hours"] if x.get("age_hours") is not None else float("inf")))
-        logger.info(f"🔥 全网热搜标的（币安在架）: {trending_valid[:8]}，相关候选已加权 +{TREND_TOKEN_BOOST}")
+        logger.info(f"🔥 全网热搜标的（币安在架）: {trending_valid[:8]}，相关候选已加权 +{TREND_TOKEN_BOOST}（命中 {trend_boost_hits}）")
+    else:
+        trend_boost_hits = 0
 
     # 5.6 全网实时热点钩子（HN 等综合热榜）：加密新闻命中当下大众/科技热点词时
     # 前移排序，并把标题注入 prompt 供模型找「能点进来」的跨域角度。
@@ -5880,10 +5895,12 @@ def _run_main():
     hot_topics = MarketDataProvider.get_hot_topics()
     hot_keywords = MarketDataProvider.get_hot_keywords()
     if hot_keywords:
-        NewsFetcher.apply_hot_topic_boost(candidates, hot_keywords)
+        hot_boost_hits = NewsFetcher.apply_hot_topic_boost(candidates, hot_keywords)
         candidates.sort(key=lambda x: (-x["impact_score"],
                                         x["age_hours"] if x.get("age_hours") is not None else float("inf")))
-        logger.info(f"🌐 全网热点关键词命中加权 +{HOT_TOPIC_BOOST}，热点样本: {hot_topics[:3]}")
+        logger.info(f"🌐 全网热点关键词命中加权 +{HOT_TOPIC_BOOST}（命中 {hot_boost_hits}），热点样本: {hot_topics[:3]}")
+    else:
+        hot_boost_hits = 0
 
     # 6. 执行发帖循环
     posted_count = 0
@@ -6423,6 +6440,10 @@ def _run_main():
         # R94：当轮热搜标的快照——事后做"热搜加权是否带来更好选题"的相关分析
         "trending": " ".join(trending_valid[:8]) if trending_valid else None,
         "hot_topics": " | ".join(hot_topics[:5]) if hot_topics else None,
+        # R193：四路信号命中数——此前只有供给快照，加权是否真打中候选不可见
+        "campaign_boost_hits": int(fetcher.stats.get("campaign_boost_hits") or 0),
+        "trend_boost_hits": int(trend_boost_hits or 0),
+        "hot_boost_hits": int(hot_boost_hits or 0),
         # R126：单轮总耗时（秒）——20 分钟外部回调节奏下的堆积预警指标
         "run_elapsed_sec": round(time.time() - t_run_start, 1),
         "next_slot_frees": _nf_iso,

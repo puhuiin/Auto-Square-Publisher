@@ -596,6 +596,26 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("热点钩子", text)
         self.assertIn("2 轮有供给", text)
 
+    def test_boost_hits_aggregated(self):
+        """R193：四路信号加权命中数——供给快照看不到是否真打中候选"""
+        _write(self.path, [
+            {"outcome": "run_summary", "candidates": 10, "published": 1,
+             "campaign_boost_hits": 3, "trend_boost_hits": 1, "hot_boost_hits": 2},
+            {"outcome": "run_summary", "candidates": 10, "published": 1,
+             "campaign_boost_hits": 1, "hot_boost_hits": 1},
+            {"outcome": "run_summary", "candidates": 10, "published": 1},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        runs = mr.summarize(rows)["runs"]
+        self.assertEqual(runs["boost_hits"]["campaign"], 4)
+        self.assertEqual(runs["boost_hits"]["trend"], 1)
+        self.assertEqual(runs["boost_hits"]["hot"], 3)
+        self.assertEqual(runs["boost_runs"], 2)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("加权命中", text)
+        self.assertIn("活动 4", text)
+        self.assertIn("热点 3", text)
+
     def test_quota_estimator_surfaced_in_report(self):
         """R113：配额释放估算的报表端消费——运营者看报告即知下一帖何时能发"""
         from datetime import datetime, timezone, timedelta

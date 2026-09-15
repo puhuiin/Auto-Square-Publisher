@@ -228,6 +228,9 @@ def summarize(rows):
         "trend_freq": collections.Counter(),
         "last_hot_topics": "",  # R190：全网实时热点钩子供给（HN 等）
         "hot_topic_hits": 0,    # 出现过 hot_topics 的发帖轮数
+        # R193：四路信号加权命中数（供给≠命中，此前不可见）
+        "boost_hits": {"campaign": 0, "trend": 0, "hot": 0},
+        "boost_runs": 0,
         "elapsed": [],  # R126：单轮耗时样本（秒），聚平均/最长
         "sleep_elapsed": [],  # R177：拟人 pacing 累计——解释 ~370s 总耗时
         "llm_elapsed": [],
@@ -367,6 +370,18 @@ def summarize(rows):
             if isinstance(ht, str) and ht.strip():
                 runs_tmp["last_hot_topics"] = ht
                 runs_tmp["hot_topic_hits"] += 1
+            # R193：加权命中数
+            _bh = {}
+            for _k, _f in (("campaign", "campaign_boost_hits"),
+                           ("trend", "trend_boost_hits"),
+                           ("hot", "hot_boost_hits")):
+                _v = _num(r.get(_f))
+                if _v is not None and _v > 0:
+                    _bh[_k] = int(_v)
+            if _bh:
+                runs_tmp["boost_runs"] += 1
+                for _k, _v in _bh.items():
+                    runs_tmp["boost_hits"][_k] += _v
             for k, v in r.items():
                 if k.startswith("skipped_") and isinstance(v, (int, float)):
                     runs_tmp["skips"][k[len("skipped_"):]] += int(v)
@@ -505,6 +520,12 @@ def render_text(s, rows=None):
             hits = runs.get("hot_topic_hits") or 0
             hooks = " | ".join(t[:28] for t in runs["last_hot_topics"].split(" | ")[:3])
             lines.append(f"  🌐 热点钩子（{hits} 轮有供给）: {hooks}")
+        # R193：四路信号加权命中——供给≠命中
+        bh = runs.get("boost_hits") or {}
+        if any(bh.values()):
+            lines.append(
+                f"  📈 加权命中（{runs.get('boost_runs', 0)} 轮）: "
+                f"活动 {bh.get('campaign', 0)} / 热搜 {bh.get('trend', 0)} / 热点 {bh.get('hot', 0)}")
         # R126：单轮耗时——逼近 20 分钟回调节奏时即为堆积预警
         if runs.get("avg_elapsed_sec") is not None:
             warn = " ⚠️逼近回调节奏" if runs.get("max_elapsed_sec", 0) > 1100 else ""
