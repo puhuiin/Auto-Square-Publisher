@@ -5702,11 +5702,18 @@ def _intel_age_hours(campaign_intel: Optional[Dict[str, Any]]) -> Optional[float
 
 
 def _intel_is_degraded(campaign_intel: Optional[Dict[str, Any]]) -> Optional[bool]:
-    """情报是否已过 12h 新鲜窗（R195）。无时间戳 → None（不猜）。
-    语义与 _build_user_prompt 的 intel_fresh 判定一致。"""
+    """情报是否已过 12h 新鲜窗（R195）。
+    语义必须与 _build_user_prompt 的 intel_fresh 判定一致（R197）：
+    - 无 guidance / 空对象 → None（本轮没注入情报，不猜）
+    - 有 guidance 但无/坏 last_updated → True（R179 DEFAULT_INTEL fail-closed 降权）
+    - 有 last_updated → age >= INTEL_EXPIRE_HOURS
+    旧实现对「有 guidance 无时间戳」返回 None，而 prompt 侧已按降级注入——
+    遥测与实际注入语义分叉。"""
+    if not isinstance(campaign_intel, dict) or not campaign_intel.get("strategy_guidance"):
+        return None
     age = _intel_age_hours(campaign_intel)
     if age is None:
-        return None
+        return True
     return age >= INTEL_EXPIRE_HOURS
 
 

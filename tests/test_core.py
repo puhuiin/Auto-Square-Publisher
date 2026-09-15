@@ -6011,6 +6011,22 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_intel_degraded_fail_closed_without_timestamp(self):
+        """R197：有 guidance 但无 last_updated（R179 DEFAULT_INTEL）——
+        prompt 侧已按降权注入，遥测必须同样标 True，不得返回 None 分叉。"""
+        self.assertIsNone(m._intel_is_degraded(None))
+        self.assertIsNone(m._intel_is_degraded({}))
+        self.assertIsNone(m._intel_is_degraded({"strategy_guidance": ""}))
+        self.assertIs(m._intel_is_degraded({"strategy_guidance": "g"}), True,
+                      "无时间戳 = fail-closed 降级")
+        from datetime import datetime, timezone, timedelta
+        fresh = {"strategy_guidance": "g",
+                 "last_updated": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")}
+        self.assertIs(m._intel_is_degraded(fresh), False)
+        stale = {"strategy_guidance": "g",
+                 "last_updated": (datetime.now(timezone.utc) - timedelta(hours=13)).isoformat().replace("+00:00", "Z")}
+        self.assertIs(m._intel_is_degraded(stale), True)
+
     def test_quota_next_slot_estimate_helper(self):
         """R129：估算提为公共函数 _quota_next_slot_estimate——发帖轮的收尾
         run_summary 同样写入，报表不再拿到数小时前的过期估算。"""
