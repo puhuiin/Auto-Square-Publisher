@@ -5631,6 +5631,41 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_publish_receipt_carries_hot_topics(self):
+        """R191：发布回执带当轮热点钩子快照——与 run_summary 互补，
+        可做「有钩子供给的帖」对照分析。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            with patch.object(m.MarketDataProvider, "get_hot_topics",
+                              return_value=["Java 27 Released", "OpenAI buys camera maker",
+                                            "E-ink frame hears birds",
+                                            "Mass surveillance essay",
+                                            "Google cuts off access"]), \
+                 patch.object(m.MarketDataProvider, "get_hot_keywords",
+                              return_value=["JAVA", "OPENAI"]):
+                m._run_main()
+            import json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            pub_row = next(r for r in rows if r.get("outcome") == "binance_published")
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            ht = pub_row.get("hot_topics") or ""
+            self.assertIn("Java 27 Released", ht)
+            self.assertIn("OpenAI", ht)
+            self.assertIn("E-ink", ht)
+            self.assertNotIn("surveillance", ht, "回执只带前 3 条快照")
+            self.assertIn("surveillance", run_row.get("hot_topics") or "",
+                          "run_summary 带 5 条")
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_second_post_same_run_falls_back_to_short(self):
         """R60 修复锁：同运行发完长文后第二个帖子必须回短讯。
         旧 bug：article_done_today 是循环外快照，发完长文不更新 → max_posts=2 时

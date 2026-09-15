@@ -6224,6 +6224,9 @@ def _run_main():
                         "fng_market_stripped": fng_market_stripped,
                         "intel_degraded": intel_degraded,
                         "intel_age_hours": intel_age_hours,
+                        # R191：当轮热点钩子快照——与 run_summary 互补，
+                        # 发帖回执侧可做「有钩子供给的帖 vs 无」对照
+                        "hot_topics": " | ".join(hot_topics[:3]) if hot_topics else None,
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,
