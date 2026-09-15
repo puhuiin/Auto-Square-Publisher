@@ -5627,6 +5627,8 @@ class TestRunMainSemantics(unittest.TestCase):
                 rows = [_json.loads(l) for l in f if l.strip()]
             self.assertEqual([r["outcome"] for r in rows], ["run_summary"])
             self.assertIs(rows[0].get("quota_blocked"), True)
+            # R183：饱和轮的 intel 耗时进 run_summary（区分短路读缓存 vs 真刷新）
+            self.assertIn("intel_elapsed_sec", rows[0])
             self.assertEqual(rows[0]["sent_24h"], 1)
             self.assertEqual(rows[0]["max_daily_posts"], 1)
             # R112：最早一篇 10h 前发 → 24h 窗口滚出还剩 14h

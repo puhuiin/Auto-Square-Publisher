@@ -229,6 +229,7 @@ def summarize(rows):
         "elapsed": [],  # R126：单轮耗时样本（秒），聚平均/最长
         "sleep_elapsed": [],  # R177：拟人 pacing 累计——解释 ~370s 总耗时
         "llm_elapsed": [],
+        "intel_elapsed": [],  # R183：饱和轮也付情报时间（R182 前移后）
     }
     lat_tmp, tok_tmp = collections.defaultdict(list), collections.defaultdict(list)
     for r in rows:
@@ -368,8 +369,11 @@ def summarize(rows):
             _llm = _num(r.get("llm_elapsed_sec"))
             if _llm is not None and _llm > 0:
                 runs_tmp["llm_elapsed"].append(_llm)
+            _intel = _num(r.get("intel_elapsed_sec"))
+            if _intel is not None and _intel > 0:
+                runs_tmp["intel_elapsed"].append(_intel)
     s["runs"] = {
-        **{k: v for k, v in runs_tmp.items() if k not in ("skips", "trend_freq", "elapsed", "sleep_elapsed", "llm_elapsed")},
+        **{k: v for k, v in runs_tmp.items() if k not in ("skips", "trend_freq", "elapsed", "sleep_elapsed", "llm_elapsed", "intel_elapsed")},
         "skips": dict(runs_tmp["skips"]),
         "trend_freq": dict(runs_tmp["trend_freq"].most_common(8)),
     }
@@ -383,6 +387,8 @@ def summarize(rows):
         s["runs"]["max_sleep_sec"] = round(max(runs_tmp["sleep_elapsed"]), 1)
     if runs_tmp["llm_elapsed"]:
         s["runs"]["avg_llm_sec"] = round(sum(runs_tmp["llm_elapsed"]) / len(runs_tmp["llm_elapsed"]), 1)
+    if runs_tmp["intel_elapsed"]:
+        s["runs"]["avg_intel_sec"] = round(sum(runs_tmp["intel_elapsed"]) / len(runs_tmp["intel_elapsed"]), 1)
     for prov, vals in lat_tmp.items():
         s["latency_by_provider"][prov] = round(sum(vals) / len(vals), 1)
     for prov, vals in tok_tmp.items():
@@ -487,6 +493,8 @@ def render_text(s, rows=None):
             parts = []
             if runs.get("avg_llm_sec") is not None:
                 parts.append(f"LLM {runs['avg_llm_sec']}s")
+            if runs.get("avg_intel_sec") is not None:
+                parts.append(f"情报 {runs['avg_intel_sec']}s")
             if runs.get("avg_sleep_sec") is not None:
                 parts.append(f"拟人间隔 {runs['avg_sleep_sec']}s(最长 {runs.get('max_sleep_sec', 0)}s)")
             lines.append(f"  耗时构成（均值）: {' · '.join(parts)}")

@@ -5597,6 +5597,9 @@ def _run_main():
                 "max_daily_posts": MAX_DAILY_POSTS,
                 "next_slot_frees": next_frees_iso or None,
                 "next_slot_frees_min": next_frees_min,
+                # R183：情报刷新在配额检查前（R182），饱和轮也付了 intel 时间——
+                # 不记则 run_elapsed 里的刷新成本无法与「纯短路读缓存」区分
+                "intel_elapsed_sec": round(intel_elapsed, 1),
                 "run_elapsed_sec": round(time.time() - t_run_start, 1),
             })
             # R114：Step Summary 也带估算——Actions 运行页直接可见下一槽时间
