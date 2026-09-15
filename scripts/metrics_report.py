@@ -205,6 +205,8 @@ def summarize(rows):
         "intel_fresh_posts": 0,
         # R181：情报陈旧小时样本（有 last_updated 的帖才进）
         "intel_age_hours": [],
+        # R199：最近一次情报成功刷新时刻（campaign_intel llm_success）
+        "last_intel_refresh_ts": None,
         # R175：情报刷新被失败退避跳过的轮次（区分「配额早退没刷」vs「想刷被退避挡」）
         "intel_cooldown_skips": 0,
         "reject_by_stage": collections.Counter(),
@@ -302,6 +304,11 @@ def summarize(rows):
         if outcome == "intel_cooldown_skip":
             # R175：想刷新但被 2h 失败退避挡下——与配额早退（根本没走到这里）区分
             s["intel_cooldown_skips"] += 1
+        elif outcome == "llm_success" and r.get("stage") == "campaign_intel":
+            # R199：最近成功刷新时刻——判断下一次 12h 过期、以及饱和轮是否在喂陈旧情报
+            if isinstance(ts, str) and ts:
+                if s["last_intel_refresh_ts"] is None or ts > s["last_intel_refresh_ts"]:
+                    s["last_intel_refresh_ts"] = ts
         elif outcome == "llm_rejected":
             s["reject_by_stage"][str(r.get("stage", "unknown"))] += 1
             s["reject_by_provider"][who] += 1
@@ -620,6 +627,9 @@ def render_text(s, rows=None):
         lines.append(
             f"  ⏭️ 情报刷新被失败退避跳过 {s['intel_cooldown_skips']} 轮"
             f"（2h 冷却期内沿用旧情报）")
+    # R199：最近成功刷新时刻——对照 12h 过期窗，判断饱和轮是否在喂陈旧情报
+    if s.get("last_intel_refresh_ts"):
+        lines.append(f"  🔄 最近情报刷新: {str(s['last_intel_refresh_ts'])[:19]}")
     n_rej = sum(s["reject_by_stage"].values())
     if n_rej:
         lines.append(f"- 拦截 {n_rej} 次：阶段 {_top(s['reject_by_stage'])} / 模型 {_top(s['reject_by_provider'])}")

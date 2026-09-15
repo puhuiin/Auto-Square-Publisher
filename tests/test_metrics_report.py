@@ -636,6 +636,24 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("饱和轮情报", text)
         self.assertIn("降级 1 轮", text)
 
+    def test_last_intel_refresh_ts_surfaced(self):
+        """R199：最近成功刷新时刻——对照 12h 过期窗，判断饱和轮是否在喂陈旧情报"""
+        rows = [
+            {"outcome": "llm_success", "stage": "campaign_intel",
+             "ts": "2026-09-14T22:00:00+00:00", "provider": "Preset-b.ai"},
+            {"outcome": "llm_success", "stage": "campaign_intel",
+             "ts": "2026-09-15T15:48:19+00:00", "provider": "Preset-b.ai"},
+            {"outcome": "llm_rejected", "stage": "campaign_intel",
+             "ts": "2026-09-15T16:00:00+00:00", "provider": "Preset-b.ai"},
+            {"outcome": "llm_success", "stage": "summarize",
+             "ts": "2026-09-15T17:00:00+00:00", "provider": "Preset-b.ai"},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["last_intel_refresh_ts"], "2026-09-15T15:48:19+00:00")
+        text = mr.render_text(s, rows)
+        self.assertIn("最近情报刷新", text)
+        self.assertIn("2026-09-15T15:48:19", text)
+
     def test_quota_estimator_surfaced_in_report(self):
         """R113：配额释放估算的报表端消费——运营者看报告即知下一帖何时能发"""
         from datetime import datetime, timezone, timedelta
