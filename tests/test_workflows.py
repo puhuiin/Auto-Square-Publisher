@@ -117,6 +117,70 @@ class TestRuntimeWorkflowCheckoutRef(unittest.TestCase):
                 "运行时 ref:main 约束不适用于回归测试工作流")
 
 
+class TestCiLlmLiveSmokeStep(unittest.TestCase):
+    """R184b：llm-live job 自 e987493 引入后**从未成功过**——2026-09-14 首次
+    schedule 触发即红，且日志里连 healthcheck 输出都没有（`set -e` 下命令替换
+    返回非零直接中断脚本，只剩 "exit code 1"）。两个独立缺陷：① CI 不持有
+    SQUARE_API_KEY，healthcheck 的必填检查恒 ✗；② 未吞退出码，诊断信息全丢。"""
+
+    def _llm_live_run_block(self):
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("未安装 pyyaml（仅 CI 校验需要）")
+        path = os.path.join(REPO_ROOT, ".github", "workflows", "ci.yml")
+        with open(path, encoding="utf-8") as f:
+            doc = yaml.safe_load(f)
+        steps = (doc.get("jobs") or {}).get("llm-live", {}).get("steps") or []
+        for step in steps:
+            if "healthcheck" in str(step.get("run") or ""):
+                return step
+        self.fail("ci.yml 的 llm-live job 里找不到 healthcheck 步骤")
+
+    def test_smoke_swallows_exit_code_to_keep_diagnostics(self):
+        step = self._llm_live_run_block()
+        run = step["run"]
+        self.assertIn("|| true", run,
+                      "命令替换必须吞掉 healthcheck 的非零退出码，"
+                      "否则 set -e 中断脚本、输出丢失（首次运行即踩）")
+
+    def test_smoke_does_not_require_square_key(self):
+        step = self._llm_live_run_block()
+        env = step.get("env") or {}
+        self.assertEqual(env.get("PUBLISH_PLATFORMS"), "okx_draft",
+                         "llm-live 只验 LLM 通道且 CI 无 SQUARE_API_KEY，"
+                         "必须用 okx_draft 让该检查走 ⊘ 分支而非 ✗")
+
+    def test_healthcheck_marks_square_key_optional_when_binance_off(self):
+        """行为侧锁：PUBLISH_PLATFORMS 不含 binance 时，缺 Key 不得计为故障。"""
+        import importlib
+        spec = importlib.util.spec_from_file_location(
+            "_hc_mod", os.path.join(REPO_ROOT, "main.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.PUBLISH_PLATFORMS = ["okx_draft"]
+        printed = []
+        with patch.object(mod, "_safe_print", side_effect=lambda *a: printed.append(" ".join(map(str, a)))), \
+             patch.object(mod, "MultiLLMEngine", side_effect=RuntimeError("skip")), \
+             patch.object(mod, "MarketDataProvider") as mock_mdp, \
+             patch.object(mod, "NewsFetcher"), \
+             patch.object(mod, "Notifier"), \
+             patch.object(mod.SymbolValidator, "get_valid_symbols",
+                          return_value={f"T{i}" for i in range(200)}):
+            # 行情/FNG 全 mock：本测试只关心 SQUARE_API_KEY 的 ⊘ 分支，不走网络
+            mock_mdp.get_fear_and_greed.return_value = "50/100"
+            mock_mdp.get_trending_symbols.return_value = []
+            with self.assertRaises(SystemExit) as cm:
+                mod.run_healthcheck()
+        text = "\n".join(printed)
+        self.assertIn("SQUARE_API_KEY", text)
+        self.assertIn("无需配置", text)
+        self.assertNotIn("未配置，发帖必需", text)
+        # 故障仅来自被 mock 掉的引擎构建，不含 SQUARE_API_KEY
+        self.assertEqual(cm.exception.code, 1)
+        self.assertIn("有 1 项故障", text)
+
+
 class TestAnnotationResolvable(unittest.TestCase):
     """tripwire：注解必须在 CI 的 Python 3.11 下也可求值。
 

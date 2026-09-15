@@ -83,8 +83,15 @@ jobs:
           BAI_API_KEY: ${{ secrets.BAI_API_KEY }}
           SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
           REASONIX_GW_OFF: "1" # CI 无本地网关，显式关闭探测
+          # 本 job 只验证 LLM 通道，CI 不持有 SQUARE_API_KEY（发布密钥不进 CI）。
+          # 不设此项时 healthcheck 的 SQUARE_API_KEY 检查必为 ✗ → 退出码 1 →
+          # 下方 `set -e` 的命令替换被中断，输出丢失只剩 "exit code 1"（2026-09-14
+          # 首次 schedule 运行即红，无任何诊断信息）。okx_draft 下该检查标记 ⊘。
+          PUBLISH_PLATFORMS: okx_draft
         run: |
-          OUT=$(python main.py --healthcheck --llm-live 2>&1)
+          # set -e 会在命令替换返回非零时立刻中断（连 echo 都跑不到），
+          # 而 healthcheck 有故障时本就返回 1——必须显式吞掉退出码保住输出。
+          OUT=$(python main.py --healthcheck --llm-live 2>&1) || true
           echo "$OUT"
           if ! echo "$OUT" | grep -q "LLM 实弹测试.*✔"; then
             echo "::error::LLM 实弹测试未通过——Key 过期/额度耗尽/模型下线，发帖机器人将在熔断中空转。请检查 Secrets。"
