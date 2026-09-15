@@ -436,7 +436,9 @@ STRICT_TICKERS = {
     "IO",      # 图片域名 ctmedia.io（Cointelegraph 每帖 ×25，预清洗前最大误报源）
 }
 
-# 全大写缩写噪音词：永远不当代币识别
+# 全大写缩写噪音词：裸写（无 $）时不当代币识别。
+# 显式 $WORD 且在标的池内则采信——THE/EUR 是真实现货标的，情报活动币
+# $THE（交易锦标赛）曾因本表被 extract_tokens 整表丢弃 → 活动加权恒 0。
 IGNORE_WORDS = {
     "THE", "AND", "FOR", "WITH", "NEW", "TOP", "USD", "EUR", "SEC", "ETF",
     "FED", "CEO", "ALL", "NOW", "KEY", "NFT", "DAO", "DEX", "CEX", "API",
@@ -1499,9 +1501,13 @@ class NewsFetcher:
         for m in re.finditer(r"\$?([A-Za-z0-9]{2,10})\b", text):
             word = m.group(1)
             upper_w = word.upper()
-            if upper_w in IGNORE_WORDS or upper_w not in valid_symbols:
-                continue
             starts_with_dollar = m.group(0).startswith("$")
+            # IGNORE_WORDS 只拦裸常用词；$ 前缀是与 STRICT 同级的强信号。
+            # 整表一刀切（含 $）会让在池活动币 THE 永远 extract 不到。
+            if upper_w in IGNORE_WORDS and not starts_with_dollar:
+                continue
+            if upper_w not in valid_symbols:
+                continue
             if upper_w in STRICT_TICKERS:
                 # ③ 常用词撞名：只认 $ 显式引用
                 if not starts_with_dollar:

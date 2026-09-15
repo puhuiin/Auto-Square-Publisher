@@ -799,6 +799,19 @@ class TestTokenExtraction(unittest.TestCase):
         out = m.NewsFetcher.extract_tokens("ETF SEC FED approve BTC rally", self.VALID)
         self.assertEqual(out, ["BTC"])
 
+    def test_ignore_words_allow_explicit_cashtag(self):
+        """R202：IGNORE_WORDS 只拦裸常用词。$THE 是真实现货标的且是活动激励币
+        （2026-09-15 情报：$THE 交易锦标赛），整表一刀切会让 extract_tokens
+        对 THE 恒空 → 活动加权永不命中。裸 the/THE 仍拒。"""
+        pool = self.VALID | {"THE"}
+        self.assertEqual(m.NewsFetcher.extract_tokens("the market rallies today", pool), [])
+        self.assertEqual(m.NewsFetcher.extract_tokens("THE market rallies today", pool), [])
+        self.assertEqual(
+            m.NewsFetcher.extract_tokens("Binance lists $THE trading pair", pool), ["THE"])
+        # 非标的池的 IGNORE_WORD 即使带 $ 也不采信
+        self.assertEqual(
+            m.NewsFetcher.extract_tokens("$FOR and $THE", {"THE", "BTC"}), ["THE"])
+
     def test_dedup_preserves_order(self):
         out = m.NewsFetcher.extract_tokens("$SOL and $SOL again then $ETH", self.VALID)
         self.assertEqual(out, ["SOL", "ETH"])
@@ -3498,6 +3511,20 @@ class TestCampaignBoost(unittest.TestCase):
         hits, off = m.NewsFetcher._apply_campaign_boost(cands, ["$BNB", "$PIEVERSE", "$MOVE"])
         self.assertEqual(hits, 0)
         self.assertEqual(off, ["PIEVERSE"], "在池 BNB/MOVE 不得进 off-pool")
+
+    def test_ignore_word_campaign_token_hits_on_cashtag(self):
+        """R202：活动币 $THE（IGNORE_WORDS ∩ 标的池）必须能加权命中——
+        旧实现 extract_tokens 整表丢弃 THE，在池活动币变死信号。"""
+        m.SymbolValidator._valid_symbols_cache = {"BNB", "THE"}
+        cands_bare = [{"title": "The market awaits Fed decision",
+                       "summary": "", "impact_score": 8}]
+        m.NewsFetcher._apply_campaign_boost(cands_bare, ["$THE"])
+        self.assertEqual(cands_bare[0]["impact_score"], 8, "裸 the 不得命中")
+        cands_tag = [{"title": "Binance $THE Trading Tournament kicks off",
+                      "summary": "", "impact_score": 8}]
+        m.NewsFetcher._apply_campaign_boost(cands_tag, ["$THE"])
+        self.assertEqual(cands_tag[0]["impact_score"], 8 + m.CAMPAIGN_TOKEN_BOOST,
+                         "显式 $THE 必须命中活动加权")
 
 
 class TestIntelRefreshBackoff(unittest.TestCase):
