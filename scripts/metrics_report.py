@@ -226,6 +226,8 @@ def summarize(rows):
         "candidates": 0, "published": 0, "unprocessed": 0,
         "skips": collections.Counter(), "last_trending": "",
         "trend_freq": collections.Counter(),
+        "last_hot_topics": "",  # R190：全网实时热点钩子供给（HN 等）
+        "hot_topic_hits": 0,    # 出现过 hot_topics 的发帖轮数
         "elapsed": [],  # R126：单轮耗时样本（秒），聚平均/最长
         "sleep_elapsed": [],  # R177：拟人 pacing 累计——解释 ~370s 总耗时
         "llm_elapsed": [],
@@ -360,6 +362,11 @@ def summarize(rows):
                 # R117：热搜 token 频次——跨快照统计市场注意力的持续度
                 for tok in tr.split():
                     runs_tmp["trend_freq"][tok] += 1
+            # R190：热点钩子供给（与币种热搜互补的跨域注意力）
+            ht = r.get("hot_topics")
+            if isinstance(ht, str) and ht.strip():
+                runs_tmp["last_hot_topics"] = ht
+                runs_tmp["hot_topic_hits"] += 1
             for k, v in r.items():
                 if k.startswith("skipped_") and isinstance(v, (int, float)):
                     runs_tmp["skips"][k[len("skipped_"):]] += int(v)
@@ -493,6 +500,11 @@ def render_text(s, rows=None):
             freq_str = " / ".join(f"{k}×{v}" for k, v in
                                   list(runs["trend_freq"].items())[:5])
             lines.append(f"  热搜持续度 {freq_str}")
+        # R190：全网热点钩子供给——与币种热搜互补，看跨域注意力是否在喂稿
+        if runs.get("last_hot_topics"):
+            hits = runs.get("hot_topic_hits") or 0
+            hooks = " | ".join(t[:28] for t in runs["last_hot_topics"].split(" | ")[:3])
+            lines.append(f"  🌐 热点钩子（{hits} 轮有供给）: {hooks}")
         # R126：单轮耗时——逼近 20 分钟回调节奏时即为堆积预警
         if runs.get("avg_elapsed_sec") is not None:
             warn = " ⚠️逼近回调节奏" if runs.get("max_elapsed_sec", 0) > 1100 else ""

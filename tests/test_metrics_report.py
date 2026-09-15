@@ -578,6 +578,24 @@ class TestMetricsReport(unittest.TestCase):
         self.assertEqual(runs["n"], 1)
         self.assertEqual(runs["candidates"], 3)
 
+    def test_hot_topics_surfaced_in_report(self):
+        """R190：hot_topics 已入生产 run_summary（13:04/13:19/13:35Z），
+        报表端必须消费——R92 同轮纪律。无字段的历史行不进 hits 分母。"""
+        _write(self.path, [
+            {"outcome": "run_summary", "candidates": 10, "published": 1,
+             "hot_topics": "Java 27 Released | An e-ink frame that hears birds"},
+            {"outcome": "run_summary", "candidates": 10, "published": 1,
+             "hot_topics": "OpenAI buys smartphone camera maker Glass Imaging"},
+            {"outcome": "run_summary", "candidates": 10, "published": 1},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        runs = mr.summarize(rows)["runs"]
+        self.assertEqual(runs["hot_topic_hits"], 2)
+        self.assertIn("Glass Imaging", runs["last_hot_topics"])
+        text = mr.render_text(s := mr.summarize(rows), rows)
+        self.assertIn("热点钩子", text)
+        self.assertIn("2 轮有供给", text)
+
     def test_quota_estimator_surfaced_in_report(self):
         """R113：配额释放估算的报表端消费——运营者看报告即知下一帖何时能发"""
         from datetime import datetime, timezone, timedelta
