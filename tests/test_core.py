@@ -5045,6 +5045,20 @@ class TestHotTopics(unittest.TestCase):
         self.assertEqual(len(first), 2, "过短标题丢弃")
         self.assertEqual(mock_get.call_count, 1, "15min TTL 命中缓存")
 
+    def test_dedupe_auth_suffix_variant(self):
+        """R188：生产首帖 run_summary 实测同一 HN 条目以带/不带 [Auth] 两种
+        标题各占一席。归一去重后只留一条。"""
+        xml = """<?xml version="1.0"?><rss><channel>
+        <item><title>25 Years of Mass Surveillance Is Enough</title></item>
+        <item><title>25 Years of Mass Surveillance Is Enough [Auth: Cindy Cohn; Bruce Schneier]</title></item>
+        <item><title>OpenAI buys camera maker</title></item>
+        </channel></rss>"""
+        with patch.object(m, "http_get", return_value=self._rss_resp(xml)):
+            titles = m.MarketDataProvider.get_hot_topics()
+        self.assertEqual(len(titles), 2)
+        self.assertEqual(titles[0], "25 Years of Mass Surveillance Is Enough")
+        self.assertIn("OpenAI", titles[1])
+
     def test_failure_degrades_to_empty(self):
         with patch.object(m, "http_get", return_value=None):
             self.assertEqual(m.MarketDataProvider.get_hot_topics(), [])

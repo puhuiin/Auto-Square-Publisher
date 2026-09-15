@@ -913,10 +913,22 @@ class MarketDataProvider:
             r = http_get("https://hnrss.org/frontpage", timeout=8, retries=1)
             if r is not None and r.status_code == 200:
                 feed = feedparser.parse(r.text)
+                seen_norm: set = set()
                 for e in (feed.entries or [])[:20]:
                     t = (e.get("title") or "").strip()
-                    if t and len(t) >= 8:
-                        titles.append(t[:120])
+                    if not t or len(t) < 8:
+                        continue
+                    # R188：HN 同一条会以「Title」和「Title [Auth: …]」两种形态出现，
+                    # 首帖 run_summary 实测同标题重复占两席，稀释钩子供给。
+                    # 归一：剥 [Auth:…]/(Show HN)/尾部空白，再大小写折叠去重。
+                    norm = re.sub(r"\s*[\[\(](?:Auth|Show HN|Ask HN)[^\]\)]*[\]\)]\s*$",
+                                  "", t, flags=re.I).strip().lower()
+                    if not norm:
+                        continue
+                    if norm in seen_norm:
+                        continue
+                    seen_norm.add(norm)
+                    titles.append(t[:120])
         except Exception as e:
             logger.debug(f"HN 热点拉取失败（降级为无热点钩子）: {e}")
         cls._hot_topic_cache = (now, titles)
