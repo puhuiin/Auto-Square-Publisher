@@ -184,6 +184,30 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("耗时构成", out)
         self.assertIn("拟人间隔", out)
 
+    def test_quota_wait_stage_aggregated(self):
+        """R184：配额边界追赶等待进分段——生产 18:06/18:29 轮 run_elapsed
+        197.5s/361.0s 里有 150.3s/270.3s 无法归因（R177 只覆盖 LLM/配图/发布），
+        实为 R154 的等待 sleep；单列后总账可对平，零值行不进均值。"""
+        rows = [
+            {"ts": "2026-09-14T18:06:00+00:00", "outcome": "run_summary",
+             "candidates": 43, "published": 1, "unprocessed": 42,
+             "run_elapsed_sec": 197.5, "llm_elapsed_sec": 42.4,
+             "quota_wait_elapsed_sec": 150.0},
+            {"ts": "2026-09-14T18:29:00+00:00", "outcome": "run_summary",
+             "candidates": 43, "published": 1, "unprocessed": 42,
+             "run_elapsed_sec": 361.0, "llm_elapsed_sec": 86.3,
+             "quota_wait_elapsed_sec": 270.0},
+            # 未追赶的轮次带零值：不进均值（否则把均值稀释）
+            {"ts": "2026-09-14T20:44:00+00:00", "outcome": "run_summary",
+             "candidates": 45, "published": 1, "unprocessed": 44,
+             "run_elapsed_sec": 55.9, "llm_elapsed_sec": 51.1,
+             "quota_wait_elapsed_sec": 0.0},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["avg_quota_wait_sec"], 210.0)
+        out = mr.render_text(s)
+        self.assertIn("配额追赶等待 210.0s", out)
+
     def test_empty_file_renders(self):
         _write(self.path, [])
         rows, bad = mr.load_rows(self.path)

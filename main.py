@@ -5500,6 +5500,11 @@ def _run_main():
     # 容灾 + 配图上传 + 发布）耗时逼近节奏，下一轮就会排队堆积；此前的盲区
     # 让"变慢"只能在 CI 日志里人肉翻。遥测进 run_summary 后报表可聚合监控。
     t_run_start = time.time()
+    # R184：配额边界追赶的等待时长单列——R177 分段耗时上线后，生产 18:06/18:29
+    # 两轮 run_elapsed 197.5s/361.0s 里各有 150.3s/270.3s 无法归因（分段合计只
+    # 覆盖 LLM/配图/发布），实际是 R154 的 time.sleep 追赶等待；不分段会被误读成
+    # 管线变慢（正是 R177 要修的误读，只是漏了这一处）。
+    quota_wait_sec = 0.0
     square_api_key = os.getenv("SQUARE_API_KEY", "").strip()
     max_posts_raw = os.getenv("MAX_POSTS_PER_RUN", "").strip() or "1"
     max_posts = int(max_posts_raw) if max_posts_raw.isdigit() else 1
@@ -5578,6 +5583,7 @@ def _run_main():
                 wait_sec = pre_min * 60 + 90
                 logger.info(f"⏳ 配额槽 {pre_min} 分钟后释放，等待 {wait_sec}s 后重查（边界追赶）")
                 time.sleep(wait_sec)
+                quota_wait_sec += wait_sec
                 sent_24h = cache_mgr.count_since(24)
         if sent_24h >= MAX_DAILY_POSTS:
             logger.warning(f"🛑 24 小时内已发布 {sent_24h} 篇，达到配额上限 ({MAX_DAILY_POSTS})，本轮自动静默以保护账号权重。")
@@ -5600,6 +5606,9 @@ def _run_main():
                 # R183：情报刷新在配额检查前（R182），饱和轮也付了 intel 时间——
                 # 不记则 run_elapsed 里的刷新成本无法与「纯短路读缓存」区分
                 "intel_elapsed_sec": round(intel_elapsed, 1),
+                # R184：等待后仍饱和 = 追赶失败（如估算偏差/槽未按时释放），
+                # 这笔等待同样是 run_elapsed 的一部分，单列才能对上账
+                "quota_wait_elapsed_sec": round(quota_wait_sec, 1),
                 "run_elapsed_sec": round(time.time() - t_run_start, 1),
             })
             # R114：Step Summary 也带估算——Actions 运行页直接可见下一槽时间
@@ -5644,6 +5653,8 @@ def _run_main():
             "feeds_ok": fetcher.stats.get("feeds_ok", 0),
             "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
             "feeds_parked": len(fetcher.stats.get("feeds_parked", [])),
+            # R184：追赶等待单列（零候选早退轮同样可能付了这笔等待）
+            "quota_wait_elapsed_sec": round(quota_wait_sec, 1),
             "run_elapsed_sec": round(time.time() - t_run_start, 1),
         })
         # 全源同时故障 = 基建级问题，必须报警而非静默默认"无事发生"
@@ -6207,6 +6218,10 @@ def _run_main():
         "image_elapsed_sec": round(stage_timings["image"], 1),
         "publish_elapsed_sec": round(stage_timings["publish"], 1),
         "sleep_elapsed_sec": round(sleep_total_sec, 1),
+        # R184：配额边界追赶等待单列——生产 18:06/18:29 轮 197.5s/361.0s 里
+        # 150.3s/270.3s 无法归因（R177 分段只覆盖 LLM/配图/发布），实为 R154 等待；
+        # 不分段会被误读成管线变慢
+        "quota_wait_elapsed_sec": round(quota_wait_sec, 1),
         "feeds_parked": len(fetcher.stats.get("feeds_parked", [])),
         # R94：当轮热搜标的快照——事后做"热搜加权是否带来更好选题"的相关分析
         "trending": " ".join(trending_valid[:8]) if trending_valid else None,

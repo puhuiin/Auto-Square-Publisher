@@ -5575,6 +5575,10 @@ class TestRunMainSemantics(unittest.TestCase):
             self.assertTrue(rs, "运行应继续到收尾写出 run_summary")
             self.assertNotIn("quota_blocked", rs[0],
                              "等待后配额腾出，不得再以 quota_blocked 退出")
+            # R184：追赶等待单列进收尾 run_summary——生产 18:06/18:29 轮
+            # 150~270s 未解释差额实为此等待，不单列会被误读成管线变慢
+            self.assertEqual(rs[0].get("quota_wait_elapsed_sec"), catchup_waits[0],
+                             "追赶等待秒数必须原样进 run_summary（与 sleep 实参一致）")
         finally:
             self._teardown(patches, tmpdir)
 
@@ -5598,6 +5602,13 @@ class TestRunMainSemantics(unittest.TestCase):
                     m._run_main()
             self.assertEqual(cm.exception.code, 0)
             self.assertEqual(slept, [], "远离释放窗口不得触发等待")
+            # R184：未等待时该分段恒为 0（报表按 >0 采样，零值不进均值）
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            rs = [r for r in rows if r.get("outcome") == "run_summary"]
+            self.assertEqual(rs[0].get("quota_wait_elapsed_sec"), 0.0,
+                             "未追赶的轮次也必须带零值字段（schema 齐备）")
         finally:
             self._teardown(patches, tmpdir)
 
