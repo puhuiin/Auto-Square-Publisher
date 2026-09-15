@@ -181,6 +181,67 @@ class TestCiLlmLiveSmokeStep(unittest.TestCase):
         self.assertIn("有 1 项故障", text)
 
 
+class TestCiRunsWholeSuite(unittest.TestCase):
+    """R185：CI 必须跑完整测试目录，不能逐个列举文件名。
+
+    tests/test_cost_analysis.py 自 R120 加入（12 个测试）起从未被 CI 执行——
+    同期 cost_analysis 面板连爆两个口径 bug（R120 stage 过滤、R167 dry 字段
+    漂移），都是靠生产遥测反查而非 CI 拦下。列举式清单新增文件即静默漏跑。"""
+
+    def _ci_test_run(self):
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("未安装 pyyaml（仅 CI 校验需要）")
+        path = os.path.join(REPO_ROOT, ".github", "workflows", "ci.yml")
+        with open(path, encoding="utf-8") as f:
+            doc = yaml.safe_load(f)
+        steps = (doc.get("jobs") or {}).get("test", {}).get("steps") or []
+        for step in steps:
+            if "回归测试" in str(step.get("name") or ""):
+                return str(step.get("run") or "")
+        self.fail("ci.yml 的 test job 里找不到回归测试步骤")
+
+    def test_ci_discovers_all_test_files(self):
+        run = self._ci_test_run()
+        self.assertIn("unittest discover", run,
+                      "CI 必须用 discover 跑整个 tests/，逐个列举会在新增文件时漏跑")
+
+    def test_ci_does_not_pipe_away_exit_code(self):
+        """`cmd | tail` 的退出码取自 tail——测试失败会被静默吞成绿灯。"""
+        run = self._ci_test_run()
+        self.assertNotIn("| tail", run)
+        self.assertNotIn("| head", run)
+
+    def test_every_test_file_is_discoverable(self):
+        """tests/ 下每个 test_*.py 都必须能被 discover 找到（文件名契约）。"""
+        tests_dir = os.path.join(REPO_ROOT, "tests")
+        names = [n for n in os.listdir(tests_dir)
+                 if n.startswith("test_") and n.endswith(".py")]
+        self.assertGreaterEqual(len(names), 4,
+                                f"测试文件数异常偏少: {names}")
+        for n in names:
+            self.assertRegex(n, r"^test_[a-z0-9_]+\.py$",
+                             f"{n} 不符合 discover 的 test_*.py 命名契约")
+
+    def test_compile_step_uses_globs(self):
+        """py_compile 列举式清单同样会漏新文件（R185 漏了 cost_analysis 两个）。"""
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("未安装 pyyaml（仅 CI 校验需要）")
+        path = os.path.join(REPO_ROOT, ".github", "workflows", "ci.yml")
+        with open(path, encoding="utf-8") as f:
+            doc = yaml.safe_load(f)
+        steps = (doc.get("jobs") or {}).get("test", {}).get("steps") or []
+        compile_runs = [str(s.get("run") or "") for s in steps
+                        if "编译" in str(s.get("name") or "")]
+        self.assertTrue(compile_runs, "找不到语法编译检查步骤")
+        run = compile_runs[0]
+        self.assertIn("tests/*.py", run, "测试文件必须用通配而非逐个列举")
+        self.assertIn("scripts/*.py", run, "脚本必须用通配而非逐个列举")
+
+
 class TestAnnotationResolvable(unittest.TestCase):
     """tripwire：注解必须在 CI 的 Python 3.11 下也可求值。
 

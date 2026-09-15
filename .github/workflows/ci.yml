@@ -38,7 +38,10 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: 语法编译检查
-        run: python -m py_compile main.py tests/test_core.py tests/test_metrics_report.py tests/test_workflows.py scripts/git_state_merge.py scripts/validate_workflows.py scripts/metrics_report.py
+        run: |
+          # 用通配而非逐个列举：R185 发现列举式清单漏了 tests/test_cost_analysis.py
+          # 与 scripts/cost_analysis.py——新增文件永远不会自动进入校验
+          python -m py_compile main.py tests/*.py scripts/*.py
 
       - name: Workflow YAML 与内嵌 Bash 语法校验
         # workflow 文件变更会触发本 CI，但单测覆盖不到它们：YAML 手滑或 run 块少个 fi
@@ -48,10 +51,11 @@ jobs:
           python scripts/validate_workflows.py
 
       - name: 运行离线回归测试套件
-        run: |
-          python tests/test_core.py
-          python tests/test_metrics_report.py
-          python tests/test_workflows.py
+        # R185：改用 discover 而非逐个列举——R120 加入的 tests/test_cost_analysis.py
+        # 有 12 个测试却从未被 CI 执行（cost_analysis 面板同期连爆两个口径 bug：
+        # R120 stage 过滤、R167 dry 字段漂移）。列举式清单新增文件即静默漏跑。
+        # 不接管道：`cmd | tail` 的退出码取自 tail，会让失败的测试静默变绿。
+        run: python -m unittest discover -s tests -p "test_*.py"
 
   llm-live:
     # LLM 实弹冒烟：真实调一次生成链，验证 Key 有效性与模型可用性。
