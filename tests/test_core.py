@@ -905,6 +905,105 @@ class TestSymbolValidatorFallback(unittest.TestCase):
             self.assertNotIn(fake, TEST_SYMBOL_UNIVERSE)
 
 
+class TestBinanceHostFallback(unittest.TestCase):
+    """R184c：币安主机降级链——GitHub runner（美国 IP）访问 api.binance.com
+    返 451，生产实录 `逐币行情获取失败 1/1: SOL(451)`，盘面行长期降级。"""
+
+    class _R:
+        def __init__(self, code):
+            self.status_code = code
+
+    def test_falls_back_on_451(self):
+        calls = []
+
+        def fake(url, **kw):
+            calls.append(url)
+            return self._R(451) if "api.binance.com" in url else self._R(200)
+
+        with patch.object(m, "http_get", side_effect=fake):
+            r = m.http_get_binance("/api/v3/ticker/24hr?symbol=BTCUSDT")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(calls), 2, "首主机 451 必须触发降级")
+        self.assertIn("data-api.binance.vision", calls[1])
+
+    def test_falls_back_on_none(self):
+        # 超时/连接错误经 http_request 吸收为 None，同样属"主机不可用"
+        calls = []
+
+        def fake(url, **kw):
+            calls.append(url)
+            return None if "api.binance.com" in url else self._R(200)
+
+        with patch.object(m, "http_get", side_effect=fake):
+            r = m.http_get_binance("/api/v3/klines?symbol=BTCUSDT")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(calls), 2)
+
+    def test_business_4xx_does_not_fall_back(self):
+        """400（参数非法）换主机不会变好——不得浪费一次请求也不得掩盖真 bug。"""
+        calls = []
+        with patch.object(m, "http_get",
+                          side_effect=lambda url, **kw: (calls.append(url), self._R(400))[1]):
+            r = m.http_get_binance("/api/v3/ticker/24hr?symbols=bad")
+        self.assertEqual(r.status_code, 400)
+        self.assertEqual(len(calls), 1, "业务 4xx 必须原样返回，不降级")
+
+    def test_success_uses_first_host_only(self):
+        calls = []
+        with patch.object(m, "http_get",
+                          side_effect=lambda url, **kw: (calls.append(url), self._R(200))[1]):
+            m.http_get_binance("/api/v3/exchangeInfo?permissions=SPOT")
+        self.assertEqual(len(calls), 1)
+        self.assertIn("api.binance.com", calls[0])
+
+    def test_all_hosts_fail_returns_last(self):
+        with patch.object(m, "http_get", return_value=self._R(451)):
+            r = m.http_get_binance("/api/v3/klines")
+        self.assertIsNotNone(r, "全部主机失败时返回最后一个响应，由上层降级")
+        self.assertEqual(r.status_code, 451)
+
+
+class TestBatchTickerUrlEncoding(unittest.TestCase):
+    """R184c：批量行情 URL 必须用紧凑 JSON——json.dumps 默认在分隔符后插空格，
+    编码后是 %20，币安 symbols 参数只接受严格无空格数组，直接 400。
+    该 bug 自 5014bc9 起潜伏：批量端点从未真正生效，每次都静默降级成逐币 N 次
+    请求（runner 上再撞 451 就是全灭）。"""
+
+    def test_batch_url_has_no_encoded_spaces(self):
+        captured = []
+
+        class R:
+            status_code = 200
+
+            @staticmethod
+            def json():
+                return [{"symbol": "BTCUSDT", "lastPrice": "1", "priceChangePercent": "1"}]
+
+        def fake(url, **kw):
+            captured.append(url)
+            return R()
+
+        m.MarketDataProvider._price_cache = {}
+        with patch.object(m, "http_get_binance", side_effect=fake):
+            m.MarketDataProvider._fetch_tickers(["BTC", "ETH", "SOL"])
+        self.assertTrue(captured, "批量端点必须被调用")
+        url = captured[0]
+        self.assertNotIn("%20", url, "URL 不得含编码空格（币安会 400）")
+        self.assertNotIn(" ", url)
+        self.assertIn("%5B%22BTCUSDT%22%2C%22ETHUSDT%22", url,
+                      "必须是紧凑 JSON 数组格式")
+
+    def test_real_api_accepts_compact_and_rejects_spaced(self):
+        """离线契约：编码产物的形状（不联网，只锁格式语义）。"""
+        import requests
+        pairs = ["BTCUSDT", "ETHUSDT"]
+        compact = requests.utils.quote(json.dumps(pairs, separators=(",", ":")))
+        default = requests.utils.quote(json.dumps(pairs))
+        self.assertNotEqual(compact, default)
+        self.assertNotIn("%20", compact)
+        self.assertIn("%20", default, "默认 json.dumps 的空格就是 400 的根因")
+
+
 class TestQualityGate(unittest.TestCase):
     """AI 输出质量门"""
 

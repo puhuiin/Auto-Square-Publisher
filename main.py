@@ -499,6 +499,32 @@ def http_post(url: str, **kwargs) -> Optional[requests.Response]:
     return http_request("POST", url, **kwargs)
 
 
+def http_get_binance(path: str, **kwargs) -> Optional[requests.Response]:
+    """币安行情端点请求，带主机降级链（R184c）。
+
+    GitHub runner（Azure 美国 IP）对 api.binance.com 返回 HTTP 451——生产日志
+    实录 `逐币行情获取失败 1/1: SOL(451)`，盘面行与 K 线走势卡长期静默降级。
+    data-api.binance.vision 是币安官方公共行情镜像（同 schema/同端点/免 Key），
+    在主站不可达时接管。仅对"主机不可用"（451/403/超时/连接错误）降级：
+    4xx 业务错误（如 400 参数非法）说明请求本身有问题，换主机也一样，不降级。
+    """
+    last: Optional[requests.Response] = None
+    for idx, host in enumerate(MarketDataProvider._API_HOSTS):
+        resp = http_get(host + path, **kwargs)
+        last = resp
+        if resp is not None and resp.status_code < 400:
+            return resp
+        is_last = idx == len(MarketDataProvider._API_HOSTS) - 1
+        if is_last:
+            break
+        status = "无响应" if resp is None else resp.status_code
+        if resp is not None and 400 <= resp.status_code < 500 and resp.status_code not in (403, 451):
+            # 请求本身非法（参数/路径错误），换主机不会变好——直接返回让上层处理
+            return resp
+        logger.info(f"币安主机 {host} 不可用（{status}），降级到下一主机")
+    return last
+
+
 # ---------------------------------------------------------------------------
 # Reasonix 本地免费模型聚合网关集成
 # 本地跑时（网关存活）自动把 http://localhost:20140/v1 置顶为首选提供商，
@@ -786,6 +812,11 @@ class MarketDataProvider:
     _kline_cache: Dict[str, Tuple[float, List[float]]] = {}  # symbol -> (ts, closes)
     _TREND_CACHE_TTL_SEC = 300        # 热搜缓存 5min：CoinGecko 数据 5-10 分钟刷新，且限频礼貌（借鉴 Easel 热榜纪律）
     _trend_cache: Tuple[float, List[str]] = (0.0, [])
+    # R184c：主机降级链。GitHub runner（Azure 美国 IP）访问 api.binance.com 返回
+    # HTTP 451（法律原因不可用）——生产日志实录 `逐币行情获取失败 1/1: SOL(451)`，
+    # 盘面行长期退化为"链上/全市场热点"。data-api.binance.vision 是币安官方公共
+    # 行情镜像（同 schema、同端点、无需 Key），runner 可正常访问。
+    _API_HOSTS = ("https://api.binance.com", "https://data-api.binance.vision")
 
     @classmethod
     def get_trending_symbols(cls) -> List[str]:
@@ -835,8 +866,8 @@ class MarketDataProvider:
         if cached and (now - ts) < 600:
             return cached
         try:
-            r = http_get(f"https://api.binance.com/api/v3/klines?symbol={sym}USDT"
-                         f"&interval=1h&limit={points}", timeout=5, retries=1)
+            r = http_get_binance(f"/api/v3/klines?symbol={sym}USDT"
+                                 f"&interval=1h&limit={points}", timeout=5, retries=1)
             if r is not None and r.status_code == 200:
                 data = r.json()
                 if isinstance(data, list) and len(data) >= 12:
@@ -918,8 +949,13 @@ class MarketDataProvider:
         """批量接口一次拿全部标的；失败降级逐币查询。返回 {symbol: formatted}"""
         pairs = [f"{s}USDT" for s in symbols]
         try:
-            url = "https://api.binance.com/api/v3/ticker/24hr?symbols=" + requests.utils.quote(json.dumps(pairs))
-            r = http_get(url, timeout=5, retries=1)
+            # R184c：separators 去空格是必须的——json.dumps 默认在逗号/冒号后插空格，
+            # 编码后是 %20，而币安 symbols 参数只接受 ^\[("[\w\-._&&[^a-z]]{1,50}"(,...)*\]$
+            # 严格模式，带空格直接 400（实测：默认 → 400 "Illegal characters"，
+            # 紧凑 → 200）。该 bug 自 5014bc9 引入起一直存在，批量端点从未真正生效，
+            # 每次都静默降级成逐币 N 次请求——runner 上再撞 451 就是全灭。
+            payload = requests.utils.quote(json.dumps(pairs, separators=(",", ":")))
+            r = http_get_binance("/api/v3/ticker/24hr?symbols=" + payload, timeout=5, retries=1)
             if r is not None and r.status_code == 200:
                 data = r.json()
                 if isinstance(data, list):
@@ -941,7 +977,7 @@ class MarketDataProvider:
             if not re.fullmatch(r"[A-Z0-9]{2,10}", s):
                 logger.debug(f"逐币行情拒绝非法标的字符: {s[:40]!r}")
                 continue
-            r = http_get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={s}USDT", timeout=4, retries=0)
+            r = http_get_binance(f"/api/v3/ticker/24hr?symbol={s}USDT", timeout=4, retries=0)
             if r is not None and r.status_code == 200:
                 try:
                     out[s] = cls._format_ticker(s, r.json())
@@ -979,7 +1015,9 @@ class SymbolValidator:
         }
         cls._valid_symbols_cache = valid_set
 
-        r = http_get("https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT", timeout=6, retries=1)
+        # R184c：走主机降级链——runner（美国 IP）访问 api.binance.com 返 451，
+        # 兜底池只有 47 个标的，ZEC/PENGU/UNI 等热搜常客全被判"不存在"而丢挂件
+        r = http_get_binance("/api/v3/exchangeInfo?permissions=SPOT", timeout=6, retries=1)
         if r is not None and r.status_code == 200:
             try:
                 data = r.json()
