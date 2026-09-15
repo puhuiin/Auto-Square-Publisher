@@ -878,6 +878,8 @@ class MarketDataProvider:
         research workspace agent build panes apps data goal plan tasks
         text dictation file single-file raises raise raised
         funds fund investors investment
+        becoming reality year early preview product products
+        driest america american hiring engineer remote
     """.split())
 
     @classmethod

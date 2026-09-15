@@ -5290,6 +5290,29 @@ class TestHotTopics(unittest.TestCase):
         m.NewsFetcher.apply_hot_topic_boost(cands, keys)
         self.assertEqual(cands[0]["impact_score"], 6, "global/yields 不得误加权加密稿")
 
+    def test_production_surveillance_titles_do_not_leak_generic_words(self):
+        """R205：2026-09-15T18:08Z 生产热点「Dystopian Surveillance Is Becoming
+        a Reality」抽出 BECOMING/REALITY/YEAR/PREVIEW 等通用词，词边界可误加权
+        常规加密稿。专有名词（OPENBSD/JIGA/DYSTOPIAN）保留。"""
+        titles = [
+            "Dystopian Surveillance Is Becoming a Reality",
+            "GEFS on OpenBSD: A Early Preview",
+            "Jiga (YC W21) Is Hiring Product Engineer (Remote/US)",
+            "America's Driest Year",
+        ]
+        keys = m.MarketDataProvider._extract_hot_keywords(titles)
+        for bad in ("BECOMING", "REALITY", "YEAR", "PREVIEW", "PRODUCT",
+                    "EARLY", "DRIEST", "AMERICA", "HIRING", "ENGINEER"):
+            self.assertNotIn(bad, keys, f"{bad} 不得进热点词表")
+        for good in ("DYSTOPIAN", "OPENBSD", "JIGA", "GEFS"):
+            self.assertIn(good, keys, f"{good} 应保留")
+        cands = [
+            {"title": "In reality early product previews rarely move crypto",
+             "summary": "", "impact_score": 6, "base_impact_score": 6},
+        ]
+        m.NewsFetcher.apply_hot_topic_boost(cands, keys)
+        self.assertEqual(cands[0]["impact_score"], 6, "通用词不得误加权")
+
 
 class TestAtomicWrite(unittest.TestCase):
     """崩溃安全写盘：写半截被杀不得留下损坏的状态文件"""
