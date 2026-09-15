@@ -5139,6 +5139,26 @@ class TestHotTopics(unittest.TestCase):
                     "COST", "YEARS", "THINKING", "GUINEA", "MASS"):
             self.assertNotIn(bad, keys, f"{bad} 不得进热点词表")
 
+    def test_dollar_amounts_not_treated_as_tickers(self):
+        """R192：生产热点「Hacking a $20 4G wireless hotspot」实测抽出 $20，
+        并误加权「Bitcoin holds above $20」。$ 后必须字母开头才当 ticker。"""
+        keys = m.MarketDataProvider._extract_hot_keywords([
+            "Hacking a $20 4G wireless hotspot into a texting device",
+            "OpenAI buys camera maker for $300M",
+        ])
+        self.assertIn("$300M", keys)  # 现有测试锁：金额仍进表（非 ticker 但可作钩子）
+        self.assertNotIn("$20", keys)
+        self.assertNotIn("$4G", keys)  # 4G 里的 $ 不会被拆出独立 token（无 $ 前缀）
+        cands = [
+            {"title": "Bitcoin holds above $20 as volume rises", "summary": "",
+             "impact_score": 5, "base_impact_score": 5},
+            {"title": "OpenAI partnership fuels token narrative", "summary": "",
+             "impact_score": 5, "base_impact_score": 5},
+        ]
+        m.NewsFetcher.apply_hot_topic_boost(cands, keys)
+        self.assertEqual(cands[0]["impact_score"], 5, "$20 不得误加权")
+        self.assertEqual(cands[1]["impact_score"], 5 + m.HOT_TOPIC_BOOST)
+
 
 class TestAtomicWrite(unittest.TestCase):
     """崩溃安全写盘：写半截被杀不得留下损坏的状态文件"""

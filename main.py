@@ -877,14 +877,20 @@ class MarketDataProvider:
     def _extract_hot_keywords(cls, titles: List[str]) -> List[str]:
         """从热点标题抽「有辨识度」的词：$TICKER + 专有名词（标题里大写开头）。
         小写普通词（pumps/buys 等）不收——防热点词误伤加密新闻里的常用动词。
-        过滤停用词与纯数字；按出现频次降序、去重。空表=零加权。"""
+        $ 后纯数字（$20/$100）是价格不是 ticker；含字母的 $300M 保留作钩子。"""
         counts: Dict[str, int] = {}
         for title in titles:
             if not isinstance(title, str):
                 continue
             for m in re.finditer(r"\$([A-Za-z0-9]{2,10})|([A-Z][A-Za-z0-9\-]{3,})", title):
                 if m.group(1):
-                    word = "$" + m.group(1).strip("-").upper()
+                    raw = m.group(1).strip("-")
+                    # 纯数字金额（$20/$100）不当 ticker——生产实测
+                    # 「Hacking a $20 4G hotspot」把 $20 注入词表并误加权
+                    # 「Bitcoin holds above $20」类加密稿。含字母的 $300M 保留。
+                    if re.fullmatch(r"[\d.]+", raw):
+                        continue
+                    word = "$" + raw.upper()
                 else:
                     word = m.group(2).strip("-").upper()
                     if word.lower() in cls._HOT_TOPIC_STOPWORDS:
