@@ -3492,6 +3492,13 @@ class TestCampaignBoost(unittest.TestCase):
         m.NewsFetcher._apply_campaign_boost(cands2, ["$BNB", "$PIEVERSE"])
         self.assertEqual(cands2[0]["impact_score"], 5 + m.CAMPAIGN_TOKEN_BOOST)
 
+    def test_off_pool_tokens_returned(self):
+        """R201：off-pool 列表回传——供 stats → run_summary → 报表"""
+        cands = [{"title": "quiet", "summary": "", "impact_score": 5}]
+        hits, off = m.NewsFetcher._apply_campaign_boost(cands, ["$BNB", "$PIEVERSE", "$MOVE"])
+        self.assertEqual(hits, 0)
+        self.assertEqual(off, ["PIEVERSE"], "在池 BNB/MOVE 不得进 off-pool")
+
 
 class TestIntelRefreshBackoff(unittest.TestCase):
     """情报刷新失败退避：2h 内不重复白烧 LLM"""

@@ -654,6 +654,18 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("最近情报刷新", text)
         self.assertIn("2026-09-15T15:48:19", text)
 
+    def test_campaign_off_pool_surfaced(self):
+        """R201：off-pool 活动币进报表——Alpha 上新竞赛标的可见性"""
+        rows = [
+            {"outcome": "run_summary", "candidates": 10, "published": 1,
+             "campaign_off_pool": "PIEVERSE 牛来"},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["last_campaign_off_pool"], "PIEVERSE 牛来")
+        text = mr.render_text(s, rows)
+        self.assertIn("off-pool", text)
+        self.assertIn("PIEVERSE", text)
+
     def test_quota_estimator_surfaced_in_report(self):
         """R113：配额释放估算的报表端消费——运营者看报告即知下一帖何时能发"""
         from datetime import datetime, timezone, timedelta

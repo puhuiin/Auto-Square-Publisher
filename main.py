@@ -1353,6 +1353,7 @@ class NewsFetcher:
                       "feeds_ok": 0, "feeds_failed": [], "feeds_parked": [],
                       "feeds_empty": 0, "feeds_empty_sources": [],
                       "campaign_boost_hits": 0,  # R193：活动币加权命中候选数
+                      "campaign_off_pool": [],    # R201：不在标的池的活动币
                       "per_feed": {}}  # feed_name -> {"entries": 扫描, "kept": 入选}
         # _fetch_single_feed 跑在 10 线程池里：计数器 += 非原子，list.append/setdefault
         # 混用会丢增量，Step Summary 的吞吐数字对不上。工作线程一律走下面三个带锁 helper。
@@ -1907,47 +1908,48 @@ class NewsFetcher:
 
     @staticmethod
     def _apply_campaign_boost(candidates: List[Dict[str, Any]],
-                              priority_tokens: Optional[List[str]]) -> int:
+                              priority_tokens: Optional[List[str]]) -> tuple:
         """币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布。
-        返回命中的候选数（供 run_summary 度量四路信号供给）。
+        返回 (命中的候选数, off-pool 活动币列表)——供 run_summary 度量四路
+        信号供给与「活动币不在池」缺口。
         非字符串条目直接丢弃——脏情报里的 dict/数字走到 t.replace 会炸掉整轮；
         存量脏文件由 get_campaign_intel 拦截，这里是消费侧第二道门。
         R95：在池币命中判定走 _candidate_hits_tokens（四层防线），词形活动币
         （MOVE/FORM 等严格词表成员）不再误boost普通英文标题。
         R200：不在池的活动币（Alpha 上新如 PIEVERSE，09-15 生产实证
-        extract_tokens 恒空 → 加权永不命中）改词边界匹配，并打日志暴露
-        「活动币 off-pool」供给缺口。"""
+        extract_tokens 恒空 → 加权永不命中）改词边界匹配。
+        R201：off-pool 列表回传进 stats → run_summary（此前只打日志，
+        报表看不到「当前有几颗活动币不在池」）。"""
         if not priority_tokens:
-            return 0
+            return 0, []
         campaign_set = {t.replace("$", "").strip().upper()
                         for t in priority_tokens if isinstance(t, str) and t.strip()}
         if not campaign_set:
-            return 0
+            return 0, []
         universe = SymbolValidator.get_valid_symbols()
         in_pool = {t for t in campaign_set if t in universe}
-        off_pool = campaign_set - in_pool
+        off_pool = sorted(campaign_set - in_pool)
         if off_pool:
-            # Alpha 上新/未入 SPOT 交易所列表的活动币：extract_tokens 四层防线
-            # 会恒空（不在 valid_symbols），旧实现等于给这些币的竞赛白挂权重
-            logger.info(f"🪙 活动币不在标的池（改词边界匹配）: {sorted(off_pool)}")
+            logger.info(f"🪙 活动币不在标的池（改词边界匹配）: {off_pool}")
+        off_set = set(off_pool)
         hits = 0
         for item in candidates:
             if in_pool and NewsFetcher._candidate_hits_tokens(item, in_pool):
                 item["impact_score"] += CAMPAIGN_TOKEN_BOOST
                 hits += 1
                 continue
-            if off_pool:
+            if off_set:
                 text = ((item.get("title") or "") + " " + (item.get("summary") or "")).upper()
                 if not text:
                     continue
-                for tok in off_pool:
+                for tok in off_set:
                     # 词边界：PIEVERSE 不得命中普通句子；Alpha 标题里的
                     # 「Pieverse」大写化后 \bPIEVERSE\b 可命中
                     if re.search(r"\b" + re.escape(tok) + r"\b", text):
                         item["impact_score"] += CAMPAIGN_TOKEN_BOOST
                         hits += 1
                         break
-        return hits
+        return hits, off_pool
 
     @staticmethod
     def apply_trend_boost(candidates: List[Dict[str, Any]],
@@ -2030,7 +2032,9 @@ class NewsFetcher:
                     self._feed_record(feed_name, ok=False)
 
         # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布（只影响排序，不影响准入）
-        self.stats["campaign_boost_hits"] = self._apply_campaign_boost(candidates, priority_tokens)
+        _cb_hits, _cb_off = self._apply_campaign_boost(candidates, priority_tokens)
+        self.stats["campaign_boost_hits"] = _cb_hits
+        self.stats["campaign_off_pool"] = _cb_off
 
         # 低热度新闻过滤（默认不过滤）：必须以「未加权原始分」判定。此前 boost 先加再过滤，
         # 低质源只要蹭到当期活动币就能靠 +8 越过门槛并压过真正的突发（Round 5）。
@@ -6495,6 +6499,8 @@ def _run_main():
         "campaign_boost_hits": int(fetcher.stats.get("campaign_boost_hits") or 0),
         "trend_boost_hits": int(trend_boost_hits or 0),
         "hot_boost_hits": int(hot_boost_hits or 0),
+        # R201：off-pool 活动币——Alpha 上新等未入 SPOT 池的竞赛标的
+        "campaign_off_pool": " ".join(fetcher.stats.get("campaign_off_pool") or []) or None,
         # R126：单轮总耗时（秒）——20 分钟外部回调节奏下的堆积预警指标
         "run_elapsed_sec": round(time.time() - t_run_start, 1),
         "next_slot_frees": _nf_iso,

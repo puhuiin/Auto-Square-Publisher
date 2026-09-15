@@ -233,6 +233,8 @@ def summarize(rows):
         # R193：四路信号加权命中数（供给≠命中，此前不可见）
         "boost_hits": {"campaign": 0, "trend": 0, "hot": 0},
         "boost_runs": 0,
+        # R201：off-pool 活动币快照（最近一轮）
+        "last_campaign_off_pool": "",
         "elapsed": [],  # R126：单轮耗时样本（秒），聚平均/最长
         "sleep_elapsed": [],  # R177：拟人 pacing 累计——解释 ~370s 总耗时
         "llm_elapsed": [],
@@ -392,6 +394,9 @@ def summarize(rows):
                 runs_tmp["boost_runs"] += 1
                 for _k, _v in _bh.items():
                     runs_tmp["boost_hits"][_k] += _v
+            _cop = r.get("campaign_off_pool")
+            if isinstance(_cop, str) and _cop.strip():
+                runs_tmp["last_campaign_off_pool"] = _cop
             for k, v in r.items():
                 if k.startswith("skipped_") and isinstance(v, (int, float)):
                     runs_tmp["skips"][k[len("skipped_"):]] += int(v)
@@ -548,6 +553,8 @@ def render_text(s, rows=None):
             lines.append(
                 f"  📈 加权命中（{runs.get('boost_runs', 0)} 轮）: "
                 f"活动 {bh.get('campaign', 0)} / 热搜 {bh.get('trend', 0)} / 热点 {bh.get('hot', 0)}")
+        if runs.get("last_campaign_off_pool"):
+            lines.append(f"  🪙 活动币 off-pool: {runs['last_campaign_off_pool']}")
         # R196：饱和轮情报陈旧度——配额期实际在用多旧的情报
         if runs.get("avg_quota_intel_age_h") is not None:
             deg = runs.get("quota_intel_degraded") or 0
