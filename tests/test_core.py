@@ -521,6 +521,17 @@ class TestIntelFreshnessInPrompt(unittest.TestCase):
         self.assertIsNone(eng.last_intel_degraded)
         self.assertIsNone(eng.last_intel_age_hours)
 
+    def test_prompt_and_helper_agree_on_degraded(self):
+        """R198：prompt 注入与 _intel_is_degraded 共用同一判定——
+        R179/R197 曾因双算分叉。无时间戳 → 两侧都当降级。"""
+        eng = self._eng()
+        intel = {"strategy_guidance": "g"}  # R179 DEFAULT_INTEL 形态
+        eng._build_user_prompt(self._item(), intel, "", ["BTC"])
+        self.assertIs(eng.last_intel_degraded, True)
+        self.assertIsNone(eng.last_intel_age_hours)
+        self.assertIs(m._intel_is_degraded(intel), True)
+        self.assertIn("已过缓存期", eng._build_user_prompt(self._item(), intel, "", ["BTC"])[0])
+
     def test_intel_age_hours_recorded(self):
         """R181：bool 只说降级，age 说多旧——生产 14h→16h 在涨，可聚合"""
         eng = self._eng()

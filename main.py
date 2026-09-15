@@ -3009,19 +3009,12 @@ class MultiLLMEngine:
         self.last_intel_degraded = None
         self.last_intel_age_hours = None
         if campaign_intel and campaign_intel.get("strategy_guidance"):
-            intel_fresh = False
-            try:
-                _lu = str(campaign_intel.get("last_updated") or "")
-                if _lu:
-                    _dt = datetime.fromisoformat(_lu.replace("Z", "+00:00"))
-                    _age_sec = (datetime.now(_dt.tzinfo or timezone.utc) - _dt).total_seconds()
-                    self.last_intel_age_hours = round(_age_sec / 3600.0, 1)
-                    intel_fresh = _age_sec < INTEL_EXPIRE_HOURS * 3600
-            except Exception:
-                intel_fresh = False
-            # R171：降级注入直录——配额饱和期跳过刷新导致 intel 可陈放 14h+，
-            # 此前只能靠日志推断"这帖是不是用过期情报写的"
-            self.last_intel_degraded = not intel_fresh
+            # R198：与 quota 路径共用同一套判定 helper——R179/R197 两处各自
+            # 算陈旧度已过分叉一次（无 last_updated 时 prompt 降级、遥测 None）。
+            self.last_intel_age_hours = _intel_age_hours(campaign_intel)
+            degraded = _intel_is_degraded(campaign_intel)
+            self.last_intel_degraded = degraded
+            intel_fresh = degraded is False
             if intel_fresh:
                 # R127 运行时守卫：R127 修复只作用于下次刷新，当前缓存里的
                 # guidance 仍可能带着过期竞赛指导（生产实录：XPIN 09-04 已过期
