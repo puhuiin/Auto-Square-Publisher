@@ -873,6 +873,11 @@ class MarketDataProvider:
         chart charts chat cost fast slow
         guinea papua mass
         open source open-source
+        global access speed device suspected bond yields stakes borrowers
+        cuts cut rates rate
+        research workspace agent build panes apps data goal plan tasks
+        text dictation file single-file raises raise raised
+        funds fund investors investment
     """.split())
 
     @classmethod

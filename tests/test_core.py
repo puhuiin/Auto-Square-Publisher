@@ -5266,6 +5266,30 @@ class TestHotTopics(unittest.TestCase):
         self.assertEqual(cands[0]["impact_score"], 5, "$20 不得误加权")
         self.assertEqual(cands[1]["impact_score"], 5 + m.HOT_TOPIC_BOOST)
 
+    def test_production_bond_yields_titles_do_not_leak_finance_words(self):
+        """R204：2026-09-15 生产 HN 前页实测——「Global bond yields…」抽出
+        GLOBAL/BOND/YIELDS，词边界匹配到加密稿的 global markets / DeFi yields
+        即 +4。金融通用词必须进停用词；专有名词（Google/Java/Netherlands）保留。"""
+        titles = [
+            "Global bond yields hit 2008 highs, raising stakes for big borrowers",
+            "Java 27 Released",
+            "When Google Cuts Off Access: Poland and the World",
+            "Suspected sabotage causes major Netherlands rail disruption",
+            "Jexxa: High Speed on Device Dictation",
+        ]
+        keys = m.MarketDataProvider._extract_hot_keywords(titles)
+        for bad in ("GLOBAL", "BOND", "YIELDS", "CUTS", "ACCESS", "SPEED",
+                    "DEVICE", "SUSPECTED", "STAKES", "BORROWERS"):
+            self.assertNotIn(bad, keys, f"{bad} 不得进热点词表")
+        for good in ("GOOGLE", "JAVA", "NETHERLANDS", "JEXXA"):
+            self.assertIn(good, keys, f"{good} 专有名词应保留")
+        cands = [
+            {"title": "Global markets await Fed as DeFi yields compress",
+             "summary": "", "impact_score": 6, "base_impact_score": 6},
+        ]
+        m.NewsFetcher.apply_hot_topic_boost(cands, keys)
+        self.assertEqual(cands[0]["impact_score"], 6, "global/yields 不得误加权加密稿")
+
 
 class TestAtomicWrite(unittest.TestCase):
     """崩溃安全写盘：写半截被杀不得留下损坏的状态文件"""
