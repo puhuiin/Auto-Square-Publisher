@@ -47,6 +47,31 @@ class TestPostingRowPredicate(unittest.TestCase):
         self.assertFalse(ca._posting_row({"outcome": "run_summary"}))
         self.assertFalse(ca._posting_row({"outcome": "mystery_future"}))
 
+    def test_mirror_delivery_outcomes_included(self):
+        """R211：副平台-only 投递回执 outcome=*_delivered，旧过滤只认
+        binance_published* → okx/telegram 发帖 LLM 成本在面板不可见。"""
+        self.assertTrue(ca._posting_row({"outcome": "okx_draft_delivered",
+                                         "provider": "Preset-b.ai",
+                                         "stage": "summarize"}))
+        self.assertTrue(ca._posting_row({"outcome": "okx_draft+telegram_delivered",
+                                         "provider": "Preset-b.ai",
+                                         "stage": "summarize"}))
+        self.assertTrue(ca._posting_row({"outcome": "telegram_delivered_cache_failed",
+                                         "provider": "Preset-b.ai",
+                                         "stage": "summarize"}))
+        self.assertTrue(ca.is_delivery_outcome("binance_published"))
+        self.assertTrue(ca.is_delivery_outcome("okx_draft_delivered"))
+        self.assertFalse(ca.is_delivery_outcome("already_delivered"))
+        self.assertFalse(ca.is_delivery_outcome("run_summary"))
+
+    def test_mirror_delivered_counts_as_success(self):
+        agg = ca.aggregate([
+            {"outcome": "okx_draft_delivered", "provider": "Preset-b.ai",
+             "stage": "summarize", "tokens_used": 4000, "llm_latency_sec": 35.0},
+        ], {})
+        self.assertEqual(agg["Preset-b.ai"]["success"], 1)
+        self.assertEqual(agg["Preset-b.ai"]["total_tokens"], 4000)
+
 
 class TestAggregateSemantics(unittest.TestCase):
     """aggregate：投递成功行计入成功列 + 无提供商行排除"""

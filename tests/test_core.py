@@ -4316,6 +4316,18 @@ class TestMetrics(unittest.TestCase):
         self.assertTrue(lines[0].get("dry_run") is True)
         self.assertNotIn("dry_run", lines[1])    # 生产行不加键，历史数据与旧断言零影响
 
+    def test_delivery_outcome_covers_mirror_platforms(self):
+        """R211：写侧副平台-only 回执 outcome={okx|okx+tg}_delivered*，
+        消费方只认 binance_published* 会让调度分/开场回看/成本面板全部失明。"""
+        self.assertTrue(m._is_delivery_outcome("binance_published"))
+        self.assertTrue(m._is_delivery_outcome("binance_published_cache_failed"))
+        self.assertTrue(m._is_delivery_outcome("okx_draft_delivered"))
+        self.assertTrue(m._is_delivery_outcome("okx_draft+telegram_delivered"))
+        self.assertTrue(m._is_delivery_outcome("telegram_delivered_cache_failed"))
+        self.assertFalse(m._is_delivery_outcome("already_delivered"))
+        self.assertFalse(m._is_delivery_outcome("run_summary"))
+        self.assertFalse(m._is_delivery_outcome(None))
+
     def test_merge_metrics_dedupes(self):
         # 动态加载合并脚本
         import importlib.util

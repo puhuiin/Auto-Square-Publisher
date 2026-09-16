@@ -51,16 +51,32 @@ def _parse_ts(ts: str) -> datetime | None:
         return None
 
 
+def is_delivery_outcome(outcome) -> bool:
+    """投递成功回执判定（R211）。
+    写侧：binance 成功 → binance_published[_cache_failed]；
+    副平台-only 成功 → delivered_by + '_delivered[_cache_failed]'
+    （okx_draft_delivered / okx_draft+telegram_delivered）。
+    already_delivered 是幂等跳过标记（skipped_reason），不是投递回执，
+    不得 endswith 误收。旧消费方只认 binance_published*，okx/telegram
+    发帖的 LLM token/延迟在成本面板与调度分里完全不可见（R120/R165 同族）。"""
+    o = str(outcome or "")
+    if o.startswith("binance_published"):
+        return True
+    if o == "already_delivered":
+        return False
+    return o.endswith("_delivered") or o.endswith("_delivered_cache_failed")
+
+
 def _posting_row(rec: dict) -> bool:
     """R120：发帖 LLM 行判定。旧实现按 stage ∈ (summarize, campaign_intel) 过滤，
     但真实遥测里投递成功行不带 stage、拒稿行 stage 是 quality/transport/numbers
     ——面板只剩情报刷新调用，生产实测 3 天窗口里显示的"成功 4/拒单 4"全是
     情报操作，真实发帖成本（~15 万 token）完全不可见。改按 outcome 判定：
-    投递成功行（无 stage）+ 非情报 LLM 拒稿/失败行进成本面板。"""
+    投递成功行（含副平台 *_delivered，R211）+ 非情报 LLM 拒稿/失败行进成本面板。"""
     outcome = str(rec.get("outcome", ""))
     if outcome == "run_summary":
         return False
-    if outcome.startswith("binance_published"):
+    if is_delivery_outcome(outcome):
         return True
     if outcome in ("llm_success", "llm_rejected", "llm_failed"):
         return rec.get("stage") != "campaign_intel"
@@ -134,7 +150,7 @@ def load_intel_records(days: int | None, include_dry: bool = False) -> list[dict
 
 
 def load_published(days: int | None, include_dry: bool = False) -> list[dict]:
-    """加载投递遥测（outcome=binance_published*），供形态/配图/拒稿漏斗分析。"""
+    """加载投递遥测（binance_published* 与副平台 *_delivered*），供形态/配图/拒稿漏斗分析。"""
     if not os.path.exists(METRICS_FILE):
         return []
     cutoff = None
@@ -150,7 +166,7 @@ def load_published(days: int | None, include_dry: bool = False) -> list[dict]:
                 rec = json.loads(line)
             except Exception:
                 continue
-            if not str(rec.get("outcome", "")).startswith("binance_published"):
+            if not is_delivery_outcome(rec.get("outcome", "")):
                 continue
             if not include_dry and _is_dry(rec):
                 continue
@@ -178,9 +194,10 @@ def aggregate(rows: list[dict], price: dict) -> dict:
             continue  # R88：运行摘要行无 LLM 成本语义，不进提供商聚合
         p = r.get("provider", "unknown")
         a = agg[p]
-        if outcome == "llm_success" or str(outcome).startswith("binance_published"):
+        if outcome == "llm_success" or is_delivery_outcome(outcome):
             # R120：投递成功行不带 stage，是发帖 LLM 成功的主体——必须计入成功列，
             # 否则成功列只剩情报刷新（旧面板"成功 4"全是情报调用的失真根源）
+            # R211：副平台 *_delivered 同样计入
             a["success"] += 1
         elif outcome in ("llm_rejected", "llm_failed"):
             a["rejected"] += 1

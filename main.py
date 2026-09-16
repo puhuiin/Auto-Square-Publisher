@@ -236,6 +236,21 @@ def rotate_metrics_if_needed(keep: int = 5000) -> int:
     return len(lines) - keep
 
 
+def _is_delivery_outcome(outcome) -> bool:
+    """投递成功回执（R211）。写侧：binance → binance_published*；
+    副平台-only → {delivered_by}_delivered*。
+    already_delivered 是幂等跳过标记（skipped_reason），不是投递回执。
+    消费方（调度分/开场回看/成本面板）必须与写侧对账——只认
+    binance_published 会让 okx/telegram 发帖的 LLM 延迟/token 与
+    内容多样性防线全部失明。"""
+    o = str(outcome or "")
+    if o.startswith("binance_published"):
+        return True
+    if o == "already_delivered":
+        return False
+    return o.endswith("_delivered") or o.endswith("_delivered_cache_failed")
+
+
 def _delivered_platforms(binance_ok: bool = False, draft_ok: bool = False,
                          tg_ok: bool = False) -> List[str]:
     """实际投递成功的平台清单（metrics.jsonl 的 platforms 字段唯一口径）。
@@ -2575,7 +2590,7 @@ class MultiLLMEngine:
                         # 生产提供商排序（R84 闸门只封了状态写，遥测行是设计内落盘）
                         continue
                     if r.get("stage") not in ("summarize", "campaign_intel") and \
-                            not str(r.get("outcome") or "").startswith("binance_published"):
+                            not _is_delivery_outcome(r.get("outcome")):
                         continue
                     name = r.get("provider")
                     if not name:
@@ -2970,7 +2985,7 @@ class MultiLLMEngine:
                     r = json.loads(line)
                 except Exception:
                     continue
-                if not str(r.get("outcome", "")).startswith("binance_published"):
+                if not _is_delivery_outcome(r.get("outcome")):
                     continue
                 preview = (r.get("final_preview") or "").strip()
                 if not preview:
@@ -2999,7 +3014,7 @@ class MultiLLMEngine:
                     r = json.loads(line)
                 except Exception:
                     continue
-                if not str(r.get("outcome", "")).startswith("binance_published"):
+                if not _is_delivery_outcome(r.get("outcome")):
                     continue
                 if r.get("fng_ban_active") is True:
                     return True
@@ -3032,7 +3047,7 @@ class MultiLLMEngine:
                     r = json.loads(line)
                 except Exception:
                     continue
-                if not str(r.get("outcome", "")).startswith("binance_published"):
+                if not _is_delivery_outcome(r.get("outcome")):
                     continue
                 preview = (r.get("final_preview") or "").strip()
                 if not preview:

@@ -51,7 +51,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     for r in rows:
         if not isinstance(r, dict) or r.get("dry_run") is True:
             continue
-        if not str(r.get("outcome", "")).startswith("binance_published"):
+        if not _is_delivery_outcome(r.get("outcome")):
             continue
         pv = (r.get("final_preview") or "").strip()
         if pv:
@@ -103,7 +103,7 @@ def opener_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_M
     for r in reversed(rows if isinstance(rows, list) else []):
         if not isinstance(r, dict) or r.get("dry_run") is True:
             continue
-        if not str(r.get("outcome", "")).startswith("binance_published"):
+        if not _is_delivery_outcome(r.get("outcome")):
             continue
         pv = (r.get("final_preview") or "").strip()
         if not pv:
@@ -184,6 +184,18 @@ def load_rows(path):
 def _is_delivered(row):
     plats = row.get("platforms")
     return isinstance(plats, list) and len(plats) > 0
+
+
+def _is_delivery_outcome(outcome) -> bool:
+    """与 cost_analysis.is_delivery_outcome / main._is_delivery_outcome 同语义（R211）：
+    binance_published* 与副平台 *_delivered* 都算投递成功；
+    already_delivered 是幂等跳过标记，排除。"""
+    o = str(outcome or "")
+    if o.startswith("binance_published"):
+        return True
+    if o == "already_delivered":
+        return False
+    return o.endswith("_delivered") or o.endswith("_delivered_cache_failed")
 
 
 def summarize(rows):
