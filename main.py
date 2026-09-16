@@ -55,7 +55,7 @@ import math
 import threading
 import unicodedata
 import concurrent.futures
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 
 import requests
 import feedparser
@@ -186,6 +186,27 @@ def append_metrics(record: Dict[str, Any]) -> None:
             f.write(json.dumps(base, ensure_ascii=False) + "\n")
     except Exception as e:
         logger.debug(f"写入 metrics 失败(不影响主流程): {e}")
+
+
+# run_summary 的零计数基线：所有"本轮没进到发帖阶段"的退出路径共用同一形状，
+# 避免新增一条退出路径时漏写字段，让报表聚合按缺失字段静默失真（R8）。
+_RUN_SUMMARY_ZERO_COUNTS = {
+    "candidates": 0, "published": 0, "drafts": 0, "unprocessed": 0,
+    "skipped_batch_dup": 0, "skipped_no_token": 0, "skipped_token_limit": 0,
+    "skipped_risk_blocked": 0, "skipped_parked": 0, "skipped_exception": 0,
+}
+
+
+def append_run_summary(**overrides) -> None:
+    """写一条 run_summary 遥测，维护"每个 dispatch 恰好一条"的不变量。
+
+    R8：此前只有活跃窗口 / 配额饱和 / 零候选 / 正常收尾四条路径会写，而三条**硬退出**
+    （缺 SQUARE_API_KEY、无 LLM 提供商、未捕获崩溃）一条都不写——报表里的运行轮数
+    系统性少算，与 Actions 实际 dispatch 数对不上，正是这条不变量要防的事。"""
+    record = dict(_RUN_SUMMARY_ZERO_COUNTS)
+    record["outcome"] = "run_summary"
+    record.update(overrides)
+    append_metrics(record)
 
 
 # 遥测聚合缓存：_provider_cost_latency_scores 每次 _ordered_providers 都会调用，
@@ -498,7 +519,15 @@ def http_request(method: str, url: str, *, timeout: int = 8, headers: Dict[str, 
         try:
             resp = _HTTP_SESSION.request(method, url, headers=headers, timeout=timeout, **kwargs)
             if resp.status_code in (429, 500, 502, 503, 504) and attempt < retries:
-                time.sleep(_retry_wait(resp, attempt, backoff))
+                # 退避时长须在关闭前算（Retry-After 取自已解析的响应头）
+                wait = _retry_wait(resp, attempt, backoff)
+                # R7：重试前必须关闭上一次响应。stream=True 的调用方（配图下载）若不关，
+                # 连接会一直占在池里，几次重试即耗尽 pool_maxsize=16 → 后续请求排队。
+                try:
+                    resp.close()
+                except Exception:
+                    pass
+                time.sleep(wait)
                 continue
             return resp
         except requests.RequestException as e:
@@ -654,6 +683,12 @@ def probe_reasonix_gateway(gw_url: str = REASONIX_GW_URL, timeout: float = 2.0) 
                 api_key="reasonix-local",
                 model=mid,
                 timeout=90.0,  # 推理模型链路实测可达 60s+，45s 曾在悬崖边缘
+                # R8：priority 让"置顶"经得起成本排序。此前靠 insert(0) 置顶，但
+                # _ordered_providers 的第二排序键是历史延迟/成本分，而网关通道在
+                # 提交进仓库的 metrics.jsonl 里没有任何遥测 → 分数恒 +inf →
+                # 只要任一付费通道有历史，网关就被排到后面，"本地开发零成本"的
+                # 设计意图被静默撤销（实测：配置序 [网关, b.ai] → 调度序 [b.ai, 网关]）。
+                priority=1,
             )
             for i, mid in enumerate(picked)
         ]
@@ -1022,17 +1057,24 @@ class MarketDataProvider:
         if cached and (time.time() - ts) < cls._PRICE_CACHE_TTL_SEC:
             return cached
         r = http_get("https://api.alternative.me/fng/?limit=1", timeout=4, retries=1)
-        result = "50/100 (中立)"
         if r is not None and r.status_code == 200:
             try:
                 data = r.json().get("data", [{}])[0]
                 val = data.get("value", "50")
                 cls_v = data.get("value_classification", "Neutral")
                 result = f"{val}/100 ({cls_v})"
-            except Exception:
-                pass
-        cls._fng_cache = (time.time(), result)
-        return result
+                cls._fng_cache = (time.time(), result)   # 只缓存成功读数
+                return result
+            except Exception as e:
+                logger.warning(f"情绪指数响应解析失败: {e}")
+        else:
+            logger.warning("情绪指数接口不可达（本轮不注入情绪数据，避免把假数字喂给模型）")
+        # R9：失败**不再返回 "50/100 (中立)"**。那个字符串与真实读数完全同形，
+        # 会经 market_context 进 prompt、再进 _verify_numbers 的白名单，于是模型
+        # 写"恐慌贪婪 50"能通过数字校验并当作事实发出去——用编造的行情数据发帖
+        # 比不发更糟。现在返回显式"未知"，模型看到没有读数就不会引用数字；
+        # 且失败不入缓存，下一次调用（下一轮运行）可立即重试。
+        return cls.FNG_UNKNOWN
 
     @staticmethod
     def _format_ticker(sym: str, d: Dict[str, Any]) -> str:
@@ -2186,9 +2228,21 @@ def _is_router_model(model: str) -> bool:
     :free 模型，设计注释写明「单个免费模型下架不会让 preset 通道整体报废」。
     但 _is_permanent_failure 把任意 404 判成 24h permanent，等于把聚合路由
     整通道砍掉一天（生产 8 次 permanent 404 全打在 Preset-openrouter 上）。
-    只认 /free 路由后缀；具体模型 ID（含 :free 限定）仍走 permanent 快道。"""
+
+    R8：旧谓词只认 `/free` 后缀，而聚合网关的路由别名远不止这一种写法——实测
+    Reasonix 网关的 `auto/best-fast`、`omni/auto/best-free`、`omni/auto/coding:free`
+    全部被判成"具体模型"，一次 404 就吃 24h permanent，正是 R169 想修的那类
+    "整通道报废"。现在把 `auto`/`router` 作为**路径段**纳入识别。
+    注意只按 `/` 切分、不按 `:`：`minimax/minimax-m3:free` 与
+    `coding-glm-5.3-flash-free` 是**具体**免费模型，误判成路由会让下架的模型
+    每 10 分钟重试一次（永久快道才是它们的正确处置）。"""
     ml = (model or "").strip().lower()
-    return ml.endswith("/free") or ml == "free"
+    if not ml:
+        return False
+    if ml.endswith("/free") or ml == "free":
+        return True
+    segments = ml.split("/")
+    return any(seg in ("auto", "router") for seg in segments)
 
 
 # 结尾站队提问的风格池：每条帖子随机抽取一种，避免时间线上全是同款"扣1扣2"
@@ -2264,12 +2318,16 @@ _FNG_ANCHOR_RE = re.compile(
 class LLMProviderConfig:
     """单个 LLM 模型提供商配置"""
 
-    def __init__(self, name: str, base_url: str, api_key: str, model: str, timeout: float = 25.0):
+    def __init__(self, name: str, base_url: str, api_key: str, model: str, timeout: float = 25.0,
+                 priority: int = 0):
         self.name = name
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model = model
         self.timeout = timeout
+        # R8：显式优先级（越大越先试）。用于表达"配置层已经决定好的顺序"——
+        # 目前只有本地 Reasonix 网关用它保住"置顶"语义（见 _ordered_providers）。
+        self.priority = priority
 
     def __repr__(self):
         # 安全：只回显尾 4 位。此前首 6 尾 4 共 10 个明文字符，泄漏面对短 key 过大
@@ -2381,8 +2439,14 @@ class MultiLLMEngine:
 
     def __init__(self):
         self.providers: List[LLMProviderConfig] = self._build_provider_chain()
-        # 本次运行内的连续失败计数：失败越多的提供商排越后，避免每条新闻都先撞一次死节点
+        # 本次运行内的**通道**失败计数（空回/超时/HTTP 错误）：驱动跨运行熔断，
+        # 失败越多的提供商排越后，避免每条新闻都先撞一次死节点
         self._fail_counts: Dict[str, int] = {}
+        # 内容质量拒稿计数（质量门/数字门/AI 腔门），**单独存放**。
+        # R6：此前与通道失败共用 _fail_counts，两次"文风不合格"后再来一次空回即
+        # 触发跨运行熔断——把"模型写不好"误判成"通道坏了"，还会让质量门间接冷却
+        # 一个其实完全健康的通道。质量差不等于通道故障，故只参与运行内排序。
+        self._quality_fail_counts: Dict[str, int] = {}
         # 客户端缓存：同一提供商复用底层 httpx 连接池
         self._clients: Dict[str, OpenAI] = {}
         # R130：最近一次 prompt 组装抽中的结尾套路（回执遥测用，验证轮换均匀性）
@@ -2391,6 +2455,8 @@ class MultiLLMEngine:
         # 状态直录后"禁令武装 → 新帖避开"的咬合成为可度量事实（同 last_ending_style 模式）
         self.last_fng_ban_active: Optional[bool] = None
         self.last_fng_hook_count: Optional[int] = None
+        # R6：最近一次 prompt 里实际注入的活动情报文本，供数字软校验做白名单
+        self.last_intel_section: str = ""
         self.last_fng_market_stripped: Optional[bool] = None
         # R171：情报降级注入状态——R83/R164 只在日志里可见，回执直录后
         # "过期情报是否仍在喂稿"变成可聚合事实（同 FNG 三件套模式）
@@ -2402,26 +2468,99 @@ class MultiLLMEngine:
         self.last_attempted_provider: Optional[str] = None
         self.last_attempted_model: Optional[str] = None
 
+    def _quality_fails(self) -> Dict[str, int]:
+        """内容质量拒稿计数（延迟初始化）。
+
+        本类有若干调用方与测试用 `__new__` 构造实例、不走 `__init__`，
+        直接读 `self._quality_fail_counts` 会 AttributeError。"""
+        counts = self.__dict__.get("_quality_fail_counts")
+        if not isinstance(counts, dict):
+            counts = {}
+            self._quality_fail_counts = counts
+        return counts
+
     # ---------------- 跨运行熔断持久化（网络抖动级降级到冷却级） ----------------
     _BREAKER_STATE_KEY = "_llm_breaker"
     _BREAKER_BASE_MIN = 10      # 第 1 次失败冷却 10 分钟
     _BREAKER_MAX_MIN = 240      # 指数封顶 4 小时
 
+    @staticmethod
+    def _parse_cooldown(raw: Any) -> Optional[datetime]:
+        """冷却截止时间 → aware datetime；缺失/畸形返回 None（= 不可信）。
+        naive 值按 UTC 解释：历史/手改状态里出现过无时区的 ISO 串，直接与 aware
+        比较会抛 TypeError，而旧实现把这个异常当成"未冷却"（fail-open）。"""
+        if not raw:
+            return None
+        try:
+            dt = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+
+    @classmethod
+    def _extend_cooldown(cls, info: Dict[str, Any], until: datetime) -> None:
+        """冷却只延长、不缩短。
+
+        R6：旧实现无条件覆写 cooldown_until，导致 30s 的 429 限流冷却把 24h 的
+        permanent 冷却（模型下架）直接抹掉，下一轮又去撞 404；10min 的瞬时退避
+        同样会抹掉服务端要求的 4h Retry-After。"""
+        prev = cls._parse_cooldown(info.get("cooldown_until"))
+        if prev is None or until > prev:
+            info["cooldown_until"] = until.isoformat()
+
+    @classmethod
+    def _sanitize_breaker_state(cls, state: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+        """自愈式读取断路器状态：丢弃非 dict 条目，把不可解析的 cooldown_until
+        重置为一个**有界**冷却（now + 基础退避）并写回一次。
+
+        为什么既不是 fail-open 也不是纯 fail-closed：
+        - fail-open（旧行为）：畸形条目 = 可用 → 已下架的通道每轮白撞、白烧故事；
+        - 纯 fail-closed：畸形条目 = 永久冷却 → 该通道再也不会被尝试（死锁）。
+        修成"会在基础退避后自动到期"的冷却，两个坑都避开。"""
+        repaired: Dict[str, Dict[str, Any]] = {}
+        dropped = 0
+        healed = 0
+        for name, info in state.items():
+            if not isinstance(info, dict):
+                dropped += 1
+                continue
+            if cls._parse_cooldown(info.get("cooldown_until")) is None:
+                info = dict(info)
+                info["cooldown_until"] = (datetime.now(timezone.utc)
+                                          + timedelta(minutes=cls._BREAKER_BASE_MIN)).isoformat()
+                healed += 1
+            repaired[name] = info
+        if dropped or healed:
+            logger.warning(f"断路器状态自愈：丢弃不可用条目 {dropped} 条，"
+                           f"重置畸形冷却 {healed} 条为 {cls._BREAKER_BASE_MIN} 分钟有界冷却。")
+            try:
+                intel_state_set(cls._BREAKER_STATE_KEY, repaired)
+            except Exception as e:
+                logger.debug(f"断路器自愈写回失败（不影响判定）: {e}")
+        return repaired
+
     def _breaker_state(self) -> Dict[str, Dict[str, Any]]:
         state = intel_state_get(self._BREAKER_STATE_KEY, {})
-        return state if isinstance(state, dict) else {}
+        if not isinstance(state, dict):
+            return {}
+        return self._sanitize_breaker_state(state)
 
-    @staticmethod
-    def _is_cooled(state: Dict[str, Dict[str, Any]], name: str) -> bool:
-        """快照版冷却判定（_ordered_providers 一次读盘后复用，避免逐提供商重复读文件）"""
+    @classmethod
+    def _is_cooled(cls, state: Dict[str, Dict[str, Any]], name: str) -> bool:
+        """快照版冷却判定（_ordered_providers 一次读盘后复用，避免逐提供商重复读文件）。
+
+        不可信状态按"仍冷却"处理（fail-closed）：宁可少撞一次，也不要在 Key 失效/
+        模型下架时每轮白烧故事。注意 `_breaker_state()` 已把畸形值修成有界冷却，
+        所以这里不会造成永久死锁。"""
         info = state.get(name)
-        if not info:
+        if not isinstance(info, dict):
             return False
-        try:
-            until = datetime.fromisoformat(str(info.get("cooldown_until", "")))
-            return datetime.now(until.tzinfo or timezone.utc) < until
-        except Exception:
-            return False
+        until = cls._parse_cooldown(info.get("cooldown_until"))
+        if until is None:
+            return True
+        return datetime.now(timezone.utc) < until
 
     def _breaker_cooled_down(self, name: str) -> bool:
         """True = 该提供商处于冷却期，本次运行应跳过"""
@@ -2437,7 +2576,7 @@ class MultiLLMEngine:
             info["fails"] = int(info.get("fails", 0)) + 1
             new_fails_holder.append(info["fails"])
             cooldown_min = min(self._BREAKER_BASE_MIN * (2 ** (info["fails"] - 1)), self._BREAKER_MAX_MIN)
-            info["cooldown_until"] = (datetime.now(timezone.utc) + timedelta(minutes=cooldown_min)).isoformat()
+            self._extend_cooldown(info, datetime.now(timezone.utc) + timedelta(minutes=cooldown_min))
             state[name] = info
             return state
 
@@ -2479,8 +2618,8 @@ class MultiLLMEngine:
         def _record(state):
             state = dict(state or {})
             info = dict(state.get(name, {"fails": 0}))
-            info["cooldown_until"] = (datetime.now(timezone.utc)
-                                      + timedelta(seconds=cooldown_sec)).isoformat()
+            self._extend_cooldown(info, datetime.now(timezone.utc)
+                                  + timedelta(seconds=cooldown_sec))
             state[name] = info
             return state
 
@@ -2496,7 +2635,7 @@ class MultiLLMEngine:
             state = dict(state or {})
             info = dict(state.get(name, {"fails": 0}))
             info["fails"] = int(info.get("fails", 0)) + 1
-            info["cooldown_until"] = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
+            self._extend_cooldown(info, datetime.now(timezone.utc) + timedelta(hours=24))
             info["permanent"] = True
             state[name] = info
             return state
@@ -2519,8 +2658,13 @@ class MultiLLMEngine:
 
     def _get_client(self, provider: LLMProviderConfig) -> OpenAI:
         """按提供商缓存 OpenAI 客户端；带 HTTP-Referer/X-Title 头以兼容 OpenRouter 等要求来源识别的平台。
-        localhost 提供商（Reasonix 网关）需绕开系统代理，否则 Windows TUN/Clash 会把本地请求吞掉。"""
-        cache_key = provider.name
+        localhost 提供商（Reasonix 网关）需绕开系统代理，否则 Windows TUN/Clash 会把本地请求吞掉。
+
+        R6：缓存键必须是**端点指纹**而非 provider.name。旧实现只按名字缓存，而
+        LLM_PROVIDERS_CONFIG 里 name 是可选字段（缺省全部落成 "Custom-JSON"），
+        两条不同 base_url/Key 的配置会共用同一个 client——请求打到错误的端点、
+        熔断状态与失败计数也互相污染，且被复用的通道永不生效。"""
+        cache_key = f"{provider.name}|{provider.base_url}|{hashlib.sha256(provider.api_key.encode('utf-8')).hexdigest()[:12]}"
         if cache_key not in self._clients:
             kwargs: Dict[str, Any] = dict(
                 api_key=provider.api_key,
@@ -2640,8 +2784,11 @@ class MultiLLMEngine:
             # 生产实证（9/7-9/8 遥测）：minimax 下架进 24h 长冷却后，每当 b.ai 超时
             # 进冷却，"全员重启"就把 minimax 拉回陪烧 404——12 次 404 几乎全是这条
             # 漏洞烧的（每次白烧 1 故事 × 2 次调用）。全员 permanent 时宁可空链快败。
-            transient = [p for p in self.providers
-                         if not (state.get(p.name) or {}).get("permanent")]
+            def _is_permanent(name: str) -> bool:
+                info = state.get(name)
+                return isinstance(info, dict) and bool(info.get("permanent"))
+
+            transient = [p for p in self.providers if not _is_permanent(p.name)]
             if transient:
                 logger.warning(f"所有提供商均在冷却期，仅重启非永久失败提供商: {[p.name for p in transient]}")
                 active = transient
@@ -2649,9 +2796,18 @@ class MultiLLMEngine:
                 logger.error("所有提供商均在冷却期且带 permanent 标记（模型下架/404），"
                              "本轮不再试错，空链快速失败。")
                 active = []
-        # 无遥测时 scores 为空 → 二级键恒 +inf → 退化为纯 fail-count 排序（稳定，保配置序）
+        # 排序键三层，优先级从高到低：
+        #   ① 运行内失败数（健康优先，失败过的让位）
+        #   ② -priority（配置层显式顺序，目前只有本地免费网关用）
+        #   ③ 历史延迟/成本分（无遥测恒 +inf，保持配置序）
+        # 排序可混合"内容质量差"与"通道故障"两种失败（都值得让位），但跨运行熔断只看
+        # 通道故障计数——见 _quality_fail_counts 与 _fail_counts 的分离（R6）。
+        # ② 必须排在 ③ 之前：否则"配置里已决定置顶"的通道会被成本分静默压下去（R8）。
         scores = self._provider_cost_latency_scores()
-        rank_key = lambda p: (self._fail_counts.get(p.name, 0), scores.get(p.name, float("inf")))
+        quality_fails = self._quality_fails()
+        rank_key = lambda p: (self._fail_counts.get(p.name, 0) + quality_fails.get(p.name, 0),
+                              -getattr(p, "priority", 0),
+                              scores.get(p.name, float("inf")))
         return sorted(active, key=rank_key)
 
     def _build_provider_chain(self) -> List[LLMProviderConfig]:
@@ -2664,15 +2820,31 @@ class MultiLLMEngine:
             try:
                 items = json.loads(providers_json)
                 if isinstance(items, list):
+                    seen_names: Dict[str, int] = {}
                     for item in items:
-                        if isinstance(item, dict) and item.get("api_key"):
-                            cfg = LLMProviderConfig(
-                                name=item.get("name", "Custom-JSON"),
-                                base_url=item.get("base_url", "https://api.deepseek.com"),
-                                api_key=item.get("api_key", ""),
-                                model=item.get("model", "deepseek-chat"),
-                            )
-                            chain.append(cfg)
+                        if not (isinstance(item, dict) and item.get("api_key")):
+                            continue
+                        raw_name = str(item.get("name") or "").strip() or f"Custom-JSON-{len(chain) + 1}"
+                        # 重名配置必须去重：断路器、运行内失败计数、遥测 provider 字段
+                        # 全部按 name 归档，重名会让两条独立通道互相污染状态（R6）。
+                        if raw_name in seen_names:
+                            seen_names[raw_name] += 1
+                            raw_name = f"{raw_name}#{seen_names[raw_name]}"
+                        else:
+                            seen_names[raw_name] = 1
+                        # JSON 配置此前拿不到 timeout：推理型上游按默认 25s 会在生成
+                        # 到一半被掐死（见下方 preset 分支同款处理）。允许显式覆盖。
+                        try:
+                            prov_timeout = float(item.get("timeout") or 0) or 25.0
+                        except (TypeError, ValueError):
+                            prov_timeout = 25.0
+                        chain.append(LLMProviderConfig(
+                            name=raw_name,
+                            base_url=item.get("base_url", "https://api.deepseek.com"),
+                            api_key=item.get("api_key", ""),
+                            model=item.get("model", "deepseek-chat"),
+                            timeout=prov_timeout,
+                        ))
                     if chain:
                         logger.info(f"成功从 LLM_PROVIDERS_CONFIG 加载了 {len(chain)} 个模型提供商。")
                         return chain
@@ -2828,6 +3000,11 @@ class MultiLLMEngine:
         - 正文 CJK >= 350（500~800 字目标的下沿容差）、总长 <= 2500
         短讯门（60~1200 字）对长文完全不适用，两套门各管各的模式。
         """
+        # R9：解析前先剥 Markdown 痕迹。模型常把标题写成 `**TITLE: xxx**`，而
+        # _ARTICLE_TITLE_RE 要求行首即 TITLE，行首那个 `**` 会让匹配直接失败 →
+        # 误报"长文缺 TITLE 行"整篇拒稿（还白白多烧一次 failover 调用）。
+        # 剥 `**`/`__` 与 _sanitize_content 第 0.5 步同规则，只是提前到门之前。
+        content = content.replace("**", "").replace("__", "")
         m = cls._ARTICLE_TITLE_RE.search(content)
         if not m:
             return False, "长文缺 TITLE 行（contentType=2 必须带标题）", "", content
@@ -2967,63 +3144,54 @@ class MultiLLMEngine:
             "outcome": "llm_rejected",
         })
 
+    def _recent_published_rows(self, limit: int) -> List[Dict[str, Any]]:
+        """最近 `limit` 篇**带正文快照**的已发布回执（新→旧）。
+
+        R7：此前 hook_count / ban_armed / openers 各自实现了一遍取数，且窗口口径
+        互不相同——`_recent_fng_hook_count` 只对"有 preview 的行"计数，
+        `_recent_fng_ban_armed` 却对**每个**已发布行计数。同一条非对称滞回曲线的
+        两端因此建立在不同样本集上，禁令状态不可复现（同一份遥测重算会得出不同
+        结论）。统一到本函数：只认"已投递 + 有正文快照"的行，三种消费方共用。
+
+        回看 200 行：R88 run_summary（~72 行/天）+ 拒稿行上线后遥测密度涨到
+        ~85 行/天，旧的 60 行回看只剩不足 1 天——去重窗口被静默稀释。
+        读失败返回空表（无约束，与各调用方的安全方向一致）。"""
+        rows: List[Dict[str, Any]] = []
+        try:
+            if not os.path.exists(METRICS_FILE):
+                return rows
+            with open(METRICS_FILE, "r", encoding="utf-8") as f:
+                lines = f.readlines()[-200:]
+            for line in reversed(lines):
+                try:
+                    r = json.loads(line)
+                except Exception:
+                    continue
+                if not _is_delivery_outcome(r.get("outcome")):
+                    continue
+                if not (r.get("final_preview") or "").strip():
+                    continue  # R63 之前的帖子无回执，跳过
+                rows.append(r)
+                if len(rows) >= limit:
+                    break
+        except Exception as e:
+            logger.debug(f"读取近期已发布回执失败 (不影响主流程): {e}")
+        return rows
+
     def _recent_fng_hook_count(self, previews_limit: int = 5) -> int:
         """统计最近 N 篇已发布正文里用"(贪婪|恐惧|情绪)指数"当素材的篇数。
         R101 生产实录：连续 6 帖全部拿"贪婪指数 69"当反差梗——market_context
         每帖注入情绪指数，模型把它当最顺手的反差装置，成为时间线级模板指纹
         （R75 开场去重修过的同类问题在数据锚点上的重演）。final_preview 截
-        120 字符足够覆盖该引用（通常出现在前两段）。读失败返回 0（无约束）。"""
-        try:
-            if not os.path.exists(METRICS_FILE):
-                return 0
-            with open(METRICS_FILE, "r", encoding="utf-8") as f:
-                lines = f.readlines()[-200:]
-            count = 0
-            seen = 0
-            for line in reversed(lines):
-                try:
-                    r = json.loads(line)
-                except Exception:
-                    continue
-                if not _is_delivery_outcome(r.get("outcome")):
-                    continue
-                preview = (r.get("final_preview") or "").strip()
-                if not preview:
-                    continue
-                seen += 1
-                if _FNG_ANCHOR_RE.search(preview):
-                    count += 1
-                if seen >= previews_limit:
-                    break
-            return count
-        except Exception as e:
-            logger.debug(f"读取近期情绪指数引用失败 (不影响主流程): {e}")
-            return 0
+        120 字符足够覆盖该引用（通常出现在前两段）。"""
+        return sum(1 for r in self._recent_published_rows(previews_limit)
+                   if _FNG_ANCHOR_RE.search((r.get("final_preview") or "").strip()))
 
     def _recent_fng_ban_armed(self, limit: int = 5) -> bool:
         """最近 N 篇发布里是否有 fng_ban_active=True（R176 非对称滞回用）。
-        读失败/无字段返回 False（无约束，与 hook_count 同安全方向）。"""
-        try:
-            if not os.path.exists(METRICS_FILE):
-                return False
-            with open(METRICS_FILE, "r", encoding="utf-8") as f:
-                lines = f.readlines()[-200:]
-            seen = 0
-            for line in reversed(lines):
-                try:
-                    r = json.loads(line)
-                except Exception:
-                    continue
-                if not _is_delivery_outcome(r.get("outcome")):
-                    continue
-                if r.get("fng_ban_active") is True:
-                    return True
-                seen += 1
-                if seen >= limit:
-                    break
-            return False
-        except Exception:
-            return False
+        与 hook_count 共用同一窗口（R7），读失败返回 False（无约束）。"""
+        return any(r.get("fng_ban_active") is True
+                   for r in self._recent_published_rows(limit))
 
     def _recent_openers(self, limit: int = 8) -> List[str]:
         """读取最近 N 篇已发布文本的开场句（final_preview 首句，倒序）。
@@ -3034,40 +3202,20 @@ class MultiLLMEngine:
         "先泼盆冷水"在 R75 两次复发后于 R104 第三次出现（窗口早已滚过）。
         8 条 ≈ 16-20 小时；跨天惯犯由 _OVERUSED_OPENING_DEVICES 永久禁令兜底。"""
         openers: List[str] = []
-        try:
-            if not os.path.exists(METRICS_FILE):
-                return openers
-            with open(METRICS_FILE, "r", encoding="utf-8") as f:
-                # 回看 200 行：R88 run_summary（~72 行/天）+ 拒稿行上线后遥测密度
-                # 涨到 ~85 行/天，旧的 60 行回看只剩不足 1 天——开场去重窗口被
-                # 静默稀释。200 行 ≈ 2 天密度，覆盖 12 篇/天的开场召回绰绰有余。
-                lines = f.readlines()[-200:]
-            for line in reversed(lines):
-                try:
-                    r = json.loads(line)
-                except Exception:
+        for r in self._recent_published_rows(limit):
+            preview = (r.get("final_preview") or "").strip()
+            # R121：长文回执以"一、发生了什么"分节头开头——分节头不是开场句，
+            # 直接取首段会让开场去重对全部长文失明。跳过前导分节头取首个正文段。
+            first_sentence = ""
+            for seg in (s.strip() for s in re.split(r"[。\n]", preview)):
+                if not seg:
                     continue
-                if not _is_delivery_outcome(r.get("outcome")):
-                    continue
-                preview = (r.get("final_preview") or "").strip()
-                if not preview:
-                    continue  # R63 之前的帖子无回执，跳过
-                # R121：长文回执以"一、发生了什么"分节头开头——分节头不是开场句，
-                # 直接取首段会让开场去重对全部长文失明。跳过前导分节头取首个正文段。
-                first_sentence = ""
-                for seg in (s.strip() for s in re.split(r"[。\n]", preview)):
-                    if not seg:
-                        continue
-                    if re.match(r"^[一二三四五六七八九十]、", seg):
-                        continue  # 长文分节头
-                    first_sentence = seg
-                    break
-                if first_sentence:
-                    openers.append(first_sentence[:60])
-                if len(openers) >= limit:
-                    break
-        except Exception as e:
-            logger.debug(f"读取近期开场白失败 (不影响主流程): {e}")
+                if re.match(r"^[一二三四五六七八九十]、", seg):
+                    continue  # 长文分节头
+                first_sentence = seg
+                break
+            if first_sentence:
+                openers.append(first_sentence[:60])
         return openers
 
     def _build_user_prompt(self, news_item: Dict[str, Any],
@@ -3109,6 +3257,11 @@ class MultiLLMEngine:
                                  f"{campaign_intel.get('strategy_guidance')}"
                                  "（⚠️ 以上活动信息可能已过期：严禁在正文中引用其中的任何具体日期、"
                                  "截止时间或倒计时，只可化用代币与话题方向，且若与本条新闻无关则切勿提及）。\n")
+
+        # R6：把实际注入的活动情报文本暂存到实例。数字软校验的白名单必须包含它——
+        # 模型被明确要求参考这段 guidance，忠实引用其中的奖池/费率/日期却被判"编造"
+        # 是系统性误杀（旧白名单只有 title+summary+market_context）。
+        self.last_intel_section = intel_section
 
         # R101 情绪锚点禁令（R103 补全）：触发时必须同步把情绪行从盘面上下文
         # 剥离——一边递数字一边禁用是自相矛盾的指令，且白占上下文。
@@ -3393,8 +3546,11 @@ class MultiLLMEngine:
                                        f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                         raise _QualityGateRejection(fail_reason)
 
-                # 0.1 数字幻觉软校验：编造精确百分比/大额金额的内容直接拦截
-                source_text = f"{news_item.get('title','')} {news_item.get('summary','')} {market_context}"
+                # 0.1 数字幻觉软校验：编造精确百分比/大额金额的内容直接拦截。
+                # 白名单必须包含**实际注入给模型的活动情报**：guidance 里若写了奖池
+                # 金额/费率，模型忠实引用会被判成幻觉拒稿（R6 修的系统性误杀）。
+                source_text = (f"{news_item.get('title','')} {news_item.get('summary','')} "
+                               f"{market_context} {self.last_intel_section or ''}")
                 nums_ok, nums_reason = self._verify_numbers(content, source_text)
                 if not nums_ok:
                     self._log_reject(news_item, provider.name, "numbers", nums_reason,
@@ -3435,7 +3591,13 @@ class MultiLLMEngine:
                               if t not in news_set and t in valid_syms]
                     if len(extras) >= 2:
                         for t in extras:
-                            content = re.sub(r"\$" + re.escape(t) + r"\b", t,
+                            # R9：不能用 `\b` 收尾——Python3 的 `\w` 把 CJK 也算作单词
+                            # 字符，`$PEPE和` 里 `E` 与 `和` 之间不存在词边界，`\b` 匹配
+                            # 失败 → `$` 剥不掉，但下面 merged.remove 已无条件摘除该标的
+                            # → 正文留下一个与新闻无关的 $ 挂件（刷屏式硬蹭），遥测还漏记。
+                            # `(?![A-Za-z0-9_])` 才是"不接更长的 ASCII 币名"的正确断言，
+                            # 且不误伤 $PEPECOIN 这类更长标的。
+                            content = re.sub(r"\$" + re.escape(t) + r"(?![A-Za-z0-9_])", t,
                                              content, flags=re.IGNORECASE)
                             merged.remove(t)
                         logger.info(f"去散射：剥离与本条新闻无关的标的 {extras}，保留 {merged}")
@@ -3464,8 +3626,9 @@ class MultiLLMEngine:
                     primary_token = valid_tokens[0]
                     content += f"\n\n#Write2Earn #BinanceSquare #{primary_token}"
 
-                # 成功即清除该提供商的失败计数与跨运行熔断
+                # 成功即清除该提供商的失败计数（通道 + 质量）与跨运行熔断
                 self._fail_counts.pop(provider.name, None)
+                self._quality_fails().pop(provider.name, None)
                 self._breaker_record_success(provider.name)
                 logger.info(f"🎉 模型 [{provider.name}] 生成成功！(识别标的: {valid_tokens})"
                             f" | 耗时 {latency_sec}s / tokens {tokens_used or '?'}"
@@ -3475,8 +3638,11 @@ class MultiLLMEngine:
                         "persona": persona["name"], "title": article_title}
 
             except _QualityGateRejection as e:
-                # 内容跑偏是模型质量问题，换一个模型重试；但不计入跨运行断路器
-                self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
+                # 内容跑偏是模型质量问题，换一个模型重试；既不计入跨运行断路器，
+                # 也不占用**通道**失败计数（否则两次质量拒稿 + 一次空回就会把一个
+                # 健康的通道推进 4h 冷却）。只记在质量计数里参与运行内让位（R6）。
+                quality_fails = self._quality_fails()
+                quality_fails[provider.name] = quality_fails.get(provider.name, 0) + 1
                 logger.warning(f"提供商 [{provider.name}] 质量门拦截: {e}")
                 fail_reason = f"质量门: {e}"
                 enter_breaker = False
@@ -3550,27 +3716,53 @@ def _past_date_refs(text: str, now: Optional[datetime] = None) -> List[str]:
     当前日历日则无条件命中——生产实录 guidance（last_updated=09-13T22:48Z）
     写着「KGST…今日（2026-09-13）截止」，在 09-14 的 12h 新鲜窗内仍被
     当作有效指导注入，而 36h 阈值要到 09-14 12:00Z 才开始标记，留下
-    ~11h 的「新鲜但日期已翻篇」漏洞。"""
+    ~11h 的「新鲜但日期已翻篇」漏洞。
+
+    R7 修三处口径（均有实测复现）：
+    ① 无年份的 `M月D日` / `M/D` 旧实现硬套 `now.year`：1 月看「12月31日」
+       会被算成未来而**漏判**（该日期其实已过去）；12 月看「1月5日」会被算成
+       11 个月前的旧闻而**误判**（其实是即将到来）。改为在 now.year-1/+1 中取
+       离今天最近的那一年。
+    ② 阈值用 36h 算术，导致同一份文本在 UTC 12:00 前后结论不同（「昨天」的引用
+       上午不报、下午报）。改为按**日历日**比较：只标记早于「昨天」的日期，
+       与 docstring 声明的意图一致，且与时刻无关。
+    ③ 命中项统一返回原文片段（此前两条路径分别返回 group(0) 与裸日期串）。"""
     now = now or datetime.now(timezone.utc)
     text = text or ""
+    today = now.date()
     refs: List[str] = []
+
+    def _resolve_year(month: int, day: int) -> Optional[date]:
+        """无年份日期：在 now.year±1 中取离今天最近的合法日期（跨年边界）"""
+        best: Optional[date] = None
+        for year in (now.year - 1, now.year, now.year + 1):
+            try:
+                cand = date(year, month, day)
+            except ValueError:
+                continue
+            if best is None or abs((cand - today).days) < abs((best - today).days):
+                best = cand
+        return best
+
     for m in re.finditer(
             r"(\d{4})-(\d{1,2})-(\d{1,2})"
             r"|(\d{1,2})月(\d{1,2})日"
             r"|(?<![/\d])(\d{1,2})/(\d{1,2})(?![/\d])", text):
-        try:
-            if m.group(1):
-                d = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)),
-                             tzinfo=timezone.utc)
-            elif m.group(4):
-                d = datetime(now.year, int(m.group(4)), int(m.group(5)),
-                             tzinfo=timezone.utc)
-            else:
-                d = datetime(now.year, int(m.group(6)), int(m.group(7)),
-                             tzinfo=timezone.utc)
-        except (ValueError, TypeError):
-            continue
-        if (now - d).total_seconds() > 36 * 3600:
+        if m.group(1):
+            try:
+                d = date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            except (ValueError, TypeError):
+                continue
+        else:
+            try:
+                month = int(m.group(4) or m.group(6))
+                day = int(m.group(5) or m.group(7))
+            except (ValueError, TypeError):
+                continue
+            d = _resolve_year(month, day)
+            if d is None:
+                continue  # 非法日期（9/31、2月30日）静默跳过
+        if d < today - timedelta(days=1):
             refs.append(m.group(0))
     # 「今日（date）」「今日 date」自称今天却不是今天 → 立即命中（不受 36h 保护）。
     # R184：补空格形式——生产 guidance 实录「今日 2026-09-15 截止」（09-15T03:44Z
@@ -3878,6 +4070,7 @@ class CampaignScanner:
 
         logger.info("活动情报已过期或不存在，正在重新扫描币安官方活动...")
 
+
         # 刷新失败退避：上次分析失败后 2 小时内不再重试（避免付费 LLM 每 20 分钟被白烧一次）
         fail_state = intel_state_get("_intel_refresh_fail", {}) or {}
         cooldown_until = str(fail_state.get("cooldown_until", "") or "")
@@ -3976,7 +4169,13 @@ class ImageManager:
         SSRF 防护：配图 URL 来自外部 RSS（不可信输入），恶意源可投喂
         云元数据端点（169.254.169.254）/ 内网地址 / file:// 等，download_image
         会无防护拉取。只放行 http(s) 且解析结果为公网地址的目标。
-        注意必须做 DNS 解析后校验 IP——域名可以解析到内网（DNS rebinding 变体）。
+
+        **已知残余风险（R7 如实标注，未在此层关闭）**：本函数解析一次、随后
+        requests 在发请求时**再独立解析一次**，TTL=0 的攻击域可在两次解析之间
+        翻到内网（DNS rebinding）。彻底关闭需要把校验出的 IP 钉到连接层
+        （自定义 resolver / 固定 IP 直连 + SNI 保留），属独立的网络层改造，
+        此处不做——但也不再声称已防住 rebinding。当前实际收窄的攻击面：
+        重定向逐跳复检（download_image）+ IPv4-mapped IPv6 归一 + 私网/保留段全拒。
         """
         try:
             from urllib.parse import urlparse
@@ -4004,6 +4203,13 @@ class ImageManager:
             # 否则代理环境下所有配图域名全灭（实测踩过：private=True 导致全拒）。
             fake_ip_net = ipaddress.ip_network("198.18.0.0/15")
             for ip in hosts:
+                # IPv4-mapped IPv6（::ffff:10.0.0.1）必须先归一成 IPv4 再判：
+                # 旧实现里 `ip in IPv4Network` 对 IPv6 实例恒为 False，而
+                # is_loopback/link_local/reserved 对映射地址也不成立，于是
+                # http://[::ffff:10.0.0.1]/ 与 http://[::ffff:192.168.1.1]/
+                # 双双被放行（实测确认）——这是绕过私网判定的完整通路。
+                if getattr(ip, "ipv4_mapped", None) is not None:
+                    ip = ip.ipv4_mapped
                 if ip in fake_ip_net:
                     continue  # 代理 fake-ip：由隧道出公网，无 SSRF 面
                 if (ip.is_loopback or ip.is_link_local or ip.is_multicast
@@ -4017,6 +4223,11 @@ class ImageManager:
                             ipaddress.ip_network("100.64.0.0/10")):
                     if ip in net:
                         return False
+                # 兜底：is_private 还覆盖 0.0.0.0/8、192.0.0.0/24、192.0.2.0/24、
+                # 198.51.100.0/24、203.0.113.0/24、240.0.0.0/4、fc00::/7 等未逐一
+                # 枚举的段。放在显式网段之后，fake-ip 已 continue 不会被误伤。
+                if ip.is_private:
+                    return False
             return True
         except Exception:
             return False
@@ -4026,6 +4237,95 @@ class ImageManager:
     CARD_LAYOUTS = ("split", "banner", "minimal")
     # 卡片标题轮换：同一情绪基调下换不同英文眼钩（配合布局/配色随机，图不重样）
     CARD_HEADLINES = ("MARKET PULSE", "DAILY HOTSPOTS", "ON-CHAIN WATCH", "TODAY'S MOVE")
+
+    # R8：卡片字体候选。绝对路径优先——Linux 上 PIL 的按名搜索不覆盖
+    # /usr/share/fonts/opentype/noto（fonts-noto-cjk 的安装位），只给裸文件名会找不到。
+    _CARD_FONT_CANDIDATES = (
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/System/Library/Fonts/PingFang.ttc",
+        "C:/Windows/Fonts/msyh.ttc",
+        "C:/Windows/Fonts/msyhbd.ttc",
+        "msyh.ttc", "msyhbd.ttc", "PingFang.ttc",
+        "NotoSansCJK-Regular.ttc", "DejaVuSans.ttf",
+    )
+    # 粗体优先候选（独立成类属性，便于测试把候选清空来模拟"CI 无字体"）
+    _CARD_FONT_BOLD = (
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+        "C:/Windows/Fonts/msyhbd.ttc", "msyhbd.ttc",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    )
+    # 情绪词 → 英文：FNG 接口的 value_classification 是英文，但 get_fear_and_greed
+    # 的兜底默认值是中文"中立"，且 prompt 语境下中文更自然——故在**渲染入口**转换，
+    # 而不是去改上游返回值。
+    _CARD_ASCII_MAP = (
+        ("极度贪婪", "Extreme Greed"), ("极度恐惧", "Extreme Fear"),
+        ("贪婪", "Greed"), ("恐惧", "Fear"), ("中立", "Neutral"),
+    )
+    _card_font_status: Optional[str] = None   # 最近一次解析到的字体（供健康自检暴露）
+    _card_font_warned = False
+    _card_cjk_stripped_warned = False
+
+    @classmethod
+    def _card_font(cls, size: int, bold: bool = False):
+        """卡片渲染字体：显式路径优先，全失败回落 Pillow 默认位图字体并**告警一次**。
+
+        R8：CI runner（ubuntu-latest）**不安装任何 CJK 字体**——已核实官方镜像的
+        字体包只有 fonts-noto-color-emoji。旧实现在两个渲染函数里各写了一份静默
+        `load_default()` 兜底，卡片上的中文（"热点标的"/"今日情绪"/FNG 兜底的"中立"）
+        一直是方框，且没有任何日志。现在：① 解析结果记到 `_card_font_status` 供健康
+        自检暴露；② 找不到 TTF 时明确告警。真正的 CJK 保障见 `_card_safe_text`。
+        """
+        from PIL import ImageFont
+        order: List[str] = list(cls._CARD_FONT_BOLD) if bold else []
+        order += list(cls._CARD_FONT_CANDIDATES)
+        for name in order:
+            try:
+                f = ImageFont.truetype(name, size)
+                cls._card_font_status = name
+                return f
+            except Exception:
+                continue
+        cls._card_font_status = "default-bitmap"
+        if not cls._card_font_warned:
+            cls._card_font_warned = True
+            logger.warning("卡片渲染未找到任何 TTF 字体，已回落 Pillow 内置字体："
+                           "非 ASCII 文本会显示为方框。卡片文本已做 ASCII 化；"
+                           "如需在图上标注中文，请在 CI 安装 fonts-noto-cjk。")
+        # Pillow ≥10.1 的 load_default(size) 会按尺寸加载内置字体；老版本只接受无参
+        # 调用（返回 11px 位图字体，52px 标题会被画成极小一行）。无字体环境下
+        # 这一行决定了卡片"难看但可读"还是"彻底不成形"。
+        try:
+            return ImageFont.load_default(size)
+        except Exception:
+            # 连内置字体都加载失败也要给出一个可用对象——否则异常会穿透到
+            # render_* 的 except，卡片直接返回 None（整条配图链路降级）。
+            return ImageFont.load_default()
+
+    @classmethod
+    def _card_safe_text(cls, text: str) -> str:
+        """把卡片文本规整为 ASCII（情绪词先映射成英文，其余非 ASCII 剔除）。
+
+        R8：这是"CI 无 CJK 字体"的**根本解法**——不赌运行环境装没装中文字体，
+        而是保证图上根本不出现需要 CJK 字形的字符。卡片是装饰性图文，英文字标是
+        加密社区通用形态（卡片标题/页脚本来就是英文）。
+        若确有中文被剔除，告警一次——让"有人往卡片里加中文"这件事可见，
+        而不是又变回静默的方框图。"""
+        if not text:
+            return ""
+        out = str(text)
+        for zh, en in cls._CARD_ASCII_MAP:
+            out = out.replace(zh, en)
+        stripped = "".join(ch for ch in out if ord(ch) < 128)
+        if stripped != out and not cls._card_cjk_stripped_warned:
+            cls._card_cjk_stripped_warned = True
+            logger.warning(f"卡片文本含非 ASCII 字符，已剔除（CI 无 CJK 字体，留着会渲染成方框）: "
+                           f"{out!r} -> {stripped!r}")
+        # 剔除中文后可能留下空括号/多余空白，折叠一下
+        return re.sub(r"\s{2,}", " ", stripped).strip()
 
     @classmethod
     def render_market_card(cls, token_lines: List[str], fng_text: str = "",
@@ -4042,14 +4342,19 @@ class ImageManager:
         try:
             from PIL import ImageDraw, ImageFont
             W, H = 1200, 675
-            fng_val = 50
+            # R8：卡片上只出现 ASCII（CI 无 CJK 字体，中文必成方框）
+            token_lines = [cls._card_safe_text(ln) for ln in (token_lines or [])]
+            token_lines = [ln for ln in token_lines if ln]
+            fng_text = cls._card_safe_text(fng_text)
+            headline = cls._card_safe_text(headline)
+            # R9：拿不到真实读数时不编造数字。fng_text 为"未知"（或任何不含数字
+            # 的串）时 fng_val=None，卡片画 "--" 而不是默认的 50。
             m = re.search(r"(\d+)", fng_text or "")
-            if m:
-                fng_val = int(m.group(1))
+            fng_val = int(m.group(1)) if m else None
 
-            if fng_val >= 60:
+            if fng_val is not None and fng_val >= 60:
                 bg, accent, tag = (40, 22, 30), (255, 92, 92), "GREED ZONE"
-            elif fng_val <= 40:
+            elif fng_val is not None and fng_val <= 40:
                 bg, accent, tag = (16, 36, 30), (0, 220, 130), "FEAR ZONE"
             else:
                 bg, accent, tag = (18, 24, 38), (80, 160, 255), "NEUTRAL"
@@ -4075,20 +4380,13 @@ class ImageManager:
                 tone = tuple(min(255, int(c * (1 + 0.18 * (1 - ratio)))) for c in bg)
                 d.line([(0, y), (W, y)], fill=tone)
 
-            def _font(size: int, bold: bool = False):
-                # 字体跨平台兜底：Windows(msyh) / macOS(PingFang) / Linux(DejaVu) 逐个尝试，
-                # 全失败则用默认位图字体（中文可能缺字形，但不会崩）
-                for name in (("msyhbd.ttc", "msyh.ttc") if bold else ("msyh.ttc",),
-                             "PingFang.ttc", "NotoSansCJK-Regular.ttc", "DejaVuSans.ttf"):
-                    try:
-                        return ImageFont.truetype(name, size)
-                    except Exception:
-                        continue
-                return ImageFont.load_default()
+            # 字体解析统一走 _card_font（R8 前这里与 render_chart_card 各有一份副本）
+            _font = cls._card_font
 
             f_head, f_tag, f_tok, f_small = _font(52, True), _font(26, True), _font(40, True), _font(24)
             d.text((60, 50), headline, font=f_head, fill=accent)
-            d.text((60, 122), f"{tag} · Fear&Greed {fng_val}/100", font=f_tag, fill=(200, 205, 215))
+            fng_label = f"{fng_val}/100" if fng_val is not None else "--"
+            d.text((60, 122), f"{tag} | Fear&Greed {fng_label}", font=f_tag, fill=(200, 205, 215))
             d.rectangle([60, 170, W - 60, 174], fill=accent)
 
             if layout == "bars" and rows:
@@ -4114,22 +4412,24 @@ class ImageManager:
                     y += 130
             elif layout == "split":
                 d.rounded_rectangle([60, 210, 560, H - 60], radius=20, fill=(24, 30, 44))
-                d.text((92, 240), "热点标的", font=f_tag, fill=accent)
+                d.text((92, 240), "TOP MOVERS", font=f_tag, fill=accent)
                 ty = 300
                 for line in token_lines[:4]:
                     d.text((92, ty), line, font=_font(34), fill=(235, 238, 245))
                     ty += 62
-                d.text((620, 260), "今日情绪", font=f_tag, fill=accent)
-                d.text((620, 320), f"{fng_val}", font=_font(110, True), fill=(235, 238, 245))
+                d.text((620, 260), "SENTIMENT", font=f_tag, fill=accent)
+                d.text((620, 320), f"{fng_val}" if fng_val is not None else "--",
+                       font=_font(110, True), fill=(235, 238, 245))
                 d.text((620, 460), fng_text, font=f_small, fill=(160, 168, 180))
             else:  # minimal
-                d.text((60, 230), " · ".join(token_lines[:3]) or "MARKET WATCH", font=f_tok, fill=(235, 238, 245))
+                d.text((60, 230), " | ".join(token_lines[:3]) or "MARKET WATCH", font=f_tok, fill=(235, 238, 245))
                 d.text((60, H - 130), fng_text, font=f_small, fill=(160, 168, 180))
             d.text((60, H - 70), "DATA: BINANCE SPOT 24H TICKER", font=ImageFont.load_default(), fill=(110, 116, 128))
 
             buf = io.BytesIO()
             img.save(buf, format="JPEG", quality=90)
-            logger.info(f"市场情绪卡已生成: layout={layout} fng={fng_val} rows={len(rows)} tokens={len(token_lines or [])}")
+            logger.info(f"市场情绪卡已生成: layout={layout} fng={fng_val if fng_val is not None else 'unknown'} "
+                        f"rows={len(rows)} tokens={len(token_lines or [])}")
             return buf.getvalue(), "cover.jpg", "image/jpeg"
         except Exception as e:
             logger.warning(f"情绪卡渲染失败（走 FNG 兜底）: {e}")
@@ -4149,6 +4449,9 @@ class ImageManager:
             from PIL import ImageDraw, ImageFont
             if len(closes) < 12:
                 return None
+            # R8：卡片上只出现 ASCII（CI 无 CJK 字体，中文必成方框）
+            fng_text = cls._card_safe_text(fng_text)
+            symbol = cls._card_safe_text(symbol)
             W, H = 1200, 675
             up = closes[-1] >= closes[0]
             accent = (0, 220, 130) if up else (255, 92, 92)
@@ -4161,14 +4464,8 @@ class ImageManager:
                 tone = tuple(min(255, int(c * (1 + 0.15 * (1 - ratio)))) for c in bg)
                 d.line([(0, y), (W, y)], fill=tone)
 
-            def _font(size: int, bold: bool = False):
-                for name in (("msyhbd.ttc", "msyh.ttc") if bold else ("msyh.ttc",),
-                             "PingFang.ttc", "NotoSansCJK-Regular.ttc", "DejaVuSans.ttf"):
-                    try:
-                        return ImageFont.truetype(name, size)
-                    except Exception:
-                        continue
-                return ImageFont.load_default()
+            # 字体解析统一走 _card_font（R8 前这里与 render_market_card 各有一份副本）
+            _font = cls._card_font
 
             sym = symbol.replace("$", "").upper()
             lo, hi = min(closes), max(closes)
@@ -4196,11 +4493,11 @@ class ImageManager:
             chg_str = f"{'+' if chg >= 0 else ''}{chg:.2f}%"
 
             f_head, f_price, f_chg, f_small = _font(48, True), _font(64, True), _font(48, True), _font(24)
-            d.text((60, 46), f"${sym} · 48H", font=f_head, fill=accent)
+            d.text((60, 46), f"${sym} | 48H", font=f_head, fill=accent)
             d.text((60, 118), price_str, font=f_price, fill=(240, 242, 248))
             d.text((470, 128), chg_str, font=f_chg, fill=accent)
             d.rectangle([60, 212, W - 60, 216], fill=accent)
-            foot = " · ".join(x for x in (fng_text, "DATA: BINANCE SPOT 1H KLINE") if x)
+            foot = " | ".join(x for x in (fng_text, "DATA: BINANCE SPOT 1H KLINE") if x)
             d.text((60, H - 66), foot, font=f_small, fill=(120, 128, 140))
 
             buf = io.BytesIO()
@@ -4281,6 +4578,9 @@ class ImageManager:
                 return None
 
             ctype = (r.headers.get("Content-Type", "") or "").split(";")[0].strip().lower()
+            # 头部只做廉价前置拒绝：真正的内容门是下面的 PIL 解码（见 R7 注释）。
+            # application/octet-stream / 缺失都放行到这里——不少图床不带正确类型，
+            # 而"字节能不能解码成图片"才是可信判据。
             if ctype and not (ctype.startswith("image/") or ctype == "application/octet-stream"):
                 logger.warning(f"配图 Content-Type 非图片 ({ctype})，跳过")
                 return None
@@ -4309,25 +4609,32 @@ class ImageManager:
             if len(content) <= 1024:
                 return None
 
-            # 使用 Pillow 将任意格式（WebP, PNG, AVIF, GIF 等）标准化转换为高质量 JPEG
+            # 使用 Pillow 将任意格式（WebP, PNG, AVIF, GIF 等）标准化转换为高质量 JPEG。
+            # R7：这一段同时是**内容可信门**——只有能解码成图片的字节才会被放行。
             try:
-                raw_img = Image.open(io.BytesIO(content))
-                if raw_img.mode != "RGB":
-                    raw_img = raw_img.convert("RGB")
-
-                # 适当等比缩放超大图片，极大提升网络传输与币安处理速度
-                if raw_img.width > 1920 or raw_img.height > 1080:
-                    raw_img.thumbnail((1920, 1080), Image.Resampling.LANCZOS)
-
-                buf = io.BytesIO()
-                raw_img.save(buf, format="JPEG", quality=88, optimize=True)
+                with Image.open(io.BytesIO(content)) as src:
+                    img = src if src.mode == "RGB" else src.convert("RGB")
+                    try:
+                        # 适当等比缩放超大图片，极大提升网络传输与币安处理速度
+                        if img.width > 1920 or img.height > 1080:
+                            img.thumbnail((1920, 1080), Image.Resampling.LANCZOS)
+                        buf = io.BytesIO()
+                        img.save(buf, format="JPEG", quality=88, optimize=True)
+                    finally:
+                        # convert() 返回的是新图像对象，必须显式释放（原图由 with 关闭）
+                        if img is not src:
+                            img.close()
                 jpeg_bytes = buf.getvalue()
                 logger.info(f"图片下载并标准化为 JPEG 成功: 原始 {len(content)} 字节 -> 转码 {len(jpeg_bytes)} 字节")
                 return jpeg_bytes, "cover.jpg", "image/jpeg"
             except Exception as conv_e:
-                logger.warning(f"PIL 转码异常，回退使用原始数据: {conv_e}")
-                # 如实标注原始类型：此前硬标 image/jpeg，SVG 等非 JPEG 会以错误类型进 S3
-                return content, "cover.jpg", ctype or "image/jpeg"
+                # R7：解码失败一律**丢弃**，绝不回退原始字节。
+                # 旧实现 `return content, "cover.jpg", ctype or "image/jpeg"` 会把
+                # RSS 可控 URL 返回的任意字节（SVG/脚本/二进制垃圾）原样托管到币安
+                # CDN 并随帖发布，同时让"全格式统一转码标准 JPEG"的承诺落空。
+                # 丢弃后 prepare_and_upload 会自动改用情绪卡兜底，代价只是换一张图。
+                logger.warning(f"配图无法解码为图片，已丢弃（将改用兜底图）: {conv_e}")
+                return None
         except Exception as e:
             logger.warning(f"下载配图失败 ({image_url}): {e}")
             return None
@@ -4478,7 +4785,12 @@ class ImageManager:
                         return hosted_url
                     fail_stage = "upload_failed"
                     break  # 走势卡上传失败不连续换标的重试（S3 故障时换图也没用）
-            if not hosted_url:
+            # R8：上面那句"换图也没用"此前只约束了标的循环，紧接着仍会渲染情绪卡
+            # 并**再上传一次**——代码与自己的注释矛盾。上传失败 = S3/凭证问题，
+            # 换一张图同样传不上去，白烧一次渲染 + 一次注定失败的请求。
+            if not hosted_url and fail_stage == "upload_failed":
+                logger.info("走势卡上传失败（疑似 S3/凭证问题），跳过情绪卡的渲染与二次上传，直接走外链兜底。")
+            elif not hosted_url:
                 card = cls.render_market_card(token_lines, fng_text)
                 if card:
                     hosted_url = cls.upload_to_binance(api_key, card[0], card[1], card[2])
@@ -4670,8 +4982,56 @@ class SquarePublisher(BasePublisher):
         "ETF", "SEC", "FED", "CEO", "NFT", "AI", "USD", "USDT", "USDC",
         "CEX", "DEX", "API", "CAGR", "APR", "APY", "ATH", "BAPI", "NEWS", "MEME"
     ]
+    # 平台正文字数上限（R9 起按模式区分）：
+    # - 短讯 900：移动端展示保护，同时给 TG caption（1024）留余量
+    # - 长文 2500：与 MultiLLMEngine._parse_article 的 2500 门槛对齐
+    # 此前两者共用一个 900 硬编码，导致通过长文门（≤2500）的稿子在发布时被
+    # 腰斩到 850 以内，甚至只剩一行 TITLE（见 _truncate_at_boundary 的注释）。
+    SHORT_FORM_MAX_CHARS = 900
+    LONG_FORM_MAX_CHARS = 2500
+    # 挂件/活动标签会在净化之后追加，净化时预留这段余量，避免"净化刚好卡上限、
+    # 追加后越界"（R9）
+    _APPEND_HEADROOM = 80
+
+    @staticmethod
+    def _truncate_at_boundary(text: str, limit: int) -> str:
+        """把文本截到 limit 以内，尽量落在换行/句末边界上。
+
+        R9：旧实现是 `content[:850].rsplit("\\n", 1)[0]`——当正文是一整段、前 850 字里
+        没有换行时，"最后一个换行之前的内容"就是**首行**；长文首行恰好是 TITLE 行，
+        于是整篇正文被丢掉，只剩一行标题（实测 1380 字长文 → 43 字）。
+        现在只在尾部 30% 内找边界，找不到就硬截，任何情况下都不会砍掉大半内容。
+        """
+        if len(text) <= limit:
+            return text
+        head = text[:limit]
+        floor = int(limit * 0.7)
+        for sep in ("\n", "。", "！", "？", "，"):
+            idx = head.rfind(sep)
+            if idx >= floor:
+                return head[:idx].rstrip()
+        return head.rstrip()
+
     @classmethod
-    def _sanitize_content(cls, content: str) -> str:
+    def _enforce_max_chars(cls, content: str, max_chars: int) -> str:
+        """把内容压到 max_chars 以内，并**保住末尾的标签行**。
+
+        #Write2Earn / #BinanceSquare 是创作激励返佣的归因依据，被截掉等于白发，
+        所以优先压缩正文、标签行整体保留；只有确实没有独立标签行时才按边界截断
+        （并按旧契约清掉截断处残留的半截标签，交给后续步骤重补）。"""
+        if len(content) <= max_chars:
+            return content
+        body, sep, tail = content.rpartition("\n")
+        tail_stripped = tail.strip()
+        if sep and tail_stripped.startswith("#") and len(tail_stripped) < max_chars // 3:
+            room = max(0, max_chars - len(tail_stripped) - 1)
+            trimmed = cls._truncate_at_boundary(body, room) if room else ""
+            return f"{trimmed}\n{tail_stripped}" if trimmed else tail_stripped
+        trimmed = cls._truncate_at_boundary(content, max_chars)
+        return re.sub(r"#[^\s#]+", "", trimmed).strip()
+
+    @classmethod
+    def _sanitize_content(cls, content: str, max_chars: int = None) -> str:
         """
         全自动化内容精细清洗与合规保障：
         0. NFKC 全角归一（R32 手写 ＃＄％ 三字符的子集升级）：全角字母数字
@@ -4681,11 +5041,18 @@ class SquarePublisher(BasePublisher):
         2. 剔除生硬破折号“——”
         3. 敏感词/高危违规词自动安全替换（防止触发币安 20002/20022 审核拦截）
         4. 严格限制全篇最多 3 个 Hashtag（杜绝 220094 错误）
-        5. 超长截断保护（确保在 900 字以内）
+        5. 超长截断保护（短讯 900 / 长文 2500，见 SHORT_FORM_MAX_CHARS）
+
+        max_chars 为 None 时按短讯上限处理；长文模式由调用方显式传
+        LONG_FORM_MAX_CHARS（R9：此前两者共用 900，长文必被腰斩）。
         """
         # 0. 全角符号归一（常见 LLM 输出中 “＃” “＄” “％” 等会破坏下游正则识别，
         #    全角字母数字同理：$ＢＴＣ 必须先变 $BTC，否则挂件识别与金额保护全 miss）
         content = unicodedata.normalize("NFKC", content)
+        # 0.1 零宽字符清除（R9）：U+200B/U+200C/U+200D/U+FEFF 不在 NFKC 的归一范围内，
+        # 但能插在敏感词/标签/`$TOKEN` 中间把下游所有正则拆开——既绕过敏感词替换，
+        # 又让标签计数与挂件识别失效。属于"看不见但能改变语义"的字符，直接删。
+        content = re.sub(r"[\u200b\u200c\u200d\ufeff]", "", content)
 
         # 0.5 输出洁净度：推理模型的 <think> 思考块 / Markdown 痕迹 / 客套开场白在纯文本广场全是噪音
         content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL | re.IGNORECASE)  # 思考链
@@ -4741,11 +5108,14 @@ class SquarePublisher(BasePublisher):
         for bad_kw, safe_kw in risky_words.items():
             content = content.replace(bad_kw, safe_kw)
 
-        # 4. 长度保护先行（移动端短讯保护）：只截断不清标签——截断会打乱标签位置，
-        #    在此处补标签可能与残留叠加超限（币安 220094）。截断后前缀里的残留标签
-        #    一并清除（位置已乱且第 6 步会重补，留着只会挤占名额）。
-        if len(content) > 900:
-            content = re.sub(r"#[^\s#]+", "", content[:850].rsplit("\n", 1)[0]).strip()
+        # 4. 长度保护先行：按模式取上限，并预留追加余量（挂件/活动标签在第 6 步之后
+        #    还会追加，卡着上限净化会让追加后的正文越界）。截断走 _enforce_max_chars：
+        #    保住末尾标签行，只在没有独立标签行时才清掉截断处残留的半截标签
+        #    （位置已乱且第 6 步会重补）。
+        limit = max_chars or cls.SHORT_FORM_MAX_CHARS
+        budget = max(200, limit - cls._APPEND_HEADROOM)
+        if len(content) > budget:
+            content = cls._enforce_max_chars(content, budget)
 
         # 5. Hashtag 上限 3 个：#Write2Earn/#BinanceSquare 保底优先保留（Write to Earn
         #    收益归因就靠它们；此前纯位置优先，模型自带 3 个标签时会把保底全切掉），
@@ -4777,8 +5147,18 @@ class SquarePublisher(BasePublisher):
         for mandatory in ("#Write2Earn", "#BinanceSquare"):
             tags_now = list(re.finditer(r"#[^\s#]+", content))
             have = {mm.group(0)[1:].lower() for mm in tags_now}
-            if mandatory[1:].lower() in have or len(tags_now) >= 3:
+            if mandatory[1:].lower() in have:
                 continue
+            if len(tags_now) >= 3:
+                # R9：名额不够时**挤掉一个非保底标签**，而不是放弃保底。
+                # 旧实现"满 3 个就 continue"让保底变成顺序相关：模型自带 2 个自定义
+                # 标签时补进 #Write2Earn 后名额用尽，#BinanceSquare 被静默丢掉——
+                # 而两者都是创作激励返佣的归因依据。按字符位置精确脱壳 #，与第 5 步同规则。
+                victim = next((mm for mm in reversed(tags_now)
+                               if mm.group(0)[1:].lower() not in ("write2earn", "binancesquare")), None)
+                if victim is None:
+                    continue
+                content = content[:victim.start()] + victim.group(0)[1:] + content[victim.end():]
             content = content.rstrip() + f" {mandatory}"
 
         return content.strip()
@@ -4876,8 +5256,11 @@ class SquarePublisher(BasePublisher):
             self.last_error = "未配置 SQUARE_API_KEY，无法发布到币安广场！"
             return False
 
-        # 严格清洗合规 + 代币名织挂件 + 挂件保底 + 活动标签
-        content = self._sanitize_content(content)
+        # 严格清洗合规 + 代币名织挂件 + 挂件保底 + 活动标签。
+        # R9：长度上限按模式区分——长文（title 非空 → contentType=2）用 2500，
+        # 短讯用 900。此前共用 900，凡是通过长文门（≤2500）的稿子都会被腰斩。
+        char_limit = self.LONG_FORM_MAX_CHARS if title else self.SHORT_FORM_MAX_CHARS
+        content = self._sanitize_content(content, max_chars=char_limit)
         content = self._weave_cashtags(content, ensure_tokens)
         content = self._ensure_token_widget(content, ensure_tokens)
         # 回执：全文有效挂件计数。挂件保底保证的是"全文 ≥1 个 $TOKEN"，而
@@ -4885,6 +5268,11 @@ class SquarePublisher(BasePublisher):
         # 看不到 $，不记全文计数就无法区分"截断伪影"与"真实丢挂件"。
         self.last_widget_count = self._count_valid_widgets(content)
         content = self._inject_campaign_tag(content, campaign_intel)
+        # R9：追加挂件/活动标签会突破上限（净化里的预留量只是估算）。这里做最终
+        # 复检，越界时压缩正文、保住标签行——否则平台侧会以 220094 之类的错误拒稿。
+        if len(content) > char_limit:
+            logger.warning(f"追加挂件/标签后超出上限（{len(content)} > {char_limit}），压缩正文并保留标签行")
+            content = self._enforce_max_chars(content, char_limit)
         if len(content) < 15:
             logger.error(f"发帖内容过短 ({len(content)} 字符)，拒绝发布以防被系统封禁")
             return False
@@ -5461,8 +5849,12 @@ class Notifier:
 def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_intel: Dict[str, Any],
                               posted_records: List[Dict[str, Any]], dry_run: bool,
                               timings: Optional[Dict[str, float]] = None,
-                              drafts_count: int = 0):
-    """在 GitHub Actions 运行页输出结构化 Markdown 报告（本地运行时不生效）"""
+                              drafts_count: int = 0,
+                              skipped_reason: Optional[str] = None):
+    """在 GitHub Actions 运行页输出结构化 Markdown 报告（本地运行时不生效）。
+
+    skipped_reason：本轮在**抓取之前**就退出的原因（如配额饱和）。带该参数时不再
+    输出"管线吞吐"行——那时一条新闻都没抓，全零吞吐只会误导（R8）。"""
     summary_path = os.getenv("GITHUB_STEP_SUMMARY", "").strip()
     if not summary_path:
         return
@@ -5472,10 +5864,14 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
             "## 🤖 币安广场自动发帖运行报告",
             "",
             f"- **运行模式**: {'🧪 DRY_RUN 试运行（未真实发帖）' if dry_run else '🚀 正式发布'}",
-            f"- **全网情绪指数**: {fng_index}",
+            f"- **全网情绪指数**: {fng_index or '—'}",
             f"- **当期活动标签**: {', '.join(campaign_intel.get('active_tags', []))}",
-            f"- **管线吞吐**: 扫描 {s['fetched']} 条 → 过滤旧闻 {s['stale']} / 已发 {s['cached']} / 近似重复 {s['near_dup']} → 候选 {s['kept']} 条",
         ]
+        if skipped_reason:
+            lines.append(f"- **本轮跳过**: {skipped_reason}（未进入抓取阶段）")
+        else:
+            lines.append(f"- **管线吞吐**: 扫描 {s['fetched']} 条 → 过滤旧闻 {s['stale']} / "
+                         f"已发 {s['cached']} / 近似重复 {s['near_dup']} → 候选 {s['kept']} 条")
         if feeds_parked := s.get("feeds_parked"):
             lines.append(f"- **停放的源**: {', '.join(feeds_parked)}")
         # 每源产出排行（只列有产出的前 5 名）
@@ -5537,6 +5933,13 @@ def main():
         import traceback
         err_detail = traceback.format_exc()
         logger.critical(f"💥 程序发生未捕获的致命异常: {e}\n{err_detail}")
+        # R8：崩溃路径此前只发通知、不写遥测——"运行轮数"因此漏掉最该被看见的一类轮次。
+        # 这里只记错误摘要，不写 run_elapsed_sec（该变量是 _run_main 的局部量）。
+        try:
+            append_run_summary(fatal=True, error=str(e)[:200],
+                               error_type=type(e).__name__)
+        except Exception:
+            pass
         Notifier.send_notification("币安发帖机器人运行崩溃", f"错误原因: {str(e)}\n\n堆栈详情:\n{err_detail[:600]}", is_error=True)
         sys.exit(1)
 
@@ -5608,6 +6011,28 @@ def run_healthcheck():
             checks.append(("遥测样本", "⚠", f"读取失败: {e}"))
     else:
         checks.append(("遥测样本", "ℹ", "尚无数据（每次投递/拦截自动累积到 metrics.jsonl）"))
+
+    # ---- 2.55 配图卡片字体（R8）----
+    # ubuntu-latest 不装任何 CJK 字体（已核实官方镜像只含 fonts-noto-color-emoji），
+    # 这是"卡片中文变方框"的根因。卡片文本已做 ASCII 化，所以不影响出图质量；
+    # 但字体解析结果值得暴露——运维不必等一张图发出去才发现环境缺字体。
+    try:
+        ImageManager._card_font(24)
+        resolved = ImageManager._card_font_status or "unknown"
+        cjk_capable = any(k in resolved for k in
+                          ("NotoSansCJK", "msyh", "PingFang", "wqy", "Songti",
+                           "SourceHan", "simhei", "simsun"))
+        if cjk_capable:
+            checks.append(("配图卡片字体", "✔", f"{resolved}（含 CJK 字形）"))
+        elif resolved == "default-bitmap":
+            checks.append(("配图卡片字体", "⚠",
+                           "未找到任何 TTF 字体，已回落 Pillow 位图字体；卡片文本已 ASCII 化"
+                           "（不会出现方框），如需在图上标注中文请安装 fonts-noto-cjk"))
+        else:
+            checks.append(("配图卡片字体", "ℹ",
+                           f"{resolved}（无 CJK 字形）；卡片文本已 ASCII 化，不会出现方框"))
+    except Exception as e:
+        checks.append(("配图卡片字体", "⚠", f"字体探测异常: {e}"))
 
     # ---- 2.6 LLM 实弹测试（仅 --llm-live，消耗少量 token）----
     if "--llm-live" in sys.argv and eng is not None and eng.providers:
@@ -5839,14 +6264,10 @@ def _run_main():
         logger.info(f"⏰ 当前不在北京时间活跃窗口 ({ACTIVE_HOURS_BEIJING}) 内，本轮静默退出。")
         # R91：静默退出也留痕——"每个 dispatch 恰好一条 run_summary"的完备性
         # 不变量（否则活跃窗口配置的效果在遥测里不可验证）
-        append_metrics({
-            "outcome": "run_summary",
-            "candidates": 0, "published": 0, "drafts": 0, "unprocessed": 0,
-            "skipped_batch_dup": 0, "skipped_no_token": 0, "skipped_token_limit": 0,
-            "skipped_risk_blocked": 0, "skipped_parked": 0, "skipped_exception": 0,
-            "active_hours_blocked": True,
-            "run_elapsed_sec": round(time.time() - t_run_start, 1),
-        })
+        append_run_summary(
+            active_hours_blocked=True,
+            run_elapsed_sec=round(time.time() - t_run_start, 1),
+        )
         return
 
     logger.info("==================================================")
@@ -5867,6 +6288,10 @@ def _run_main():
     # 1. 生产模式必要参数检查（仅 binance 启用时强制要求 Square Key）
     if not dry_run and "binance" in PUBLISH_PLATFORMS and not square_api_key:
         logger.error("错误: 未配置 SQUARE_API_KEY 环境变量（binance 平台已启用）！")
+        # R8：硬退出也要留痕——否则"每个 dispatch 恰好一条 run_summary"不变量破功，
+        # 报表的运行轮数会系统性少算（此前这条路径一条遥测都不写）
+        append_run_summary(config_error="missing_square_api_key",
+                           run_elapsed_sec=round(time.time() - t_run_start, 1))
         sys.exit(1)
 
     # 2. 初始化核心组件
@@ -5882,6 +6307,8 @@ def _run_main():
     if not dry_run and not llm_engine.providers:
         logger.error("❌ 未配置任何 LLM 提供商（LLM_API_KEY / LLM_PROVIDERS_CONFIG / 各平台 Key 全空）。"
                      "AI 提炼不可能成功，本轮快速失败。请先在仓库 Secrets 配置至少一个模型 Key。")
+        append_run_summary(config_error="no_llm_provider",
+                           run_elapsed_sec=round(time.time() - t_run_start, 1))
         sys.exit(1)
 
     # 2.5 防刷屏配额：24 小时滚动窗口内已发数量达到上限则本轮直接静默退出
@@ -5917,33 +6344,32 @@ def _run_main():
                 logger.info(f"⏳ 下一配额槽释放: {next_frees_iso[11:16]} UTC（约 {next_frees_min} 分钟后）")
             # R91：配额饱和轮留痕（生产实录：12/12 满额后连续多轮静默，遥测完全
             # 不可见）——quota_blocked 计数是"配额是否该调"的决策输入
-            append_metrics({
-                "outcome": "run_summary",
-                "candidates": 0, "published": 0, "drafts": 0, "unprocessed": 0,
-                "skipped_batch_dup": 0, "skipped_no_token": 0, "skipped_token_limit": 0,
-                "skipped_risk_blocked": 0, "skipped_parked": 0, "skipped_exception": 0,
-                "quota_blocked": True,
-                "sent_24h": sent_24h,
-                "max_daily_posts": MAX_DAILY_POSTS,
-                "next_slot_frees": next_frees_iso or None,
-                "next_slot_frees_min": next_frees_min,
+            append_run_summary(
+                quota_blocked=True,
+                sent_24h=sent_24h,
+                max_daily_posts=MAX_DAILY_POSTS,
+                next_slot_frees=next_frees_iso or None,
+                next_slot_frees_min=next_frees_min,
                 # R183：情报刷新在配额检查前（R182），饱和轮也付了 intel 时间——
                 # 不记则 run_elapsed 里的刷新成本无法与「纯短路读缓存」区分
-                "intel_elapsed_sec": round(intel_elapsed, 1),
+                intel_elapsed_sec=round(intel_elapsed, 1),
                 # R195：饱和轮的情报陈旧度——R182 后饱和轮也刷情报，但此前只有
-                # 发帖回执带 age/degraded，80 轮/天的饱和轮对情报状态完全不可见
-                "intel_age_hours": _intel_age_hours(campaign_intel),
-                "intel_degraded": _intel_is_degraded(campaign_intel),
+                intel_age_hours=_intel_age_hours(campaign_intel),
+                intel_degraded=_intel_is_degraded(campaign_intel),
                 # R184：等待后仍饱和 = 追赶失败（如估算偏差/槽未按时释放），
                 # 这笔等待同样是 run_elapsed 的一部分，单列才能对上账
-                "quota_wait_elapsed_sec": round(quota_wait_sec, 1),
-                "run_elapsed_sec": round(time.time() - t_run_start, 1),
-            })
+                quota_wait_elapsed_sec=round(quota_wait_sec, 1),
+                run_elapsed_sec=round(time.time() - t_run_start, 1),
+            )
             # R114：Step Summary 也带估算——Actions 运行页直接可见下一槽时间
             quota_msg = f"配额满跳过抓取（{sent_24h}/{MAX_DAILY_POSTS}）"
             if next_frees_iso:
                 quota_msg += f"，下一槽 {next_frees_iso[:16]} UTC（约 {next_frees_min} 分钟）"
-            write_github_step_summary(NewsFetcher(), quota_msg, campaign_intel, [], dry_run)
+            # R8：此前把 quota_msg 塞进 fng_index 位、并传一个新建的 NewsFetcher()，
+            # 于是报告里显示"全网情绪指数: 配额满跳过抓取（12/12）"与"扫描 0 条"。
+            # 现在用真实的 fetcher + 独立的 skipped_reason 字段。
+            write_github_step_summary(fetcher, "—", campaign_intel, [], dry_run,
+                                      skipped_reason=quota_msg)
             sys.exit(0)
         remaining_quota = MAX_DAILY_POSTS - sent_24h
         if remaining_quota < max_posts:
@@ -5966,25 +6392,15 @@ def _run_main():
     if not candidates:
         # R90：零候选轮同样记 run_summary——否则"没新闻"与"没跑"在遥测里
         # 无法区分（该早退路径此前完全隐形）。字段与主路径同 schema。
-        append_metrics({
-            "outcome": "run_summary",
-            "candidates": 0,
-            "published": 0,
-            "drafts": 0,
-            "unprocessed": 0,
-            "skipped_batch_dup": 0,
-            "skipped_no_token": 0,
-            "skipped_token_limit": 0,
-            "skipped_risk_blocked": 0,
-            "skipped_parked": 0,
-            "skipped_exception": 0,
-            "feeds_ok": fetcher.stats.get("feeds_ok", 0),
-            "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
-            "feeds_parked": len(fetcher.stats.get("feeds_parked", [])),
+        append_run_summary(
+            feeds_ok=fetcher.stats.get("feeds_ok", 0),
+            feeds_failed=len(fetcher.stats.get("feeds_failed", [])),
+            feeds_parked=len(fetcher.stats.get("feeds_parked", [])),
+            feeds_empty=fetcher.stats.get("feeds_empty", 0),
             # R184：追赶等待单列（零候选早退轮同样可能付了这笔等待）
-            "quota_wait_elapsed_sec": round(quota_wait_sec, 1),
-            "run_elapsed_sec": round(time.time() - t_run_start, 1),
-        })
+            quota_wait_elapsed_sec=round(quota_wait_sec, 1),
+            run_elapsed_sec=round(time.time() - t_run_start, 1),
+        )
         # 全源同时故障 = 基建级问题，必须报警而非静默默认"无事发生"
         if fetcher.stats["feeds_failed"] and fetcher.stats["feeds_ok"] == 0 or \
            len(fetcher.stats["feeds_parked"]) == len(RSS_FEEDS):

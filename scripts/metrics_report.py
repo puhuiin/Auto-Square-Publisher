@@ -198,6 +198,12 @@ def _is_delivery_outcome(outcome) -> bool:
     return o.endswith("_delivered") or o.endswith("_delivered_cache_failed")
 
 
+# "真正进入 LLM 尝试"的 outcome 集合。R6 补入 publish_failed：该行是
+# "LLM 生成成功、但投递失败"的留痕，platforms 为空时既不算投递也不算拒稿，
+# 旧口径会把整条故事从分母里漏掉 → 发布全挂也显示 100% 成功率。
+ATTEMPT_OUTCOMES = ("llm_rejected", "llm_failed", "llm_success", "publish_failed")
+
+
 def summarize(rows):
     """聚合成嵌套计数，调用方只读不写"""
     s = {
@@ -365,12 +371,17 @@ def summarize(rows):
             hours_blocked = r.get("active_hours_blocked") is True
             if quota_blocked:
                 runs_tmp["quota_blocked"] += 1
-                # R113：取最近一条配额行的释放估算（行按时间序追加，
-                # 后写的覆盖先写的 = 最新值）
-                if r.get("next_slot_frees"):
-                    runs_tmp["next_slot_frees"] = r["next_slot_frees"]
-                if r.get("next_slot_frees_min") is not None:
+            # R113/R6：配额释放估算取"最近一条带该字段的 run_summary"（行按时间序
+            # 追加，后写覆盖先写 = 最新值）。**不能只在 quota_blocked 行里找**：
+            # R129 之后正常发帖轮也会写该字段，只在配额行里找会让报表长期显示
+            # 一个早已过期的旧估算（正是 R129 要修的问题，读侧当时漏改）。
+            if r.get("next_slot_frees"):
+                runs_tmp["next_slot_frees"] = r["next_slot_frees"]
+            if r.get("next_slot_frees_min") is not None:
+                try:
                     runs_tmp["next_slot_frees_min"] = int(r["next_slot_frees_min"])
+                except (TypeError, ValueError):
+                    pass
             if hours_blocked:
                 runs_tmp["active_hours_blocked"] += 1
             cand = int(_num(r.get("candidates")) or 0)
@@ -442,14 +453,21 @@ def summarize(rows):
     if runs_tmp["elapsed"]:
         s["runs"]["avg_elapsed_sec"] = round(sum(runs_tmp["elapsed"]) / len(runs_tmp["elapsed"]), 1)
         s["runs"]["max_elapsed_sec"] = round(max(runs_tmp["elapsed"]), 1)
-    # R177：拟人 sleep 与 LLM 分段——总耗时 ~370s 的大头是 pacing 不是模型
+        s["runs"]["n_elapsed"] = len(runs_tmp["elapsed"])
+    # R177：拟人 sleep 与 LLM 分段——总耗时 ~370s 的大头是 pacing 不是模型。
+    # R6：各分段样本数必须一起透出——LLM 均值只覆盖"有该字段"的轮次，与
+    # "单轮耗时"（覆盖全部轮次）不是同一批样本，不标样本量会读出
+    # "分段和 > 总量"的假象（实测 平均 29.7s / LLM 52.0s）。
     if runs_tmp["sleep_elapsed"]:
         s["runs"]["avg_sleep_sec"] = round(sum(runs_tmp["sleep_elapsed"]) / len(runs_tmp["sleep_elapsed"]), 1)
         s["runs"]["max_sleep_sec"] = round(max(runs_tmp["sleep_elapsed"]), 1)
+        s["runs"]["n_sleep_sec"] = len(runs_tmp["sleep_elapsed"])
     if runs_tmp["llm_elapsed"]:
         s["runs"]["avg_llm_sec"] = round(sum(runs_tmp["llm_elapsed"]) / len(runs_tmp["llm_elapsed"]), 1)
+        s["runs"]["n_llm_sec"] = len(runs_tmp["llm_elapsed"])
     if runs_tmp["intel_elapsed"]:
         s["runs"]["avg_intel_sec"] = round(sum(runs_tmp["intel_elapsed"]) / len(runs_tmp["intel_elapsed"]), 1)
+        s["runs"]["n_intel_sec"] = len(runs_tmp["intel_elapsed"])
     # R184：追赶等待均值——R177 分段只覆盖 LLM/配图/发布，18:06/18:29 轮
     # 150~270s 的未解释差额实为 R154 等待；报表补这一项后总账可对平
     if runs_tmp["quota_wait_elapsed"]:
@@ -495,18 +513,16 @@ def funnel(rows):
             # 孤儿行退化为行计数
             if is_del:
                 orphan_delivered += 1
-            elif outcome in ("llm_rejected", "llm_failed", "llm_success") \
-                    and r.get("stage") != "campaign_intel":
+            elif outcome in ATTEMPT_OUTCOMES and r.get("stage") != "campaign_intel":
                 orphan_attempted += 1
             continue
         key = (str(r.get("ts", ""))[:10], title)
         if is_del:
             delivered_stories.add(key)
             attempted_stories.add(key)
-        elif outcome in ("llm_rejected", "llm_failed", "llm_success") \
-                and r.get("stage") != "campaign_intel":
+        elif outcome in ATTEMPT_OUTCOMES and r.get("stage") != "campaign_intel":
             attempted_stories.add(key)
-            if outcome in ("llm_rejected", "llm_failed"):
+            if outcome in ("llm_rejected", "llm_failed", "publish_failed"):
                 rejected_stories.add(key)
     delivered = len(delivered_stories) + orphan_delivered
     attempted = len(attempted_stories) + orphan_attempted + orphan_delivered
@@ -582,12 +598,21 @@ def render_text(s, rows=None):
         # R177：分段拆解——拟人 pacing 是总耗时大头，别误读成 LLM 变慢
         if runs.get("avg_sleep_sec") is not None or runs.get("avg_llm_sec") is not None:
             parts = []
-            if runs.get("avg_llm_sec") is not None:
-                parts.append(f"LLM {runs['avg_llm_sec']}s")
-            if runs.get("avg_intel_sec") is not None:
-                parts.append(f"情报 {runs['avg_intel_sec']}s")
-            if runs.get("avg_sleep_sec") is not None:
-                parts.append(f"拟人间隔 {runs['avg_sleep_sec']}s(最长 {runs.get('max_sleep_sec', 0)}s)")
+            n_total = runs.get("n_elapsed") or 0
+
+            def _seg(label, val, n, extra=""):
+                """分段均值 + 样本量。样本数少于总轮数时标注，避免与"单轮耗时"误比。"""
+                if val is None:
+                    return None
+                tag = f"(样本 {n} 轮)" if n and n_total and n < n_total else ""
+                return f"{label} {val}s{extra}{tag}"
+
+            parts = [p for p in (
+                _seg("LLM", runs.get("avg_llm_sec"), runs.get("n_llm_sec")),
+                _seg("情报", runs.get("avg_intel_sec"), runs.get("n_intel_sec")),
+                _seg("拟人间隔", runs.get("avg_sleep_sec"), runs.get("n_sleep_sec"),
+                     f"(最长 {runs.get('max_sleep_sec', 0)}s)"),
+            ) if p]
             # R184：追赶等待——不列则 run_elapsed 的差额无法归因（R177 漏项）
             if runs.get("avg_quota_wait_sec") is not None:
                 parts.append(f"配额追赶等待 {runs['avg_quota_wait_sec']}s")
@@ -683,9 +708,25 @@ def filter_days(rows, days):
         return None
     if days <= 0:
         return None
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-    return [r for r in rows
-            if isinstance(r.get("ts"), str) and r["ts"] >= cutoff]
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    kept = []
+    for r in rows:
+        raw = r.get("ts")
+        if not isinstance(raw, str):
+            continue
+        # R8：不能拿 ISO 串直接比大小。`append_metrics` 写的是 +00:00，但历史/手写行
+        # 可能是 Z 结尾（'Z' > '+'，字典序恒大于任何 +00:00 行）或别的偏移量——
+        # 前者会让陈旧行永远被判"在窗口内"。按真实时间解析，解析失败的行丢弃
+        # （与"缺 ts 即丢弃"的严格近期视图语义一致）。
+        try:
+            ts = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            continue
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        if ts >= cutoff:
+            kept.append(r)
+    return kept
 
 
 def main(argv=None):

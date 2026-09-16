@@ -104,7 +104,10 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
-          ACTIVE_HOURS_BEIJING: ${{ vars.ACTIVE_HOURS_BEIJING }}
+        # R6：看门狗只报警、绝不能阻塞发帖。旧配置没有 continue-on-error，
+        # 脚本一旦抛错（报警通道不可用等）这一步就失败，而下一步发帖默认
+        # 只在 success() 下执行 → 整轮直接漏发。脚本内也已全程 try 兜底。
+        continue-on-error: true
         run: python scripts/schedule_watchdog.py
 
       - name: 执行自动化发帖脚本 (支持多模型故障转移)
@@ -176,6 +179,7 @@ jobs:
           python main.py
 
       - name: 回写状态并提交 Git 变更 (快照并集合并 - 零冲突)
+        id: state
         # 主脚本非零退出（全源故障 exit 1 / 未捕获崩溃 / 超时被杀）时仍要同步：
         # 本轮已产生的发帖记录与断路器状态不落盘就会丢失 → 下轮重复发帖。
         # 无变更时步骤内自行 exit 0，always 不会把成功的运行标红。
@@ -234,7 +238,20 @@ jobs:
             sleep $((i * 2))
           done
 
-          echo "❌ 多次重试后仍推送失败，本次缓存仅保留在运行沙箱中，下次运行会自动兜底。"
+          # R9：旧文案说"下次运行会自动兜底"是错的——runner 销毁后沙箱里的记录就没了，
+          # 下一轮看不到这条 id，会把同一内容**再发一遍**。改为：明确报错 + 把快照
+          # 整段转储进运行日志，人工可从日志里恢复（这是不引入新 action 的前提下
+          # 唯一能把"静默丢失"变成"可恢复"的手段）。
+          echo "::error::状态推送连续 4 次失败：本轮已发布记录未能落盘，下一轮会重复发布同一内容。"
+          SIZE=$(wc -c < /tmp/sent_cache.json 2>/dev/null || echo 0)
+          if [ "${SIZE:-0}" -gt 0 ] && [ "${SIZE:-0}" -lt 2000000 ]; then
+            echo "----- 救援快照 sent_cache.json 开始（整段复制可人工恢复）-----"
+            cat /tmp/sent_cache.json
+            echo
+            echo "----- 救援快照结束 -----"
+          else
+            echo "快照过大或不存在（${SIZE:-0} 字节），跳过转储。"
+          fi
           exit 1
 
       - name: 主流程失败兜底通报 (不依赖项目依赖)
@@ -253,4 +270,5 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           INSTALL_RESULT: ${{ steps.install.conclusion }}
           POSTER_RESULT: ${{ steps.poster.conclusion }}
+          STATE_RESULT: ${{ steps.state.conclusion }}
         run: python3 scripts/notify_fallback.py

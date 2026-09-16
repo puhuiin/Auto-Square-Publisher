@@ -225,10 +225,19 @@ def merge_state(a: dict, b: dict) -> dict:
 
 
 def merge_sent_cache(local_snapshot_path: str, remote_path: str) -> int:
-    """并集远端+本地 sent_cache，返回合并后总条数"""
+    """并集远端+本地 sent_cache，返回合并后总条数。
+
+    R9：同一 id 出现两条时取 `sent_at` **较新**的那条。旧实现 `union[id] = item`
+    按遍历顺序（远端在前、本地在后）覆盖，等于"本地快照必胜"——本地若是较早的
+    序列化版本，就会把远端更新的记录顶掉，`count_since` / `token_posts_since`
+    的 24h 窗口随之回退（配额与单币限流都会算错）。
+    """
     union = {}
     for item in load_list(remote_path) + load_list(local_snapshot_path):
-        if isinstance(item, dict) and item.get("id"):
+        if not (isinstance(item, dict) and item.get("id")):
+            continue
+        prev = union.get(item["id"])
+        if prev is None or _sort_key(item.get("sent_at")) >= _sort_key(prev.get("sent_at")):
             union[item["id"]] = item
     merged = sorted(union.values(), key=lambda x: _sort_key(x.get("sent_at")))[-MAX_CACHE_KEEP:]
     atomic_write_text(remote_path, json.dumps(merged, ensure_ascii=False, indent=2))
@@ -272,8 +281,19 @@ def merge_intel(local_snapshot_path: str, remote_path: str) -> bool:
     return True
 
 
+# 与 main.rotate_metrics_if_needed 的默认 keep 必须一致（有同步测试锁定）。
+# 单侧定义会漂移，所以两边都显式声明 + 一条断言两者相等的测试。
+METRICS_MAX_LINES = 5000
+
+
 def merge_metrics(local_snapshot_path: str, remote_path: str) -> int:
-    """JSONL 行级去重并集（追加型遥测，重复行只保留一份），返回合并后行数"""
+    """JSONL 行级去重并集（追加型遥测，重复行只保留一份），返回合并后行数。
+
+    R7：纯并集会把 `main.rotate_metrics_if_needed` 刚裁掉的历史行从**远端复活**
+    ——轮转形同虚设，CI 下文件仍无界增长（实测：本地裁到 3 行，合并后回到 5000 行）。
+    故合并后统一按 METRICS_MAX_LINES 收敛：排序后只保留最新的 N 行。
+    这样"上限"由合并侧兜底保证，不依赖某一侧是否跑过轮转。
+    """
     lines = []
     seen = set()
     for path in (remote_path, local_snapshot_path):
@@ -286,6 +306,9 @@ def merge_metrics(local_snapshot_path: str, remote_path: str) -> int:
         except Exception:
             continue
     lines.sort()  # ts 开头的 JSON 行排序即时间序
+    if METRICS_MAX_LINES > 0 and len(lines) > METRICS_MAX_LINES:
+        # 排序即时间序 → 尾部是最新的 N 行
+        lines = lines[-METRICS_MAX_LINES:]
     atomic_write_text(remote_path, ("\n".join(lines) + "\n") if lines else "")
     return len(lines)
 

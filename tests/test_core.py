@@ -4371,6 +4371,31 @@ class TestSSRFGuard(unittest.TestCase):
         for url, desc in cases:
             self.assertFalse(m.ImageManager._is_safe_image_url(url), f"{desc} 必须被拒: {url}")
 
+    def test_ipv4_mapped_ipv6_cannot_bypass(self):
+        """R7：IPv4-mapped IPv6（::ffff:10.0.0.1）此前整条绕过私网判定——
+        `ip in IPv4Network` 对 IPv6 实例恒 False，loopback/link_local/reserved 对
+        映射地址也不成立，于是内网地址换一层壳就被放行（实测确认）。"""
+        for url, desc in [
+            ("http://[::ffff:10.0.0.1]/x.png", "映射 10/8"),
+            ("http://[::ffff:192.168.1.1]/x.png", "映射 192.168/16"),
+            ("http://[::ffff:169.254.169.254]/x.png", "映射元数据端点"),
+            ("http://[::ffff:172.16.0.9]/x.png", "映射 172.16/12"),
+        ]:
+            self.assertFalse(m.ImageManager._is_safe_image_url(url), f"{desc} 必须被拒: {url}")
+
+    def test_ipv6_private_ranges_blocked(self):
+        """R7：IPv6 ULA（fc00::/7）此前不在任何显式网段里、也不触发 loopback/
+        link_local/reserved，同样被放行。is_private 兜底后一并拦下。"""
+        for url in ("http://[fc00::1]/x.png", "http://[fd12:3456::1]/x.png",
+                    "http://[fe80::1]/x.png", "http://[::1]/x.png"):
+            self.assertFalse(m.ImageManager._is_safe_image_url(url), f"必须被拒: {url}")
+
+    def test_reserved_doc_ranges_blocked(self):
+        """R7：文档保留段（TEST-NET）与保留段一并拒——那里不可能有真实图床"""
+        for url in ("http://203.0.113.9/a.jpg", "http://192.0.2.9/a.jpg",
+                    "http://198.51.100.9/a.jpg", "http://240.0.0.1/a.jpg"):
+            self.assertFalse(m.ImageManager._is_safe_image_url(url), f"必须被拒: {url}")
+
     def test_public_urls_allowed(self):
         # 公网域名（本机代理 fake-ip 解析到 198.18/15 也放行——该段不可路由，出网由代理承担）
         self.assertTrue(m.ImageManager._is_safe_image_url("https://public.bnbstatic.com/img/a.jpg"))
@@ -5001,6 +5026,23 @@ class TestDownloadImageGate(unittest.TestCase):
             "close": lambda self: None,
         })()
 
+    @staticmethod
+    def _real_png(size=(200, 200)):
+        """真实可解码、且体积 > 1024 字节的 PNG。
+
+        R7 起 PIL 解码是配图链路的**内容可信门**（解码失败一律丢弃），所以夹具必须
+        是真图片——旧的 b"\\x89PNG..." 假头在旧实现里靠"回退原始字节"侥幸通过，
+        新口径下会被正确地拒掉。用随机像素而非纯色：纯色 PNG 压缩后只有几百字节，
+        会先被 download_image 的"<1024 字节视为无效图"前置门挡掉。"""
+        import io as _io
+        img = m.Image.frombytes("RGB", size, os.urandom(size[0] * size[1] * 3))
+        try:
+            buf = _io.BytesIO()
+            img.save(buf, format="PNG")
+            return buf.getvalue()
+        finally:
+            img.close()
+
     def test_html_error_page_rejected_early(self):
         # 200 + text/html（WAF 挑战页）此前会一路走到 S3 上传才失败
         page = b"<html><body>challenge</body></html>" * 100
@@ -5012,13 +5054,33 @@ class TestDownloadImageGate(unittest.TestCase):
         with patch.object(m, "http_get", return_value=self._fake_resp(body, "application/json")):
             self.assertIsNone(m.ImageManager.download_image("https://x.example/cover.jpg"))
 
-    def test_pil_fallback_reports_true_content_type(self):
-        # 垃圾字节 + 图片声明：PIL 转码失败时回退原始数据，类型必须如实（此前硬标 image/jpeg）
+    def test_undecodable_bytes_discarded_not_uploaded_raw(self):
+        """R7：PIL 解码失败的字节必须**丢弃**，绝不回退原始数据。
+
+        旧实现 `return content, "cover.jpg", ctype or "image/jpeg"` 会把 RSS 可控
+        URL 返回的任意字节（SVG/脚本/二进制垃圾）原样托管到币安 CDN 并随帖发布，
+        也让"全格式统一转码标准 JPEG"的承诺落空。丢弃后 prepare_and_upload 会
+        自动改用情绪卡兜底，代价只是换一张图。"""
         garbage = bytes(range(256)) * 20
         with patch.object(m, "http_get", return_value=self._fake_resp(garbage, "image/png")):
+            self.assertIsNone(m.ImageManager.download_image("https://x.example/cover.png"))
+
+    def test_decodable_image_reencoded_to_jpeg(self):
+        """内容门不得误伤合法路径：真图片照常放行并统一转码为 JPEG"""
+        with patch.object(m, "http_get",
+                          return_value=self._fake_resp(self._real_png(), "image/png")):
             out = m.ImageManager.download_image("https://x.example/cover.png")
         self.assertIsNotNone(out)
-        self.assertEqual(out[2], "image/png")
+        self.assertEqual(out[1], "cover.jpg")
+        self.assertEqual(out[2], "image/jpeg")
+        self.assertTrue(out[0].startswith(b"\xff\xd8"), "应是 JPEG（SOI 标记）")
+
+    def test_svg_bytes_rejected_not_hosted(self):
+        """SVG 不是 PIL 能解码的位图：必须拒掉而不是以 octet-stream 托管"""
+        svg = b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>' * 40
+        with patch.object(m, "http_get",
+                          return_value=self._fake_resp(svg, "application/octet-stream")):
+            self.assertIsNone(m.ImageManager.download_image("https://x.example/evil.svg"))
 
     def test_scheme_not_http_rejected_at_download_layer(self):
         """下载层 scheme 门（防御绕过入口门禁的直调）：file/ftp 一律拒绝"""
@@ -5065,8 +5127,7 @@ class TestDownloadImageGate(unittest.TestCase):
         目标必须用公网 IP 字面量（8.8.8.8）：域名形式在 CI 真实 DNS 下解析失败
         → SSRF 门 fail-closed 拒绝，而本地 Clash fake-ip 又解析成功——R61 教训
         在 R79 重演，CI 因此连红 18+ 轮而本地全绿（R98 修复）。"""
-        png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 2048
-        final = self._fake_resp(png, "image/png")
+        final = self._fake_resp(self._real_png(), "image/png")
         with patch.object(m, "http_get", side_effect=[
                 self._redirect_resp("https://8.8.8.8/real.png"), final]):
             out = m.ImageManager.download_image("https://8.8.8.8/cover")
@@ -7153,9 +7214,10 @@ class TestFallbackImageCache(unittest.TestCase):
                           "兜底图成功后失败标记必须清除，否则遥测把成功帖误标 image_failed")
 
     def test_raw_failure_tries_card_before_fng(self):
-        # URL 用保留 IP 字面量（203.0.113.0/24 TEST-NET-3，公网属性、非内网段）：
-        # 域名形式（news.example）在 CI 真实 DNS 下解析失败 → SSRF 门 fail-closed
-        # 拒绝 → 静默走兜底分支，断言全灭。本机代理 fake-ip 才会解析成功（环境依赖）。
+        # URL 用**真实公网** IP 字面量（8.8.8.8）：域名形式（news.example）在 CI
+        # 真实 DNS 下解析失败 → SSRF 门 fail-closed 拒绝 → 静默走兜底分支，断言全灭。
+        # R7 起不能再借用 203.0.113.0/24（TEST-NET-3）：SSRF 门新增 is_private 兜底后
+        # 文档保留段一并被拒（那里本就不可能有真实图床），夹具须换成真正公网地址。
         blob = ("card-jpeg", "cover.jpg", "image/jpeg")
         m.ImageManager._write_fallback_cache("https://cdn.example/cached.jpg")
         with patch.object(m.MarketDataProvider, "get_kline_closes", return_value=None), \
@@ -7163,11 +7225,11 @@ class TestFallbackImageCache(unittest.TestCase):
              patch.object(m.ImageManager, "render_market_card", return_value=blob) as mock_card, \
              patch.object(m.ImageManager, "upload_to_binance",
                           return_value="https://cdn.example/card.jpg") as mock_up:
-            out = m.ImageManager.prepare_and_upload("k", "https://203.0.113.77/a.jpg",
+            out = m.ImageManager.prepare_and_upload("k", "https://8.8.8.8/a.jpg",
                                                     token_lines=["$ETH"], fng_text="Fear&Greed 61")
         self.assertEqual(out, "https://cdn.example/card.jpg")
         mock_dl.assert_called_once()
-        self.assertEqual(mock_dl.call_args[0][0], "https://203.0.113.77/a.jpg")
+        self.assertEqual(mock_dl.call_args[0][0], "https://8.8.8.8/a.jpg")
         mock_card.assert_called_once()
         # 原图链路的 upload 只发情绪卡这一次，FNG 缓存图未被消费
         mock_up.assert_called_once()
@@ -7177,7 +7239,7 @@ class TestFallbackImageCache(unittest.TestCase):
              patch.object(m.ImageManager, "render_market_card", return_value=None), \
              patch.object(m.ImageManager, "download_image", return_value=None), \
              patch.object(m.ImageManager, "upload_to_binance", return_value=None):
-            out = m.ImageManager.prepare_and_upload("k", "https://203.0.113.77/a.jpg")
+            out = m.ImageManager.prepare_and_upload("k", "https://8.8.8.8/a.jpg")
         self.assertIsNone(out)
         # 全链失败标记取链上最后一环：原图下载挂 → 卡片渲染挂（最终走到的是卡片路径）
         self.assertEqual(m.ImageManager.last_image_fail_reason, "render_failed")
@@ -7826,6 +7888,994 @@ class TestImageTier(unittest.TestCase):
         self.assertIsNone(out)
         self.assertEqual(m.ImageManager.last_image_tier, "none")
         self.assertIsNotNone(m.ImageManager.last_image_fail_reason)
+
+
+# ===========================================================================
+# Round 6 — 调度/判废口径、视频通道、看门狗
+# ===========================================================================
+class _BreakerTestBase(unittest.TestCase):
+    """断路器相关测试的公共脚手架：把 intel 状态指向临时文件"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig_intel
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _write_state(self, state):
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"_llm_breaker": state}, f)
+
+    def _engine(self, names=("p1", "p2")):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng.providers = [m.LLMProviderConfig(n, f"http://{n}/v1", "k", "m") for n in names]
+        eng._fail_counts = {}
+        eng._clients = {}
+        return eng
+
+
+class TestBreakerStateHealing(_BreakerTestBase):
+    """断路器状态自愈 + 冷却只延长不缩短（R6）"""
+
+    def test_junk_dropped_and_malformed_healed(self):
+        self._write_state({"p1": "junk-string", "p2": {"fails": 1, "cooldown_until": "not-a-date"}})
+        eng = self._engine()
+        self.assertEqual([p.name for p in eng._ordered_providers()], ["p1"],
+                         "非 dict 脏条目应被丢弃；畸形冷却应被修成有界冷却并跳过本轮")
+        self.assertTrue(eng._breaker_cooled_down("p2"),
+                        "畸形 cooldown_until 不得被当作可用（旧实现 fail-open）")
+
+    def test_healed_cooldown_expires_not_permanent(self):
+        """自愈必须是有界冷却：不能把畸形条目变成永久冷却（死锁）"""
+        self._write_state({"p2": {"cooldown_until": "garbage"}})
+        eng = self._engine()
+        eng._ordered_providers()
+        until = m.MultiLLMEngine._parse_cooldown(eng._breaker_state()["p2"]["cooldown_until"])
+        self.assertIsNotNone(until)
+        delta_min = (until - datetime.now(timezone.utc)).total_seconds() / 60
+        self.assertLessEqual(delta_min, m.MultiLLMEngine._BREAKER_BASE_MIN + 1)
+
+    def test_all_junk_state_does_not_crash_ordering(self):
+        self._write_state({"p1": ["x"], "p2": 5})
+        eng = self._engine()
+        self.assertEqual(len(eng._ordered_providers()), 2)
+
+    def test_rate_limit_does_not_shorten_permanent_cooldown(self):
+        self._write_state({})
+        eng = self._engine(("p1",))
+        eng._breaker_record_permanent("p1")
+        before = eng._breaker_state()["p1"]["cooldown_until"]
+        eng._breaker_record_rate_limit("p1", 30)
+        self.assertEqual(eng._breaker_state()["p1"]["cooldown_until"], before,
+                         "30s 的 429 冷却不得覆盖 24h 的模型下架冷却")
+
+    def test_transient_failure_does_not_shorten_long_cooldown(self):
+        self._write_state({})
+        eng = self._engine(("p1",))
+        eng._breaker_record_rate_limit("p1", 4 * 3600)
+        long_until = eng._breaker_state()["p1"]["cooldown_until"]
+        eng._breaker_record_failure("p1")
+        self.assertEqual(eng._breaker_state()["p1"]["cooldown_until"], long_until,
+                         "10min 指数退避不得缩短服务端要求的 4h 冷却")
+
+    def test_longer_cooldown_still_applies(self):
+        """只延长不缩短 ≠ 永不更新：更长的冷却必须生效"""
+        self._write_state({})
+        eng = self._engine(("p1",))
+        eng._breaker_record_failure("p1")          # 10min
+        short = eng._breaker_state()["p1"]["cooldown_until"]
+        eng._breaker_record_rate_limit("p1", 4 * 3600)  # 4h
+        self.assertGreater(eng._breaker_state()["p1"]["cooldown_until"], short)
+
+    def test_is_cooled_fail_closed(self):
+        self.assertTrue(m.MultiLLMEngine._is_cooled({"x": {"cooldown_until": "nope"}}, "x"))
+        self.assertTrue(m.MultiLLMEngine._is_cooled({"x": {"fails": 1}}, "x"),
+                        "缺 cooldown_until 的条目属不可信状态，应判冷却")
+        self.assertFalse(m.MultiLLMEngine._is_cooled({}, "x"))
+        self.assertFalse(m.MultiLLMEngine._is_cooled({"x": "junk"}, "x"))
+
+    def test_expired_cooldown_not_cooled(self):
+        past = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
+        self.assertFalse(m.MultiLLMEngine._is_cooled({"x": {"cooldown_until": past}}, "x"))
+
+    def test_naive_timestamp_tolerated(self):
+        future_naive = (datetime.now(timezone.utc) + timedelta(hours=1)).replace(tzinfo=None).isoformat()
+        self.assertTrue(m.MultiLLMEngine._is_cooled({"x": {"cooldown_until": future_naive}}, "x"),
+                        "无时区的 ISO 串应按 UTC 解释，而不是抛异常后被当作可用")
+
+
+class TestLLMClientCacheIsolation(_BreakerTestBase):
+    """客户端缓存键必须是端点指纹：同名不同端点不得复用同一 client（R6）"""
+
+    def setUp(self):
+        super().setUp()
+        self._orig_openai = m.OpenAI
+        self.created = []
+        outer = self
+
+        class _FakeOpenAI:
+            def __init__(self, **kw):
+                self.kw = kw
+                outer.created.append(kw)
+
+        m.OpenAI = _FakeOpenAI
+
+    def tearDown(self):
+        m.OpenAI = self._orig_openai
+        super().tearDown()
+
+    def _client_engine(self):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._clients = {}
+        eng._fail_counts = {}
+        return eng
+
+    def test_same_name_different_endpoint_isolated(self):
+        eng = self._client_engine()
+        a = eng._get_client(m.LLMProviderConfig("Custom-JSON", "http://a/v1", "ka", "m"))
+        b = eng._get_client(m.LLMProviderConfig("Custom-JSON", "http://b/v1", "kb", "m"))
+        self.assertIsNot(a, b, "同名但端点不同的 provider 必须各自持有 client")
+        self.assertEqual(b.kw["base_url"], "http://b/v1")
+        self.assertEqual(len(self.created), 2)
+
+    def test_same_provider_reuses_client(self):
+        eng = self._client_engine()
+        a = eng._get_client(m.LLMProviderConfig("P", "http://a/v1", "ka", "m"))
+        b = eng._get_client(m.LLMProviderConfig("P", "http://a/v1", "ka", "m"))
+        self.assertIs(a, b, "完全相同的 provider 应复用连接池")
+        self.assertEqual(len(self.created), 1)
+
+    def test_json_config_dedupes_names(self):
+        eng = self._client_engine()
+        cfg = json.dumps([
+            {"name": "Same", "base_url": "http://a/v1", "api_key": "k1", "model": "m"},
+            {"name": "Same", "base_url": "http://b/v1", "api_key": "k2", "model": "m"},
+        ])
+        with patch.dict(os.environ, {"LLM_PROVIDERS_CONFIG": cfg}):
+            chain = eng._build_provider_chain()
+        names = [p.name for p in chain]
+        self.assertEqual(len(names), 2)
+        self.assertEqual(len(set(names)), 2, f"重名配置必须去重，实际 {names}")
+
+    def test_json_config_missing_names_get_unique_defaults(self):
+        eng = self._client_engine()
+        cfg = json.dumps([
+            {"base_url": "http://a/v1", "api_key": "k1", "model": "m"},
+            {"base_url": "http://b/v1", "api_key": "k2", "model": "m"},
+        ])
+        with patch.dict(os.environ, {"LLM_PROVIDERS_CONFIG": cfg}):
+            chain = eng._build_provider_chain()
+        self.assertEqual(len({p.name for p in chain}), 2,
+                         "缺省 name 不得全部落成同一个 Custom-JSON")
+
+    def test_json_config_honors_timeout(self):
+        eng = self._client_engine()
+        cfg = json.dumps([{"base_url": "http://a/v1", "api_key": "k1", "model": "m", "timeout": 90}])
+        with patch.dict(os.environ, {"LLM_PROVIDERS_CONFIG": cfg}):
+            chain = eng._build_provider_chain()
+        self.assertEqual(chain[0].timeout, 90.0)
+
+
+class TestQualityRejectDoesNotTripBreaker(unittest.TestCase):
+    """质量门拒稿只进质量计数，不得推高跨运行熔断（R6）"""
+
+    def setUp(self):
+        self._orig_syms = m.SymbolValidator._valid_symbols_cache
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH"}
+        import tempfile
+        self.intel_tmp = tempfile.mktemp(suffix=".json")
+        with open(self.intel_tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        self._orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.intel_tmp
+
+    def tearDown(self):
+        m.SymbolValidator._valid_symbols_cache = self._orig_syms
+        m.CAMPAIGN_INTEL_FILE = self._orig_intel
+        if os.path.exists(self.intel_tmp):
+            os.remove(self.intel_tmp)
+
+    def _engine(self):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.providers = [m.LLMProviderConfig("stub", "https://x", "k", "mm")]
+        return eng
+
+    def _resp(self, content):
+        return MagicMock(choices=[MagicMock(message=MagicMock(content=content))])
+
+    def _run(self, eng, client):
+        item = {"title": "BTC news", "summary": "Bitcoin surged", "source": "U.Today"}
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics"):
+            return eng.summarize(item, None, market_context="", token_hints=["BTC"])
+
+    def test_quality_rejects_tracked_separately(self):
+        eng = self._engine()
+        client = MagicMock()
+        # 永远返回过不了质量门的稿（纯英文），只关心计数落在哪一侧
+        client.chat.completions.create.side_effect = lambda *a, **kw: self._resp(
+            "This is an English only body which fails the quality gate entirely.")
+        out = self._run(eng, client)
+        self.assertIsNone(out)
+        self.assertEqual(eng._fail_counts.get("stub", 0), 0,
+                         "质量拒稿不得计入通道失败计数")
+        self.assertGreaterEqual(eng._quality_fails().get("stub", 0), 1)
+        self.assertFalse(eng._breaker_cooled_down("stub"),
+                         "文风不合格不等于通道故障，不应进跨运行冷却")
+
+    def test_success_clears_both_counters(self):
+        eng = self._engine()
+        eng._fail_counts = {"stub": 1}
+        eng._quality_fails()["stub"] = 1
+        client = MagicMock()
+        client.chat.completions.create.side_effect = lambda *a, **kw: self._resp(
+            "比特币放量突破关键位，$BTC 短线情绪转多，回调就是上车机会，"
+            "但别追高，等回踩确认支撑再进，仓位控制好，止损放在前低下方。")
+        out = self._run(eng, client)
+        self.assertIsNotNone(out)
+        self.assertNotIn("stub", eng._fail_counts)
+        self.assertNotIn("stub", eng._quality_fails())
+
+
+class TestNumbersWhitelistIncludesIntel(unittest.TestCase):
+    """数字软校验白名单必须包含实际注入的活动情报（R6 修的系统性误杀）"""
+
+    def _engine(self):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.last_intel_section = ""
+        return eng
+
+    def test_injected_intel_recorded_on_instance(self):
+        eng = self._engine()
+        intel = {"strategy_guidance": "本期奖池 1,200,000 美元，APR 12.5%",
+                 "last_updated": datetime.now(timezone.utc).isoformat()}
+        prompt, _ = eng._build_user_prompt({"title": "t", "summary": "s", "age_hours": 1.0},
+                                           intel, "", ["BTC"])
+        self.assertIn("1,200,000", eng.last_intel_section)
+        self.assertIn("1,200,000", prompt)
+
+    def test_intel_number_no_longer_flagged_as_fabrication(self):
+        # 用中文大额单位（≥100 万）触发金额校验规则——这正是活动情报里最常见的写法
+        content = "本期活动奖池 157 亿美元，$BTC 参与者可以关注后续节奏。"
+        intel_text = "【官方活动风向参考】：本期奖池 157 亿美元"
+        ok, reason = m.MultiLLMEngine._verify_numbers(content, f"新闻标题 新闻摘要 {intel_text}")
+        self.assertTrue(ok, f"情报里出现过的数字不应被判编造: {reason}")
+        ok_without, reason_without = m.MultiLLMEngine._verify_numbers(content, "新闻标题 新闻摘要")
+        self.assertFalse(ok_without, "反证：白名单不含情报时该数字应被拦下")
+        self.assertIn("157", reason_without)
+
+
+class TestVideoPublisherPayload(unittest.TestCase):
+    """视频通道：videoList 必须下发；不得把 mp4 塞进图片字段；504 不重试（R6）"""
+
+    def setUp(self):
+        import importlib
+        self.pv = importlib.import_module("scripts.publish_video")
+
+    def _resp(self, status=200, payload=None):
+        r = MagicMock(status_code=status)
+        r.text = json.dumps(payload or {}, ensure_ascii=False)
+        r.json.return_value = payload or {}
+        return r
+
+    def test_video_list_sent_even_with_title(self):
+        """默认就有 title，旧实现因此只写 cover，视频从未真正作为视频发布"""
+        with patch.object(m, "http_post",
+                          return_value=self._resp(200, {"code": "000000", "data": {"contentId": "1"}})) as hp:
+            ok = self.pv.publish("k", "这是一段足够长的正文内容用于测试。",
+                                 "https://cdn.example/v.mp4", title="标题")
+        self.assertTrue(ok)
+        payload = hp.call_args.kwargs["json"]
+        self.assertEqual(payload.get("videoList"), ["https://cdn.example/v.mp4"])
+        self.assertNotIn("imageList", payload)
+        self.assertNotIn("cover", payload)
+        self.assertEqual(payload.get("contentType"), 2)
+
+    def test_video_list_sent_without_title(self):
+        with patch.object(m, "http_post",
+                          return_value=self._resp(200, {"code": "000000"})) as hp:
+            self.pv.publish("k", "这是一段足够长的正文内容用于测试。",
+                            "https://cdn.example/v.mp4", title=None)
+        self.assertEqual(hp.call_args.kwargs["json"].get("videoList"),
+                         ["https://cdn.example/v.mp4"])
+
+    def test_no_video_no_video_list(self):
+        with patch.object(m, "http_post", return_value=self._resp(200, {"code": "000000"})) as hp:
+            self.pv.publish("k", "这是一段足够长的正文内容用于测试。", None, title="标题")
+        self.assertNotIn("videoList", hp.call_args.kwargs["json"])
+
+    def test_504_accepted_without_retry(self):
+        with patch.object(m, "http_post", return_value=self._resp(504)) as hp:
+            self.assertTrue(self.pv.publish("k", "这是一段足够长的正文内容用于测试。",
+                                            "https://cdn.example/v.mp4", title="t"))
+        self.assertEqual(hp.call_count, 1, "504 语义是已受理，重试等于重复发帖")
+        self.assertEqual(hp.call_args.kwargs.get("retries"), 0)
+
+    def test_business_error_not_retried_as_imagelist(self):
+        with patch.object(m, "http_post",
+                          return_value=self._resp(200, {"code": "10001", "message": "bad"})) as hp:
+            self.assertFalse(self.pv.publish("k", "这是一段足够长的正文内容用于测试。",
+                                             "https://cdn.example/v.mp4", title="t"))
+        self.assertEqual(hp.call_count, 1)
+        self.assertNotIn("imageList", hp.call_args.kwargs["json"],
+                         "mp4 不得降级塞进只收图片的字段")
+
+    def test_oversized_video_rejected_before_read(self):
+        import tempfile
+        fd, path = tempfile.mkstemp(suffix=".mp4")
+        os.close(fd)
+        try:
+            with patch.object(self.pv.os.path, "getsize",
+                              return_value=self.pv.MAX_VIDEO_BYTES + 1):
+                self.assertIsNone(self.pv.upload_video("k", path))
+        finally:
+            os.remove(path)
+
+    def test_resolve_video_path_falls_back_to_repo_root(self):
+        import shutil, tempfile
+        old = os.getcwd()
+        tmp = tempfile.mkdtemp()
+        try:
+            os.chdir(tmp)
+            resolved = self.pv.resolve_video_path("assets/videos/lp-pool-explainer.mp4")
+            self.assertTrue(os.path.exists(resolved),
+                            "相对路径应按仓库根解析，而不是当前工作目录")
+        finally:
+            os.chdir(old)
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_record_sent_makes_guard_effective(self):
+        """双发守卫读的是 sent_cache；发布成功后必须写进去，否则重跑必双发"""
+        import tempfile
+        tmp = tempfile.mktemp(suffix=".json")
+        orig = m.CACHE_FILE
+        m.CACHE_FILE = tmp
+        try:
+            self.assertFalse(self.pv.check_duplicate("视频帖标题X"))
+            self.assertTrue(self.pv.record_sent("视频帖标题X"))
+            self.assertTrue(self.pv.check_duplicate("视频帖标题X"))
+        finally:
+            m.CACHE_FILE = orig
+            if os.path.exists(tmp):
+                os.remove(tmp)
+
+
+class TestWatchdogHistorySelection(unittest.TestCase):
+    """看门狗取"上一轮"的口径：必须排除本次运行（R6）"""
+
+    def _wd(self):
+        import importlib
+        return importlib.import_module("scripts.schedule_watchdog")
+
+    def _run(self, minutes_ago, event="schedule", status="completed"):
+        return {"event": event, "status": status,
+                "createdAt": (datetime.now(timezone.utc) - timedelta(minutes=minutes_ago)).isoformat()}
+
+    def test_current_in_progress_run_excluded(self):
+        wd = self._wd()
+        runs = [self._run(0, status="in_progress"), self._run(20)]
+        self.assertEqual(wd.evaluate(runs, datetime.now(timezone.utc)), "")
+
+    def test_manual_dispatch_does_not_offset_previous_schedule(self):
+        """本次是 workflow_dispatch 时，上一条 schedule 是列表第一条而非第二条"""
+        wd = self._wd()
+        runs = [self._run(0, event="workflow_dispatch", status="in_progress"),
+                self._run(30)]  # 30 分钟前的那轮 schedule
+        self.assertEqual(wd.evaluate(runs, datetime.now(timezone.utc)), "",
+                         "30 分钟未超 50 分钟阈值，不应误报")
+
+    def test_stale_schedule_alerts(self):
+        wd = self._wd()
+        runs = [self._run(0, event="workflow_dispatch", status="in_progress"),
+                self._run(130)]
+        self.assertIn("静默吞掉", wd.evaluate(runs, datetime.now(timezone.utc)))
+
+    def test_no_status_field_falls_back_to_skipping_head(self):
+        wd = self._wd()
+        now = datetime.now(timezone.utc)
+        runs = [
+            {"event": "schedule", "createdAt": now.isoformat()},
+            {"event": "schedule", "createdAt": (now - timedelta(minutes=130)).isoformat()},
+        ]
+        self.assertIn("静默吞掉", wd.evaluate(runs, now))
+
+    def test_no_completed_schedule_silent(self):
+        wd = self._wd()
+        runs = [self._run(0, status="in_progress")]
+        self.assertEqual(wd.evaluate(runs, datetime.now(timezone.utc)), "")
+
+    def test_main_never_raises_when_gh_missing(self):
+        wd = self._wd()
+        with patch.object(wd, "_load_runs", side_effect=FileNotFoundError("gh not found")):
+            wd.main()  # 不得抛异常（workflow 侧另有 continue-on-error 兜底）
+
+
+# ===========================================================================
+# Round 7 — 图片链路安全、长期状态有界、运维文案
+# ===========================================================================
+class TestHttpRetryReleasesConnection(unittest.TestCase):
+    """重试前必须关闭上一次响应：stream=True 不关会占满连接池（pool_maxsize=16）"""
+
+    def test_response_closed_before_retry(self):
+        closed = []
+        resp = MagicMock(status_code=503)
+        resp.headers = {}
+        resp.close.side_effect = lambda: closed.append(True)
+        with patch.object(m._HTTP_SESSION, "request", return_value=resp), \
+             patch.object(m.time, "sleep"):
+            out = m.http_request("GET", "https://x.example/a", retries=1, stream=True)
+        self.assertIs(out, resp)
+        self.assertEqual(len(closed), 1, "重试前应关闭上一次响应，否则连接滞留池中")
+
+    def test_no_close_when_not_retrying(self):
+        resp = MagicMock(status_code=200)
+        resp.headers = {}
+        with patch.object(m._HTTP_SESSION, "request", return_value=resp):
+            m.http_request("GET", "https://x.example/a", retries=1)
+        resp.close.assert_not_called()
+
+
+class TestPastDateRefsCrossYear(unittest.TestCase):
+    """R7：无年份日期的取年 + 日界口径（旧实现有三处实测可复现的错判）"""
+
+    def test_january_reading_last_december_flagged(self):
+        """1 月看「12月31日」：旧实现硬套 now.year → 被算成未来 → 漏判（其实已过去）"""
+        now = datetime(2026, 1, 5, 10, tzinfo=timezone.utc)
+        self.assertEqual(m._past_date_refs("活动 12月31日 截止", now), ["12月31日"])
+        self.assertEqual(m._past_date_refs("活动 12/31 截止", now), ["12/31"])
+
+    def test_december_reading_next_january_not_flagged(self):
+        """12 月看「1月5日」：旧实现算成 11 个月前的旧闻 → 误判（其实是即将到来）"""
+        now = datetime(2026, 12, 20, 10, tzinfo=timezone.utc)
+        self.assertEqual(m._past_date_refs("活动 1月5日 开始", now), [])
+        self.assertEqual(m._past_date_refs("活动 1/5 开始", now), [])
+
+    def test_yesterday_boundary_is_time_of_day_independent(self):
+        """36h 算术导致同一引用上午不报、下午报；日历日口径下与时刻无关"""
+        morning = datetime(2026, 9, 15, 10, tzinfo=timezone.utc)
+        evening = datetime(2026, 9, 15, 23, tzinfo=timezone.utc)
+        text = "2026-09-14 截止"
+        self.assertEqual(m._past_date_refs(text, morning), [])
+        self.assertEqual(m._past_date_refs(text, evening), [],
+                         "「昨天」的引用不应因时刻不同而改变判定")
+
+    def test_day_before_yesterday_flagged(self):
+        now = datetime(2026, 9, 15, 13, tzinfo=timezone.utc)
+        self.assertEqual(m._past_date_refs("2026-09-13 截止", now), ["2026-09-13"])
+
+    def test_invalid_dates_still_skipped(self):
+        now = datetime(2026, 9, 11, 12, tzinfo=timezone.utc)
+        self.assertEqual(m._past_date_refs("9/31 与 2月30日", now), [])
+
+
+class TestFngWindowConsistency(unittest.TestCase):
+    """R7：hook_count 与 ban_armed 必须建立在同一窗口上"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".jsonl")
+        self._orig = m.METRICS_FILE
+        m.METRICS_FILE = self.tmp
+
+    def tearDown(self):
+        m.METRICS_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _append(self, rows):
+        with open(self.tmp, "a", encoding="utf-8") as f:
+            for r in rows:
+                f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+    def _engine(self):
+        return m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+
+    def test_both_functions_share_the_same_window(self):
+        eng = self._engine()
+        # 写入顺序 = 时间序（旧→新）：最早那条才是 armed
+        self._append([
+            {"outcome": "binance_published", "final_preview": "贪婪指数 68，别追高。",
+             "fng_ban_active": True},
+            {"outcome": "binance_published", "final_preview": "情绪指数 61。"},
+            {"outcome": "binance_published"},                                  # 无 preview
+            {"outcome": "binance_published", "final_preview": "情绪指数 62。"},
+            {"outcome": "binance_published"},                                  # 无 preview
+            {"outcome": "binance_published", "final_preview": "情绪指数 63。"},
+        ])
+        # 带正文快照的回执共 4 条
+        self.assertEqual(len(eng._recent_published_rows(10)), 4)
+        # 窗口 3 → 看不到最早那条 armed
+        self.assertFalse(eng._recent_fng_ban_armed(3))
+        # 窗口 4 → 看得到（旧实现按"所有已发布行"计数，被无 preview 行挤掉，
+        # 此处会错误地返回 False——正是两端样本集不一致的表现）
+        self.assertTrue(eng._recent_fng_ban_armed(4))
+        # hook_count 用同一窗口：4 条都含情绪锚点
+        self.assertEqual(eng._recent_fng_hook_count(4), 4)
+
+    def test_preview_less_rows_do_not_shift_window(self):
+        eng = self._engine()
+        self._append([{"outcome": "binance_published", "final_preview": "情绪指数 61。"},
+                      {"outcome": "binance_published", "final_preview": ""},
+                      {"outcome": "binance_published", "final_preview": "贪婪指数 70。"},
+                      {"outcome": "binance_published"}])
+        self.assertEqual(len(eng._recent_published_rows(5)), 2)
+
+    def test_missing_file_is_safe(self):
+        m.METRICS_FILE = self.tmp + ".none"
+        eng = self._engine()
+        self.assertEqual(eng._recent_fng_hook_count(), 0)
+        self.assertFalse(eng._recent_fng_ban_armed())
+
+
+class TestMetricsRotationNotRevived(unittest.TestCase):
+    """R7：并集合并不得把轮转裁掉的历史行复活（否则 CI 下文件仍无界增长）"""
+
+    @staticmethod
+    def _merger():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "git_state_merge_r7",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "git_state_merge.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def setUp(self):
+        import tempfile
+        self.tmpdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_merge_caps_line_count(self):
+        gsm = self._merger()
+        remote = os.path.join(self.tmpdir, "remote.jsonl")
+        snap = os.path.join(self.tmpdir, "snap.jsonl")
+        # 远端满是历史行；本地快照只有一条最新行
+        with open(remote, "w", encoding="utf-8") as f:
+            for i in range(gsm.METRICS_MAX_LINES + 200):
+                f.write(json.dumps({"ts": f"2026-01-01T{i // 3600:02d}:{(i // 60) % 60:02d}:{i % 60:02d}+00:00",
+                                    "i": i}) + "\n")
+        with open(snap, "w", encoding="utf-8") as f:
+            f.write(json.dumps({"ts": "2026-12-31T23:59:59+00:00", "i": "newest"}) + "\n")
+        n = gsm.merge_metrics(snap, remote)
+        self.assertLessEqual(n, gsm.METRICS_MAX_LINES, "合并后必须收敛到上限")
+        with open(remote, encoding="utf-8") as f:
+            lines = [l for l in f.read().splitlines() if l.strip()]
+        self.assertEqual(len(lines), n)
+        self.assertIn("newest", lines[-1], "收敛时应保留最新的行")
+
+    def test_cap_matches_main_rotate_default(self):
+        """两处上限必须一致：单侧定义会漂移，与 FNG 正则同步测试同款约束"""
+        import inspect
+        gsm = self._merger()
+        sig = inspect.signature(m.rotate_metrics_if_needed)
+        self.assertEqual(gsm.METRICS_MAX_LINES, sig.parameters["keep"].default,
+                         "merge_metrics 的上限与 rotate_metrics_if_needed 的 keep 不一致")
+
+
+class TestFallbackNotificationWording(unittest.TestCase):
+    """R7：兜底通报文案必须按"哪一步失败"分叉"""
+
+    @staticmethod
+    def _module():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "notify_fallback_r7",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "notify_fallback.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _capture(self, env_extra):
+        nf = self._module()
+        sent = []
+        env = {"GITHUB_SERVER_URL": "https://github.com", "GITHUB_REPOSITORY": "o/r",
+               "GITHUB_RUN_ID": "1"}
+        env.update(env_extra)
+        with patch.dict(os.environ, env, clear=True), \
+             patch.object(nf, "send_fallback",
+                          side_effect=lambda title, message, e: (sent.append((title, message)) or {})):
+            nf.main()
+        self.assertTrue(sent, "应触发一次兜底通报")
+        return sent[0]
+
+    def test_state_write_failure_warns_about_duplicate_post(self):
+        """发帖成功但状态回写失败 → 必须提示"下一轮会重复发布"，
+        而不是旧文案的"未产生任何状态变更"（会把排障带向 Secrets）"""
+        title, message = self._capture({
+            "INSTALL_RESULT": "success", "POSTER_RESULT": "success", "STATE_RESULT": "failure"})
+        self.assertIn("状态回写", title)
+        self.assertIn("重复发布", message)
+        self.assertNotIn("未产生任何状态变更", message)
+
+    def test_poster_failure_message_not_absolute(self):
+        _, message = self._capture({
+            "INSTALL_RESULT": "success", "POSTER_RESULT": "failure", "STATE_RESULT": "skipped"})
+        self.assertIn("未成功完成", message)
+        self.assertNotIn("未产生任何状态变更", message)
+
+    def test_reports_all_three_step_results(self):
+        _, message = self._capture({
+            "INSTALL_RESULT": "success", "POSTER_RESULT": "success", "STATE_RESULT": "success"})
+        self.assertIn("安装步骤: success", message)
+        self.assertIn("发帖步骤: success", message)
+        self.assertIn("状态回写: success", message)
+
+
+# ===========================================================================
+# Round 8 — 卡片 CJK 豆腐块、LLM 调度、遥测完备性
+# ===========================================================================
+class TestCardTextIsAsciiOnly(unittest.TestCase):
+    """R8：CI runner 不装任何 CJK 字体（官方镜像只有 fonts-noto-color-emoji），
+    卡片上出现中文必然渲染成方框。卡片渲染必须做到"不绘制非 ASCII 文本"。"""
+
+    def setUp(self):
+        self._orig_layouts = m.ImageManager.CARD_LAYOUTS
+        self._orig_warned = m.ImageManager._card_cjk_stripped_warned
+        m.ImageManager._card_cjk_stripped_warned = True  # 静音测试期间的告警
+
+    def tearDown(self):
+        m.ImageManager.CARD_LAYOUTS = self._orig_layouts
+        m.ImageManager._card_cjk_stripped_warned = self._orig_warned
+
+    def test_safe_text_maps_emotion_words_and_strips_other_cjk(self):
+        F = m.ImageManager._card_safe_text
+        self.assertEqual(F("Fear&Greed 50/100 (中立)"), "Fear&Greed 50/100 (Neutral)")
+        self.assertEqual(F("恐惧"), "Fear")
+        self.assertEqual(F("极度贪婪 88"), "Extreme Greed 88")
+        self.assertEqual(F("$BTC: $60,000.00 (24H: +1.23%)"), "$BTC: $60,000.00 (24H: +1.23%)")
+        self.assertEqual(F("中文混 English 123"), "English 123")
+        self.assertEqual(F("热点标的"), "")
+        self.assertEqual(F(""), "")
+        self.assertEqual(F(None), "")
+
+    def _drawn_texts(self, render_fn):
+        from PIL import ImageDraw
+        drawn = []
+        orig = ImageDraw.ImageDraw.text
+
+        def spy(self, xy, text, *a, **kw):
+            drawn.append(str(text))
+            return orig(self, xy, text, *a, **kw)
+
+        with patch.object(ImageDraw.ImageDraw, "text", spy):
+            render_fn()
+        return drawn
+
+    def _assert_no_cjk(self, drawn):
+        bad = [t for t in drawn if any(ord(c) > 127 for c in t)]
+        self.assertEqual(bad, [], f"卡片绘制了非 ASCII 文本（CI 上会变方框）: {bad}")
+
+    def test_market_card_never_draws_non_ascii(self):
+        # 故意投喂中文：FNG 兜底默认值就是"中立"，情绪行/标题也可能带中文
+        def run():
+            m.ImageManager.render_market_card(
+                ["$BTC: $60,000.00 (24H: +1.23%)", "$ETH: $2,500.00 (24H: -0.50%)"],
+                "Fear&Greed 50/100 (中立)", headline="MARKET PULSE")
+        self._assert_no_cjk(self._drawn_texts(run))
+
+    def test_all_non_bars_layouts_never_draw_non_ascii(self):
+        """split/banner/minimal 布局里原本有"热点标的"/"今日情绪"两个中文标签"""
+        for layout in ("split", "banner", "minimal"):
+            m.ImageManager.CARD_LAYOUTS = (layout,)
+            drawn = self._drawn_texts(lambda: m.ImageManager.render_market_card(
+                ["$BTC", "$ETH"], "Fear&Greed 50/100 (中立)", headline="MARKET PULSE"))
+            self._assert_no_cjk(drawn)
+
+    def test_chart_card_never_draws_non_ascii(self):
+        def run():
+            m.ImageManager.render_chart_card("BTC", [100.0 + i * 0.5 for i in range(48)],
+                                             "Fear&Greed 50/100 (中立)")
+        self._assert_no_cjk(self._drawn_texts(run))
+
+    def test_cards_still_render_with_chinese_input(self):
+        """ASCII 化不得把卡片搞成 None（那会整条配图链路降级）"""
+        card = m.ImageManager.render_market_card(["$BTC"], "50/100 (中立)")
+        self.assertIsNotNone(card)
+        self.assertTrue(card[0].startswith(b"\xff\xd8"))
+        chart = m.ImageManager.render_chart_card("BTC", [1.0 + i * 0.01 for i in range(48)], "(中立)")
+        self.assertIsNotNone(chart)
+
+
+class TestCardFontResolution(unittest.TestCase):
+    """R8：字体解析必须显式可观测，且无字体时也不能把卡片搞挂"""
+
+    def setUp(self):
+        self._orig_status = m.ImageManager._card_font_status
+        self._orig_warned = m.ImageManager._card_font_warned
+
+    def tearDown(self):
+        m.ImageManager._card_font_status = self._orig_status
+        m.ImageManager._card_font_warned = self._orig_warned
+
+    def test_records_resolved_font(self):
+        m.ImageManager._card_font_warned = True
+        m.ImageManager._card_font(24)
+        self.assertTrue(m.ImageManager._card_font_status)
+
+    def _no_font_env(self):
+        """清空候选表模拟"CI 上一个字体都找不到"。
+
+        不能用 patch(PIL.ImageFont.truetype) —— Pillow ≥10.1 的 load_default(size)
+        内部同样走 truetype，一起 patch 掉连内置字体都加载不了，模拟失真。"""
+        return patch.multiple(
+            m.ImageManager,
+            _CARD_FONT_CANDIDATES=(),
+            _CARD_FONT_BOLD=(),
+        )
+
+    def test_falls_back_to_builtin_when_no_ttf_available(self):
+        m.ImageManager._card_font_warned = False
+        with self._no_font_env():
+            font = m.ImageManager._card_font(52, bold=True)
+        self.assertIsNotNone(font, "无 TTF 时必须给出可用字体对象，不能抛异常")
+        self.assertEqual(m.ImageManager._card_font_status, "default-bitmap")
+
+    def test_warning_only_once(self):
+        m.ImageManager._card_font_warned = False
+        with self._no_font_env(), patch.object(m.logger, "warning") as warn:
+            m.ImageManager._card_font(20)
+            m.ImageManager._card_font(20)
+        font_warns = [c for c in warn.call_args_list if "TTF" in str(c.args[0])]
+        self.assertEqual(len(font_warns), 1, "字体缺失告警只应打一次，避免刷屏")
+
+    def test_render_survives_no_font_environment(self):
+        """无字体环境下卡片仍要出图（否则整条配图链路降级为纯文本）"""
+        m.ImageManager._card_font_warned = True
+        with self._no_font_env():
+            card = m.ImageManager.render_market_card(["$BTC"], "50/100 (Neutral)")
+        self.assertIsNotNone(card)
+        self.assertTrue(card[0].startswith(b"\xff\xd8"))
+
+
+class TestRouterModelPredicate(unittest.TestCase):
+    """R8：聚合路由别名不止 /free 一种写法，误判会让健康通道吃 24h permanent"""
+
+    def test_router_aliases_recognized(self):
+        for mid in ("auto/best-fast", "omni/auto/best-free", "omni/auto/coding:free",
+                    "openrouter/free", "free", "auto", "router/anything"):
+            self.assertTrue(m._is_router_model(mid), f"{mid} 应识别为聚合路由")
+
+    def test_concrete_models_not_misclassified(self):
+        """具体模型（含 :free 限定与 -free 后缀）必须仍走 permanent 快道：
+        它们下架后不会自愈，按瞬时故障每 10 分钟重试只是空烧。"""
+        for mid in ("minimax/minimax-m3:free", "coding-glm-5.3-flash-free",
+                    "qwen/qwen3.8-max:free", "groq/openai/gpt-oss-120b",
+                    "glm-5.3-flash", "deepseek-chat", ""):
+            self.assertFalse(m._is_router_model(mid), f"{mid} 不应被判为聚合路由")
+
+
+class TestProviderPriorityOrdering(unittest.TestCase):
+    """R8：配置层"置顶"必须经得起成本排序，但不得越过健康度"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".jsonl")
+        self.intel = tempfile.mktemp(suffix=".json")
+        self._orig_m, self._orig_i = m.METRICS_FILE, m.CAMPAIGN_INTEL_FILE
+        m.METRICS_FILE, m.CAMPAIGN_INTEL_FILE = self.tmp, self.intel
+        with open(self.intel, "w", encoding="utf-8") as f:
+            f.write("{}")
+        # 付费通道有历史遥测（延迟 12s）；网关通道无遥测（分数恒 +inf）
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            for _ in range(5):
+                f.write(json.dumps({"stage": "summarize", "outcome": "llm_success",
+                                    "provider": "Preset-b.ai", "llm_latency_sec": 12.0,
+                                    "tokens_used": 800}) + "\n")
+
+    def tearDown(self):
+        m.METRICS_FILE, m.CAMPAIGN_INTEL_FILE = self._orig_m, self._orig_i
+        for p in (self.tmp, self.intel):
+            if os.path.exists(p):
+                os.remove(p)
+
+    def _engine(self):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts, eng._clients = {}, {}
+        eng.providers = [
+            m.LLMProviderConfig("Reasonix-GW", "http://localhost:20140/v1", "reasonix-local",
+                                "auto/best-fast", timeout=90.0, priority=1),
+            m.LLMProviderConfig("Preset-b.ai", "https://api.b.ai/v1", "k", "glm-5.3-flash"),
+        ]
+        return eng
+
+    def test_priority_survives_cost_sorting(self):
+        order = [p.name for p in self._engine()._ordered_providers()]
+        self.assertEqual(order[0], "Reasonix-GW",
+                         "配置里置顶的网关不得被成本分静默压下去")
+
+    def test_health_still_outranks_priority(self):
+        eng = self._engine()
+        eng._fail_counts["Reasonix-GW"] = 1
+        order = [p.name for p in eng._ordered_providers()]
+        self.assertEqual(order[0], "Preset-b.ai", "失败过的通道必须让位，优先级不能越过健康度")
+
+    def test_default_priority_is_zero(self):
+        self.assertEqual(m.LLMProviderConfig("p", "http://x", "k", "m").priority, 0)
+
+
+class TestRunSummaryCompleteness(unittest.TestCase):
+    """R8：'每个 dispatch 恰好一条 run_summary' 的不变量在硬退出路径上也要成立"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".jsonl")
+        self._orig = m.METRICS_FILE
+        m.METRICS_FILE = self.tmp
+
+    def tearDown(self):
+        m.METRICS_FILE = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _rows(self):
+        if not os.path.exists(self.tmp):
+            return []
+        with open(self.tmp, encoding="utf-8") as f:
+            return [json.loads(l) for l in f if l.strip()]
+
+    def test_helper_emits_full_baseline(self):
+        m.append_run_summary(config_error="x")
+        rows = self._rows()
+        self.assertEqual(len(rows), 1)
+        r = rows[0]
+        self.assertEqual(r["outcome"], "run_summary")
+        for k in ("candidates", "published", "drafts", "unprocessed",
+                  "skipped_batch_dup", "skipped_no_token", "skipped_token_limit",
+                  "skipped_risk_blocked", "skipped_parked", "skipped_exception"):
+            self.assertEqual(r.get(k), 0, f"run_summary 缺字段 {k}")
+
+    def test_missing_square_key_writes_summary(self):
+        env = {"SQUARE_API_KEY": "", "DRY_RUN": "false"}
+        with patch.dict(os.environ, env, clear=False), \
+             patch.object(m, "PUBLISH_PLATFORMS", ["binance"]):
+            os.environ.pop("SQUARE_API_KEY", None)
+            with self.assertRaises(SystemExit) as ctx:
+                m._run_main()
+        self.assertEqual(ctx.exception.code, 1)
+        rows = [r for r in self._rows() if r.get("outcome") == "run_summary"]
+        self.assertEqual(len(rows), 1, "缺 Key 硬退出也必须留一条 run_summary")
+        self.assertEqual(rows[0]["config_error"], "missing_square_api_key")
+
+    def test_crash_path_writes_summary(self):
+        with patch.object(m, "_run_main", side_effect=RuntimeError("boom")), \
+             patch.object(m.Notifier, "send_notification"), \
+             patch.object(sys, "argv", ["main.py"]):
+            with self.assertRaises(SystemExit) as ctx:
+                m.main()
+        self.assertEqual(ctx.exception.code, 1)
+        rows = [r for r in self._rows() if r.get("outcome") == "run_summary"]
+        self.assertEqual(len(rows), 1, "未捕获崩溃也必须留一条 run_summary")
+        self.assertTrue(rows[0]["fatal"])
+        self.assertIn("boom", rows[0]["error"])
+
+
+class TestStepSummarySkipReason(unittest.TestCase):
+    """R8：抓取前跳过的轮次不得显示"全网情绪指数: 配额满跳过抓取"与全零吞吐"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".md")
+        self._orig = os.environ.get("GITHUB_STEP_SUMMARY")
+        os.environ["GITHUB_STEP_SUMMARY"] = self.tmp
+
+    def tearDown(self):
+        if self._orig is None:
+            os.environ.pop("GITHUB_STEP_SUMMARY", None)
+        else:
+            os.environ["GITHUB_STEP_SUMMARY"] = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _text(self):
+        with open(self.tmp, encoding="utf-8") as f:
+            return f.read()
+
+    def test_skip_reason_rendered_separately(self):
+        m.write_github_step_summary(m.NewsFetcher(), "—", {"active_tags": ["#X"]}, [], False,
+                                    skipped_reason="配额满跳过抓取（12/12）")
+        text = self._text()
+        self.assertIn("本轮跳过", text)
+        self.assertIn("配额满跳过抓取", text)
+        self.assertIn("全网情绪指数**: —", text)
+        self.assertNotIn("管线吞吐", text, "未抓取时不得输出全零吞吐")
+
+    def test_normal_run_keeps_throughput_line(self):
+        f = m.NewsFetcher()
+        f.stats["fetched"] = 12
+        f.stats["kept"] = 3
+        m.write_github_step_summary(f, "50/100 (Neutral)", {"active_tags": []}, [], False)
+        text = self._text()
+        self.assertIn("管线吞吐", text)
+        self.assertIn("扫描 12 条", text)
+        self.assertNotIn("本轮跳过", text)
+
+
+class TestS3FailureSkipsSecondUpload(unittest.TestCase):
+    """R8：上传失败= S3/凭证问题，换张图同样传不上去，不该再渲染并二次上传"""
+
+    def setUp(self):
+        self._orig_kline = m.MarketDataProvider.get_kline_closes
+
+    def tearDown(self):
+        m.MarketDataProvider.get_kline_closes = self._orig_kline
+
+    def test_card_render_skipped_after_chart_upload_failure(self):
+        blob = ("chart-jpeg", "cover.jpg", "image/jpeg")
+        with patch.object(m.MarketDataProvider, "get_kline_closes",
+                          return_value=[1.0 + i * 0.01 for i in range(48)]), \
+             patch.object(m.ImageManager, "render_chart_card", return_value=blob), \
+             patch.object(m.ImageManager, "upload_to_binance", return_value=None), \
+             patch.object(m.ImageManager, "render_market_card") as mock_card, \
+             patch.object(m.ImageManager, "_read_fallback_cache", return_value=None), \
+             patch.object(m.ImageManager, "download_image", return_value=None):
+            out = m.ImageManager.prepare_and_upload("k", None, token_lines=["$BTC"],
+                                                    fng_text="Fear&Greed 50/100")
+        self.assertIsNone(out)
+        mock_card.assert_not_called(), "上传已失败，不应再渲染情绪卡做注定失败的二次上传"
+        self.assertEqual(m.ImageManager.last_image_fail_reason, "upload_failed")
+
+    def test_card_still_tried_when_chart_unavailable(self):
+        """反证：K 线拿不到（非上传失败）时仍应尝试情绪卡"""
+        blob = ("card-jpeg", "cover.jpg", "image/jpeg")
+        with patch.object(m.MarketDataProvider, "get_kline_closes", return_value=[]), \
+             patch.object(m.ImageManager, "render_market_card", return_value=blob) as mock_card, \
+             patch.object(m.ImageManager, "upload_to_binance",
+                          return_value="https://cdn.example/card.jpg"):
+            out = m.ImageManager.prepare_and_upload("k", None, token_lines=["$BTC"],
+                                                    fng_text="Fear&Greed 50/100")
+        self.assertEqual(out, "https://cdn.example/card.jpg")
+        mock_card.assert_called_once()
+
+
+class TestFilterDaysTimezone(unittest.TestCase):
+    """R8：--days 窗口按真实时间比较，不按 ISO 字符串字典序"""
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r8",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_mixed_offsets(self):
+        mr = self._mr()
+        now = datetime.now(timezone.utc)
+        rows = [
+            {"ts": (now - timedelta(days=1)).isoformat(), "k": "recent_utc"},
+            # 'Z' 结尾：字典序恒大于 '+00:00'，旧实现会把它永远判为"在窗口内"
+            {"ts": (now - timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%SZ"), "k": "old_z"},
+            {"ts": (now - timedelta(days=1)).astimezone(timezone(timedelta(hours=8))).isoformat(),
+             "k": "recent_plus8"},
+            {"ts": (now - timedelta(days=10)).astimezone(timezone(timedelta(hours=8))).isoformat(),
+             "k": "old_plus8"},
+        ]
+        kept = {r["k"] for r in mr.filter_days(rows, 3)}
+        self.assertEqual(kept, {"recent_utc", "recent_plus8"})
+
+    def test_unparseable_ts_dropped(self):
+        mr = self._mr()
+        kept = mr.filter_days([{"ts": "not-a-timestamp"}, {"no_ts": 1}], 3)
+        self.assertEqual(kept, [])
 
 
 if __name__ == "__main__":

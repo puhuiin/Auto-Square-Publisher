@@ -977,5 +977,122 @@ class TestQualityPatternSync(unittest.TestCase):
                          "FNG 锚定检测模式两份不一致——改 main 必须同步 metrics_report")
 
 
+class TestFunnelCountsPublishFailures(unittest.TestCase):
+    """R6：publish_failed 必须进分母——否则"发布全挂"会被报表显示成高成功率"""
+
+    def setUp(self):
+        import tempfile
+        self.tmpdir = tempfile.mkdtemp()
+        self.path = os.path.join(self.tmpdir, "metrics.jsonl")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_publish_failed_counts_as_attempt(self):
+        _write(self.path, [
+            {"title": "A", "platforms": ["binance"], "outcome": "binance_published"},
+            {"title": "B", "platforms": [], "outcome": "publish_failed", "stage": "publish"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        f = mr.funnel(rows)
+        self.assertEqual(f["delivered"], 1)
+        self.assertEqual(f["attempted"], 2,
+                         "投递失败的故事被算进分母，成功率才不会被虚高")
+        self.assertEqual(f["rate"], 0.5)
+
+    def test_all_publishes_failed_is_not_100_percent(self):
+        """只有 publish_failed 行时成功率必须是 0，而不是"没有尝试"或 100%"""
+        _write(self.path, [
+            {"title": "A", "platforms": [], "outcome": "publish_failed", "stage": "publish"},
+            {"title": "B", "platforms": [], "outcome": "publish_failed", "stage": "publish"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        f = mr.funnel(rows)
+        self.assertEqual(f["delivered"], 0)
+        self.assertEqual(f["attempted"], 2)
+        self.assertEqual(f["rate"], 0.0)
+
+    def test_publish_failed_then_delivered_counts_as_rescued(self):
+        _write(self.path, [
+            {"title": "A", "ts": "2026-09-15T01:00:00+00:00",
+             "platforms": [], "outcome": "publish_failed", "stage": "publish"},
+            {"title": "A", "ts": "2026-09-15T01:20:00+00:00",
+             "platforms": ["binance"], "outcome": "binance_published"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        f = mr.funnel(rows)
+        self.assertEqual(f["delivered"], 1)
+        self.assertEqual(f["attempted"], 1, "同题同日按一个故事计")
+        self.assertEqual(f["failover_rescued"], 1, "失败后重投成功 = 被救回")
+
+
+class TestNextSlotFreesReadSide(unittest.TestCase):
+    """R6：next_slot_frees 由任何 run_summary 行提供（发帖轮也写），不能只在配额行里找"""
+
+    def setUp(self):
+        import tempfile
+        self.tmpdir = tempfile.mkdtemp()
+        self.path = os.path.join(self.tmpdir, "metrics.jsonl")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_taken_from_posting_round_too(self):
+        _write(self.path, [
+            {"outcome": "run_summary", "quota_blocked": True,
+             "next_slot_frees": "2026-09-15T10:00:00+00:00", "next_slot_frees_min": 300},
+            # 后续正常发帖轮也写了该字段（R129 写侧扩展）→ 报表应取更新的这条
+            {"outcome": "run_summary", "quota_blocked": False,
+             "next_slot_frees": "2026-09-15T09:00:00+00:00", "next_slot_frees_min": 60},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["next_slot_frees"], "2026-09-15T09:00:00+00:00")
+        self.assertEqual(s["runs"]["next_slot_frees_min"], 60)
+
+    def test_quota_blocked_count_unchanged(self):
+        _write(self.path, [
+            {"outcome": "run_summary", "quota_blocked": True, "next_slot_frees_min": 300},
+            {"outcome": "run_summary", "quota_blocked": False, "next_slot_frees_min": 60},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["quota_blocked"], 1)
+
+    def test_malformed_value_ignored(self):
+        _write(self.path, [
+            {"outcome": "run_summary", "next_slot_frees_min": "not-a-number"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertNotIn("next_slot_frees_min", s["runs"])
+
+
+class TestSegmentSampleCounts(unittest.TestCase):
+    """R6：分段耗时均值必须带样本量，否则会读出"分段和 > 总量"的假象"""
+
+    def setUp(self):
+        import tempfile
+        self.tmpdir = tempfile.mkdtemp()
+        self.path = os.path.join(self.tmpdir, "metrics.jsonl")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_sample_counts_exposed_and_rendered(self):
+        rows = [{"outcome": "run_summary", "run_elapsed_sec": 30} for _ in range(4)]
+        rows.append({"outcome": "run_summary", "run_elapsed_sec": 40, "llm_elapsed_sec": 52})
+        _write(self.path, rows)
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        self.assertEqual(s["runs"]["n_elapsed"], 5)
+        self.assertEqual(s["runs"]["n_llm_sec"], 1)
+        text = mr.render_text(s, loaded)
+        self.assertIn("样本 1 轮", text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       video_path:
-        description: '视频文件在仓库中的路径 (如 assets/videos/lp.mp4)'
+        description: '视频文件在仓库中的路径 (如 assets/videos/lp-pool-explainer.mp4)'
         required: true
         type: string
       title:
@@ -24,12 +24,18 @@ on:
         type: boolean
 
 permissions:
-  contents: read
+  contents: write
+
+# R6：手动触发可能被连点两次 → 双份上传 + 双发同一条。串行化同一分组的运行，
+# 且不取消进行中的那次（上传/发布是有副作用的长事务，中断会留下半截状态）。
+concurrency:
+  group: video-publish
+  cancel-in-progress: false
 
 jobs:
   publish-video:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: 检出仓库代码
@@ -50,31 +56,82 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: 验证视频文件存在
+        env:
+          VIDEO_PATH: ${{ github.event.inputs.video_path }}
         run: |
-          if [ ! -f "${{ github.event.inputs.video_path }}" ]; then
-            echo "::error::视频文件不存在: ${{ github.event.inputs.video_path }}"
+          if [ ! -f "$VIDEO_PATH" ]; then
+            echo "::error::视频文件不存在: $VIDEO_PATH"
             echo "请先把视频文件推送到仓库（建议放 assets/videos/ 目录）"
             exit 1
           fi
-          echo "视频文件确认存在: ${{ github.event.inputs.video_path }}"
-          ls -lh "${{ github.event.inputs.video_path }}"
+          echo "视频文件确认存在: $VIDEO_PATH"
+          ls -lh "$VIDEO_PATH"
 
       - name: 上传并发布视频
+        id: publish
         env:
           SQUARE_API_KEY: ${{ secrets.SQUARE_API_KEY }}
           REASONIX_GW_OFF: "1"
+          VIDEO_PATH: ${{ github.event.inputs.video_path }}
+          POST_TITLE: ${{ github.event.inputs.title }}
+          POST_BODY: ${{ github.event.inputs.body }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        # R6：旧写法把 dispatch 输入直接拼进 shell 字符串再 eval——标题里一个
+        # 双引号就会破坏命令，一个 $(...) 就是命令注入。改为环境变量 + bash 数组：
+        # 输入值不再经过 shell 解析。
         run: |
-          ARGS="${{ github.event.inputs.video_path }}"
-          if [ -n "${{ github.event.inputs.title }}" ]; then
-            ARGS="$ARGS --title \"${{ github.event.inputs.title }}\""
+          set -euo pipefail
+          ARGS=("$VIDEO_PATH")
+          if [ -n "$POST_TITLE" ]; then ARGS+=(--title "$POST_TITLE"); fi
+          if [ -n "$POST_BODY" ]; then ARGS+=(--body "$POST_BODY"); fi
+          if [ "$DRY_RUN" = "true" ]; then ARGS+=(--dry); fi
+          python scripts/publish_video.py "${ARGS[@]}"
+
+      - name: 回写发帖记录并提交 (双发守卫依赖)
+        id: state
+        # R6：publish_video.py 现在会把成功的视频帖写进 sent_cache.json，但状态
+        # 必须提交回仓库，下一次手动触发才看得见（否则守卫恒不命中、重跑必双发，
+        # 该帖也不计入 24h 配额）。合并逻辑复用 auto_post 同款并集合并脚本。
+        if: always()
+        run: |
+          set -e
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          if [ ! -f sent_cache.json ] || [ -z "$(git status --porcelain sent_cache.json)" ]; then
+            echo "sent_cache.json 无变动，无需提交。"
+            exit 0
           fi
-          if [ -n "${{ github.event.inputs.body }}" ]; then
-            ARGS="$ARGS --body \"${{ github.event.inputs.body }}\""
+          echo "检测到视频发帖记录，进入 [快照 -> 同步远端 -> 并集合并 -> 重试推送] 流程..."
+          cp sent_cache.json /tmp/sent_cache.json
+          for i in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            python scripts/git_state_merge.py /tmp
+            if git diff --quiet -- sent_cache.json; then
+              echo "远端已包含该记录，无需重复提交。"
+              exit 0
+            fi
+            git add sent_cache.json
+            git commit -m "chore(cache): record video post [skip ci]"
+            if git push origin HEAD:main; then
+              echo "✔ 视频发帖记录已持久化（第 $i 次尝试）"
+              exit 0
+            fi
+            echo "⚠️ 推送被拒绝，重新合并后重试 ($i/3)..."
+            sleep $((i * 2))
+          done
+          # R9：同 auto_post —— 沙箱销毁后记录就没了，转储进日志以便人工恢复。
+          echo "::error::视频帖记录未能提交：重跑会被守卫放行而双发，请从下方快照人工恢复。"
+          SIZE=$(wc -c < /tmp/sent_cache.json 2>/dev/null || echo 0)
+          if [ "${SIZE:-0}" -gt 0 ] && [ "${SIZE:-0}" -lt 2000000 ]; then
+            echo "----- 救援快照 sent_cache.json 开始 -----"
+            cat /tmp/sent_cache.json
+            echo
+            echo "----- 救援快照结束 -----"
+          else
+            echo "快照过大或不存在（${SIZE:-0} 字节），跳过转储。"
           fi
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            ARGS="$ARGS --dry"
-          fi
-          eval python scripts/publish_video.py $ARGS
+          exit 1
 
       - name: 发布失败兜底通报
         if: failure()
@@ -86,4 +143,6 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           EVENT_NAME: ${{ github.event_name }}
+          POSTER_RESULT: ${{ steps.publish.conclusion }}
+          STATE_RESULT: ${{ steps.state.conclusion }}
         run: python3 scripts/notify_fallback.py

@@ -477,5 +477,86 @@ class TestReadmeEnvCoverage(unittest.TestCase):
                          f"以下环境变量已实现但 README 未文档化: {missing}")
 
 
+class TestWatchdogCannotBlockPosting(unittest.TestCase):
+    """R6：看门狗只报警，绝不能阻塞发帖主流程"""
+
+    def _text(self):
+        path = os.path.join(REPO_ROOT, ".github", "workflows", "auto_post.yml")
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+
+    def test_watchdog_step_continue_on_error(self):
+        text = self._text()
+        # 锚定真正执行脚本的那一行（注释里也出现过文件名，不能用它定位）
+        idx = text.index("run: python scripts/schedule_watchdog.py")
+        block = text[max(0, idx - 1500):idx]
+        self.assertIn("continue-on-error: true", block,
+                      "看门狗步骤必须 continue-on-error，否则脚本一抛错就会跳过发帖步骤")
+
+    def test_posting_step_not_gated_on_watchdog(self):
+        text = self._text()
+        idx = text.index("python main.py")
+        block = text[max(0, idx - 1200):idx]
+        self.assertNotIn("steps.watchdog", block, "发帖步骤不应依赖看门狗步骤的结果")
+
+
+class TestStateResultWiredToFallbackNotify(unittest.TestCase):
+    """R7：兜底通报需要知道"状态回写步骤"的结果，否则会把
+    "帖子已发但状态没落盘"误报成"什么都没发生"（排障方向被带偏）"""
+
+    def _text(self, name):
+        with open(os.path.join(REPO_ROOT, ".github", "workflows", name), encoding="utf-8") as f:
+            return f.read()
+
+    def test_auto_post_state_step_has_id_and_is_reported(self):
+        text = self._text("auto_post.yml")
+        self.assertIn("id: state", text, "回写状态步骤需要 id 才能取 conclusion")
+        self.assertIn("STATE_RESULT: ${{ steps.state.conclusion }}", text)
+
+    def test_video_workflow_reports_publish_and_state(self):
+        text = self._text("video_publish.yml")
+        self.assertIn("id: state", text)
+        self.assertIn("STATE_RESULT: ${{ steps.state.conclusion }}", text)
+        self.assertIn("POSTER_RESULT: ${{ steps.publish.conclusion }}", text)
+
+
+class TestVideoWorkflowContracts(unittest.TestCase):
+    """R6：视频 workflow 的并发 / 权限 / 传参契约"""
+
+    def _text(self):
+        path = os.path.join(REPO_ROOT, ".github", "workflows", "video_publish.yml")
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+
+    def test_concurrency_declared(self):
+        self.assertIn("concurrency:", self._text(), "手动触发可被连点，必须串行化")
+
+    def test_contents_write_for_state_commit(self):
+        self.assertIn("contents: write", self._text(),
+                      "需要回写 sent_cache.json，权限必须是 write")
+
+    def test_no_eval_in_run_blocks(self):
+        for line in self._text().splitlines():
+            stripped = line.strip()
+            if stripped.startswith("#"):
+                continue
+            self.assertNotIn("eval ", stripped,
+                             f"不得用 eval 执行拼接的命令: {stripped}")
+
+    def test_dispatch_inputs_not_interpolated_into_shell(self):
+        """dispatch 输入必须经 env 传入：直接插值进 shell 会被引号/$(...) 破坏"""
+        run_blocks = re.findall(r"run: \|\n((?: {10,}.*\n)+)", self._text())
+        self.assertTrue(run_blocks, "没找到多行 run 块，测试可能已失效")
+        for block in run_blocks:
+            self.assertNotIn("github.event.inputs", block,
+                             f"dispatch 输入不得直接插值进 shell 脚本:\n{block}")
+
+    def test_state_commit_step_present(self):
+        text = self._text()
+        self.assertIn("git_state_merge.py", text,
+                      "视频帖记录必须提交回仓库，否则双发守卫恒不命中")
+        self.assertIn("sent_cache.json", text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

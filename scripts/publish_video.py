@@ -15,6 +15,7 @@
 合规清洗后发布。
 """
 import argparse
+import hashlib
 import os
 import sys
 import time
@@ -22,10 +23,30 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import main as m  # noqa: E402
 
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# 币安 S3 单文件上限的保守兜底：防止误传一个几百 MB 的文件把上传窗口耗光
+MAX_VIDEO_BYTES = 200 * 1024 * 1024
+
+
+def resolve_video_path(raw: str) -> str:
+    """把命令行给的相对路径解析成真实路径。
+
+    相对路径按**仓库根**解析而非当前工作目录：脚本常被 workflow 从别处调用，
+    且手动 `cd scripts && python publish_video.py assets/x.mp4` 时 CWD 不是仓库根。"""
+    if os.path.isabs(raw):
+        return raw
+    if os.path.exists(raw):
+        return raw
+    candidate = os.path.join(REPO_ROOT, raw)
+    return candidate if os.path.exists(candidate) else raw
+
 
 def check_duplicate(title: str) -> bool:
     """R111：双发守卫——sent_cache 里已有同标题的帖子时警告（不阻断，由人决定）。
-    视频是一次性手动操作，误触重跑是最常见的双发场景。"""
+    视频是一次性手动操作，误触重跑是最常见的双发场景。
+
+    R6：这条守卫此前**恒不命中**——publish() 成功后从不写 sent_cache，
+    表里永远不会有视频帖。现在发布成功会调用 record_sent() 登记。"""
     try:
         cache = m.CacheManager(m.CACHE_FILE)
         for item in cache.cached_items:
@@ -36,8 +57,32 @@ def check_duplicate(title: str) -> bool:
     return False
 
 
+def record_sent(title: str, source: str = "video") -> bool:
+    """把视频帖登记进 sent_cache（幂等去重 + 24h 配额都依赖这张表）。
+
+    返回是否落盘成功。失败不阻断——帖子已经发出去了，这里只是让下一轮能看见它。"""
+    try:
+        cache = m.CacheManager(m.CACHE_FILE)
+        news_id = "video-" + hashlib.sha256(title.encode("utf-8")).hexdigest()[:16]
+        ok = cache.record_sent(news_id, title, source, tokens=[])
+        if not ok:
+            print("⚠️ sent_cache 落盘失败：本次视频帖未登记，重跑可能双发（请手动核对）。")
+        return ok
+    except Exception as e:
+        print(f"⚠️ 登记 sent_cache 异常（不影响已发布的帖子）: {e}")
+        return False
+
+
 def upload_video(api_key: str, video_path: str) -> str | None:
     """上传视频到币安 S3，返回托管 URL（None = 失败）。"""
+    try:
+        size = os.path.getsize(video_path)
+    except OSError as e:
+        print(f"❌ 无法读取视频文件属性: {e}")
+        return None
+    if size > MAX_VIDEO_BYTES:
+        print(f"❌ 视频过大 ({size / 1024 / 1024:.1f} MB)，上限 {MAX_VIDEO_BYTES // 1024 // 1024} MB")
+        return None
     with open(video_path, "rb") as f:
         video_bytes = f.read()
     size_mb = len(video_bytes) / 1024 / 1024
@@ -97,7 +142,16 @@ def upload_video(api_key: str, video_path: str) -> str | None:
 
 
 def publish(api_key: str, body: str, video_url: str | None, title: str | None = None) -> bool:
-    """发布到币安广场。"""
+    """发布到币安广场。
+
+    R6 修了两处让"视频发布"实际不成立的缺陷：
+    1. 旧实现在 title 非空（**默认就非空**）时只写 `cover = video_url`，从不写
+       `videoList` —— 视频被当成封面图提交，而"videoList 被拒则降级 imageList"
+       的分支因为 payload 里永远没有 videoList 而恒不执行（死代码）。
+       现在 videoList 与 title/contentType 正交：只要有视频就下发。
+    2. 删掉 imageList 降级：把 mp4 塞进图片字段不可能成功，只会把视频 URL
+       喂给图片接口。
+    """
     # 走既有净化管线（合规清洗+挂件+标签）
     content = m.SquarePublisher._sanitize_content(body)
     headers = {
@@ -110,17 +164,24 @@ def publish(api_key: str, body: str, video_url: str | None, title: str | None = 
     if title:
         payload["contentType"] = 2
         payload["title"] = title[:80]
-        if video_url:
-            payload["cover"] = video_url
     else:
         payload["contentType"] = 1
-        if video_url:
-            payload["videoList"] = [video_url]
+    if video_url:
+        payload["videoList"] = [video_url]
     print(f"📝 发布 payload 键: {list(payload.keys())}")
+    # retries=0：http_request 会把 504 也纳入重试，而发帖接口的 504 官方语义是
+    # "内容已受理入库"（main.SquarePublisher.publish 同款约定）。带重试 = 重复发帖。
     res = m.http_post(m.BINANCE_SQUARE_API_URL, headers=headers, json=payload,
-                      timeout=20, retries=1)
-    if res is None or res.status_code != 200:
-        print(f"❌ 发布失败: {'网络错误' if res is None else f'HTTP {res.status_code} {res.text[:200]}'}")
+                      timeout=20, retries=0)
+    if res is None:
+        print("❌ 发布失败: 网络错误")
+        return False
+    if res.status_code == 504:
+        print("⚠️ 504 Gateway Timeout：按币安官方语义内容已进入发布队列，"
+              "视为成功且**不重试**（重试等于重复发帖）")
+        return True
+    if res.status_code != 200:
+        print(f"❌ 发布失败: HTTP {res.status_code} {res.text[:200]}")
         return False
     rj = res.json()
     if rj.get("code") == "000000" or rj.get("success"):
@@ -130,23 +191,6 @@ def publish(api_key: str, body: str, video_url: str | None, title: str | None = 
             print(f"   帖子链接: https://www.binance.com/zh-CN/square/post/{cid}")
         return True
     print(f"❌ 业务错误: {rj.get('message')} (code={rj.get('code')})")
-    # R111：videoList 被拒时用 imageList 重试（任何错误都试一次降级，
-    # 不只匹配 "field" 关键词——API 错误消息格式不可预测）
-    if "videoList" in payload:
-        print("💡 尝试降级：移除 videoList，只用 imageList...")
-        payload.pop("videoList", None)
-        payload["imageList"] = [video_url]
-        res2 = m.http_post(m.BINANCE_SQUARE_API_URL, headers=headers, json=payload,
-                           timeout=20, retries=1)
-        if res2 is not None and res2.status_code == 200:
-            rj2 = res2.json()
-            if rj2.get("code") == "000000" or rj2.get("success"):
-                cid2 = (rj2.get("data") or {}).get("contentId")
-                print(f"🎉 降级发布成功！Content ID: {cid2}")
-                if cid2:
-                    print(f"   帖子链接: https://www.binance.com/zh-CN/square/post/{cid2}")
-                return True
-            print(f"❌ 降级也失败: {rj2.get('message')} (code={rj2.get('code')})")
     return False
 
 
@@ -185,11 +229,12 @@ def main() -> int:
         print("   或在 GitHub Secrets 中已配置，用 workflow 触发。")
         return 1
 
-    if not os.path.exists(args.video):
-        print(f"❌ 视频文件不存在: {args.video}")
+    video_path = resolve_video_path(args.video)
+    if not os.path.exists(video_path):
+        print(f"❌ 视频文件不存在: {args.video}（按仓库根解析为 {video_path}）")
         return 1
 
-    print(f"🎬 视频发布准备: {args.video}")
+    print(f"🎬 视频发布准备: {video_path}")
     print(f"   标题: {args.title[:40]}...")
     print(f"   正文: {args.body[:40]}...")
 
@@ -203,7 +248,7 @@ def main() -> int:
     print()
 
     # 上传视频
-    video_url = upload_video(api_key, args.video)
+    video_url = upload_video(api_key, video_path)
     if not video_url:
         print("❌ 视频上传失败，无法发布")
         return 1
@@ -214,6 +259,11 @@ def main() -> int:
 
     # 发布
     ok = publish(api_key, args.body, video_url, title=args.title)
+    if ok:
+        # 登记去重缓存：这是 R111 双发守卫与 24h 配额唯一的数据来源。
+        # workflow 随后会把 sent_cache.json 提交回仓库，让下次手动触发能看见。
+        if record_sent(args.title):
+            print("🧾 已登记 sent_cache（workflow 会随状态回写提交，重跑将被守卫拦下）")
     return 0 if ok else 1
 
 

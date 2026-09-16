@@ -89,12 +89,33 @@ def main(argv=None) -> int:
     server = (env.get("GITHUB_SERVER_URL", "") or "").strip() or "https://github.com"
     repo = (env.get("GITHUB_REPOSITORY", "") or "").strip() or "?"
     run_id = (env.get("GITHUB_RUN_ID", "") or "").strip() or "?"
-    title = "【兜底】发帖主流程异常退出"
+    install = (env.get("INSTALL_RESULT", "") or "").strip() or "?"
+    poster = (env.get("POSTER_RESULT", "") or "").strip() or "?"
+    state = (env.get("STATE_RESULT", "") or "").strip() or "?"
+
+    # R7：文案必须按"到底哪一步失败"分叉。旧实现硬编码"主脚本未产生任何状态变更"，
+    # 但本步骤由 `if: failure()` 触发，同样覆盖**状态回写步骤失败**的情形——那时
+    # 帖子可能已经真实发出、只是 sent_cache 没推送成功，下一轮会重复发布同一条。
+    # 一句"未产生任何状态变更"会把排障方向直接带偏（去查 Secrets，而真因是写入权限）。
+    if poster == "success" and state == "failure":
+        title = "【兜底】发帖已执行但状态回写失败"
+        detail = ("⚠️ 发帖步骤成功，但状态回写失败：sent_cache.json 可能未推送成功，"
+                  "**下一轮会重复发布同一内容**。请检查 Settings → Actions → "
+                  "General → Workflow permissions 是否为 Read and write，"
+                  "并确认远端 sent_cache.json 已包含本次发帖记录。")
+    elif poster == "failure":
+        title = "【兜底】发帖主流程异常退出"
+        detail = ("发帖步骤未成功完成，本轮可能未产生新帖（也可能部分已发）。"
+                  "若连续出现请检查 Secrets / 依赖 / Runner。")
+    else:
+        title = "【兜底】发帖流水线异常退出"
+        detail = (f"非发帖步骤失败（发帖步骤={poster}）。本轮可能未产生新帖；"
+                  f"若连续出现请检查依赖 / Runner / 仓库权限。")
+
     message = (
-        f"安装步骤: {env.get('INSTALL_RESULT', '?')} / "
-        f"发帖步骤: {env.get('POSTER_RESULT', '?')} / "
+        f"安装步骤: {install} / 发帖步骤: {poster} / 状态回写: {state} / "
         f"触发: {env.get('EVENT_NAME', '?')}\n"
-        f"主脚本未产生任何状态变更；若连续出现请检查 Secrets/依赖/Runner。\n"
+        f"{detail}\n"
         f"运行日志: {server}/{repo}/actions/runs/{run_id}")
     results = send_fallback(title, message, env)
     done = sorted(k for k, v in results.items() if v)
