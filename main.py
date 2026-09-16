@@ -6100,10 +6100,19 @@ def _run_main():
                 # 任一命中代币触顶即跳过。旧写法要求"全部代币都触顶"才跳过，
                 # 于是"同时提到 BTC 和某个冷门小币"的新闻会让已满额的 BTC 继续发，
                 # TOKEN_DAILY_LIMIT 形同虚设（Round 5）。
+                # R208：常规行情帖限流防刷屏；安全/突发等高影响故事仍允许占额度——
+                # 报表实录 1 日 token_limit 跳过 20 次，BTC/XRP/SOL 顶满后连被盗/
+                # ETF 级新闻一并丢掉（限流保护垂直度，不该吞掉市场级事件）。
                 if capped:
-                    logger.info(f"代币 {capped} 24h 内已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)，为避免刷屏跳过本条: {title}")
-                    skip_counts["token_limit"] += 1
-                    continue
+                    base_impact = item.get("base_impact_score", item.get("impact_score", 0)) or 0
+                    if base_impact >= ARTICLE_MIN_IMPACT:
+                        logger.info(
+                            f"代币 {capped} 已达 24h 限流，但本条热度 {base_impact} "
+                            f">= {ARTICLE_MIN_IMPACT}（高影响放行）: {title[:50]}")
+                    else:
+                        logger.info(f"代币 {capped} 24h 内已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)，为避免刷屏跳过本条: {title}")
+                        skip_counts["token_limit"] += 1
+                        continue
 
             # 风控拦截否认名单前置：20002/20022 拦过的内容重试大概率再被拦，
             # 此前该检查在 LLM+配图之后，每轮白烧一次生成（挪到前面，条件不变）

@@ -6305,9 +6305,10 @@ class TestRunMainSemantics(unittest.TestCase):
             self._teardown(patches, tmpdir)
 
     def test_token_limit_skips_pre_llm(self):
-        # 单币种限流在 LLM 之前跳过（BTC 已达上限的候选不再烧生成）
+        # 单币种限流在 LLM 之前跳过（BTC 已达上限的常规行情帖不再烧生成）
         tmpdir, paths = self._iso_files()
-        patches = self._base_patches(tmpdir, paths, dry=False)
+        low = dict(self._candidate(), impact_score=12, base_impact_score=12)
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[low])
         try:
             import json
             with open(paths["cache"], "w", encoding="utf-8") as f:
@@ -6325,6 +6326,37 @@ class TestRunMainSemantics(unittest.TestCase):
             self.assertEqual(rows[0]["skipped_token_limit"], 1, "限流跳过必须计数")
             self.assertEqual(rows[0]["published"], 0)
             self.assertEqual(len(self._read_json(paths["cache"], [])), 1, "限流跳过不得改写缓存")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_token_limit_high_impact_bypass(self):
+        """R208：BTC/XRP/SOL 顶满 24h 限流后，被盗/ETF 级高影响新闻仍应放行——
+        报表 1 日 token_limit 跳过 20 次，限流保护垂直度不该吞掉市场级事件。"""
+        tmpdir, paths = self._iso_files()
+        hot = dict(self._candidate(), impact_score=28, base_impact_score=28,
+                   title="BTC exchange cold wallet drained in $200M exploit")
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[hot])
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            import json
+            with open(paths["cache"], "w", encoding="utf-8") as f:
+                json.dump([{"id": "old", "title": "t", "source": "s",
+                            "sent_at": datetime.now(timezone.utc).isoformat(),
+                            "tokens": ["BTC"]}], f)
+            with patch.object(m, "TOKEN_DAILY_LIMIT", 1):
+                m._run_main()
+            self.assertEqual(self._engine.summarize.call_count, 1, "高影响必须进 LLM")
+            self.assertTrue(pub.publish.called)
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(run_row.get("skipped_token_limit"), 0)
+            self.assertEqual(run_row.get("published"), 1)
         finally:
             self._teardown(patches, tmpdir)
 
