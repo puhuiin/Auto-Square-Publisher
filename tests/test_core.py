@@ -5091,7 +5091,7 @@ class TestTrendBoost(unittest.TestCase):
         self._orig_cache = m.MarketDataProvider._trend_cache
         m.MarketDataProvider._trend_cache = (0.0, [])
         self._orig_syms = m.SymbolValidator._valid_symbols_cache
-        m.SymbolValidator._valid_symbols_cache = {"SOL", "BTC", "PUMP"}
+        m.SymbolValidator._valid_symbols_cache = {"SOL", "BTC", "PUMP", "PENGU"}
 
     def tearDown(self):
         m.MarketDataProvider._trend_cache = self._orig_cache
@@ -5124,28 +5124,29 @@ class TestTrendBoost(unittest.TestCase):
 
     def test_boost_applies_and_base_untouched(self):
         cands = [
-            {"title": "Solana DeFi TVL hits new high", "summary": "SOL ecosystem",
+            {"title": "PENGU DeFi TVL hits new high", "summary": "PENGU ecosystem",
              "impact_score": 10, "base_impact_score": 10},
             {"title": "Regulation hearing scheduled", "summary": "SEC meeting",
              "impact_score": 8, "base_impact_score": 8},
         ]
-        m.NewsFetcher.apply_trend_boost(cands, ["SOL"])
+        m.NewsFetcher.apply_trend_boost(cands, ["PENGU"])
         self.assertEqual(cands[0]["impact_score"], 10 + m.TREND_TOKEN_BOOST)
         self.assertEqual(cands[0]["base_impact_score"], 10, "准入分不得被加权污染")
         self.assertEqual(cands[1]["impact_score"], 8)
 
     def test_boost_empty_noop_and_dirty_symbols(self):
-        cands = [{"title": "SOL rally continues", "summary": "", "impact_score": 5,
+        cands = [{"title": "PUMP rally continues", "summary": "", "impact_score": 5,
                   "base_impact_score": 5}]
         m.NewsFetcher.apply_trend_boost(cands, [])
         self.assertEqual(cands[0]["impact_score"], 5, "空热搜表零行为变化")
-        m.NewsFetcher.apply_trend_boost(cands, ["", None, 42, "$SOL"])
+        m.NewsFetcher.apply_trend_boost(cands, ["", None, 42, "$PUMP"])
         self.assertEqual(cands[0]["impact_score"], 5 + m.TREND_TOKEN_BOOST,
                          "脏条目丢弃，$ 前缀归一后仍生效")
 
     def test_majors_on_trending_do_not_boost(self):
-        """R207：BTC/ETH/BNB/稳定币几乎常驻热搜——生产 trend_boost_hits=21/44
-        把「异常热点」稀释成人人 +6。蓝筹命中不得加权；山寨热搜仍加权。"""
+        """R207/R209：BTC/ETH/SOL/XRP/BNB/稳定币几乎常驻热搜——生产
+        trend_boost_hits=21/44 把「异常热点」稀释成人人 +6。61 份快照频率：
+        BTC 85% / ETH 44% / SOL 41% / XRP 30%。蓝筹命中不得加权；山寨仍加权。"""
         cands = [
             {"title": "Bitcoin ETF inflows accelerate as ETH staking grows",
              "summary": "", "impact_score": 10, "base_impact_score": 10},
@@ -5153,15 +5154,15 @@ class TestTrendBoost(unittest.TestCase):
              "summary": "", "impact_score": 10, "base_impact_score": 10},
         ]
         hits = m.NewsFetcher.apply_trend_boost(
-            cands, ["BTC", "ETH", "BNB", "USDT", "PUMP"])
+            cands, ["BTC", "ETH", "SOL", "XRP", "BNB", "USDT", "PUMP"])
         self.assertEqual(cands[0]["impact_score"], 10, "蓝筹常驻热搜不得加权")
         self.assertEqual(cands[1]["impact_score"], 10 + m.TREND_TOKEN_BOOST)
         self.assertEqual(hits, 1)
         # 热搜全是蓝筹 → 零加权（无异常山寨信号）
-        only_majors = [{"title": "Bitcoin dominance rises", "summary": "",
-                        "impact_score": 8, "base_impact_score": 8}]
+        only_majors = [{"title": "Bitcoin dominance rises as SOL cools",
+                        "summary": "", "impact_score": 8, "base_impact_score": 8}]
         self.assertEqual(
-            m.NewsFetcher.apply_trend_boost(only_majors, ["BTC", "ETH"]), 0)
+            m.NewsFetcher.apply_trend_boost(only_majors, ["BTC", "ETH", "SOL"]), 0)
         self.assertEqual(only_majors[0]["impact_score"], 8)
 
     def test_wordlike_trending_token_no_false_boost(self):
