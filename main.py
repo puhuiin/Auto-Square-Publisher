@@ -205,6 +205,13 @@ def append_run_summary(**overrides) -> None:
     系统性少算，与 Actions 实际 dispatch 数对不上，正是这条不变量要防的事。"""
     record = dict(_RUN_SUMMARY_ZERO_COUNTS)
     record["outcome"] = "run_summary"
+    # R10：无条件带上"外部依赖降级"信号。这两项决定了本轮的 no_token 跳过与盘面行
+    # 缺失是"真的没有"还是"数据源降级了"——没有它们，报表无法区分（归因会跑偏）。
+    # 放在这里而不是各调用点：新增退出路径时不会漏记。
+    if SymbolValidator.last_degraded_reason:
+        record["symbols_degraded"] = SymbolValidator.last_degraded_reason
+    if MarketDataProvider.last_fetch_missing:
+        record["market_missing"] = ",".join(MarketDataProvider.last_fetch_missing)[:120]
     record.update(overrides)
     append_metrics(record)
 
@@ -396,6 +403,30 @@ def intel_state_set(key: str, value) -> None:
             _atomic_write_text(CAMPAIGN_INTEL_FILE, json.dumps(intel, ensure_ascii=False, indent=2))
     except Exception as e:
         logger.warning(f"写入 intel 状态 [{key}] 失败 (不影响主流程): {e}")
+
+
+def intel_state_merge(updates: Dict[str, Any]) -> bool:
+    """把 updates 合并进 intel 文件（锁内读-改-写），返回是否写入成功。
+
+    R9：为"情报刷新落盘"这类**整文件写**提供持锁通道。旧实现在锁外拿函数入口的
+    快照回灌 `_` 键、再裸写整文件——刷新期间任何 `intel_state_update`
+    （告警节流 / 源健康 / 兜底图缓存）都会被旧值静默覆盖。
+    这里以**当前文件**为基线做合并，天然不会丢更新，也不再需要"回灌旧快照"。
+    """
+    if not _intel_writes_enabled():
+        return False
+    try:
+        with _INTEL_STATE_LOCK:
+            current = _read_intel_file()
+            if not isinstance(current, dict):
+                current = {}
+            current.update(updates)
+            _atomic_write_text(CAMPAIGN_INTEL_FILE,
+                               json.dumps(current, ensure_ascii=False, indent=2))
+        return True
+    except Exception as e:
+        logger.warning(f"合并写入 intel 状态失败 (不影响主流程): {e}")
+        return False
 
 
 def intel_state_update(key: str, mutate_fn, default=None):
@@ -861,9 +892,19 @@ class MarketDataProvider:
     """获取加密货币全网宏观情绪与任意代币币安实时 24H 盘面价格数据"""
 
     _PRICE_CACHE_TTL_SEC = 90          # 同一轮内行情缓存窗口
+    # 情绪指数拿不到时的显式占位（R9）。**必须与真实读数形态不同**：此前失败返回
+    # "50/100 (中立)"，与真实读数完全同形，会经 market_context 进 prompt、再进
+    # _verify_numbers 的白名单，于是模型写"恐慌贪婪 50"能通过数字校验并当事实发出。
+    # 中文占位顺带保证它不会在卡片上被当成数字（卡片侧另有 None 分支画 "--"）。
+    FNG_UNKNOWN = "未知"
     _price_cache: Dict[str, Tuple[float, str]] = {}  # symbol -> (timestamp, formatted)
     _fng_cache: Tuple[float, str] = (0.0, "")        # 恐慌贪婪指数同样缓存
     _kline_cache: Dict[str, Tuple[float, List[float]]] = {}  # symbol -> (ts, closes)
+    # R10：K 线失败的负缓存（symbol -> 失败时刻）。见 get_kline_closes 注释。
+    _kline_neg_cache: Dict[str, float] = {}
+    _KLINE_NEG_TTL_SEC = 120
+    # R10：最近一次批量行情里"没拿到价"的标的（区分"没有"与"拿不到"）
+    last_fetch_missing: List[str] = []
     _TREND_CACHE_TTL_SEC = 300        # 热搜缓存 5min：CoinGecko 数据 5-10 分钟刷新，且限频礼貌（借鉴 Easel 热榜纪律）
     _trend_cache: Tuple[float, List[str]] = (0.0, [])
     # R184c：主机降级链。GitHub runner（Azure 美国 IP）访问 api.binance.com 返回
@@ -1036,6 +1077,13 @@ class MarketDataProvider:
         ts, cached = cls._kline_cache.get(sym, (0.0, None))
         if cached and (now - ts) < 600:
             return cached
+        # R10：失败也要负缓存。`prepare_and_upload` 每帖对最多 3 个标的试 K 线，
+        # 每次失败要打 2 个主机 × (1+1 次重试) × 5s ≈ 20s；一轮多帖时同一标的会被
+        # 反复重打（一次故障期内单轮可白烧数分钟）。负缓存 TTL 取 120s——足够覆盖
+        # 同一轮内的重复调用，又不会让短暂抖动影响下一轮。
+        neg_ts = cls._kline_neg_cache.get(sym, 0.0)
+        if neg_ts and (now - neg_ts) < cls._KLINE_NEG_TTL_SEC:
+            return None
         try:
             r = http_get_binance(f"/api/v3/klines?symbol={sym}USDT"
                                  f"&interval=1h&limit={points}", timeout=5, retries=1)
@@ -1045,9 +1093,11 @@ class MarketDataProvider:
                     closes = [float(k[4]) for k in data if len(k) > 4]
                     if len(closes) >= 12:
                         cls._kline_cache[sym] = (now, closes)
+                        cls._kline_neg_cache.pop(sym, None)
                         return closes
         except Exception as e:
             logger.debug(f"K线拉取失败 [{sym}]: {e}")
+        cls._kline_neg_cache[sym] = now
         return None
 
     @classmethod
@@ -1077,9 +1127,27 @@ class MarketDataProvider:
         return cls.FNG_UNKNOWN
 
     @staticmethod
-    def _format_ticker(sym: str, d: Dict[str, Any]) -> str:
-        price = float(d.get("lastPrice", 0))
-        chg = float(d.get("priceChangePercent", 0))
+    def _format_ticker(sym: str, d: Dict[str, Any]) -> Optional[str]:
+        """单标的行情行；**拿不到价格时返回 None**（而不是编一个 $0.000000）。
+
+        R10：旧实现 `float(d.get("lastPrice", 0))` 在字段缺失/为 0 时渲染出
+        `$XXX: $0.000000 (24H: +0.00%)`——与 R9 修的情绪指数同一类问题：
+        缺失的数据被包装成一个看起来合理的数字，经 market_context 进 prompt，
+        再进数字白名单，最后可能作为"实时盘面"写进正文。
+        """
+        try:
+            raw_price = d.get("lastPrice")
+            if raw_price is None or str(raw_price).strip() == "":
+                return None
+            price = float(raw_price)
+        except (TypeError, ValueError):
+            return None
+        if price <= 0:
+            return None
+        try:
+            chg = float(d.get("priceChangePercent", 0))
+        except (TypeError, ValueError):
+            chg = 0.0
         sign = "+" if chg > 0 else ""
         if price > 100:
             price_str = f"${price:,.2f}"
@@ -1138,11 +1206,23 @@ class MarketDataProvider:
                 data = r.json()
                 if isinstance(data, list):
                     stats = {d.get("symbol"): d for d in data if isinstance(d, dict)}
-                    out = {
-                        s: cls._format_ticker(s, stats[f"{s}USDT"])
-                        for s in symbols if stats.get(f"{s}USDT")
-                    }
+                    out = {}
+                    for s in symbols:
+                        raw = stats.get(f"{s}USDT")
+                        if not raw:
+                            continue
+                        line = cls._format_ticker(s, raw)
+                        if line:                      # 无有效价格则整条丢弃（R10）
+                            out[s] = line
                     if out:
+                        # R10：批量接口"部分成功"必须留痕。旧实现只要有任意一条就 return，
+                        # 调用方无法区分"这个标的没有数据"与"接口只回了一部分"——
+                        # 盘面行会静默变短，而没人知道是网络问题还是真没行情。
+                        missing = [s for s in symbols if s not in out]
+                        cls.last_fetch_missing = missing
+                        if missing:
+                            logger.warning(f"批量行情仅返回 {len(out)}/{len(symbols)} 个标的，"
+                                           f"缺失 {missing}（盘面行将少这几项）")
                         return out
         except Exception as e:
             logger.debug(f"批量行情接口异常，降级为逐币查询: {e}")
@@ -1158,11 +1238,16 @@ class MarketDataProvider:
             r = http_get_binance(f"/api/v3/ticker/24hr?symbol={s}USDT", timeout=4, retries=0)
             if r is not None and r.status_code == 200:
                 try:
-                    out[s] = cls._format_ticker(s, r.json())
+                    line = cls._format_ticker(s, r.json())
+                    if line:
+                        out[s] = line
+                    else:
+                        failed.append(f"{s}(无有效价格)")
                 except Exception as e:
                     failed.append(f"{s}({e})")
             else:
                 failed.append(f"{s}({'网络' if r is None else r.status_code})")
+        cls.last_fetch_missing = [s for s in symbols if s not in out]
         if failed:
             # 不静默：全部失败时 prompt 的盘面行会退化为"链上/全市场热点"，排障需知
             logger.warning(f"逐币行情获取失败 {len(failed)}/{len(symbols)}: {', '.join(failed)}")
@@ -1176,12 +1261,28 @@ class SymbolValidator:
     """校验提取的代币是否在币安真实上线，防止幻觉生成假标的"""
 
     _valid_symbols_cache: Optional[Set[str]] = None
+    # R10：拉取 exchangeInfo 期间的双检锁。旧实现是"先把兜底池写进缓存再拉"——
+    # 用"提前占位"来避免并发重复拉取，代价是**中途异常会把半成品集合留在缓存里**
+    # （valid_set 与缓存是同一个对象，循环里逐个 add）。改为本地构建 + 末尾一次性写入，
+    # 并用锁保证并发调用只拉一次（本函数会在 9 个抓取线程里被间接调用）。
+    _symbols_lock = threading.Lock()
+    # 最近一次降级的归因（None = 完整加载）。供健康自检与 run_summary 暴露：
+    # 拉取失败时兜底池只有 47 个标的，新币新闻会被记为 no_token 静默跳过——
+    # 没有这个字段就分不清"新闻真没标的"与"标的表降级了"。
+    last_degraded_reason: Optional[str] = None
 
     @classmethod
     def get_valid_symbols(cls) -> Set[str]:
         if cls._valid_symbols_cache is not None:
             return cls._valid_symbols_cache
+        with cls._symbols_lock:
+            if cls._valid_symbols_cache is not None:   # 双检：并发调用只拉一次
+                return cls._valid_symbols_cache
+            return cls._load_valid_symbols()
 
+    @classmethod
+    def _load_valid_symbols(cls) -> Set[str]:
+        """拉取并缓存有效标的表。调用方必须持 `_symbols_lock`。"""
         valid_set = {
             "BTC", "ETH", "BNB", "SOL", "DOGE", "XRP", "PEPE", "SHIB", "WIF", "SUI",
             "NEAR", "APT", "AVAX", "LINK", "TRX", "ADA", "TAO", "RENDER", "FET", "POPCAT",
@@ -1191,7 +1292,9 @@ class SymbolValidator:
             # 全部漏召回。补齐高市值常客（真实币安现货标的，与别名表无重叠冲突）。
             "XLM", "ATOM", "ETC", "HBAR", "VET", "ALGO",
         }
-        cls._valid_symbols_cache = valid_set
+        # R10：不再提前把兜底池写进缓存（见 _symbols_lock 注释），
+        # 改为本地构建、末尾一次性写入。
+        degraded: Optional[str] = None
 
         # R184c：走主机降级链——runner（美国 IP）访问 api.binance.com 返 451，
         # 兜底池只有 47 个标的，ZEC/PENGU/UNI 等热搜常客全被判"不存在"而丢挂件
@@ -1199,18 +1302,35 @@ class SymbolValidator:
         if r is not None and r.status_code == 200:
             try:
                 data = r.json()
+                # 先收到独立集合里，成功解析完再并入——循环中途抛异常时
+                # 不会把"半成品集合"留在缓存里（旧实现 valid_set 与缓存同对象，边解析边 add）
+                fetched_bases = set()
                 for s in data.get("symbols", []):
                     if s.get("status") == "TRADING" and s.get("quoteAsset") in ("USDT", "FDUSD", "USDC"):
                         base = s.get("baseAsset", "").upper()
                         if base:
-                            valid_set.add(base)
-                logger.info(f"成功加载币安 {len(valid_set)} 个有效交易标的（含全部山寨币与 Meme 币）。")
+                            fetched_bases.add(base)
+                if fetched_bases:
+                    valid_set |= fetched_bases
+                    logger.info(f"成功加载币安 {len(valid_set)} 个有效交易标的（含全部山寨币与 Meme 币）。")
+                else:
+                    degraded = "exchange_info_empty"
+                    logger.warning("币安 exchangeInfo 返回 200 但无可用标的，使用内置基础标的池。")
             except Exception as e:
+                degraded = "exchange_info_parse_error"
                 logger.warning(f"解析币安交易标的列表异常 ({e})，使用内置基础标的池。")
         else:
+            degraded = "exchange_info_unreachable"
             logger.warning("获取币安交易标的列表失败，使用内置基础标的池。")
 
-        return cls._valid_symbols_cache
+        if degraded:
+            # 降级必须留痕：否则新币新闻被记为 no_token 跳过时，无法区分
+            # "这条新闻真没有标的"与"标的表只剩 47 个兜底币"（归因错误 → 排障跑偏）。
+            logger.warning(f"⚠️ 有效标的表降级为内置兜底池（{len(valid_set)} 个，原因 {degraded}）："
+                           f"本轮新币新闻可能被误判为 no_token。")
+        cls.last_degraded_reason = degraded
+        cls._valid_symbols_cache = valid_set
+        return valid_set
 
     @classmethod
     def filter_valid_tokens(cls, tokens: List[str]) -> List[str]:
@@ -1454,8 +1574,13 @@ class NewsFetcher:
         state = intel_state_get(self._FEED_HEALTH_KEY, {})
         return state if isinstance(state, dict) else {}
 
-    def _feed_is_parked(self, name: str) -> bool:
-        info = self._feed_health().get(name)
+    def _feed_is_parked(self, name: str,
+                        health: Optional[Dict[str, Dict[str, Any]]] = None) -> bool:
+        """health 可选：调用方已有快照时传进来，避免逐源重复整文件读。
+
+        R10：实测 `fetch_candidates` 逐源调本函数 = 每轮 9 次整文件读（另有
+        `_feed_record` 的 9 次），全部串在同一把锁上。9 个抓取线程收尾时会互相排队。"""
+        info = (health if health is not None else self._feed_health()).get(name)
         # 脏状态里可能塞进字符串/数字（手改或旧版本遗留）：当作未停放，不能让
         # 它把抓取链路炸掉
         if not isinstance(info, dict):
@@ -1478,6 +1603,11 @@ class NewsFetcher:
 
     def _feed_record(self, name: str, ok: bool):
         if ok:
+            # R10：无记录时不写盘——成功源占绝大多数，而 `_clear` 对不存在的键
+            # 是空操作，旧实现仍会做一次"整文件读 + 整文件写"。实测每轮固定 9 次
+            # 无意义整文件写（状态为空时全部是空操作）。与 `_publish_record` 同款守卫。
+            if name not in self._feed_health():
+                return
             def _clear(state):
                 state = dict(state or {})
                 state.pop(name, None)
@@ -1511,9 +1641,17 @@ class NewsFetcher:
     )
 
     @staticmethod
-    def clean_html(raw_html: str) -> str:
+    def clean_html(raw_html: str, max_len: int = 20000) -> str:
+        """RSS 文本清洗（去标签/解实体/折叠空白/注入截断）。
+
+        R10：**先按 max_len 截断再清洗**。调用方最终只取前 1000 字，而旧实现对整段
+        原文跑 NFKC + 3 条全局正则——Cointelegraph/Decrypt 单条 summary 可达数十 KB，
+        20 条 × 9 源全在 fetch_elapsed 的关键路径上。上限取 20000 远高于消费长度，
+        注入检测的语义不受影响（被截掉的部分本来也进不了 prompt）。"""
         if not raw_html:
             return ""
+        if len(raw_html) > max_len:
+            raw_html = raw_html[:max_len]
         # NFKC 优先再解实体：全角转义（如 ＆lt;）先归一半角，否则 unescape 认不出而漏网
         clean_text = html.unescape(unicodedata.normalize("NFKC", raw_html))
         clean_text = re.sub(r"<(script|style).*?</\1>", "", clean_text, flags=re.DOTALL | re.IGNORECASE)
@@ -2099,10 +2237,13 @@ class NewsFetcher:
 
     def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5,
                          priority_tokens: Optional[List[str]] = None) -> List[Dict[str, Any]]:
-        # 自动停放连续故障源：本次运行完全不触碰它们
+        # 自动停放连续故障源：本次运行完全不触碰它们。
+        # R10：源健康状态读一次快照后复用（旧实现逐源各读一次整文件，9 源 = 9 次读，
+        # 且全部串在同一把锁上）。
+        feed_health = self._feed_health()
         active_feeds = []
         for cfg in RSS_FEEDS:
-            if self._feed_is_parked(cfg["name"]):
+            if self._feed_is_parked(cfg["name"], health=feed_health):
                 self.stats["feeds_parked"].append(cfg["name"])
                 logger.info(f"⏸️ 数据源 [{cfg['name']}] 处于停放期，本次跳过。")
             else:
@@ -2111,20 +2252,47 @@ class NewsFetcher:
         candidates = []
         if not active_feeds:
             logger.warning(f"⚠️ 所有 {len(RSS_FEEDS)} 个数据源均处于故障停放期，本轮将无候选。请人工检查网络。")
-        with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(active_feeds) or 1, 10)) as executor:
+        # R9：抓取必须有**全局 deadline**。`_fetch_single_feed` 里的 timeout=8 只是单次
+        # socket 读写间隔，不是源级总时长——drip-feed 型服务器（每几秒吐一个字节）能把
+        # 一次请求吊住远超 8s；再叠加 403/429 的整轮重试，单源最坏可达数十秒。
+        # 而 workflow 的 timeout-minutes 是 30、cron 每 20 分钟一次且
+        # cancel-in-progress=false：一轮卡住会把后续 cron 全部排到后面。
+        # 超时后放弃迟到源、用已有候选继续（宁可少几条候选，不可整轮堆积）。
+        try:
+            fetch_deadline = float(os.getenv("FETCH_DEADLINE_SEC", "").strip() or 300)
+        except ValueError:
+            fetch_deadline = 300.0
+        timed_out_feeds: List[str] = []
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=min(len(active_feeds) or 1, 10))
+        try:
             future_to_feed = {
                 executor.submit(self._fetch_single_feed, cfg, cache_mgr, limit_per_feed): cfg["name"]
                 for cfg in active_feeds
             }
-            for future in concurrent.futures.as_completed(future_to_feed):
-                feed_name = future_to_feed[future]
-                try:
-                    feed_items = future.result()
-                    candidates.extend(feed_items)
-                except Exception as exc:
-                    logger.warning(f"解析数据源 [{feed_name}] 结果异常: {exc}")
-                    self._stat_fail(feed_name)
-                    self._feed_record(feed_name, ok=False)
+            try:
+                for future in concurrent.futures.as_completed(future_to_feed, timeout=fetch_deadline):
+                    feed_name = future_to_feed[future]
+                    try:
+                        feed_items = future.result()
+                        candidates.extend(feed_items)
+                    except Exception as exc:
+                        logger.warning(f"解析数据源 [{feed_name}] 结果异常: {exc}")
+                        self._stat_fail(feed_name)
+                        self._feed_record(feed_name, ok=False)
+            except concurrent.futures.TimeoutError:
+                timed_out_feeds = [n for f, n in future_to_feed.items() if not f.done()]
+                logger.warning(f"⏱️ 抓取超过全局上限 {fetch_deadline:.0f}s，放弃 {len(timed_out_feeds)} 个迟到源: "
+                               f"{timed_out_feeds}（已用已完成的候选继续）")
+        finally:
+            # 必须 wait=False：用 with 块收尾会 shutdown(wait=True)，等于原地等迟到源跑完，
+            # "全局 deadline"就形同虚设。cancel_futures 只取消尚未启动的任务；
+            # 已在跑的那几个线程会自行结束（其 _feed_record 写入是持锁的，不会撕裂状态）。
+            try:
+                executor.shutdown(wait=False, cancel_futures=True)
+            except TypeError:      # Python < 3.9 无 cancel_futures
+                executor.shutdown(wait=False)
+        if timed_out_feeds:
+            self.stats["fetch_timeout"] = len(timed_out_feeds)
 
         # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布（只影响排序，不影响准入）
         _cb_hits, _cb_off = self._apply_campaign_boost(candidates, priority_tokens)
@@ -2311,8 +2479,12 @@ _GENERIC_LEADINS = ("刚刚", "突发", "重磅", "快讯", "注意")
 # R101/R105：情绪指数锚定检测模式（覆盖生产六种真实措辞——一半不含"指数"字样，
 # 如"贪婪区"/"情绪还挂在 69"）。metrics_report.quality_scan 有同款副本，
 # TestQualityPatternSync 锁死两份一致——改这里必须同步改报表侧。
+# R10：第三分支此前是 `(?:贪婪|恐惧|情绪)[^。！？\n]{0,8}\d{2}`——间隙允许逗号与拉丁字母，
+# 于是"市场情绪偏谨慎，BTC 24 小时涨了 3%"这类**正常行情句**也会命中（实测确认），
+# 后果是：误武装情绪锚点禁令 → 盘面情绪行被剥离、prompt 注入"严禁提及"，
+# 报表还把合规内容记成违规。收紧为"间隙只允许中文/空格，且数字紧跟"，实测真阳性全保留。
 _FNG_ANCHOR_RE = re.compile(
-    r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^。！？\n]{0,8}\d{2}")
+    r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^\s。！？，、；：\nA-Za-z0-9]{0,4}\s?\d{2}")
 
 
 class LLMProviderConfig:
@@ -4116,23 +4288,21 @@ class CampaignScanner:
             intel_state_update("_intel_refresh_fail", _mark_fail, default={})
 
         if intel:
-            # 保留文件中的非 AI 键（如 _fallback_image 兜底图缓存），避免情报刷新时被冲刷；
-            # 但 _intel_refresh_fail 不保留——成功刷新后失败退避必须归零；
-            # _intel_empty_streak 同理：本轮拉取非空已清零，入口快照 cached 里还是旧值，
-            # 若合并回去会把刚清的零覆盖掉（stale-cache 回写）。
-            # 注意用 isinstance 守卫：cached 可能是脏文件残留的非 dict（如列表），直接 .items() 会炸。
-            if isinstance(cached, dict):
-                for k, v in cached.items():
-                    if k.startswith("_") and k not in intel and k not in (
-                            "_intel_refresh_fail", CampaignScanner._EMPTY_STREAK_KEY):
-                        intel[k] = v
-            intel["_intel_refresh_fail"] = {}
+            # R9：改为**锁内读-改-写**（intel_state_merge）。旧实现是"拿函数入口的
+            # cached 快照回灌 `_` 键 + 锁外裸写整文件"，有两个坑：
+            #   ① 丢更新：刷新期间任何 intel_state_update（告警节流/源健康/兜底图缓存）
+            #      都会被入口快照里的旧值覆盖；
+            #   ② stale 回写：`_intel_empty_streak` 本轮已清零，而 cached 里还是旧值，
+            #      合并回去会把刚清的零顶掉（旧代码要靠手工排除名单绕开，现在结构上不存在）。
+            # 以当前文件为基线合并后，"保留非 AI 键"与"清零失败退避"都自然成立。
             # 仅当 AI 产出了真实分析结果才落盘持久化（DRY_RUN 零副作用：跳过落盘，
             # 本轮内存返回新鲜情报，不把试运行的刷新写进生产状态）
             if _intel_writes_enabled():
                 try:
-                    _atomic_write_text(CAMPAIGN_INTEL_FILE, json.dumps(intel, ensure_ascii=False, indent=2))
-                    logger.info("最新币安活动情报已写入本地文件: campaign_intel.json")
+                    if intel_state_merge(dict(intel, _intel_refresh_fail={})):
+                        logger.info("最新币安活动情报已写入本地文件: campaign_intel.json")
+                    else:
+                        logger.error("保存 campaign_intel.json 失败（详见上一条警告）")
                 except Exception as e:
                     logger.error(f"保存 campaign_intel.json 失败: {e}")
             else:
@@ -5009,7 +5179,8 @@ class SquarePublisher(BasePublisher):
         for sep in ("\n", "。", "！", "？", "，"):
             idx = head.rfind(sep)
             if idx >= floor:
-                return head[:idx].rstrip()
+                # 保留句末标点（"\n" 会被随后的 rstrip 去掉），读起来才是完整句子
+                return head[:idx + len(sep)].rstrip()
         return head.rstrip()
 
     @classmethod

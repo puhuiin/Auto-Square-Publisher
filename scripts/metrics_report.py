@@ -29,8 +29,12 @@ TOP_N = 8
 # prompt 级禁令是软约束，模型可能不遵守——合规度此前零度量，全靠人工读帖。
 # 注意：final_preview 截断长度经历过 120→200（R106），巡检覆盖的是回执实际
 # 存储的钩子区文本（算法首屏所在），非全文。
+# R10：第三分支此前是 `(?:贪婪|恐惧|情绪)[^。！？\n]{0,8}\d{2}`——间隙允许逗号与拉丁字母，
+# 于是"市场情绪偏谨慎，BTC 24 小时涨了 3%"这类**正常行情句**也会命中（实测确认），
+# 后果是：误武装情绪锚点禁令 → 盘面情绪行被剥离、prompt 注入"严禁提及"，
+# 报表还把合规内容记成违规。收紧为"间隙只允许中文/空格，且数字紧跟"，实测真阳性全保留。
 _FNG_ANCHOR_RE = re.compile(
-    r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^。！？\n]{0,8}\d{2}")
+    r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^\s。！？，、；：\nA-Za-z0-9]{0,4}\s?\d{2}")
 _OVERUSED_DEVICES = ("先泼盆冷水",)  # main._OVERUSED_OPENING_DEVICES
 _AI_FLAVOR_HARD = (  # main.MultiLLMEngine._AI_FLAVOR_HARD
     "拭目以待", "未来可期", "保驾护航", "谱写", "新篇章", "扬帆起航",
@@ -394,6 +398,12 @@ def summarize(rows):
             # 只是"没看"），混入会让饱和期被双重标记成"配额饱和 N 轮 / 零候选 N 轮"
             if cand == 0 and pub == 0 and not quota_blocked and not hours_blocked:
                 runs_tmp["zero_candidates"] += 1
+            # R10：外部依赖降级信号——决定本轮 no_token/盘面缺失是"真的没有"
+            # 还是"数据源降级了"（没有它归因会跑偏）。取最近一次出现的值。
+            if r.get("symbols_degraded"):
+                runs_tmp["symbols_degraded"] = str(r["symbols_degraded"])
+            if r.get("market_missing"):
+                runs_tmp["market_missing"] = str(r["market_missing"])
             tr = r.get("trending")
             if isinstance(tr, str) and tr.strip():
                 runs_tmp["last_trending"] = tr
@@ -559,6 +569,12 @@ def render_text(s, rows=None):
         lines.append(f"- 运行摘要（{runs['n']} 轮）: {' / '.join(parts)}"
                      f"，累计候选 {runs['candidates']} → 发布 {runs['published']}"
                      + (f"（未处理 {runs['unprocessed']}）" if runs.get("unprocessed") else ""))
+        # R10：降级可见——否则"标的表只剩兜底池"会伪装成"这些新闻没有标的"
+        if runs.get("symbols_degraded"):
+            lines.append(f"  ⚠️ 有效标的表最近一次降级: {runs['symbols_degraded']}"
+                         f"（该轮新币新闻可能被误判为 no_token）")
+        if runs.get("market_missing"):
+            lines.append(f"  ⚠️ 盘面行情最近一次缺失标的: {runs['market_missing']}")
         # R113：配额释放估算直读——运营者不再需要查原始遥测
         if runs.get("next_slot_frees"):
             frees_min = runs.get("next_slot_frees_min")
