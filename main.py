@@ -1980,10 +1980,10 @@ class NewsFetcher:
     # R207：蓝筹/稳定币几乎常驻 CoinGecko Trending——生产 18:08/18:44 两轮
     # trend_boost_hits=21/20（约半数候选），多半是 BTC/ETH 词边界命中，
     # 把「正在被搜的异常热点」稀释成「人人 +6」。加权层跳过；prompt 快照仍展示全量。
-    # R209：61 份热搜快照频率 BTC 85% / ETH 44% / SOL 41% / XRP 30%——SOL/XRP
-    # 与 ETH 同属常驻档，一并跳过；NEAR/UNI/ZEC/PENGU 等山寨仍可加权。
+    # R209/R210：61 份热搜快照频率 BTC 85% / ETH 44% / SOL 41% / NEAR 36% /
+    # XRP 30%——≥30% 均属常驻档；UNI/ZEC/PENGU/ARB 等更低频山寨仍可加权。
     _TREND_BOOST_SKIP_MAJORS = frozenset({
-        "BTC", "ETH", "BNB", "SOL", "XRP",
+        "BTC", "ETH", "BNB", "SOL", "XRP", "NEAR",
         "USDT", "USDC", "FDUSD", "USD1", "TUSD", "DAI",
     })
 

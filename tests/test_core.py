@@ -5144,25 +5144,26 @@ class TestTrendBoost(unittest.TestCase):
                          "脏条目丢弃，$ 前缀归一后仍生效")
 
     def test_majors_on_trending_do_not_boost(self):
-        """R207/R209：BTC/ETH/SOL/XRP/BNB/稳定币几乎常驻热搜——生产
-        trend_boost_hits=21/44 把「异常热点」稀释成人人 +6。61 份快照频率：
-        BTC 85% / ETH 44% / SOL 41% / XRP 30%。蓝筹命中不得加权；山寨仍加权。"""
+        """R207/R209/R210：BTC/ETH/SOL/NEAR/XRP/BNB/稳定币几乎常驻热搜——
+        生产 trend_boost_hits=21/44 把「异常热点」稀释成人人 +6。61 份快照
+        频率：BTC 85% / ETH 44% / SOL 41% / NEAR 36% / XRP 30%。
+        常驻档命中不得加权；更低频山寨仍加权。"""
         cands = [
-            {"title": "Bitcoin ETF inflows accelerate as ETH staking grows",
+            {"title": "Bitcoin ETF inflows accelerate as NEAR staking grows",
              "summary": "", "impact_score": 10, "base_impact_score": 10},
             {"title": "PUMP meme season returns with new listings",
              "summary": "", "impact_score": 10, "base_impact_score": 10},
         ]
         hits = m.NewsFetcher.apply_trend_boost(
-            cands, ["BTC", "ETH", "SOL", "XRP", "BNB", "USDT", "PUMP"])
-        self.assertEqual(cands[0]["impact_score"], 10, "蓝筹常驻热搜不得加权")
+            cands, ["BTC", "ETH", "SOL", "NEAR", "XRP", "BNB", "USDT", "PUMP"])
+        self.assertEqual(cands[0]["impact_score"], 10, "常驻档热搜不得加权")
         self.assertEqual(cands[1]["impact_score"], 10 + m.TREND_TOKEN_BOOST)
         self.assertEqual(hits, 1)
-        # 热搜全是蓝筹 → 零加权（无异常山寨信号）
-        only_majors = [{"title": "Bitcoin dominance rises as SOL cools",
+        # 热搜全是常驻档 → 零加权（无异常山寨信号）
+        only_majors = [{"title": "Bitcoin dominance rises as NEAR cools",
                         "summary": "", "impact_score": 8, "base_impact_score": 8}]
         self.assertEqual(
-            m.NewsFetcher.apply_trend_boost(only_majors, ["BTC", "ETH", "SOL"]), 0)
+            m.NewsFetcher.apply_trend_boost(only_majors, ["BTC", "ETH", "NEAR"]), 0)
         self.assertEqual(only_majors[0]["impact_score"], 8)
 
     def test_wordlike_trending_token_no_false_boost(self):
