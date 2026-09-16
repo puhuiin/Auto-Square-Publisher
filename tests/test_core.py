@@ -6406,9 +6406,11 @@ class TestRunMainSemantics(unittest.TestCase):
 
     def test_token_limit_high_impact_bypass(self):
         """R208：BTC/XRP/SOL 顶满 24h 限流后，被盗/ETF 级高影响新闻仍应放行——
-        报表 1 日 token_limit 跳过 20 次，限流保护垂直度不该吞掉市场级事件。"""
+        报表 1 日 token_limit 跳过 20 次，限流保护垂直度不该吞掉市场级事件。
+        R215：绕过门槛独立化为 TOKEN_LIMIT_BYPASS_IMPACT(30)——28 分的旧夹具
+        在新门槛下会被限流，改用 32 分（生产真实事件档：加息 34/被盗 32/ETF 32）。"""
         tmpdir, paths = self._iso_files()
-        hot = dict(self._candidate(), impact_score=28, base_impact_score=28,
+        hot = dict(self._candidate(), impact_score=32, base_impact_score=32,
                    title="BTC exchange cold wallet drained in $200M exploit")
         patches = self._base_patches(tmpdir, paths, dry=False, candidates=[hot])
         pub = MagicMock()
@@ -6431,7 +6433,68 @@ class TestRunMainSemantics(unittest.TestCase):
                 rows = [json.loads(l) for l in f if l.strip()]
             run_row = next(r for r in rows if r.get("outcome") == "run_summary")
             self.assertEqual(run_row.get("skipped_token_limit"), 0)
+            # R215：放行必须留痕——只记拦截会把"限流正常工作"误读成"疯狂拦截"
+            self.assertEqual(run_row.get("token_limit_bypassed"), 1, "高影响放行必须计数")
             self.assertEqual(run_row.get("published"), 1)
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_token_limit_routine_score_still_capped(self):
+        """R215 回归锁：20~29 分的常规行情帖（等待联储/观点分析类）触顶后必须
+        被限流——R208 用 ARTICLE_MIN_IMPACT(20) 当绕过门槛时，生产实录 BTC 单日
+        8/12 篇穿透（'Traders Wait for the Fed' 20 分、'AI onboarding' 21 分照发），
+        单币限流的垂直度保护形同虚设。"""
+        tmpdir, paths = self._iso_files()
+        routine = dict(self._candidate(), impact_score=21, base_impact_score=21,
+                       title="Bitcoin stays stuck as traders wait for the Fed")
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[routine])
+        try:
+            import json
+            with open(paths["cache"], "w", encoding="utf-8") as f:
+                json.dump([{"id": "old", "title": "t", "source": "s",
+                            "sent_at": datetime.now(timezone.utc).isoformat(),
+                            "tokens": ["BTC"]}], f)
+            with patch.object(m, "TOKEN_DAILY_LIMIT", 1):
+                m._run_main()
+            self.assertEqual(self._engine.summarize.call_count, 0,
+                            "常规分触顶帖必须拦在 LLM 之前（R208 时代 21 分会照发）")
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(run_row.get("skipped_token_limit"), 1)
+            self.assertEqual(run_row.get("token_limit_bypassed"), 0)
+            self.assertEqual(run_row.get("published"), 0)
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_token_limit_bypass_threshold_env_tunable(self):
+        """R215：TOKEN_LIMIT_BYPASS_IMPACT 可调——降到 20 恢复 R208 行为
+        （常规 21 分放行），运维可按账号垂直度策略校准。"""
+        tmpdir, paths = self._iso_files()
+        routine = dict(self._candidate(), impact_score=21, base_impact_score=21,
+                       title="Bitcoin onboarding engine opinion piece")
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[routine])
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            import json
+            with open(paths["cache"], "w", encoding="utf-8") as f:
+                json.dump([{"id": "old", "title": "t", "source": "s",
+                            "sent_at": datetime.now(timezone.utc).isoformat(),
+                            "tokens": ["BTC"]}], f)
+            with patch.object(m, "TOKEN_DAILY_LIMIT", 1), \
+                 patch.object(m, "TOKEN_LIMIT_BYPASS_IMPACT", 20):
+                m._run_main()
+            self.assertEqual(self._engine.summarize.call_count, 1, "门槛降到 20 后 21 分应放行")
+            self.assertTrue(pub.publish.called)
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(run_row.get("token_limit_bypassed"), 1)
         finally:
             self._teardown(patches, tmpdir)
 

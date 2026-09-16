@@ -156,6 +156,11 @@ DUP_SIMILARITY_THRESHOLD = _clamp01("DUP_SIMILARITY_THRESHOLD", _env_float("DUP_
 MIN_IMPACT_SCORE = _env_int("MIN_IMPACT_SCORE", 0)                 # 最低热度分过滤，0 表示不过滤
 MAX_DAILY_POSTS = _env_int("MAX_DAILY_POSTS", 12)                  # 24h 滚动发帖配额，0 表示不限制
 TOKEN_DAILY_LIMIT = _env_int("TOKEN_DAILY_LIMIT", 3)               # 同一代币 24h 内最多发布篇数，0 表示不限制
+# R215：限流绕过阈值独立化——R208 复用 ARTICLE_MIN_IMPACT(20) 让"常规行情帖"
+# （等待联储/观点分析类，生产实录 20~26 分）也能无限绕过限流，BTC 单日 8/12 篇
+# 穿透。真实市场级事件（加息/被盗/ETF 出逃）生产分布在 29~34 档；30 分界把
+# 常规帖还给限流（垂直度保护），事件帖仍放行。独立于长文门槛，可单独调。
+TOKEN_LIMIT_BYPASS_IMPACT = _env_int("TOKEN_LIMIT_BYPASS_IMPACT", 30)  # 限流绕过门槛：触顶代币的热度低于此值仍被限流
 MAX_TOKENS_PER_POST = _env_int("MAX_TOKENS_PER_POST", 3)           # 单帖挂件标的上限（清单式行情日评可提取 9+ 币）
 # 每日深度长文（contentType=2）：每天首帖若热度达标即升级长文（ARTICLE_PER_DAY=0 关闭）
 ARTICLE_PER_DAY = os.getenv("ARTICLE_PER_DAY", "1").strip()
@@ -6317,7 +6322,8 @@ def run_healthcheck():
             checks.append(("24h 发帖配额", "⚠", "无法读取 sent_cache（缓存文件异常）"))
 
     # ---- 7. 发布通道级开关 ----
-    checks.append(("运行策略", "ℹ", f"日配额={MAX_DAILY_POSTS} | 单币种限流={TOKEN_DAILY_LIMIT} | "
+    checks.append(("运行策略", "ℹ", f"日配额={MAX_DAILY_POSTS} | 单币种限流={TOKEN_DAILY_LIMIT}"
+                                 f"（热度≥{TOKEN_LIMIT_BYPASS_IMPACT} 放行） | "
                                   f"时效={MAX_NEWS_AGE_HOURS}h | 去重={DUP_SIMILARITY_THRESHOLD} | "
                                   f"时段={ACTIVE_HOURS_BEIJING or '全天'} | LOG={_LOG_LEVEL}"))
     plats = " / ".join(PUBLISH_PLATFORMS)
@@ -6646,6 +6652,9 @@ def _run_main():
     skip_counts = {"batch_dup": 0, "no_token": 0, "token_limit": 0,
                    "risk_blocked": 0, "parked": 0}
     exception_skipped = 0
+    # R215：限流高影响放行计数——放行是限流决策的另一半，只记跳过会把
+    # "限流正常工作"误读成"限流疯狂拦截"（生产 R208 时代 8 次放行零留痕）
+    token_limit_bypassed = 0
 
     # 每日深度长文（contentType=2）：当日本轮次未发过长文且榜首热度达标时，
     # 首帖升级为长文——短讯抢时效，长文打专业垂直度与长尾流量（平台算法对
@@ -6707,12 +6716,18 @@ def _run_main():
                 # R208：常规行情帖限流防刷屏；安全/突发等高影响故事仍允许占额度——
                 # 报表实录 1 日 token_limit 跳过 20 次，BTC/XRP/SOL 顶满后连被盗/
                 # ETF 级新闻一并丢掉（限流保护垂直度，不该吞掉市场级事件）。
+                # R215：R208 原用 ARTICLE_MIN_IMPACT(20) 当绕过门槛，语义错位——
+                # 20 分是"日常 decent 故事"的水平（生产实录：等待联储 20 分、
+                # 观点分析 21 分照发），等于给 BTC 这类高频标的开了无限后门
+                # （单日 8/12 篇穿透）。独立门槛 TOKEN_LIMIT_BYPASS_IMPACT(30)
+                # 对齐真实事件档（加息 34/被盗 32/ETF 32），常规帖回到限流。
                 if capped:
                     base_impact = item.get("base_impact_score", item.get("impact_score", 0)) or 0
-                    if base_impact >= ARTICLE_MIN_IMPACT:
+                    if base_impact >= TOKEN_LIMIT_BYPASS_IMPACT:
+                        token_limit_bypassed += 1
                         logger.info(
                             f"代币 {capped} 已达 24h 限流，但本条热度 {base_impact} "
-                            f">= {ARTICLE_MIN_IMPACT}（高影响放行）: {title[:50]}")
+                            f">= {TOKEN_LIMIT_BYPASS_IMPACT}（高影响放行）: {title[:50]}")
                     else:
                         logger.info(f"代币 {capped} 24h 内已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)，为避免刷屏跳过本条: {title}")
                         skip_counts["token_limit"] += 1
@@ -7156,6 +7171,8 @@ def _run_main():
         "skipped_risk_blocked": skip_counts["risk_blocked"],
         "skipped_parked": skip_counts["parked"],
         "skipped_exception": exception_skipped,
+        # R215：限流放行计数——与 skipped_token_limit 互补，放行/拦截两侧都可观测
+        "token_limit_bypassed": token_limit_bypassed,
         "feeds_ok": fetcher.stats.get("feeds_ok", 0),
         "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
         # R177：分段耗时进 run_summary——生产发帖轮 elapsed 稳定 ~370s，

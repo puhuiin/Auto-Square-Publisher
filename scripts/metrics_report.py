@@ -249,6 +249,7 @@ def summarize(rows):
         "n": 0, "quota_blocked": 0, "active_hours_blocked": 0, "zero_candidates": 0,
         "candidates": 0, "published": 0, "unprocessed": 0,
         "skips": collections.Counter(), "last_trending": "",
+        "token_limit_bypass": 0,  # R215：限流高影响放行计数（拦截的另一半）
         "trend_freq": collections.Counter(),
         "last_hot_topics": "",  # R190：全网实时热点钩子供给（HN 等）
         "hot_topic_hits": 0,    # 出现过 hot_topics 的发帖轮数
@@ -433,6 +434,10 @@ def summarize(rows):
             for k, v in r.items():
                 if k.startswith("skipped_") and isinstance(v, (int, float)):
                     runs_tmp["skips"][k[len("skipped_"):]] += int(v)
+            # R215：限流高影响放行（放行字段不带 skipped_ 前缀，显式收集）
+            _tlb = _num(r.get("token_limit_bypassed"))
+            if _tlb is not None and _tlb > 0:
+                runs_tmp["token_limit_bypass"] += int(_tlb)
             # R177：分段耗时（有则收，历史行无字段不进）
             _sl = _num(r.get("sleep_elapsed_sec"))
             if _sl is not None and _sl > 0:
@@ -635,6 +640,11 @@ def render_text(s, rows=None):
             lines.append(f"  耗时构成（均值）: {' · '.join(parts)}")
         if runs.get("skips"):
             lines.append(f"  跳过分布 {runs['skips']}")
+        # R215：放行是限流决策的另一半——只看拦截会把"限流正常"误读成"疯狂拦截"
+        # 阈值数字不在此硬编码（脚本独立运行不 import 主模块，双份事实源会漂移），
+        # 阈值经 main.py --healthcheck 的「运行策略」行可见
+        if runs.get("token_limit_bypass"):
+            lines.append(f"  ⭕ 限流高影响放行 {runs['token_limit_bypass']} 次（热度达标绕过单币上限）")
     if rows is not None:
         q = quality_scan(rows)
         if q["scanned"]:
