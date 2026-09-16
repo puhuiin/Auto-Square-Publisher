@@ -5135,13 +5135,34 @@ class TestTrendBoost(unittest.TestCase):
         self.assertEqual(cands[1]["impact_score"], 8)
 
     def test_boost_empty_noop_and_dirty_symbols(self):
-        cands = [{"title": "BTC rally", "summary": "", "impact_score": 5,
+        cands = [{"title": "SOL rally continues", "summary": "", "impact_score": 5,
                   "base_impact_score": 5}]
         m.NewsFetcher.apply_trend_boost(cands, [])
         self.assertEqual(cands[0]["impact_score"], 5, "空热搜表零行为变化")
-        m.NewsFetcher.apply_trend_boost(cands, ["", None, 42, "$BTC"])
+        m.NewsFetcher.apply_trend_boost(cands, ["", None, 42, "$SOL"])
         self.assertEqual(cands[0]["impact_score"], 5 + m.TREND_TOKEN_BOOST,
                          "脏条目丢弃，$ 前缀归一后仍生效")
+
+    def test_majors_on_trending_do_not_boost(self):
+        """R207：BTC/ETH/BNB/稳定币几乎常驻热搜——生产 trend_boost_hits=21/44
+        把「异常热点」稀释成人人 +6。蓝筹命中不得加权；山寨热搜仍加权。"""
+        cands = [
+            {"title": "Bitcoin ETF inflows accelerate as ETH staking grows",
+             "summary": "", "impact_score": 10, "base_impact_score": 10},
+            {"title": "PUMP meme season returns with new listings",
+             "summary": "", "impact_score": 10, "base_impact_score": 10},
+        ]
+        hits = m.NewsFetcher.apply_trend_boost(
+            cands, ["BTC", "ETH", "BNB", "USDT", "PUMP"])
+        self.assertEqual(cands[0]["impact_score"], 10, "蓝筹常驻热搜不得加权")
+        self.assertEqual(cands[1]["impact_score"], 10 + m.TREND_TOKEN_BOOST)
+        self.assertEqual(hits, 1)
+        # 热搜全是蓝筹 → 零加权（无异常山寨信号）
+        only_majors = [{"title": "Bitcoin dominance rises", "summary": "",
+                        "impact_score": 8, "base_impact_score": 8}]
+        self.assertEqual(
+            m.NewsFetcher.apply_trend_boost(only_majors, ["BTC", "ETH"]), 0)
+        self.assertEqual(only_majors[0]["impact_score"], 8)
 
     def test_wordlike_trending_token_no_false_boost(self):
         """R95：热搜榜全是词形 ticker（PUMP/PENGU），'Solana pumps 10%'
@@ -5893,10 +5914,12 @@ class TestRunMainSemantics(unittest.TestCase):
             self._teardown(patches, tmpdir)
 
     def test_run_summary_records_boost_hits(self):
-        """R193：三路加权命中数进 run_summary——供给快照看不到是否真打中候选。
-        默认候选标题含 BTC；热搜/热点词表喂 BTC 则两路各 +1。"""
+        """R193/R207：三路加权命中数进 run_summary。默认候选标题含 BTC；
+        热点词喂 BTC → hot +1；热搜喂 BTC → R207 蓝筹跳过 trend 0。
+        另喂山寨热搜 PENGU + 候选含 PENGU → trend 1。"""
         tmpdir, paths = self._iso_files()
-        patches = self._base_patches(tmpdir, paths, dry=False)
+        cand = dict(self._candidate(), title="BTC and PENGU both move")
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[cand])
         pub = MagicMock()
         pub.publish.return_value = True
         pub._publish_parked.return_value = False
@@ -5905,9 +5928,9 @@ class TestRunMainSemantics(unittest.TestCase):
         patches.append(sq_patch)
         try:
             with patch.object(m.MarketDataProvider, "get_trending_symbols",
-                              return_value=["BTC"]), \
+                              return_value=["BTC", "PENGU"]), \
                  patch.object(m.SymbolValidator, "get_valid_symbols",
-                              return_value={"BTC", "ETH"}), \
+                              return_value={"BTC", "ETH", "PENGU"}), \
                  patch.object(m.MarketDataProvider, "get_hot_keywords",
                               return_value=["BTC"]):
                 m._run_main()
@@ -5915,7 +5938,8 @@ class TestRunMainSemantics(unittest.TestCase):
             with open(paths["metrics"], encoding="utf-8") as f:
                 rows = [json.loads(l) for l in f if l.strip()]
             run_row = next(r for r in rows if r.get("outcome") == "run_summary")
-            self.assertEqual(run_row.get("trend_boost_hits"), 1)
+            self.assertEqual(run_row.get("trend_boost_hits"), 1,
+                             "仅山寨热搜 PENGU 命中；蓝筹 BTC 不得计入")
             self.assertEqual(run_row.get("hot_boost_hits"), 1)
             self.assertEqual(run_row.get("campaign_boost_hits"), 0,
                              "空活动币表不得记命中")

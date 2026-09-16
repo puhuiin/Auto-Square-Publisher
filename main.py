@@ -1977,6 +1977,14 @@ class NewsFetcher:
                         break
         return hits, off_pool
 
+    # R207：蓝筹/稳定币几乎常驻 CoinGecko Trending——生产 18:08/18:44 两轮
+    # trend_boost_hits=21/20（约半数候选），多半是 BTC/ETH 词边界命中，
+    # 把「正在被搜的异常热点」稀释成「人人 +6」。加权层跳过；prompt 快照仍展示全量。
+    _TREND_BOOST_SKIP_MAJORS = frozenset({
+        "BTC", "ETH", "BNB",
+        "USDT", "USDC", "FDUSD", "USD1", "TUSD", "DAI",
+    })
+
     @staticmethod
     def apply_trend_boost(candidates: List[Dict[str, Any]],
                           trending_symbols: Optional[List[str]]) -> int:
@@ -1986,11 +1994,13 @@ class NewsFetcher:
         不动（MIN_IMPACT_SCORE 过滤已按原始分完成）。空表 = 零行为变化。
         返回命中的候选数（供 run_summary 度量）。
         R95：命中判定走 _candidate_hits_tokens 四层防线——热搜榜全是 PUMP/
-        PENGU 词形 ticker，text_upper 匹配会把 "pumps" 误当 $PUMP。"""
+        PENGU 词形 ticker，text_upper 匹配会把 "pumps" 误当 $PUMP。
+        R207：跳过蓝筹常驻热搜，只对「异常热起来的山寨」加权。"""
         if not trending_symbols:
             return 0
         trend_set = {t.strip().upper().replace("$", "")
                      for t in trending_symbols if isinstance(t, str) and t.strip()}
+        trend_set -= NewsFetcher._TREND_BOOST_SKIP_MAJORS
         if not trend_set:
             return 0
         hits = 0
