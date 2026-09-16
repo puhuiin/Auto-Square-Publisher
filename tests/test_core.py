@@ -653,16 +653,17 @@ class TestPastDateRefs(unittest.TestCase):
         self.assertIn("仅作背景感知", prompt)
 
     def test_fresh_intel_with_stale_date_refs_annotated(self):
-        """R127 运行时守卫：新鲜缓存的 guidance 可能仍带着过期竞赛指导
-        （生产实录：XPIN 09-04 过期一周仍走正常注入）。命中过期日期引用
-        即追加禁提注记，新鲜路径不再无条件信任内容。"""
+        """R127/R206：新鲜缓存的 guidance 可能仍带着过期竞赛指导
+        （生产实录：XPIN 09-04；2026-09-16T00:13Z age 8.3h 仍写「今天 09-15」）。
+        R206 起含过期日期引用即视为 degraded，走降权注入（更强禁提）。"""
         intel = {"strategy_guidance": "最紧迫的是 XPIN 竞赛（2026-09-04 截止），立即追贴",
-                 "last_updated": self._ts(2)}  # 2h 前刷新 = 新鲜
+                 "last_updated": self._ts(2)}  # 2h 前刷新 = 时间戳新鲜
         prompt, _ = self._eng()._build_user_prompt(
             {"title": "t", "summary": "s"}, intel, "", ["BTC"])
         self.assertIn("官方活动风向参考", prompt)
-        self.assertIn("已过期活动的日期", prompt, "过期引用必须触发禁提注记")
         self.assertIn("2026-09-04", prompt)
+        # R206：含过期日期 → degraded 路径（禁止引用具体日期/截止）
+        self.assertIn("严禁在正文中引用", prompt)
 
     def test_fresh_intel_clean_guidance_untouched(self):
         # 干净 guidance：不得注入多余注记（prompt 干扰最小化）
@@ -3630,6 +3631,57 @@ class TestIntelRefreshBackoff(unittest.TestCase):
             self.assertEqual(intel.get("active_tags"), ["#新"])
             # 成功后退避标记应被清空
             self.assertFalse(m.intel_state_get("_intel_refresh_fail", {}).get("cooldown_until"))
+
+    def test_fresh_but_stale_dates_forces_refresh(self):
+        """R206：时间戳新鲜（age 8h）但 guidance 写「今天 <前天>」——
+        日切后不得继续当现役注入，应强制刷新。日期动态取，避免测试随日历翻篇失效。"""
+        from unittest.mock import patch
+        import json
+        stale_day = (datetime.now(timezone.utc) - timedelta(days=2)).strftime("%Y-%m-%d")
+        stale_guidance = f"最紧迫的是 Pieverse 竞赛，截止日就是今天 {stale_day}"
+        updated = (datetime.now(timezone.utc) - timedelta(hours=8)).isoformat()
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"active_tags": ["#旧"], "strategy_guidance": stale_guidance,
+                       "last_updated": updated}, f, ensure_ascii=False)
+        fake_intel = {"active_tags": ["#新"], "incentivized_tokens": ["$BNB"],
+                      "strategy_guidance": "结合 Traders League 引导交易",
+                      "last_updated": datetime.now(timezone.utc).isoformat()}
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns", return_value=["t1"]) as mock_fetch, \
+             patch.object(m.CampaignScanner, "analyze_with_ai", return_value=fake_intel) as mock_ai:
+            intel = m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+            mock_fetch.assert_called()
+            mock_ai.assert_called()
+        self.assertEqual(intel.get("active_tags"), ["#新"], "含过期日期必须刷新")
+
+    def test_fresh_stale_dates_within_2h_keeps_cache(self):
+        """R206 防连环烧：刚刷新（age<2h）仍带过期日期 → 注记兜底，不再刷。"""
+        from unittest.mock import patch
+        import json
+        stale_day = (datetime.now(timezone.utc) - timedelta(days=2)).strftime("%Y-%m-%d")
+        stale_guidance = f"Pieverse 竞赛截止日就是今天 {stale_day}"
+        updated = (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat()
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"active_tags": ["#刚刷"], "strategy_guidance": stale_guidance,
+                       "last_updated": updated}, f, ensure_ascii=False)
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns") as mock_fetch, \
+             patch.object(m.CampaignScanner, "analyze_with_ai") as mock_ai:
+            intel = m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+            mock_fetch.assert_not_called()
+            mock_ai.assert_not_called()
+        self.assertEqual(intel.get("active_tags"), ["#刚刷"])
+
+    def test_intel_degraded_when_stale_dates_even_if_fresh_ts(self):
+        """R206：遥测/注入共用判定——时间戳新鲜但含过期日期 → degraded=True。"""
+        stale_day = (datetime.now(timezone.utc) - timedelta(days=2)).strftime("%Y-%m-%d")
+        ts = (datetime.now(timezone.utc) - timedelta(hours=3)).isoformat()
+        self.assertTrue(m._intel_is_degraded({
+            "strategy_guidance": f"截止日就是今天 {stale_day}",
+            "last_updated": ts,
+        }))
+        self.assertFalse(m._intel_is_degraded({
+            "strategy_guidance": "结合 Traders League Season 4 引导交易",
+            "last_updated": ts,
+        }))
 
     def test_default_intel_fallback_has_no_fake_fresh_timestamp(self):
         """R179：无缓存 + 退避中 → 静态兜底。不得盖「现在」时间戳，

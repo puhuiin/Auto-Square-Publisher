@@ -3833,8 +3833,21 @@ class CampaignScanner:
             logger.warning(f"存量活动情报正文字段损坏已剔除 {dropped_fields}，保留可用部分继续运行（_ 状态键不受影响）。")
 
         if usable_cache and is_fresh:
-            logger.info(f"使用现存有效的币安活动情报 (更新于 {usable_cache.get('last_updated')})")
-            return usable_cache
+            # R206：时间戳新鲜 ≠ 内容未过期。生产实录（2026-09-16T00:13Z）：
+            # last_updated=09-15T15:48Z（age 8.3h < 12h）guidance 仍写
+            # 「截止日就是今天 2026-09-15」「最后一天冲刺」——日切后 12h 窗内
+            # 会把已结束竞赛当现役注入。命中过期日期引用即视为不可用并刷新；
+            # 刚刷新过（age < 2h）仍带过期日期时靠 prompt 注记兜底，不 20min
+            # 连环烧 LLM。
+            stale_in_fresh = _past_date_refs(str(usable_cache.get("strategy_guidance") or ""))
+            if not stale_in_fresh:
+                logger.info(f"使用现存有效的币安活动情报 (更新于 {usable_cache.get('last_updated')})")
+                return usable_cache
+            age_h = _intel_age_hours(usable_cache)
+            if age_h is not None and age_h < 2.0:
+                logger.warning(f"情报刚刷新仍含过期日期 {stale_in_fresh}，本轮靠注入注记兜底")
+                return usable_cache
+            logger.warning(f"情报时间戳新鲜但含过期日期 {stale_in_fresh}，强制刷新")
 
         logger.info("活动情报已过期或不存在，正在重新扫描币安官方活动...")
 
@@ -5763,6 +5776,8 @@ def _intel_is_degraded(campaign_intel: Optional[Dict[str, Any]]) -> Optional[boo
     - 无 guidance / 空对象 → None（本轮没注入情报，不猜）
     - 有 guidance 但无/坏 last_updated → True（R179 DEFAULT_INTEL fail-closed 降权）
     - 有 last_updated → age >= INTEL_EXPIRE_HOURS
+    R206：时间戳新鲜但 guidance 含过期日期引用 → True（日切后「今天 09-15」
+    仍在 12h 窗内，与 get_campaign_intel 强制刷新同一判定）。
     旧实现对「有 guidance 无时间戳」返回 None，而 prompt 侧已按降级注入——
     遥测与实际注入语义分叉。"""
     if not isinstance(campaign_intel, dict) or not campaign_intel.get("strategy_guidance"):
@@ -5770,7 +5785,11 @@ def _intel_is_degraded(campaign_intel: Optional[Dict[str, Any]]) -> Optional[boo
     age = _intel_age_hours(campaign_intel)
     if age is None:
         return True
-    return age >= INTEL_EXPIRE_HOURS
+    if age >= INTEL_EXPIRE_HOURS:
+        return True
+    if _past_date_refs(str(campaign_intel.get("strategy_guidance") or "")):
+        return True
+    return False
 
 
 def _run_main():
