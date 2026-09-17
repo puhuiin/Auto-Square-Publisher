@@ -2556,13 +2556,20 @@ def _is_reasoning_channel(provider_name: str, model: str = "") -> bool:
     下次加新推理渠道只改这一处。
     Preset-b.ai（glm-5.3-flash 系思考模型）：生产实证空包 tokens_used 1035~2264，
     600 预算全被思考链吃掉导致 content 系统性 None，与网关推理通道同等 1500。
-    model 关键词兜底：未来新接思考模型（名含 thinking/reasoning）免改代码自动大预算。"""
+    model 关键词兜底：未来新接思考模型（名含 thinking/reasoning）免改代码自动大预算。
+    R218：聚合路由别名（openrouter/free、auto/best-fast 等）静态看不到实际落地
+    模型，免费池当前以思考型为主——按非推理配 25s 超时+600/900 预算会系统性掐死
+    （生产 7 天 failover 8 拒/1 救，空回全带"思考链疑似吃满预算"；R172 情报刷新
+    双通道 2800 顶仍空回的另一半就是 openrouter）。路由别名按推理配给：预算是
+    上限非下限、超时是上界非目标，落到非思考模型时只是更早自然返回，误升无成本。"""
     if provider_name.startswith("Reasonix-GW"):
         return True
     if provider_name == "Preset-b.ai":
         return True
     ml = (model or "").lower()
-    return "thinking" in ml or "reasoning" in ml
+    if "thinking" in ml or "reasoning" in ml:
+        return True
+    return _is_router_model(model)
 
 
 def _summarize_max_tokens(provider_name: str, model: str = "") -> int:

@@ -2582,9 +2582,20 @@ class TestTimeoutBudgetCoupling(unittest.TestCase):
         self.assertEqual(bai.timeout, 90.0, "推理通道 Preset-b.ai 应与 Reasonix 同级 90s")
 
     def test_non_reasoning_preset_keeps_short_timeout(self):
+        # R218：openrouter 默认模型 openrouter/free 是聚合路由别名（落地模型
+        # 静态不可见）已按推理配给；非推理负例改用具体模型名的 tokenrouter——
+        # 该锁防的是"整链无差别抬超时"
+        chain = self._build({"TOKENROUTER_API_KEY": "k2"})
+        trp = next(p for p in chain if p.name == "Preset-tokenrouter")
+        self.assertEqual(trp.timeout, 25.0, "非推理通道不应被抬超时")
+
+    def test_router_alias_preset_gets_long_timeout(self):
+        """R218：聚合路由别名（openrouter/free）落地模型静态不可见、免费池以
+        思考型为主，25s 超时+短预算系统性掐死（生产 7 天 failover 8 拒/1 救，
+        空回全带"思考链疑似吃满预算"）——与 Preset-b.ai 同级 90s。"""
         chain = self._build({"OPENROUTER_API_KEY": "k2"})
         orp = next(p for p in chain if p.name == "Preset-openrouter")
-        self.assertEqual(orp.timeout, 25.0, "非推理通道不应被抬超时")
+        self.assertEqual(orp.timeout, 90.0, "路由别名通道应与推理通道同级 90s")
 
     def test_openai_client_disables_sdk_retries(self):
         """R166：SDK 默认 max_retries=2 与自有扩容/空回重试/failover 叠乘，
@@ -4682,6 +4693,8 @@ class TestReasoningChannel(unittest.TestCase):
             self.assertTrue(m._is_reasoning_channel(name), name)
 
     def test_external_providers_not_reasoning(self):
+        # 无模型信息时只按渠道名判（Preset-openrouter 的默认模型 openrouter/free
+        # 按推理配给，见 test_router_alias_models_reasoning——此处锁的是空模型名路径）
         for name in ("Primary-LLM", "Preset-openrouter", "", "reasonix-gw"):
             self.assertFalse(m._is_reasoning_channel(name), repr(name))
 
@@ -4691,6 +4704,21 @@ class TestReasoningChannel(unittest.TestCase):
         # 未来新思考模型免改代码自动大预算；普通模型不受影响
         self.assertTrue(m._is_reasoning_channel("Preset-x", "qwen-thinking-plus"))
         self.assertFalse(m._is_reasoning_channel("Preset-x", "gpt-4o-mini"))
+
+    def test_router_alias_models_reasoning(self):
+        """R218：聚合路由别名静态看不到落地模型，免费池以思考型为主——
+        openrouter/free 按非推理配 25s 超时+600/900 预算系统性掐死（生产 7 天
+        failover 8 拒/1 救，空回全带"思考链疑似吃满预算"；R172 情报双通道
+        2800 顶仍空回的另一半）。预算是上限非下限、超时是上界非目标。"""
+        # 生产默认路由别名 → 推理配给（1500 预算 + 90s 超时）
+        self.assertTrue(m._is_reasoning_channel("Preset-openrouter", "openrouter/free"))
+        self.assertTrue(m._is_reasoning_channel("Preset-x", "auto/best-fast"))
+        self.assertTrue(m._is_reasoning_channel("Preset-x", "omni/auto/best-free"))
+        # 具体免费模型名无 thinking/reasoning 关键词 → 不受影响（防误伤扩大）
+        self.assertFalse(m._is_reasoning_channel("Preset-x", "minimax/minimax-m3:free"))
+        self.assertFalse(m._is_reasoning_channel("Preset-tokenrouter", "qwen/qwen3.8-max-free"))
+        # 预算函数必须与谓词一致（改谓词即全局生效，不断链）
+        self.assertEqual(m._summarize_max_tokens("Preset-openrouter", "openrouter/free"), 1500)
 
     def test_budget_helpers_share_predicate(self):
         # 预算函数必须与谓词一致（改谓词即全局生效，不断链）
