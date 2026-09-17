@@ -222,6 +222,8 @@ def summarize(rows):
         "zero_widget_posts": 0,
         "zero_tag_posts": 0,
         "by_ending": collections.Counter(),
+        # R222：发布内容新鲜度样本（age_hours 发布行全量携带，此前只能手工统计）
+        "pub_ages": [],
         # R173：过期情报注入计数——R171 写侧已直录，报表端同轮补齐（R92 纪律）
         "intel_degraded_posts": 0,
         "intel_fresh_posts": 0,
@@ -304,6 +306,12 @@ def summarize(rows):
             toks = r.get("tokens")
             if isinstance(toks, list) and toks:
                 s["by_token"][str(toks[0])] += 1
+            # R222：内容新鲜度样本——中位数一旦明显抬升（生产基线 ~1.9h），
+            # 大概率是某源日期格式变化让 parse_entry_age_hours 返 None
+            # （时效过滤 fail-open），旧闻纯拼内容分入选
+            _age = _num(r.get("age_hours"))
+            if _age is not None:
+                s["pub_ages"].append(_age)
             if r.get("image"):
                 s["images"] += 1
             tier = r.get("image_tier")
@@ -706,6 +714,13 @@ def render_text(s, rows=None):
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")
         lines.append(f"  模型 {_top(s['by_provider'])} / 首标的 {_top(s['by_token'])} / 配图率 "
                      f"{s['images']}/{n_pub}")
+        # R222：内容新鲜度漂移监控——生产基线中位 ~1.9h / P75 ~3.1h（109 篇全史
+        # 79%<3h、零篇 ≥24h）；中位数抬升即查各源日期解析（fail-open 风险面）
+        if s.get("pub_ages"):
+            _ag = sorted(s["pub_ages"])
+            lines.append(f"  ⏱️ 内容新鲜度: 中位 {_ag[len(_ag)//2]}h · P75 "
+                         f"{_ag[min(len(_ag)*3//4, len(_ag)-1)]}h · 最老 {_ag[-1]}h"
+                         f"（样本 {len(_ag)} 篇）")
         # R123：全文零挂件帖 = Write2Earn 生命线失守（保底机制被绕过）的直接信号
         if s.get("zero_widget_posts"):
             lines.append(f"  ⚠️ 全文零有效挂件 {s['zero_widget_posts']}/{n_pub} 篇——保底机制被绕过，需排查")
