@@ -8,8 +8,10 @@
   python scripts/publish_video.py <视频路径> [--body "正文文本"] [--dry]
 
 上传流程复用 main.ImageManager 的 presigned URL 机制（探测确认端点对
-视频文件名与图片文件名行为一致）；发布 payload 尝试 videoList 字段
-（与 imageList 平行的官方字段名），失败时降级 imageList + 附件说明。
+视频文件名与图片文件名行为一致）。发布 payload 走 videoList 字段（与
+imageList 平行的官方字段名）；videoList 被拒时不降级 imageList——把
+mp4 塞进图片字段不可能成功（R6 删除的旧降级路径，docstring 此前仍
+描述它，与实现自相矛盾）。
 
 正文与标题由调用方提供（或用内置默认文案），走 _sanitize_content
 合规清洗后发布。
@@ -26,6 +28,12 @@ import main as m  # noqa: E402
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # 币安 S3 单文件上限的保守兜底：防止误传一个几百 MB 的文件把上传窗口耗光
 MAX_VIDEO_BYTES = 200 * 1024 * 1024
+# 转码轮询窗口：图片流程秒级完成，视频转码普遍以分钟计（R110 照抄图片节奏的
+# 60s 窗口对视频太短——超时的失败模式是"200MB 已传完却放弃"，用户重触即整片
+# 重传）。15 次 × 12s = 180s：就绪即早退，只有真在转的才占满窗口；workflow
+# 15 分钟预算下 180s 无压力。
+VIDEO_POLL_ATTEMPTS = 15
+VIDEO_POLL_INTERVAL_SEC = 12
 
 
 def resolve_video_path(raw: str) -> str:
@@ -121,9 +129,9 @@ def upload_video(api_key: str, video_path: str) -> str | None:
         return None
     print("✅ 视频已送达 S3，等待转码...")
 
-    # 步骤 3：轮询转码状态（视频给 15 次 × 4 秒 = 60 秒窗口）
-    for i in range(15):
-        time.sleep(4)
+    # 步骤 3：轮询转码状态（窗口 180s，视频转码以分钟计；就绪即早退）
+    for i in range(VIDEO_POLL_ATTEMPTS):
+        time.sleep(VIDEO_POLL_INTERVAL_SEC)
         stat = m.http_post(m.ImageManager.IMAGE_STATUS_API, headers=headers,
                            json={"fileTicket": file_ticket}, timeout=10, retries=1)
         if stat is not None and stat.status_code == 200:
@@ -136,8 +144,8 @@ def upload_video(api_key: str, video_path: str) -> str | None:
             if status == 2:
                 print(f"❌ 审核未通过: {sj.get('failedReason')}")
                 return None
-        print(f"  等待转码... ({i + 1}/15)")
-    print("⚠️ 转码轮询超时（60s），视频可能仍在处理中")
+        print(f"  等待转码... ({i + 1}/{VIDEO_POLL_ATTEMPTS})")
+    print(f"⚠️ 转码轮询超时（{VIDEO_POLL_ATTEMPTS * VIDEO_POLL_INTERVAL_SEC}s），视频可能仍在处理中")
     return None
 
 
