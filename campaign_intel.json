@@ -3,21 +3,21 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#bStocks",
-    "#BinanceWallet"
+    "#BinanceAlpha",
+    "#bStocks"
   ],
   "incentivized_tokens": [
-    "$BNB",
+    "$CAP",
+    "$PROVE",
     "$NEAR",
     "$REZ",
-    "$THE",
-    "$USDC",
+    "$BNB",
     "$GPROB",
     "$RDDTB",
     "$BNCB"
   ],
-  "strategy_guidance": "最紧迫的是带'Limited-Time'信号的Stock Options限时手续费优惠：发帖机器人应立即以'活动冲刺+抄作业'角度追贴，把GPROB、RDDTB、BNCB等新上线bStocks快讯与低费率交易教程、Word of the Day答题打包成'美股代币化交易攻略'，引导读者跟单开户交易以最大化Write to Earn返佣。日常快讯则绑定$NEAR、$REZ、$THE三场Trading Tournament与Wallet Season 7（Arc链上交易瓜分$200,000）做赛况复盘和榜单跟踪贴，持续承接官方奖励流量。每篇文末挂'You Invite, You Choose'邀请奖励与Binance Points任务钩子，把阅读流量转化为邀请注册和交易返佣。",
-  "last_updated": "2026-09-17T00:04:18.848611Z",
+  "strategy_guidance": "最紧迫信号：CAP Alpha 交易竞赛今日（2026-09-17）截止，发帖机器人须立即优先追贴，用活动冲刺+抄作业角度输出 $CAP 参与教程与交易思路，抢占截止日最后一波搜索与官方流量；随后以 #TradingTournament 为主线持续覆盖仍在进行中的 $PROVE、$NEAR、$REZ 三场锦标赛，并将 bStocks 新上线 $GPROB/$RDDTB 交易对及抵押品公告、Stock Options 限时免佣、钱包 Arc 链 Season 7 等官方动态与日常快讯联动蹭官方曝光。所有帖子统一挂 #Write2Earn 引导读者跟单注册交易拿返佣，赛事结束后再用复盘+榜单角度追贴延长长尾收益。",
+  "last_updated": "2026-09-17T12:19:57.008846Z",
   "_feed_health": {},
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
