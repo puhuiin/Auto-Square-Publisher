@@ -6435,6 +6435,9 @@ class TestRunMainSemantics(unittest.TestCase):
             self.assertEqual(run_row.get("skipped_token_limit"), 0)
             # R215：放行必须留痕——只记拦截会把"限流正常工作"误读成"疯狂拦截"
             self.assertEqual(run_row.get("token_limit_bypassed"), 1, "高影响放行必须计数")
+            # R216：两端顶分——放行侧记 32，拦截侧无候选不落字段（None 过滤）
+            self.assertEqual(run_row.get("token_limit_bypass_top"), 32, "放行顶分必须留痕")
+            self.assertIsNone(run_row.get("token_limit_capped_top"))
             self.assertEqual(run_row.get("published"), 1)
         finally:
             self._teardown(patches, tmpdir)
@@ -6463,6 +6466,10 @@ class TestRunMainSemantics(unittest.TestCase):
             run_row = next(r for r in rows if r.get("outcome") == "run_summary")
             self.assertEqual(run_row.get("skipped_token_limit"), 1)
             self.assertEqual(run_row.get("token_limit_bypassed"), 0)
+            # R216：拦截侧顶分——多日后仍只贴 20~26 常规档即门槛健康；
+            # 顶分逼近门槛值 = 真事件被吞，需复评 TOKEN_LIMIT_BYPASS_IMPACT
+            self.assertEqual(run_row.get("token_limit_capped_top"), 21, "拦截顶分必须留痕")
+            self.assertIsNone(run_row.get("token_limit_bypass_top"))
             self.assertEqual(run_row.get("published"), 0)
         finally:
             self._teardown(patches, tmpdir)
@@ -6495,6 +6502,7 @@ class TestRunMainSemantics(unittest.TestCase):
                 rows = [json.loads(l) for l in f if l.strip()]
             run_row = next(r for r in rows if r.get("outcome") == "run_summary")
             self.assertEqual(run_row.get("token_limit_bypassed"), 1)
+            self.assertEqual(run_row.get("token_limit_bypass_top"), 21, "门槛调整后顶分按实际热度记")
         finally:
             self._teardown(patches, tmpdir)
 

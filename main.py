@@ -6655,6 +6655,11 @@ def _run_main():
     # R215：限流高影响放行计数——放行是限流决策的另一半，只记跳过会把
     # "限流正常工作"误读成"限流疯狂拦截"（生产 R208 时代 8 次放行零留痕）
     token_limit_bypassed = 0
+    # R216：门槛校准两端顶分——只计数不记分的话，若 28~29 的真事件被拦，
+    # "误杀市场级事件"（R208 绕过想防的另一半）会静默发生而遥测不可见。
+    # None 经 append_metrics 过滤 = 本轮没有该类候选，不写空字段。
+    token_limit_capped_top = None
+    token_limit_bypass_top = None
 
     # 每日深度长文（contentType=2）：当日本轮次未发过长文且榜首热度达标时，
     # 首帖升级为长文——短讯抢时效，长文打专业垂直度与长尾流量（平台算法对
@@ -6725,11 +6730,18 @@ def _run_main():
                     base_impact = item.get("base_impact_score", item.get("impact_score", 0)) or 0
                     if base_impact >= TOKEN_LIMIT_BYPASS_IMPACT:
                         token_limit_bypassed += 1
+                        if token_limit_bypass_top is None or base_impact > token_limit_bypass_top:
+                            token_limit_bypass_top = base_impact
                         logger.info(
                             f"代币 {capped} 已达 24h 限流，但本条热度 {base_impact} "
                             f">= {TOKEN_LIMIT_BYPASS_IMPACT}（高影响放行）: {title[:50]}")
                     else:
-                        logger.info(f"代币 {capped} 24h 内已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)，为避免刷屏跳过本条: {title}")
+                        # R216：拦截侧顶分留痕——多日后顶分仍只贴着 20~26 常规档
+                        # 说明门槛健康；顶分频繁逼近门槛值即需复评（真事件被吞）。
+                        if token_limit_capped_top is None or base_impact > token_limit_capped_top:
+                            token_limit_capped_top = base_impact
+                        logger.info(f"代币 {capped} 24h 内已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)，"
+                                    f"本条热度 {base_impact} 未达放行门槛，为避免刷屏跳过: {title}")
                         skip_counts["token_limit"] += 1
                         continue
 
@@ -7173,6 +7185,10 @@ def _run_main():
         "skipped_exception": exception_skipped,
         # R215：限流放行计数——与 skipped_token_limit 互补，放行/拦截两侧都可观测
         "token_limit_bypassed": token_limit_bypassed,
+        # R216：门槛校准两端顶分——拦截顶分贴门槛 = 真事件被吞需复评；放行顶分
+        # 贴门槛 = 常规帖在越线边缘需收紧。None 不落行（append_metrics 过滤）。
+        "token_limit_capped_top": token_limit_capped_top,
+        "token_limit_bypass_top": token_limit_bypass_top,
         "feeds_ok": fetcher.stats.get("feeds_ok", 0),
         "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
         # R177：分段耗时进 run_summary——生产发帖轮 elapsed 稳定 ~370s，

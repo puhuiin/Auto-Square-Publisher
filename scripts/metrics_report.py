@@ -250,6 +250,8 @@ def summarize(rows):
         "candidates": 0, "published": 0, "unprocessed": 0,
         "skips": collections.Counter(), "last_trending": "",
         "token_limit_bypass": 0,  # R215：限流高影响放行计数（拦截的另一半）
+        # R216：门槛校准两端顶分（窗口内最大，None=窗口内没有该类候选）
+        "token_limit_capped_top": None, "token_limit_bypass_top": None,
         "trend_freq": collections.Counter(),
         "last_hot_topics": "",  # R190：全网实时热点钩子供给（HN 等）
         "hot_topic_hits": 0,    # 出现过 hot_topics 的发帖轮数
@@ -438,6 +440,15 @@ def summarize(rows):
             _tlb = _num(r.get("token_limit_bypassed"))
             if _tlb is not None and _tlb > 0:
                 runs_tmp["token_limit_bypass"] += int(_tlb)
+            # R216：门槛校准两端顶分——窗口内取最大（有则收，历史行无字段不进）
+            _ct = _num(r.get("token_limit_capped_top"))
+            if _ct is not None and (runs_tmp["token_limit_capped_top"] is None
+                                    or _ct > runs_tmp["token_limit_capped_top"]):
+                runs_tmp["token_limit_capped_top"] = int(_ct)
+            _bt = _num(r.get("token_limit_bypass_top"))
+            if _bt is not None and (runs_tmp["token_limit_bypass_top"] is None
+                                    or _bt > runs_tmp["token_limit_bypass_top"]):
+                runs_tmp["token_limit_bypass_top"] = int(_bt)
             # R177：分段耗时（有则收，历史行无字段不进）
             _sl = _num(r.get("sleep_elapsed_sec"))
             if _sl is not None and _sl > 0:
@@ -645,6 +656,16 @@ def render_text(s, rows=None):
         # 阈值经 main.py --healthcheck 的「运行策略」行可见
         if runs.get("token_limit_bypass"):
             lines.append(f"  ⭕ 限流高影响放行 {runs['token_limit_bypass']} 次（热度达标绕过单币上限）")
+        # R216：门槛校准行——拦截顶分贴门槛 = 真事件被吞需复评；稳居 20~26
+        # 常规档 = 门槛健康。门槛数值不在此硬编码（R106：双份事实源会漂移），
+        # 经 main.py --healthcheck 的「运行策略」行可见。
+        calib = []
+        if runs.get("token_limit_capped_top") is not None:
+            calib.append(f"拦截顶分 {runs['token_limit_capped_top']}")
+        if runs.get("token_limit_bypass_top") is not None:
+            calib.append(f"放行顶分 {runs['token_limit_bypass_top']}")
+        if calib:
+            lines.append(f"  🎚️ 限流门槛校准: {' / '.join(calib)}（顶分贴门槛即复评）")
     if rows is not None:
         q = quality_scan(rows)
         if q["scanned"]:
