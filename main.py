@@ -7211,6 +7211,15 @@ def _run_main():
         # 贴门槛 = 常规帖在越线边缘需收紧。None 不落行（append_metrics 过滤）。
         "token_limit_capped_top": token_limit_capped_top,
         "token_limit_bypass_top": token_limit_bypass_top,
+        # R220：每源入选率进遥测——此前只渲染进易失的 Actions Step Summary
+        #（且只列前 5 名），历史不可回查；"某源扫了 N 条却 0 入选"的源治理决策
+        #（换源/撤源）一直没有数据面。键取源名首词（与 Step Summary 渲染同规约，
+        # 9 源首词互不冲突），entries==0 的源不落（本轮该源没被抓到）。
+        "per_feed_yield": {
+            name.split(" ")[0]: {"entries": int(d.get("entries") or 0),
+                                 "kept": int(d.get("kept") or 0)}
+            for name, d in (fetcher.stats.get("per_feed") or {}).items()
+            if isinstance(d, dict) and (d.get("entries") or 0) > 0},
         "feeds_ok": fetcher.stats.get("feeds_ok", 0),
         "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
         # R177：分段耗时进 run_summary——生产发帖轮 elapsed 稳定 ~370s，

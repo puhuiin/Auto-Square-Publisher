@@ -252,6 +252,8 @@ def summarize(rows):
         "token_limit_bypass": 0,  # R215：限流高影响放行计数（拦截的另一半）
         # R216：门槛校准两端顶分（窗口内最大，None=窗口内没有该类候选）
         "token_limit_capped_top": None, "token_limit_bypass_top": None,
+        # R220：每源入选率——源名首词 → [扫描, 入选]（源治理数据面）
+        "feed_yield": {},
         "trend_freq": collections.Counter(),
         "last_hot_topics": "",  # R190：全网实时热点钩子供给（HN 等）
         "hot_topic_hits": 0,    # 出现过 hot_topics 的发帖轮数
@@ -449,6 +451,12 @@ def summarize(rows):
             if _bt is not None and (runs_tmp["token_limit_bypass_top"] is None
                                     or _bt > runs_tmp["token_limit_bypass_top"]):
                 runs_tmp["token_limit_bypass_top"] = int(_bt)
+            # R220：每源入选率累加（有则收，历史行无字段不进）
+            for _fname, _fy in (r.get("per_feed_yield") or {}).items():
+                if isinstance(_fy, dict):
+                    _agg = runs_tmp["feed_yield"].setdefault(_fname, [0, 0])
+                    _agg[0] += int(_fy.get("entries") or 0)
+                    _agg[1] += int(_fy.get("kept") or 0)
             # R177：分段耗时（有则收，历史行无字段不进）
             _sl = _num(r.get("sleep_elapsed_sec"))
             if _sl is not None and _sl > 0:
@@ -666,6 +674,15 @@ def render_text(s, rows=None):
             calib.append(f"放行顶分 {runs['token_limit_bypass_top']}")
         if calib:
             lines.append(f"  🎚️ 限流门槛校准: {' / '.join(calib)}（顶分贴门槛即复评）")
+        # R220：每源入选率——0% 源是"扫描了却从未进入候选池"的死重候选，
+        # 换源/撤源决策首次有可回查数据面（此前只进易失 Step Summary）
+        if runs.get("feed_yield"):
+            parts = []
+            for _fname, (_ents, _kept) in sorted(runs["feed_yield"].items(),
+                                                 key=lambda x: (-x[1][1], -x[1][0])):
+                flag = " ⚠️" if _ents >= 20 and _kept == 0 else ""
+                parts.append(f"{_fname} {_kept}/{_ents}{flag}")
+            lines.append(f"  📡 源入选率(入选/扫描): {' · '.join(parts)}")
     if rows is not None:
         q = quality_scan(rows)
         if q["scanned"]:

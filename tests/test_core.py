@@ -6550,6 +6550,31 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_run_summary_records_per_feed_yield(self):
+        """R220：每源入选率进 run_summary——此前只渲染进易失的 Actions Step
+        Summary（且仅前 5 名），历史不可回查；"某源扫了 N 条却 0 入选"的
+        换源/撤源决策一直没有数据面。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True, candidates=[self._candidate()])
+        try:
+            import json
+            m.NewsFetcher.return_value.stats["per_feed"] = {
+                "CryptoPotato (山寨币/Meme热点)": {"entries": 5, "kept": 2},
+                "Decrypt (Web3/AI/Meme)": {"entries": 4, "kept": 0},
+            }
+            m._run_main()
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            # 源名首词规约（与 Step Summary 渲染一致）；零入选源同样留痕——
+            # 死重候选的判定依据就是它
+            self.assertEqual(run_row.get("per_feed_yield"), {
+                "CryptoPotato": {"entries": 5, "kept": 2},
+                "Decrypt": {"entries": 4, "kept": 0},
+            })
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_in_batch_dup_burns_llm_once(self):
         # 同批近似变体：首篇发出后，第二篇必须判重跳过（只烧一次 LLM）
         second = dict(self._candidate(), id="news-2", title="BTC breaks past key level!!")
