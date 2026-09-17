@@ -4,20 +4,20 @@
     "#BinanceSquare",
     "#TradingTournament",
     "#bStocks",
-    "#BinanceEarn"
+    "#BinanceWallet"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$NEAR",
     "$REZ",
     "$THE",
-    "$RLUSD",
+    "$USDC",
     "$GPROB",
     "$RDDTB",
     "$BNCB"
   ],
-  "strategy_guidance": "最紧迫的是今日(2026-09-16)截止的 Binance Earn Yield Arena：$200K RLUSD 本周限时理财额度，发帖机器人应立即以'活动冲刺+抄作业'角度追贴，引导读者抢搭末班车并顺势报名 NEAR/REZ/THE 三场交易锦标赛瓜分 $BNB 与 USDC 代金券。日常快讯可结合 9-16 新上线的 GoPro($GPROB)、Reddit($RDDTB) bStocks 交易对与 BNCB 抵押品公告，叠加 Stock Options 限时手续费减免做'新标的+美股代币化'组合解读，持续蹭 bStocks 生态热度。所有帖子统一挂 #Write2Earn #BinanceSquare #TradingTournament 标签，并在文中嵌入交易/理财参与路径，以最大化曝光与 Write to Earn 交易返佣。",
-  "last_updated": "2026-09-16T12:24:00.652611Z",
+  "strategy_guidance": "最紧迫的是带'Limited-Time'信号的Stock Options限时手续费优惠：发帖机器人应立即以'活动冲刺+抄作业'角度追贴，把GPROB、RDDTB、BNCB等新上线bStocks快讯与低费率交易教程、Word of the Day答题打包成'美股代币化交易攻略'，引导读者跟单开户交易以最大化Write to Earn返佣。日常快讯则绑定$NEAR、$REZ、$THE三场Trading Tournament与Wallet Season 7（Arc链上交易瓜分$200,000）做赛况复盘和榜单跟踪贴，持续承接官方奖励流量。每篇文末挂'You Invite, You Choose'邀请奖励与Binance Points任务钩子，把阅读流量转化为邀请注册和交易返佣。",
+  "last_updated": "2026-09-17T00:04:18.848611Z",
   "_feed_health": {},
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
