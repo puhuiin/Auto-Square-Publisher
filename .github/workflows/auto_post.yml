@@ -91,11 +91,12 @@ jobs:
           if [ -n "$BARK_KEY" ]; then echo "✔ BARK_KEY (iOS推送): 已检测到"; fi
           echo "============================================================"
 
-      - name: 调度看门狗（上轮 schedule 运行距今超阈值则报警）
+      - name: 调度看门狗（上轮调度触发距今超阈值则报警）
         # 背景（2026-09-09 事故）：GitHub 调度器静默吞掉 4.5 小时的 cron 投递，
         # 无日志无报警——没跑就没有任何日志。逻辑在 scripts/schedule_watchdog.py
-        # （独立脚本可单元测试）：查 gh run list（真相源），上一轮 schedule 距今
-        # 超 50 分钟（>2 个 cron 间隔）即报警。只报警不 exit 非零，发帖不受影响。
+        # （独立脚本可单元测试）：查 gh run list（真相源），上一轮调度触发
+        # （R221 起 = schedule/repository_dispatch 任一；push 是运行结果不算）
+        # 距今超 50 分钟（>2 个间隔）即报警。只报警不 exit 非零，发帖不受影响。
         env:
           GH_TOKEN: ${{ github.token }}
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}

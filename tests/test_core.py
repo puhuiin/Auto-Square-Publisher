@@ -146,12 +146,12 @@ class TestNearDuplicateDetection(unittest.TestCase):
 class TestScheduleWatchdogScript(unittest.TestCase):
     """调度看门狗判定函数（R71 抽出为 scripts/schedule_watchdog.py 后可离线测试）"""
 
-    def _runs(self, prev_minutes_ago):
+    def _runs(self, prev_minutes_ago, event="repository_dispatch"):
         from datetime import datetime, timedelta, timezone
         now = datetime.now(timezone.utc)
         return [
-            {"event": "schedule", "createdAt": now.isoformat()},
-            {"event": "schedule", "createdAt": (now - timedelta(minutes=prev_minutes_ago)).isoformat()},
+            {"event": event, "createdAt": now.isoformat()},
+            {"event": event, "createdAt": (now - timedelta(minutes=prev_minutes_ago)).isoformat()},
         ]
 
     def test_normal_gap_silent(self):
@@ -172,6 +172,50 @@ class TestScheduleWatchdogScript(unittest.TestCase):
         from datetime import datetime, timezone
         self.assertEqual(wd.evaluate([{"event": "schedule",
                                        "createdAt": datetime.now(timezone.utc).isoformat()}],
+                                      datetime.now(timezone.utc)), "")
+
+    def test_stale_schedule_with_healthy_dispatch_silent(self):
+        """R221 假火警回归锁：生产实录 schedule 06:05 偶发落地一发，07:43 轮
+        误报"距上一轮 98 分钟"——期间 dispatch（07:03/07:23/07:43）全部准点。
+        schedule 的偶发旧时间戳不得在 dispatch 健康时触发报警。"""
+        import importlib
+        from datetime import datetime, timedelta, timezone
+        wd = importlib.import_module("scripts.schedule_watchdog")
+        now = datetime.now(timezone.utc)
+        runs = [
+            {"event": "repository_dispatch", "createdAt": now.isoformat()},
+            {"event": "repository_dispatch",
+             "createdAt": (now - timedelta(minutes=15)).isoformat()},
+            {"event": "push",
+             "createdAt": (now - timedelta(minutes=40)).isoformat()},
+            {"event": "schedule",
+             "createdAt": (now - timedelta(minutes=98)).isoformat()},
+        ]
+        self.assertEqual(wd.evaluate(runs, now), "")
+
+    def test_push_runs_do_not_mask_cadence_blackout(self):
+        """R221：push 是运行的结果（缓存提交）而非调度源——dispatch 停摆
+        期间的零星 push 运行不得为调度器健康背书、重置停摆时钟。"""
+        import importlib
+        from datetime import datetime, timedelta, timezone
+        wd = importlib.import_module("scripts.schedule_watchdog")
+        now = datetime.now(timezone.utc)
+        runs = [
+            {"event": "push", "createdAt": now.isoformat()},
+            {"event": "push",
+             "createdAt": (now - timedelta(minutes=5)).isoformat()},
+            {"event": "repository_dispatch",
+             "createdAt": (now - timedelta(minutes=130)).isoformat()},
+        ]
+        self.assertIn("静默吞掉", wd.evaluate(runs, now))
+
+    def test_schedule_alone_still_counts(self):
+        """R221：schedule 仍是合法心跳源（GitHub 偶发投递时照常刷新时钟），
+        窗口内没有 dispatch 则按 schedule 判定。"""
+        import importlib
+        from datetime import datetime, timezone
+        wd = importlib.import_module("scripts.schedule_watchdog")
+        self.assertEqual(wd.evaluate(self._runs(20, event="schedule"),
                                       datetime.now(timezone.utc)), "")
 
 

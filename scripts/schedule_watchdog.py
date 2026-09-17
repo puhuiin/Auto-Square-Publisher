@@ -3,8 +3,9 @@
 
 背景：GitHub 调度器曾静默吞掉 4.5 小时的 cron 投递（13 个调度点零投递、
 无日志无报警——没跑就没有日志）。本脚本在每次真实运行的开头执行，查
-GitHub API 的运行历史（真相源，不依赖任何落盘状态）：上一轮 schedule
-运行距今超过阈值（默认 50 分钟 = 2 个 cron 间隔）即推送报警。
+GitHub API 的运行历史（真相源，不依赖任何落盘状态）：上一轮**调度触发**
+（R221 起 = schedule / repository_dispatch 任一）距今超过阈值
+（默认 50 分钟 = 2 个间隔）即推送报警。
 
 设计约束：
 - 只报警不退出非零——看门狗绝不能阻塞发帖主流程；
@@ -23,7 +24,7 @@ R6 修的三处：
    就是本次运行。旧实现固定取 schedule 列表的 [1]：本次若非 schedule 事件
    （push / workflow_dispatch）则上一条 schedule 其实是 [0]，age 被多算一整个
    槽位；schedule 不足两条时又直接静默，真正的长时间停摆反而漏报。现在只统计
-   **已完成**的运行并取最近一条 schedule。
+   **已完成**的运行并取最近一条调度触发（R221：schedule / repository_dispatch）。
 """
 import json
 import os
@@ -32,7 +33,7 @@ import sys
 from datetime import datetime, timezone
 from typing import Optional
 
-WATCHDOG_MAX_AGE_MIN = 50   # cron 每 20 分钟一次，2 次连续丢点即触发
+WATCHDOG_MAX_AGE_MIN = 50   # 调度触发每 20 分钟一次，2 次连续丢点即触发
 NORMAL_SLOT_MIN = 20
 
 
@@ -67,20 +68,29 @@ def _history(runs: list) -> list:
 
 def evaluate(runs: list, now: datetime) -> str:
     """纯函数判定：返回报警消息（空串 = 不报警）。供单元测试直调。"""
-    sched = [r for r in _history(runs) if r.get("event") == "schedule"]
-    if not sched:
+    # R221：调度主力已迁到 repository_dispatch（外部回调 20 分钟一发），
+    # schedule 被 GitHub 高丢失率降级成偶发（实测 ~20 轮窗口仅 1 发）。
+    # 只认 schedule 的旧口径双向失实：dispatch 健康时，schedule 偶发落地
+    # 会让随后一个窗口期连续误报（生产实录：schedule 06:05 落一发，
+    # 07:43 轮报警"距上一轮 98 分钟"——期间 dispatch 全部准点，纯属假火警）；
+    # dispatch 真死时窗口里多半没有 schedule，反而静默漏报（R61 场景回归）。
+    # 心跳口径 = 两种调度触发任一；push 刻意不计入——它是运行的结果
+    # （缓存提交）而非调度源，不能为调度器健康背书。
+    cadence = [r for r in _history(runs)
+               if r.get("event") in ("schedule", "repository_dispatch")]
+    if not cadence:
         return ""
-    prev = _parse_ts(sched[0].get("createdAt"))
+    prev = _parse_ts(cadence[0].get("createdAt"))
     if prev is None:
         return ""
     age_min = (now - prev).total_seconds() / 60
     if age_min <= WATCHDOG_MAX_AGE_MIN:
         return ""
     missed = int(age_min // NORMAL_SLOT_MIN)
-    return (f"本次运行距上一轮 schedule 运行 {age_min:.0f} 分钟（正常 {NORMAL_SLOT_MIN} 分钟），"
-            f"中间约 {missed} 轮 cron 被 GitHub 调度器静默吞掉。机器人没跑就没有日志，"
-            f"此报警由本次恢复后的运行代发。若反复出现，建议改用外部 cron "
-            f"（cron-job.org 等）定时回调 workflow_dispatch 触发。")
+    return (f"本次运行距上一轮调度触发（schedule/repository_dispatch）{age_min:.0f} 分钟"
+            f"（正常 {NORMAL_SLOT_MIN} 分钟），中间约 {missed} 个调度点被静默吞掉。"
+            f"机器人没跑就没有日志，此报警由本次恢复后的运行代发。"
+            f"若反复出现，检查外部定时回调（cron-job.org 等）是否停摆。")
 
 
 def main() -> None:
@@ -95,7 +105,7 @@ def main() -> None:
         print(f"看门狗判定异常（不影响主流程）: {e}")
         return
     if not message:
-        print("看门狗正常：上一轮 schedule 运行间隔未超阈值。")
+        print("看门狗正常：上一轮调度触发间隔未超阈值。")
         return
     print(f"🚨 {message}")
     # 延迟导入：复用主程序的报警通道（其自带 12h 同标题节流）。
