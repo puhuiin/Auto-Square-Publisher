@@ -902,6 +902,22 @@ class TestTokenExtraction(unittest.TestCase):
         self.assertEqual(out, ["ADA", "DOT", "SHIB"])
         self.assertEqual(m.NewsFetcher.extract_tokens("币安币走势强劲", pool), ["BNB"])
 
+    def test_cjk_alias_traditional_variants(self):
+        """R217：繁体源（BlockTempo 动区动趋）写"比特幣"而非"比特币"——R118
+        只收简体导致生产实录 02:09 帖"比特幣守穩7.65萬鎂、以太坊站回2428"BTC
+        领涨题材只挂 $ETH：主标的挂件丢失（返佣生命线受损），且繁体帖整体绕过
+        单币限流（当时 BTC 窗口内 9 篇远超限）。全部补已收录简体别名的繁体字形。"""
+        pool = self.VALID | {"ADA", "DOT", "SHIB", "BNB", "LTC", "TRX", "DOGE"}
+        out = m.NewsFetcher.extract_tokens(
+            "比特幣、以太幣、索拉納、狗狗幣、瑞波幣、萊特幣、波場、艾達幣、柴犬幣、幣安幣", pool)
+        self.assertEqual(out, ["BTC", "ETH", "SOL", "DOGE", "XRP", "LTC", "TRX", "ADA", "SHIB", "BNB"])
+        # 生产实句镜像：以太坊繁简同形走原条目，比特幣走新繁体条目，两者都进挂件链路
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "比特幣守穩7.65萬鎂、以太坊站回2428,Fed升息市場靜待下一步", pool),
+            ["BTC", "ETH"])
+        # 繁体字形不得误伤纯中文无关文本
+        self.assertEqual(m.NewsFetcher.extract_tokens("市場靜待下一步，氣氛偏觀望", pool), [])
+
     def test_cjk_pool_symbols_extracted(self):
         """R203：币安 SPOT 真有中文 baseAsset（牛来/币安人生）。ASCII 正则
         看不见它们 → 活动激励 $牛来 时 extract 恒空、加权/挂件全链路死信号。
