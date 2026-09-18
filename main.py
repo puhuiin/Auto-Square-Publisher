@@ -1507,6 +1507,10 @@ TOKEN_NAME_ALIASES = {
     "worldcoin": "WLD",
     "celestia": "TIA",
     "ondo": "ONDO",
+    # R234 活源全形态审计：9 源 165 条内容扫描，"Zcash" 全名 ×11 且 ZEC 连续
+    # 两天热搜第一——此前提取全靠标题恰带裸代码 "ZEC"（"Zcash (ZEC) soars..."
+    # 式双写标题），纯全名引用会漏召回丢挂件。零撞词面（无英文词含 zcash）。
+    "zcash": "ZEC",
 }
 # 别名词预编译（ASCII 用 \b 整词边界，防 Bitcoiner/ethereum-killer 误匹配）
 _TOKEN_ALIAS_PATTERNS = {

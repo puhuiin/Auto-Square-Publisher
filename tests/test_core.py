@@ -962,6 +962,17 @@ class TestTokenExtraction(unittest.TestCase):
         # 繁体字形不得误伤纯中文无关文本
         self.assertEqual(m.NewsFetcher.extract_tokens("市場靜待下一步，氣氛偏觀望", pool), [])
 
+    def test_zcash_full_name_alias(self):
+        """R234 活源全形态审计：9 源 165 条内容扫描 "Zcash" 全名 ×11，ZEC 连续
+        两天热搜第一——此前提取全靠标题恰带裸代码 ZEC（"Zcash (ZEC)"式双写），
+        纯全名引用漏召回丢挂件。零撞词面（无英文词含 zcash）。"""
+        pool = self.VALID | {"ZEC"}
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "Zcash soars to a fresh 10-year peak amid ETF speculation", pool), ["ZEC"])
+        # 全名+显式代码双写不重复提取
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "Zcash (ZEC) soars to a fresh 10-year peak", pool), ["ZEC"])
+
     def test_cjk_pool_symbols_extracted(self):
         """R203：币安 SPOT 真有中文 baseAsset（牛来/币安人生）。ASCII 正则
         看不见它们 → 活动激励 $牛来 时 extract 恒空、加权/挂件全链路死信号。
