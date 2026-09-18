@@ -3291,6 +3291,25 @@ class TestNumberHallucinationGuard(unittest.TestCase):
             "Bitcoin broke $119850, up 5.23% in 24h (2024-2025 data)")
         self.assertTrue(ok)
 
+    def test_suffix_words_do_not_pollute_whitelist(self):
+        """R233 活源审计实录：165 条真实标题中 "85 Millionaire Wallets" ×4——
+        millionaire/billionaire 无词边界时其中的 million 被当单位，白名单污染出
+        85e6，模型编造的"8500 万美元"借污染过门（假放行方向，削弱红线）。
+        修复后污染场景必须拒绝；合法"百万富翁"措辞不受影响。"""
+        source = "XRP's 70% Breakout Had a Warning Sign: 85 Millionaire Wallets Loaded Up"
+        ok, reason = m.MultiLLMEngine._verify_numbers(
+            "这 85 个钱包合计囤了 8500 万美元的 XRP", source)
+        self.assertFalse(ok, "Millionaire 不是数字单位，编造的 8500 万美元不得借污染过门")
+        self.assertIn("8500", reason)
+        ok2, reason2 = m.MultiLLMEngine._verify_numbers(
+            "这批钱包合计吃进 50 亿美元", "5 Billionaire Wallets Accumulate BTC During Dip")
+        self.assertFalse(ok2, "Billionaire 同理：5 个亿万富翁 ≠ 5 billion")
+        self.assertIn("50", reason2)
+        # 合法场景：百万富翁计数本身（无被检查的大额数字）不得被误伤
+        ok3, _ = m.MultiLLMEngine._verify_numbers(
+            "85 个百万富翁钱包在突破前集体加仓", source)
+        self.assertTrue(ok3)
+
     def test_plain_numbers_still_pass_after_unit_regex_change(self):
         """单位组改全拼兼容后，普通纯数字/百分比场景不得回归（首版实现曾把
         单位组做成必选，$119850 与 5.23% 全部失配 → 合法内容被误杀）。"""

@@ -3243,9 +3243,14 @@ class MultiLLMEngine:
         # (2.02e11) 查无此数，b.ai 与 openrouter 双通道同因误杀（09-17 23:24
         # 生产实录，imp=16 的 SHIB 净流入新闻整条弃单）。间隔扩为可含连字符；
         # 年份区间（2024-2025）因无单位词不进缩放，行为不变。
+        # R233：全拼单词分支补词边界——活源扫描 165 条真实标题实录 "85 Millionaire
+        # Wallets" 等 ×4：millionaire/billionaire（X 个百万/亿万富翁）里的 million
+        # 被当单位 → 白名单污染出 85e6，模型编造的"8500 万美元"借污染过门（假放行
+        # 方向，削弱红线；与误杀方向相反）。加 \b 后 "Millionaire" 不再提取，合法
+        # "$15.7 Billion"（单词+空格）不受影响——与单字母分支的 (?![A-Za-z]) 对齐。
         for m in re.finditer(
                 r"\$?\s*([\d,]+(?:\.\d+)?)\s*[-–—]?\s*(?:(?:([KkMmBb])(?![A-Za-z])"
-                r"|(millions?|billions?|trillions?))?)", source_text, re.IGNORECASE):
+                r"|((?:millions?|billions?|trillions?)\b))?)", source_text, re.IGNORECASE):
             num_str = m.group(1).replace(",", "")
             letter = (m.group(2) or "").upper()
             full = (m.group(3) or "").lower()
