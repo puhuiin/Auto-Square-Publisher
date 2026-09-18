@@ -6711,6 +6711,16 @@ def _run_main():
         if posted_count >= max_posts:
             logger.info(f"已达到本次最大发帖数 ({max_posts})，退出循环。")
             break
+        # R237：24h 配额逐条复查——入口检查只保证循环开始时有空槽，max_posts>1
+        # 时第 1 篇发布即把滚动窗口填满；workflow 的 max_posts fallback 为 2
+        # （schedule/push/裸 dispatch 触发都拿不到 input），无复查的第 2 篇将以
+        # 第 13 篇穿透 24h 硬上限——配额是防刷屏红线（R5），须对全部触发路径与
+        # max_posts 取值保持不变式。首条不查：入口已保证且省一次扫描；放在
+        # 拟人 sleep 之前，单空槽轮不再为注定发不出的第 2 篇白付 90~240s。
+        if posted_count > 0 and MAX_DAILY_POSTS > 0 \
+                and cache_mgr.count_since(24) >= MAX_DAILY_POSTS:
+            logger.info(f"24h 配额已满 ({MAX_DAILY_POSTS} 篇)，本轮不再继续发帖")
+            break
 
         news_id = item["id"]
         title = item["title"]

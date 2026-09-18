@@ -6676,6 +6676,61 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_quota_recheck_blocks_second_post_mid_run(self):
+        """R237：max_posts>1 时的 24h 配额逐条复查——workflow 的 max_posts
+        fallback 为 2（schedule/push/裸 dispatch 拿不到 input），单空槽轮发完
+        第 1 篇后窗口即满，第 2 篇若无复查将以第 13 篇穿透硬上限（防刷屏红线）。
+        复查放在拟人 sleep 之前：不为注定发不出的第 2 篇白付 90~240s。"""
+        tmpdir, paths = self._iso_files()
+        hot1 = dict(self._candidate(), title="First story fills the last slot")
+        hot2 = dict(self._candidate(), id="news-2", title="Second story must not post")
+        patches = self._base_patches(tmpdir, paths, dry=False, max_posts="2",
+                                     candidates=[hot1, hot2])
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            import json
+            # 空缓存：入口检查 0 < 1 放行；第 1 篇发布（record_sent 落盘）后窗口 1/1 满
+            with open(paths["cache"], "w", encoding="utf-8") as f:
+                json.dump([], f)
+            with patch.object(m, "MAX_DAILY_POSTS", 1):
+                m._run_main()
+            self.assertEqual(pub.publish.call_count, 1, "配额复查必须拦下第 2 篇")
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            rs = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(rs.get("published"), 1)
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_quota_recheck_does_not_overblock_two_slots(self):
+        """R237 反向锁：窗口真有 2 个空槽时 max_posts=2 必须两篇都发——
+        复查只对"满窗"刹车，不得借机收紧正常多帖轮。"""
+        tmpdir, paths = self._iso_files()
+        hot1 = dict(self._candidate(), title="First story with real slot")
+        hot2 = dict(self._candidate(), id="news-2", title="Second story real slot too")
+        patches = self._base_patches(tmpdir, paths, dry=False, max_posts="2",
+                                     candidates=[hot1, hot2])
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            import json
+            with open(paths["cache"], "w", encoding="utf-8") as f:
+                json.dump([], f)
+            with patch.object(m, "MAX_DAILY_POSTS", 2):
+                m._run_main()
+            self.assertEqual(pub.publish.call_count, 2, "2 空槽 + max_posts=2 应发两篇")
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_in_batch_dup_burns_llm_once(self):
         # 同批近似变体：首篇发出后，第二篇必须判重跳过（只烧一次 LLM）
         second = dict(self._candidate(), id="news-2", title="BTC breaks past key level!!")
