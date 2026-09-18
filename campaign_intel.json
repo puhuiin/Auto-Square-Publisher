@@ -25,6 +25,11 @@
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-09-18",
-  "_publish_park": {},
+  "_publish_park": {
+    "188a8af7020be50a": {
+      "fails": 1,
+      "last_fail": "2026-09-18T14:24:49.878815+00:00"
+    }
+  },
   "_intel_refresh_fail": {}
 }
