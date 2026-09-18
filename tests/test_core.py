@@ -3264,6 +3264,33 @@ class TestNumberHallucinationGuard(unittest.TestCase):
             "流入 24 亿美元", "inflows of $2.4 billion")
         self.assertTrue(ok2)
 
+    def test_hyphenated_unit_word_accepted(self):
+        """R232 生产误杀回放：U.Today 标题"Shiba Inu Bulls Return Amid
+        202-Billion SHIB Netflow"——英文复合修饰语连字符写法（数字-单位词），
+        源提取只拿到裸 202，正文合法换算的 2020亿(2.02e11) 查无此数，b.ai 与
+        openrouter 双通道同因误杀（09-17 23:24 整条弃单）。连字符必须与空格
+        写法同权，真编造仍拦截。"""
+        source = "Shiba Inu Bulls Return Amid 202-Billion SHIB Netflow"
+        ok, _ = m.MultiLLMEngine._verify_numbers(
+            "2020 亿枚 $SHIB 从交易所搬家，抛压一松币价反弹", source)
+        self.assertTrue(ok, "连字符复合修饰语必须与空格写法同权")
+        ok2, _ = m.MultiLLMEngine._verify_numbers(
+            "黑客盗走 15 亿美元", "Exchange loses $1.5-Billion in hack")
+        self.assertTrue(ok2)
+        # 真编造不得借连字符修复放水：源文没有 3000 亿量级
+        ok3, reason = m.MultiLLMEngine._verify_numbers(
+            "3000 亿枚 $SHIB 净流入", source)
+        self.assertFalse(ok3)
+        self.assertIn("3000", reason)
+
+    def test_year_range_not_scaled_by_hyphen_gap(self):
+        """R232 边界锁：年份区间（2024-2025）无单位词，不得被连字符间隔
+        改造成带缩放的提取（防误升级）。"""
+        ok, _ = m.MultiLLMEngine._verify_numbers(
+            "BTC 突破 $119,850，单日 +5.23%",
+            "Bitcoin broke $119850, up 5.23% in 24h (2024-2025 data)")
+        self.assertTrue(ok)
+
     def test_plain_numbers_still_pass_after_unit_regex_change(self):
         """单位组改全拼兼容后，普通纯数字/百分比场景不得回归（首版实现曾把
         单位组做成必选，$119850 与 5.23% 全部失配 → 合法内容被误杀）。"""

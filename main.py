@@ -3237,8 +3237,14 @@ class MultiLLMEngine:
         # "$15.7 Billion"（空格 + 全拼），旧正则只认紧邻单字母 → 只提到裸 15.7，
         # 正文侧换算出的 157亿(1.57e10) 在源文集合里查无此数 → 合法数字被当幻觉拦掉。
         # 现同时支持：单字母紧邻/空格、全拼 million/billion/trillion（大小写）。
+        # R232：英文标题的复合修饰语连字符写法（"202-Billion SHIB Netflow"、
+        # "$1.5-Billion Hack"）是加密媒体高频标题风格——数字与单位词之间是连字符
+        # 而非空格，旧正则 \s* 只匹配空白 → 提取出裸 202，正文合法换算的 2020亿
+        # (2.02e11) 查无此数，b.ai 与 openrouter 双通道同因误杀（09-17 23:24
+        # 生产实录，imp=16 的 SHIB 净流入新闻整条弃单）。间隔扩为可含连字符；
+        # 年份区间（2024-2025）因无单位词不进缩放，行为不变。
         for m in re.finditer(
-                r"\$?\s*([\d,]+(?:\.\d+)?)\s*(?:(?:([KkMmBb])(?![A-Za-z])"
+                r"\$?\s*([\d,]+(?:\.\d+)?)\s*[-–—]?\s*(?:(?:([KkMmBb])(?![A-Za-z])"
                 r"|(millions?|billions?|trillions?))?)", source_text, re.IGNORECASE):
             num_str = m.group(1).replace(",", "")
             letter = (m.group(2) or "").upper()
