@@ -18,10 +18,15 @@
   ],
   "strategy_guidance": "今日 KiiChain ($KII) Alpha 交易竞赛正值活动日，时间压力信号最强、节奏最紧迫，发帖机器人应优先围绕该活动以'活动冲刺'角度追贴，引导读者立即参与交易赚取返佣。同时结合 Binance Futures 今日新上线多组 USDⓈ-M 永续合约以及 $PROVE/$NEAR/$REZ 等多项正在进行中的 Trading Tournament，以'抄作业'角度整理参赛攻略和代币选择清单，将日常快讯与官方激励活动深度绑定，最大化 Write2Earn 曝光与交易返佣收益。",
   "last_updated": "2026-09-18T12:25:11.490592Z",
-  "_feed_health": {},
+  "_feed_health": {
+    "CryptoPotato (山寨币/Meme热点)": {
+      "fails": 1,
+      "last_fail": "2026-09-18T18:27:55.271363+00:00"
+    }
+  },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-09-18",
