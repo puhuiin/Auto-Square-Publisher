@@ -3,11 +3,10 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#BinanceAlpha",
-    "#bStocks"
+    "#bStocks",
+    "#StockOptions"
   ],
   "incentivized_tokens": [
-    "$CAP",
     "$PROVE",
     "$NEAR",
     "$REZ",
@@ -16,12 +15,12 @@
     "$RDDTB",
     "$BNCB"
   ],
-  "strategy_guidance": "最紧迫信号：CAP Alpha 交易竞赛今日（2026-09-17）截止，发帖机器人须立即优先追贴，用活动冲刺+抄作业角度输出 $CAP 参与教程与交易思路，抢占截止日最后一波搜索与官方流量；随后以 #TradingTournament 为主线持续覆盖仍在进行中的 $PROVE、$NEAR、$REZ 三场锦标赛，并将 bStocks 新上线 $GPROB/$RDDTB 交易对及抵押品公告、Stock Options 限时免佣、钱包 Arc 链 Season 7 等官方动态与日常快讯联动蹭官方曝光。所有帖子统一挂 #Write2Earn 引导读者跟单注册交易拿返佣，赛事结束后再用复盘+榜单角度追贴延长长尾收益。",
-  "last_updated": "2026-09-17T12:19:57.008846Z",
+  "strategy_guidance": "最紧迫的时间压力信号是 Stock Options「限时」费率减免活动（可交易 1000+ 美股/ETF，标题明确带限时字样、随时可能结束），发帖机器人应优先追贴，用「活动冲刺+抄作业」角度输出低费率美股交易攻略，并串联 Word of the Day 答题赢 USDC 形成双重引流。同时围绕无截止日的 $PROVE、$NEAR、$REZ 三场交易锦标赛做「抄作业」式冲榜帖（仓位管理、冲榜节奏、$BNB 与 $USDC 奖励测算），引导读者跟单交易以最大化 Write to Earn 交易返佣。bStocks 新上线 GoPro($GPROB)、Reddit($RDDTB)、BNCB($BNCB) 交易对及抵押品公告可作背景素材，结合「邀请好友选 bStocks 奖励」与 Wallet 链上交易 Season 7（Arc 链 $200K 奖池）打包成美股代币化+链上热点专题，持续收割新上线流量。",
+  "last_updated": "2026-09-18T00:04:11.969506Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
-      "fails": 2,
-      "last_fail": "2026-09-17T23:23:22.154540+00:00"
+      "last_fail": "2026-09-17T23:23:22.154540+00:00",
+      "fails": 2
     }
   },
   "_fallback_image": {
