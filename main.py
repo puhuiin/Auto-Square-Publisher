@@ -25,7 +25,9 @@
    - 歧义代码守护：NEAR/LINK/MASK/APT 等与英文单词撞名的代币，仅当原文为大写或带 $ 前缀才采信。
    - 发布前强制校验正文至少含 1 个有效 $TOKEN 交易挂件，杜绝无返佣白发帖。
 7. 🔄 多 LLM 模型池与自动故障转移 (Auto-Failover)：
-   - 支持 OpenRouter (minimax-m3:free), B.ai (glm-5.3-flash), xkiro, aihubmix, inferera, TokenRouter, DeepSeek, 硅基流动等。
+   - 支持 OpenRouter (openrouter/free 聚合路由), B.ai (glm-5.3-flash), 智谱 Z.ai
+     (glm-4.7-flash), xkiro, aihubmix, inferera, TokenRouter, DeepSeek, 硅基流动,
+     bluesminds 等；免费模型名按 R263(2026-09-19) 双源实测逐站校准，随轮次同步。
 8. 🚨 多渠道异常报警系统 (Notifier)：
    - 支持微信 (Server酱/PushPlus)、Bark iOS、Telegram、通用 Webhook 实时通知与崩溃告警。
 9. ⏰ 热点时效与跨源去重过滤器 (Freshness & Near-Dup Guard)：
@@ -3145,6 +3147,13 @@ class MultiLLMEngine:
             ))
 
         # 3. 检查是否有单独配置的常见平台 Key
+        # R263：免费模型名随站点轮换频繁失效（minimax-m3:free 已被 OpenRouter 下架、
+        # tokenrouter 的 glm-5.3-free 9 月中旬悄然消失），本池所有默认名按
+        # 2026-09-19 实测双源逐条校准：① OpenRouter 官方 /api/v1/models 实时目录；
+        # ② 维护列表 mvalentsev/awesome-free-ai-coding（09-17~19 逐站核验页）。
+        # 约定：站点的免费 id 通常带 :free / -free 后缀；不带后缀的"官方免费模型"
+        # 只在 SiliconFlow/Z.ai 这类自家平台成立（其定价表列 ¥0）。改动默认名
+        # 必须同步 tests/test_core.py 的默认名锁定测试（锁名=防静默漂回僵尸名）。
         extra_keys = {
             "openrouter": (
                 os.getenv("OPENROUTER_API_KEY", "").strip(),
@@ -3152,37 +3161,66 @@ class MultiLLMEngine:
                 # 默认用 OpenRouter 官方聚合免费路由 openrouter/free：官方按可用性
                 # 自动路由到存活的 :free 模型，单个免费模型下架（生产实证 minimax-m3:free
                 # 已 404）不会让 preset 通道整体报废。想固定单模型仍可用 OPENROUTER_MODEL 覆盖。
+                # 09-19 实测目录仍有该别名；免费额度 50 次/天（充值 $10 后 1000 次/天）。
                 os.getenv("OPENROUTER_MODEL", "").strip() or "openrouter/free",
             ),
             "b.ai": (
                 os.getenv("BAI_API_KEY", "").strip(),
                 "https://api.b.ai/v1",
+                # 09-19 生产仍在产（当日多数帖子由此通道完成），域名有时无法从本机
+                # 探测、无第二手证据源，保持现状不动：生产在跑即活源，不凭猜测换名。
                 os.getenv("BAI_MODEL", "").strip() or "glm-5.3-flash",
+            ),
+            # 智谱官方免费层：api.z.ai/paas/v4，注册即赠 tokens 后转免费档。
+            # 09-17 实测在册免费模型：glm-4.7-flash / glm-4.5-flash / glm-4.6v-flash。
+            # 默认取最新 GLM-4.7-flash；想换视觉版改 ZAI_MODEL=glm-4.6v-flash。
+            "zai": (
+                os.getenv("ZAI_API_KEY", "").strip(),
+                "https://api.z.ai/api/paas/v4",
+                os.getenv("ZAI_MODEL", "").strip() or "glm-4.7-flash",
             ),
             "xkiro": (
                 os.getenv("XKIRO_API_KEY", "").strip(),
                 "https://api.xkiro.com/v1",
-                os.getenv("XKIRO_MODEL", "").strip() or "qwen/qwen3.8-max:free",
+                # 维护列表 09-17 实测免费层含 qwen/qwen3.6-plus:free（旧默认
+                # qwen3.8-max 全目录已无条目=僵尸名，命中只会 404）。
+                os.getenv("XKIRO_MODEL", "").strip() or "qwen/qwen3.6-plus:free",
             ),
             "aihubmix": (
                 os.getenv("AIHUBMIX_API_KEY", "").strip(),
                 "https://aihubmix.com/v1",
+                # 09-17 实测仍有效的免费编程路由（-free 后缀=免费 id 约定）；
+                # 限额 5 次/分、500 次/天、100 万 tokens/天，每日重置。
                 os.getenv("AIHUBMIX_MODEL", "").strip() or "coding-glm-5.3-flash-free",
             ),
             "inferera": (
                 os.getenv("INFERERA_API_KEY", "").strip(),
                 "https://api.inferera.com/v1",
+                # ⚠️ 未找到独立可核验来源；如遇 404 按 ZAI_MODEL 套路换名或撤 preset。
                 os.getenv("INFERERA_MODEL", "").strip() or "coding-kimi-k3-free",
             ),
             "tokenrouter": (
                 os.getenv("TOKENROUTER_API_KEY", "").strip(),
                 "https://api.tokenrouter.com/v1",
-                os.getenv("TOKENROUTER_MODEL", "").strip() or "qwen/qwen3.8-max-free",
+                # 09-17 实测免费 id 已换成 nemotron-3-nano-omni（旧默认 glm-5.3-free
+                # 与 minimax-3 均因 ggml 错误/额度耗尽被列表标记失效，勿漂回去）。
+                os.getenv("TOKENROUTER_MODEL", "").strip() or "nemotron-3-nano-omni",
             ),
             "siliconflow": (
                 os.getenv("SILICONFLOW_API_KEY", "").strip(),
                 "https://api.siliconflow.cn/v1",
-                os.getenv("SILICONFLOW_MODEL", "").strip() or "deepseek-ai/DeepSeek-V3",
+                # SiliconFlow 自家平台"免费模型"列在定价表 ¥0 且不带后缀（qwen3-8b /
+                # glm-4-9b-0414 / StepFun-xing4.0-29b，需实名）；旧默认 DeepSeek-V3
+                # 是计费模型，免费用免费 key 打过去只会 402，故换 qwen3-8b。
+                os.getenv("SILICONFLOW_MODEL", "").strip() or "qwen3-8b",
+            ),
+            # 来自本地《白嫖》项目（D:\Desktop\AI\project\白嫖）注册的注册赠额度站，
+            # OmniRoute 注册表有其可见目录（glm-4-flash / kimi-k2 / deepseek-chat 等）。
+            # 试用额度机制=长尾兜底通道，主力仍是上面几家。
+            "bluesminds": (
+                os.getenv("BLUESMINDS_API_KEY", "").strip(),
+                "https://api.bluesminds.com/v1",
+                os.getenv("BLUESMINDS_MODEL", "").strip() or "glm-4-flash",
             ),
         }
 

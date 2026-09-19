@@ -9057,6 +9057,77 @@ class TestRouterModelPredicate(unittest.TestCase):
                     "glm-5.3-flash", "deepseek-chat", ""):
             self.assertFalse(m._is_router_model(mid), f"{mid} 不应被判为聚合路由")
 
+        # R263 新增默认名同样按具体模型锁 permanent 快道（站点改名/下架=404
+        # 不会自愈，按瞬时故障重试只是空烧）
+        for mid in ("qwen/qwen3.6-plus:free", "nemotron-3-nano-omni",
+                    "glm-4.7-flash", "qwen3-8b", "glm-4-flash"):
+            self.assertFalse(m._is_router_model(mid), f"{mid} 不应被判为聚合路由")
+
+
+class TestPresetFreeModelDefaults(unittest.TestCase):
+    """R263：免费模型名锁定（双源实测校准，防静默漂回已下架僵尸名）。
+
+    背景：免费站点换名下架极频繁——OpenRouter 的 minimax-m3:free 被下架（生产
+    7 天 20 次 404 集群）、tokenrouter 的 glm-5.3-free/qwen3.8 族 9 月中旬失效、
+    xkiro 的 qwen3.8-max 全目录已无条目。僵尸默认名的代价是 404 触发 24h
+    permanent 封禁（具体模型走快道，不会自愈），整条 preset 通道静默报废。
+
+    锁三条不变式：
+    1. 每个 preset 默认模型名=2026-09-19 实测在册名（改名=测试红灯，强制带证据改）；
+    2. 除 b.ai（生产实证思考型）与 openrouter（路由别名）外全部按非推理配给
+       25s/600——新免费默认名不能顺手把整链超时抬上天；
+    3. 默认名一律不带路由别名（除 openrouter 外），404 才能保持 permanent 可解释。
+    """
+
+    _ALL_KEYS = {
+        "OPENROUTER_API_KEY": "k-or", "BAI_API_KEY": "k-bai", "ZAI_API_KEY": "k-zai",
+        "XKIRO_API_KEY": "k-xkiro", "AIHUBMIX_API_KEY": "k-ahm",
+        "INFERERA_API_KEY": "k-inf", "TOKENROUTER_API_KEY": "k-tr",
+        "SILICONFLOW_API_KEY": "k-sf", "BLUESMINDS_API_KEY": "k-bsm",
+    }
+
+    # 2026-09-19 实测：OpenRouter 官方实时目录 + awesome-free-ai-coding 09-17~19
+    _EXPECTED = {
+        "openrouter": "openrouter/free",          # 官方聚合路由别名仍在目录
+        "b.ai": "glm-5.3-flash",                  # 生产当日仍在跑，不动
+        "zai": "glm-4.7-flash",                   # 智谱官方免费层
+        "xkiro": "qwen/qwen3.6-plus:free",        # 原 qwen3.8-max 全目录无条目
+        "aihubmix": "coding-glm-5.3-flash-free",  # 09-17 仍有效
+        "inferera": "coding-kimi-k3-free",        # 待第二来源核验
+        "tokenrouter": "nemotron-3-nano-omni",    # 原 glm-5.3-free/minimax-3 已失效
+        "siliconflow": "qwen3-8b",                # ¥0 免费模型；V3 是计费模型
+        "bluesminds": "glm-4-flash",              # 本地《白嫖》注册表目录
+    }
+
+    def _build(self):
+        saved = {k: os.environ.get(k) for k in self._ALL_KEYS}
+        os.environ.update(self._ALL_KEYS)
+        try:
+            return m.MultiLLMEngine()._build_provider_chain()
+        finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+    def test_defaults_match_measured_catalog(self):
+        chain = {p.name: p for p in self._build()}
+        for preset, model in self._EXPECTED.items():
+            cfg = chain[f"Preset-{preset}"]
+            self.assertEqual(cfg.model, model, f"{preset} 默认名漂移，重新核验站点目录后再改")
+
+    def test_new_defaults_stay_non_reasoning(self):
+        """新默认名除 b.ai/openrouter 外不得是推理通道：免费池里思考型毕竟少数，
+        全链 90s+1500 会把墙钟预算吃穿（且与 R219 断言'具体模型短配'冲突）。"""
+        chain = {p.name: p for p in self._build()}
+        reasoning = {"Preset-b.ai", "Preset-openrouter"}  # 生产实证/路由别名
+        for name, cfg in chain.items():
+            if not name.startswith("Preset-"):
+                continue
+            want = 90.0 if name in reasoning else 25.0
+            self.assertEqual(cfg.timeout, want, f"{name} 超时配给漂移")
+
 
 class TestProviderPriorityOrdering(unittest.TestCase):
     """R8：配置层"置顶"必须经得起成本排序，但不得越过健康度"""

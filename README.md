@@ -2,7 +2,7 @@
 
 > **0 服务器成本 · 0 常驻进程 · GitHub Actions 全自动定时运行 · 多 LLM 容灾故障转移 · 币安广场 OpenAPI 自动发布**
 
-本项目专为加密货币创作者（Binance Square Creator）打造，定时抓取顶级加密快讯，支持通过 **OpenRouter、B.ai、xkiro、aihubmix、inferera、TokenRouter、DeepSeek、硅基流动** 等多模型池进行智能提炼、行情点评与代币标签提取（触发 Write to Earn），并自动发布至币安广场。
+本项目专为加密货币创作者（Binance Square Creator）打造，定时抓取顶级加密快讯，支持通过 **OpenRouter、B.ai、智谱 Z.ai、xkiro、aihubmix、inferera、TokenRouter、SiliconFlow、bluesminds** 等多模型池进行智能提炼、行情点评与代币标签提取（触发 Write to Earn），并自动发布至币安广场。
 
 ---
 
@@ -129,16 +129,20 @@
 
 系统原生兼容以下常用平台的 OpenAI 格式接口及免费模型（可同时配置多个，自动轮询容灾）：
 
+> 📋 **免费模型名会随站点轮换**：下表标注名按 **R263（2026-09-19）** 双源实测校准——① OpenRouter 官方 `/api/v1/models` 实时目录；② 免费站列表 [awesome-free-ai-coding](https://github.com/mvalentsev/awesome-free-ai-coding)（09-17~19 逐站核验）。遇到 404 先怀疑"平台换名/下架"，去各官方目录核对后再改。
+
 | 提供商名称 | Base URL | 常用/推荐免费模型 | 专用 Secret 变量名 |
 | :--- | :--- | :--- | :--- |
-| **OpenRouter** | `https://openrouter.ai/api/v1` | `minimax/minimax-m3:free`<br>`qwen/qwen-2.5-72b-instruct:free`<br>`deepseek/deepseek-r1:free`<br>`google/gemini-2.0-flash-exp:free` | `OPENROUTER_API_KEY` |
-| **B.ai** | `https://api.b.ai/v1` | `deepseek-v4-flash`<br>`glm-5.3-flash`<br>`qwen3.8-flash` | `BAI_API_KEY` |
-| **xkiro** | `https://api.xkiro.com/v1` | `qwen/qwen3.8-max:free`<br>`minimax/minimax-m3:free` | `XKIRO_API_KEY` |
-| **aihubmix** | `https://aihubmix.com/v1` | `coding-glm-5.3-flash-free`<br>`gemini-3.7-flash-free`<br>`minimax-m3-free` | `AIHUBMIX_API_KEY` |
-| **inferera** | `https://api.inferera.com/v1` | `coding-kimi-k3-free`<br>`gemini-3.7-flash-free`<br>`minimax-m3-free` | `INFERERA_API_KEY` |
-| **TokenRouter** | `https://api.tokenrouter.com/v1` | `qwen/qwen3.8-max-free`<br>`z-ai/glm-5.3-free` | `TOKENROUTER_API_KEY` |
+| **OpenRouter** | `https://openrouter.ai/api/v1` | `openrouter/free`（聚合路由，默认）<br>`qwen/qwen3.8-27b:free`<br>`z-ai/glm-5.2:free`<br>`deepseek/deepseek-v4-flash-0731:free` | `OPENROUTER_API_KEY` |
+| **B.ai** | `https://api.b.ai/v1` | `glm-5.3-flash`（生产在跑）<br>`deepseek-v4-flash`<br>`qwen3.8-flash` | `BAI_API_KEY` |
+| **智谱 Z.ai** | `https://api.z.ai/api/paas/v4` | `glm-4.7-flash`（默认，注册赠额度）<br>`glm-4.5-flash`<br>`glm-4.6v-flash`（视觉） | `ZAI_API_KEY` |
+| **xkiro** | `https://api.xkiro.com/v1` | `qwen/qwen3.6-plus:free`<br>`minimax/minimax-m3:free` | `XKIRO_API_KEY` |
+| **aihubmix** | `https://aihubmix.com/v1` | `coding-glm-5.3-flash-free`（默认，500 次/天）<br>`gemini-3.7-flash-free`<br>`minimax-m3-free` | `AIHUBMIX_API_KEY` |
+| **inferera** | `https://api.inferera.com/v1` | `coding-kimi-k3-free`（⚠️ 暂无第二来源核验）<br>`gemini-3.7-flash-free`<br>`minimax-m3-free` | `INFERERA_API_KEY` |
+| **TokenRouter** | `https://api.tokenrouter.com/v1` | `nemotron-3-nano-omni`<br>`z-ai/glm-5.3-free` | `TOKENROUTER_API_KEY` |
 | **DeepSeek 官方** | `https://api.deepseek.com` | `deepseek-chat` | `LLM_API_KEY` |
-| **SiliconFlow (硅基流动)** | `https://api.siliconflow.cn/v1` | `deepseek-ai/DeepSeek-V3`<br>`Qwen/Qwen2.5-7B-Instruct` | `SILICONFLOW_API_KEY` |
+| **SiliconFlow (硅基流动)** | `https://api.siliconflow.cn/v1` | `qwen3-8b`（¥0 免实名后免费）<br>`glm-4-9b-0414`<br>`StepFun-xing4.0-29b` | `SILICONFLOW_API_KEY` |
+| **bluesminds** | `https://api.bluesminds.com/v1` | `glm-4-flash`（注册赠试用额度）<br>`kimi-k2`<br>`deepseek-chat` | `BLUESMINDS_API_KEY` |
 | **🏠 Reasonix 本地网关** ⭐ 本地首选 | `http://localhost:20140/v1` | `auto/best-fast`（自动路由） | **无需 Key**（本地自动发现） |
 
 ### 🏠 Reasonix 本地免费模型网关（本地开发首选）
@@ -171,6 +175,8 @@
 **方式 A：简单配置（单 Key 或常用预置 Key）**
 - `OPENROUTER_API_KEY`: 你的 OpenRouter Key（自动使用内置免费模型池）
 - `BAI_API_KEY`: 你的 B.ai API Key
+- `ZAI_API_KEY`: 智谱 Z.ai Key（自动使用 `glm-4.7-flash` 免费层）
+- `BLUESMINDS_API_KEY`: bluesminds Key（注册赠试用额度，自动使用 `glm-4-flash`）
 - `LLM_API_KEY`: 你的 DeepSeek / 其他 OpenAI 兼容 API Key
 - `LLM_BASE_URL` *(可选)*: 自定义接口地址（默认 `https://api.deepseek.com`）
 - `LLM_MODEL` *(可选)*: 自定义模型名称（默认 `deepseek-chat`）
@@ -189,13 +195,13 @@
     "name": "OpenRouter-Free",
     "base_url": "https://openrouter.ai/api/v1",
     "api_key": "sk-or-v1-你的OpenRouterKey",
-    "model": "minimax/minimax-m3:free"
+    "model": "qwen/qwen3.8-27b:free"
   },
   {
     "name": "xkiro-Free",
     "base_url": "https://api.xkiro.com/v1",
     "api_key": "sk-你的xkiroKey",
-    "model": "qwen/qwen3.8-max:free"
+    "model": "qwen/qwen3.6-plus:free"
   }
 ]
 ```
@@ -273,7 +279,7 @@ python scripts/metrics_report.py --days 1
   | `FETCH_DEADLINE_SEC` | `300` | 单轮 RSS 抓取的全局 deadline（秒）：到点放弃迟到源、用已完成候选继续，避免卡住的源拖满 workflow 并挤掉后续 cron |
   | `LOG_LEVEL` | `INFO` | 日志级别（排障时可设 `DEBUG`） |
   | `MAX_POSTS_PER_RUN` | `2` | 单次运行最大发帖数（workflow 运行参数；配额剩余不足时自动收敛） |
-- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `BAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL`——想把某平台固定到指定模型时设置。
+- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `BAI_MODEL` / `ZAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL` / `BLUESMINDS_MODEL`——想把某平台固定到指定模型时设置。
 - **报警通知渠道**（全部可选，多渠道并发）：`SERVERCHAN_KEY`（Server酱微信）/ `PUSHPLUS_TOKEN`（PushPlus 微信）/ `BARK_KEY`（iOS Bark）/ `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`（Telegram）/ `WEBHOOK_URL`（钉钉/飞书/企微/Discord 通用）。同一错误报警 12 小时同题节流，投递成功才计额度。
 - **CI 回归防线**：`tests/test_core.py` 内置百余个离线回归测试（含断路器/源停放/报错分类/通知编码/跨语言去重/行情缓存/同步契约），`.github/workflows/ci.yml` 在每次 push/PR 时自动编译、校验 workflow 语法并跑测试，防止守护逻辑被后续改动悄悄破坏。
   - **workflow 内嵌脚本校验的环境降级**：`scripts/validate_workflows.py` 只在确认本机 bash **真能执行** `bash -n -c true` 时才校验内嵌 shell；PATH 上只有 WSL 启动器、或 bash 被安全策略拒绝时，一律跳过并说明原因，**绝不把环境故障伪装成 workflow 语法错误**。需强制指定时用环境变量 `BASH_PATH=/path/to/bash`。
