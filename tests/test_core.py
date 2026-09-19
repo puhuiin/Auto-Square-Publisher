@@ -3321,6 +3321,27 @@ class TestNumberHallucinationGuard(unittest.TestCase):
             "85 个百万富翁钱包在突破前集体加仓", source)
         self.assertTrue(ok3)
 
+    def test_thousands_separator_in_cjk_unit_numbers(self):
+        """R243 生产误杀回放：BlockTempo 标题"9,500 萬鎂"——千分位逗号让 CJK
+        分支裸 \\d+ 只截到"500"→白名单只有 500万(5e6)，模型忠实转写的
+        "9500 万"(9.5e7) 查无此数，b.ai 与 openrouter 双通道同因误杀
+        （09-18 14:24，Zcash 开发基金新闻整条弃单）。英文分支早有 [\\d,]+，
+        CJK 两侧（源提取+内容校验）须对称支持逗号。"""
+        source = "Dragonfly 喊停 Zcash 開發基金!9,500 萬鎂資金該還給市場?"
+        # 模型常规转写：去逗号
+        ok, _ = m.MultiLLMEngine._verify_numbers(
+            "这笔 9500 万美元的资金去向引争议", source)
+        self.assertTrue(ok, "源文 9,500 萬 与正文 9500 万 必须互通")
+        # 模型原样继承逗号写法：两侧解析须对称
+        ok2, _ = m.MultiLLMEngine._verify_numbers(
+            "这笔 9,500 万美元的资金去向引争议", source)
+        self.assertTrue(ok2, "两侧逗号解析必须对称")
+        # 真编造不得借修复放水：源文没有 1.2 亿量级
+        ok3, reason = m.MultiLLMEngine._verify_numbers(
+            "基金里躺着 1.2 亿美元", source)
+        self.assertFalse(ok3)
+        self.assertIn("1.2", reason)
+
     def test_plain_numbers_still_pass_after_unit_regex_change(self):
         """单位组改全拼兼容后，普通纯数字/百分比场景不得回归（首版实现曾把
         单位组做成必选，$119850 与 5.23% 全部失配 → 合法内容被误杀）。"""

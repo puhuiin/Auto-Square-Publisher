@@ -3274,10 +3274,14 @@ class MultiLLMEngine:
         # R128：繁体 億/萬 必须同权——BlockTempo 等 TW 源是生产主力源之一，
         # "市值 2.8 億鎂"只认简体时提取出裸 2.8，正文引用 2.8 亿(2.8e8) 被
         # 误判"源文找不到"（生产实录 12:47Z STONK 一篇被两连误杀）
-        for m in re.finditer(r"(\d+(?:\.\d+)?)\s*(万|萬|亿|億)", source_text):
+        # R243：数字组必须支持千分位逗号——生产实录 09-18 14:24，BlockTempo
+        # 标题"9,500 萬鎂"的逗号让裸 \d+ 只截到"500"→白名单只有 500万(5e6)，
+        # 模型忠实转写的"9500 万"(9.5e7) 查无此数，双通道同因误杀（Zcash 开发
+        # 基金新闻整条弃单）。英文分支早有 [\d,]+，CJK 分支漏配。
+        for m in re.finditer(r"(\d[\d,]*(?:\.\d+)?)\s*(万|萬|亿|億)", source_text):
             scale = 1e4 if m.group(2) in ("万", "萬") else 1e8
             try:
-                source_nums.append(float(m.group(1)) * scale)
+                source_nums.append(float(m.group(1).replace(",", "")) * scale)
             except ValueError:
                 continue
 
@@ -3308,8 +3312,10 @@ class MultiLLMEngine:
 
         # 中文大额单位金额（X亿 / X百万）：只查 ≥100万 的数额数据（"拿 5 万本金"这类口吻不校验）。
         # R128：繁体 億/萬 同权（模型从 TW 源转写时会继承繁体写法）
-        for m in re.finditer(r"(\d+(?:\.\d+)?)\s*([亿万萬億])\s*(?:美元|美刀|刀|U|u|USDT|usd|资金|美元计|鎂|镁)?", content):
-            num = float(m.group(1))
+        # R243：内容侧数字组同步支持千分位逗号（源文"9,500 萬"若被原样继承到
+        # 正文"9,500 万"，两侧解析须对称，否则同数异形互查无果）
+        for m in re.finditer(r"(\d[\d,]*(?:\.\d+)?)\s*([亿万萬億])\s*(?:美元|美刀|刀|U|u|USDT|usd|资金|美元计|鎂|镁)?", content):
+            num = float(m.group(1).replace(",", ""))
             scale = 1e4 if m.group(2) in ("万", "萬") else 1e8
             abs_val = num * scale
             if abs_val < 1e6:
