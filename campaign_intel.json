@@ -19,11 +19,21 @@
   "last_updated": "2026-09-19T00:44:18.252464Z",
   "_feed_health": {},
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-b.ai": {
+      "fails": 1,
+      "cooldown_until": "2026-09-19T11:01:16.330246+00:00"
+    }
+  },
   "_article_sent_date": "2026-09-18",
-  "_publish_park": {},
+  "_publish_park": {
+    "9420288087e199e9": {
+      "fails": 1,
+      "last_fail": "2026-09-19T10:52:44.492085+00:00"
+    }
+  },
   "_intel_refresh_fail": {}
 }
