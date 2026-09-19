@@ -21,12 +21,7 @@
     "date": "2026-09-09",
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
-  "_llm_breaker": {
-    "Preset-b.ai": {
-      "fails": 1,
-      "cooldown_until": "2026-09-19T13:57:42.899889+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-09-19",
   "_publish_park": {
     "9420288087e199e9": {
