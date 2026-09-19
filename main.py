@@ -3771,10 +3771,26 @@ class MultiLLMEngine:
 
         # 遍历提供商链进行容灾尝试（按本次运行连续失败数升序，健康节点优先）
         ordered = self._ordered_providers()
+        base_len = len(ordered)
+        # R264：聚合路由通道一次调用=按可用免费模型随机抽一个后端
+        # （OpenRouter 官方目录原话 "selects free models at random"），质量门
+        # 命中意味着"这次抽中的后端弱"，不是"通道坏了"——同通道再抽一次是完全
+        # 独立的新样本。生产实证 09-10~09-19：13 次质量门拒稿 100% 来自路由
+        # 通道（b.ai 零命中），其中 3 次把整条故事打死（17/21/50 字符 stub），
+        # 只能等下一轮 cron（20 分钟后）重抽。故在链尾给每个路由通道补一次
+        # 重抽位：只在其余通道都走完后发生（真·failover 优先），且只对质量门
+        # 拒稿生效——超时/429/空回重抽无意义（同分布再抽大概率同样超时）。
+        reroll_quality_ok: set = set()
+        if base_len:
+            ordered = ordered + [p for p in ordered if _is_router_model(p.model)]
         # fail_reason 缺省覆盖"全冷却空链"路径（循环一次不执行，避免引用未绑定）；
         # last_fail_reason 入口已赋默认值，其余 return None 前逐一覆写。
         fail_reason = "全部提供商处于冷却期，无可用通道"
         for index, provider in enumerate(ordered):
+            if index >= base_len:
+                if provider.name not in reroll_quality_ok:
+                    continue  # 通道侧故障（超时/限流/空回）不重抽，直接结束
+                logger.info(f"路由通道 [{provider.name}] 上次抽中弱后端，重抽一次（随机样本独立）...")
             logger.info(f"[{index + 1}/{len(ordered)}] 正在尝试使用提供商 [{provider.name}] (模型: {provider.model})...")
             # 计时起点放在 try 之前：连 _get_client 构造失败也要能记出耗时
             t_call = time.perf_counter()
@@ -3978,6 +3994,8 @@ class MultiLLMEngine:
                 # 健康的通道推进 4h 冷却）。只记在质量计数里参与运行内让位（R6）。
                 quality_fails = self._quality_fails()
                 quality_fails[provider.name] = quality_fails.get(provider.name, 0) + 1
+                if _is_router_model(provider.model):
+                    reroll_quality_ok.add(provider.name)  # R264：路由通道允许链尾重抽一次
                 logger.warning(f"提供商 [{provider.name}] 质量门拦截: {e}")
                 fail_reason = f"质量门: {e}"
                 enter_breaker = False

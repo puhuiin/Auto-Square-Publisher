@@ -7866,6 +7866,111 @@ class TestEmptyContentRetry(unittest.TestCase):
         self.assertIn("stub", eng._breaker_state())
 
 
+class TestRouterRerollOnQualityReject(unittest.TestCase):
+    """R264：聚合路由通道的质量门拒稿后，链尾补一次重抽（独立随机样本）。
+
+    生产实证 09-10~09-19：13 次质量门/ai_flavor 拒稿 100% 来自路由通道
+    （b.ai 零命中），其中 3 次把整条故事打死（17/21/50 字符 stub）只能等下一轮
+    cron 重抽。OpenRouter 路由一次调用=按可用免费模型随机抽一个后端，拒稿
+    =「这次抽中的后端弱」而不是「通道坏了」，故同通道再抽一次是独立新样本。
+    重抽位挂在链尾：真·failover 仍优先；且只对质量门生效（超时/429/空回
+    重抽是同分布再抽，大概率同样失败）。
+    """
+
+    def setUp(self):
+        self._orig = m.SymbolValidator._valid_symbols_cache
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH"}
+        import tempfile
+        self.intel_tmp = tempfile.mktemp(suffix=".json")
+        with open(self.intel_tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        self._orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.intel_tmp
+
+    def tearDown(self):
+        m.SymbolValidator._valid_symbols_cache = self._orig
+        m.CAMPAIGN_INTEL_FILE = self._orig_intel
+        if os.path.exists(self.intel_tmp):
+            os.remove(self.intel_tmp)
+
+    def _engine(self, models):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.providers = [
+            m.LLMProviderConfig(f"Preset-{i}", "https://x", "k", model)
+            for i, model in enumerate(models)
+        ]
+        return eng
+
+    def _resp(self, content):
+        return MagicMock(choices=[MagicMock(message=MagicMock(content=content))])
+
+    def _good_body(self):
+        return ("比特币放量突破关键位，$BTC 短线情绪转多，"
+                "回调就是上车机会，但别追高，等回踩确认支撑再进，"
+                "仓位控制好，止损放在前低下方。")
+
+    def _stub_body(self):
+        return "BTC 短线看多"  # 8 字符 → 质量门「内容过短」
+
+    def _item(self):
+        return {"title": "BTC news", "summary": "Bitcoin surged", "source": "U.Today"}
+
+    def test_router_quality_reject_rerolls_to_success(self):
+        """路由通道首抽 stub 拒稿 → 链尾重抽成功（2 次调用）"""
+        eng = self._engine(["openrouter/free"])
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [self._resp(self._stub_body()), self._resp(self._good_body())]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch("time.sleep"), patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        self.assertIn("$BTC", out["content"])
+        self.assertEqual(client.chat.completions.create.call_count, 2)
+
+    def test_concrete_model_quality_reject_no_reroll(self):
+        """具体免费模型（非路由）拒稿不重抽：没有随机抽样的语义"""
+        eng = self._engine(["glm-5.3-flash"])
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [self._resp(self._stub_body()), self._resp(self._good_body())]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch("time.sleep"), patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        self.assertEqual(client.chat.completions.create.call_count, 1)
+
+    def test_router_transport_failure_no_reroll(self):
+        """路由通道传输层失败不重抽：同分布再抽大概率同样超时"""
+        eng = self._engine(["openrouter/free"])
+        client = MagicMock()
+        client.chat.completions.create.side_effect = RuntimeError("timeout")
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch("time.sleep"), patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        self.assertEqual(client.chat.completions.create.call_count, 1)
+
+    def test_reroll_runs_after_all_real_channels_exhausted(self):
+        """重抽位在链尾：整条链（路由→具体）都走完后才轮到路由重抽"""
+        eng = self._engine(["openrouter/free", "glm-5.3-flash"])
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            self._resp(self._stub_body()),    # 路由通道首抽：弱后端
+            self._resp(self._stub_body()),    # 具体模型：也拒稿（走完整条 failover）
+            self._resp(self._good_body()),    # 链尾重抽：独立新样本命中
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch("time.sleep"), patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out, "链尾重抽应把故事救回")
+        self.assertEqual(client.chat.completions.create.call_count, 3)
+
+
 class TestPermanentFailure(unittest.TestCase):
     """永久失败快道：404/模型下架直接 24h 冷却 + 拒因打标；瞬时故障仍走指数退避"""
 
