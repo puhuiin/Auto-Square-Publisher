@@ -2,28 +2,22 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#TradingTournament",
     "#Futures",
-    "#Megadrop"
+    "#TradingTournament",
+    "#StockOptions"
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$KII",
+    "$BANK",
     "$PROVE",
     "$NEAR",
-    "$REZ",
-    "$RLUSD",
     "$USDC",
+    "$META",
     "$AVGO"
   ],
-  "strategy_guidance": "今日 KiiChain ($KII) Alpha 交易竞赛正值活动日，时间压力信号最强、节奏最紧迫，发帖机器人应优先围绕该活动以'活动冲刺'角度追贴，引导读者立即参与交易赚取返佣。同时结合 Binance Futures 今日新上线多组 USDⓈ-M 永续合约以及 $PROVE/$NEAR/$REZ 等多项正在进行中的 Trading Tournament，以'抄作业'角度整理参赛攻略和代币选择清单，将日常快讯与官方激励活动深度绑定，最大化 Write2Earn 曝光与交易返佣收益。",
-  "last_updated": "2026-09-18T12:25:11.490592Z",
-  "_feed_health": {
-    "CryptoPotato (山寨币/Meme热点)": {
-      "last_fail": "2026-09-18T18:27:55.271363+00:00",
-      "fails": 1
-    }
-  },
+  "strategy_guidance": "最紧迫的是「Stock Options 限时手续费优惠」（标题已现『限时』信号），发帖机器人应优先追贴，以『活动冲刺』角度教读者抢在费率窗口关闭前低门槛交易美股/ETF，并顺势带出 AVGO、META、QQQ、STX 经 bStocks 分红的热度。其次以 #Futures 视角前瞻 9-21 上线的 USDBRLUSDT TradFi 永续及季度 0326 交割合约，配合 BANK/PROVE/NEAR 三场 Trading Tournament（最高 400 BNB、150万 PROVE 奖池）输出『抄作业』式策略帖，引导读者跟单交易以赚取 Write to Earn 返佣。日常快讯统一挂 #Write2Earn #BinanceSquare，把无截止的 Wallet Season 7（Arc 链 $200K）、Starter Carnival $200K、P2P 赢 iPhone 18 Pro 等长青活动作为长尾素材持续引流变现。",
+  "last_updated": "2026-09-19T00:44:18.252464Z",
+  "_feed_health": {},
   "_fallback_image": {
     "date": "2026-09-09",
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
