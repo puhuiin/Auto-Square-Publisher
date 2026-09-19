@@ -8004,6 +8004,85 @@ class TestRouterRerollOnQualityReject(unittest.TestCase):
         self.assertIsNotNone(out, "链尾重抽应把故事救回")
         self.assertEqual(client.chat.completions.create.call_count, 3)
 
+    def _numbers_body(self):
+        """过长度/中文字数门，但带一个源文没有的精确大额（数字幻觉门目标）"""
+        return ("链上监测到这笔 1.2 亿美元的资金半夜换手，$BTC 短线情绪直接转多，"
+                "回调不破支撑就可以继续拿住，重仓的自己找个舒服位置減点，"
+                "别在情绪最高点接刀。")
+
+    def test_numbers_gate_rejection_arms_reroll(self):
+        """R267：数字幻觉门的拒稿同样武装重抽。生产实录 09-18 14:24Z（Zcash
+        开发基金"9,500 萬鎂"报道）正是数字门连杀三个提供商行、整条故事弃单——
+        质量门之外的 _QualityGateRejection 全族（长文门/数字门/ai_flavor 门）
+        都代表「这次抽中的后端弱」。若武装点被收窄成只认短讯质量门，本测试红。"""
+        eng = self._engine(["openrouter/free"])
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            self._resp(self._numbers_body()),  # 路由首抽：编造精确金额 → 数字门
+            self._resp(self._good_body()),     # 链尾重抽：干净样本
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch("time.sleep"), patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out, "数字门拒稿后链尾重抽应把故事救回")
+        self.assertEqual(client.chat.completions.create.call_count, 2)
+
+    def test_ai_flavor_rejection_arms_reroll(self):
+        """R267：AI 腔门拒稿同样武装重抽（与数字门同族，同一 _QualityGateRejection）"""
+        flavored = ("比特币今晚这波拉升确实猛，$BTC 突破关键位后资金还在进场，"
+                    "短期回踩不破就是机会，让我们拭目以待！")
+        eng = self._engine(["openrouter/free"])
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            self._resp(flavored),           # 路由首抽：命中硬特征「拭目以待」
+            self._resp(self._good_body()),  # 链尾重抽：干净样本
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch("time.sleep"), patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out, "AI 腔门拒稿后链尾重抽应把故事救回")
+        self.assertEqual(client.chat.completions.create.call_count, 2)
+
+    def test_real_failover_takes_priority_over_reroll(self):
+        """R267：重抽永远排在真·failover 之后。路由通道质量拒稿后若具体通道
+        直接成功，必须当场返回（2 次调用）——把重抽提前到拒稿next-in-line 会
+        让免费具体模型的成功路径白白多烧一次路由调用。"""
+        eng = self._engine(["openrouter/free", "glm-5.3-flash"])
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            self._resp(self._stub_body()),   # 路由首抽：弱后端
+            self._resp(self._good_body()),   # 具体模型：直接成功
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch("time.sleep"), patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        self.assertEqual(out["provider"], "Preset-1", "成功应来自具体模型而非重抽")
+        self.assertEqual(client.chat.completions.create.call_count, 2,
+                         "具体通道已成功，链尾重抽不得再发生")
+
+    def test_reroll_slot_is_per_channel(self):
+        """R267：武装集按通道名记。两个路由通道时链尾各补一个重抽位，
+        但只有自己拒稿过的通道才重抽——healthy 的路由通道不得被别人的
+        拒稿拖着多打一次调用。"""
+        eng = self._engine(["openrouter/free", "tokenrouter/free"])
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            self._resp(self._stub_body()),   # 通道 A 首抽：弱后端 → 武装 A
+            self._resp(self._good_body()),   # 通道 B 首抽：直接成功 → 返回
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch("time.sleep"), patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        self.assertEqual(out["provider"], "Preset-1")
+        self.assertEqual(client.chat.completions.create.call_count, 2,
+                         "通道 B 已成功；通道 A 的重抽位不得抢先发生")
+
 
 class TestPermanentFailure(unittest.TestCase):
     """永久失败快道：404/模型下架直接 24h 冷却 + 拒因打标；瞬时故障仍走指数退避"""
