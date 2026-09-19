@@ -21,17 +21,12 @@
     "date": "2026-09-09",
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
-  "_llm_breaker": {
-    "Preset-b.ai": {
-      "fails": 1,
-      "cooldown_until": "2026-09-19T15:17:34.639284+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-09-19",
   "_publish_park": {
     "9420288087e199e9": {
-      "last_fail": "2026-09-19T10:52:44.492085+00:00",
-      "fails": 1
+      "fails": 1,
+      "last_fail": "2026-09-19T10:52:44.492085+00:00"
     }
   },
   "_intel_refresh_fail": {}
