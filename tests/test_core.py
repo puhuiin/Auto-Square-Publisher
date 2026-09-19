@@ -6802,6 +6802,40 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_secondary_platform_only_writes_delivery_telemetry(self):
+        """R265：副平台-only 模式（PUBLISH_PLATFORMS 不含 binance）下，image_tier/
+        image_fail_reason 只在币安配图分支内赋值。副平台投递回执同样读这两个变量，
+        未初始化即 NameError → 被单条候选的 except 吞成 skipped_exception，
+        结果：草稿其实成功投递，遥测却显示零发布、全部跳过，异常被彻底静音。
+        回归锁：投递回执必须落行、skipped_exception 必须归零、图源态回退为未评估。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        try:
+            # 覆盖 _base_patches 的默认 ["binance"]（后启动的 patch 先停，互不污染）
+            _plat = patch.object(m, "PUBLISH_PLATFORMS", ["okx_draft"])
+            patches.append(_plat)
+            _plat.start()
+            with patch.object(m, "OKXDraftExporter") as exp_cls:
+                exp_cls.return_value.publish.return_value = True
+                m._run_main()
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            delivered = [r for r in rows
+                         if str(r.get("outcome", "")).startswith("okx_draft_delivered")]
+            self.assertTrue(delivered,
+                            f"副平台-only 回执必须落遥测，实际 outcome={[r.get('outcome') for r in rows]}")
+            # 副平台路径不评估图源：未评估即 None，append_metrics 过滤空值 → 键不在场
+            self.assertIsNone(delivered[0].get("image_tier"),
+                              "未配图的副平台投递不得残留/伪造图源层级")
+            rs = [r for r in rows if r.get("outcome") == "run_summary"]
+            self.assertTrue(rs, "运行必须走到收尾 run_summary")
+            self.assertEqual(rs[-1].get("published"), 1, "草稿投递应计为已发布")
+            self.assertEqual(rs[-1].get("skipped_exception"), 0,
+                             "副平台-only 不得把每条候选都吞成意外异常跳过")
+        finally:
+            self._teardown(patches, tmpdir)
+
 
 class TestDedupIndexEquivalence(unittest.TestCase):
     """判重索引必须与逐对比较逐字等价（性能优化不许悄悄改变拦截口径）"""

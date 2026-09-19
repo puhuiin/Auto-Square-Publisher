@@ -7031,6 +7031,14 @@ def _run_main():
             # 多媒体图文装配：下载新闻原生配图或采用情绪仪表盘兜底，并上传至币安官方 S3
             binance_enabled = "binance" in PUBLISH_PLATFORMS
             uploaded_image_url = None
+            # R265：图源态先在币安分支外兜底初始化。副平台-only（okx_draft/telegram）
+            # 与"币安启用但未配 Key"两条路径根本不走配图分支，而三条投递回执
+            # （币安/副平台/发布失败）都要把 image_fail_reason/image_tier 写进遥测，
+            # 晚绑定即 UnboundLocalError → 被单条候选的 except 吞成 skipped_exception：
+            # 草稿其实投递成功，遥测却显示零发布 + 零异常线索，问题彻底静音。
+            # 未评估即 None（append_metrics 过滤空值），不伪造图源层级。
+            image_fail_reason = None
+            image_tier = None
             raw_img = item.get("image_url")
             if dry_run:
                 logger.info(f"【DRY_RUN】多媒体配图测试: {raw_img or '使用全网情绪图保底'}")
