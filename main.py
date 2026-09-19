@@ -609,6 +609,64 @@ def http_get_binance(path: str, **kwargs) -> Optional[requests.Response]:
     return last
 
 
+# RSS 抓取的响应体上限：远超正常 feed 体积（实测各源均 <2MB），仅拦截畸形/
+# 恶意服务器倾泻超大响应体。与配图下载的 15MB 上限同一设计：双通道
+# （Content-Length 预检 + 边读边计数），流式读取，超限即 fail-closed。
+FEED_MAX_BYTES = 32 * 1024 * 1024
+_FEED_READ_CHUNK = 64 * 1024
+
+
+def _read_response_capped(resp, cap: int = FEED_MAX_BYTES) -> Optional[bytes]:
+    """有界读取 HTTP 响应体：超限/读取失败返回 None（调用方按故障处理）。
+
+    镜像配图下载的双通道防御：Content-Length 预检先拒明超，随后 iter_content
+    边读边计数——谎报小体积实吐超限流时读到 cap+1 字节立即掐断并关闭连接，
+    不会把整个响应体吃进内存。调用方须以 stream=True 发起请求，否则 body
+    在 requests 发送阶段已整体落内存，计数上限只剩解析保护、没有内存保护。
+    """
+    try:
+        declared = int((getattr(resp, "headers", None) or {}).get("Content-Length", "") or 0)
+    except (TypeError, ValueError):
+        declared = 0
+    if declared > cap:
+        try:
+            resp.close()
+        except Exception:
+            pass
+        return None
+    try:
+        chunks = []
+        total = 0
+        for chunk in resp.iter_content(chunk_size=_FEED_READ_CHUNK):
+            if not chunk:
+                continue
+            total += len(chunk)
+            if total > cap:
+                try:
+                    resp.close()
+                except Exception:
+                    pass
+                return None
+            chunks.append(chunk)
+        return b"".join(chunks)
+    except (AttributeError, TypeError):
+        # 无 iter_content 或其返回值不可迭代（测试夹具的宽恕响应对象）：
+        # 回退 .content，保持离线测试可用
+        pass
+    except Exception:
+        try:
+            resp.close()
+        except Exception:
+            pass
+        return None
+    content = getattr(resp, "content", None)
+    if isinstance(content, str):
+        content = content.encode("utf-8", "replace")
+    if not isinstance(content, (bytes, bytearray)) or len(content) > cap:
+        return None
+    return bytes(content)
+
+
 # ---------------------------------------------------------------------------
 # Reasonix 本地免费模型聚合网关集成
 # 本地跑时（网关存活）自动把 http://localhost:20140/v1 置顶为首选提供商，
@@ -2015,7 +2073,7 @@ class NewsFetcher:
         }
         items = []
         try:
-            resp = http_get(url, headers=headers, timeout=8, retries=1)
+            resp = http_get(url, headers=headers, timeout=8, retries=1, stream=True)
             # WAF/Cloudflare 偶发 403：用完整浏览器指纹再试一次（很多源只认 Accept 系列头齐全的请求）
             if resp is not None and resp.status_code in (403, 429):
                 time.sleep(0.5)
@@ -2026,7 +2084,12 @@ class NewsFetcher:
                     "Referer": url.rsplit("/", 1)[0] + "/",
                     "Cache-Control": "no-cache",
                 }
-                resp = http_get(url, headers=fp_headers, timeout=8, retries=1)
+                # stream=True 的响应不读就丢会白占连接，先显式关闭再重试
+                try:
+                    resp.close()
+                except Exception:
+                    pass
+                resp = http_get(url, headers=fp_headers, timeout=8, retries=1, stream=True)
                 if resp is not None and resp.status_code == 200:
                     logger.info(f"数据源 [{name}] 指纹升级重试成功。")
             if resp is None or resp.status_code != 200:
@@ -2035,7 +2098,21 @@ class NewsFetcher:
                 self._feed_record(name, ok=False)
                 return items
 
-            feed = feedparser.parse(resp.content)
+            # 有界读取：feed 是唯一还会把外部响应体整块喂给解析器的入口，
+            # 必须和配图一样对体积设防（畸形/被攻陷的源倾泻超大 body 会吃爆
+            # runner 内存）。超限/读取失败 = 源故障，绝不放行。
+            body = _read_response_capped(resp, FEED_MAX_BYTES)
+            try:
+                resp.close()
+            except Exception:
+                pass
+            if body is None:
+                logger.warning(f"数据源 [{name}] 响应体超过 {FEED_MAX_BYTES // (1024 * 1024)}MB 上限或读取失败，按故障处理。")
+                self._stat_fail(name)
+                self._feed_record(name, ok=False)
+                return items
+
+            feed = feedparser.parse(body)
             # bozo=1 且无 entries = 源返回了 200 但内容不是有效 XML（通常是 HTML 错误页/风控页）
             if getattr(feed, "bozo", 0) and not feed.entries:
                 logger.warning(f"数据源 [{name}] 返回 200 但 RSS 解析无效（可能被风控），按故障处理。")

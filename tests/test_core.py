@@ -7183,6 +7183,87 @@ class TestEmptyFeedNotHealthy(unittest.TestCase):
         self.assertEqual(f.stats["feeds_ok"], 0)
 
 
+class _StreamFeedResp:
+    """可迭代响应体夹具：记录 close/断点消费位置，模拟流式 feed 响应"""
+
+    def __init__(self, chunks, headers=None, status=200, content=b""):
+        self._chunks = list(chunks)
+        self.headers = headers or {}
+        self.status_code = status
+        self.content = content
+        self.closed = False
+        self.consumed = 0
+
+    def iter_content(self, chunk_size=65536):
+        for c in self._chunks:
+            self.consumed += 1
+            yield c
+
+    def close(self):
+        self.closed = True
+
+
+class TestFeedBodyBounded(unittest.TestCase):
+    """R253：feed 响应体必须有界——畸形/被攻陷的源倾泻超大 body 不得吃爆内存。
+
+    与配图下载的 15MB 上限同一防御结构：Content-Length 预检 + iter_content
+    边读边计数，超限 fail-closed 记源故障，绝不把超限 body 喂给 feedparser。
+    """
+
+    def _feed_cfg(self):
+        return {"name": "BigFeed", "url": "https://big.example/rss", "lang": "en"}
+
+    def test_declared_oversize_rejected_before_read(self):
+        """Content-Length 明超上限：不读 body，直接记源故障"""
+        xml = b'<?xml version="1.0"?><rss version="2.0"><channel><title>T</title>' \
+              b'<item><title>BTC up</title><link>https://x/1</link></item></channel></rss>'
+        resp = _StreamFeedResp([xml], headers={"Content-Length": str(m.FEED_MAX_BYTES + 1)})
+        f = m.NewsFetcher()
+        with patch.object(m, "http_get", return_value=resp):
+            items = f._fetch_single_feed(self._feed_cfg(), _FakeCache(), 5)
+        self.assertEqual(items, [], "超限响应体不得产出候选")
+        self.assertEqual(resp.consumed, 0, "预检拒绝时不得开始流式读取")
+        self.assertTrue(resp.closed)
+        self.assertIn("BigFeed", f.stats["feeds_failed"], "超限必须记源故障，不得静默跳过")
+
+    def test_lying_content_length_oversized_stream_aborted(self):
+        """谎报小体积实吐超限流：边读边计数在 cap+1 处掐断并关闭，不得读完"""
+        small_xml = b'<?xml version="1.0"?><rss version="2.0"><channel><title>T</title></channel></rss>'
+        resp = _StreamFeedResp([b"x" * 512] * 10,
+                               headers={"Content-Length": "4096"})
+        f = m.NewsFetcher()
+        with patch.object(m, "FEED_MAX_BYTES", 1024), \
+             patch.object(m, "http_get", return_value=resp):
+            items = f._fetch_single_feed(self._feed_cfg(), _FakeCache(), 5)
+        self.assertEqual(items, [])
+        self.assertLess(resp.consumed, 10, "超限后必须立即掐断，不得读完整个流")
+        self.assertTrue(resp.closed, "掐断必须关闭连接，否则连接池被流式响应占满")
+
+    def test_normal_body_streamed_and_parsed(self):
+        """正常 feed：stream=True 抓取、有界读完、候选正常产出"""
+        xml = ('<?xml version="1.0" encoding="UTF-8"?>'
+               '<rss version="2.0"><channel><title>T</title>'
+               '<item><title>BTC breaks resistance as inflows surge</title>'
+               '<link>https://x.example/ok-1</link><description>body</description></item>'
+               '</channel></rss>').encode("utf-8")
+        resp = _StreamFeedResp([xml[:40], xml[40:]], headers={"Content-Length": str(len(xml))})
+        f = m.NewsFetcher()
+        with patch.object(m, "http_get", return_value=resp) as get:
+            items = f._fetch_single_feed(self._feed_cfg(), _FakeCache(), 5)
+        self.assertEqual(len(items), 1)
+        self.assertTrue(get.call_args.kwargs["stream"], "feed 抓取必须流式，计数上限才有内存意义")
+        self.assertTrue(resp.closed)
+
+    def test_read_response_capped_plain_content_fallback(self):
+        """无 iter_content 的夹具（离线测试常用）：回退 .content 且受 cap 约束"""
+        self.assertEqual(m._read_response_capped(
+            type("R", (), {"status_code": 200, "content": b"hello"})(), 1024), b"hello")
+        self.assertIsNone(m._read_response_capped(
+            type("R", (), {"status_code": 200, "content": b"x" * 2048})(), 1024))
+        self.assertEqual(m._read_response_capped(
+            type("R", (), {"status_code": 200, "content": b""})(), 1024), b"")
+
+
 class TestCachePersistenceContract(unittest.TestCase):
     """去重缓存落盘：失败必须回传给调用方，tokens 必须始终写入"""
 
