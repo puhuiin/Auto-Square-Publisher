@@ -650,6 +650,51 @@ class TestPastDateRefs(unittest.TestCase):
         self.assertEqual(m._past_date_refs("今天(2026-09-15)截止", now), ["2026-09-15"])
         self.assertEqual(m._past_date_refs("今日（2026-09-15）截止", now), ["2026-09-15"])
 
+    def test_compact_date_forms_detected_with_guards(self):
+        """R281：活源实证——2026-09-20 的 guidance 自己写「9-21 上线」「季度
+        0326 交割」，都是三种既有形态（YYYY-MM-DD / M月D日 / M/D）的漏网面；
+        紧凑数字串又混在数量区间里，无护栏会把「5-8 折」这类误判成过期日期，
+        触发 get_campaign_intel 的强制刷新。锁四条不变式：① 过去的紧凑
+        日期语义词命中；② 数量区间/今天/未来/远期日期不命中；③ 全日期不被
+        紧凑分支重复报（2026-09-18 ≠ 0918 双份）；④ 三种既有形态不回归。"""
+        now = datetime(2026, 9, 20, 12, 0, tzinfo=timezone.utc)
+        # ① 过去的紧凑形态：日期语义词邻位 → 命中
+        self.assertEqual(m._past_date_refs("截止日 9-18", now), ["9-18"])
+        self.assertEqual(m._past_date_refs("季度 0918 交割", now), ["0918"])
+        self.assertEqual(m._past_date_refs("USDBRL 9-18 上线后开启", now), ["9-18"])
+        # ② 不命中的群组
+        for text in ("手续费 5-8 折优惠",          # 数量区间
+                     "返佣比例 8-20% 无门槛",       # 区间落在 90 天窗口内：仅靠
+                                                   # 关键词闸拦住（M2 匕首）
+                     "3-5 天后开始报名",           # 区间 + 日期语义词也不该命中
+                     "分享 40,000 USDC 开放",
+                     "Season 4 开启",
+                     "今日 9-20 上线",             # 当天
+                     "截止日 9-21 上线",           # 未来
+                     "1-5 开启",                   # 远期日期（>90 天）
+                     "deadline Sep 18, 2026"):     # 英文月名：无活源证据，暂不收
+            self.assertEqual(m._past_date_refs(text, now), [], text)
+        # ③ 全日期不被紧凑分支重复报
+        self.assertEqual(m._past_date_refs("截止 2026-09-18 分红", now), ["2026-09-18"])
+        # ④ 既有形态不回归
+        self.assertEqual(m._past_date_refs("XPIN 2026-09-04 截止，RLUSD 9月4日",
+                                           datetime(2026, 9, 11, 12, 0, tzinfo=timezone.utc)),
+                         ["2026-09-04", "9月4日"])
+        # 活源原文（两个日期一个未来一个远期）：必须零误报
+        live = ("最紧迫的是 Stock Options 限时手续费优惠。快讯层面绑定 9-21 上线的 "
+                "USDBRLUSDT TradFi 永续、季度 0326 交割合约与 Arc 链上 Trade & Win "
+                "Season 7（$200K 奖池）")
+        self.assertEqual(m._past_date_refs(live, now), [])
+
+    def test_compact_forms_drive_intel_freshness_gate(self):
+        """R281 联动：紧凑过期日期必须让"时间戳新鲜"的情报被 R206 判为不可用——
+        否则探测到也白探（get_campaign_intel 只认 is_fresh 门的返回值）。"""
+        fresh = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        intel = {"strategy_guidance": "XPIN 竞赛 9-18 截止，抓紧", "last_updated": fresh}
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        self.assertTrue(m._intel_is_degraded(intel),
+                        "紧凑过期日期必须让新鲜情报判为降级")
+
 
     def setUp(self):
         import tempfile

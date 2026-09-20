@@ -4210,8 +4210,22 @@ class MultiLLMEngine:
 # ---------------------------------------------------------------------------
 # 模块六：币安官方创作者活动智能扫描与理解 (CampaignScanner)
 # ---------------------------------------------------------------------------
+# R281：紧凑日期形态的判据护栏（配合 _past_date_refs 第三分支使用）。
+# 活源实证：2026-09-20 的 guidance 自己写「9-21 上线」「季度 0326 交割」——
+# 模型 summarise 活动日期时的日常书写，却是三种既有形态（YYYY-MM-DD /
+# M月D日 / M/D）的漏网面。但紧凑数字串混在数量区间里（"5-8 折"/"40,000"），
+# 无护栏直接入列会把区间误判成过期日期，触发 get_campaign_intel 的强制刷新，
+# 2h 冷却内虽降级为 prompt 注记，误报仍会持续注记污染注入。故双重护栏：
+# ① ±90 天窗口：guidance 里值得追的截止日必在当下附近，远期日期不是残留；
+# ② 上下文关键词：只有"截止/上线/交割"等日期语义词邻位才算日期书写。
+_COMPACT_DATE_CTX = ("截止", "截至", "上线", "开启", "开始", "结束", "交割", "结算",
+                     "发放", "开放", "报名", "有效期", "发奖", "投票", "截止日")
+_COMPACT_DATE_WINDOW_DAYS = 90
+
+
 def _past_date_refs(text: str, now: Optional[datetime] = None) -> List[str]:
     """R127：提取文本中早于昨天的日期引用（YYYY-MM-DD / M月D日 / M/D）。
+    R281 补 R127：紧凑形态 M-D（"9-18"）与 MMDD（"0918"）——见 _COMPACT_DATE_CTX 注释。
     用于度量情报 guidance 是否残留过期活动日期（软约束的度量侧）。
     阈值 36h：跨日边界写到"昨天"的引用不算过期残留，避免误报。
     R164 补丁：「今日（YYYY-MM-DD）/今天(YYYY-MM-DD)」若所标日期并非
@@ -4278,6 +4292,30 @@ def _past_date_refs(text: str, now: Optional[datetime] = None) -> List[str]:
             continue
         if d.date() != now.date() and raw not in refs:
             refs.append(raw)
+    # R281：紧凑形态（"9-18" / "0918"）。守卫与活源依据见 _COMPACT_DATE_CTX 注释：
+    # 关键词邻位 + ±90 天窗口双闸——数量区间（"5-8 折"）与远期日期不进场。
+    for m in re.finditer(
+            r"(?<![\d\-/])(\d{1,2})-(\d{1,2})(?![\d\-/])"
+            r"|(?<![\d\-/])(\d{2})(\d{2})(?![\d\-/])", text):
+        try:
+            if m.group(1) is not None:
+                month, day = int(m.group(1)), int(m.group(2))
+            else:
+                month, day = int(m.group(3)), int(m.group(4))
+        except (ValueError, TypeError):
+            continue
+        d = _resolve_year(month, day)
+        if d is None:
+            continue  # 非法日期（13-40 等）静默跳过
+        if d >= today - timedelta(days=1):
+            continue  # 今天/昨天/未来不报（与主循环同一跨日边界口径）
+        if abs((d - today).days) > _COMPACT_DATE_WINDOW_DAYS:
+            continue
+        near = text[max(0, m.start() - 6):m.end() + 6]
+        if not any(k in near for k in _COMPACT_DATE_CTX):
+            continue
+        if m.group(0) not in refs:
+            refs.append(m.group(0))
     return refs
 
 
