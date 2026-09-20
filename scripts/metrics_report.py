@@ -36,6 +36,11 @@ TOP_N = 8
 _FNG_ANCHOR_RE = re.compile(
     r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^\s。！？，、；：\nA-Za-z0-9]{0,4}\s?\d{2}")
 _OVERUSED_DEVICES = ("先泼盆冷水",)  # main._OVERUSED_OPENING_DEVICES
+# R286：长文标题禁用领词表——与 main._GENERIC_LEADINS 同步（防漂移测试见
+# TestQualityPatternSync）。R121/R282 守卫只覆盖正文开场句，而标题是信息流里
+# 决定点不点开的第一触点、比正文开场更显眼：生产实录 11 篇长文标题里
+# "刚出炉：Fed升息落地…"命中 R282 刚晋升进静态表的"刚出"族。
+_TITLE_LEADINS = ("刚刚", "突发", "重磅", "快讯", "注意", "刚出")
 _AI_FLAVOR_HARD = (  # main.MultiLLMEngine._AI_FLAVOR_HARD
     "拭目以待", "未来可期", "保驾护航", "谱写", "新篇章", "扬帆起航",
     "值得注意的是", "值得一提的是", "综上所述", "总而言之", "让我们一起",
@@ -302,6 +307,11 @@ def summarize(rows):
         # R285：浏览/互动 join（content_id × content_stats.jsonl）与三维归因样本
         "stats_posts": 0,
         "stats_views_total": 0,
+        # R286：长文标题眼钩分析——article_title 自 R125 起逐帖落盘（注释原话
+        # "事后做标题质量/眼钩分析"），129 条回执零消费面。标题是信息流第一触点。
+        "article_titles": [],
+        "title_hooks": collections.Counter(),
+        "title_leadin_hits": [],
         "stats_views": [],
         "stats_likes": [],
         "stats_comments": [],
@@ -452,6 +462,19 @@ def summarize(rows):
                 _src = str(r.get("source") or "")
                 if _src:
                     s["stats_by_source"].setdefault(_src, []).append(st["views"])
+            # R286：长文标题眼钩普查（article_title 仅长文帖非空）——标题是信息流
+            # 第一触点，数字/$挂件/疑问三类眼钩元素的覆盖率要有基线可查
+            _at = r.get("article_title")
+            if isinstance(_at, str) and _at.strip():
+                s["article_titles"].append(_at.strip())
+                if any(c.isdigit() for c in _at):
+                    s["title_hooks"]["数字钩子"] += 1
+                if "$" in _at:
+                    s["title_hooks"]["$挂件"] += 1
+                if "？" in _at or "?" in _at:
+                    s["title_hooks"]["疑问钩子"] += 1
+                if any(_at.startswith(w) for w in _TITLE_LEADINS):
+                    s["title_leadin_hits"].append(_at.strip())
             # R130：结尾套路分布——验证 ShuffleBag 生产轮换均匀性
             if r.get("ending_style"):
                 s["by_ending"][str(r["ending_style"])] += 1
@@ -902,6 +925,19 @@ def render_text(s, rows=None):
             _sc = _bucket_line(s["stats_by_source"], top=3)
             if _sc:
                 lines.append(f"    来源均浏览: {_sc}")
+        # R286：长文标题眼钩基线（有长文标题才渲染）+ 禁用领词告警
+        if s.get("article_titles"):
+            _n = len(s["article_titles"])
+            _avg = sum(len(t) for t in s["article_titles"]) / _n
+            _hooks = " · ".join(f"{k} {v}/{_n}"
+                                for k, v in s["title_hooks"].most_common())
+            lines.append(f"  📐 长文标题（{_n} 篇 · 均长 {_avg:.0f} 字）: {_hooks}")
+        if s.get("title_leadin_hits"):
+            _hits = s["title_leadin_hits"]
+            _pref = "、".join(sorted({h[:2] for h in _hits}))
+            lines.append(f"  ⚠️ 长文标题命中禁用领词 {len(_hits)}/"
+                         f"{len(s['article_titles'])} 篇（{_pref}…）——R121/R282 "
+                         f"守卫只覆盖正文开场，标题是更显眼的指纹位")
         # R130：结尾套路分布（验证 ShuffleBag 轮换均匀性；旧 schema 无字段则不渲染）
         if s["by_ending"]:
             ending_str = " · ".join(f"{k} ×{v}" for k, v in s["by_ending"].most_common(5))

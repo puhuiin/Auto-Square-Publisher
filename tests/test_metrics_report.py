@@ -1058,6 +1058,62 @@ class TestQualityPatternSync(unittest.TestCase):
         self.assertEqual(mr._FNG_ANCHOR_RE.pattern, m._FNG_ANCHOR_RE.pattern,
                          "FNG 锚定检测模式两份不一致——改 main 必须同步 metrics_report")
 
+    def test_title_leadins_in_sync(self):
+        """R286：长文标题禁用领词表是 main._GENERIC_LEADINS 的第二份事实源
+        （R282 把'刚出'提进静态表后，标题侧必须同刻跟上，否则标题漏防）。"""
+        self.assertEqual(tuple(mr._TITLE_LEADINS), tuple(m._GENERIC_LEADINS),
+                         "标题领词表与正文领词表不一致——改 main 必须同步 metrics_report")
+
+
+class TestArticleTitleHookCensus(unittest.TestCase):
+    """R286：长文标题眼钩普查——article_title 落盘 129 条零消费面的缺口闭合"""
+
+    def setUp(self):
+        import tempfile, shutil
+        self.tmpdir = tempfile.mkdtemp()
+        self.path = os.path.join(self.tmpdir, "metrics.jsonl")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _row(self, title, **kw):
+        d = {"platforms": ["binance"], "outcome": "binance_published",
+             "article_title": title, "final_preview": "x"}
+        d.update(kw)
+        return d
+
+    def test_hook_census_and_leadin_alert(self):
+        """数字/$挂件/疑问三类眼钩各自计数；命中禁用领词的标题单独告警"""
+        _write(self.path, [
+            self._row("20天狂买1.07亿美元，Bitwise悄悄吸筹$SOL"),
+            self._row("$SHIB掌门失联4个月，改个资料就想搞事？"),
+            self._row("BTC $82000 Battle"),
+            self._row("刚出炉：Fed升息落地，$BTC守住7.65万"),
+            self._row("突发，某交易所又出事了", article=False),  # 短讯也可能带标题
+            self._row(""),  # 空标题（短讯常态）不进分母
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(len(s["article_titles"]), 5)
+        self.assertEqual(s["title_hooks"]["数字钩子"], 4)   # 除"BTC $82000 Battle"外都有数字
+        self.assertEqual(s["title_hooks"]["$挂件"], 4)
+        self.assertEqual(s["title_hooks"]["疑问钩子"], 1)
+        self.assertEqual(len(s["title_leadin_hits"]), 2, "刚出/突发两个领词命中")
+        text = mr.render_text(s, rows)
+        self.assertIn("长文标题（5 篇", text)
+        self.assertIn("数字钩子 4/5", text)
+        self.assertIn("标题命中禁用领词 2/5", text)
+        self.assertIn("更显眼的指纹位", text)
+
+    def test_no_titles_renders_nothing(self):
+        """全是短讯（标题为空）时整块不渲染（零噪音）"""
+        _write(self.path, [self._row(""), self._row(None)])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(s["article_titles"], [])
+        self.assertNotIn("长文标题", mr.render_text(s, rows))
+
 
 class TestFunnelCountsPublishFailures(unittest.TestCase):
     """R6：publish_failed 必须进分母——否则"发布全挂"会被报表显示成高成功率"""
