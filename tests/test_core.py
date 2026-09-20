@@ -468,6 +468,18 @@ class TestRecentOpeners(unittest.TestCase):
         banned = self._banned_leadins()
         self.assertEqual(banned, {"刚刚"}, f"静态表与聚簇去重合并，实际 {banned}")
 
+    def test_proven_fingerprint_leadin_banned_at_first_use(self):
+        """R282：晋升静态表的领词窗口内 1 次即禁——'刚出'族生产实录近 10 帖
+        开场同前缀 ×3（刚出炉的…/刚出炉…/刚出的消息…，R124 雷达当日在册）。
+        联锁 ≥3 阈值意味着三个指纹样本已出街才执法；已被证实的领词按 R121
+        惯例提升进静态表（刚刚/突发同语义），复现频率压到窗口内零次。"""
+        self._append([
+            {"outcome": "binance_published",
+             "final_preview": "刚出炉的重磅,$SOL 把出块时间砍了 17%。后续略。"},
+        ])
+        self.assertEqual(self._banned_leadins(), {"刚出"},
+                         "静态表领词必须 1 次即禁，不得等联锁攒够 3 次")
+
     def test_freshness_line_not_suggesting_banned_leadin(self):
         """R138：<1h 时效行曾建议"用'刚刚/最新'等词强调时效"——与 R121 守卫、
         R132 联锁自相矛盾（一边递开手册一边禁用），"刚刚"指纹正是 <1h 高频期
@@ -497,6 +509,25 @@ class TestRecentOpeners(unittest.TestCase):
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
         fresh_line = next(l for l in prompt.split("\n") if "突发" in l)
         self.assertIn("刚出", prompt, "联锁必须已禁用'刚出'")
+        self.assertNotIn("刚出炉", fresh_line.split("等表述")[0],
+                         f"时效行推荐词不得包含被禁表述: {fresh_line}")
+        self.assertIn("最新/几分钟前", fresh_line, "其余推荐词保留")
+
+    def test_freshness_line_drops_banned_leadin_on_first_use(self):
+        """R282：R156 动态剔除按静态表口径提前——'刚出炉'晋升静态领词后，窗口内
+        仅 1 次'刚出'开场即触发禁令，时效行必须当轮就把该推荐词撤下（R138 的
+        推荐不得与 R121 的禁令互相打架），其余推荐词保留可用的时效表述。"""
+        self._append([
+            {"outcome": "binance_published",
+             "final_preview": "刚出的消息,Grayscale 的 Zcash ETF 拆股。"},
+        ])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 0.4}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        fresh_line = next(l for l in prompt.split("\n") if "突发" in l)
+        self.assertIn("刚出", prompt, "静态表必须已禁用'刚出'")
         self.assertNotIn("刚出炉", fresh_line.split("等表述")[0],
                          f"时效行推荐词不得包含被禁表述: {fresh_line}")
         self.assertIn("最新/几分钟前", fresh_line, "其余推荐词保留")
