@@ -7465,8 +7465,11 @@ def _run_main():
                         if t[1:].lower() not in ("write2earn", "binancesquare"))
                     # R291：注入的活动标签原文（显式字段）——proxy 计数把模型自写的
                     # 核心代币名也算"有活动标签"，活动标签静默缺席时遥测显示全覆盖；
-                    # 显式字段让"活动标签到底进没进帖"可直查，不再靠 proxy 推断
-                    _ctg = getattr(llm_engine, "last_campaign_tag", None)
+                    # 显式字段让"活动标签到底进没进帖"可直查，不再靠 proxy 推断。
+                    # R293：属性由 SquarePublisher.publish 设定（注入发生在发布器内），
+                    # 必须从 publisher 读——首版从 llm_engine 读，注入成功了遥测却
+                    # 永远落不到键（None 被 append_metrics 过滤），接线回归测试锁死。
+                    _ctg = getattr(publisher, "last_campaign_tag", None)
                     campaign_tag_used = _ctg if isinstance(_ctg, str) and _ctg else None
                     # R130：抽中的结尾套路标签（Mock 替身/异常态防御性降级 None）
                     _es = getattr(llm_engine, "last_ending_style", None)

@@ -7527,6 +7527,59 @@ class TestRunMainSemantics(unittest.TestCase):
             self._teardown(patches, tmpdir)
 
 
+    def test_publish_receipt_records_campaign_tag_from_publisher(self):
+        """R293 接线回归：活动标签由 SquarePublisher.publish 设定（last_campaign_tag），
+        回执必须从 publisher 读——首版从 llm_engine 读，注入成功了遥测却永远落不到键
+        （None 被 append_metrics 过滤），R291 的显式字段形同虚设。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        try:
+            with patch.object(m, "SquarePublisher") as pub_cls:
+                pub = pub_cls.return_value
+                pub.publish.return_value = True
+                pub._publish_parked.return_value = False  # 否则 mock 真值=误判停放
+                pub.last_content_id = "cid-1"
+                pub.last_final_content = "BTC 放量突破。\n\n#Write2Earn #BinanceSquare #BTC #TradingTournament"
+                pub.last_widget_count = 1
+                pub.last_campaign_tag = "#TradingTournament"  # 注入器回填的原文
+                m._run_main()
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            delivered = [r for r in rows
+                         if str(r.get("outcome", "")).startswith("binance_published")]
+            self.assertTrue(delivered, "投递回执必须落遥测")
+            self.assertEqual(delivered[0].get("campaign_tag"), "#TradingTournament",
+                             "显式活动标签字段必须从 publisher 读取并落盘")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_publish_receipt_campaign_tag_absent_when_not_injected(self):
+        """R293 接线回归（对照）：未注入时键不得伪造（None 被过滤=键不在场）"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False)
+        try:
+            with patch.object(m, "SquarePublisher") as pub_cls:
+                pub = pub_cls.return_value
+                pub.publish.return_value = True
+                pub._publish_parked.return_value = False  # 否则 mock 真值=误判停放
+                pub.last_content_id = "cid-2"
+                pub.last_final_content = "BTC 放量突破。\n\n#Write2Earn #BinanceSquare #BTC"
+                pub.last_widget_count = 1
+                pub.last_campaign_tag = None  # 本轮无活动标签可注入
+                m._run_main()
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            delivered = [r for r in rows
+                         if str(r.get("outcome", "")).startswith("binance_published")]
+            self.assertTrue(delivered, "投递回执必须落遥测")
+            self.assertNotIn("campaign_tag", delivered[0],
+                             "未注入不得伪造显式字段（append_metrics 过滤 None）")
+        finally:
+            self._teardown(patches, tmpdir)
+
+
 class TestDedupIndexEquivalence(unittest.TestCase):
     """判重索引必须与逐对比较逐字等价（性能优化不许悄悄改变拦截口径）"""
 

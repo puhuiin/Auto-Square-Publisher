@@ -1333,6 +1333,60 @@ class TestContentLengthDistribution(unittest.TestCase):
         self.assertNotIn("篇幅", mr.render_text(s, loaded))
 
 
+class TestOpenerHookCensus(unittest.TestCase):
+    """R293：首段钩子普查——prompt 最强调的条款"【首两行定生死】第一段必须放
+    钩子（反差结论/具体数字/悬念）"此前零门零度量；与 R286 标题眼钩同口径。"""
+
+    def setUp(self):
+        import tempfile, shutil
+        self.tmpdir = tempfile.mkdtemp()
+        self.path = os.path.join(self.tmpdir, "metrics.jsonl")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _row(self, preview):
+        return {"platforms": ["binance"], "outcome": "binance_published",
+                "final_preview": preview}
+
+    def test_hook_census_counts_three_elements(self):
+        """首段三要素各自计数；长文分节头不算开场句（与雷达同语义）"""
+        _write(self.path, [
+            self._row("灰度给 $ZEC ETF 递了拆股申请，9 月 28 日收盘后生效。后续。"),
+            self._row("$BTC 虚站 8 万，扒开持仓数据直接露馅。后续。"),
+            self._row("这波是诱多出货还是真突破？后续。"),
+            self._row("一、发生了什么\n\n灰度递了申请。后续。"),   # 分节头跳过
+            self._row(""),                                        # 空预览不计
+        ])
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        self.assertEqual(s["opener_evaluated"], 4, "空预览不进分母")
+        self.assertEqual(s["opener_hooks"]["数字"], 2)
+        self.assertEqual(s["opener_hooks"]["$挂件"], 2)
+        self.assertEqual(s["opener_hooks"]["疑问"], 1)
+        text = mr.render_text(s, loaded)
+        self.assertIn("🪝 首段钩子（4 篇）", text)
+        self.assertIn("数字 2/4", text)
+
+    def test_extract_opener_skips_article_header(self):
+        """_extract_opener：分节头（"一、"）跳过取正文段；空/纯分节头返回空串"""
+        self.assertEqual(mr._extract_opener("一、发生了什么\n\n正文第一句。"),
+                         "正文第一句")
+        self.assertEqual(mr._extract_opener("开头就是正文。"), "开头就是正文")
+        self.assertEqual(mr._extract_opener(""), "")
+        self.assertEqual(mr._extract_opener(None), "")
+
+    def test_fingerprint_still_works_after_helper_refactor(self):
+        """R293 重构守卫：_extract_opener 抽取后，开场指纹雷达行为不得漂移"""
+        _write(self.path, [self._row(f"盘面放量突破，结构健康 {i}。后续略。") for i in range(3)]
+               + [self._row("Bitwise 关了 ETF。后续略。")])
+        loaded, _ = mr.load_rows(self.path)
+        fp = mr.opener_fingerprint(loaded)
+        self.assertEqual(fp["alerts"], {"盘面放量": 3}, "4 字簇优先（R124 语义）")
+        self.assertEqual(fp["scanned"], 4)
+
+
 class TestFunnelCountsPublishFailures(unittest.TestCase):
     """R6：publish_failed 必须进分母——否则"发布全挂"会被报表显示成高成功率"""
 

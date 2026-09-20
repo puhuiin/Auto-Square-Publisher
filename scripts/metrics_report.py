@@ -104,6 +104,22 @@ _FINGERPRINT_MIN_HITS = 3
 _ARTICLE_HEADER_RE = re.compile(r"^[一二三四五六七八九十]、")
 
 
+def _extract_opener(preview):
+    """R293：从回执预览取开场句——长文分节头（"一、发生了什么"）不是开场句，
+    跳过取首个正文段（与 main.py _recent_openers 的 R121 修复同语义）。
+    opener_fingerprint 与首段钩子普查（R293）共用，保口径不漂移。"""
+    pv = (preview or "").strip()
+    if not pv:
+        return ""
+    for seg in (s.strip() for s in re.split(r"[。\n]", pv)):
+        if not seg:
+            continue
+        if _ARTICLE_HEADER_RE.match(seg):
+            continue
+        return seg
+    return ""
+
+
 def opener_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_MIN_HITS):
     """抽最近 N 帖开场句的首 2/4 字前缀，同一前缀 ≥min_hits 次即报预警。
     长文分节头（"一、发生了什么"）不是开场句，跳过取正文段（与 main.py
@@ -114,17 +130,7 @@ def opener_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_M
             continue
         if not _is_delivery_outcome(r.get("outcome")):
             continue
-        pv = (r.get("final_preview") or "").strip()
-        if not pv:
-            continue
-        opener = ""
-        for seg in (s.strip() for s in re.split(r"[。\n]", pv)):
-            if not seg:
-                continue
-            if _ARTICLE_HEADER_RE.match(seg):
-                continue
-            opener = seg
-            break
+        opener = _extract_opener(r.get("final_preview"))
         if opener:
             openers.append(opener)
         if len(openers) >= window:
@@ -330,6 +336,10 @@ def summarize(rows):
         # R292：篇幅遥测（短讯/长文分桶）——prompt"160~240 字"条款的度量面
         "chars_by_genre": {},
         "cjk_by_genre": {},
+        # R293：首段钩子普查——prompt 最强调的条款"【首两行定生死】第一段必须放
+        # 钩子（反差结论/具体数字/悬念）"此前零门零度量；与 R286 标题眼钩同口径
+        "opener_hooks": collections.Counter(),
+        "opener_evaluated": 0,
         # R222：发布内容新鲜度样本（age_hours 发布行全量携带，此前只能手工统计）
         "pub_ages": [],
         # R173：过期情报注入计数——R171 写侧已直录，报表端同轮补齐（R92 纪律）
@@ -523,6 +533,16 @@ def summarize(rows):
                     s["chars_by_genre"].setdefault(_g, []).append(int(_cc))
                 if _cj is not None:
                     s["cjk_by_genre"].setdefault(_g, []).append(int(_cj))
+            # R293：首段钩子三要素（与 R286 标题眼钩同口径：数字/$挂件/疑问）
+            _op = _extract_opener(r.get("final_preview"))
+            if _op:
+                s["opener_evaluated"] += 1
+                if any(c.isdigit() for c in _op):
+                    s["opener_hooks"]["数字"] += 1
+                if "$" in _op:
+                    s["opener_hooks"]["$挂件"] += 1
+                if "？" in _op or "?" in _op:
+                    s["opener_hooks"]["疑问"] += 1
             # R173：情报降级注入——None=历史行无字段，不进分母
             if r.get("intel_degraded") is True:
                 s["intel_degraded_posts"] += 1
@@ -1039,6 +1059,13 @@ def render_text(s, rows=None):
                 _in = sum(1 for v in _vals if _lo <= v <= _hi_b)
                 lines.append(f"  📏 {_genre}篇幅（{len(_vals)} 篇）: 中位 {_m} 字 · "
                              f"P90 {_p} · {_lo}~{_hi_b} 区间内 {_in}/{len(_vals)}")
+        # R293：首段钩子覆盖率（prompt"首两行定生死"条款的度量面；与标题眼钩
+        # 同口径，零钩子率=信息流前两行没有点开理由）
+        if s["opener_evaluated"]:
+            _n = s["opener_evaluated"]
+            _hk = " · ".join(f"{k} {v}/{_n}"
+                             for k, v in s["opener_hooks"].most_common())
+            lines.append(f"  🪝 首段钩子（{_n} 篇）: {_hk}")
         if s["image_tiers"]:
             lines.append(f"  配图层级 {dict(s['image_tiers'])}")
         # R173：过期情报注入可见化（有字段的帖才进分母，历史行不混入）
