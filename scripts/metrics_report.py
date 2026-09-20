@@ -221,6 +221,10 @@ def summarize(rows):
         "image_tiers": collections.Counter(),
         "zero_widget_posts": 0,
         "zero_tag_posts": 0,
+        # R284：活动标签返佣归因覆盖（保底双标签之外的创作激励活动标签）
+        "campaign_tag_evaluated": 0,
+        "campaign_tag_covered": 0,
+        "campaign_tag_zero_fresh": 0,
         "by_ending": collections.Counter(),
         # R222：发布内容新鲜度样本（age_hours 发布行全量携带，此前只能手工统计）
         "pub_ages": [],
@@ -334,6 +338,17 @@ def summarize(rows):
             tc = r.get("tag_count")
             if tc == 0:
                 s["zero_tag_posts"] += 1
+            # R284：活动标签（返佣归因第 3 席）覆盖——tag_count>0 只证明保底双
+            # 标签在，活动标签静默丢失（intel 无 active_tags / _inject_campaign_tag
+            # 回归）时零可见。零覆盖且 intel_degraded≠True = 情报新鲜却没活动标签
+            # 可注入 = 疑似注入回归；intel 降级时的零覆盖是合法语境（无供给）。
+            ctc = r.get("campaign_tag_count")
+            if ctc is not None:
+                s["campaign_tag_evaluated"] += 1
+                if ctc > 0:
+                    s["campaign_tag_covered"] += 1
+                elif r.get("intel_degraded") is not True:
+                    s["campaign_tag_zero_fresh"] += 1
             # R130：结尾套路分布——验证 ShuffleBag 生产轮换均匀性
             if r.get("ending_style"):
                 s["by_ending"][str(r["ending_style"])] += 1
@@ -760,6 +775,10 @@ def render_text(s, rows=None):
         # R125：零标签帖 = #Write2Earn 返佣归因丢失
         if s.get("zero_tag_posts"):
             lines.append(f"  ⚠️ 全文零标签 {s['zero_tag_posts']}/{n_pub} 篇——返佣归因丢失，需排查")
+        # R284：活动标签覆盖——情报新鲜却零活动标签 = _inject_campaign_tag 疑似回归
+        if s.get("campaign_tag_zero_fresh"):
+            lines.append(f"  ⚠️ 情报新鲜但无活动标签 {s['campaign_tag_zero_fresh']}/"
+                         f"{s['campaign_tag_evaluated']} 篇——创作激励活动标签未注入，需排查")
         # R130：结尾套路分布（验证 ShuffleBag 轮换均匀性；旧 schema 无字段则不渲染）
         if s["by_ending"]:
             ending_str = " · ".join(f"{k} ×{v}" for k, v in s["by_ending"].most_common(5))

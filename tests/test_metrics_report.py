@@ -909,6 +909,33 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("全文零标签 1/3 篇", text)
         self.assertIn("返佣归因丢失", text)
 
+    def test_campaign_tag_zero_with_fresh_intel_surfaced(self):
+        """R284：活动标签是返佣归因第 3 席（创作激励活动入口），tag_count>0
+        只证明保底双标签在——活动标签静默丢失时零可见。情报新鲜却零活动标签
+        = _inject_campaign_tag 疑似回归，必须显性告警。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tag_count": 3, "campaign_tag_count": 1, "intel_degraded": False},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tag_count": 3, "campaign_tag_count": 0, "intel_degraded": False},
+            # intel 降级时的零活动标签是合法语境（无供给），不得告警
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tag_count": 3, "campaign_tag_count": 0, "intel_degraded": True},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tag_count": 3, "campaign_tag_count": 0},  # 无 intel 字段：同样告警
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tag_count": 3},  # 旧 schema 无 campaign_tag_count：不进分母
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(s["campaign_tag_evaluated"], 4, "仅带字段的行进分母")
+        self.assertEqual(s["campaign_tag_covered"], 1)
+        self.assertEqual(s["campaign_tag_zero_fresh"], 2,
+                         "降级语境的零覆盖不算疑似回归")
+        text = mr.render_text(s, rows)
+        self.assertIn("情报新鲜但无活动标签 2/4 篇", text)
+        self.assertIn("需排查", text)
+
     def test_run_elapsed_aggregated(self):
         """R126：单轮耗时——20 分钟外部回调节奏下的堆积预警指标。
         平均/最长聚合进 runs 段，最长逼近 1200s 时渲染告警。"""
