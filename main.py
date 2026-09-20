@@ -3110,9 +3110,14 @@ class MultiLLMEngine:
         """从 metrics.jsonl 聚合每个 provider 的历史(平均延迟 + 平均 token)，
         合成一个「越小越优」的调度分数，供 _ordered_providers 在同健康档内二次排序。
 
-        - 统计发帖主链路成本：stage ∈ {summarize, campaign_intel}，以及
-          outcome 以 binance_published 开头的历史回执（R165 前发帖回执无 stage，
-          75 条生产延迟/token 曾被本函数静默排除，排序只看情报刷新）。
+        - 统计全部真实 LLM 尝试：凡带真实 provider（非空、非无 Key 占位 "-"）的
+          非运行级行——成功投递、campaign_intel、transport/quality/numbers/
+          ai_flavor 拒稿、llm_failed 全计入；唯一点名排除 run_summary（运行级）。
+          R283：此前按 stage ∈ {summarize, campaign_intel} + 投递回执白名单取行，
+          而拒稿行同样烧掉整次调用（b.ai 超时实录 139s/469s 全在 transport 行），
+          只统计成功调用是幸存者口径：排序维度看不见失败成本，还与报表
+          latency_by_provider 的全行口径漂移。改为"是否 LLM 尝试"取行后，新行型
+          默认入账，不会重演 R165 的静默漏收。
         - 分数 = 平均延迟(s) + 0.001 × (平均 token / 1000)：token 是成本代理（无单价时足够排序）。
         - 无遥测 / 文件缺失 / 解析异常 → 返回空 dict，调用方保持原 fail-count 顺序（零副作用）。
         - 进程内缓存（按 路径+mtime+size 失效，TTL 120s）：同一运行内多次 _ordered_providers
@@ -3147,11 +3152,15 @@ class MultiLLMEngine:
                         # dry_run 触发即产生），不过滤会把本地沙盒的延迟/token 灌进
                         # 生产提供商排序（R84 闸门只封了状态写，遥测行是设计内落盘）
                         continue
-                    if r.get("stage") not in ("summarize", "campaign_intel") and \
-                            not _is_delivery_outcome(r.get("outcome")):
+                    # R283：按"是否 LLM 尝试"取行。stage 白名单与 outcome 白名单
+                    # 都会把新行型静默漏在评分外（R165 的教训：发帖回执无 stage 被
+                    # 整类排除），故只点名排除唯一的运行级行型 run_summary，其余凡
+                    # 带真实 provider 的行即一次 LLM 尝试——transport 超时烧掉的
+                    # 139s/469s 由此进入排序维度；无 Key 占位 "-" 不是真实通道。
+                    if r.get("outcome") == "run_summary":
                         continue
                     name = r.get("provider")
-                    if not name:
+                    if not name or name == "-":
                         continue
                     lat = r.get("llm_latency_sec")
                     tok = r.get("tokens_used")

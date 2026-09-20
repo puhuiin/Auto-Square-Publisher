@@ -1815,7 +1815,8 @@ class TestCostAwareScheduling(unittest.TestCase):
             f.write(_json.dumps({"outcome": "binance_published", "stage": "summarize",
                                  "provider": "fast", "llm_latency_sec": 10.0,
                                  "tokens_used": 800}) + "\n")
-            # 噪声：run_summary / 拒稿不得进分
+            # 噪声：run_summary 是运行级行不得进分（R283 后仍排除）；
+            # llm_rejected 拒稿行是真实 LLM 尝试——R283 起计入评分（见专项测试）
             f.write(_json.dumps({"outcome": "run_summary", "provider": "slow",
                                  "llm_latency_sec": 1.0, "tokens_used": 10}) + "\n")
             f.write(_json.dumps({"outcome": "llm_rejected", "stage": "quality",
@@ -1827,8 +1828,72 @@ class TestCostAwareScheduling(unittest.TestCase):
             self.assertEqual(set(scores), {"slow", "fast"})
             self.assertLess(scores["fast"], scores["slow"],
                             "发帖回执延迟必须进入调度分")
+            self.assertGreater(scores["fast"], 10.0,
+                               "R283：拒稿行的整次调用开销必须计入该通道评分")
             eng = self._engine_with(["slow", "fast"])
             self.assertEqual([p.name for p in eng._ordered_providers()], ["fast", "slow"])
+        finally:
+            m.METRICS_FILE = orig
+            m._METRICS_AGG_CACHE.update({"key": None, "val": {}, "ts": 0.0})
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_transport_timeout_burns_enter_scheduling_score(self):
+        """R283：调度分此前只收成功调用（幸存者口径）——b.ai 超时实录 139s/469s
+        全写在 stage=transport 拒稿行，评分维度看不见，与报表 latency_by_provider
+        的全行口径漂移。transport 行必须计入：烧掉整次调用的失败也是尝试成本。"""
+        import tempfile, json as _json
+        tmp = tempfile.mkdtemp()
+        orig = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(tmp, "metrics.jsonl")
+        with open(m.METRICS_FILE, "w", encoding="utf-8") as f:
+            # flaky：成功很快（10s）但每次都超时烧 139s 才切下一家
+            f.write(_json.dumps({"outcome": "binance_published", "provider": "flaky",
+                                 "llm_latency_sec": 10.0, "tokens_used": 800}) + "\n")
+            f.write(_json.dumps({"outcome": "llm_rejected", "stage": "transport",
+                                 "provider": "flaky", "llm_latency_sec": 139.0,
+                                 "tokens_used": 1200,
+                                 "reason": "Request timed out."}) + "\n")
+            # steady：每次都慢但稳（60s，无失败）
+            f.write(_json.dumps({"outcome": "binance_published", "provider": "steady",
+                                 "llm_latency_sec": 60.0, "tokens_used": 800}) + "\n")
+        try:
+            m._METRICS_AGG_CACHE.update({"key": None, "val": {}, "ts": 0.0})
+            scores = m.MultiLLMEngine._provider_cost_latency_scores()
+            # 尝试成本口径：flaky=(10+139)/2≈74.5 > steady=60
+            self.assertAlmostEqual(scores["flaky"], 74.5, places=1,
+                                   msg="transport 超时行必须计入评分")
+            eng = self._engine_with(["flaky", "steady"])
+            self.assertEqual([p.name for p in eng._ordered_providers()], ["steady", "flaky"],
+                             "快但每次都超时的通道必须让位于慢而稳的通道")
+        finally:
+            m.METRICS_FILE = orig
+            m._METRICS_AGG_CACHE.update({"key": None, "val": {}, "ts": 0.0})
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_scheduling_score_excludes_run_level_rows(self):
+        """R283：口径放宽到"llm_* + 投递回执"后，运行级行与无 Key 的 "-" 占位
+        仍必须排除——run_summary 不是 LLM 尝试，其 llm_latency_sec（若有）不是
+        任何通道的成本；llm_rejected/no_provider 的 provider="-" 不是真实通道。"""
+        import tempfile, json as _json
+        tmp = tempfile.mkdtemp()
+        orig = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(tmp, "metrics.jsonl")
+        with open(m.METRICS_FILE, "w", encoding="utf-8") as f:
+            f.write(_json.dumps({"outcome": "run_summary", "provider": "b.ai",
+                                 "llm_latency_sec": 1.0, "tokens_used": 10}) + "\n")
+            f.write(_json.dumps({"outcome": "llm_rejected", "stage": "no_provider",
+                                 "provider": "-", "tokens_used": 0}) + "\n")
+            f.write(_json.dumps({"outcome": "llm_failed", "reason": "boom"}) + "\n")
+            f.write(_json.dumps({"outcome": "binance_published", "provider": "b.ai",
+                                 "llm_latency_sec": 42.0, "tokens_used": 900}) + "\n")
+        try:
+            m._METRICS_AGG_CACHE.update({"key": None, "val": {}, "ts": 0.0})
+            scores = m.MultiLLMEngine._provider_cost_latency_scores()
+            self.assertNotIn("-", scores, "无 Key 占位不是真实通道")
+            self.assertAlmostEqual(scores.get("b.ai"), 42.0, places=1,
+                                   msg="运行级行不得污染通道评分均值")
         finally:
             m.METRICS_FILE = orig
             m._METRICS_AGG_CACHE.update({"key": None, "val": {}, "ts": 0.0})
