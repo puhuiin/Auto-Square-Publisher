@@ -1679,6 +1679,11 @@ class NewsFetcher:
     def __init__(self):
         # 运行统计器：供最终报告输出吞吐详情与可用性诊断
         self.stats = {"fetched": 0, "stale": 0, "cached": 0, "near_dup": 0, "kept": 0,
+                      # R277：R9 全局抓取 deadline 触发数与被放弃的迟到源名——deadline
+                      # 触发时才赋真实值，未触发保持 0（与漏斗同口径：0=本轮评估过
+                      # 且未触发）。迟到源不进 feeds_failed（future 未返回、_stat_fail
+                      # 不会被调用），这是该机制在生产中唯一可回查的痕迹。
+                      "fetch_timeout": 0, "fetch_timeout_sources": [],
                       "feeds_ok": 0, "feeds_failed": [], "feeds_parked": [],
                       "feeds_empty": 0, "feeds_empty_sources": [],
                       "injection_hits": 0,  # R273：入口字段命中注入特征被截断的条数
@@ -2497,6 +2502,9 @@ class NewsFetcher:
                 executor.shutdown(wait=False)
         if timed_out_feeds:
             self.stats["fetch_timeout"] = len(timed_out_feeds)
+            # R277：源名一并留下——"哪个源在拖"是换源/排查的决策输入，
+            # 此前 deadline 路径只留计数，名字随 warning 日志一起蒸发。
+            self.stats["fetch_timeout_sources"] = list(timed_out_feeds)
 
         # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布（只影响排序，不影响准入）
         _cb_hits, _cb_off = self._apply_campaign_boost(candidates, priority_tokens)
@@ -6355,6 +6363,15 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
         if inj_hits:
             inj_detail = _format_injection_feed_detail(s.get("injection_feeds") or {})
             lines.append(f"- **⚠️ 注入截断**: {inj_hits} 条{inj_detail}（请评估停放该源）")
+        # R277：抓取 deadline 触发进人类面——R9 机制此前只有 warning 日志一个出口，
+        # Actions 运行页第一屏完全看不见；候选偏少的轮次里"被放弃的迟到源"正是
+        # 人工巡检要看的。同"停放的源"惯例：只在触发时显形，未触发零噪音。
+        ft_count = s.get("fetch_timeout", 0)
+        if ft_count:
+            ft_src = s.get("fetch_timeout_sources") or []
+            ft_detail = f"（{'、'.join(ft_src)}）" if ft_src else ""
+            lines.append(f"- **⚠️ 抓取超时**: {ft_count} 个源超过全局上限被放弃{ft_detail}"
+                         f"（R9 deadline，候选可能偏少）")
         # 每源产出排行（只列有产出的前 5 名）
         per_feed = s.get("per_feed") or {}
         productive = sorted(
@@ -6879,6 +6896,18 @@ def _run_main():
             feeds_failed=len(fetcher.stats.get("feeds_failed", [])),
             feeds_parked=len(fetcher.stats.get("feeds_parked", [])),
             feeds_empty=fetcher.stats.get("feeds_empty", 0),
+            # R277：抓取漏斗进零候选轮——"为什么是 0"全靠它区分：fetched=0
+            # （源没出活）与 fetched=87/near_dup=84（候选被去重全吃）在旧遥测里
+            # 表现完全一样（都只有 candidates=0），只能去翻日志。R276 只补了成功
+            # 路径，这个更该有漏斗的早退路径反而没有。
+            fetched=fetcher.stats.get("fetched", 0),
+            stale=fetcher.stats.get("stale", 0),
+            cached=fetcher.stats.get("cached", 0),
+            near_dup=fetcher.stats.get("near_dup", 0),
+            # R277：deadline 触发数——零候选的 top 成因之一（迟到源被砍光后
+            # 无候选），与漏斗合起来才能定位是哪个阶段吃掉了候选
+            fetch_timeout=fetcher.stats.get("fetch_timeout", 0),
+            fetch_timeout_sources=" ".join(fetcher.stats.get("fetch_timeout_sources") or []) or None,
             # R273：注入截断计数（零候选轮同样可能刚截过注入源——与源健康同维度）
             injection_hits=fetcher.stats.get("injection_hits", 0),
             # R274：按源归因（空 dict 转 None——未命中不落空壳字段）
@@ -7541,6 +7570,13 @@ def _run_main():
         "stale": fetcher.stats.get("stale", 0),
         "cached": fetcher.stats.get("cached", 0),
         "near_dup": fetcher.stats.get("near_dup", 0),
+        # R277：R9 全局抓取 deadline（默认 300s）触发数与被放弃的迟到源——此前
+        # 该 stats 键只进易失 warning 日志，durable 历史 0 条记录：R9 机制是否
+        # 真在生产触发过、哪个源在拖，从未有过证据。迟到源不进 feeds_failed
+        # （future 未返回、不记健康），这是它唯一可回查的出口；回答了"候选
+        # 突然变少"里"源没出活"与"deadline 砍掉了迟到源"的区别。
+        "fetch_timeout": fetcher.stats.get("fetch_timeout", 0),
+        "fetch_timeout_sources": " ".join(fetcher.stats.get("fetch_timeout_sources") or []) or None,
         # R276：成功路径的 feeds_empty——零候选路径自 R5 起就记计数，成功路径
         # 一直只有易失 warning：某源劣化成"有效 XML 零条目"而其他源仍在出活时，
         # durable 记录里完全看不见（per_feed_yield 按设计不落 entries==0 的源，

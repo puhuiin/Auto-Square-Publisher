@@ -4914,6 +4914,32 @@ class TestStepSummary(unittest.TestCase):
             "（B 5 条、C 2 条、A 1 条）",
         )
 
+    def test_r277_fetch_timeout_line_hidden_when_not_triggered(self):
+        """R277：deadline 未触发的轮次报表零噪音（stats 默认 0，不显形）"""
+        content = self._write_summary(fetched=87, kept=23)
+        self.assertNotIn("抓取超时", content)
+
+    def test_r277_fetch_timeout_line_renders_with_sources(self):
+        """R277：deadline 触发时报表第一屏必须带计数与被放弃的源名——
+        R9 机制此前只有 warning 日志一个出口，巡检页完全看不见"""
+        content = self._write_summary(
+            fetched=87, kept=23, fetch_timeout=2,
+            fetch_timeout_sources=["SlowFeed", "DripFeed"],
+        )
+        self.assertIn("抓取超时", content)
+        self.assertIn("2 个源", content)
+        self.assertIn("SlowFeed", content)
+        self.assertIn("DripFeed", content)
+
+    def test_r277_fetch_timeout_line_survives_missing_names(self):
+        """R277：触发但源名缺失/为空（None/[]）时仍渲染计数，不炸不空壳"""
+        for srcs in ({}, [], None):
+            content = self._write_summary(
+                fetched=1, kept=1, fetch_timeout=1, fetch_timeout_sources=srcs,
+            )
+            self.assertIn("抓取超时", content)
+            self.assertIn("1 个源", content)
+
 
 class TestReasonixModelsUrl(unittest.TestCase):
     """网关模型目录 URL：gw_url 自带 /v1 时不可再拼一层（/v1/v1/models 恒 404）"""
@@ -6922,6 +6948,72 @@ class TestRunMainSemantics(unittest.TestCase):
             self.assertEqual(run_row.get("fetched"), 1, "_base_patches 默认 stats 的扫描量")
             self.assertEqual(run_row.get("feeds_empty"), 0)
             self.assertNotIn("feeds_empty_sources", run_row, "空列表转 None 被过滤，不落空壳字段")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_run_summary_records_fetch_timeout(self):
+        """R277：R9 全局抓取 deadline 触发数+被放弃的迟到源名进 durable 遥测——
+        该 stats 键此前只进易失 warning 日志，1149 行历史 0 条记录：R9 机制
+        是否真在生产触发过、哪个源在拖，从未有过任何可回查证据。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True, candidates=[self._candidate()])
+        try:
+            import json
+            m.NewsFetcher.return_value.stats.update({
+                "fetch_timeout": 2, "fetch_timeout_sources": ["SlowFeed", "DripFeed"],
+            })
+            m._run_main()
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(run_row.get("fetch_timeout"), 2)
+            # 迟到源不进 feeds_failed（future 未返回），源名是唯一归因面
+            self.assertEqual(run_row.get("fetch_timeout_sources"), "SlowFeed DripFeed")
+            self.assertEqual(run_row.get("feeds_failed"), 0, "deadline 放弃的源不记失败")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_run_summary_fetch_timeout_zero_without_names_by_default(self):
+        """R277：常态轮 deadline 未触发——计数 0 在场（0=评估过且未触发），
+        空源名列表转 None 被过滤，不落空壳字段"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True, candidates=[self._candidate()])
+        try:
+            import json
+            m._run_main()
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(run_row.get("fetch_timeout"), 0)
+            self.assertNotIn("fetch_timeout_sources", run_row)
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_zero_candidate_run_summary_records_funnel_and_fetch_timeout(self):
+        """R277：零候选早退轮补齐漏斗与 deadline——"为什么是 0"全靠它区分：
+        fetched=0（源没出活）与 fetched=87/near_dup=84（候选被去重全吃）在旧
+        遥测里表现完全一样（都只有 candidates=0），只能翻日志；deadline 砍光
+        迟到源后无候选也是 top 成因之一。R276 只补了成功路径。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[])
+        try:
+            import json
+            m.NewsFetcher.return_value.stats.update({
+                "fetched": 87, "stale": 3, "cached": 5, "near_dup": 79,
+                "fetch_timeout": 1, "fetch_timeout_sources": ["DripFeed"],
+            })
+            with self.assertRaises(SystemExit) as cm:
+                m._run_main()
+            self.assertEqual(cm.exception.code, 0)
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(run_row.get("fetched"), 87)
+            self.assertEqual(run_row.get("stale"), 3)
+            self.assertEqual(run_row.get("cached"), 5)
+            self.assertEqual(run_row.get("near_dup"), 79)
+            self.assertEqual(run_row.get("fetch_timeout"), 1)
+            self.assertEqual(run_row.get("fetch_timeout_sources"), "DripFeed")
         finally:
             self._teardown(patches, tmpdir)
 
@@ -10148,6 +10240,9 @@ class TestFetchGlobalDeadline(unittest.TestCase):
         self.assertEqual(out, [])
         self.assertLess(elapsed, 4, "全局 deadline 到点后不得原地等迟到源跑完")
         self.assertEqual(f.stats.get("fetch_timeout"), 3)
+        # R277：被放弃的源名一并留痕（deadline 路径此前只留计数，名字随日志蒸发）
+        self.assertEqual(sorted(f.stats.get("fetch_timeout_sources") or []),
+                         ["slow-0", "slow-1", "slow-2"])
 
 
 class TestWorkflowRescueDump(unittest.TestCase):
