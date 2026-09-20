@@ -2528,6 +2528,10 @@ class NewsFetcher:
         if feeds_ok := self.stats["feeds_ok"]:
             level = logging.WARNING if feeds_failed else logging.INFO
             extra = f" / 停放 {len(feeds_parked)}" if feeds_parked else ""
+            # CI 的 Python 是 3.11：f-string 表达式内不允许同型引号/反斜杠（PEP 701 起才解禁），
+            # 故内层 f-string 一律只引用裸名字——曾在此基础上叠下标引字典导致 3.11 语法错误、
+            # 双工作流导入即炸（本地 3.14 编译通过，只有 CI 能拦住）。
+            inj_hits = self.stats["injection_hits"]
             logger.log(
                 level,
                 f"多源并发扫描完毕: 源在线 {feeds_ok} / 故障 {len(feeds_failed)}{extra}"
@@ -2535,7 +2539,7 @@ class NewsFetcher:
                 f"扫描 {self.stats['fetched']} 条 → 过滤旧闻 {self.stats['stale']} / "
                 f"已发 {self.stats['cached']} / 近似重复 {self.stats['near_dup']} → 剩候选 {len(candidates)} 条"
                 # R273：注入截断数（只在 >0 时显形——源夹带注入 payload 必须显眼）
-                f"{f' | ⚠️ 注入截断 {self.stats['injection_hits']} 条' if self.stats['injection_hits'] else ''}。"
+                f"{f' | ⚠️ 注入截断 {inj_hits} 条' if inj_hits else ''}。"
             )
         return candidates
 

@@ -9,6 +9,7 @@ import json
 import os
 import re
 import sys
+import ast
 import unittest
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
@@ -10450,6 +10451,100 @@ class TestIntraPostCtaDedupe(unittest.TestCase):
         self.assertIsNotNone(out, "带双 CTA 的稿子应被清理后正常返回而非拒稿")
         self.assertEqual(out["content"].count("扣1"), 1)
         self.assertEqual(eng.last_cta_dedupes, 1)
+
+
+class TestPython311FStringCompat(unittest.TestCase):
+    """CI 跑 Python 3.11（本地开发机是 3.14）：f-string 的 {} 表达式内**禁止**同型
+    引号与反斜杠——PEP 701（3.12）起才解禁。R273 曾把 {self.stats['injection_hits']}
+    叠进单引号 f-string：本地 import/单测全绿（3.14 合法），CI 的语法检查直接
+    SyntaxError、双工作流连坐红。CI 是第一道闸，本测试让同一 bug 类在本地红灯：
+    对 main.py / tests / scripts 的每个 f-string 做源码级静态扫描。"""
+
+    ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    @classmethod
+    def _py_files(cls):
+        files = [os.path.join(cls.ROOT, "main.py")]
+        for sub in ("tests", "scripts"):
+            d = os.path.join(cls.ROOT, sub)
+            if os.path.isdir(d):
+                files += [os.path.join(d, f) for f in sorted(os.listdir(d)) if f.endswith(".py")]
+        return files
+
+    @classmethod
+    def _find_violations(cls, source: str):
+        """返回 [(行号, 违规 f-string 片段), …]。ast 已解析（本地版本），只取其
+        源码文本做字符级扫描——检测的是 3.11 词法层的禁用形态。"""
+        tree = ast.parse(source)
+        bad = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.JoinedStr):
+                seg = ast.get_source_segment(source, node)
+                if seg and cls._scan_fstring(seg):
+                    bad.append((node.lineno, seg[:60]))
+        return bad
+
+    @classmethod
+    def _scan_fstring(cls, seg: str) -> bool:
+        """从 f-string 字面量起点逐字符走：定界符外的 {{ 是字面转义，
+        定界符内按 {} 深度追踪；表达式内（depth>0）出现同型引号或反斜杠即违规
+        （3.11 的 SyntaxError 现场）。支持嵌套 f-string（换定界符递归）。"""
+        head = re.match(r"[fF](?:'''|\"\"\"|'|\")", seg)
+        if not head:
+            return False
+        delim = head.group(0)[1:]
+        return cls._walk(seg, len(head.group(0)) - len(delim), delim)[1]
+
+    @classmethod
+    def _walk(cls, seg: str, i: int, delim: str):
+        """i 指向定界符首字符。返回 (闭合位置, 是否违规)；
+        未闭合返回 (len(seg), False)——那是 3.12+ 特性无法在此复现，不误报。"""
+        n = len(seg)
+        depth = 0
+        i += len(delim)
+        while i < n:
+            if depth == 0:
+                if seg.startswith(delim, i):
+                    return i + len(delim), False
+                if seg.startswith("{{", i):
+                    i += 2
+                    continue
+                if seg[i] == "{":
+                    depth = 1
+                i += 1
+                continue
+            ch = seg[i]
+            if ch == "\\":
+                return i, True
+            # 嵌套 f-string：其余字符按表达式字符继续走（其中同型引号在下一行命中）
+            nested = re.match(r"[fF](?:'''|\"\"\"|'|\")", seg[i:])
+            if nested and ch in "fF":
+                inner_delim = nested.group(0)[1:]
+                i, violation = cls._walk(seg, i + 1, inner_delim)
+                if violation:
+                    return i, True
+                continue
+            if ch == delim:
+                return i, True
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+            i += 1
+        return n, False
+
+    def test_no_pep701_fstring_nesting(self):
+        offenders = []
+        for path in self._py_files():
+            with open(path, encoding="utf-8") as fh:
+                src = fh.read()
+            for lineno, text in self._find_violations(src):
+                offenders.append(f"{os.path.basename(path)}:{lineno} {text!r}")
+        self.assertEqual(
+            offenders, [],
+            "f-string 表达式内出现同型引号/反斜杠（Python 3.11 SyntaxError）："
+            "把下标或键名提到表达式外，或外层改双引号、内层用单引号且只引用裸名字",
+        )
 
 
 if __name__ == "__main__":
