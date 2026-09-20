@@ -330,6 +330,12 @@ def summarize(rows):
         # R173：过期情报注入计数——R171 写侧已直录，报表端同轮补齐（R92 纪律）
         "intel_degraded_posts": 0,
         "intel_fresh_posts": 0,
+        # R289：FNG 三件套的最后两个字段（R162 起落盘、R284 对账清单最后一项）
+        # hook_count=近窗锚点引入次数（滞回驱动量）；market_stripped=R101 互补
+        # 剥离是否真生效。armed_not_stripped 是跨字段一致性不变量。
+        "fng_hook_hist": collections.Counter(),
+        "fng_evaluated": 0,
+        "fng_armed_not_stripped": 0,
         # R181：情报陈旧小时样本（有 last_updated 的帖才进）
         "intel_age_hours": [],
         # R199：最近一次情报成功刷新时刻（campaign_intel llm_success）
@@ -500,6 +506,14 @@ def summarize(rows):
             _iah = _num(r.get("intel_age_hours"))
             if _iah is not None:
                 s["intel_age_hours"].append(_iah)
+            # R289：FNG 滞回驱动量 + 互补剥离一致性（三件套里最后两个未消费字段）
+            _fhc = r.get("fng_hook_count")
+            if isinstance(_fhc, int):
+                s["fng_evaluated"] += 1
+                s["fng_hook_hist"][_fhc] += 1
+                if r.get("fng_ban_active") is True and \
+                        r.get("fng_market_stripped") is False:
+                    s["fng_armed_not_stripped"] += 1
         if outcome == "intel_cooldown_skip":
             # R175：想刷新但被 2h 失败退避挡下——与配额早退（根本没走到这里）区分
             s["intel_cooldown_skips"] += 1
@@ -890,6 +904,17 @@ def render_text(s, rows=None):
                 flag = " ⚠️" if q["fng_violation"] else ""
                 lines.append(f"  🚦 FNG 禁令咬合{flag}: 武装 {q['fng_ban_armed']} 篇中避开 "
                              f"{q['fng_avoided']} / 违反 {q['fng_violation']}")
+        # R289：FNG 三件套收口——滞回驱动量直方图 + 武装未剥离一致性告警。
+        # hook_count 是近窗引入次数（武装条件 ≥2，故 1 = 距武装一步之遥的压力面）；
+        # armed 但 market_stripped=False = R101 互补剥离疑似失效（禁令与盘面行
+        # 同时在场=自相矛盾指令），生产现况 58/58 全部一致剥离。
+        if s["fng_evaluated"]:
+            _hist = " · ".join(f"hook={k} ×{v}"
+                               for k, v in sorted(s["fng_hook_hist"].items()))
+            lines.append(f"  🔥 FNG 锚点压力（{s['fng_evaluated']} 篇）: {_hist}")
+        if s["fng_armed_not_stripped"]:
+            lines.append(f"  ⚠️ FNG 武装但盘面未剥离 {s['fng_armed_not_stripped']} 篇"
+                         f"——R101 互补剥离疑似失效，需排查")
         # R124：开场指纹雷达——共享前缀 ≥3/10 即预警（禁令仍走 main.py 机制，
         # 这里只负责让新指纹在成形期可见，不再依赖人工抽样发现）
         fp = opener_fingerprint(rows)

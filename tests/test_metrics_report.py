@@ -1183,6 +1183,71 @@ class TestPersonaAndImpactDistribution(unittest.TestCase):
         self.assertNotIn("🔥 热度分", text)
 
 
+class TestFngTrioReportSurface(unittest.TestCase):
+    """R289：FNG 三件套收口——hook_count 直方图 + 武装未剥离一致性告警"""
+
+    def setUp(self):
+        import tempfile, shutil
+        self.tmpdir = tempfile.mkdtemp()
+        self.path = os.path.join(self.tmpdir, "metrics.jsonl")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _row(self, hook, armed, stripped, pv="正文略。", **kw):
+        d = {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": pv, "fng_hook_count": hook,
+             "fng_ban_active": armed, "fng_market_stripped": stripped}
+        d.update(kw)
+        return d
+
+    def test_hook_histogram_and_armed_not_stripped_alert(self):
+        """直方图按 hook_count 分档；武装却未剥离（R101 互补剥离失效）必须告警"""
+        _write(self.path, [
+            self._row(1, True, True),
+            self._row(1, True, True),
+            self._row(0, False, False),
+            self._row(2, True, True),
+            self._row(2, True, False),   # 武装但没剥离 → 疑似失效
+        ])
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        self.assertEqual(s["fng_evaluated"], 5)
+        self.assertEqual(dict(s["fng_hook_hist"]), {0: 1, 1: 2, 2: 2})
+        self.assertEqual(s["fng_armed_not_stripped"], 1)
+        text = mr.render_text(s, loaded)
+        self.assertIn("🔥 FNG 锚点压力（5 篇）: hook=0 ×1 · hook=1 ×2 · hook=2 ×2", text)
+        self.assertIn("⚠️ FNG 武装但盘面未剥离 1 篇", text)
+        self.assertIn("R101 互补剥离疑似失效", text)
+
+    def test_consistent_stripping_silent(self):
+        """全部一致剥离时只有直方图、无告警（零噪音）"""
+        _write(self.path, [self._row(1, True, True) for _ in range(3)])
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        text = mr.render_text(s, loaded)
+        self.assertIn("🔥 FNG 锚点压力", text)
+        self.assertNotIn("武装但盘面未剥离", text)
+
+    def test_unarmed_not_stripped_not_counted(self):
+        """未武装帖本就不该剥离盘面行——不得计入疑似失效（否则每篇都误报）"""
+        _write(self.path, [self._row(0, False, False) for _ in range(3)])
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        self.assertEqual(s["fng_armed_not_stripped"], 0)
+        self.assertNotIn("武装但盘面未剥离", mr.render_text(s, loaded))
+
+    def test_legacy_rows_silent(self):
+        """无 FNG 字段的历史帖：整块不渲染"""
+        _write(self.path, [{"platforms": ["binance"],
+                            "outcome": "binance_published", "final_preview": "x"}])
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        self.assertEqual(s["fng_evaluated"], 0)
+        self.assertNotIn("FNG 锚点压力", mr.render_text(s, loaded))
+
+
 class TestFunnelCountsPublishFailures(unittest.TestCase):
     """R6：publish_failed 必须进分母——否则"发布全挂"会被报表显示成高成功率"""
 
