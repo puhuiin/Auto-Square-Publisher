@@ -1671,6 +1671,9 @@ class NewsFetcher:
                       "feeds_ok": 0, "feeds_failed": [], "feeds_parked": [],
                       "feeds_empty": 0, "feeds_empty_sources": [],
                       "injection_hits": 0,  # R273：入口字段命中注入特征被截断的条数
+                      # R274：按源归因的注入截断分布——命中要知道"哪个源在夹带"
+                      # 才能停车/告警（空 dict=本轮无命中，append_metrics 前转 None）
+                      "injection_feeds": {},
                       "campaign_boost_hits": 0,  # R193：活动币加权命中候选数
                       "campaign_off_pool": [],    # R201：不在标的池的活动币
                       "per_feed": {}}  # feed_name -> {"entries": 扫描, "kept": 入选}
@@ -1811,17 +1814,28 @@ class NewsFetcher:
             return clean_text, True
         return clean_text, False
 
-    def _clean_field(self, raw_html: str, max_len: int = 20000) -> str:
+    def _clean_field(self, raw_html: str, max_len: int = 20000,
+                     feed_name: Optional[str] = None) -> str:
         """入口字段清洗 + 注入截断计数（R273）。
 
         注入命中此前只有一条 warning 日志，run_summary/报表零可见——某个源
         真的开始夹带注入 payload 时，事后遥测里查不到任何痕迹（日志随 Actions
         保留期蒸发）。计数进 stats→run_summary 后"曾有源试图注入、哪个源在试"
         才可度量、可归因。命中即 +1；合法文本零成本（一次多余 search，与
-        clean_html 内部同一条正则同一段文本，非新增清洗开销）。"""
+        clean_html 内部同一条正则同一段文本，非新增清洗开销）。
+
+        R274：全局计数回答不了"哪个源"——warning 日志与 injection_hits 都不带
+        来源，命中瞬间无法停车/告警（R273 docstring 承诺的归因此前并无数据面）。
+        feed_name 传入时同步累计 per-source 计数 injection_feeds，扫描日志行与
+        run_summary 带源名分布。"""
         text, hit = self._clean_html_impl(raw_html, max_len)
         if hit:
             self._stat_inc("injection_hits")
+            if feed_name:
+                # 与 _stat_feed_entry 同规约：dict 读-改-写在线程池里非原子，必须持锁
+                with self._stats_lock:
+                    per_feed = self.stats.setdefault("injection_feeds", {})
+                    per_feed[feed_name] = per_feed.get(feed_name, 0) + 1
         return text
 
     @staticmethod
@@ -2244,7 +2258,7 @@ class NewsFetcher:
                           cache_mgr: "CacheManager") -> Optional[Dict[str, Any]]:
         """单条 RSS 条目 → 候选字典；时效/缓存不通过返回 None（自带 stats 计数）。
         供 _fetch_single_feed 的条目循环调用——抽取自其循环体（行为等价重构）。"""
-        title = self._clean_field(entry.get("title", ""))
+        title = self._clean_field(entry.get("title", ""), feed_name=name)
         if not title:
             return None
 
@@ -2272,7 +2286,7 @@ class NewsFetcher:
         if not summary:
             summary = entry.get("description") or ""
 
-        clean_summary = self._clean_field(summary)
+        clean_summary = self._clean_field(summary, feed_name=name)
         published = entry.get("published", "") or entry.get("updated", "")
         impact_score = self.calculate_impact_score(title, clean_summary) + self.freshness_bonus(age_h)
         image_url = self.extract_image_url(entry, summary)
@@ -2532,6 +2546,11 @@ class NewsFetcher:
             # 故内层 f-string 一律只引用裸名字——曾在此基础上叠下标引字典导致 3.11 语法错误、
             # 双工作流导入即炸（本地 3.14 编译通过，只有 CI 能拦住）。
             inj_hits = self.stats["injection_hits"]
+            # R274：按源分布——命中要知道是哪个源在夹带（停车/告警的决策输入）
+            inj_src = self.stats.get("injection_feeds") or {}
+            inj_detail = ("（" + "、".join(
+                f"{k} {v} 条" for k, v in sorted(inj_src.items(), key=lambda kv: -kv[1])
+            ) + "）") if inj_src else ""
             logger.log(
                 level,
                 f"多源并发扫描完毕: 源在线 {feeds_ok} / 故障 {len(feeds_failed)}{extra}"
@@ -2539,7 +2558,7 @@ class NewsFetcher:
                 f"扫描 {self.stats['fetched']} 条 → 过滤旧闻 {self.stats['stale']} / "
                 f"已发 {self.stats['cached']} / 近似重复 {self.stats['near_dup']} → 剩候选 {len(candidates)} 条"
                 # R273：注入截断数（只在 >0 时显形——源夹带注入 payload 必须显眼）
-                f"{f' | ⚠️ 注入截断 {inj_hits} 条' if inj_hits else ''}。"
+                f"{f' | ⚠️ 注入截断 {inj_hits} 条{inj_detail}' if inj_hits else ''}。"
             )
         return candidates
 
@@ -6845,6 +6864,8 @@ def _run_main():
             feeds_empty=fetcher.stats.get("feeds_empty", 0),
             # R273：注入截断计数（零候选轮同样可能刚截过注入源——与源健康同维度）
             injection_hits=fetcher.stats.get("injection_hits", 0),
+            # R274：按源归因（空 dict 转 None——未命中不落空壳字段）
+            injection_feeds=fetcher.stats.get("injection_feeds") or None,
             # R184：追赶等待单列（零候选早退轮同样可能付了这笔等待）
             quota_wait_elapsed_sec=round(quota_wait_sec, 1),
             run_elapsed_sec=round(time.time() - t_run_start, 1),
@@ -7497,6 +7518,8 @@ def _run_main():
         # R273：入口字段注入截断数——安全控制的命中遥测（零命中是常态，
         # 有命中说明某源在夹带 prompt 注入 payload，按源名可归因）
         "injection_hits": fetcher.stats.get("injection_hits", 0),
+        # R274：按源分布——injection_hits>0 时回答"哪个源在夹带"（停车/告警决策输入）
+        "injection_feeds": fetcher.stats.get("injection_feeds") or None,
         # R177：分段耗时进 run_summary——生产发帖轮 elapsed 稳定 ~370s，
         # 其中 90~240s 是拟人 pacing；只记总时长会把 sleep 误读成 LLM 变慢
         "fetch_elapsed_sec": round(stage_timings["fetch"], 1),
