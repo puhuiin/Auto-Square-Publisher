@@ -53,7 +53,7 @@ import random
 import hashlib
 import html
 import logging
-from typing import List, Dict, Any, Optional, Set, Tuple
+from typing import List, Dict, Any, Optional, Set, Tuple, Iterable
 import io
 import math
 import threading
@@ -2673,6 +2673,38 @@ class ShuffleBag:
                 self._bag = random.sample(self._items, len(self._items))
             return self._bag.pop()
 
+    def draw_fresh(self, recent: Iterable[str],
+                   key: Callable[[str], str] = lambda s: s) -> str:
+        """R287：跨运行不扎堆——优先抽近期未出现过的选项。
+
+        生产形态是每个 Actions 运行一个进程、每轮通常 1 篇：进程内洗牌对单篇
+        运行是空转，袋子每次全新，"任意窗口内不扎堆"的承诺跨运行落空（近 12 帖
+        人设实测「数据拆解派」×5 扎堆，全史 52/42/41 均衡纯属大数平均）。用回执
+        里的近期选项预热：近期出现过的选项排到袋子头部，先抽完未出现过的
+        （pop 从尾部取，fresh 必须排在尾部）。
+
+        key：回执里存的是短标签而袋里是整句时用（结尾套路遥测只存冒号前）。
+        回看窗口钳在最近 len(items) 次（行数）——窗口再长会把池内选项全覆盖，
+        fresh 集空即退化为随机，防扎堆失效（生产 3 人设池喂 20 行必全覆盖）。
+        recent 覆盖全部选项时同样退化为普通 draw。
+        """
+        with self._lock:
+            if not self._bag:
+                seen = set()
+                taken = 0
+                for r in recent:
+                    if isinstance(r, str) and r:
+                        seen.add(r)
+                        taken += 1
+                        if taken >= len(self._items):
+                            break
+                used = [i for i in self._items if key(i) in seen]
+                fresh = [i for i in self._items if key(i) not in seen]
+                random.shuffle(used)
+                random.shuffle(fresh)
+                self._bag = used + fresh
+            return self._bag.pop()
+
 
 ENDING_STYLE_POOL = [
     "极简站队：看多的扣 1，看空的扣 2（经典款，偶尔用）",
@@ -3780,7 +3812,12 @@ class MultiLLMEngine:
             hint_section = f"【本条新闻可用标的（币安已核实存在）】：{' '.join('$' + t for t in token_hints)}，请围绕它们写作；\n"
 
         # 结尾互动句 + 写派人设风格轮换：随机抽取本条的套路，防止每条帖子一个模子
-        ending_style = _ENDING_BAG.draw()
+        # R287：draw_fresh 接近期回执预热——进程内洗牌跨运行失效（每轮新进程），
+        # 近期出现过的套路排到袋子末尾先抽别的
+        recent_published = self._recent_published_rows(20)
+        ending_style = _ENDING_BAG.draw_fresh(
+            (r.get("ending_style") for r in recent_published),
+            key=lambda s: s.split("：")[0])  # 回执只存冒号前短标签（R130）
         # R130：回执遥测——验证 ShuffleBag 轮换均匀性（只存冒号前短标签便于聚合）
         self.last_ending_style = ending_style.split("：")[0]
         ending_hint = f"【本条结尾站队提问的套路】：{ending_style}\n"
@@ -3852,7 +3889,9 @@ class MultiLLMEngine:
             ending_hint += freshness_line + "\n"
 
         # 写派人设轮换：本条用哪种气质说话
-        persona_name = _PERSONA_BAG.draw()
+        # R287：同结尾套路——近期人设出现过的排后再抽（跨运行不扎堆）
+        persona_name = _PERSONA_BAG.draw_fresh(
+            r.get("persona") for r in recent_published)
         persona = next(p for p in WRITING_PERSONAS if p["name"] == persona_name)
 
         if article:
