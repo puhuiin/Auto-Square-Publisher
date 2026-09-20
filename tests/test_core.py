@@ -4858,6 +4858,62 @@ class TestStepSummary(unittest.TestCase):
             if os.path.exists(tmp):
                 os.unlink(tmp)
 
+    def _write_summary(self, **stat_overrides):
+        import tempfile
+        tmp = tempfile.mktemp(suffix=".md")
+        os.environ["GITHUB_STEP_SUMMARY"] = tmp
+        try:
+            fetcher = m.NewsFetcher()
+            fetcher.stats.update(stat_overrides)
+            m.write_github_step_summary(
+                fetcher, "74/100 (Greed)", {"active_tags": ["#Write2Earn"]},
+                [], dry_run=False,
+            )
+            with open(tmp, encoding="utf-8") as fh:
+                return fh.read()
+        finally:
+            os.environ.pop("GITHUB_STEP_SUMMARY", None)
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+
+    def test_r275_injection_line_hidden_when_no_hits(self):
+        """R275：零命中轮报表零噪音——注入截断行只在真的命中时显形"""
+        content = self._write_summary(fetched=44, kept=23)
+        self.assertNotIn("注入截断", content)
+
+    def test_r275_injection_line_renders_with_source_breakdown(self):
+        """R275：命中时报表第一屏必须带总数+按源分布（降序），并给出处置提示"""
+        content = self._write_summary(
+            fetched=44, kept=23, injection_hits=3,
+            injection_feeds={"MinorFeed": 1, "BadFeed": 2},
+        )
+        self.assertIn("注入截断", content)
+        self.assertIn("3 条", content)
+        self.assertIn("BadFeed 2 条", content)
+        self.assertIn("MinorFeed 1 条", content)
+        # 降序：最该停车的源排最前（与扫描日志行同口径）
+        self.assertLess(content.index("BadFeed"), content.index("MinorFeed"))
+        self.assertIn("停放该源", content)
+
+    def test_r275_injection_line_survives_empty_feed_distribution(self):
+        """R275：命中>0 但分布缺失/为空（None/{}）时仍渲染总数，不炸不空壳"""
+        for dist in ({}, None):
+            content = self._write_summary(
+                fetched=1, kept=1, injection_hits=2, injection_feeds=dist,
+            )
+            self.assertIn("注入截断", content)
+            self.assertIn("2 条", content)
+
+    def test_r275_feed_detail_helper_contract(self):
+        """R275：共用渲染 helper 的口径——空串/降序/单源"""
+        self.assertEqual(m._format_injection_feed_detail({}), "")
+        self.assertEqual(m._format_injection_feed_detail(None), "")
+        self.assertEqual(m._format_injection_feed_detail({"A": 1}), "（A 1 条）")
+        self.assertEqual(
+            m._format_injection_feed_detail({"A": 1, "B": 5, "C": 2}),
+            "（B 5 条、C 2 条、A 1 条）",
+        )
+
 
 class TestReasonixModelsUrl(unittest.TestCase):
     """网关模型目录 URL：gw_url 自带 /v1 时不可再拼一层（/v1/v1/models 恒 404）"""

@@ -300,6 +300,17 @@ def _delivered_platforms(binance_ok: bool = False, draft_ok: bool = False,
         out.append("telegram")
     return out
 
+
+def _format_injection_feed_detail(inj_src: Dict[str, int]) -> str:
+    """按源注入截断分布的条目渲染（R275：扫描日志行与 Step Summary 报表共用
+    同一口径——此前只有日志一处内联拼串，报表根本没有这个面孔，两处若各拼
+    一份必然漂移）。空分布回空串；按命中数降序：最该被停车/告警的源排最前。"""
+    if not inj_src:
+        return ""
+    return ("（" + "、".join(
+        f"{k} {v} 条" for k, v in sorted(inj_src.items(), key=lambda kv: -kv[1])
+    ) + "）")
+
 # R268：帖内 CTA 分句去重。模型按 ending_hint 在结尾写一句"扣1扣2"站队提问，
 # 偶尔会在正文里自发再写一句同构互动——同一个问题问两遍，评论区还互相截流。
 # 生产实录 09-19 10:58Z XRP 帖：正文"看多的扣1，空仓的扣2"+ 结尾"看多的扣1，
@@ -2548,9 +2559,7 @@ class NewsFetcher:
             inj_hits = self.stats["injection_hits"]
             # R274：按源分布——命中要知道是哪个源在夹带（停车/告警的决策输入）
             inj_src = self.stats.get("injection_feeds") or {}
-            inj_detail = ("（" + "、".join(
-                f"{k} {v} 条" for k, v in sorted(inj_src.items(), key=lambda kv: -kv[1])
-            ) + "）") if inj_src else ""
+            inj_detail = _format_injection_feed_detail(inj_src)
             logger.log(
                 level,
                 f"多源并发扫描完毕: 源在线 {feeds_ok} / 故障 {len(feeds_failed)}{extra}"
@@ -6338,6 +6347,14 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
                          f"已发 {s['cached']} / 近似重复 {s['near_dup']} → 候选 {s['kept']} 条")
         if feeds_parked := s.get("feeds_parked"):
             lines.append(f"- **停放的源**: {', '.join(feeds_parked)}")
+        # R275：注入截断进人类面——此前只有扫描日志（>0）与 run_summary（机器面）
+        # 两个出口，Actions 运行页第一屏完全看不见。某个源真的开始夹带 prompt
+        # 注入 payload 时，人工巡检的就是这一页。同"停放的源"惯例：只在命中时
+        # 显形，零命中轮零噪音；源名分布与扫描日志共用 _format_injection_feed_detail。
+        inj_hits = s.get("injection_hits", 0)
+        if inj_hits:
+            inj_detail = _format_injection_feed_detail(s.get("injection_feeds") or {})
+            lines.append(f"- **⚠️ 注入截断**: {inj_hits} 条{inj_detail}（请评估停放该源）")
         # 每源产出排行（只列有产出的前 5 名）
         per_feed = s.get("per_feed") or {}
         productive = sorted(
