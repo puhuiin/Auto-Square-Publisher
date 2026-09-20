@@ -6355,6 +6355,14 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
                          f"已发 {s['cached']} / 近似重复 {s['near_dup']} → 候选 {s['kept']} 条")
         if feeds_parked := s.get("feeds_parked"):
             lines.append(f"- **停放的源**: {', '.join(feeds_parked)}")
+        # R278：硬故障源名进人类面——计数自 R90 起只在扫描日志（易失）里，运行页
+        # 只看得见"停放的源"名单。生产实证：单源硬失败的三轮（feeds_failed=1/
+        # feeds_ok=8）候选照常 39~40 篇，巡检页一切绿灯，源名却从未出现在任何
+        # 人工面上。连续失败达阈值会自动停放，点名才能提前人工介入。
+        feeds_failed_names = s.get("feeds_failed") or []
+        if feeds_failed_names:
+            lines.append(f"- **⚠️ 故障源**: {', '.join(feeds_failed_names)}"
+                         f"（本轮抓取失败，连续失败将自动停放）")
         # R275：注入截断进人类面——此前只有扫描日志（>0）与 run_summary（机器面）
         # 两个出口，Actions 运行页第一屏完全看不见。某个源真的开始夹带 prompt
         # 注入 payload 时，人工巡检的就是这一页。同"停放的源"惯例：只在命中时
@@ -6907,7 +6915,12 @@ def _run_main():
             # R277：deadline 触发数——零候选的 top 成因之一（迟到源被砍光后
             # 无候选），与漏斗合起来才能定位是哪个阶段吃掉了候选
             fetch_timeout=fetcher.stats.get("fetch_timeout", 0),
-            fetch_timeout_sources=" ".join(fetcher.stats.get("fetch_timeout_sources") or []) or None,
+            fetch_timeout_sources=" | ".join(fetcher.stats.get("fetch_timeout_sources") or []) or None,
+            # R278：硬故障/停放源名——与成功路径同 schema 同分隔符；零候选轮
+            # 的"为什么 0"里源侧归因（哪个源挂了/哪个被停）同样只有计数可看
+            feeds_failed_sources=" | ".join(fetcher.stats.get("feeds_failed") or []) or None,
+            feeds_parked_sources=" | ".join(fetcher.stats.get("feeds_parked") or []) or None,
+            feeds_empty_sources=" | ".join(fetcher.stats.get("feeds_empty_sources") or []) or None,
             # R273：注入截断计数（零候选轮同样可能刚截过注入源——与源健康同维度）
             injection_hits=fetcher.stats.get("injection_hits", 0),
             # R274：按源归因（空 dict 转 None——未命中不落空壳字段）
@@ -7561,6 +7574,14 @@ def _run_main():
             if isinstance(d, dict) and (d.get("entries") or 0) > 0},
         "feeds_ok": fetcher.stats.get("feeds_ok", 0),
         "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
+        # R278：硬故障源名——计数自 R90 起就在，但生产三个实证轮（09-17 ×2、
+        # 09-18 ×1，feeds_failed=1/feeds_ok=8）候选照常 39~40 篇，失败被健康
+        # 表象完全掩盖，而 durable 记录只有计数、源名仅在易失扫描日志里。源名
+        # 才是停车/换源的决策输入（与 R274 注入/R276 空源/R277 迟到源同理由）。
+        "feeds_failed_sources": " | ".join(fetcher.stats.get("feeds_failed") or []) or None,
+        # R278：停放源名同理——计数回答不了"哪个源被停了 6h"，Step Summary 的
+        # 人类面只列当轮名单，历史趋势（哪个源反复进出停放）需要行内证据
+        "feeds_parked_sources": " | ".join(fetcher.stats.get("feeds_parked") or []) or None,
         # R276：扫描漏斗进 durable 遥测——fetched/stale/cached/near_dup 此前只有
         # 两个易失出口（扫描日志行与 Step Summary"管线吞吐"，均随 Actions 保留期
         # 蒸发），历史不可回查：near_dup 异常抬升（去重过紧吞事件）/ cached 跳涨
@@ -7576,13 +7597,17 @@ def _run_main():
         # （future 未返回、不记健康），这是它唯一可回查的出口；回答了"候选
         # 突然变少"里"源没出活"与"deadline 砍掉了迟到源"的区别。
         "fetch_timeout": fetcher.stats.get("fetch_timeout", 0),
-        "fetch_timeout_sources": " ".join(fetcher.stats.get("fetch_timeout_sources") or []) or None,
+        # 源名字段统一用 " | " 分隔（R278 定）：feed 名自带空格与括号
+        # （"U.Today (加密货币新闻)"），空格拼接回读时有歧义；hot_topics 早已
+        # 用 " | " 承载多词值。R276/R277 的两字段同轮切换——生产历史里这两
+        # 个字段零行携带（饱和期未出场），无跨行可比性损失。
+        "fetch_timeout_sources": " | ".join(fetcher.stats.get("fetch_timeout_sources") or []) or None,
         # R276：成功路径的 feeds_empty——零候选路径自 R5 起就记计数，成功路径
         # 一直只有易失 warning：某源劣化成"有效 XML 零条目"而其他源仍在出活时，
         # durable 记录里完全看不见（per_feed_yield 按设计不落 entries==0 的源，
         # 分不清"没抓到"与"抓到但空"）。带源名才可事后归因停车/换源。
         "feeds_empty": fetcher.stats.get("feeds_empty", 0),
-        "feeds_empty_sources": " ".join(fetcher.stats.get("feeds_empty_sources") or []) or None,
+        "feeds_empty_sources": " | ".join(fetcher.stats.get("feeds_empty_sources") or []) or None,
         # R273：入口字段注入截断数——安全控制的命中遥测（零命中是常态，
         # 有命中说明某源在夹带 prompt 注入 payload，按源名可归因）
         "injection_hits": fetcher.stats.get("injection_hits", 0),

@@ -4940,6 +4940,22 @@ class TestStepSummary(unittest.TestCase):
             self.assertIn("抓取超时", content)
             self.assertIn("1 个源", content)
 
+    def test_r278_failed_feed_line_hidden_when_all_ok(self):
+        """R278：全轮无硬故障时报表零噪音（stats 默认空名单，不显形）"""
+        content = self._write_summary(fetched=87, kept=23)
+        self.assertNotIn("故障源", content)
+
+    def test_r278_failed_feed_line_renders_with_names(self):
+        """R278：有源硬失败时报表第一屏必须点名——生产实证三轮
+        （feeds_failed=1/feeds_ok=8）候选照常 39~40 篇，巡检页此前一切绿灯"""
+        content = self._write_summary(
+            fetched=87, kept=23,
+            feeds_failed=["BlockTempo (区块链新闻)", "U.Today (加密货币新闻)"],
+        )
+        self.assertIn("故障源", content)
+        self.assertIn("BlockTempo (区块链新闻)", content)
+        self.assertIn("U.Today (加密货币新闻)", content)
+
 
 class TestReasonixModelsUrl(unittest.TestCase):
     """网关模型目录 URL：gw_url 自带 /v1 时不可再拼一层（/v1/v1/models 恒 404）"""
@@ -6931,7 +6947,7 @@ class TestRunMainSemantics(unittest.TestCase):
             # 劣化源计数与源名都留痕——空名列表转 None（append_metrics 过滤，不落空壳）
             self.assertEqual(run_row.get("feeds_empty"), 2)
             self.assertEqual(run_row.get("feeds_empty_sources"),
-                             "U.Today (加密货币新闻) Decrypt (Web3/AI/Meme)")
+                             "U.Today (加密货币新闻) | Decrypt (Web3/AI/Meme)")
         finally:
             self._teardown(patches, tmpdir)
 
@@ -6968,7 +6984,7 @@ class TestRunMainSemantics(unittest.TestCase):
             run_row = next(r for r in rows if r.get("outcome") == "run_summary")
             self.assertEqual(run_row.get("fetch_timeout"), 2)
             # 迟到源不进 feeds_failed（future 未返回），源名是唯一归因面
-            self.assertEqual(run_row.get("fetch_timeout_sources"), "SlowFeed DripFeed")
+            self.assertEqual(run_row.get("fetch_timeout_sources"), "SlowFeed | DripFeed")
             self.assertEqual(run_row.get("feeds_failed"), 0, "deadline 放弃的源不记失败")
         finally:
             self._teardown(patches, tmpdir)
@@ -7014,6 +7030,70 @@ class TestRunMainSemantics(unittest.TestCase):
             self.assertEqual(run_row.get("near_dup"), 79)
             self.assertEqual(run_row.get("fetch_timeout"), 1)
             self.assertEqual(run_row.get("fetch_timeout_sources"), "DripFeed")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_run_summary_records_feed_failure_sources(self):
+        """R278：硬故障/停放源名进 durable 遥测——计数自 R90 起就在，但生产
+        三轮实证（feeds_failed=1/feeds_ok=8，候选照常 39~40）的源名从未落行，
+        "哪个源在挂"只能翻易失日志；与 R274 注入/R276 空源/R277 迟到源同一
+        理由的源健康家族补齐。分隔符 " | "：feed 名自带空格与括号。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True, candidates=[self._candidate()])
+        try:
+            import json
+            m.NewsFetcher.return_value.stats.update({
+                "feeds_failed": ["BlockTempo (区块链新闻)"],
+                "feeds_parked": ["OldFeed (旧闻源)"],
+            })
+            m._run_main()
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(run_row.get("feeds_failed_sources"), "BlockTempo (区块链新闻)")
+            self.assertEqual(run_row.get("feeds_parked_sources"), "OldFeed (旧闻源)")
+            # 计数字段不动——既有趋势线的口径不变
+            self.assertEqual(run_row.get("feeds_failed"), 1)
+            self.assertEqual(run_row.get("feeds_parked"), 1)
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_run_summary_feed_source_names_absent_when_healthy(self):
+        """R278：全源健康轮三个源名字段均不落行（空列表 or None 被过滤）"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True, candidates=[self._candidate()])
+        try:
+            import json
+            m._run_main()
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            for k in ("feeds_failed_sources", "feeds_parked_sources", "feeds_empty_sources"):
+                self.assertNotIn(k, run_row, "空名单不得落空壳字段")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_zero_candidate_run_summary_records_feed_source_names(self):
+        """R278：零候选路径同 schema——源侧归因（哪个挂了/哪个被停/哪个空）
+        在"为什么 0"的排查里与漏斗同权，不能只在成功路径可见"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[])
+        try:
+            import json
+            m.NewsFetcher.return_value.stats.update({
+                "feeds_failed": ["BrokenFeed (测试源)"],
+                "feeds_parked": ["ParkedFeed (测试源)"],
+                "feeds_empty": 1, "feeds_empty_sources": ["EmptyFeed (测试源)"],
+            })
+            with self.assertRaises(SystemExit) as cm:
+                m._run_main()
+            self.assertEqual(cm.exception.code, 0)
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(run_row.get("feeds_failed_sources"), "BrokenFeed (测试源)")
+            self.assertEqual(run_row.get("feeds_parked_sources"), "ParkedFeed (测试源)")
+            self.assertEqual(run_row.get("feeds_empty_sources"), "EmptyFeed (测试源)")
         finally:
             self._teardown(patches, tmpdir)
 
