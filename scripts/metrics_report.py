@@ -319,6 +319,12 @@ def summarize(rows):
         "stats_by_genre": {},        # 长文/短讯 -> [浏览样本]
         "stats_by_source": {},       # 来源 -> [浏览样本]
         "by_ending": collections.Counter(),
+        # R288：人设分布与近期集中度（R287 修的是生成端，报表端监测其效果）
+        "by_persona": collections.Counter(),
+        "persona_seq": [],
+        # R288：热度分分布——TOKEN_LIMIT_BYPASS_IMPACT(30)/ARTICLE_MIN_IMPACT(20)
+        # 等门槛的校准基线，此前只能即席探针
+        "impact_scores": [],
         # R222：发布内容新鲜度样本（age_hours 发布行全量携带，此前只能手工统计）
         "pub_ages": [],
         # R173：过期情报注入计数——R171 写侧已直录，报表端同轮补齐（R92 纪律）
@@ -478,6 +484,13 @@ def summarize(rows):
             # R130：结尾套路分布——验证 ShuffleBag 生产轮换均匀性
             if r.get("ending_style"):
                 s["by_ending"][str(r["ending_style"])] += 1
+            # R288：人设分布 + 时序（集中度告警要按发布顺序取近窗）
+            if r.get("persona"):
+                s["by_persona"][str(r["persona"])] += 1
+                s["persona_seq"].append(str(r["persona"]))
+            _imp = _num(r.get("impact_score"))
+            if _imp is not None:
+                s["impact_scores"].append(int(_imp))
             # R173：情报降级注入——None=历史行无字段，不进分母
             if r.get("intel_degraded") is True:
                 s["intel_degraded_posts"] += 1
@@ -942,6 +955,24 @@ def render_text(s, rows=None):
         if s["by_ending"]:
             ending_str = " · ".join(f"{k} ×{v}" for k, v in s["by_ending"].most_common(5))
             lines.append(f"  结尾套路分布: {ending_str}")
+        # R288：人设分布 + 近期集中度告警（R287 跨运行预热后的效果监测面）
+        if s["by_persona"]:
+            persona_str = " · ".join(f"{k} ×{v}" for k, v in s["by_persona"].most_common())
+            lines.append(f"  🎭 人设分布: {persona_str}")
+            _win = s["persona_seq"][-12:]
+            if len(_win) >= 6:
+                _top_p, _cnt_p = collections.Counter(_win).most_common(1)[0]
+                if _cnt_p * 2 >= len(_win):
+                    lines.append(f"  ⚠️ 近 {len(_win)} 帖人设集中: {_top_p} {_cnt_p}/{len(_win)}"
+                                 f"——R287 跨运行预热后仍扎堆需排查")
+        # R288：热度分分布（门槛校准基线；≥30 = 单币限流高影响放行档）
+        if s["impact_scores"]:
+            _imps = sorted(s["impact_scores"])
+            _med = _imps[len(_imps) // 2]
+            _p90 = _imps[int(len(_imps) * 0.9)]
+            _hi = sum(1 for i in _imps if i >= 30)
+            lines.append(f"  🔥 热度分: 中位 {_med} · P90 {_p90} · "
+                         f"≥30 放行档 {_hi}/{len(_imps)} 篇")
         if s["image_tiers"]:
             lines.append(f"  配图层级 {dict(s['image_tiers'])}")
         # R173：过期情报注入可见化（有字段的帖才进分母，历史行不混入）

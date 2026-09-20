@@ -1115,6 +1115,74 @@ class TestArticleTitleHookCensus(unittest.TestCase):
         self.assertNotIn("长文标题", mr.render_text(s, rows))
 
 
+class TestPersonaAndImpactDistribution(unittest.TestCase):
+    """R288：人设分布/近期集中度 + 热度分分布（R284 对账清单剩余两项）"""
+
+    def setUp(self):
+        import tempfile, shutil
+        self.tmpdir = tempfile.mkdtemp()
+        self.path = os.path.join(self.tmpdir, "metrics.jsonl")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _row(self, persona, imp):
+        return {"platforms": ["binance"], "outcome": "binance_published",
+                "final_preview": "x", "persona": persona, "impact_score": imp}
+
+    def test_distribution_and_concentration_alert(self):
+        """人设分布按池计数；近 12 窗内单人设过半才告警（阈值 = 50%）"""
+        rows = [self._row("数据拆解派", 32) for _ in range(6)]
+        rows += [self._row("毒舌老韭菜", 22) for _ in range(4)]
+        rows += [self._row("吃瓜叙事党", 18) for _ in range(2)]
+        _write(self.path, rows)
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        self.assertEqual(s["by_persona"]["数据拆解派"], 6)
+        self.assertEqual(len(s["persona_seq"]), 12)
+        text = mr.render_text(s, loaded)
+        self.assertIn("🎭 人设分布: 数据拆解派 ×6 · 毒舌老韭菜 ×4 · 吃瓜叙事党 ×2", text)
+        self.assertIn("⚠️ 近 12 帖人设集中: 数据拆解派 6/12", text)
+        self.assertIn("R287 跨运行预热后仍扎堆需排查", text)
+
+    def test_balanced_window_silent(self):
+        """均衡窗口不告警（零噪音）；分布行仍渲染。老段集中+近窗均衡的区分样本：
+        集中度告警只许看近 12 帖——若退化成全史窗口，老段的扎堆会误报。"""
+        old = [self._row("数据拆解派", 20) for _ in range(6)]      # 老段扎堆
+        recent = [self._row(p, 20 + i) for i, p in enumerate(
+            ["毒舌老韭菜", "吃瓜叙事党", "数据拆解派"] * 4)]       # 近 12 帖均衡
+        _write(self.path, old + recent)
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        text = mr.render_text(s, loaded)
+        self.assertIn("🎭 人设分布", text)
+        self.assertNotIn("人设集中", text, "近窗均衡不得被老段扎堆误报")
+
+    def test_impact_score_distribution(self):
+        """热度分中位/P90/≥30 放行档计数——门槛校准基线"""
+        _write(self.path, [self._row("毒舌老韭菜", v) for v in
+                           [10, 12, 15, 20, 22, 25, 28, 30, 33, 40]])
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        self.assertEqual(len(s["impact_scores"]), 10)
+        text = mr.render_text(s, loaded)
+        self.assertIn("🔥 热度分:", text)
+        self.assertIn("中位 25", text)
+        self.assertIn("P90 40", text)
+        self.assertIn("≥30 放行档 3/10 篇", text)
+
+    def test_legacy_rows_without_fields_silent(self):
+        """旧 schema 无 persona/impact_score：两块都不渲染"""
+        _write(self.path, [{"platforms": ["binance"],
+                            "outcome": "binance_published", "final_preview": "x"}])
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        text = mr.render_text(s, loaded)
+        self.assertNotIn("🎭 人设分布", text)
+        self.assertNotIn("🔥 热度分", text)
+
+
 class TestFunnelCountsPublishFailures(unittest.TestCase):
     """R6：publish_failed 必须进分母——否则"发布全挂"会被报表显示成高成功率"""
 
