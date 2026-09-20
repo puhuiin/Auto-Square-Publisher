@@ -10241,5 +10241,113 @@ class TestFngAnchorRegexPrecision(unittest.TestCase):
                          "两侧锚点正则必须一致（改 main 必须同步 metrics_report）")
 
 
+class TestIntraPostCtaDedupe(unittest.TestCase):
+    """R268：帖内互动句去重。生产实录 09-19 10:58Z XRP 帖——模型在正文自发
+    写了一句"看多的扣1，空仓的扣2"，结尾又按 ending_hint 写了一句同构的
+    "看多的扣1，看空的扣2"：同一个问题问两遍，评论区还互相截流。全史 144 篇
+    发布帖扫出 1 篇。清理策略：确定性分句手术（保留结尾互动位），不为
+    cosmetic 瑕疵烧 LLM 调用或弃单。"""
+
+    REAL_POST = (
+        "1.6B鲸鱼涌入币安,$XRP 1.4206,24小时+6.50%。这波周末动能十足,别等到晚了才后悔。\n\n"
+        "周末收盘能否站住1.55,冲刺至2的35%涨幅成悬念。若真突破,盘面会瞬间爆发,仓位要提前准备。\n\n"
+        "现在手里有 $XRP 的兄弟,看多的扣1,空仓的扣2。如果你还在观望,别让机会溜走。\n\n"
+        "别追高,先挂限价,止损别松,等波段确认再动。看多的扣1,看空的扣2。\n\n"
+        "#Write2Earn #BinanceSquare #XRP")
+
+    def test_real_incident_replay(self):
+        """09-19 10:58Z 实录回放：剥离正文那句 CTA，结尾互动位与其他文字不动"""
+        out, removed = m._dedupe_cta_clauses(self.REAL_POST)
+        self.assertEqual(removed, 1)
+        self.assertEqual(out.count("扣1"), 1, "必须只剩结尾一句完整 CTA")
+        self.assertIn("看多的扣1,看空的扣2", out, "结尾互动位必须原样保留")
+        self.assertIn("现在手里有 $XRP 的兄弟", out, "CTA 之外的正文字一个都不能少")
+        self.assertIn("如果你还在观望,别让机会溜走", out)
+        self.assertIn("别追高,先挂限价,止损别松", out)
+        self.assertIn("#Write2Earn #BinanceSquare #XRP", out)
+        self.assertNotIn("，。", out, "不得留下悬挂逗号")
+
+    def test_single_cta_byte_identical(self):
+        """单 CTA 帖原文返回、计数 0——不许制造无意义改动"""
+        post = ("这波以太坊换手明显放大，$ETH 站回关键位，短期情绪偏多，"
+                "仓位重的自己找个舒服位置减点。看多的扣1,看空的扣2。")
+        out, removed = m._dedupe_cta_clauses(post)
+        self.assertEqual(out, post)
+        self.assertEqual(removed, 0)
+
+    def test_no_cta_untouched(self):
+        post = "比特币这波回调主要是杠杆挤出去的，$BTC 现货没什么大变化，拿住就行。"
+        out, removed = m._dedupe_cta_clauses(post)
+        self.assertEqual(out, post)
+        self.assertEqual(removed, 0)
+
+    def test_three_ctas_keep_last(self):
+        """三句 CTA：剥前两句、留最后一句，各自非 CTA 文字保留"""
+        post = ("看多的扣1,看空的扣2。第一段正文。全信扣1,将信将疑扣2,纯看戏扣3。"
+                "第二段正文。乐观派扣1,谨慎派扣2。收尾段。")
+        out, removed = m._dedupe_cta_clauses(post)
+        self.assertEqual(removed, 2)
+        self.assertEqual(out.count("扣1"), 1)
+        self.assertIn("第一段正文", out)
+        self.assertIn("第二段正文", out)
+        self.assertIn("收尾段", out)
+        self.assertIn("乐观派扣1,谨慎派扣2", out)
+        self.assertNotIn("看多的扣1", out)
+        self.assertNotIn("全信扣1", out)
+
+    def test_space_separated_and_three_option_forms(self):
+        """prompt 原款空格写法 + 情绪表态三选项句式都必须整体识别"""
+        a = ("看多冲前高的扣 1 觉得是诱多出货的扣 2。正文甲。看空的扣 2 看多的扣 1。结尾乙。")
+        out, removed = m._dedupe_cta_clauses(a)
+        self.assertEqual(removed, 1)
+        self.assertIn("看空的扣 2 看多的扣 1", out)
+        self.assertIn("正文甲", out)
+        self.assertIn("结尾乙", out)
+        b = ("这消息你信几分？全信扣 1，将信将疑扣 2，纯看戏扣 3。前文。"
+             "你站哪边？加仓扣 1，止盈扣 2。后文。")
+        out2, removed2 = m._dedupe_cta_clauses(b)
+        self.assertEqual(removed2, 1, "三选项句式必须整句识别，不许剥出悬挂残句")
+        self.assertIn("加仓扣 1，止盈扣 2", out2)
+        self.assertIn("前文", out2)
+        self.assertIn("后文", out2)
+        self.assertNotIn("纯看戏扣 3", out2)
+
+    def test_wired_into_summarize(self):
+        """接线验证：走完整 summarize 的输出只剩一个 CTA 且留痕 last_cta_dedupes"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.providers = [m.LLMProviderConfig("Preset-or", "https://x", "k", "openrouter/free")]
+        orig_cache = m.SymbolValidator._valid_symbols_cache
+        m.SymbolValidator._valid_symbols_cache = {"XRP", "BTC"}
+        import tempfile
+        intel_tmp = tempfile.mktemp(suffix=".json")
+        with open(intel_tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = intel_tmp
+
+        def _resp(text):
+            return MagicMock(choices=[MagicMock(message=MagicMock(content=text))])
+
+        try:
+            client = MagicMock()
+            client.chat.completions.create.side_effect = [_resp(self.REAL_POST)]
+            item = {"title": "XRP to $2 Roadmap",
+                    "summary": "XRP jumped 1.42 to 1.55 as whales moved 1.6B, up 6.50% in 24h",
+                    "source": "U.Today"}
+            with patch.object(eng, "_get_client", return_value=client), \
+                 patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+                 patch("time.sleep"), patch.object(m, "append_metrics"):
+                out = eng.summarize(item, None, market_context="", token_hints=["XRP"])
+        finally:
+            m.SymbolValidator._valid_symbols_cache = orig_cache
+            m.CAMPAIGN_INTEL_FILE = orig_intel
+            os.remove(intel_tmp)
+        self.assertIsNotNone(out, "带双 CTA 的稿子应被清理后正常返回而非拒稿")
+        self.assertEqual(out["content"].count("扣1"), 1)
+        self.assertEqual(eng.last_cta_dedupes, 1)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

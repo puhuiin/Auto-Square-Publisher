@@ -299,6 +299,38 @@ def _delivered_platforms(binance_ok: bool = False, draft_ok: bool = False,
     if tg_ok:
         out.append("telegram")
     return out
+
+# R268：帖内 CTA 分句去重。模型按 ending_hint 在结尾写一句"扣1扣2"站队提问，
+# 偶尔会在正文里自发再写一句同构互动——同一个问题问两遍，评论区还互相截流。
+# 生产实录 09-19 10:58Z XRP 帖：正文"看多的扣1，空仓的扣2"+ 结尾"看多的扣1，
+# 看空的扣2"（全史 144 篇发布帖扫出 1 篇）。分句边界锁死逗号/句号/换行：
+# 前缀带逗号时连逗号一起吃（否则留下"，。"悬挂逗号），扣1→扣2 之间允许一个
+# 逗号（"看多的扣1，看空的扣2"本就跨一个逗号），语序两向都认（模型偶发
+# "看空的扣2，看多的扣1"），情绪表态款第三选项扣3 整句吃掉不留残句，
+# 其余文字一律不动。
+_CTA_CLAUSE = re.compile(
+    r"[，,；;]?(?:[^。！？!?\n，,；;]{0,12}?扣\s*1[^。！？!?\n]{0,24}?扣\s*2"
+    r"|[^。！？!?\n，,；;]{0,12}?扣\s*2[^。！？!?\n]{0,24}?扣\s*1)"
+    r"[^。！？!?\n，,；;]{0,14}?(?:[，,；;][^。！？!?\n，,；;]{0,12}?扣\s*3"
+    r"[^。！？!?\n，,；;]{0,14}?)?(?=[，,。！？!?\n]|$)")
+
+
+def _dedupe_cta_clauses(content: str) -> Tuple[str, int]:
+    """同一篇帖子出现 ≥2 个完整"扣1+扣2"互动分句时，保留最后一个（结尾即互动
+    位，与 ending_style 遥测同口径），剥掉前面几个 CTA 分句自身——其余文字
+    原样保留。返回 (清理后正文, 剥离的分句数)。单个 CTA 或无 CTA 时原文返回、
+    计数 0（不制造无意义改动，也保证字节级幂等）。"""
+    matches = list(_CTA_CLAUSE.finditer(content))
+    if len(matches) < 2:
+        return content, 0
+    out: List[str] = []
+    pos = 0
+    for m in matches[:-1]:
+        out.append(content[pos:m.start()])
+        pos = m.end()
+    out.append(content[pos:])
+    return "".join(out), len(matches) - 1
+
 ACTIVE_HOURS_BEIJING = os.getenv("ACTIVE_HOURS_BEIJING", "").strip()  # 活跃时段(北京时间)，如 "8-23"；空 = 全天
 CAMPAIGN_TOKEN_BOOST = 8                                           # 命中官方活动重点代币的热度加权
 TREND_TOKEN_BOOST = 6                                              # 命中全网热搜标的的加权（借鉴 Easel 热榜发现层：
@@ -2733,6 +2765,8 @@ class MultiLLMEngine:
         self._clients: Dict[str, OpenAI] = {}
         # R130：最近一次 prompt 组装抽中的结尾套路（回执遥测用，验证轮换均匀性）
         self.last_ending_style: Optional[str] = None
+        # R268：最近一次稿子的帖内 CTA 剥离数（0=无需清理；回执直录测频率）
+        self.last_cta_dedupes: Optional[int] = None
         # R162：FNG 禁令状态遥测——R158 呼吸周期此前只能靠扫 preview 间接推断，
         # 状态直录后"禁令武装 → 新帖避开"的咬合成为可度量事实（同 last_ending_style 模式）
         self.last_fng_ban_active: Optional[bool] = None
@@ -3971,6 +4005,15 @@ class MultiLLMEngine:
                                          persona=persona["name"])
                         self.last_fail_reason = "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光"
                         return None
+
+                # 2.5 R268 帖内互动句去重：质量门放行过的稿子仍可能在正文里
+                # 自发写一句"扣1扣2"站队提问，与结尾按 ending_hint 写的同构
+                # CTA 撞车（一个问题问两遍）。确定性清理而非拒稿重写——为
+                #  cosmetic 瑕疵烧一次 LLM 调用或弃单不值得。保留结尾那句。
+                content, cta_removed = _dedupe_cta_clauses(content)
+                self.last_cta_dedupes = cta_removed
+                if cta_removed:
+                    logger.info(f"帖内 CTA 去重：剥离正文里 {cta_removed} 个前置互动分句，保留结尾互动位")
 
                 # 2. 标签保底处理（仅保留干净的 3 个标签，绝不附带机械化广告标语）
                 if not re.search(r"#Write2Earn", content, re.IGNORECASE):
@@ -7157,6 +7200,10 @@ def _run_main():
                     # R130：抽中的结尾套路标签（Mock 替身/异常态防御性降级 None）
                     _es = getattr(llm_engine, "last_ending_style", None)
                     ending_style_used = _es if isinstance(_es, str) else None
+                    # R268：帖内 CTA 剥离数（Mock 替身/异常态防御性降级 None；
+                    # append_metrics 过滤 None，0 也过滤=只在真剥离时留痕）
+                    _cd = getattr(llm_engine, "last_cta_dedupes", None)
+                    cta_dedupes_used = _cd if isinstance(_cd, int) else None
                     # R162：FNG 禁令状态直录（同款防御性降级）——R158 呼吸周期
                     # 从"扫 preview 间接推断"升级为"每帖可查禁令是否武装/计数/剥离"
                     _fba = getattr(llm_engine, "last_fng_ban_active", None)
@@ -7195,6 +7242,7 @@ def _run_main():
                         "tag_count": tag_count,
                         "campaign_tag_count": campaign_tag_count,
                         "ending_style": ending_style_used,
+                        "cta_dedupes": cta_dedupes_used if cta_dedupes_used else None,
                         # R162：禁令状态三件套——违反时（ban 武装+仍引用锚点）
                         # 报表合规巡检可直接点名，执法升级（拒稿重写）待违规实证再议
                         "fng_ban_active": fng_ban_used,
