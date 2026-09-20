@@ -164,6 +164,80 @@ def _num(v):
     return f
 
 
+def load_content_stats(path=None):
+    """R285：读 content_stats.jsonl（import_content_stats.py 的产物）→
+    {content_id: {"views":int,"likes":int,"comments":int}}。文件缺失/损坏返回
+    空 dict——没有互动数据时报表整块不渲染（零噪音，同"停放的源"惯例）。"""
+    if path is None:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "..", "content_stats.jsonl")
+    out = {}
+    try:
+        with open(path, encoding="utf-8-sig") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    r = json.loads(line)
+                except Exception:
+                    continue
+                cid = r.get("content_id")
+                if not cid:
+                    continue
+                rec = {}
+                for k in ("views", "likes", "comments"):
+                    v = r.get(k)
+                    if isinstance(v, int) and v >= 0:
+                        rec[k] = v
+                if rec:
+                    out[str(cid)] = rec
+    except OSError:
+        return {}
+    return out
+
+
+_STATS_CACHE = {"loaded": False, "data": {}}
+
+
+def _stats_lookup(cid):
+    """R285：content_stats 进程内懒加载缓存（一次读盘，后续 join 零 IO）。"""
+    if not _STATS_CACHE["loaded"]:
+        _STATS_CACHE["data"] = load_content_stats()
+        _STATS_CACHE["loaded"] = True
+    if not cid:
+        return None
+    return _STATS_CACHE["data"].get(str(cid))
+
+
+def _bucket_line(buckets, top=None):
+    """R285：{桶名: [浏览样本]} → "名 均值×n" 串（按均值降序，样本 <3 标注小样本）。"""
+    if not buckets:
+        return ""
+    items = sorted(buckets.items(), key=lambda kv: -(sum(kv[1]) / len(kv[1])))
+    if top:
+        items = items[:top]
+    parts = []
+    for name, vals in items:
+        avg = sum(vals) / len(vals)
+        mark = "（小样本）" if len(vals) < 3 else ""
+        parts.append(f"{name} {avg:.0f}×{len(vals)}{mark}")
+    return " · ".join(parts)
+
+
+def _hour_bucket(h):
+    """北京小时 → 时段桶（内容受众以中文用户为主，按本地作息分四档）。"""
+    if not isinstance(h, int) or not (0 <= h <= 23):
+        return None
+    if h < 6:
+        return "凌晨0-6"
+    if h < 12:
+        return "上午6-12"
+    if h < 18:
+        return "下午12-18"
+    return "晚间18-24"
+
+
 def load_rows(path):
     """返回 (rows, bad_lines)：坏行跳过计数。
     utf-8-sig：Windows 下编辑器手碰过的文件常带 BOM，不吃掉它首行必被判坏。"""
@@ -225,6 +299,15 @@ def summarize(rows):
         "campaign_tag_evaluated": 0,
         "campaign_tag_covered": 0,
         "campaign_tag_zero_fresh": 0,
+        # R285：浏览/互动 join（content_id × content_stats.jsonl）与三维归因样本
+        "stats_posts": 0,
+        "stats_views_total": 0,
+        "stats_views": [],
+        "stats_likes": [],
+        "stats_comments": [],
+        "stats_by_hourbucket": {},   # 时段桶 -> [浏览样本]
+        "stats_by_genre": {},        # 长文/短讯 -> [浏览样本]
+        "stats_by_source": {},       # 来源 -> [浏览样本]
         "by_ending": collections.Counter(),
         # R222：发布内容新鲜度样本（age_hours 发布行全量携带，此前只能手工统计）
         "pub_ages": [],
@@ -349,6 +432,26 @@ def summarize(rows):
                     s["campaign_tag_covered"] += 1
                 elif r.get("intel_degraded") is not True:
                     s["campaign_tag_zero_fresh"] += 1
+            # R285：浏览/互动 join——content_id 是 R125 起就落盘的 join 键，
+            # 直到本轮才第一次有消费面。三维归因样本按发布行的既有字段分桶，
+            # 回答"哪类帖有流量"（时段/体裁/来源），无 stats 的行不进任何分母。
+            st = _stats_lookup(r.get("content_id"))
+            if st and isinstance(st.get("views"), int):
+                s["stats_posts"] += 1
+                s["stats_views_total"] += st["views"]
+                s["stats_views"].append(st["views"])
+                if isinstance(st.get("likes"), int):
+                    s["stats_likes"].append(st["likes"])
+                if isinstance(st.get("comments"), int):
+                    s["stats_comments"].append(st["comments"])
+                _hb = _hour_bucket(r.get("hour_bj"))
+                if _hb:
+                    s["stats_by_hourbucket"].setdefault(_hb, []).append(st["views"])
+                _genre = "长文" if r.get("article") else "短讯"
+                s["stats_by_genre"].setdefault(_genre, []).append(st["views"])
+                _src = str(r.get("source") or "")
+                if _src:
+                    s["stats_by_source"].setdefault(_src, []).append(st["views"])
             # R130：结尾套路分布——验证 ShuffleBag 生产轮换均匀性
             if r.get("ending_style"):
                 s["by_ending"][str(r["ending_style"])] += 1
@@ -779,6 +882,26 @@ def render_text(s, rows=None):
         if s.get("campaign_tag_zero_fresh"):
             lines.append(f"  ⚠️ 情报新鲜但无活动标签 {s['campaign_tag_zero_fresh']}/"
                          f"{s['campaign_tag_evaluated']} 篇——创作激励活动标签未注入，需排查")
+        # R285：浏览/互动面板——有 join 上的样本才渲染（无 stats 时整块不出现）。
+        # 三维均浏览是"哪类帖有流量"的第一手答案：时段/体裁/来源各自的样本量
+        # 一并给出，样本 <3 的桶只展示不解读（避免小样本误判）。
+        if s.get("stats_posts"):
+            _v = s["stats_views"]
+            _lk = s["stats_likes"]
+            _cm = s["stats_comments"]
+            _fmt = lambda xs: f"{sum(xs)/len(xs):.0f}" if xs else "-"
+            lines.append(f"  📊 内容数据（{s['stats_posts']} 篇有记录）: "
+                         f"均浏览 {_fmt(_v)} · 均点赞 {_fmt(_lk)} · 均评论 {_fmt(_cm)}"
+                         f"（总浏览 {s['stats_views_total']}）")
+            _hb = _bucket_line(s["stats_by_hourbucket"])
+            if _hb:
+                lines.append(f"    时段均浏览: {_hb}")
+            _gg = _bucket_line(s["stats_by_genre"])
+            if _gg:
+                lines.append(f"    体裁均浏览: {_gg}")
+            _sc = _bucket_line(s["stats_by_source"], top=3)
+            if _sc:
+                lines.append(f"    来源均浏览: {_sc}")
         # R130：结尾套路分布（验证 ShuffleBag 轮换均匀性；旧 schema 无字段则不渲染）
         if s["by_ending"]:
             ending_str = " · ".join(f"{k} ×{v}" for k, v in s["by_ending"].most_common(5))

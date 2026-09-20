@@ -21,3 +21,7 @@ ENV/
 .workbuddy/
 .zcode/
 OPTIMIZATION_ROUND_*.md
+
+# 内容浏览/互动数据（R285：用户从币安创作者中心导出，属账号侧数据不入库）
+content_stats.jsonl
+stats/

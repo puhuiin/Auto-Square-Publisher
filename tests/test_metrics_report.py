@@ -1176,5 +1176,143 @@ class TestSegmentSampleCounts(unittest.TestCase):
         self.assertIn("样本 1 轮", text)
 
 
+class TestContentStatsImport(unittest.TestCase):
+    """R285：浏览/互动数据导入（CSV → content_stats.jsonl）"""
+
+    def setUp(self):
+        import tempfile, shutil
+        self.tmpdir = tempfile.mkdtemp()
+        self.csv = os.path.join(self.tmpdir, "content_stats.csv")
+        self.out = os.path.join(self.tmpdir, "content_stats.jsonl")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _import(self):
+        spec = importlib.util.spec_from_file_location(
+            "import_content_stats",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "import_content_stats.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_chinese_headers_parsed_and_deduped_max(self):
+        """后台导出是中文表头；同 id 多行（每周重复导出）取 max——浏览量单调递增。
+        千分位逗号在合法 CSV 里必须带引号（无引号的 "1,000" 会把列错位，那是
+        导出器配置问题，导入器按列号取数不猜）。"""
+        with open(self.csv, "w", encoding="utf-8") as f:
+            f.write("帖子ID,浏览量,点赞,评论\n")
+            f.write('111,"1,000",12,3\n')    # 带引号的千分位：字段内逗号必须吃掉
+            f.write("111,800,12,3\n")        # 二次导出：更高读数
+            f.write("222,350,5,1\n")
+            f.write(",999,1,1\n")            # 无 id 行跳过
+        mod = self._import()
+        recs = mod.read_csv(self.csv)
+        self.assertEqual(recs, {"111": {"views": 1000, "likes": 12, "comments": 3},
+                                "222": {"views": 350, "likes": 5, "comments": 1}},
+                         "同 id 取 max 观测，千分位逗号吃掉")
+
+    def test_merge_keeps_prior_observations_and_upgrades(self):
+        """merge 进 jsonl：已有观测不得被更低的新读数覆盖，新帖子追加"""
+        with open(self.out, "w", encoding="utf-8") as f:
+            f.write(json.dumps({"content_id": "111", "views": 5000,
+                                "likes": 30, "comments": 9}) + "\n")
+        mod = self._import()
+        mod.OUT_PATH = self.out
+        changed = mod.merge_into_jsonl({"111": {"views": 4000, "likes": 31},
+                                        "222": {"views": 10}})
+        rows = [json.loads(l) for l in open(self.out, encoding="utf-8")]
+        by_id = {r["content_id"]: r for r in rows}
+        self.assertEqual(by_id["111"]["views"], 5000, "浏览是单调递增量，取 max")
+        self.assertEqual(by_id["111"]["likes"], 31, "其他指标同样取 max")
+        self.assertEqual(by_id["222"]["views"], 10)
+        self.assertEqual(changed, 2)
+
+
+class TestContentStatsReportJoin(unittest.TestCase):
+    """R285：报表侧 content_id × content_stats 的 join 与三维归因"""
+
+    def setUp(self):
+        import tempfile, shutil
+        self.tmpdir = tempfile.mkdtemp()
+        self.path = os.path.join(self.tmpdir, "metrics.jsonl")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _rows(self):
+        return [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "content_id": "c1", "hour_bj": 21, "article": False, "source": "U.Today"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "content_id": "c2", "hour_bj": 22, "article": False, "source": "U.Today"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "content_id": "c3", "hour_bj": 2, "article": True, "source": "CryptoSlate"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "content_id": "c4", "hour_bj": 9, "article": False, "source": "CryptoSlate"},
+            # 18 点边界两侧各钉一样本：上游分桶阈值若被改动，下面断言立刻红
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "content_id": "c5", "hour_bj": 15, "article": False, "source": "Decrypt"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "content_id": "c6", "hour_bj": 19, "article": True, "source": "Decrypt"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "content_id": None, "hour_bj": 21, "article": False, "source": "U.Today"},
+        ]
+
+    def _stats_file(self, stats):
+        p = os.path.join(self.tmpdir, "content_stats.jsonl")
+        with open(p, "w", encoding="utf-8") as f:
+            for cid, rec in stats.items():
+                f.write(json.dumps({"content_id": cid, **rec},
+                                   ensure_ascii=False) + "\n")
+        return p
+
+    def test_join_and_three_dimension_buckets(self):
+        """有浏览数据的帖才进面板；时段/体裁/来源各自分桶算均浏览"""
+        stats = {"c1": {"views": 300, "likes": 5, "comments": 2},
+                 "c2": {"views": 500, "likes": 7, "comments": 4},
+                 "c3": {"views": 900, "likes": 20, "comments": 11},
+                 "c4": {"views": 100, "likes": 1, "comments": 0},
+                 "c5": {"views": 200, "likes": 3, "comments": 1},
+                 "c6": {"views": 150, "likes": 4, "comments": 2}}
+        sp = self._stats_file(stats)
+        orig = mr._STATS_CACHE.copy()
+        try:
+            mr._STATS_CACHE.update({"loaded": True, "data": mr.load_content_stats(sp)})
+            _write(self.path, self._rows())
+            rows, _ = mr.load_rows(self.path)
+            rows = mr.summarize(rows)
+        finally:
+            mr._STATS_CACHE.update(orig)
+        self.assertEqual(rows["stats_posts"], 6, "content_id 为 None 的行不进分母")
+        self.assertEqual(rows["stats_views_total"], 2150)
+        self.assertEqual(rows["stats_by_hourbucket"]["晚间18-24"], [300, 500, 150])
+        self.assertEqual(rows["stats_by_hourbucket"]["凌晨0-6"], [900])
+        self.assertEqual(rows["stats_by_hourbucket"]["下午12-18"], [200])
+        self.assertEqual(rows["stats_by_hourbucket"]["上午6-12"], [100])
+        self.assertEqual(rows["stats_by_genre"]["长文"], [900, 150])
+        self.assertEqual(sorted(rows["stats_by_source"]["U.Today"]), [300, 500])
+        text = mr.render_text(rows, self._rows())
+        self.assertIn("内容数据（6 篇有记录）", text)
+        self.assertIn("均浏览 358", text)
+        self.assertIn("时段均浏览", text)
+        self.assertIn("体裁均浏览", text)
+        self.assertIn("来源均浏览", text)
+
+    def test_no_stats_file_renders_nothing(self):
+        """没有 content_stats.jsonl 时整块面板不渲染（零噪音）"""
+        orig = mr._STATS_CACHE.copy()
+        try:
+            mr._STATS_CACHE.update({"loaded": True, "data": {}})
+            rows = mr.summarize(self._rows())
+        finally:
+            mr._STATS_CACHE.update(orig)
+        self.assertEqual(rows["stats_posts"], 0)
+        self.assertNotIn("内容数据", mr.render_text(rows, self._rows()))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

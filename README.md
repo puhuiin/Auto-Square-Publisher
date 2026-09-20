@@ -269,6 +269,20 @@ python scripts/metrics_report.py --days 1
 
 ---
 
+## 📊 内容浏览数据（浏览量归因）
+
+每篇发布帖的回执都带 `content_id`（币安帖子永久标识），但它本身不含浏览量。把账号侧数据接进来后，报表才能回答"哪类帖有流量"：
+
+1. 登录[币安创作者中心](https://www.binance.com/zh-CN/square) → 内容管理 → 导出内容数据 CSV（需含帖子 ID 列，浏览/点赞/评论列可选）
+2. 把 CSV 放到 `stats/content_stats.csv`（或用 `CONTENT_STATS_CSV` 指定路径），执行：
+   ```bash
+   python scripts/import_content_stats.py
+   ```
+3. 规整结果写入 `content_stats.jsonl`（按帖子 ID 去重、各指标取最大观测——浏览量单调递增，可每周重复导出增量更新）
+4. 运行 `python scripts/metrics_report.py`，新增「内容数据」面板：均浏览/点赞/评论 + 时段/体裁/来源三维均浏览（样本 <3 的桶标注小样本）
+
+> 若后续核实到币安 Square OpenAPI 提供内容统计查询接口，只需替换第 2 步的数据来源，`content_stats.jsonl` 的形状与消费面不变。
+
 ## ⚙️ 定制与优化建议
 
 - **调整执行频率**：外部 cron（repository_dispatch，20 分钟一次，当前生产形态）或 `.github/workflows/auto_post.yml` 的 `schedule` 兜底。GitHub 自带 schedule 有静默吞投递的风险（看门狗会报警），生产建议保持外部回调。
