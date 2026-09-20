@@ -327,6 +327,9 @@ def summarize(rows):
         # R288：热度分分布——TOKEN_LIMIT_BYPASS_IMPACT(30)/ARTICLE_MIN_IMPACT(20)
         # 等门槛的校准基线，此前只能即席探针
         "impact_scores": [],
+        # R292：篇幅遥测（短讯/长文分桶）——prompt"160~240 字"条款的度量面
+        "chars_by_genre": {},
+        "cjk_by_genre": {},
         # R222：发布内容新鲜度样本（age_hours 发布行全量携带，此前只能手工统计）
         "pub_ages": [],
         # R173：过期情报注入计数——R171 写侧已直录，报表端同轮补齐（R92 纪律）
@@ -511,6 +514,15 @@ def summarize(rows):
             _imp = _num(r.get("impact_score"))
             if _imp is not None:
                 s["impact_scores"].append(int(_imp))
+            # R292：篇幅分体裁收集（短讯目标 160~240 / 长文目标 500~800）
+            _cc = _num(r.get("content_chars"))
+            _cj = _num(r.get("content_cjk"))
+            if _cc is not None or _cj is not None:
+                _g = "长文" if r.get("article") else "短讯"
+                if _cc is not None:
+                    s["chars_by_genre"].setdefault(_g, []).append(int(_cc))
+                if _cj is not None:
+                    s["cjk_by_genre"].setdefault(_g, []).append(int(_cj))
             # R173：情报降级注入——None=历史行无字段，不进分母
             if r.get("intel_degraded") is True:
                 s["intel_degraded_posts"] += 1
@@ -1016,6 +1028,17 @@ def render_text(s, rows=None):
             _hi = sum(1 for i in _imps if i >= 30)
             lines.append(f"  🔥 热度分: 中位 {_med} · P90 {_p90} · "
                          f"≥30 放行档 {_hi}/{len(_imps)} 篇")
+        # R292：篇幅分布——prompt 宣称"160~240 字"（短讯）/500~800（长文）而
+        # 质量门实际只卡 60~1200，两者差 20 倍；按体裁分桶报中位/P90/区间命中率，
+        # 回答"模型到底写多长"（有字段的行才统计，旧 schema 行不渲染）
+        for _genre, _lo, _hi_b in (("短讯", 160, 240), ("长文", 500, 800)):
+            _vals = sorted(s["cjk_by_genre"].get(_genre, []))
+            if _vals:
+                _m = _vals[len(_vals) // 2]
+                _p = _vals[int(len(_vals) * 0.9)]
+                _in = sum(1 for v in _vals if _lo <= v <= _hi_b)
+                lines.append(f"  📏 {_genre}篇幅（{len(_vals)} 篇）: 中位 {_m} 字 · "
+                             f"P90 {_p} · {_lo}~{_hi_b} 区间内 {_in}/{len(_vals)}")
         if s["image_tiers"]:
             lines.append(f"  配图层级 {dict(s['image_tiers'])}")
         # R173：过期情报注入可见化（有字段的帖才进分母，历史行不混入）

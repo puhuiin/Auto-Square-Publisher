@@ -1279,6 +1279,60 @@ class TestFngTrioReportSurface(unittest.TestCase):
         self.assertNotIn("FNG 锚点压力", mr.render_text(s, loaded))
 
 
+class TestContentLengthDistribution(unittest.TestCase):
+    """R292：篇幅遥测——prompt 宣称"160~240 字"（短讯）而质量门实际只卡
+    60~1200 字符，发布篇幅此前无任何度量面。按体裁分桶报中位/P90/区间命中率。"""
+
+    def setUp(self):
+        import tempfile, shutil
+        self.tmpdir = tempfile.mkdtemp()
+        self.path = os.path.join(self.tmpdir, "metrics.jsonl")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _row(self, cjk, article=False, chars=None):
+        return {"platforms": ["binance"], "outcome": "binance_published",
+                "final_preview": "x", "content_cjk": cjk,
+                "content_chars": cjk if chars is None else chars,
+                "article": article}
+
+    def test_short_form_length_distribution_and_band(self):
+        """短讯按 160~240 区间报命中率；中位/P90 按 CJK 字数"""
+        _write(self.path, [self._row(v) for v in
+                           [150, 180, 200, 210, 240, 260, 300]])
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        self.assertEqual(len(s["cjk_by_genre"]["短讯"]), 7)
+        text = mr.render_text(s, loaded)
+        self.assertIn("📏 短讯篇幅（7 篇）", text)
+        self.assertIn("中位 210 字", text)
+        self.assertIn("160~240 区间内 4/7", text)
+
+    def test_long_form_separate_bucket(self):
+        """长文单独分桶（目标 500~800），不与短讯混算"""
+        _write(self.path, [self._row(v, article=True) for v in
+                           [520, 610, 700, 780]] + [self._row(190)])
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        self.assertEqual(len(s["cjk_by_genre"]["长文"]), 4)
+        self.assertEqual(len(s["cjk_by_genre"]["短讯"]), 1)
+        text = mr.render_text(s, loaded)
+        self.assertIn("📏 长文篇幅（4 篇）", text)
+        self.assertIn("500~800 区间内 4/4", text)
+        self.assertIn("📏 短讯篇幅（1 篇）", text)
+
+    def test_legacy_rows_without_length_silent(self):
+        """旧 schema 无篇幅字段：整块不渲染（零噪音）"""
+        _write(self.path, [{"platforms": ["binance"],
+                            "outcome": "binance_published", "final_preview": "x"}])
+        loaded, _ = mr.load_rows(self.path)
+        s = mr.summarize(loaded)
+        self.assertEqual(s["cjk_by_genre"], {})
+        self.assertNotIn("篇幅", mr.render_text(s, loaded))
+
+
 class TestFunnelCountsPublishFailures(unittest.TestCase):
     """R6：publish_failed 必须进分母——否则"发布全挂"会被报表显示成高成功率"""
 

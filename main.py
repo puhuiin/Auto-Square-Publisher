@@ -7447,6 +7447,13 @@ def _run_main():
                     # 命中点最远 ~110 字，仅贴着旧截断线），合规巡检的覆盖盲区
                     # 直接削弱软禁令的度量价值。200 字覆盖前三段钩子区。
                     final_preview = final_content[:200] if isinstance(final_content, str) else ""
+                    # R292：篇幅遥测——prompt 三处宣称"160~240 字"（SYSTEM_PROMPT/
+                    # user prompt/返回值注释），而质量门实际只卡 60~1200 字符（20 倍
+                    # 宽），且发布篇幅从未落任何遥测：模型是否守约无从回答。200 字
+                    # 预览只覆盖钩子区，量不了全文——按门同款口径记总字符与 CJK 字数。
+                    content_chars = len(final_content) if isinstance(final_content, str) else None
+                    content_cjk = (len(re.findall(r"[一-鿿]", final_content))
+                                   if isinstance(final_content, str) else None)
                     # R125：标签回执——标签链路（#Write2Earn/#BinanceSquare 保底 +
                     # 活动标签第 3 席）全部注入正文尾部，200 字预览永远看不到；
                     # 返佣归因标签的覆盖率从此可度量（零标签帖 = 归因丢失）
@@ -7502,6 +7509,10 @@ def _run_main():
                         # final_preview 记净化/织挂件/标签注入后的实际发布文本（质量门只见原稿）
                         "content_id": content_id,
                         "final_preview": final_preview,
+                        # R292：篇幅（总字符 + CJK 字数）——prompt"160~240 字"条款的
+                        # 唯一度量面；None=Mock/异常态防御性降级
+                        "content_chars": content_chars,
+                        "content_cjk": content_cjk,
                         "widget_count": widget_count,
                         "tag_count": tag_count,
                         "campaign_tag_count": campaign_tag_count,
