@@ -1758,10 +1758,21 @@ class NewsFetcher:
             logger.warning(msg)
 
     # RSS 摘要中可能出现的提示词注入特征（命中即从其位置截断，防止劫持机器人发言）
+    # R272：同义词家族扩铺——原正则只认英文 ignore…instructions 与中文「无视」，
+    # 活源探针实测四类同义形态全漏（"忽略以上指令"/"忽略上述提示词"/
+    # "不要理会你的身份"/"disregard all previous rules"）：中文支补「忽略/不要理会」
+    # 动词与「上述/以下/所有/你的」范围词，英文支补 disregard 与 following。
+    # 两条边界刻意卡死（均有合法面对照，见 TestInjectionDefense R272 用例）：
+    # ① 范围词必填——放开成可选就被"点击忽略提示即可关闭弹窗"这类教程裸句误杀，
+    #    而实测注入形态全都自带范围词，必填不损失覆盖；
+    # ② 目标词表不收"设定"——"若忽略上述设定"是正常软件文档用语，收了误杀。
+    # 另注：目标名词必须紧贴范围词（中间不隔字），"无视风险提示"因此天然不命中。
+    # 扩铺后 45 条活源零误杀、探针全命中。
     INJECTION_RE = re.compile(
-        r"ignore\s+(all\s+|any\s+)?(the\s+)?(previous|prior|above)\s+(instructions?|prompts?|rules?)"
+        r"ignore\s+(all\s+|any\s+)?(the\s+)?(previous|prior|above|following)\s+(instructions?|prompts?|rules?)"
+        r"|disregard\s+(all\s+|any\s+)?(the\s+)?(previous|prior|above)\s+(instructions?|prompts?|rules?)"
         r"|system\s+prompt|developer\s+mode|jailbreak|DAN\s+mode"
-        r"|无视(之前|以上|前面)(的)?(指令|规则|提示)",
+        r"|(?:无视|忽略|不要理会)(?:以下|上述|之前|以上|前面|所有|全部|你的)(?:的)?(?:指令|规则|提示|指示|身份)",
         re.IGNORECASE,
     )
 
