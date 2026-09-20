@@ -2683,10 +2683,14 @@ class ShuffleBag:
         里的近期选项预热：近期出现过的选项排到袋子头部，先抽完未出现过的
         （pop 从尾部取，fresh 必须排在尾部）。
 
+        回看窗口 = len(items) - 1（R290 修正）：进程内契约是"任意连续 N 抽互异"，
+        新抽取只需避开最近 N-1 次即可保持该不变式。窗口取 N 是 off-by-one——
+        最近 N 帖恰好三个选项各一次时约束集覆盖全池、fresh 集空、退化为随机，
+        重复放行（生产首验实录：09-20 11:05/11:23 连续两帖同人设，而前三帖
+        三个人设各一次）。取 N-1 后 fresh 恒非空（最多避开 N-1 个），
+        最近 N-1 帖之外的旧项不影响判定（喂 20 行也只认最新 N-1 次）。
+
         key：回执里存的是短标签而袋里是整句时用（结尾套路遥测只存冒号前）。
-        回看窗口钳在最近 len(items) 次（行数）——窗口再长会把池内选项全覆盖，
-        fresh 集空即退化为随机，防扎堆失效（生产 3 人设池喂 20 行必全覆盖）。
-        recent 覆盖全部选项时同样退化为普通 draw。
         """
         with self._lock:
             if not self._bag:
@@ -2696,7 +2700,7 @@ class ShuffleBag:
                     if isinstance(r, str) and r:
                         seen.add(r)
                         taken += 1
-                        if taken >= len(self._items):
+                        if taken >= max(len(self._items) - 1, 1):
                             break
                 used = [i for i in self._items if key(i) in seen]
                 fresh = [i for i in self._items if key(i) not in seen]

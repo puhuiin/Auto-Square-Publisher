@@ -566,6 +566,33 @@ class TestRecentOpeners(unittest.TestCase):
         finally:
             random.setstate(_rng)
 
+    def test_persona_avoids_repeat_when_window_all_distinct(self):
+        """R290（生产首验回归）：最近 3 帖三个人设各一次时，下一抽必须是最久未现
+        的那个——窗口若取全池大小会覆盖全池退化为随机，重复放行（09-20
+        11:05/11:23 连续两帖毒舌老韭菜实录）。"""
+        self._append([
+            {"outcome": "binance_published", "final_preview": "甲。",
+             "persona": "数据拆解派", "ending_style": "灵魂拷问"},
+            {"outcome": "binance_published", "final_preview": "乙。",
+             "persona": "吃瓜叙事党", "ending_style": "灵魂拷问"},
+            {"outcome": "binance_published", "final_preview": "丙。",
+             "persona": "毒舌老韭菜", "ending_style": "灵魂拷问"},
+        ])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        m._PERSONA_BAG = m.ShuffleBag([p["name"] for p in m.WRITING_PERSONAS])
+        m._ENDING_BAG = m.ShuffleBag(m.ENDING_STYLE_POOL)
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        _rng = random.getstate()
+        try:
+            random.seed(2)  # 变异（窗口 N）下首抽退化随机，种子让"回退即挂"确定化
+            _, persona = eng._build_user_prompt(item, None, "", ["BTC"])
+        finally:
+            random.setstate(_rng)
+        self.assertEqual(persona["name"], "数据拆解派",
+                         "最近 2 帖是毒舌/吃瓜 → 下一抽必须是数据拆解派（三连互异）")
+
     def test_ending_style_stashed_on_engine(self):
         """R130：抽取的结尾套路短标签要暂存到引擎（回执遥测读它验证轮换
         均匀性），且必须是结尾池词条冒号前的合法标签。"""
@@ -5001,16 +5028,24 @@ class TestShuffleBag(unittest.TestCase):
         self.assertEqual(sorted(draws[:2]), ["B", "C"], "近期出现的 A 不得先抽")
         self.assertEqual(draws[2], "A", "A 必须排到最后")
 
-    def test_draw_fresh_full_recent_degrades_to_draw(self):
-        """recent 覆盖全部选项时退化为普通 draw（都刚出现过，无从偏好），
-        且必须仍按袋子契约每窗口各出现一次。"""
+    def test_draw_fresh_keeps_window_invariant(self):
+        """R290（off-by-one 回归）：进程内契约是"任意连续 N 抽互异"，新抽取只需
+        避开最近 N-1 次。最近 3 帖三个人设各一次时，窗口若取 N=3 会覆盖全池、
+        fresh 集空、退化为随机——生产首验实录 09-20 11:05/11:23 连续两帖同人设。
+        正确行为：只避开最新 2 次，下一抽确定性地是最久未现的那个。"""
         bag = m.ShuffleBag(["A", "B", "C"])
-        draws = [bag.draw_fresh(["A", "B", "C"]) for _ in range(3)]
-        self.assertEqual(sorted(draws), ["A", "B", "C"])
+        # 新→旧：B, C, A（三个人设各一次，与生产实录同构）。
+        # 变异（窗口放回 N）下首抽退化随机，固定种子让"回退即挂"确定化。
+        _rng = random.getstate()
+        try:
+            random.seed(0)
+            first = bag.draw_fresh(["B", "C", "A"])
+        finally:
+            random.setstate(_rng)
+        self.assertEqual(first, "A", "只避开最近 2 次（B/C），首抽必须是 A")
 
-    def test_draw_fresh_caps_window_at_pool_size(self):
-        """R287：回看窗口钳在最近 K=池大小 次——20+ 篇前的旧选项不得继续挤占
-        偏好，否则生产 3 人设池喂 20 行回执必全覆盖、fresh 集空、防扎堆静默失效。"""
+    def test_draw_fresh_window_ignores_older_entries(self):
+        """R290：窗口 = 池大小-1，更老的回执不得挤占判定（喂 20 行也只认最新 2 次）"""
         bag = m.ShuffleBag(["A", "B", "C"])
         recent = ["C"] * 17 + ["A", "B", "C"]   # 最近全是 C，A/B 是很久以前的
         # 同集成测试：断言落在 shuffle 上，固定种子让"窗口放宽即挂"确定化
@@ -5020,13 +5055,13 @@ class TestShuffleBag(unittest.TestCase):
             draws = [bag.draw_fresh(recent) for _ in range(2)]
         finally:
             random.setstate(_rng)
-        self.assertNotIn("C", draws, "最近 K 次只见过 C，前两抽必须出 A/B")
+        self.assertNotIn("C", draws, "最近 2 次只见过 C，前两抽必须出 A/B")
 
     def test_draw_fresh_ignores_unknown_recent(self):
         """回执里可能混入非池内字符串（None/历史脏值）——不计入窗口、不挤掉池内选项。"""
         bag = m.ShuffleBag(["A", "B"])
-        first = bag.draw_fresh([None, "Z", "", "A"])
-        self.assertEqual(first, "B", "None/脏值不计窗口，A 近期出现过 → 首抽 B")
+        first = bag.draw_fresh(["A", "Z", "", None])  # 窗口=1：只认最新一条 A
+        self.assertEqual(first, "B", "脏值不计窗口，A 最新出现过 → 首抽 B")
         self.assertEqual(bag.draw(), "A")
 
 
