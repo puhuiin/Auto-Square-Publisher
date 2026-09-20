@@ -306,8 +306,9 @@ def _delivered_platforms(binance_ok: bool = False, draft_ok: bool = False,
 # 看空的扣2"（全史 144 篇发布帖扫出 1 篇）。分句边界锁死逗号/句号/换行：
 # 前缀带逗号时连逗号一起吃（否则留下"，。"悬挂逗号），扣1→扣2 之间允许一个
 # 逗号（"看多的扣1，看空的扣2"本就跨一个逗号），语序两向都认（模型偶发
-# "看空的扣2，看多的扣1"），情绪表态款第三选项扣3 整句吃掉不留残句，
-# 其余文字一律不动。
+# "看空的扣2，看多的扣1"），情绪表态款第三选项扣3 整句吃掉不留残句；
+# 整句即 CTA（句首/换行/句号后直接就是互动分句）时尾终结符连吃，其余文字
+# 一律不动。
 _CTA_CLAUSE = re.compile(
     r"[，,；;]?(?:[^。！？!?\n，,；;]{0,12}?扣\s*1[^。！？!?\n]{0,24}?扣\s*2"
     r"|[^。！？!?\n，,；;]{0,12}?扣\s*2[^。！？!?\n]{0,24}?扣\s*1)"
@@ -326,8 +327,16 @@ def _dedupe_cta_clauses(content: str) -> Tuple[str, int]:
     out: List[str] = []
     pos = 0
     for m in matches[:-1]:
-        out.append(content[pos:m.start()])
-        pos = m.end()
+        start, end = m.start(), m.end()
+        # 整句都是 CTA 时（分句前面只剩句首/换行/句末终结符，没有任何正文），
+        # 前缀没有可连吃的逗号，就把尾部的终结符/分隔符一起吃掉——否则剥离后
+        # 句首留一个开口的"。"或"，"（"。"先讲正事"）。分句前面还有正文的
+        # 情形不动：那里的逗号已由正则前缀连吃，尾部逗号是正常分句隔断。
+        if start == 0 or content[start - 1] in "\n。！？!?":
+            while end < len(content) and content[end] in "。！？!?,，；;":
+                end += 1
+        out.append(content[pos:start])
+        pos = end
     out.append(content[pos:])
     return "".join(out), len(matches) - 1
 

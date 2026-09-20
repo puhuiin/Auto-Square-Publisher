@@ -10312,6 +10312,28 @@ class TestIntraPostCtaDedupe(unittest.TestCase):
         self.assertIn("后文", out2)
         self.assertNotIn("纯看戏扣 3", out2)
 
+    def test_whole_sentence_cta_at_paragraph_start(self):
+        """R269：整句就是 CTA（句首/换行后直接是互动分句）时，剥离必须连尾终结符
+        一起吃——否则段首留一个开口的"。"（"。"先讲正事）。中间夹正文的常规款
+        不受影响；挂件被剥走也由 publish 的 _ensure_token_widget 保底补回。"""
+        # 句首整句 CTA + 结尾 CTA：前置分句连它自己的句号一起消失
+        a = ("看多的扣1,$BTC 加油 看空的扣2。先讲正事。\n\n"
+             "周末这波能不能冲？看多的扣1,看空的扣2。")
+        out, removed = m._dedupe_cta_clauses(a)
+        self.assertEqual(removed, 1)
+        self.assertTrue(out.startswith("先讲正事"), f"段首悬挂终结符: {out[:12]!r}")
+        self.assertNotIn("加油 看空的扣2。", out)
+        self.assertEqual(out.count("扣1"), 1, "只保留结尾互动位")
+        # 剥离后挂件消失 → publish 侧保底补回，返佣生命线不失
+        self.assertEqual(m.SquarePublisher._count_valid_widgets(out), 0)
+        ensured = m.SquarePublisher._ensure_token_widget(out, ["BTC"])
+        self.assertEqual(m.SquarePublisher._count_valid_widgets(ensured), 1)
+        # 换行后整句 CTA：尾部逗号也一起吃，不留"，"开头残段
+        b = "第一段。\n\n看空的扣2，看多的扣1，别犹豫。第二段。看多的扣1，看空的扣2。"
+        out2, removed2 = m._dedupe_cta_clauses(b)
+        self.assertEqual(removed2, 1)
+        self.assertIn("第一段。\n\n别犹豫。第二段。", out2)
+
     def test_wired_into_summarize(self):
         """接线验证：走完整 summarize 的输出只剩一个 CTA 且留痕 last_cta_dedupes"""
         eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
