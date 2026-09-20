@@ -1691,6 +1691,40 @@ class TestContentSanitizer(unittest.TestCase):
         self.assertNotIn("带单", s)
 
 
+class TestCampaignTagInjection(unittest.TestCase):
+    """R291：活动标签注入——few-shot 教模型写 3 个标签（第 3 席=核心代币名），
+    旧实现在"已有 ≥3 标签"时直接返回，活动标签在生产里从未注入成功（遥测 proxy
+    把核心代币名也算"有活动标签"，107/107 假全覆盖）。改为按缺失判定。"""
+
+    def test_appends_when_model_filled_third_slot(self):
+        """模型按范文写 3 个标签（第 3 席是核心代币名）——活动标签必须仍能注入"""
+        intel = {"active_tags": ["#Write2Earn", "#TradingTournament", "#Futures"]}
+        out = m.SquarePublisher._inject_campaign_tag(
+            "正文略。\n\n#Write2Earn #BinanceSquare #XRP", intel)
+        self.assertIn("#TradingTournament", out,
+                      "第 3 席被核心代币占也要注入活动标签（活动入口不容丢）")
+        self.assertIn("#XRP", out, "模型自写的标签不得被删")
+
+    def test_no_duplicate_when_already_present(self):
+        """活动标签已在文中（模型自己写了/重复注入）→ 不得追加第二个"""
+        intel = {"active_tags": ["#TradingTournament"]}
+        out = m.SquarePublisher._inject_campaign_tag(
+            "正文略。\n\n#Write2Earn #BinanceSquare #TradingTournament", intel)
+        self.assertEqual(out.count("#TradingTournament"), 1)
+
+    def test_skips_guaranteed_pair_and_picks_campaign(self):
+        """保底双标签不是活动标签——跳过它们取第一个真活动标签"""
+        intel = {"active_tags": ["#Write2Earn", "#BinanceSquare", "#Futures"]}
+        out = m.SquarePublisher._inject_campaign_tag("正文略。", intel)
+        self.assertTrue(out.rstrip().endswith("#Futures"))
+        self.assertEqual(out.count("#Write2Earn"), 0, "不得追加保底双标签")
+
+    def test_no_intel_or_no_active_tags_noop(self):
+        self.assertEqual(m.SquarePublisher._inject_campaign_tag("正文。", None), "正文。")
+        self.assertEqual(
+            m.SquarePublisher._inject_campaign_tag("正文。", {"active_tags": []}), "正文。")
+
+
 class TestTokenWidgetEnforcement(unittest.TestCase):
     """交易挂件保底：无挂件内容自动补齐"""
 

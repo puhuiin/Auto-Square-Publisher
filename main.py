@@ -5763,15 +5763,20 @@ class SquarePublisher(BasePublisher):
     def _inject_campaign_tag(cls, content: str, campaign_intel: Optional[Dict[str, Any]]) -> str:
         """
         活动标签入帖：把当期官方活动标签（如 #TradingTournament/#AltcoinTrading）
-        作为第 3 个标签注入——这是参与币安广场创作激励活动的入口（第 1/2 名额固定给
-        #Write2Earn/#BinanceSquare 返佣归因）。
+        追加到文末标签行——这是参与币安广场创作激励活动的入口（#Write2Earn/
+        #BinanceSquare 是返佣归因的保底双标签，本标签是活动入口第 3 席）。
+
+        R291：旧实现在"正文已有 ≥3 个标签"时直接返回——而 few-shot 范文
+        （"#Write2Earn #BinanceSquare #XRP"）与 prompt 规则都在教模型把第 3 席
+        写成核心代币名，模型照做时本函数在生产里从未注入成功：活动标签静默缺席，
+        而遥测 proxy（campaign_tag_count 计非保底标签数）把核心代币名也算作
+        "有活动标签"，107/107 篇全覆盖的假象。改为按"活动标签是否已在文中"
+        判定，缺失即追加（第 4 席也无妨——活动入口不容丢，标签 aesthetic 让位）。
         """
         if not campaign_intel:
             return content
-        tags_now = list(re.finditer(r"#[^\s#]+", content))
-        if len(tags_now) >= 3:
-            return content
-        have = {mm.group(0)[1:].lower() for mm in tags_now}
+        have = {mm.group(0)[1:].lower()
+                for mm in re.finditer(r"#[^\s#]+", content)}
         for tag in campaign_intel.get("active_tags") or []:
             tag = str(tag).strip()
             if not tag.startswith("#") or tag[1:].lower() in have:
@@ -5847,6 +5852,8 @@ class SquarePublisher(BasePublisher):
         self.last_content_id: Optional[str] = None
         self.last_final_content: Optional[str] = None
         self.last_widget_count: Optional[int] = None
+        # R291：本轮注入的活动标签原文（None=无活动标签可注入/未走注入路径）
+        self.last_campaign_tag: Optional[str] = None
         if not self.api_key:
             logger.error("未配置 SQUARE_API_KEY，无法发布到币安广场！")
             self.last_error = "未配置 SQUARE_API_KEY，无法发布到币安广场！"
@@ -5863,7 +5870,12 @@ class SquarePublisher(BasePublisher):
         # final_preview 只存前 200 字钩子区——模型把挂件写在正文尾部时预览区
         # 看不到 $，不记全文计数就无法区分"截断伪影"与"真实丢挂件"。
         self.last_widget_count = self._count_valid_widgets(content)
+        _before_ct = content
         content = self._inject_campaign_tag(content, campaign_intel)
+        # R291：显式记录注入的活动标签原文——旧 proxy（campaign_tag_count 计
+        # 非保底标签数）把模型自写的核心代币名也算作"有活动标签"，活动标签
+        # 静默缺席时遥测显示 107/107 全覆盖。None=本轮无活动标签可注入。
+        self.last_campaign_tag = None if content == _before_ct else content[len(_before_ct):].strip()
         # R9：追加挂件/活动标签会突破上限（净化里的预留量只是估算）。这里做最终
         # 复检，越界时压缩正文、保住标签行——否则平台侧会以 220094 之类的错误拒稿。
         if len(content) > char_limit:
@@ -7444,6 +7456,11 @@ def _run_main():
                     campaign_tag_count = sum(
                         1 for t in _tag_list
                         if t[1:].lower() not in ("write2earn", "binancesquare"))
+                    # R291：注入的活动标签原文（显式字段）——proxy 计数把模型自写的
+                    # 核心代币名也算"有活动标签"，活动标签静默缺席时遥测显示全覆盖；
+                    # 显式字段让"活动标签到底进没进帖"可直查，不再靠 proxy 推断
+                    _ctg = getattr(llm_engine, "last_campaign_tag", None)
+                    campaign_tag_used = _ctg if isinstance(_ctg, str) and _ctg else None
                     # R130：抽中的结尾套路标签（Mock 替身/异常态防御性降级 None）
                     _es = getattr(llm_engine, "last_ending_style", None)
                     ending_style_used = _es if isinstance(_es, str) else None
@@ -7488,6 +7505,8 @@ def _run_main():
                         "widget_count": widget_count,
                         "tag_count": tag_count,
                         "campaign_tag_count": campaign_tag_count,
+                        # R291：注入的活动标签原文（None=本轮无活动标签可注入）
+                        "campaign_tag": campaign_tag_used,
                         "ending_style": ending_style_used,
                         "cta_dedupes": cta_dedupes_used if cta_dedupes_used else None,
                         # R162：禁令状态三件套——违反时（ban 武装+仍引用锚点）

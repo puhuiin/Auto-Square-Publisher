@@ -936,6 +936,37 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("情报新鲜但无活动标签 2/4 篇", text)
         self.assertIn("需排查", text)
 
+    def test_explicit_campaign_tag_field_overrides_proxy(self):
+        """R291：显式字段（注入的活动标签原文）优先于 proxy 计数——proxy 把模型
+        自写的核心代币名也算"有活动标签"，injector 死代码时期遥测显示全覆盖。
+        显式 None（无活动标签可注入）+ 情报新鲜 → 必须告警，即使 proxy>0。"""
+        _write(self.path, [
+            # proxy 说有（核心代币名 #XRP），显式字段说没有 → 以显式为准，告警
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tag_count": 3, "campaign_tag_count": 1, "campaign_tag": None,
+             "intel_degraded": False},
+            # 显式有注入 → 覆盖，并进直方图
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tag_count": 4, "campaign_tag_count": 2, "campaign_tag": "#TradingTournament",
+             "intel_degraded": False},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tag_count": 4, "campaign_tag_count": 2, "campaign_tag": "#TradingTournament",
+             "intel_degraded": False},
+            # 显式 None + intel 降级 = 合法语境，不告警
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "campaign_tag": None, "intel_degraded": True},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(s["campaign_tag_evaluated"], 4)
+        self.assertEqual(s["campaign_tag_covered"], 2)
+        self.assertEqual(s["campaign_tag_zero_fresh"], 1,
+                         "显式 None 且情报新鲜才算疑似回归")
+        self.assertEqual(dict(s["campaign_tags"]), {"#TradingTournament": 2})
+        text = mr.render_text(s, rows)
+        self.assertIn("情报新鲜但无活动标签 1/4 篇", text)
+        self.assertIn("🏷️ 活动标签注入: #TradingTournament ×2", text)
+
     def test_run_elapsed_aggregated(self):
         """R126：单轮耗时——20 分钟外部回调节奏下的堆积预警指标。
         平均/最长聚合进 runs 段，最长逼近 1200s 时渲染告警。"""

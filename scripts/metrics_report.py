@@ -304,6 +304,8 @@ def summarize(rows):
         "campaign_tag_evaluated": 0,
         "campaign_tag_covered": 0,
         "campaign_tag_zero_fresh": 0,
+        # R291：显式活动标签直方图（注入原文，回答"实际在参加哪个活动"）
+        "campaign_tags": collections.Counter(),
         # R285：浏览/互动 join（content_id × content_stats.jsonl）与三维归因样本
         "stats_posts": 0,
         "stats_views_total": 0,
@@ -447,13 +449,25 @@ def summarize(rows):
             # 标签在，活动标签静默丢失（intel 无 active_tags / _inject_campaign_tag
             # 回归）时零可见。零覆盖且 intel_degraded≠True = 情报新鲜却没活动标签
             # 可注入 = 疑似注入回归；intel 降级时的零覆盖是合法语境（无供给）。
-            ctc = r.get("campaign_tag_count")
-            if ctc is not None:
+            # R291：显式字段（注入的活动标签原文）优先于 proxy 计数——旧 proxy 把
+            # 模型自写的核心代币名也算"有活动标签"，injector 被 few-shot 挤成死
+            # 代码时遥测显示 107/107 假全覆盖；legacy 行无该键，回退 proxy。
+            if "campaign_tag" in r:
                 s["campaign_tag_evaluated"] += 1
-                if ctc > 0:
+                _ct = r.get("campaign_tag")
+                if _ct:
                     s["campaign_tag_covered"] += 1
+                    s["campaign_tags"][str(_ct)] += 1
                 elif r.get("intel_degraded") is not True:
                     s["campaign_tag_zero_fresh"] += 1
+            else:
+                ctc = r.get("campaign_tag_count")
+                if ctc is not None:
+                    s["campaign_tag_evaluated"] += 1
+                    if ctc > 0:
+                        s["campaign_tag_covered"] += 1
+                    elif r.get("intel_degraded") is not True:
+                        s["campaign_tag_zero_fresh"] += 1
             # R285：浏览/互动 join——content_id 是 R125 起就落盘的 join 键，
             # 直到本轮才第一次有消费面。三维归因样本按发布行的既有字段分桶，
             # 回答"哪类帖有流量"（时段/体裁/来源），无 stats 的行不进任何分母。
@@ -943,6 +957,10 @@ def render_text(s, rows=None):
         if s.get("campaign_tag_zero_fresh"):
             lines.append(f"  ⚠️ 情报新鲜但无活动标签 {s['campaign_tag_zero_fresh']}/"
                          f"{s['campaign_tag_evaluated']} 篇——创作激励活动标签未注入，需排查")
+        # R291：实际注入的活动标签分布（有显式字段的行才统计）
+        if s.get("campaign_tags"):
+            _cts = " · ".join(f"{k} ×{v}" for k, v in s["campaign_tags"].most_common(3))
+            lines.append(f"  🏷️ 活动标签注入: {_cts}")
         # R285：浏览/互动面板——有 join 上的样本才渲染（无 stats 时整块不出现）。
         # 三维均浏览是"哪类帖有流量"的第一手答案：时段/体裁/来源各自的样本量
         # 一并给出，样本 <3 的桶只展示不解读（避免小样本误判）。
