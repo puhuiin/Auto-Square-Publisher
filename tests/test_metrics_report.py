@@ -208,6 +208,61 @@ class TestMetricsReport(unittest.TestCase):
         out = mr.render_text(s)
         self.assertIn("配额追赶等待 210.0s", out)
 
+    def test_stage_pipeline_segments_aggregated(self):
+        """R280：抓取/配图/发布分段进报表——R177 起随 run_summary 落盘但读侧
+        从未消费（全史三分段零读取面），总耗时逼近回调节奏时"哪一段在吃钟"
+        没有出口。抓取段对 R9 deadline（300s）负责；配图段含转码+S3 上传
+        （R110；发布段是币安侧延迟代理。零值行不进均值。"""
+        rows = [
+            {"ts": "2026-09-14T13:09:00+00:00", "outcome": "run_summary",
+             "candidates": 40, "published": 1, "unprocessed": 39,
+             "run_elapsed_sec": 370.0, "fetch_elapsed_sec": 47.5,
+             "image_elapsed_sec": 32.0, "publish_elapsed_sec": 4.2},
+            {"ts": "2026-09-14T13:29:00+00:00", "outcome": "run_summary",
+             "candidates": 40, "published": 1, "unprocessed": 39,
+             "run_elapsed_sec": 360.0, "fetch_elapsed_sec": 88.5,
+             "image_elapsed_sec": 28.0, "publish_elapsed_sec": 6.8},
+            # 抓取段为零的轮次不进均值（否则稀释）
+            {"ts": "2026-09-14T20:44:00+00:00", "outcome": "run_summary",
+             "candidates": 45, "published": 1, "unprocessed": 44,
+             "run_elapsed_sec": 55.9, "fetch_elapsed_sec": 0.0,
+             "image_elapsed_sec": 0.0, "publish_elapsed_sec": 0.0},
+            # 历史行无这三个字段：不进分段聚合
+            {"ts": "2026-09-14T12:00:00+00:00", "outcome": "run_summary",
+             "candidates": 0, "published": 0, "quota_blocked": True,
+             "run_elapsed_sec": 0.0},
+        ]
+        s = mr.summarize(rows)
+        runs = s["runs"]
+        self.assertEqual(runs["avg_fetch_sec"], 68.0)
+        self.assertEqual(runs["max_fetch_sec"], 88.5)
+        self.assertEqual(runs["n_fetch_sec"], 2)
+        self.assertEqual(runs["avg_image_sec"], 30.0)
+        self.assertEqual(runs["max_image_sec"], 32.0)
+        self.assertEqual(runs["n_image_sec"], 2)
+        self.assertEqual(runs["avg_publish_sec"], 5.5)
+        self.assertEqual(runs["max_publish_sec"], 6.8)
+        self.assertEqual(runs["n_publish_sec"], 2)
+        out = mr.render_text(s)
+        self.assertIn("耗时构成", out)
+        self.assertIn("抓取 68.0s", out)
+        self.assertIn("配图 30.0s", out)
+        self.assertIn("发布 5.5s", out)
+        # 样本少于总轮数必须标出——否则读成覆盖全部轮次
+        self.assertIn("(样本 2 轮)", out)
+
+    def test_pipeline_segments_not_in_runs_dict(self):
+        """R280：三段原始序列不得进 s["runs"] 明细（易失 JSON 混进 run 摘要）"""
+        rows = [
+            {"ts": "2026-09-14T13:09:00+00:00", "outcome": "run_summary",
+             "candidates": 40, "published": 1, "run_elapsed_sec": 370.0,
+             "fetch_elapsed_sec": 47.5, "image_elapsed_sec": 32.0,
+             "publish_elapsed_sec": 4.2},
+        ]
+        s = mr.summarize(rows)
+        for k in ("fetch_elapsed", "image_elapsed", "publish_elapsed"):
+            self.assertNotIn(k, s["runs"])
+
     def test_empty_file_renders(self):
         _write(self.path, [])
         rows, bad = mr.load_rows(self.path)

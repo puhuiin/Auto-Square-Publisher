@@ -269,6 +269,14 @@ def summarize(rows):
         "llm_elapsed": [],
         "intel_elapsed": [],  # R183：饱和轮也付情报时间（R182 前移后）
         "quota_wait_elapsed": [],  # R184：配额边界追赶等待（R154）单列
+        # R280：抓取/配图/发布分段——R177 起就随 run_summary 落盘，但读侧
+        # 从未消费（全史 run_summary 三分段零读取面）：总耗时逼近回调节奏时
+        # "哪一段在吃钟"没有任何报表出口。抓取段直接对 R9 deadline（默认
+        # 300s）负责；配图段含转码+S3 上传（R110：视频转码以分钟计）；
+        # 发布段是币安侧延迟的代理。
+        "fetch_elapsed": [],
+        "image_elapsed": [],
+        "publish_elapsed": [],
         # R196：饱和轮情报陈旧度（R195 写侧）——80 轮/天的 quota_blocked 可见
         "quota_intel_ages": [],
         "quota_intel_degraded": 0,
@@ -479,6 +487,13 @@ def summarize(rows):
             _qw = _num(r.get("quota_wait_elapsed_sec"))
             if _qw is not None and _qw > 0:
                 runs_tmp["quota_wait_elapsed"].append(_qw)
+            # R280：抓取/配图/发布分段——R177 起就随 run_summary 落盘，读侧
+            # 从未消费（全史 run_summary 三分段零读取面）：总耗时逼近回调节奏
+            # 时"哪一段在吃钟"没有任何报表出口
+            for _k in ("fetch_elapsed_sec", "image_elapsed_sec", "publish_elapsed_sec"):
+                _v = _num(r.get(_k))
+                if _v is not None and _v > 0:
+                    runs_tmp[_k.replace("_sec", "")].append(_v)
             # R196：饱和轮情报陈旧度（仅 quota_blocked 轮，避免与发帖回执重复计）
             if quota_blocked:
                 _ia = _num(r.get("intel_age_hours"))
@@ -487,7 +502,7 @@ def summarize(rows):
                 if r.get("intel_degraded") is True:
                     runs_tmp["quota_intel_degraded"] += 1
     s["runs"] = {
-        **{k: v for k, v in runs_tmp.items() if k not in ("skips", "trend_freq", "elapsed", "sleep_elapsed", "llm_elapsed", "intel_elapsed", "quota_wait_elapsed", "quota_intel_ages")},
+        **{k: v for k, v in runs_tmp.items() if k not in ("skips", "trend_freq", "elapsed", "sleep_elapsed", "llm_elapsed", "intel_elapsed", "quota_wait_elapsed", "quota_intel_ages", "fetch_elapsed", "image_elapsed", "publish_elapsed")},
         "skips": dict(runs_tmp["skips"]),
         "trend_freq": dict(runs_tmp["trend_freq"].most_common(8)),
     }
@@ -510,8 +525,8 @@ def summarize(rows):
     if runs_tmp["intel_elapsed"]:
         s["runs"]["avg_intel_sec"] = round(sum(runs_tmp["intel_elapsed"]) / len(runs_tmp["intel_elapsed"]), 1)
         s["runs"]["n_intel_sec"] = len(runs_tmp["intel_elapsed"])
-    # R184：追赶等待均值——R177 分段只覆盖 LLM/配图/发布，18:06/18:29 轮
-    # 150~270s 的未解释差额实为 R154 等待；报表补这一项后总账可对平
+    # R184：追赶等待均值——R177 分段只覆盖情报/LLM/拟人间隔，18:06/18:29 轮
+    # 150~270s 的未解释差额实为 R154 等待；R280 补齐抓取/配图/发布后总账可对平
     if runs_tmp["quota_wait_elapsed"]:
         s["runs"]["avg_quota_wait_sec"] = round(
             sum(runs_tmp["quota_wait_elapsed"]) / len(runs_tmp["quota_wait_elapsed"]), 1)
@@ -520,6 +535,15 @@ def summarize(rows):
         _qia = runs_tmp["quota_intel_ages"]
         s["runs"]["avg_quota_intel_age_h"] = round(sum(_qia) / len(_qia), 1)
         s["runs"]["max_quota_intel_age_h"] = round(max(_qia), 1)
+    # R280：抓取/配图/发布分段聚合。抓取段直接对 R9 deadline（默认 300s）负责，
+    # max 比均值更早暴露逼近；配图段含转码+S3 上传（R110：视频转码以分钟计）；
+    # 发布段是币安侧延迟的代理（本地写完≠平台可见）
+    for _seg in ("fetch", "image", "publish"):
+        _vals = runs_tmp[f"{_seg}_elapsed"]
+        if _vals:
+            s["runs"][f"avg_{_seg}_sec"] = round(sum(_vals) / len(_vals), 1)
+            s["runs"][f"max_{_seg}_sec"] = round(max(_vals), 1)
+            s["runs"][f"n_{_seg}_sec"] = len(_vals)
     for prov, vals in lat_tmp.items():
         s["latency_by_provider"][prov] = round(sum(vals) / len(vals), 1)
     for prov, vals in tok_tmp.items():
@@ -644,7 +668,10 @@ def render_text(s, rows=None):
             lines.append(f"  ⏱️ 单轮耗时: 平均 {runs['avg_elapsed_sec']}s / "
                          f"最长 {runs['max_elapsed_sec']}s（回调节奏 1200s）{warn}")
         # R177：分段拆解——拟人 pacing 是总耗时大头，别误读成 LLM 变慢
-        if runs.get("avg_sleep_sec") is not None or runs.get("avg_llm_sec") is not None:
+        # R280：抓取/配图/发布同样是"总账差额归因"项，六段任一在场即出整行
+        _seg_keys = ("avg_sleep_sec", "avg_llm_sec", "avg_intel_sec", "avg_fetch_sec",
+                     "avg_image_sec", "avg_publish_sec")
+        if any(runs.get(k) is not None for k in _seg_keys):
             parts = []
             n_total = runs.get("n_elapsed") or 0
 
@@ -656,8 +683,14 @@ def render_text(s, rows=None):
                 return f"{label} {val}s{extra}{tag}"
 
             parts = [p for p in (
-                _seg("LLM", runs.get("avg_llm_sec"), runs.get("n_llm_sec")),
+                _seg("抓取", runs.get("avg_fetch_sec"), runs.get("n_fetch_sec"),
+                     f"(最长 {runs.get('max_fetch_sec', 0)}s)"),
                 _seg("情报", runs.get("avg_intel_sec"), runs.get("n_intel_sec")),
+                _seg("LLM", runs.get("avg_llm_sec"), runs.get("n_llm_sec")),
+                _seg("配图", runs.get("avg_image_sec"), runs.get("n_image_sec"),
+                     f"(最长 {runs.get('max_image_sec', 0)}s)"),
+                _seg("发布", runs.get("avg_publish_sec"), runs.get("n_publish_sec"),
+                     f"(最长 {runs.get('max_publish_sec', 0)}s)"),
                 _seg("拟人间隔", runs.get("avg_sleep_sec"), runs.get("n_sleep_sec"),
                      f"(最长 {runs.get('max_sleep_sec', 0)}s)"),
             ) if p]
