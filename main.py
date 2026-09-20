@@ -7532,6 +7532,21 @@ def _run_main():
             if isinstance(d, dict) and (d.get("entries") or 0) > 0},
         "feeds_ok": fetcher.stats.get("feeds_ok", 0),
         "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
+        # R276：扫描漏斗进 durable 遥测——fetched/stale/cached/near_dup 此前只有
+        # 两个易失出口（扫描日志行与 Step Summary"管线吞吐"，均随 Actions 保留期
+        # 蒸发），历史不可回查：near_dup 异常抬升（去重过紧吞事件）/ cached 跳涨
+        # （缓存失效异常）/ stale 峰值（源新鲜度劣化）这类趋势没有任何行内证据。
+        # 与 R220 per_feed_yield 同一理由的聚合层补课；kept 已有 candidates 字段。
+        "fetched": fetcher.stats.get("fetched", 0),
+        "stale": fetcher.stats.get("stale", 0),
+        "cached": fetcher.stats.get("cached", 0),
+        "near_dup": fetcher.stats.get("near_dup", 0),
+        # R276：成功路径的 feeds_empty——零候选路径自 R5 起就记计数，成功路径
+        # 一直只有易失 warning：某源劣化成"有效 XML 零条目"而其他源仍在出活时，
+        # durable 记录里完全看不见（per_feed_yield 按设计不落 entries==0 的源，
+        # 分不清"没抓到"与"抓到但空"）。带源名才可事后归因停车/换源。
+        "feeds_empty": fetcher.stats.get("feeds_empty", 0),
+        "feeds_empty_sources": " ".join(fetcher.stats.get("feeds_empty_sources") or []) or None,
         # R273：入口字段注入截断数——安全控制的命中遥测（零命中是常态，
         # 有命中说明某源在夹带 prompt 注入 payload，按源名可归因）
         "injection_hits": fetcher.stats.get("injection_hits", 0),

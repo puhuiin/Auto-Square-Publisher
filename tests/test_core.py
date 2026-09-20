@@ -6882,6 +6882,49 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_run_summary_records_scan_funnel(self):
+        """R276：扫描漏斗进 durable 遥测——fetched/stale/cached/near_dup 此前只有
+        扫描日志与 Step Summary 两个易失出口，历史不可回查；feeds_empty 在成功
+        路径同样缺记（零候选路径有），劣化源在 durable 记录里不可见。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True, candidates=[self._candidate()])
+        try:
+            import json
+            m.NewsFetcher.return_value.stats.update({
+                "fetched": 50, "stale": 4, "cached": 5, "near_dup": 1, "kept": 40,
+                "feeds_empty": 2, "feeds_empty_sources": ["U.Today (加密货币新闻)", "Decrypt (Web3/AI/Meme)"],
+            })
+            m._run_main()
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(run_row.get("fetched"), 50)
+            self.assertEqual(run_row.get("stale"), 4)
+            self.assertEqual(run_row.get("cached"), 5)
+            self.assertEqual(run_row.get("near_dup"), 1)
+            # 劣化源计数与源名都留痕——空名列表转 None（append_metrics 过滤，不落空壳）
+            self.assertEqual(run_row.get("feeds_empty"), 2)
+            self.assertEqual(run_row.get("feeds_empty_sources"),
+                             "U.Today (加密货币新闻) Decrypt (Web3/AI/Meme)")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_run_summary_funnel_fields_zero_when_no_signals(self):
+        """R276：常态轮漏斗字段全零在场（append_metrics 不过滤 0），空源名不落字段"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True, candidates=[self._candidate()])
+        try:
+            import json
+            m._run_main()
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(run_row.get("fetched"), 1, "_base_patches 默认 stats 的扫描量")
+            self.assertEqual(run_row.get("feeds_empty"), 0)
+            self.assertNotIn("feeds_empty_sources", run_row, "空列表转 None 被过滤，不落空壳字段")
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_quota_recheck_blocks_second_post_mid_run(self):
         """R237：max_posts>1 时的 24h 配额逐条复查——workflow 的 max_posts
         fallback 为 2（schedule/push/裸 dispatch 拿不到 input），单空槽轮发完
