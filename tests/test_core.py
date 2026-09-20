@@ -2765,6 +2765,13 @@ class TestTimeoutBudgetCoupling(unittest.TestCase):
         bai = next(p for p in chain if p.name == "Preset-b.ai")
         self.assertEqual(bai.timeout, 90.0, "推理通道 Preset-b.ai 应与 Reasonix 同级 90s")
 
+    def test_stepfun_preset_gets_long_timeout(self):
+        """R279：step-5-preview 官方文档带 reasoning_effort 思考档，与 b.ai 同型
+        ——按非推理配 25s/600 会复刻 R218 的系统性空包，故按推理通道同级 90s。"""
+        chain = self._build({"STEPFUN_API_KEY": "k-sf2"})
+        sf = next(p for p in chain if p.name == "Preset-stepfun")
+        self.assertEqual(sf.timeout, 90.0, "推理通道 Preset-stepfun 应与 Preset-b.ai 同级 90s")
+
     def test_non_reasoning_preset_keeps_short_timeout(self):
         # R218：openrouter 默认模型 openrouter/free 是聚合路由别名（落地模型
         # 静态不可见）已按推理配给；非推理负例改用具体模型名的 tokenrouter——
@@ -5050,6 +5057,8 @@ class TestReasoningChannel(unittest.TestCase):
     def test_thinking_provider_and_model_keyword(self):
         # Preset-b.ai 实证思考吞噬：600 预算下 tokens_used 上千只吐空包
         self.assertTrue(m._is_reasoning_channel("Preset-b.ai", "glm-5.3-flash"))
+        # R279：step-5-preview 文档明示 reasoning_effort 思考档，与 b.ai 同型
+        self.assertTrue(m._is_reasoning_channel("Preset-stepfun", "step-5-preview"))
         # 未来新思考模型免改代码自动大预算；普通模型不受影响
         self.assertTrue(m._is_reasoning_channel("Preset-x", "qwen-thinking-plus"))
         self.assertFalse(m._is_reasoning_channel("Preset-x", "gpt-4o-mini"))
@@ -9681,6 +9690,10 @@ class TestRouterModelPredicate(unittest.TestCase):
                     "glm-4.7-flash", "qwen3-8b", "glm-4-flash"):
             self.assertFalse(m._is_router_model(mid), f"{mid} 不应被判为聚合路由")
 
+        # R279 step-5-preview 是具体模型（订阅制旗舰，非路由别名）：下架/更名
+        # 时 404 必须走 permanent 快道保持可解释
+        self.assertFalse(m._is_router_model("step-5-preview"), "step-5-preview 不应被判为聚合路由")
+
 
 class TestPresetFreeModelDefaults(unittest.TestCase):
     """R263：免费模型名锁定（双源实测校准，防静默漂回已下架僵尸名）。
@@ -9695,16 +9708,23 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
     2. 除 b.ai（生产实证思考型）与 openrouter（路由别名）外全部按非推理配给
        25s/600——新免费默认名不能顺手把整链超时抬上天；
     3. 默认名一律不带路由别名（除 openrouter 外），404 才能保持 permanent 可解释。
+
+    R279：stepfun（阶跃 Step Plan）是订阅制通道，非免费池一员，同样纳入锁定
+    ——默认名 step-5-preview 按官方文档（2026-09-20）在册，下架/更名同样走
+    permanent 404；它是文档明示的 reasoning_effort 思考型，按推理配给 90s/1500
+    （不变式 2 的白名单随之扩一员，理由同 b.ai：不升预算=思考链吃空=通道报废）。
     """
 
     _ALL_KEYS = {
         "OPENROUTER_API_KEY": "k-or", "BAI_API_KEY": "k-bai", "ZAI_API_KEY": "k-zai",
         "XKIRO_API_KEY": "k-xkiro", "AIHUBMIX_API_KEY": "k-ahm",
         "INFERERA_API_KEY": "k-inf", "TOKENROUTER_API_KEY": "k-tr",
-        "SILICONFLOW_API_KEY": "k-sf", "BLUESMINDS_API_KEY": "k-bsm",
+        "SILICONFLOW_API_KEY": "k-sf", "STEPFUN_API_KEY": "k-stepfun",
+        "BLUESMINDS_API_KEY": "k-bsm",
     }
 
     # 2026-09-19 实测：OpenRouter 官方实时目录 + awesome-free-ai-coding 09-17~19
+    # stepfun 行为 2026-09-20 阶跃官方文档在册名（订阅制，非免费池）
     _EXPECTED = {
         "openrouter": "openrouter/free",          # 官方聚合路由别名仍在目录
         "b.ai": "glm-5.3-flash",                  # 生产当日仍在跑，不动
@@ -9715,6 +9735,7 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
         "tokenrouter": "nemotron-3-nano-omni",    # 原 glm-5.3-free/minimax-3 已失效
         "siliconflow": "qwen3-8b",                # ¥0 免费模型；V3 是计费模型
         "bluesminds": "glm-4-flash",              # 本地《白嫖》注册表目录
+        "stepfun": "step-5-preview",              # 阶跃 Step Plan 订阅旗舰（推理型）
     }
 
     def _build(self):
@@ -9737,14 +9758,67 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
 
     def test_new_defaults_stay_non_reasoning(self):
         """新默认名除 b.ai/openrouter 外不得是推理通道：免费池里思考型毕竟少数，
-        全链 90s+1500 会把墙钟预算吃穿（且与 R219 断言'具体模型短配'冲突）。"""
+        全链 90s+1500 会把墙钟预算吃穿（且与 R219 断言'具体模型短配'冲突）。
+        R279 白名单扩 stepfun：订阅制旗舰、文档明示 reasoning_effort 思考档
+        （非免费池推论，不破坏"免费名短配"的初衷）。"""
         chain = {p.name: p for p in self._build()}
-        reasoning = {"Preset-b.ai", "Preset-openrouter"}  # 生产实证/路由别名
+        reasoning = {"Preset-b.ai", "Preset-openrouter", "Preset-stepfun"}  # 生产实证/路由别名/订阅旗舰
         for name, cfg in chain.items():
             if not name.startswith("Preset-"):
                 continue
             want = 90.0 if name in reasoning else 25.0
             self.assertEqual(cfg.timeout, want, f"{name} 超时配给漂移")
+
+
+class TestStepfunPreset(unittest.TestCase):
+    """R279：阶跃星辰 Step Plan 订阅通道接入（用户指定稳定源）。
+
+    锁四条不变式：
+    1. base_url 必须落在 /step_plan/v1——官方文档明示删掉前缀会静默切换到
+       按量计费的普通 API 通道（另一套计费体系），属于"看起来修好了其实在
+       花另一笔钱"的陷阱，写死防手滑；
+    2. 默认模型 = step-5-preview，STEPFUN_MODEL 可覆盖；
+    3. 按推理通道配给 90s/1500（reasoning_effort 思考档，见
+       test_stepfun_preset_gets_long_timeout 与谓词测试）；
+    4. 无 Key 零痕迹（不占链位、不污染其他 preset）。
+    """
+
+    def _build(self, extra=None):
+        keys = {"STEPFUN_API_KEY": "k-stepfun-x"}
+        if extra:
+            keys.update(extra)
+        saved = {k: os.environ.get(k) for k in keys}
+        os.environ.update(keys)
+        try:
+            return m.MultiLLMEngine()._build_provider_chain()
+        finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+    def test_base_url_and_defaults(self):
+        sf = next(p for p in self._build() if p.name == "Preset-stepfun")
+        self.assertEqual(sf.base_url, "https://api.stepfun.com/step_plan/v1",
+                         "/step_plan 前缀丢失会静默落入按量计费通道，勿删")
+        self.assertEqual(sf.model, "step-5-preview")
+        self.assertEqual(sf.timeout, 90.0)
+        self.assertEqual(m._summarize_max_tokens("Preset-stepfun", "step-5-preview"), 1500)
+
+    def test_model_env_override(self):
+        sf = next(p for p in self._build({"STEPFUN_MODEL": "step-3.7-flash"})
+                  if p.name == "Preset-stepfun")
+        self.assertEqual(sf.model, "step-3.7-flash")
+
+    def test_absent_without_key(self):
+        saved = os.environ.pop("STEPFUN_API_KEY", None)
+        try:
+            chain = m.MultiLLMEngine()._build_provider_chain()
+        finally:
+            if saved is not None:
+                os.environ["STEPFUN_API_KEY"] = saved
+        self.assertFalse(any(p.name == "Preset-stepfun" for p in chain))
 
 
 class TestProviderPriorityOrdering(unittest.TestCase):

@@ -76,6 +76,7 @@ jobs:
           SQUARE_KEY: ${{ secrets.SQUARE_API_KEY }}
           OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           BAI_KEY: ${{ secrets.BAI_API_KEY }}
+          STEPFUN_KEY: ${{ secrets.STEPFUN_API_KEY }}
           LLM_KEY: ${{ secrets.LLM_API_KEY }}
           SC_KEY: ${{ secrets.SERVERCHAN_KEY }}
           PP_KEY: ${{ secrets.PUSHPLUS_TOKEN }}
@@ -85,6 +86,7 @@ jobs:
           if [ -n "$SQUARE_KEY" ]; then echo "✔ SQUARE_API_KEY: 已检测到"; else echo "❌ SQUARE_API_KEY: 未检测到 (请在 Repository Secrets 中配置)"; fi
           if [ -n "$OPENROUTER_KEY" ]; then echo "✔ OPENROUTER_API_KEY: 已检测到"; fi
           if [ -n "$BAI_KEY" ]; then echo "✔ BAI_API_KEY: 已检测到"; fi
+          if [ -n "$STEPFUN_KEY" ]; then echo "✔ STEPFUN_API_KEY (阶跃 Step Plan): 已检测到"; fi
           if [ -n "$LLM_KEY" ]; then echo "✔ LLM_API_KEY: 已检测到"; fi
           if [ -n "$SC_KEY" ]; then echo "✔ SERVERCHAN_KEY (微信推送): 已检测到"; fi
           if [ -n "$PP_KEY" ]; then echo "✔ PUSHPLUS_TOKEN (微信推送): 已检测到"; fi
@@ -134,6 +136,11 @@ jobs:
           INFERERA_API_KEY: ${{ secrets.INFERERA_API_KEY }}
           TOKENROUTER_API_KEY: ${{ secrets.TOKENROUTER_API_KEY }}
           SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
+          # 阶跃星辰 Step Plan 订阅通道：OpenAI 协议端点与 Anthropic 的
+          # /step_plan/v1/messages 同订阅额度（删 /step_plan 前缀会静默落入
+          # 按量计费的普通 API 通道，勿"修复"该 URL）
+          STEPFUN_API_KEY: ${{ secrets.STEPFUN_API_KEY }}
+          STEPFUN_MODEL: ${{ secrets.STEPFUN_MODEL }}
           
           # 可选通知与异常报警渠道 (微信 / iOS / Telegram / 团队群)
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}

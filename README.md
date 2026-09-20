@@ -144,6 +144,7 @@
 | **SiliconFlow (硅基流动)** | `https://api.siliconflow.cn/v1` | `qwen3-8b`（¥0 免实名后免费）<br>`glm-4-9b-0414`<br>`StepFun-xing4.0-29b` | `SILICONFLOW_API_KEY` |
 | **bluesminds** | `https://api.bluesminds.com/v1` | `glm-4-flash`（注册赠试用额度）<br>`kimi-k2`<br>`deepseek-chat` | `BLUESMINDS_API_KEY` |
 | **🏠 Reasonix 本地网关** ⭐ 本地首选 | `http://localhost:20140/v1` | `auto/best-fast`（自动路由） | **无需 Key**（本地自动发现） |
+| **阶跃星辰 Step Plan** 💳 订阅制 | `https://api.stepfun.com/step_plan/v1` | `step-5-preview`（默认，旗舰推理）<br>`step-3.7-flash`<br>`step-3.5-flash` | `STEPFUN_API_KEY` |
 
 ### 🏠 Reasonix 本地免费模型网关（本地开发首选）
 
@@ -177,6 +178,7 @@
 - `BAI_API_KEY`: 你的 B.ai API Key
 - `ZAI_API_KEY`: 智谱 Z.ai Key（自动使用 `glm-4.7-flash` 免费层）
 - `BLUESMINDS_API_KEY`: bluesminds Key（注册赠试用额度，自动使用 `glm-4-flash`）
+- `STEPFUN_API_KEY`: 阶跃星辰 Step Plan 订阅 Key（自动使用 `step-5-preview`，见下方订阅说明）
 - `LLM_API_KEY`: 你的 DeepSeek / 其他 OpenAI 兼容 API Key
 - `LLM_BASE_URL` *(可选)*: 自定义接口地址（默认 `https://api.deepseek.com`）
 - `LLM_MODEL` *(可选)*: 自定义模型名称（默认 `deepseek-chat`）
@@ -205,6 +207,16 @@
   }
 ]
 ```
+
+#### 💳 阶跃星辰 Step Plan 订阅通道（`STEPFUN_API_KEY`）
+
+Step Plan 是阶跃星辰的**订阅制**服务（¥49~699/月 Credit 池，与按量计费的普通 API 额度独立）：
+
+1. 在 [platform.stepfun.com](https://platform.stepfun.com) 订阅 Step Plan 并创建 **Step API Key**（中国区 key 配 `.com` 域名；国际版 key 配 `.ai`，两者不通用）。
+2. 仓库 Secret 添加 `STEPFUN_API_KEY` = 该 Key；`STEPFUN_MODEL` 可选覆盖（默认 `step-5-preview`）。
+3. 本项目走 OpenAI 协议端点 `https://api.stepfun.com/step_plan/v1`——与 Claude Code 等工具用的 Anthropic 端点 `https://api.stepfun.com/step_plan/v1/messages` 是**同一订阅额度的另一协议面**，计费口径相同。
+4. ⚠️ **URL 里的 `/step_plan` 不可删除**：删掉会静默切换到按量计费的普通 API 通道（另一套计费体系，调用成功也不代表在花订阅 Credit）。
+5. 本地运行：`$env:STEPFUN_API_KEY="sk-xxxx"; python main.py`。
 
 ---
 
@@ -279,7 +291,7 @@ python scripts/metrics_report.py --days 1
   | `FETCH_DEADLINE_SEC` | `300` | 单轮 RSS 抓取的全局 deadline（秒）：到点放弃迟到源、用已完成候选继续，避免卡住的源拖满 workflow 并挤掉后续 cron |
   | `LOG_LEVEL` | `INFO` | 日志级别（排障时可设 `DEBUG`） |
   | `MAX_POSTS_PER_RUN` | `2` | 单次运行最大发帖数（workflow 运行参数；配额剩余不足时自动收敛） |
-- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `BAI_MODEL` / `ZAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL` / `BLUESMINDS_MODEL`——想把某平台固定到指定模型时设置。
+- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `BAI_MODEL` / `ZAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL` / `STEPFUN_MODEL` / `BLUESMINDS_MODEL`——想把某平台固定到指定模型时设置。
 - **报警通知渠道**（全部可选，多渠道并发）：`SERVERCHAN_KEY`（Server酱微信）/ `PUSHPLUS_TOKEN`（PushPlus 微信）/ `BARK_KEY`（iOS Bark）/ `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`（Telegram）/ `WEBHOOK_URL`（钉钉/飞书/企微/Discord 通用）。同一错误报警 12 小时同题节流，投递成功才计额度。
 - **CI 回归防线**：`tests/test_core.py` 内置百余个离线回归测试（含断路器/源停放/报错分类/通知编码/跨语言去重/行情缓存/同步契约），`.github/workflows/ci.yml` 在每次 push/PR 时自动编译、校验 workflow 语法并跑测试，防止守护逻辑被后续改动悄悄破坏。
   - **workflow 内嵌脚本校验的环境降级**：`scripts/validate_workflows.py` 只在确认本机 bash **真能执行** `bash -n -c true` 时才校验内嵌 shell；PATH 上只有 WSL 启动器、或 bash 被安全策略拒绝时，一律跳过并说明原因，**绝不把环境故障伪装成 workflow 语法错误**。需强制指定时用环境变量 `BASH_PATH=/path/to/bash`。

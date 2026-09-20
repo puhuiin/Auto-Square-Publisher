@@ -27,7 +27,9 @@
 7. 🔄 多 LLM 模型池与自动故障转移 (Auto-Failover)：
    - 支持 OpenRouter (openrouter/free 聚合路由), B.ai (glm-5.3-flash), 智谱 Z.ai
      (glm-4.7-flash), xkiro, aihubmix, inferera, TokenRouter, DeepSeek, 硅基流动,
-     bluesminds 等；免费模型名按 R263(2026-09-19) 双源实测逐站校准，随轮次同步。
+     阶跃星辰 Step Plan (step-5-preview, OpenAI 协议端点与 Anthropic 的
+     /step_plan/v1/messages 同订阅额度), bluesminds 等；免费模型名按
+     R263(2026-09-19) 双源实测逐站校准，随轮次同步。
 8. 🚨 多渠道异常报警系统 (Notifier)：
    - 支持微信 (Server酱/PushPlus)、Bark iOS、Telegram、通用 Webhook 实时通知与崩溃告警。
 9. ⏰ 热点时效与跨源去重过滤器 (Freshness & Near-Dup Guard)：
@@ -2767,6 +2769,11 @@ def _is_reasoning_channel(provider_name: str, model: str = "") -> bool:
         return True
     if provider_name == "Preset-b.ai":
         return True
+    if provider_name == "Preset-stepfun":
+        # step-5-preview 官方文档带 reasoning_effort(low/medium/high) 思考档，
+        # 与 b.ai 的 glm-5.3-flash 同型（思考链吃 1000~2300 token）。按非推理
+        # 配 25s/600 会复刻 R218 的系统性空包；误升无成本（预算上限非下限）。
+        return True
     ml = (model or "").lower()
     if "thinking" in ml or "reasoning" in ml:
         return True
@@ -3341,6 +3348,19 @@ class MultiLLMEngine:
                 os.getenv("BLUESMINDS_API_KEY", "").strip(),
                 "https://api.bluesminds.com/v1",
                 os.getenv("BLUESMINDS_MODEL", "").strip() or "glm-4-flash",
+            ),
+            # 阶跃星辰 Step Plan 订阅通道（2026-09-20 接入，用户指定稳定源）。
+            # 订阅制（¥49~699/月 Credit 池），与 anthropic 格式端点
+            # api.stepfun.com/step_plan/v1/messages 是同一订阅额度的另一协议面
+            # ——官方文档双协议并列，本引擎全走 OpenAI SDK，故取同通道的
+            # OpenAI 端点（step_plan/v1/chat/completions），两者同计 Credit 池。
+            # ⚠️ /step_plan 前缀不可删：官方文档明示删掉它会静默落入按量计费的
+            # 普通 API 通道（独立计费体系，调用成功也不代表消耗订阅额度）。
+            # key 需中国区 key（.com 域；.ai 域为国际版）。
+            "stepfun": (
+                os.getenv("STEPFUN_API_KEY", "").strip(),
+                "https://api.stepfun.com/step_plan/v1",
+                os.getenv("STEPFUN_MODEL", "").strip() or "step-5-preview",
             ),
         }
 
