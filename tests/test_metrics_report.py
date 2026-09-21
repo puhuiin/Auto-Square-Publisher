@@ -1280,7 +1280,7 @@ class TestFngTrioReportSurface(unittest.TestCase):
 
 
 class TestContentLengthDistribution(unittest.TestCase):
-    """R292：篇幅遥测——prompt 宣称"160~240 字"（短讯）而质量门实际只卡
+    """R292：篇幅遥测——prompt 宣称"140~200 字"（短讯，R294 对齐后）而质量门实际只卡
     60~1200 字符，发布篇幅此前无任何度量面。按体裁分桶报中位/P90/区间命中率。"""
 
     def setUp(self):
@@ -1299,7 +1299,7 @@ class TestContentLengthDistribution(unittest.TestCase):
                 "article": article}
 
     def test_short_form_length_distribution_and_band(self):
-        """短讯按 160~240 区间报命中率；中位/P90 按 CJK 字数"""
+        """短讯按 140~200 区间报命中率；中位/P90 按 CJK 字数"""
         _write(self.path, [self._row(v) for v in
                            [150, 180, 200, 210, 240, 260, 300]])
         loaded, _ = mr.load_rows(self.path)
@@ -1308,7 +1308,7 @@ class TestContentLengthDistribution(unittest.TestCase):
         text = mr.render_text(s, loaded)
         self.assertIn("📏 短讯篇幅（7 篇）", text)
         self.assertIn("中位 210 字", text)
-        self.assertIn("160~240 区间内 4/7", text)
+        self.assertIn("140~200 区间内 3/7", text)
 
     def test_long_form_separate_bucket(self):
         """长文单独分桶（目标 500~800），不与短讯混算"""

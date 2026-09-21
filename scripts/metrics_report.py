@@ -333,7 +333,7 @@ def summarize(rows):
         # R288：热度分分布——TOKEN_LIMIT_BYPASS_IMPACT(30)/ARTICLE_MIN_IMPACT(20)
         # 等门槛的校准基线，此前只能即席探针
         "impact_scores": [],
-        # R292：篇幅遥测（短讯/长文分桶）——prompt"160~240 字"条款的度量面
+        # R292：篇幅遥测（短讯/长文分桶）——prompt"140~200 字"条款的度量面（R294 对齐后）
         "chars_by_genre": {},
         "cjk_by_genre": {},
         # R293：首段钩子普查——prompt 最强调的条款"【首两行定生死】第一段必须放
@@ -524,7 +524,7 @@ def summarize(rows):
             _imp = _num(r.get("impact_score"))
             if _imp is not None:
                 s["impact_scores"].append(int(_imp))
-            # R292：篇幅分体裁收集（短讯目标 160~240 / 长文目标 500~800）
+            # R292：篇幅分体裁收集（短讯目标 140~200 / 长文目标 500~800）
             _cc = _num(r.get("content_chars"))
             _cj = _num(r.get("content_cjk"))
             if _cc is not None or _cj is not None:
@@ -1048,10 +1048,10 @@ def render_text(s, rows=None):
             _hi = sum(1 for i in _imps if i >= 30)
             lines.append(f"  🔥 热度分: 中位 {_med} · P90 {_p90} · "
                          f"≥30 放行档 {_hi}/{len(_imps)} 篇")
-        # R292：篇幅分布——prompt 宣称"160~240 字"（短讯）/500~800（长文）而
+        # R292：篇幅分布——prompt 宣称"140~200 字"（短讯，R294 对齐后）/500~800（长文）而
         # 质量门实际只卡 60~1200，两者差 20 倍；按体裁分桶报中位/P90/区间命中率，
         # 回答"模型到底写多长"（有字段的行才统计，旧 schema 行不渲染）
-        for _genre, _lo, _hi_b in (("短讯", 160, 240), ("长文", 500, 800)):
+        for _genre, _lo, _hi_b in (("短讯", 140, 200), ("长文", 500, 800)):
             _vals = sorted(s["cjk_by_genre"].get(_genre, []))
             if _vals:
                 _m = _vals[len(_vals) // 2]

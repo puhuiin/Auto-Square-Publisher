@@ -11276,5 +11276,44 @@ class TestPython311FStringCompat(unittest.TestCase):
         )
 
 
+class TestLengthBandSync(unittest.TestCase):
+    """R294：篇幅宣称三处同步守卫——SYSTEM_PROMPT / user prompt / 方法 docstring
+    必须同口径。R292 遥测发现旧宣称"160~240"与自家 few-shot 范文（157/173 字）
+    及生产实测（中位 148、P90 170）系统性矛盾：模型从未命中过宣称区间，
+    三处文字各改各的必然再次漂移，故对齐为 140~200 并用本测试锁死。"""
+
+    def test_three_sources_agree_on_band(self):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        _sp = m.MultiLLMEngine.SYSTEM_PROMPT.replace(" ", "")
+        self.assertIn("140~200", _sp,
+                      "SYSTEM_PROMPT 篇幅带必须与 user prompt 同口径")
+        self.assertIn("140~200", prompt, "user prompt 篇幅带必须与 SYSTEM_PROMPT 同口径")
+        self.assertIn("140~200", (m.MultiLLMEngine.summarize.__doc__ or "").replace(" ", ""),
+                      "summarize docstring 篇幅带必须与 prompt 同口径")
+        # 旧值一处都不许残留（除记录变更缘由的注释外）
+        for src in (m.MultiLLMEngine.SYSTEM_PROMPT, prompt):
+            self.assertNotIn("160~240", src.replace(" ", ""),
+                             "旧的 160~240 宣称必须已全部对齐")
+
+    def test_fewshot_examples_inside_band(self):
+        """R294：few-shot 范文是模型最强的长度信号——范文必须落在宣称区间内，
+        否则 prompt 说一套、范文示范另一套（旧 160~240 宣称就是这样被违法的）。"""
+        import re as _re
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        i = sp.find("【真人实战范文对照")
+        self.assertGreater(i, 0, "SYSTEM_PROMPT 必须包含范文对照块")
+        for seg in _re.split(r"---", sp[i:]):
+            if not seg.strip().startswith("范文"):
+                continue
+            cjk = len(_re.findall(r"[一-鿿]", seg))
+            self.assertGreater(cjk, 0, "范文块不应为空")
+            self.assertTrue(140 <= cjk <= 200,
+                            f"范文 CJK {cjk} 字落在宣称区间 140~200 之外：{seg[:40]}")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
