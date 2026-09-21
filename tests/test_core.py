@@ -563,6 +563,51 @@ class TestRecentOpeners(unittest.TestCase):
                          f"时效行推荐词不得包含被禁表述: {fresh_line}")
         self.assertIn("最新/几分钟前", fresh_line, "其余推荐词保留")
 
+    def test_article_prompt_carries_opener_guard(self):
+        """R298：开场/FNG 指纹守卫此前全拼进 ending_hint，而长文分支只取 fresh_art
+        不取 ending_hint——长文正文开场对跨帖去重/领词/FNG 守卫完全失明（生产 14
+        篇长文里 2 篇正文以'刚刚爆出的消息''刚出炉的消息'开场，短讯早被压住的指纹
+        在长文照样复发）。守卫抽成 opener_guard 后两种形态都必须注入。"""
+        self._append([
+            {"outcome": "binance_published", "final_preview": "先泼盆冷水,贪婪指数 66 了。后续略。"},
+            {"outcome": "binance_published", "final_preview": "孙宇晨又抢头条了。后续略。"},
+        ])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 5.0}
+        art, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=True)
+        self.assertIn("近期已用过的开场句", art, "长文必须带跨帖开场去重守卫")
+
+    def test_article_prompt_carries_fng_ban(self):
+        """R298：FNG 反差梗禁令同属指纹守卫，长文也必须带（长文一样会拿情绪指数
+        当反差装置）。market_context 带高压 FNG 钩子触发 fng_ban_active。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        # 近 2 帖武装 FNG → fng_ban_active（hook_count>=2 路径）
+        self._append([
+            {"outcome": "binance_published", "final_preview": "贪婪指数 69，全网上头。略。"},
+            {"outcome": "binance_published", "final_preview": "恐惧贪婪指数 69 又上头。略。"},
+        ])
+        item = {"title": "BTC news", "summary": "s", "age_hours": 5.0}
+        art, _ = eng._build_user_prompt(item, {"strategy_guidance": ""},
+                                        "全网情绪指数: 69/100\n", ["BTC"], article=True)
+        self.assertIn("情绪指数", art)
+        self.assertIn("禁止再引用", art, "长文必须带 FNG 反差梗禁令")
+
+    def test_article_prompt_omits_shortform_cta(self):
+        """R298：抽取只搬指纹守卫，短讯专属的结尾站队 CTA（长文有自己的'给跟踪
+        变量不喊单'结尾）不得泄漏进长文——否则长文会被要求写'扣1扣2'站队。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 5.0}
+        art, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=True)
+        short, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=False)
+        self.assertNotIn("本条结尾站队提问的套路", art, "长文不吃短讯站队 CTA")
+        self.assertIn("本条结尾站队提问的套路", short, "短讯仍带站队 CTA")
+
     def test_persona_and_ending_avoid_recently_seen(self):
         """R287：跨运行不扎堆——最近 K=池大小 次回执里出现过的人设/结尾套路，
         本轮不得再抽中（每轮新进程=新袋子，进程内洗牌对单篇运行是空转；生产近
