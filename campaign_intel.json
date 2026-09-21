@@ -3,25 +3,28 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#Futures",
-    "#TradingTournament",
-    "#StockOptions"
+    "#TradingTournament"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$BANK",
     "$PROVE",
     "$NEAR",
-    "$META",
     "$USDC"
   ],
-  "strategy_guidance": "今日优先追贴 Binance Futures 新公告的 USDBRLUSDT TradFi 永续合约（2026-09-21 上线），用 #Futures 标签做快速解读并植入交易返佣引导；同时 BANK、PROVE、NEAR 三场 Trading Tournament 正在瓜分最高 400 BNB 与 150 万 PROVE 代币券，日常快讯可用“抄作业”角度附上参赛策略持续蹭赛事流量。最紧迫的是股票期权限时手续费优惠（Limited-Time 信号），建议以活动冲刺角度优先追贴，提醒读者赶在截止前交易 1000+ 美股/ETF，并结合 bStocks 分红公告（$META、$AVGO 等）与 Word of the Day 答题组成内容矩阵，最大化 Write to Earn 曝光与返佣。",
-  "last_updated": "2026-09-21T01:44:27.550934Z",
+  "strategy_guidance": "结合当期新上线的Binance Futures USDBRLUSDT永续合约和多个交易竞赛（如BANK、PROVE、NEAR Tournament），创作快讯引导用户参与交易以最大化曝光和Write2Earn返佣。最紧迫的活动是今天（2026-09-21）上线的Binance Futures新合约，建议发帖机器人优先追贴，从活动冲刺角度切入，强调新合约的交易机遇和即时奖励。",
+  "last_updated": "2026-09-21T13:54:09.061613Z",
   "_feed_health": {},
   "_fallback_image": {
     "date": "2026-09-09",
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-b.ai": {
+      "fails": 1,
+      "cooldown_until": "2026-09-21T14:04:13.805341+00:00"
+    }
+  },
   "_article_sent_date": "2026-09-21",
   "_publish_park": {},
   "_intel_refresh_fail": {}
