@@ -423,6 +423,30 @@ class TestRecentOpeners(unittest.TestCase):
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
         self.assertNotIn("领句", prompt)
 
+    def test_article_title_bans_generic_leadins(self):
+        """R296：长文标题是信息流第一触点、比正文开场更显眼的指纹位。长文分支不拼
+        ending_hint（正文开场领词守卫的载体），标题此前完全不设防——生产实录长文标题
+        "刚出炉：Fed升息落地…"命中禁用领词（R286 报表侧已检测但预防侧一直缺）。
+        TITLE 指令必须无条件带上静态领词禁令，且列全 _GENERIC_LEADINS 每个词。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "Fed 升息落地", "summary": "s", "age_hours": 0.5}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=True)
+        self.assertIn("时效领词开头", prompt, "长文 TITLE 指令必须带领词禁令")
+        for w in m._GENERIC_LEADINS:
+            self.assertIn(w, prompt, f"领词「{w}」必须出现在标题禁令里")
+
+    def test_short_form_title_ban_absent(self):
+        """短讯没有独立 TITLE 行（正文即帖），标题领词禁令只属于长文分支——
+        避免把长文专属约束泄漏进短讯 prompt 占位。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "Fed 升息落地", "summary": "s", "age_hours": 0.5}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=False)
+        self.assertNotIn("时效领词开头", prompt)
+
     def _banned_leadins(self):
         prompt, _ = self._eng_prompt()
         for line in prompt.split("\n"):
