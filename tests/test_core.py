@@ -508,14 +508,20 @@ class TestRecentOpeners(unittest.TestCase):
     def test_freshness_line_not_suggesting_banned_leadin(self):
         """R138：<1h 时效行曾建议"用'刚刚/最新'等词强调时效"——与 R121 守卫、
         R132 联锁自相矛盾（一边递开手册一边禁用），"刚刚"指纹正是 <1h 高频期
-        的产物。时效行必须用不撞禁令的表述。"""
+        的产物。时效行必须用不撞禁令的表述。
+        R297：干净窗口（无历史开场）下 used_leadins 为空，故'刚出炉'被撤下的
+        唯一原因就是静态禁词表检查——R282 起'刚出'进 _GENERIC_LEADINS 后，时效
+        行不得再把'刚出炉'递给模型（生产 R282 后 4 次<1h 帖仍以'刚出炉'开场，
+        根因正是此处只查动态集不查静态集）。此用例隔离验证静态半边。"""
         eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
         eng._fail_counts = {}
         eng._clients = {}
         item = {"title": "BTC news", "summary": "s", "age_hours": 0.4}
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
         self.assertNotIn("用'刚刚/最新'", prompt, "时效行不得再建议被禁领词")
-        self.assertIn("最新/刚出炉/几分钟前", prompt)
+        self.assertIn("最新/几分钟前", prompt, "未撞禁令的时效表述保留")
+        self.assertNotIn("刚出炉", prompt,
+                         "R297：'刚出'已进静态禁词表，干净窗口下也绝不推荐'刚出炉'")
         self.assertIn("开头不得用被禁的领句", prompt)
 
     def test_freshness_line_drops_self_banned_words(self):

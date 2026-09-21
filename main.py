@@ -3887,12 +3887,19 @@ class MultiLLMEngine:
         # R156：推荐词本身也可能被过度采纳成指纹（"最新"变下一个"刚刚"）——
         # 时效行动态剔除已被 used_leadins 禁用的表述（2 字前缀比对，与联锁
         # 同语义），禁令优先于推荐；全部撞禁时只留"勿用禁令领句"约束。
+        # R297：R156 只做了动态半边——"刚出炉"[:2]="刚出"自 R282 起已进静态禁词表
+        # _GENERIC_LEADINS，但 used_leadins 只收"近 8 帖开场里实际出现过"的词，
+        # 近期窗口没'刚出'开场时该推荐照样递给模型 → 生产 R282 后 4 次<1h 帖仍以
+        # "刚出炉/刚出的"开场（既不进 used_leadins 被禁、又被时效行鼓励=复发跑步机）。
+        # 推荐词一律先过静态禁词表：已证实的高频指纹任何时候都不得被推荐，与
+        # "禁令优先于推荐"的原意对齐。
         freshness_line = ""
         age_h = news_item.get("age_hours")
         if age_h is not None:
             if age_h < 1:
                 approved = [expr for expr in ("最新", "刚出炉", "几分钟前")
-                            if expr[:2] not in used_leadins]
+                            if expr[:2] not in used_leadins
+                            and expr[:2] not in _GENERIC_LEADINS]
                 expr_part = f"用'{'/'.join(approved)}'等表述强调时效，" if approved else ""
                 freshness = (f"突发（{age_h:.1f} 小时前刚爆出），{expr_part}"
                              "速度感优先，但开头不得用被禁的领句")
