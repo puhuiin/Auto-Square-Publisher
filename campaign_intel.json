@@ -21,8 +21,8 @@
   },
   "_llm_breaker": {
     "Preset-b.ai": {
-      "fails": 1,
-      "cooldown_until": "2026-09-21T14:04:13.805341+00:00"
+      "cooldown_until": "2026-09-21T14:43:38.476908+00:00",
+      "fails": 2
     }
   },
   "_article_sent_date": "2026-09-21",
