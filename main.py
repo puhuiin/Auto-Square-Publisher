@@ -1090,6 +1090,17 @@ class MarketDataProvider:
         funds fund investors investment
         becoming reality year early preview product products
         driest america american hiring engineer remote
+        # R295：活源词表全量审计补录（不等事故——R233 方法论）。2026-09-21 HN
+        # 前页实测词表 40 词中约 31 个是句式大写/标题腔通用词：句首词（Why/Winning/
+        # What）、逗号后词（Core/Again）、标题腔动词名词（Battle/Project/Shell）。
+        # 词边界匹配到加密稿即白吃 +4 排序加权（生产实测受影响轮次约 15% 候选被
+        # 误加权，imp 6~43 场里足以颠倒选稿）。专有名词（Visa/Unix/Snowden/
+        # Google/Amiga/Ogre）不受影响。
+        again always alternative battle board business core deletion deterministic
+        evil face going history idea letter library lottery meetup models national
+        necessary non-deterministic oddest offline orchestrator pirate project
+        radius recompiled rescues shell tools winning happened answers wrong
+        financial queries most time backward propagation chatbots give
     """.split())
 
     @classmethod

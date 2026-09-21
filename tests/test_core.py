@@ -6144,6 +6144,47 @@ class TestHotTopics(unittest.TestCase):
         m.NewsFetcher.apply_hot_topic_boost(cands, keys)
         self.assertEqual(cands[0]["impact_score"], 6, "通用词不得误加权")
 
+    def test_live_hn_frontpage_batch_do_not_leak_generic_words(self):
+        """R295：2026-09-21 HN 前页实测词表全量审计（R233 方法论=主动扫不等事故）。
+        40 个抽取词里约 31 个是句式大写/标题腔通用词：句首词（Why/Winning/What）、
+        逗号后词（Core/Again）、标题腔名词（Battle/Project/Shell）。生产实测这些词
+        使受影响轮次约 15% 候选白吃 +4 排序加权（imp 6~43 场里足以颠倒选稿）。
+        本测试锁：通用词全拦、专有名词全留。"""
+        titles = [
+            "AI chatbots give wrong answers to financial queries 'most of the time'",
+            "Winning the Visa Lottery",
+            "Deterministic Core, Non-Deterministic Shell",
+            "Why back propagation goes backward",
+            "Amiga Unix, Again",
+            "What happened to the Snowden archive",
+            "AX – Google's Open Agentic Orchestrator",
+            "Ogre Battle 64 Recompiled Project at 99.05%",
+        ]
+        keys = m.MarketDataProvider._extract_hot_keywords(titles)
+        for bad in ("WINNING", "LOTTERY", "DETERMINISTIC", "CORE",
+                    "NON-DETERMINISTIC", "SHELL", "GOING", "AGAIN",
+                    "HAPPENED", "ARCHIVE", "ORCHESTRATOR", "BATTLE",
+                    "RECOMPILED", "PROJECT", "CHATBOTS", "GIVE", "WRONG",
+                    "ANSWERS", "FINANCIAL", "QUERIES", "MOST", "TIME",
+                    "BACKWARD", "PROPAGATION"):
+            self.assertNotIn(bad, keys, f"{bad} 是标题腔通用词，不得进热点词表")
+        for good in ("VISA", "UNIX", "SNOWDEN", "GOOGLE", "AMIGA",
+                     "OGRE", "AGENTIC"):
+            self.assertIn(good, keys, f"{good} 是专有名词，应保留")
+        # 端到端：通用词不得给加密稿加权，专有名词命中才加
+        cands = [
+            {"title": "Core developers again battle over project roadmap",
+             "summary": "deterministic shell design debate", "impact_score": 10,
+             "base_impact_score": 10},
+            {"title": "Visa pilot brings USDC settlement to new market",
+             "summary": "", "impact_score": 10, "base_impact_score": 10},
+        ]
+        m.NewsFetcher.apply_hot_topic_boost(cands, keys)
+        self.assertEqual(cands[0]["impact_score"], 10,
+                        "通用词堆砌的加密稿不得吃热点加权")
+        self.assertEqual(cands[1]["impact_score"], 10 + m.HOT_TOPIC_BOOST,
+                        "真命中专有名词才加权")
+
 
 class TestAtomicWrite(unittest.TestCase):
     """崩溃安全写盘：写半截被杀不得留下损坏的状态文件"""
