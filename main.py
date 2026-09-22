@@ -3720,6 +3720,19 @@ class MultiLLMEngine:
             if not _in_source(abs_val):
                 return False, f"正文给出精确金额 {m.group(0)}（≈{abs_val:,.0f}），源文中找不到（疑似编造数据）"
 
+        # R309：裸阿拉伯数字 + 货币词（无 $ 前缀、无 亿/万 单位）——此前是幻觉门的
+        # 盲区：$金额规则要 $ 前缀、CJK 规则要 亿/万，"机构买入 123456 美元" 这种
+        # 裸数+美元三条规则全不命中，编造的精确金额直接过门（数字严禁编造红线的漏洞）。
+        # 源侧的 \$? 可选分支本就能收裸数（合法值会入白名单），故只补内容侧对称规则。
+        # 与 CJK 规则不重叠：那条要求数字后紧跟 亿/万，本条要求数字后直接跟货币词。
+        # 阈值 ≥10000 与 $金额规则一致（小额口吻不校验）。
+        for m in re.finditer(r"(\d[\d,]*(?:\.\d+)?)\s*(?:美元|美金|美刀|USDT)", content):
+            val = float(m.group(1).replace(",", ""))
+            if val < 10000:
+                continue
+            if not _in_source(val):
+                return False, f"正文给出精确金额 {m.group(0)}（≈{val:,.0f}），源文中找不到（疑似编造数据）"
+
         return True, ""
 
     @staticmethod

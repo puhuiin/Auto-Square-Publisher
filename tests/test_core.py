@@ -3746,6 +3746,28 @@ class TestNumberHallucinationGuard(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("24", reason)
 
+    def test_bare_number_plus_currency_word_gated(self):
+        """R309：裸阿拉伯数字 + 货币词（无 $ 前缀、无 亿/万 单位）此前是幻觉门盲区——
+        $金额规则要 $ 前缀、CJK 规则要 亿/万，'机构买入 123456 美元' 三条全不命中，
+        编造精确金额直接过门（数字严禁编造红线漏洞）。"""
+        src_no = "比特币价格突破关键位，市场情绪回暖。"
+        # 编造的裸数+美元：必须拦
+        ok, reason = m.MultiLLMEngine._verify_numbers("机构买入 123456 美元建仓", src_no)
+        self.assertFalse(ok, "编造裸数+美元必须拦")
+        self.assertIn("123456", reason)
+        ok2, _ = m.MultiLLMEngine._verify_numbers("成交额 500000 美元", src_no)
+        self.assertFalse(ok2)
+        # 源文含该数：合法引用不得误杀（源侧 \$? 可选分支已收裸数入白名单）
+        ok3, _ = m.MultiLLMEngine._verify_numbers(
+            "机构买入 123456 美元建仓", "Institutions bought 123456 USD worth today")
+        self.assertTrue(ok3, "源文含该裸数时合法引用必须放行")
+        # 小额不校验（<10000，与 $金额规则同阈值）
+        ok4, _ = m.MultiLLMEngine._verify_numbers("定投 500 美元", src_no)
+        self.assertTrue(ok4, "小额口吻不校验")
+        # USDT 货币词同拦
+        ok5, _ = m.MultiLLMEngine._verify_numbers("转入 88888 USDT", src_no)
+        self.assertFalse(ok5)
+
     def test_traditional_chinese_units_accepted(self):
         """R128 生产误杀回放：TW 源（BlockTempo）标题"市值 2.8 億鎂"——
         源文/正文两侧的繁体 億/萬 此前不被识别，正文引用 2.8 亿被两连误杀
