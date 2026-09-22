@@ -3997,7 +3997,11 @@ class MultiLLMEngine:
                 if not o.startswith(w):
                     continue
                 nxt = o[2:3]
-                if nxt == "" or not (nxt.isascii() and nxt.isalnum()):
+                # R320：cashtag 开场（$ 前缀）——生产近 10 帖「$ETH + 价格 + 24h」
+                # 模板连开 ×3（R124 报警 "$ETH…"×3），但第 3 字符 T 是 ASCII 字母数字
+                # → 被「实体名前半不算」豁免，联锁从不咬合。$ 起手的挂件名本身就是
+                # 完整词边界，应计入聚簇。实体名前半（Bi+twise/Go/coin）规则不变。
+                if nxt == "" or not (nxt.isascii() and nxt.isalnum()) or w.startswith("$"):
                     hit += 1
             if hit >= 3:
                 used_leadins.add(w)

@@ -483,6 +483,20 @@ class TestRecentOpeners(unittest.TestCase):
         ])
         self.assertEqual(self._banned_leadins(), set())
 
+    def test_radar_interlock_bans_cashtag_leadin_cluster(self):
+        """R320：「$ETH + 价格 + 24h」式开场是 R75 级模板指纹（生产近 10 帖 ×3，
+        R124 报警 "$ETH…"×3）。$ 起手挂件名是完整词边界，旧「实体名前半不算」
+        规则把 $E+T 当词干豁免，联锁从不咬合。cashtag 开场聚簇 ≥3 必须禁用。"""
+        self._append([
+            {"outcome": "binance_published",
+             "final_preview": "$ETH 刚站上 2743,24 小时微涨 0.28%。"},
+            {"outcome": "binance_published",
+             "final_preview": "$ETH 凌晨干到 2773,24 小时涨近 5%。"},
+            {"outcome": "binance_published",
+             "final_preview": "$ETH凌晨一度干到2751,24小时拉了4.64%。"},
+        ])
+        self.assertIn("$E", self._banned_leadins())
+
     def test_radar_interlock_merges_with_static_list(self):
         # 静态表命中与自动聚簇合并且去重：两表同词只注入一次
         self._append([
