@@ -9076,6 +9076,35 @@ class TestPermanentFailure(unittest.TestCase):
                    if c.args and isinstance(c.args[0], dict)]
         self.assertTrue(any(r.startswith("[credit 24h]") for r in reasons), reasons)
 
+    def test_permanent_failure_alerts_operator_with_cause(self):
+        """R301：LLM 通道永久死是需人工处置的持久状态（余额耗尽/模型下架），
+        必须推运营报警，不能只埋在运行日志（b.ai 余额耗尽 20h 全靠翻 metrics 才发现）。
+        报警须带具体原因，运营才知道是充值还是改配置。"""
+        eng = self._engine()
+        client = MagicMock()
+        client.chat.completions.create.side_effect = RuntimeError(
+            "Error code: 400 - {'error': {'message': 'credit insufficient balance: 0'}}")
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics"), \
+             patch.object(m.Notifier, "send_notification") as mock_notify:
+            eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertEqual(mock_notify.call_count, 1, "永久失败须且仅推一次运营报警")
+        args, kwargs = mock_notify.call_args
+        self.assertIn("stub", args[0], "报警标题须点名故障提供商")
+        # 断言 threaded 的具体原因短语（非正文静态文案）——静态兜底文案含「余额耗尽请充值」，
+        # 只断言"余额"会被静态文案满足、放过"原因未穿透"的退化；断言注入短语才真正锁住穿透。
+        self.assertIn("账户余额/额度耗尽", args[1], "报警正文须带 threaded 的具体原因")
+        self.assertTrue(kwargs.get("is_error"), "永久失败是 is_error 报警")
+
+    def test_permanent_failure_alert_not_refired_within_cooldown(self):
+        """边沿触发：24h 冷却期内每轮重撞不得重复轰炸——只在首次进入 permanent 报警。"""
+        eng = self._engine()
+        with patch.object(m.Notifier, "send_notification") as mock_notify:
+            eng._breaker_record_permanent("stub", reason="模型下架/404")
+            self.assertEqual(mock_notify.call_count, 1, "首次进入报警")
+            eng._breaker_record_permanent("stub", reason="模型下架/404")
+            self.assertEqual(mock_notify.call_count, 1, "已 permanent 再撞不得重复报警")
+
     def test_router_model_404_not_permanent(self):
         """R169：openrouter/free 是聚合路由，404=当前路由目标挂了，不是通道死亡。
         生产 8 次 permanent 404 全打在 Preset-openrouter 上，把整通道砍 24h，

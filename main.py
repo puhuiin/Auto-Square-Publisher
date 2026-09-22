@@ -3118,13 +3118,23 @@ class MultiLLMEngine:
         logger.warning(f"提供商 [{name}] 触发限流 429，按服务端 Retry-After 冷却 "
                        f"{cooldown_sec} 秒（不升级指数退避）")
 
-    def _breaker_record_permanent(self, name: str):
-        """永久失败长冷却（模型下架/404）：直接冷却 24 小时，当天不再拿故事试错。
-        不复用指数退避——404 不会自己好转，按瞬时故障每次冷却到期试一次只是空烧
-        （生产：免费模型下架当天空烧 8 个故事）。"""
+    def _breaker_record_permanent(self, name: str, reason: str = "模型下架/404"):
+        """永久失败长冷却（模型下架/404/余额耗尽）：直接冷却 24 小时，当天不再拿故事试错。
+        不复用指数退避——这类故障不会自己好转，按瞬时故障每次冷却到期试一次只是空烧
+        （生产：免费模型下架当天空烧 8 个故事）。
+
+        R301：永久失败是**需要人工处置**的持久状态（余额耗尽要充值、模型下架要改配置），
+        与目录全空/Key 失效/RSS 全线故障同级——那些都推运营报警，唯独 LLM 通道永久死
+        此前只 logger.warning 埋在运行日志里（b.ai 余额耗尽 20 小时全靠翻 metrics.jsonl
+        才发现，其间静默降级到弱后端 openrouter/free = 17 字符残句/9202 字残句/单位误算
+        全出自它）。只在**首次进入** permanent 时报警（Notifier 另有 12h 同题节流兜底），
+        冷却期内每轮重撞不重复轰炸。"""
+        was_permanent_holder: List[bool] = []
+
         def _record(state):
             state = dict(state or {})
             info = dict(state.get(name, {"fails": 0}))
+            was_permanent_holder.append(bool(info.get("permanent")))
             info["fails"] = int(info.get("fails", 0)) + 1
             self._extend_cooldown(info, datetime.now(timezone.utc) + timedelta(hours=24))
             info["permanent"] = True
@@ -3132,7 +3142,16 @@ class MultiLLMEngine:
             return state
 
         intel_state_update(self._BREAKER_STATE_KEY, _record, default={})
-        logger.warning(f"提供商 [{name}] 永久失败（模型下架/404），进入 24 小时节约冷却")
+        logger.warning(f"提供商 [{name}] 永久失败（{reason}），进入 24 小时节约冷却")
+        # 边沿触发：仅在 permanent 状态的首次进入报警，避免 24h 冷却期内每轮重撞刷屏。
+        if not (was_permanent_holder and was_permanent_holder[0]):
+            Notifier.send_notification(
+                f"LLM 提供商永久失败: {name}",
+                f"提供商 [{name}] 因「{reason}」被标记永久失败，已冷却 24 小时。\n"
+                "这是需要人工处置的持久故障：余额耗尽请充值、模型下架请改配置。\n"
+                "其间发帖会降级到备用提供商（可能是较弱的免费通道），请尽快处理。",
+                is_error=True,
+            )
 
     def _breaker_record_success(self, name: str):
         had_entry = name in self._breaker_state()
@@ -4301,7 +4320,7 @@ class MultiLLMEngine:
                     # R300：账户余额/额度耗尽是账户级持久故障，充值前必失败——无条件
                     # 走 permanent 24h（不做 router 降级：同账户所有模型一样没钱），
                     # 否则冷却到期每轮撞空账户白烧故事 + failover 位。
-                    self._breaker_record_permanent(provider.name)
+                    self._breaker_record_permanent(provider.name, reason="账户余额/额度耗尽")
                     fail_reason = f"[credit 24h] {err_msg}"
                 elif _is_permanent_failure(e):
                     if _is_router_model(provider.model):
@@ -4311,7 +4330,7 @@ class MultiLLMEngine:
                         fail_reason = f"[router 404] {err_msg}"
                     else:
                         # 永久失败快道：具体模型下架/404 不会自愈，24h 长冷却
-                        self._breaker_record_permanent(provider.name)
+                        self._breaker_record_permanent(provider.name, reason="模型下架/404")
                         fail_reason = f"[permanent 24h] {err_msg}"
                 elif (rl_sec := self._rate_limit_cooldown_sec(e)) is not None:
                     # R96 限流专项：429 按服务端 Retry-After 精确冷却（30s~4h 钳制），
