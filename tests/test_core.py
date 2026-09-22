@@ -5855,6 +5855,22 @@ class TestDownloadImageGate(unittest.TestCase):
                           return_value=self._fake_resp(svg, "application/octet-stream")):
             self.assertIsNone(m.ImageManager.download_image("https://x.example/evil.svg"))
 
+    def test_decompression_bomb_rejected_before_decode(self):
+        """R306：15MB 下载上限只约束压缩体积——高压缩比图可以很小却解出上亿像素
+        （解压炸弹）。像素闸必须 fail-closed 拦下超上限尺寸。为避免真造 >50M px 巨图
+        （150MB+ 分配），把上限临时压到 1000 px，再喂真 200×200(=40000px) 图：
+        闸在→丢弃返 None；闸失效（去掉守卫）→ 会正常转码出 JPEG，assertIsNone 即红。"""
+        # 常量哨位：默认上限须高于 8K 真图、低于 PIL 告警线（防误伤真图 / 防形同虚设）
+        self.assertGreaterEqual(m.IMAGE_MAX_DECODED_PIXELS, 33_000_000, "默认上限须高于 8K 真图")
+        self.assertLess(m.IMAGE_MAX_DECODED_PIXELS, 89_478_485, "默认上限须低于 PIL 告警线")
+
+        real_png = self._real_png(size=(200, 200))  # 40000 px，通过 <1024 门
+        with patch.object(m, "IMAGE_MAX_DECODED_PIXELS", 1000), \
+             patch.object(m, "http_get",
+                          return_value=self._fake_resp(real_png, "image/png")):
+            self.assertIsNone(
+                m.ImageManager.download_image("https://x.example/bomb.png"))
+
     def test_scheme_not_http_rejected_at_download_layer(self):
         """下载层 scheme 门（防御绕过入口门禁的直调）：file/ftp 一律拒绝"""
         for url in ("file:///etc/passwd", "ftp://x.example/a.jpg", "data:image/png;base64,AAAA"):

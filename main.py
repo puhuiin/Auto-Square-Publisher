@@ -684,6 +684,13 @@ def http_get_binance(path: str, **kwargs) -> Optional[requests.Response]:
 FEED_MAX_BYTES = 32 * 1024 * 1024
 _FEED_READ_CHUNK = 64 * 1024
 
+# 配图解码像素上限（防解压炸弹）：15MB 下载上限只约束**压缩体积**，不约束解码后的
+# 像素数——高压缩比 PNG 可以很小却解出上亿像素（10000×10000=1e8 px → RGB 解码占
+# ~300MB）。PIL 默认 MAX_IMAGE_PIXELS≈89.5M 只在 2× 处才抛错，中间档（89.5M~179M）
+# 仅告警不拦，会白吃一次巨额分配。真实新闻图远小于此（8K=33M、6000×4000=24M），故取
+# 50M 作硬闸：远高于任何合法图、低于 PIL 告警线，超限 fail-closed 走情绪卡兜底。
+IMAGE_MAX_DECODED_PIXELS = 50_000_000
+
 
 def _read_response_capped(resp, cap: int = FEED_MAX_BYTES) -> Optional[bytes]:
     """有界读取 HTTP 响应体：超限/读取失败返回 None（调用方按故障处理）。
@@ -5314,6 +5321,14 @@ class ImageManager:
             # R7：这一段同时是**内容可信门**——只有能解码成图片的字节才会被放行。
             try:
                 with Image.open(io.BytesIO(content)) as src:
+                    # 解压炸弹闸：尺寸从文件头即可读出（无需整幅解码），超上限在昂贵的
+                    # convert/save **之前** fail-closed，避免上亿像素图触发数百 MB 分配。
+                    px = (src.width or 0) * (src.height or 0)
+                    if px > IMAGE_MAX_DECODED_PIXELS:
+                        logger.warning(
+                            f"配图解码像素 {px:,} 超上限 {IMAGE_MAX_DECODED_PIXELS:,}"
+                            f"（{src.width}×{src.height}），疑似解压炸弹，已丢弃（改用兜底图）")
+                        return None
                     img = src if src.mode == "RGB" else src.convert("RGB")
                     try:
                         # 适当等比缩放超大图片，极大提升网络传输与币安处理速度
