@@ -817,6 +817,43 @@ class TestPastDateRefs(unittest.TestCase):
         self.assertEqual(m._past_date_refs("今天(2026-09-15)截止", now), ["2026-09-15"])
         self.assertEqual(m._past_date_refs("今日（2026-09-15）截止", now), ["2026-09-15"])
 
+    def test_english_today_relative_date_flagged_after_rollover(self):
+        """R317：英文「ending today」锚定写作日。生产 guidance（09-22T12:10）
+        写「AEON competition ending today」，09-23 00:05 时 R206 显式日期扫描
+        仍空（无 YYYY-MM-DD 可比）。written_on 日历日 ≠ now 即命中。"""
+        from datetime import datetime as _dt, timezone as _tz
+        written = _dt(2026, 9, 22, 12, 10, tzinfo=_tz.utc)
+        text = "Focus first on the AEON competition ending today, capture the $200K reward."
+        # 同日：today 仍有效
+        self.assertEqual(
+            m._past_date_refs(text, now=written, written_on=written), [])
+        # 日切后：today 已过期
+        later = _dt(2026, 9, 23, 0, 5, tzinfo=_tz.utc)
+        self.assertEqual(
+            m._past_date_refs(text, now=later, written_on=written), ["today"])
+        # 无 written_on 不猜（防误报）
+        self.assertEqual(m._past_date_refs(text, now=later), [])
+        # 无 today 的文本不受影响
+        self.assertEqual(
+            m._past_date_refs("AEON season launches", now=later, written_on=written), [])
+
+    def test_intel_degraded_on_stale_english_today(self):
+        """R317：_intel_is_degraded 与 get_campaign_intel 共用 written_on 谓词。"""
+        from datetime import datetime as _dt, timezone as _tz
+        written = _dt(2026, 9, 22, 12, 10, tzinfo=_tz.utc)
+        intel = {
+            "strategy_guidance": "AEON competition ending today",
+            "last_updated": written.isoformat(),
+        }
+        wo = m._intel_written_on(intel)
+        self.assertEqual(wo, written)
+        later = _dt(2026, 9, 23, 0, 5, tzinfo=_tz.utc)
+        self.assertEqual(
+            m._past_date_refs(intel["strategy_guidance"], now=later, written_on=wo),
+            ["today"])
+        self.assertIsNone(m._intel_written_on({"strategy_guidance": "x"}))
+        self.assertIsNone(m._intel_written_on(None))
+
     def test_compact_date_forms_detected_with_guards(self):
         """R281：活源实证——2026-09-20 的 guidance 自己写「9-21 上线」「季度
         0326 交割」，都是三种既有形态（YYYY-MM-DD / M月D日 / M/D）的漏网面；

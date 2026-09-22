@@ -3903,7 +3903,8 @@ class MultiLLMEngine:
                 # guidance 仍可能带着过期竞赛指导（生产实录：XPIN 09-04 已过期
                 # 一周仍因 last_updated 新鲜走正常注入）。注入前检测过期日期
                 # 引用，命中即追加禁提注记——新鲜路径不再无条件信任内容。
-                stale_refs = _past_date_refs(str(campaign_intel.get("strategy_guidance") or ""))
+                stale_refs = _past_date_refs(str(campaign_intel.get("strategy_guidance") or ""),
+                                             written_on=_intel_written_on(campaign_intel))
                 intel_section = f"【官方活动风向参考】：{campaign_intel.get('strategy_guidance')}（若与本条新闻无关则切勿生硬提及）。\n"
                 if stale_refs:
                     intel_section += (f"⚠️ 上述参考中引用的 {'、'.join(stale_refs)} 均为已过期活动的日期，"
@@ -4444,7 +4445,8 @@ _COMPACT_DATE_CTX = ("截止", "截至", "上线", "开启", "开始", "结束",
 _COMPACT_DATE_WINDOW_DAYS = 90
 
 
-def _past_date_refs(text: str, now: Optional[datetime] = None) -> List[str]:
+def _past_date_refs(text: str, now: Optional[datetime] = None,
+                    written_on: Optional[datetime] = None) -> List[str]:
     """R127：提取文本中早于昨天的日期引用（YYYY-MM-DD / M月D日 / M/D）。
     R281 补 R127：紧凑形态 M-D（"9-18"）与 MMDD（"0918"）——见 _COMPACT_DATE_CTX 注释。
     用于度量情报 guidance 是否残留过期活动日期（软约束的度量侧）。
@@ -4454,6 +4456,9 @@ def _past_date_refs(text: str, now: Optional[datetime] = None) -> List[str]:
     写着「KGST…今日（2026-09-13）截止」，在 09-14 的 12h 新鲜窗内仍被
     当作有效指导注入，而 36h 阈值要到 09-14 12:00Z 才开始标记，留下
     ~11h 的「新鲜但日期已翻篇」漏洞。
+    R317：英文相对日期「today」锚定写作日 written_on——生产 guidance
+    （09-22T12:10）写「AEON competition ending today」，09-23 00:05 时
+    显式日期扫描仍空（R206 只认「今日/今天 YYYY-MM-DD」）。
 
     R7 修三处口径（均有实测复现）：
     ① 无年份的 `M月D日` / `M/D` 旧实现硬套 `now.year`：1 月看「12月31日」
@@ -4513,6 +4518,15 @@ def _past_date_refs(text: str, now: Optional[datetime] = None) -> List[str]:
             continue
         if d.date() != now.date() and raw not in refs:
             refs.append(raw)
+    # R317：英文相对日期「today」锚定写作日。written_on 日历日 ≠ now 即命中
+    # （与「今日 YYYY-MM-DD」同语义，只是日期隐含在写作时刻）。
+    if written_on is not None and re.search(r"\btoday\b", text, re.I):
+        try:
+            wdate = written_on.date() if isinstance(written_on, datetime) else written_on
+        except Exception:
+            wdate = None
+        if wdate is not None and wdate != now.date() and "today" not in refs:
+            refs.append("today")
     # R281：紧凑形态（"9-18" / "0918"）。守卫与活源依据见 _COMPACT_DATE_CTX 注释：
     # 关键词邻位 + ±90 天窗口双闸——数量区间（"5-8 折"）与远期日期不进场。
     for m in re.finditer(
@@ -4819,7 +4833,8 @@ class CampaignScanner:
             # 会把已结束竞赛当现役注入。命中过期日期引用即视为不可用并刷新；
             # 刚刷新过（age < 2h）仍带过期日期时靠 prompt 注记兜底，不 20min
             # 连环烧 LLM。
-            stale_in_fresh = _past_date_refs(str(usable_cache.get("strategy_guidance") or ""))
+            stale_in_fresh = _past_date_refs(str(usable_cache.get("strategy_guidance") or ""),
+                                             written_on=_intel_written_on(usable_cache))
             if not stale_in_fresh:
                 logger.info(f"使用现存有效的币安活动情报 (更新于 {usable_cache.get('last_updated')})")
                 return usable_cache
@@ -7024,6 +7039,20 @@ def _quota_next_slot_estimate(cache_mgr) -> tuple:
         return None, None  # 估算失败不影响配额退出语义
 
 
+def _intel_written_on(campaign_intel: Optional[Dict[str, Any]]) -> Optional[datetime]:
+    """情报 last_updated 解析（R317）：供 _past_date_refs 的英文「today」
+    相对日期锚定写作日。解析失败返回 None（不猜，与 _intel_age_hours 同向）。"""
+    if not isinstance(campaign_intel, dict):
+        return None
+    try:
+        lu = str(campaign_intel.get("last_updated") or "")
+        if not lu:
+            return None
+        return datetime.fromisoformat(lu.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+
 def _intel_age_hours(campaign_intel: Optional[Dict[str, Any]]) -> Optional[float]:
     """情报陈旧小时数（R195）。无 last_updated / 解析失败返回 None。
     供 quota_blocked 与发帖 run_summary 共用——饱和轮也刷情报后，
@@ -7057,7 +7086,8 @@ def _intel_is_degraded(campaign_intel: Optional[Dict[str, Any]]) -> Optional[boo
         return True
     if age >= INTEL_EXPIRE_HOURS:
         return True
-    if _past_date_refs(str(campaign_intel.get("strategy_guidance") or "")):
+    if _past_date_refs(str(campaign_intel.get("strategy_guidance") or ""),
+                       written_on=_intel_written_on(campaign_intel)):
         return True
     return False
 
