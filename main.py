@@ -2761,6 +2761,15 @@ _GENERIC_LEADINS = ("刚刚", "突发", "重磅", "快讯", "注意", "刚出")
 _FNG_ANCHOR_RE = re.compile(
     r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^\s。！？，、；：\nA-Za-z0-9]{0,4}\s?\d{2}")
 
+# R121：长文回执以"一、发生了什么"分节头开头——分节头不是开场句，开场去重/指纹
+# 雷达必须跳过它取首个正文段，否则对全部长文失明。R299：此前 main._recent_openers
+# 内联该正则、metrics_report._ARTICLE_HEADER_RE 各持一份副本，两处都注释"与对方同
+# 语义"却无同步守卫（FNG 锚点/标题领词两个双事实源都有字节同一守卫，唯独它漏）。
+# 提升为模块级常量，与报表侧靠 TestArticleHeaderSync 锁死——改这里必须同步报表侧，
+# 否则 main 若扩展跳过"（一）/1、"等新分节头形态，报表雷达会把新分节头当开场句、
+# 污染指纹统计。
+_ARTICLE_HEADER_RE = re.compile(r"^[一二三四五六七八九十]、")
+
 
 class LLMProviderConfig:
     """单个 LLM 模型提供商配置"""
@@ -3746,8 +3755,8 @@ class MultiLLMEngine:
             for seg in (s.strip() for s in re.split(r"[。\n]", preview)):
                 if not seg:
                     continue
-                if re.match(r"^[一二三四五六七八九十]、", seg):
-                    continue  # 长文分节头
+                if _ARTICLE_HEADER_RE.match(seg):
+                    continue  # 长文分节头（R299：模块级常量，与报表侧同步守卫）
                 first_sentence = seg
                 break
             if first_sentence:

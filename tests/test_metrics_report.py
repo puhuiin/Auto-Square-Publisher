@@ -1089,6 +1089,15 @@ class TestQualityPatternSync(unittest.TestCase):
         self.assertEqual(mr._FNG_ANCHOR_RE.pattern, m._FNG_ANCHOR_RE.pattern,
                          "FNG 锚定检测模式两份不一致——改 main 必须同步 metrics_report")
 
+    def test_article_header_pattern_in_sync(self):
+        """R299：长文分节头跳过正则是双事实源——main._recent_openers（开场去重/
+        领词守卫的采集口径）与 metrics_report._ARTICLE_HEADER_RE（指纹雷达 R124 +
+        开场普查 R293 的采集口径）各持一份。两处若漂移，报表测量的"开场句"就与
+        main 守卫/下发的不是同一个 → 雷达把新分节头形态误当开场句污染统计。
+        FNG 锚点/标题领词两个双事实源都已有字节同一守卫，此前唯独这条漏。"""
+        self.assertEqual(mr._ARTICLE_HEADER_RE.pattern, m._ARTICLE_HEADER_RE.pattern,
+                         "长文分节头正则两份不一致——改 main 必须同步 metrics_report")
+
     def test_title_leadins_in_sync(self):
         """R286：长文标题禁用领词表是 main._GENERIC_LEADINS 的第二份事实源
         （R282 把'刚出'提进静态表后，标题侧必须同刻跟上，否则标题漏防）。"""
