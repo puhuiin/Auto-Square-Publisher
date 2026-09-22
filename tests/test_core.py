@@ -2120,6 +2120,21 @@ class TestEnvParsing(unittest.TestCase):
         finally:
             os.environ.pop("T_F", None)
 
+    def test_parse_max_posts_tolerant(self):
+        """R303：MAX_POSTS_PER_RUN 是外部可控值，必须容错。空/非整数/负数回落 1；
+        正整数原样。关键回归：Unicode 数字类（上标 ²/带圈 ①）str.isdigit()=True 但
+        int() 抛 ValueError——旧的 isdigit 守卫会让外部值直接崩启动。"""
+        self.assertEqual(m._parse_max_posts("10"), 10)
+        self.assertEqual(m._parse_max_posts("  3  "), 3)
+        self.assertEqual(m._parse_max_posts("1"), 1)
+        # 空 / 非整数 / 负数 / 零 → 地板 1
+        for bad in ("", "  ", "abc", "2.5", "-1", "0", "-99"):
+            self.assertEqual(m._parse_max_posts(bad), 1, bad)
+        # 关键回归：isdigit()=True 但 int() 拒收的 Unicode 数字，旧写法会 ValueError 崩
+        for uni in ("²", "³", "①", "⑤"):
+            self.assertTrue(uni.isdigit(), f"{uni} 应触发旧 isdigit 守卫")
+            self.assertEqual(m._parse_max_posts(uni), 1, uni)
+
     def test_clamp01(self):
         self.assertEqual(m._clamp01("T", 0.65), 0.65)
         self.assertEqual(m._clamp01("T", 0.0), 0.0)

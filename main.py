@@ -125,6 +125,19 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+def _parse_max_posts(raw: str) -> int:
+    """MAX_POSTS_PER_RUN 容错解析：外部可控值（workflow_dispatch 输入 /
+    repository_dispatch client_payload），空/非整数/负数一律回落 1（保留"≥1"地板）。
+    不用 `int(x) if x.isdigit() else 1` 守卫——str.isdigit() 对上标/带圈 Unicode
+    数字（"²"、"①" 等数字类字符）返回 True，但 int() 拒收会抛 ValueError 崩运行；
+    外部可控值能崩启动就是输入校验缺口。上限由 24h 配额在下游钳制，此处不设。"""
+    try:
+        n = int((raw or "").strip())
+    except (ValueError, TypeError):
+        return 1
+    return n if n >= 1 else 1
+
+
 def _env_float(name: str, default: float) -> float:
     raw = os.getenv(name, "").strip()
     if not raw:
@@ -6982,8 +6995,7 @@ def _run_main():
     # 管线变慢（正是 R177 要修的误读，只是漏了这一处）。
     quota_wait_sec = 0.0
     square_api_key = os.getenv("SQUARE_API_KEY", "").strip()
-    max_posts_raw = os.getenv("MAX_POSTS_PER_RUN", "").strip() or "1"
-    max_posts = int(max_posts_raw) if max_posts_raw.isdigit() else 1
+    max_posts = _parse_max_posts(os.getenv("MAX_POSTS_PER_RUN", ""))
     dry_run = os.getenv("DRY_RUN", "false").strip().lower() in ("true", "1", "yes")
 
     # 北京时间活跃时段窗口：窗口外整轮静默退出，避免低流量时段发帖稀释账号权重
