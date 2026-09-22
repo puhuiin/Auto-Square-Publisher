@@ -6341,6 +6341,37 @@ class TestHotTopics(unittest.TestCase):
         m.NewsFetcher.apply_hot_topic_boost(cands, keys)
         self.assertEqual(cands[0]["impact_score"], 6, "通用词不得误加权")
 
+    def test_production_2026_09_22_titles_do_not_leak_generic_words(self):
+        """R315：2026-09-22 生产热点回放（R295 同方法续补）。18:50 单轮 hot=13、
+        12 轮合计 67——漏出 SYSTEM/MEDIA/DEVELOPMENT 等，词边界可误加权常规加密稿。
+        专有名词 APPLE/JETBRAINS/CLAUDE/XIAOMI 保留。"""
+        titles = [
+            "Avoiding the babbling-idiot failure in a time-triggered communication system",
+            "Turn off and restrict access to Apple Intelligence",
+            "US halts flights at busy East Coast airports, says fiber line cut",
+            "Help 404 Media Find Out How Your Local Police Are Surveilling You",
+            "JetBrains Air: A System of Products for Agentic Software Development",
+            "9 Ads per Minute: FIFA Cup 26 – the price of the game",
+            "Ars Technica's Mac Mini review: The new M6",
+            "Xiaomi MiMo v2.6 | Transformers Explained Visually",
+            "The Claude Delusion",
+        ]
+        keys = m.MarketDataProvider._extract_hot_keywords(titles)
+        for bad in ("AVOIDING", "TURN", "FIND", "HELP", "COAST", "EAST",
+                    "MEDIA", "POLICE", "DEVELOPMENT", "MINUTE", "SOFTWARE",
+                    "SYSTEM", "EXPLAINED", "VISUALLY", "MINI", "TECHNICA",
+                    "INTELLIGENCE", "SURVEILLING"):
+            self.assertNotIn(bad, keys, f"{bad} 是标题腔通用词，不得进热点词表")
+        for good in ("APPLE", "JETBRAINS", "FIFA", "CLAUDE", "XIAOMI",
+                     "MIMO", "TRANSFORMERS", "AGENTIC"):
+            self.assertIn(good, keys, f"{good} 是专有名词，应保留")
+        cands = [
+            {"title": "Crypto media system development needs more software tools",
+             "summary": "", "impact_score": 6, "base_impact_score": 6},
+        ]
+        m.NewsFetcher.apply_hot_topic_boost(cands, keys)
+        self.assertEqual(cands[0]["impact_score"], 6, "通用词不得误加权加密稿")
+
     def test_live_hn_frontpage_batch_do_not_leak_generic_words(self):
         """R295：2026-09-21 HN 前页实测词表全量审计（R233 方法论=主动扫不等事故）。
         40 个抽取词里约 31 个是句式大写/标题腔通用词：句首词（Why/Winning/What）、

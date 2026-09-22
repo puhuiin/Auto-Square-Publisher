@@ -1121,6 +1121,13 @@ class MarketDataProvider:
         necessary non-deterministic oddest offline orchestrator pirate project
         radius recompiled rescues shell tools winning happened answers wrong
         financial queries most time backward propagation chatbots give
+        # R315：2026-09-22 生产热点回放续补（R295 同方法）。18:50 单轮 hot=13、
+        # 12 轮合计 67——漏出 AVOIDING/TURN/FIND/HELP/COAST/EAST/MEDIA/POLICE/
+        # DEVELOPMENT/MINUTE/SOFTWARE/SYSTEM/EXPLAINED/VISUALLY/MINI/TECHNICA。
+        # 专有名词 APPLE/META/JETBRAINS/FIFA/RASPBERRY/SIRI/CLAUDE/MIMO/XIAOMI 保留。
+        avoiding turn find help coast east media police development
+        minute software system explained visually mini technica
+        intelligence surveilling
     """.split())
 
     @classmethod
