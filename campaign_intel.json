@@ -2,29 +2,27 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
+    "#TradingTournament",
     "#Futures",
-    "#TradingTournament"
+    "#StockOptions"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$BANK",
     "$PROVE",
     "$NEAR",
-    "$USDC"
+    "$USDC",
+    "$ARC",
+    "$USDBRL"
   ],
-  "strategy_guidance": "结合当期新上线的Binance Futures USDBRLUSDT永续合约和多个交易竞赛（如BANK、PROVE、NEAR Tournament），创作快讯引导用户参与交易以最大化曝光和Write2Earn返佣。最紧迫的活动是今天（2026-09-21）上线的Binance Futures新合约，建议发帖机器人优先追贴，从活动冲刺角度切入，强调新合约的交易机遇和即时奖励。",
-  "last_updated": "2026-09-21T13:54:09.061613Z",
+  "strategy_guidance": "优先追贴Limited-Time Fee Promotion for Stock Options的限时窗口，结合2026-09-21新增的25只美股与USDBRLUSDT永续合约，以'活动冲刺+抄作业'角度输出交易攻略；同步挂载BANK、PROVE、NEAR交易锦标赛与Binance Wallet Arc赛季，通过#Write2Earn发布参赛复盘，引导读者交易并最大化返佣收益。",
+  "last_updated": "2026-09-22T00:04:28.046993Z",
   "_feed_health": {},
   "_fallback_image": {
     "date": "2026-09-09",
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
-  "_llm_breaker": {
-    "Preset-b.ai": {
-      "fails": 1,
-      "cooldown_until": "2026-09-21T23:53:30.977876+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-09-21",
   "_publish_park": {},
   "_intel_refresh_fail": {}
