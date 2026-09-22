@@ -2647,6 +2647,27 @@ def _is_router_model(model: str) -> bool:
     return any(seg in ("auto", "router") for seg in segments)
 
 
+# R300：账户余额/额度耗尽是**账户级持久**故障——充值前每次调用必失败，且与
+# 404 下架同源（不会在当天自愈）。生产实证 b.ai(glm-5.3-flash) 从 09-21 起返回
+# `400 credit insufficient balance`，8 次跨 10 小时：旧逻辑把它当瞬时故障走指数
+# 退避（封顶 4h），冷却到期又去撞同一个空账户，每轮白烧一个故事 + 一个 failover 位。
+# 与 404 唯一的区别：余额耗尽是**账户级**而非模型级，所以聚合路由别名也救不了
+# （同账户所有 :free 模型一样没钱），必须无条件走 permanent 快道，不做 router 降级。
+_CREDIT_EXHAUSTED_RE = re.compile(
+    r"insufficient[\s_]*(balance|credit|fund|quota)"
+    r"|(balance|credit|fund|quota)[\s_]*insufficient"
+    r"|余额不足|额度不足|欠费",
+    re.IGNORECASE)
+
+
+def _is_credit_exhausted(exc: BaseException) -> bool:
+    """账户余额/额度耗尽判定：命中即按 permanent 24h 冷却，当天不再撞空账户空烧。
+    只认「insufficient + balance/credit/fund/quota」（含 insufficient_quota 下划线形态）
+    与中文余额不足/额度不足/欠费；普通 429「exceeded your rate limit」不命中（那是节奏
+    问题，走既有 Retry-After 冷却）。"""
+    return bool(_CREDIT_EXHAUSTED_RE.search(str(exc or "")))
+
+
 # 结尾站队提问的风格池：每条帖子随机抽取一种，避免时间线上全是同款"扣1扣2"
 # 写派人设风格池：每帖随机抽取一种注入 system prompt，让时间线的"人味"不重样。
 # 核心规则（$ 标识/字数/标签/禁套话）在 SYSTEM_PROMPT 里不受影响，这里只换表达气质。
@@ -4276,7 +4297,13 @@ class MultiLLMEngine:
             except Exception as e:
                 err_msg = str(e)
                 self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
-                if _is_permanent_failure(e):
+                if _is_credit_exhausted(e):
+                    # R300：账户余额/额度耗尽是账户级持久故障，充值前必失败——无条件
+                    # 走 permanent 24h（不做 router 降级：同账户所有模型一样没钱），
+                    # 否则冷却到期每轮撞空账户白烧故事 + failover 位。
+                    self._breaker_record_permanent(provider.name)
+                    fail_reason = f"[credit 24h] {err_msg}"
+                elif _is_permanent_failure(e):
                     if _is_router_model(provider.model):
                         # R169：聚合路由 404 = 当前路由目标挂了，不是通道死亡。
                         # 走普通指数退避（可升级到 4h），勿 24h permanent 整通道报废。

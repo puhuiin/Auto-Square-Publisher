@@ -9013,6 +9013,69 @@ class TestPermanentFailure(unittest.TestCase):
                    if c.args and isinstance(c.args[0], dict)]
         self.assertTrue(any(r.startswith("[permanent 24h]") for r in reasons), reasons)
 
+    def test_credit_exhausted_matrix(self):
+        true_cases = [
+            "Error code: 400 - {'error': {'message': 'credit insufficient balance: 0'}}",
+            "insufficient balance",
+            "insufficient credit",
+            "insufficient funds",
+            "Error code: 429 - insufficient_quota: You exceeded your current quota",
+            "账户余额不足，请充值",
+            "账户额度不足",
+            "当前账户已欠费",
+        ]
+        for msg in true_cases:
+            self.assertTrue(m._is_credit_exhausted(RuntimeError(msg)), msg)
+        false_cases = [
+            "Error code: 429 - rate limit exceeded",
+            "you have exceeded your rate limit",
+            "timeout after 30s",
+            "service unavailable",
+            "Error code: 500 - internal error",
+            "boom",
+            "",
+        ]
+        for msg in false_cases:
+            self.assertFalse(m._is_credit_exhausted(RuntimeError(msg)), msg)
+
+    def test_credit_exhausted_gets_24h_permanent_and_tag(self):
+        """R300：b.ai(glm-5.3-flash) 余额耗尽返回 400 credit insufficient——账户级
+        持久故障，充值前必失败。旧逻辑当瞬时故障走指数退避（封顶 4h），冷却到期
+        每轮撞空账户白烧故事。必须走 permanent 24h。"""
+        eng = self._engine()
+        client = MagicMock()
+        client.chat.completions.create.side_effect = RuntimeError(
+            "Error code: 400 - {'error': {'message': 'credit insufficient balance: 0'}}")
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics") as mock_metrics:
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        self.assertGreater(self._cooldown_hours(eng), 20)
+        self.assertTrue(eng._breaker_state()["stub"].get("permanent"))
+        reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
+                   if c.args and isinstance(c.args[0], dict)]
+        self.assertTrue(any(r.startswith("[credit 24h]") for r in reasons), reasons)
+
+    def test_credit_exhausted_permanent_even_for_router_model(self):
+        """账户级 vs 模型级的关键区别：404 是模型级（路由别名可换存活兄弟，走指数退避），
+        但余额耗尽是账户级——同账户所有 :free 模型一样没钱，路由救不了，必须 permanent。"""
+        eng = self._engine()
+        eng.providers = [m.LLMProviderConfig(
+            "Preset-openrouter", "https://openrouter.ai/api/v1", "k", "openrouter/free")]
+        client = MagicMock()
+        client.chat.completions.create.side_effect = RuntimeError(
+            "Error code: 402 - {'error': {'message': 'Insufficient credits'}}")
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics") as mock_metrics:
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        state = eng._breaker_state()["Preset-openrouter"]
+        self.assertTrue(state.get("permanent"), "余额耗尽即使路由别名也走 permanent")
+        self.assertGreater(self._cooldown_hours(eng, "Preset-openrouter"), 20)
+        reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
+                   if c.args and isinstance(c.args[0], dict)]
+        self.assertTrue(any(r.startswith("[credit 24h]") for r in reasons), reasons)
+
     def test_router_model_404_not_permanent(self):
         """R169：openrouter/free 是聚合路由，404=当前路由目标挂了，不是通道死亡。
         生产 8 次 permanent 404 全打在 Preset-openrouter 上，把整通道砍 24h，
