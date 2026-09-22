@@ -3558,24 +3558,23 @@ class MultiLLMEngine:
     # R314：上游安全壳/元回复（不是正文）。R163 content_preview 实锤：
     # openrouter/free 连续 4 次返回恰好 17 字符的 "User Safety: safe"，
     # 被误归为「内容过短」——短是质量问题，这是上游占位壳，换模型即可。
-    _UPSTREAM_META_STUBS = (
-        "User Safety: safe",
-        "User Safety: unsafe",
-        "User Safety: unknown",
-    )
+    # R322：精确匹配漏掉长变体——生产拒稿快照「User Safety: unsafe Safety
+    # Categories: PII/Privacy」落入「内容过短 (50 字符)」。改前缀匹配
+    # "User Safety:"，安全类别后缀任意变化都归元回复。
+    _UPSTREAM_META_PREFIX = "User Safety:"
 
     @classmethod
     def _passes_quality_gate(cls, content: str) -> Tuple[bool, str]:
         """
         AI 输出质量硬门槛：防止低质量/跑偏输出被直接发布。
-        - 上游元回复（User Safety: safe 等）单独归类，勿与内容过短混谈
+        - 上游元回复（User Safety: …）单独归类，勿与内容过短混谈
         - 拒答/身份暴露（"作为AI我无法…"）直接判废并切换下一模型
         - 中文字符必须 >= 40（本账号面向中文读者，纯英文输出视为跑偏）
         - 总长度必须在 60~1200 字符之间
         """
         stripped = (content or "").strip()
-        if stripped in cls._UPSTREAM_META_STUBS:
-            return False, f"上游元回复而非正文（{stripped!r}）"
+        if stripped.startswith(cls._UPSTREAM_META_PREFIX):
+            return False, f"上游元回复而非正文（{stripped[:60]!r}）"
         for pat in cls._REFUSAL_PATTERNS:
             if pat in content:
                 return False, f"疑似拒答/身份暴露（命中: {pat}）"

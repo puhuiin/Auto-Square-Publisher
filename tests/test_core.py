@@ -1426,13 +1426,20 @@ class TestQualityGate(unittest.TestCase):
         self.assertFalse(ok)
 
     def test_upstream_meta_stub_not_misclassified_as_short(self):
-        """R314：R163 content_preview 实锤 openrouter/free 连续 4 次返回
+        """R314/R322：R163 content_preview 实锤 openrouter/free 连续 4 次返回
         恰好 17 字符的 'User Safety: safe'。旧实现误归「内容过短 (17 字符)」
-        ——短是质量问题，这是上游安全壳元回复，必须单独归类。"""
-        ok, reason = m.MultiLLMEngine._passes_quality_gate("User Safety: safe")
-        self.assertFalse(ok)
-        self.assertIn("上游元回复", reason)
-        self.assertNotIn("内容过短", reason)
+        ——短是质量问题，这是上游安全壳元回复，必须单独归类。
+        R322：精确匹配漏掉长变体——生产拒稿「User Safety: unsafe Safety
+        Categories: PII/Privacy」落入「内容过短 (50 字符)」。改前缀匹配。"""
+        for stub in ("User Safety: safe",
+                     "User Safety: unsafe",
+                     "User Safety: unknown",
+                     "User Safety: unsafe Safety Categories: PII/Privacy",
+                     "User Safety: unsafe Safety Categories: Hate/Toxic"):
+            ok, reason = m.MultiLLMEngine._passes_quality_gate(stub)
+            self.assertFalse(ok, stub)
+            self.assertIn("上游元回复", reason, stub)
+            self.assertNotIn("内容过短", reason, stub)
         # 对照：真正的短内容仍走「内容过短」
         ok2, reason2 = m.MultiLLMEngine._passes_quality_gate("太短了")
         self.assertFalse(ok2)
