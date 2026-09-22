@@ -1789,6 +1789,30 @@ class TestContentSanitizer(unittest.TestCase):
         self.assertNotIn("$USDT", s)
         self.assertIn("$BTC", s)
 
+    def test_force_strip_not_rewoven_or_ensured(self):
+        """R316：FORCE_STRIP「稳定币不做挂件」被 weave 击穿——sanitize 剥掉 $USDC
+        后 weave/ensure 又织回（生产 09-20/09-22 两帖 Circle/USDC 实录，
+        widget 全是 $USDC）。weave/ensure 必须跳过 FORCE_STRIP 词。"""
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "USDC", "ETH"}
+        try:
+            # weave 不得回织
+            s = m.SquarePublisher._weave_cashtags(
+                "Circle 推广 USDC 支付通道，BTC 同步走强", ["USDC", "BTC"])
+            self.assertIn("$BTC", s, "非稳定币仍要织入")
+            self.assertNotIn("$USDC", s, "FORCE_STRIP 词不得回织")
+            self.assertIn("USDC", s, "裸词保留可读性")
+            # ensure 不得用稳定币当兜底
+            s2 = m.SquarePublisher._ensure_token_widget("纯情绪分析", ["USDC"])
+            self.assertNotIn("$USDC", s2)
+            self.assertEqual(s2, "纯情绪分析")
+            # 有非稳定币时仍兜底
+            s3 = m.SquarePublisher._ensure_token_widget(
+                "纯情绪分析\n\n#Write2Earn", ["USDC", "BTC"])
+            self.assertIn("$BTC", s3)
+            self.assertNotIn("$USDC", s3)
+        finally:
+            m.SymbolValidator._valid_symbols_cache = set(TEST_SYMBOL_UNIVERSE)
+
     def test_risky_words_replaced(self):
         s = m.SquarePublisher._sanitize_content("这波稳赚，加我带你带单")
         self.assertNotIn("稳赚", s)

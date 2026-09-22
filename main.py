@@ -5976,6 +5976,7 @@ class SquarePublisher(BasePublisher):
         """
         交易挂件保底：若正文没有任何有效 $TOKEN，自动把首个有效代币插到标签区之前，
         确保币安 100% 渲染 Write to Earn 交易组件，不产生无返佣的空帖。
+        R316：FORCE_STRIP 稳定币/机构词不得当兜底挂件（「不做挂件」契约）。
         """
         if not ensure_tokens:
             return content
@@ -5988,7 +5989,13 @@ class SquarePublisher(BasePublisher):
             if f"${sym}" in content:
                 return content
 
-        primary = ensure_tokens[0].upper()
+        strip = set(SquarePublisher.FORCE_STRIP_CASHTAGS)
+        primary = next(
+            (t.upper() for t in ensure_tokens
+             if t and t.upper() in valid_symbols and t.upper() not in strip),
+            None)
+        if primary is None:
+            return content
         idx = content.find("#")
         if idx == -1:
             return content + f"\n\n${primary}"
@@ -5997,12 +6004,17 @@ class SquarePublisher(BasePublisher):
     # 把正文里"裸写的代币名"织成句内 $ 挂件（仿爆款：'$PEPE 和 $WIF 这俩老牌山寨'）。
     # 交易挂件只渲染 $ 前缀 cashtag，模型写纯名（PEPE 和 WIF）就丢返佣抓手。
     # 歧义代码（NEAR/LINK 等撞名词）仅当原文全大写才织入，防误伤普通英文。
+    # R316：FORCE_STRIP 稳定币不得回织——sanitize 刚剥掉 $USDC，weave 再织回去
+    # 等于「不做挂件」契约被静默击穿（生产 09-20/09-22 两帖 Circle/USDC 实录，
+    # widget 全是 $USDC）。
     @classmethod
     def _weave_cashtags(cls, content: str, ensure_tokens: Optional[List[str]]) -> str:
         if not ensure_tokens:
             return content
         valid_symbols = SymbolValidator.get_valid_symbols()
-        for tok in sorted({t.upper() for t in ensure_tokens if t and t.upper() in valid_symbols},
+        strip = set(cls.FORCE_STRIP_CASHTAGS)
+        for tok in sorted({t.upper() for t in ensure_tokens
+                           if t and t.upper() in valid_symbols and t.upper() not in strip},
                           key=len, reverse=True):
             flags = 0 if tok in STRICT_TICKERS else re.IGNORECASE
             pattern = re.compile(
