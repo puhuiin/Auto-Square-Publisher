@@ -134,11 +134,42 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("💀 永久失败", out)
         # 只在 💀 行内断言（provider 名在上方的模型/拒因行也出现，全局 index 会串台）
         perm_line = next(ln for ln in out.split("\n") if "💀 永久失败" in ln)
-        self.assertIn("Preset-b.ai (余额/额度耗尽 ×2)", perm_line)
-        self.assertIn("Preset-openrouter/minimax (模型下架/404 ×1)", perm_line)
+        self.assertIn("Preset-b.ai (余额/额度耗尽 ×2", perm_line)
+        self.assertIn("Preset-openrouter/minimax (模型下架/404 ×1", perm_line)
         # 命中数降序：b.ai(2) 排在 minimax(1) 之前
         self.assertLess(perm_line.index("Preset-b.ai"), perm_line.index("Preset-openrouter/minimax"))
         self.assertNotIn("router 404", perm_line)
+
+    def test_permanent_failures_last_seen_dates(self):
+        """R304：💀 行带每条的末次命中日期，区分"当前该处理"与"历史退役簇"。
+        全史里 09-08 的 minimax（已退役）与今天 b.ai 余额耗尽同框，运营靠日期分辨。"""
+        rows = [
+            # minimax：跨两天的历史簇，末次必须取较晚的 09-08（而非首见 09-06），
+            # 乱序投喂 + 首行是更早日期，锁死"取 max 而非 min/首见"
+            {"ts": "2026-09-08T19:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "transport", "provider": "Preset-openrouter/minimax",
+             "reason": "[permanent 24h] Error code: 404 model unavailable"},
+            {"ts": "2026-09-06T02:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "transport", "provider": "Preset-openrouter/minimax",
+             "reason": "[permanent 24h] Error code: 404 model unavailable"},
+            # b.ai：今天的当前故障
+            {"ts": "2026-09-22T03:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "transport", "provider": "Preset-b.ai",
+             "reason": "[credit 24h] credit insufficient balance"},
+        ]
+        s = mr.summarize(rows)
+        # 末次=较晚的 09-08，不是首见 09-06（区分 max vs min）
+        self.assertEqual(s["permanent_failures_last"][("Preset-openrouter/minimax", "模型下架/404")][:10], "2026-09-08")
+        self.assertEqual(s["permanent_failures_last"][("Preset-b.ai", "余额/额度耗尽")][:10], "2026-09-22")
+        perm_line = next(ln for ln in mr.render_text(s).split("\n") if "💀 永久失败" in ln)
+        self.assertIn("最近 09-08", perm_line)
+        self.assertIn("最近 09-22", perm_line)
+        # 末次日期贴在各自条目：minimax→09-08，b.ai→09-22
+        self.assertIn("Preset-openrouter/minimax (模型下架/404 ×2, 最近 09-08)", perm_line)
+        self.assertIn("Preset-b.ai (余额/额度耗尽 ×1, 最近 09-22)", perm_line)
+        # helper 无 last_seen 时向后兼容（不带日期，不炸）
+        self.assertEqual(
+            mr._format_permanent_failures(s["permanent_failures"]).count("最近"), 0)
 
     def test_permanent_failures_silent_when_none(self):
         """零永久失败时不渲染 💀 行（沿用零命中零噪音惯例）；helper 契约：空→空串。"""

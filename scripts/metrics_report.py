@@ -376,6 +376,10 @@ def summarize(rows):
         # 埋在 60 字截断的高频原因 top5 里，"哪个通道当前永久死、为什么"看不清（生产
         # b.ai 余额耗尽 8 条只在 top5 占一行、极易漏读）。键 (provider, 原因标签)。
         "permanent_failures": collections.Counter(),
+        # R304：每 (provider,原因) 的最近命中时刻——全史报表里 09-08 已退役的 minimax
+        # 永久失败与今天 b.ai 余额耗尽同框而无时间线索，运营分不清"当前该处理"vs
+        # "两周前的历史簇"（minimax R261 早已撤），加末次日期让 💀 行真正可行动。
+        "permanent_failures_last": {},
         # R163：质量门拒稿正文快照（最近几条）——短回/拒答型故障只报长度无法归因
         "reject_previews": [],
         "latency_by_provider": {},
@@ -593,7 +597,13 @@ def summarize(rows):
                 # R302：真·24h 永久失败按 提供商×原因 单列（前缀匹配部署的 fail_reason 标记）
                 for tag, label in _PERMANENT_FAIL_TAGS:
                     if reason_str.startswith(tag):
-                        s["permanent_failures"][(who, label)] += 1
+                        key = (who, label)
+                        s["permanent_failures"][key] += 1
+                        # R304：记末次命中时刻（字符串 ISO ts 可字典序比较）
+                        if isinstance(ts, str) and ts:
+                            prev = s["permanent_failures_last"].get(key)
+                            if prev is None or ts > prev:
+                                s["permanent_failures_last"][key] = ts
                         break
             # R163：短回/质量拒稿的原文快照（有则收，窗口内只留最近 5 条）
             pv = r.get("content_preview")
@@ -837,13 +847,22 @@ def _top(counter, n=TOP_N):
     return counter.most_common(n)
 
 
-def _format_permanent_failures(counter):
+def _format_permanent_failures(counter, last_seen=None):
     """R302：把 (provider, 原因) → 次数 渲染成 '提供商 (原因 ×N)'，命中数降序
-    （最该处理的排最前）；空计数器返回空串（沿用"停放的源"零命中零噪音惯例）。"""
+    （最该处理的排最前）；空计数器返回空串（沿用"停放的源"零命中零噪音惯例）。
+    R304：带 last_seen（(provider,原因)→末次 ISO ts）时追加 '最近 MM-DD'——
+    区分"当前该处理"与"历史退役簇"（09-08 的 minimax vs 今天的 b.ai）。"""
     if not counter:
         return ""
-    parts = [f"{prov} ({label} ×{cnt})"
-             for (prov, label), cnt in counter.most_common()]
+    last_seen = last_seen or {}
+    parts = []
+    for (prov, label), cnt in counter.most_common():
+        seg = f"{prov} ({label} ×{cnt}"
+        ts = last_seen.get((prov, label))
+        if isinstance(ts, str) and len(ts) >= 10:
+            seg += f", 最近 {ts[5:10]}"
+        seg += ")"
+        parts.append(seg)
     return " | ".join(parts)
 
 
@@ -1125,7 +1144,8 @@ def render_text(s, rows=None):
         lines.append(f"- 拦截 {n_rej} 次：阶段 {_top(s['reject_by_stage'])} / 模型 {_top(s['reject_by_provider'])}")
         if s["reject_reasons"]:
             lines.append(f"  高频原因 {_top(s['reject_reasons'], 5)}")
-        _perm = _format_permanent_failures(s.get("permanent_failures"))
+        _perm = _format_permanent_failures(s.get("permanent_failures"),
+                                            s.get("permanent_failures_last"))
         if _perm:
             lines.append(f"  💀 永久失败(24h冷却): {_perm}（需人工处置：余额耗尽→充值 / 模型下架→改配置）")
         if s.get("reject_previews"):
