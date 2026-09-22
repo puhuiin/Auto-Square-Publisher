@@ -6433,6 +6433,30 @@ class TestHotTopics(unittest.TestCase):
         m.NewsFetcher.apply_hot_topic_boost(cands, keys)
         self.assertEqual(cands[0]["impact_score"], 6, "通用词不得误加权加密稿")
 
+    def test_production_2026_09_22_1348_titles_do_not_leak_generic_words(self):
+        """R318：R315 后首弹（09-22T13:48）再漏 SERIES/LEARNING/TYPE 等。
+        SERIES 命中融资稿「Series A/B」、LEARNING 命中 AI 学习类加密稿。
+        专有名词 FIFA/FINLAND/VERDA 保留。"""
+        titles = [
+            "AI Is Antithetical to Learning",
+            "AI Has No Wisdom and Neither Will You",
+            "Type Punning in C and C++",
+            "9 Ads per Minute: FIFA Cup 26 – the price of the beautiful game",
+            "Verda (Finland) raises $189M in Series B",
+        ]
+        keys = m.MarketDataProvider._extract_hot_keywords(titles)
+        for bad in ("ANTITHETICAL", "LEARNING", "NEITHER", "PUNNING",
+                    "SERIES", "TYPE", "WISDOM"):
+            self.assertNotIn(bad, keys, f"{bad} 是通用词，不得进热点词表")
+        for good in ("FIFA", "FINLAND", "VERDA", "$189M"):
+            self.assertIn(good, keys, f"{good} 应保留")
+        cands = [
+            {"title": "Crypto startup raises Series A to build learning tools",
+             "summary": "", "impact_score": 6, "base_impact_score": 6},
+        ]
+        m.NewsFetcher.apply_hot_topic_boost(cands, keys)
+        self.assertEqual(cands[0]["impact_score"], 6, "SERIES/LEARNING 不得误加权融资稿")
+
     def test_live_hn_frontpage_batch_do_not_leak_generic_words(self):
         """R295：2026-09-21 HN 前页实测词表全量审计（R233 方法论=主动扫不等事故）。
         40 个抽取词里约 31 个是句式大写/标题腔通用词：句首词（Why/Winning/What）、

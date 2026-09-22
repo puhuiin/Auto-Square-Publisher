@@ -1128,6 +1128,11 @@ class MarketDataProvider:
         avoiding turn find help coast east media police development
         minute software system explained visually mini technica
         intelligence surveilling
+        # R318：R315 后首弹（09-22T13:48）再漏——「Type Punning / AI Is
+        # Antithetical to Learning / Series B」抽出 TYPE/PUNNING/ANTITHETICAL/
+        # LEARNING/NEITHER/SERIES/WISDOM。SERIES 命中融资稿「Series A/B」、
+        # LEARNING 命中 AI 学习类加密稿。专有名词 FIFA/FINLAND/VERDA 保留。
+        antithetical learning neither punning series type wisdom
     """.split())
 
     @classmethod
