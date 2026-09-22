@@ -31,6 +31,7 @@ import csv
 import io
 import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from typing import Dict, Optional
@@ -59,6 +60,14 @@ def _to_int(v) -> Optional[int]:
     s = str(v).strip().replace(",", "")
     if not s or s in {"-", "--"}:
         return None
+    # R311：币安创作者后台的大数展示/导出用中文数量单位（"1.2万"=12000、"2亿"），
+    # 裸 int(float()) 对这类值抛 ValueError → 返 None → **高浏览帖的浏览量被静默丢弃**，
+    # 归因分析只剩低浏览帖 = 系统性偏倚（恰与用户"浏览量低怎么办"的诉求相反）。
+    # 数字+单位形态先换算；裸整数/千分位逗号走原路径，两者互不影响。
+    m = re.fullmatch(r"(\d+(?:\.\d+)?)\s*(万|萬|亿|億)", s)
+    if m:
+        scale = 1e4 if m.group(2) in ("万", "萬") else 1e8
+        return int(float(m.group(1)) * scale)
     try:
         return int(float(s))
     except (TypeError, ValueError):

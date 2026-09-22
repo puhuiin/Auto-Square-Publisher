@@ -1647,6 +1647,34 @@ class TestContentStatsImport(unittest.TestCase):
         self.assertEqual(by_id["222"]["views"], 10)
         self.assertEqual(changed, 2)
 
+    def test_chinese_wan_yi_notation_parsed(self):
+        """R311：币安创作者后台大数展示/导出用中文单位（"1.2万"=12000、"2亿"）。
+        旧 _to_int 对这类值抛 ValueError 返 None → 高浏览帖浏览量被静默丢弃 →
+        归因分析只剩低浏览帖（恰与"浏览量低怎么办"诉求相反）。数字+单位必须换算，
+        裸整数/千分位逗号照旧。"""
+        mod = self._import()
+        self.assertEqual(mod._to_int("1.2万"), 12000)
+        self.assertEqual(mod._to_int("3.5万"), 35000)
+        self.assertEqual(mod._to_int("2亿"), 200000000)
+        self.assertEqual(mod._to_int("1.2億"), 120000000)  # 繁体同权
+        self.assertEqual(mod._to_int("  8万  "), 80000)     # 前后空白
+        # 回归对照：裸整数 / 千分位 / 空 / 破折号不变
+        self.assertEqual(mod._to_int("12000"), 12000)
+        self.assertEqual(mod._to_int("1,234"), 1234)
+        self.assertIsNone(mod._to_int("-"))
+        self.assertIsNone(mod._to_int(""))
+        self.assertIsNone(mod._to_int("abc"))
+
+    def test_wan_notation_end_to_end_read_csv(self):
+        """端到端：CSV 用"万"记法的浏览量必须进 records 而非被丢。"""
+        with open(self.csv, "w", encoding="utf-8") as f:
+            f.write("帖子ID,浏览量,点赞,评论\n")
+            f.write("333,1.2万,500,42\n")
+        mod = self._import()
+        recs = mod.read_csv(self.csv)
+        self.assertEqual(recs["333"]["views"], 12000, "万记法浏览量不得被丢弃")
+        self.assertEqual(recs["333"]["likes"], 500)
+
 
 class TestContentStatsReportJoin(unittest.TestCase):
     """R285：报表侧 content_id × content_stats 的 join 与三维归因"""
