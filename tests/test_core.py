@@ -4213,6 +4213,20 @@ class TestCampaignBoost(unittest.TestCase):
         m.NewsFetcher._apply_campaign_boost(cands2, ["$BNB", "$PIEVERSE"])
         self.assertEqual(cands2[0]["impact_score"], 5 + m.CAMPAIGN_TOKEN_BOOST)
 
+    def test_off_pool_campaign_token_glued_to_cjk(self):
+        """R313：off-pool 活动币在中文标题里紧贴汉字（"META获批"/"ARC领涨"）——旧 \\b 在
+        A↔获 无词边界会漏 boost；配额长期饱和下加权决定单槽花落谁家，漏命中=活动相关帖
+        丢槽（返佣相关）。环视仍防子串误命中（METAVERSE 不命中）。"""
+        cands = [
+            {"title": "META获批上线，社区沸腾", "summary": "", "impact_score": 10},   # 右贴汉字
+            {"title": "巨鲸增持ARC领涨山寨", "summary": "", "impact_score": 10},      # 两侧贴汉字
+            {"title": "METAVERSE 生态普涨", "summary": "", "impact_score": 10},       # 子串不得误命中
+        ]
+        m.NewsFetcher._apply_campaign_boost(cands, ["$META", "$ARC"])
+        self.assertEqual(cands[0]["impact_score"], 10 + m.CAMPAIGN_TOKEN_BOOST, "META获批 应命中")
+        self.assertEqual(cands[1]["impact_score"], 10 + m.CAMPAIGN_TOKEN_BOOST, "ARC领涨 应命中")
+        self.assertEqual(cands[2]["impact_score"], 10, "METAVERSE 子串不得误命中 META")
+
     def test_off_pool_tokens_returned(self):
         """R201：off-pool 列表回传——供 stats → run_summary → 报表"""
         cands = [{"title": "quiet", "summary": "", "impact_score": 5}]

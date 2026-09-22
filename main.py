@@ -2419,8 +2419,14 @@ class NewsFetcher:
                     continue
                 for tok in off_set:
                     # 词边界：PIEVERSE 不得命中普通句子；Alpha 标题里的
-                    # 「Pieverse」大写化后 \bPIEVERSE\b 可命中
-                    if re.search(r"\b" + re.escape(tok) + r"\b", text):
+                    # 「Pieverse」大写化后可命中。R313：不能用 \b——汉字是 word char，
+                    # 中文标题里 off-pool 活动币紧贴汉字（"META获批"/"ARC领涨"）\b 无边界
+                    # 会漏命中；配额长期饱和下加权决定单槽花落谁家，漏 boost=活动相关帖
+                    # 丢槽（返佣相关）。改 ASCII 边界环视（CJK 相邻不算边界、防子串误命中
+                    # 与 \b 等价：PIEVERSED/METAVERSE 因后随字母仍不命中）。in-pool 分支走
+                    # _candidate_hits_tokens（已由 R308 修复 CJK），此处 off-pool 非有效
+                    # 交易标的走不了四层闸，故用环视文本匹配。
+                    if re.search(r"(?<![A-Za-z0-9])" + re.escape(tok) + r"(?![A-Za-z0-9])", text):
                         item["impact_score"] += CAMPAIGN_TOKEN_BOOST
                         hits += 1
                         break
