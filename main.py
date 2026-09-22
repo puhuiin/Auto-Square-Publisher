@@ -5980,16 +5980,19 @@ class SquarePublisher(BasePublisher):
 
     @staticmethod
     def _count_valid_widgets(content: str) -> int:
-        """统计正文中币安真实标的的 $ 挂件数（Write2Earn 生命线度量）。
-        R203：中文标的（$牛来）不在 ASCII 正则里，必须单独计数。"""
+        """统计正文中币安真实标的的**唯一** $ 挂件数（Write2Earn 生命线度量）。
+        R203：中文标的（$牛来）不在 ASCII 正则里，必须单独计数。
+        R319：按唯一标的而非出现次数——R74 单帖挂件上限=MAX_TOKENS_PER_POST
+        说的是唯一标的；旧实现把同一 $PENGU 写 3 次记成 3，与 R74 语义分叉
+        （生产 09-22T14:03 PENGU 帖 wc=3 实为 1 币提及 3 次）。"""
         content = content or ""
         valid_symbols = SymbolValidator.get_valid_symbols()
-        n = sum(1 for t in re.findall(r"\$([A-Za-z0-9]{2,10})(?![A-Za-z0-9])", content)
-                if t.upper() in valid_symbols)
+        seen = {t.upper() for t in re.findall(r"\$([A-Za-z0-9]{2,10})(?![A-Za-z0-9])", content)
+                if t.upper() in valid_symbols}
         for sym in _cjk_pool_symbols(valid_symbols):
             if f"${sym}" in content:
-                n += 1
-        return n
+                seen.add(sym)
+        return len(seen)
 
     @staticmethod
     def _ensure_token_widget(content: str, ensure_tokens: Optional[List[str]]) -> str:

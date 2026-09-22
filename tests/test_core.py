@@ -1927,10 +1927,20 @@ class TestTokenWidgetEnforcement(unittest.TestCase):
         self.assertEqual(count(""), 0)
         # 词边界：$BTCX 不算 BTC，$BTC 算
         self.assertEqual(count("$BTCX 和 $BTC"), 1)
+        # R319：按唯一标的计数，同一 $PENGU 提及 3 次 = 1（与 R74 MAX_TOKENS_PER_POST
+        # 唯一标的语义一致；生产 09-22T14:03 PENGU 帖 wc=3 实为 1 币 ×3 次提及）
+        self.assertEqual(count("$BTC 现在 $BTC 吗 $BTC"), 1, "重复提及只计 1")
+        self.assertEqual(count("$BTC $BTC $ETH"), 2, "BTC 重复 + ETH = 2 唯一标的")
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP", "PENGU"}
+        try:
+            self.assertEqual(count("$PENGU 现在 $PENGU 吗 $PENGU"), 1)
+        finally:
+            m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP"}
         # R203：中文标的挂件必须计入（ASCII 正则看不见）
         m.SymbolValidator._valid_symbols_cache = {"BTC", "牛来", "币安人生"}
         try:
             self.assertEqual(count("冲 $牛来 和 $BTC"), 2)
+            self.assertEqual(count("$牛来 $牛来 和 $BTC"), 2, "中文重复提及也去重")
             self.assertEqual(count("只有牛来俩字没有美元号"), 0)
         finally:
             m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP"}
