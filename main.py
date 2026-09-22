@@ -2084,8 +2084,15 @@ class NewsFetcher:
 
     @staticmethod
     def _title_tokens_upper(title: str) -> frozenset:
-        """标题里的全大写疑似代币符号集合（跨语言同事件判定用；剔除国家/机构/通用缩写噪音）"""
-        raw = set(re.findall(r"\b([A-Z]{2,10})\b", title))
+        """标题里的全大写疑似代币符号集合（跨语言同事件判定用；剔除国家/机构/通用缩写噪音）。
+
+        R307：不能用 \\b——汉字是 word char，`\\bETF\\b` 在「比特币ETF获批」里 币↔E 之间
+        无词边界 → ETF 提取不到。而跨语言指纹（_fingerprint_match 要求 tok 交集）正是
+        为 CN↔EN 同事件判重存在，中文标题的代币符号几乎总紧贴汉字 → 全被漏掉、CN 稿的
+        token 恒空、CN×EN 永不判重（同事件重复发帖，R161 家族）。改用 ASCII 边界的
+        环视（与 _weave_cashtags/_title_amount_fingerprint 同规约：CJK 相邻不算边界），
+        纯 ASCII 空格场景行为不变。"""
+        raw = set(re.findall(r"(?<![A-Za-z0-9])([A-Z]{2,10})(?![A-Za-z0-9])", title))
         return frozenset(t for t in raw if t not in NewsFetcher._FP_NOISE_TOKENS)
 
     @classmethod

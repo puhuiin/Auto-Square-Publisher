@@ -2842,6 +2842,32 @@ class TestCrossLangDedup(unittest.TestCase):
         b = "币安上线 XRP 永续，成交量 5000 万美元"
         self.assertTrue(m.NewsFetcher._is_cross_lang_dup(a, b))
 
+    def test_cjk_glued_token_extracted(self):
+        """R307：中文标题里代币符号紧贴汉字（无空格）——旧 \\b 正则在 币↔E 之间无
+        词边界会整个漏掉，跨语言指纹的 token 交集恒空。既有用例都恰好带空格/标点
+        （比特币突破…，ETF）掩盖了此坑，真实 BlockTempo 标题多为紧贴。"""
+        # 两侧都紧贴汉字
+        self.assertIn("ETF", m.NewsFetcher._title_tokens_upper("比特币ETF获批机构狂买"))
+        # 中间夹汉字的多 token
+        toks = m.NewsFetcher._title_tokens_upper("现货ETF通过SEC审批")
+        self.assertIn("ETF", toks)
+        self.assertIn("SEC", toks)
+        # 汉字连接词粘连
+        self.assertIn("DOGE", m.NewsFetcher._title_tokens_upper("$SHIB和DOGE领涨"))
+        # 纯 ASCII 行为不变（回归对照）
+        self.assertEqual(m.NewsFetcher._title_tokens_upper("Bitcoin ETF approved by SEC"),
+                         frozenset({"ETF", "SEC"}))
+        # 混合大小写不误收
+        self.assertEqual(m.NewsFetcher._title_tokens_upper("Bitcoin surges"), frozenset())
+
+    def test_same_event_zh_en_glued_token_detected(self):
+        """跨语言同事件、中文 token 紧贴汉字：修复前 CN token 恒空→永不判重→重复发帖。"""
+        en = "Bitcoin ETF sees $50 billion inflow"
+        cn = "比特币ETF获批，500亿美元资金涌入"   # ETF 紧贴汉字，金额同量级 5e10
+        self.assertTrue(m.NewsFetcher._is_cross_lang_dup(en, cn),
+                        "紧贴汉字的 CN token 也应参与跨语言判重")
+        self.assertIsNotNone(m.NewsFetcher._find_near_duplicate(cn, [en]))
+
 
 class TestMarketDataCache(unittest.TestCase):
     """行情 TTL 缓存：同一 run 内重复代币命中缓存、超期后重新拉取"""
