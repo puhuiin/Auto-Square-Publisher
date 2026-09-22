@@ -103,6 +103,55 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("拒稿快照", out)
         self.assertIn("finish=stop", out)
 
+    def test_permanent_failures_aggregated_and_rendered(self):
+        """R302：真·24h 永久失败（[credit 24h]/[permanent 24h]）按 提供商×原因 单列，
+        命中数降序；[router 404]（指数退避、会自愈）与普通拒稿都不算永久失败。"""
+        rows = [
+            {"ts": "2026-09-22T01:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "transport", "provider": "Preset-b.ai",
+             "reason": "[credit 24h] Error code: 400 credit insufficient balance"},
+            {"ts": "2026-09-22T01:10:00+00:00", "outcome": "llm_rejected",
+             "stage": "transport", "provider": "Preset-b.ai",
+             "reason": "[credit 24h] Error code: 400 credit insufficient balance"},
+            {"ts": "2026-09-22T01:20:00+00:00", "outcome": "llm_rejected",
+             "stage": "transport", "provider": "Preset-openrouter/minimax",
+             "reason": "[permanent 24h] Error code: 404 model unavailable"},
+            # [router 404] 走指数退避会自愈——不算永久失败
+            {"ts": "2026-09-22T01:30:00+00:00", "outcome": "llm_rejected",
+             "stage": "transport", "provider": "Preset-openrouter",
+             "reason": "[router 404] Error code: 404 route target down"},
+            # 普通质量拒稿——不算永久失败
+            {"ts": "2026-09-22T01:40:00+00:00", "outcome": "llm_rejected",
+             "stage": "quality", "provider": "Preset-openrouter",
+             "reason": "内容过短 (17 字符)"},
+        ]
+        s = mr.summarize(rows)
+        pf = s["permanent_failures"]
+        self.assertEqual(pf[("Preset-b.ai", "余额/额度耗尽")], 2)
+        self.assertEqual(pf[("Preset-openrouter/minimax", "模型下架/404")], 1)
+        self.assertEqual(sum(pf.values()), 3, "router 404 与普通拒稿不得计入永久失败")
+        out = mr.render_text(s)
+        self.assertIn("💀 永久失败", out)
+        # 只在 💀 行内断言（provider 名在上方的模型/拒因行也出现，全局 index 会串台）
+        perm_line = next(ln for ln in out.split("\n") if "💀 永久失败" in ln)
+        self.assertIn("Preset-b.ai (余额/额度耗尽 ×2)", perm_line)
+        self.assertIn("Preset-openrouter/minimax (模型下架/404 ×1)", perm_line)
+        # 命中数降序：b.ai(2) 排在 minimax(1) 之前
+        self.assertLess(perm_line.index("Preset-b.ai"), perm_line.index("Preset-openrouter/minimax"))
+        self.assertNotIn("router 404", perm_line)
+
+    def test_permanent_failures_silent_when_none(self):
+        """零永久失败时不渲染 💀 行（沿用零命中零噪音惯例）；helper 契约：空→空串。"""
+        rows = [
+            {"ts": "2026-09-22T01:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "quality", "provider": "Preset-openrouter",
+             "reason": "内容过短 (17 字符)"},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(sum(s["permanent_failures"].values()), 0)
+        self.assertNotIn("💀 永久失败", mr.render_text(s))
+        self.assertEqual(mr._format_permanent_failures({}), "")
+
     def test_intel_degraded_counted_and_rendered(self):
         """R173：R171 写侧 intel_degraded 必须进报表——过期情报注入可聚合"""
         rows = [

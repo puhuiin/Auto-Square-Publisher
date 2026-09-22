@@ -103,6 +103,17 @@ _FINGERPRINT_WINDOW = 10
 _FINGERPRINT_MIN_HITS = 3
 _ARTICLE_HEADER_RE = re.compile(r"^[一二三四五六七八九十]、")
 
+# R302：永久失败拒因标记 → 人类可读原因。标记文本是 main.py failover 循环里
+# _breaker_record_permanent 两个调用点写死的 fail_reason 前缀（[credit 24h] =
+# 账户余额/额度耗尽、[permanent 24h] = 模型下架/404），test_core 的 R300/R301
+# 用例以字面量锁了 main 侧；这里是报表侧的独立副本，故意只认这两类**真·24h 永久
+# 冷却**——[router 404] 走指数退避（会自愈、非永久）、[rate-limit] 是节奏问题，
+# 都不算永久失败，不进本面。main 若改标记文本，其自身 R300/R301 用例先红。
+_PERMANENT_FAIL_TAGS = (
+    ("[credit 24h]", "余额/额度耗尽"),
+    ("[permanent 24h]", "模型下架/404"),
+)
+
 
 def _extract_opener(preview):
     """R293：从回执预览取开场句——长文分节头（"一、发生了什么"）不是开场句，
@@ -360,6 +371,11 @@ def summarize(rows):
         "reject_by_stage": collections.Counter(),
         "reject_by_provider": collections.Counter(),
         "reject_reasons": collections.Counter(),
+        # R302：永久失败（24h 冷却）按 提供商×原因 单列——push 侧 R301 报警只在跃迁沿
+        # 响一次，报表是 pull 侧的常驻视图，但此前把 [credit 24h]/[permanent 24h] 标记
+        # 埋在 60 字截断的高频原因 top5 里，"哪个通道当前永久死、为什么"看不清（生产
+        # b.ai 余额耗尽 8 条只在 top5 占一行、极易漏读）。键 (provider, 原因标签)。
+        "permanent_failures": collections.Counter(),
         # R163：质量门拒稿正文快照（最近几条）——短回/拒答型故障只报长度无法归因
         "reject_previews": [],
         "latency_by_provider": {},
@@ -572,7 +588,13 @@ def summarize(rows):
             s["reject_by_stage"][str(r.get("stage", "unknown"))] += 1
             s["reject_by_provider"][who] += 1
             if r.get("reason"):
-                s["reject_reasons"][str(r["reason"])[:60]] += 1
+                reason_str = str(r["reason"])
+                s["reject_reasons"][reason_str[:60]] += 1
+                # R302：真·24h 永久失败按 提供商×原因 单列（前缀匹配部署的 fail_reason 标记）
+                for tag, label in _PERMANENT_FAIL_TAGS:
+                    if reason_str.startswith(tag):
+                        s["permanent_failures"][(who, label)] += 1
+                        break
             # R163：短回/质量拒稿的原文快照（有则收，窗口内只留最近 5 条）
             pv = r.get("content_preview")
             if isinstance(pv, str) and pv:
@@ -813,6 +835,16 @@ def funnel(rows):
 
 def _top(counter, n=TOP_N):
     return counter.most_common(n)
+
+
+def _format_permanent_failures(counter):
+    """R302：把 (provider, 原因) → 次数 渲染成 '提供商 (原因 ×N)'，命中数降序
+    （最该处理的排最前）；空计数器返回空串（沿用"停放的源"零命中零噪音惯例）。"""
+    if not counter:
+        return ""
+    parts = [f"{prov} ({label} ×{cnt})"
+             for (prov, label), cnt in counter.most_common()]
+    return " | ".join(parts)
 
 
 def render_text(s, rows=None):
@@ -1093,6 +1125,9 @@ def render_text(s, rows=None):
         lines.append(f"- 拦截 {n_rej} 次：阶段 {_top(s['reject_by_stage'])} / 模型 {_top(s['reject_by_provider'])}")
         if s["reject_reasons"]:
             lines.append(f"  高频原因 {_top(s['reject_reasons'], 5)}")
+        _perm = _format_permanent_failures(s.get("permanent_failures"))
+        if _perm:
+            lines.append(f"  💀 永久失败(24h冷却): {_perm}（需人工处置：余额耗尽→充值 / 模型下架→改配置）")
         if s.get("reject_previews"):
             lines.append("  拒稿快照（最近）:")
             for item in s["reject_previews"][-3:]:
