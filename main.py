@@ -1930,7 +1930,12 @@ class NewsFetcher:
         text = re.sub(r"(?<![\w$])[\w-]+\.(?:com|net|io|org|xyz|app|finance|me|tv)\b\S*",
                       " ", text, flags=re.I)                      # 裸域名（含 www.x.com/a/b）
         detected: List[str] = []
-        for m in re.finditer(r"\$?([A-Za-z0-9]{2,10})\b", text):
+        # R308：结尾不能用 \b——汉字是 word char，`([A-Z]{2,10})\b` 在「BTC领涨」里
+        # C↔领 之间无词边界，裸代码符号紧贴汉字（中文标题极常见：BTC领涨/ETH突破/SOL暴跌）
+        # 整个提取不到 → 该帖标的检测为空 → 可能无挂件（返佣生命线）+ 绕过单币限流。
+        # 改用 ASCII 边界环视（CJK 相邻不算边界，纯 ASCII 空格行为不变），与 R307
+        # _title_tokens_upper / _weave_cashtags 同规约。前导侧本就无边界断言，不受影响。
+        for m in re.finditer(r"\$?([A-Za-z0-9]{2,10})(?![A-Za-z0-9])", text):
             word = m.group(1)
             upper_w = word.upper()
             starts_with_dollar = m.group(0).startswith("$")

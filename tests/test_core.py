@@ -1105,6 +1105,22 @@ class TestTokenExtraction(unittest.TestCase):
         out = m.NewsFetcher.extract_tokens("比特币突破关键阻力位，以太坊紧随其后", self.VALID)
         self.assertEqual(out, ["BTC", "ETH"])
 
+    def test_bare_symbol_glued_to_cjk_detected(self):
+        """R308：中文标题里裸代码符号紧贴汉字（无空格）——旧 `([A-Z]{2,10})\\b` 在
+        C↔领 之间无词边界会整个漏掉（BTC领涨/ETH突破/SOL暴跌 是 CN 标题极常见形态），
+        该帖标的检测为空 → 可能无挂件（返佣生命线）+ 绕过单币限流。既有 CJK 用例只测了
+        全名别名（比特币→BTC）掩盖了裸符号紧贴的坑。"""
+        # 裸符号两侧/右侧紧贴汉字
+        self.assertEqual(m.NewsFetcher.extract_tokens("BTC领涨SOL暴跌", self.VALID), ["BTC", "SOL"])
+        self.assertEqual(m.NewsFetcher.extract_tokens("ETH突破新高", self.VALID), ["ETH"])
+        # $ 前缀 + 右贴汉字（用 VALID 池内符号）
+        self.assertEqual(m.NewsFetcher.extract_tokens("$PEPE和XRP都涨", self.VALID), ["PEPE", "XRP"])
+        # ASCII 空格形态行为不变（回归对照）
+        self.assertEqual(m.NewsFetcher.extract_tokens("BTC 领涨", self.VALID), ["BTC"])
+        # 派生词仍不误匹配（右侧是 ASCII 字母→环视拒绝，与旧 \b 一致）
+        self.assertEqual(
+            m.NewsFetcher.extract_tokens("Bitcoiners stack on BitcoinTalk", self.VALID), [])
+
     def test_alias_respects_valid_symbols(self):
         # 别名不给幻觉币开洞：stellar 映射 XLM，但池子里没有 XLM 就不得出现
         self.assertEqual(m.NewsFetcher.extract_tokens("Stellar network upgrade ships", self.VALID), [])
