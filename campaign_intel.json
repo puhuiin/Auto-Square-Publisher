@@ -2,21 +2,18 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#TradingTournament",
     "#Futures",
-    "#StockOptions"
+    "#TradingTournament"
   ],
   "incentivized_tokens": [
+    "$AEON",
     "$BNB",
-    "$BANK",
-    "$PROVE",
-    "$NEAR",
     "$USDC",
-    "$ARC",
-    "$USDBRL"
+    "$PROVE",
+    "$TJS"
   ],
-  "strategy_guidance": "优先追贴Limited-Time Fee Promotion for Stock Options的限时窗口，结合2026-09-21新增的25只美股与USDBRLUSDT永续合约，以'活动冲刺+抄作业'角度输出交易攻略；同步挂载BANK、PROVE、NEAR交易锦标赛与Binance Wallet Arc赛季，通过#Write2Earn发布参赛复盘，引导读者交易并最大化返佣收益。",
-  "last_updated": "2026-09-22T00:04:28.046993Z",
+  "strategy_guidance": "Focus first on the AEON competition ending today, urging traders to act immediately to capture the $200K reward and the Write to Earn rebate. Then highlight the newly launched MOONSHOTUSDT perpetual contract as a timely futures opportunity, using a ‘last‑minute’ angle for the competition and a ‘new product’ angle for the contract. Combine real‑time updates with concise how‑to instructions to drive urgent participation and maximize exposure.",
+  "last_updated": "2026-09-22T12:10:49.033314Z",
   "_feed_health": {},
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
