@@ -16,14 +16,14 @@
   "last_updated": "2026-09-22T12:10:49.033314Z",
   "_feed_health": {},
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
+    "date": "2026-09-09"
   },
   "_llm_breaker": {
     "Preset-b.ai": {
-      "permanent": true,
+      "fails": 1,
       "cooldown_until": "2026-09-23T03:03:34.648553+00:00",
-      "fails": 1
+      "permanent": true
     }
   },
   "_article_sent_date": "2026-09-22",
