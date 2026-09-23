@@ -4849,12 +4849,23 @@ class CampaignScanner:
                     # 才冷却（生产 09-21 13:53 起 campaign_intel 连续 credit 错误，
                     # 09-22 03:03 才 permanent，其间每次刷新都白撞空账户）。
                     # R300「无条件走 permanent 快道」适用于一切 LLM 调用，不只故事。
+                    # R339：情报路径遥测契约对齐 transport——R332 补了行为侧（回填
+                    # permanent 断路器），却漏了遥测侧的 reason 前缀标签。transport 路径
+                    # （R300）在拒稿 reason 前缀 [credit 24h]/[permanent 24h]，情报路径只记
+                    # 原始错误串，导致巡检时无法从 metrics 一眼看出这条 credit/404 到底
+                    # 触没触发 permanent 冷却（09-21 情报 credit=裸串 vs 09-22 transport
+                    # =[credit 24h]，同一账户耗尽事件在两条路径上呈现不一致）。标签与
+                    # 断路器动作严格同源：只有真回填了 permanent 才打标，纯行为无改动。
                     _rec_perm = getattr(llm_engine, "_breaker_record_permanent", None)
-                    if callable(_rec_perm):
-                        if _is_credit_exhausted(e):
+                    _reason_tag = ""
+                    if _is_credit_exhausted(e):
+                        if callable(_rec_perm):
                             _rec_perm(provider.name, reason="账户余额/额度耗尽")
-                        elif _is_permanent_failure(e) and not _is_router_model(provider.model):
+                            _reason_tag = "[credit 24h] "
+                    elif _is_permanent_failure(e) and not _is_router_model(provider.model):
+                        if callable(_rec_perm):
                             _rec_perm(provider.name, reason="模型下架/404")
+                            _reason_tag = "[permanent 24h] "
                     _ff_intel = _fin if isinstance(_fin, str) else None
                     append_metrics({
                         "provider": provider.name,
@@ -4862,7 +4873,7 @@ class CampaignScanner:
                         "tokens_used": tokens_used,
                         "llm_latency_sec": round(time.perf_counter() - t_call, 3),
                         "stage": "campaign_intel",
-                        "reason": str(e)[:80],
+                        "reason": _reason_tag + str(e)[:80],
                         "finish_reason": _ff_intel or None,
                         "outcome": "llm_rejected",
                     })

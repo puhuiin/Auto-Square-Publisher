@@ -4234,6 +4234,54 @@ class TestIntelSchema(unittest.TestCase):
             import shutil
             shutil.rmtree(tmp, ignore_errors=True)
 
+    def _intel_reject_reason(self, side_effect):
+        """跑一次情报失败，回读 campaign_intel/llm_rejected 那行的 reason 串。
+        R339：遥测 reason 前缀标签的取证辅助（复用 METRICS_FILE 临时重定向）。"""
+        import tempfile, json as _json, shutil
+        tmp = tempfile.mkdtemp()
+        orig = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(tmp, "metrics.jsonl")
+        try:
+            eng = self._stub_engine("ignored")
+            eng._get_client.return_value.chat.completions.create.side_effect = side_effect
+            self.assertIsNone(m.CampaignScanner.analyze_with_ai(eng, ["t1"]))
+            with open(m.METRICS_FILE, encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            rejects = [r for r in rows if r.get("stage") == "campaign_intel"
+                       and r.get("outcome") == "llm_rejected"]
+            self.assertTrue(rejects, "情报失败应落一条 llm_rejected 遥测")
+            return rejects[-1].get("reason", "")
+        finally:
+            m.METRICS_FILE = orig
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_intel_credit_reject_reason_tagged(self):
+        """R339：情报 credit 拒稿的 reason 须带 [credit 24h] 前缀——与 transport
+        路径（R300）对齐。R332 补了行为侧（回填 permanent），却漏了这条遥测标签，
+        巡检时无法从 metrics 一眼分辨这次 credit 到底触没触发 permanent 冷却。"""
+        reason = self._intel_reject_reason(RuntimeError(
+            "Error code: 400 - {'error': {'message': 'credit insufficient balance: 0'}}"))
+        self.assertTrue(reason.startswith("[credit 24h] "),
+                        f"credit 拒稿 reason 应以 [credit 24h] 开头，实得: {reason!r}")
+
+    def test_intel_404_reject_reason_tagged(self):
+        """R339：情报具体模型 404 拒稿的 reason 须带 [permanent 24h] 前缀。"""
+        reason = self._intel_reject_reason(RuntimeError(
+            "Error code: 404 - {'error': {'message': 'This model is unavailable for free.}}"))
+        self.assertTrue(reason.startswith("[permanent 24h] "),
+                        f"404 拒稿 reason 应以 [permanent 24h] 开头，实得: {reason!r}")
+
+    def test_intel_transient_reject_reason_untagged(self):
+        """R339 变异守卫：瞬时故障（超时/5xx）不得误打 permanent 标签——标签
+        与断路器动作严格同源，只有真回填了 permanent 才打标。"""
+        reason = self._intel_reject_reason(RuntimeError("Request timed out."))
+        self.assertFalse(reason.startswith("[credit 24h] "),
+                         f"瞬时故障不应带 credit 标签，实得: {reason!r}")
+        self.assertFalse(reason.startswith("[permanent 24h] "),
+                         f"瞬时故障不应带 permanent 标签，实得: {reason!r}")
+        self.assertTrue(reason.startswith("Request timed out"),
+                        f"瞬时故障 reason 应为裸错误串，实得: {reason!r}")
+
     def test_truncated_output_retried_same_provider(self):
         """情报 finish=length 即时重试（R67）：glm 冗长 JSON 被 max_tokens 掐断是
         生产二连实录（04:58Z/07:43Z），同渠道重试一次常收敛到更短输出。
