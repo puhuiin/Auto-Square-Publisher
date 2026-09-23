@@ -5954,7 +5954,20 @@ class SquarePublisher(BasePublisher):
             return content
         body, sep, tail = content.rpartition("\n")
         tail_stripped = tail.strip()
-        if sep and tail_stripped.startswith("#") and len(tail_stripped) < max_chars // 3:
+        # R352：末行可能是"$挂件 + #标签"整行——_ensure_token_widget 兜底会把
+        # 首个 $TOKEN 插到标签区之前（生成 "$BTC #Write2Earn #BinanceSquare #活动"
+        # 这一整行）。旧判据只认 startswith("#")，于是这种行不被识别为标签行，
+        # 落到下面的兜底分支被 re.sub 连 #Write2Earn/#BinanceSquare 一起清空——
+        # 挂件与返佣归因标签全丢，正是"被截掉等于白发"。这里补一个纯挂件/标签行
+        # 判据（每个 token 都以 # 或 $ 开头且含 ≥1 个 #），与旧 startswith("#")
+        # 取并集，只新增覆盖不改动原有 #-开头行的行为（含首字符为 # 的正文行）。
+        _tail_tokens = tail_stripped.split()
+        _is_widget_tag_line = (
+            bool(_tail_tokens)
+            and any(t.startswith("#") for t in _tail_tokens)
+            and all(t.startswith("#") or t.startswith("$") for t in _tail_tokens))
+        if sep and (tail_stripped.startswith("#") or _is_widget_tag_line) \
+                and len(tail_stripped) < max_chars // 3:
             room = max(0, max_chars - len(tail_stripped) - 1)
             trimmed = cls._truncate_at_boundary(body, room) if room else ""
             return f"{trimmed}\n{tail_stripped}" if trimmed else tail_stripped

@@ -11389,6 +11389,40 @@ class TestLongFormLengthBudget(unittest.TestCase):
         self.assertLessEqual(len(out), 900)
         self.assertGreater(len(out), 800)
 
+    def test_enforce_max_chars_keeps_widget_prefixed_tag_line(self):
+        """R352：_ensure_token_widget 兜底把 $挂件插到标签区之前，末行成
+        "$BTC #Write2Earn #BinanceSquare #活动"（以 $ 开头，非 #）。旧判据
+        只认 startswith("#")，溢出时这一整行落到 re.sub 兜底被连标签一起清空——
+        挂件与返佣归因标签全丢。修复后整行保留。"""
+        body = "行情正文。" * 500
+        text = f"{body}\n\n$BTC #Write2Earn #BinanceSquare #TradingTournament"
+        out = m.SquarePublisher._enforce_max_chars(text, 900)
+        self.assertLessEqual(len(out), 900)
+        self.assertIn("#Write2Earn", out, "返佣归因标签不得因挂件前缀被误删")
+        self.assertIn("#BinanceSquare", out)
+        self.assertIn("$BTC", out, "兜底挂件应随标签行一并保留")
+        self.assertTrue(out.rstrip().endswith("#TradingTournament"))
+
+    def test_enforce_max_chars_prose_hash_line_unchanged(self):
+        """回归防护：以 # 开头但夹带正文的末行仍走旧 startswith("#") 分支
+        （并集只新增覆盖、不改动原有 #-开头行行为）。"""
+        body = "行情正文。" * 500
+        text = f"{body}\n\n#热点 这波还得看承接"
+        out = m.SquarePublisher._enforce_max_chars(text, 900)
+        self.assertLessEqual(len(out), 900)
+        self.assertTrue(out.rstrip().endswith("#热点 这波还得看承接"),
+                        "#-开头末行行为必须与修复前一致")
+
+    def test_enforce_max_chars_prose_dollar_line_not_preserved(self):
+        """反向防护：夹带 $金额的普通正文末行（无 #、含非 $/# token）不得被
+        误判为挂件/标签行整体保留，仍按边界截断。"""
+        body = "行情正文。" * 500
+        text = f"{body}\n\n赚了 $100 就跑别贪"
+        out = m.SquarePublisher._enforce_max_chars(text, 900)
+        self.assertLessEqual(len(out), 900)
+        self.assertFalse(out.rstrip().endswith("赚了 $100 就跑别贪"),
+                         "普通正文末行不应被当作标签行豁免压缩")
+
 
 class TestArticleTitleTolerance(unittest.TestCase):
     """R9：模型给标题加 Markdown 加粗时不得误判"缺 TITLE 行"整篇拒稿"""
