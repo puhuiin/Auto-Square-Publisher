@@ -409,6 +409,12 @@ def summarize(rows):
         "token_limit_capped_top": None, "token_limit_bypass_top": None,
         # R220：每源入选率——源名首词 → [扫描, 入选]（源治理数据面）
         "feed_yield": {},
+        # R334：R273/R274 注入截断（injection_hits/injection_feeds）自写侧起
+        # 只有日志 + Step Summary 两个易失出口；R275 明言「人工第一眼巡检的页面
+        # 完全静默…最后缺口」但只补了 write_github_step_summary。metrics_report
+        # （持久巡检面）零消费——R276 同族「有数据无出口」。命中才显形。
+        "injection_hits": 0,
+        "injection_feeds": collections.Counter(),
         "trend_freq": collections.Counter(),
         "last_hot_topics": "",  # R190：全网实时热点钩子供给（HN 等）
         "hot_topic_hits": 0,    # 出现过 hot_topics 的发帖轮数
@@ -739,6 +745,16 @@ def summarize(rows):
                     _agg = runs_tmp["feed_yield"].setdefault(_fname, [0, 0])
                     _agg[0] += int(_fy.get("entries") or 0)
                     _agg[1] += int(_fy.get("kept") or 0)
+            # R334：注入截断（R273/R274 写侧，报表此前零出口）
+            _ih = _num(r.get("injection_hits"))
+            if _ih is not None and _ih > 0:
+                runs_tmp["injection_hits"] += int(_ih)
+            _isrc = r.get("injection_feeds")
+            if isinstance(_isrc, dict):
+                for _fn, _fc in _isrc.items():
+                    _v = _num(_fc)
+                    if _v is not None and _v > 0:
+                        runs_tmp["injection_feeds"][str(_fn)] += int(_v)
             # R177：分段耗时（有则收，历史行无字段不进）
             _sl = _num(r.get("sleep_elapsed_sec"))
             if _sl is not None and _sl > 0:
@@ -1016,6 +1032,17 @@ def render_text(s, rows=None):
                 flag = " ⚠️" if _ents >= 20 and _kept == 0 else ""
                 parts.append(f"{_fname} {_kept}/{_ents}{flag}")
             lines.append(f"  📡 源入选率(入选/扫描): {' · '.join(parts)}")
+        # R334：注入截断（R273/R274 写侧）——R275 补了 Step Summary，metrics_report
+        # 此前仍零消费。安全面：某源夹带 payload 时持久巡检页不得静默。
+        if runs.get("injection_hits"):
+            _srcs = runs.get("injection_feeds") or {}
+            if hasattr(_srcs, "most_common"):
+                _pairs = _srcs.most_common(5)
+            else:
+                _pairs = sorted(_srcs.items(), key=lambda x: -int(x[1] or 0))[:5]
+            _detail = "、".join(f"{n} ×{v}" for n, v in _pairs) if _pairs else ""
+            _note = f"（{_detail}）" if _detail else ""
+            lines.append(f"  🚨 注入截断: {runs['injection_hits']} 条{_note}——请评估停放该源")
     if rows is not None:
         q = quality_scan(rows)
         if q["scanned"]:

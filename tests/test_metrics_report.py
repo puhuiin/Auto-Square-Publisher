@@ -833,6 +833,31 @@ class TestMetricsReport(unittest.TestCase):
         s2 = mr.summarize([rows[1]])
         self.assertNotIn("残留过期日期", mr.render_text(s2, [rows[1]]))
 
+    def test_injection_hits_consumed_and_rendered(self):
+        """R334：R273/R274 注入截断（injection_hits/injection_feeds）写侧落盘
+        run_summary，R275 补了 Step Summary，metrics_report 仍零消费——
+        R275 自己写「人工第一眼巡检的页面完全静默…最后缺口」，持久巡检面必须可见。"""
+        rows = [
+            {"outcome": "run_summary", "candidates": 10, "published": 0,
+             "injection_hits": 0},
+            {"outcome": "run_summary", "candidates": 10, "published": 1,
+             "injection_hits": 3, "injection_feeds": {"EvilFeed": 2, "SusFeed": 1}},
+            {"outcome": "run_summary", "candidates": 5, "published": 0,
+             "injection_hits": 1, "injection_feeds": {"EvilFeed": 1}},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["injection_hits"], 4, "3+1 跨轮累加")
+        self.assertEqual(s["runs"]["injection_feeds"].get("EvilFeed"), 3)
+        self.assertEqual(s["runs"]["injection_feeds"].get("SusFeed"), 1)
+        text = mr.render_text(s, rows)
+        self.assertIn("注入截断", text)
+        self.assertIn("4 条", text)
+        self.assertIn("EvilFeed ×3", text, "命中数降序（最该停车的源排最前）")
+        self.assertIn("请评估停放该源", text)
+        # 零命中零噪音
+        s2 = mr.summarize([rows[0]])
+        self.assertNotIn("注入截断", mr.render_text(s2, [rows[0]]))
+
     def test_campaign_off_pool_surfaced(self):
         """R201：off-pool 活动币进报表——Alpha 上新竞赛标的可见性"""
         rows = [
