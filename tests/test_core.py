@@ -9643,6 +9643,48 @@ class TestEmptyPolicyV2(unittest.TestCase):
         self.assertEqual(c2.chat.completions.create.call_count, 1)
         self.assertIn("stub", eng._breaker_state())
 
+    def test_budget_exhausted_enters_breaker_on_first_hit(self):
+        """R331：预算到顶残句截断=确定性失败（同预算重试必现），首挂即进断路器。
+
+        生产 03:11 openrouter 残句 14100 字符却记「空回…孤立事件，不计入断路器」
+        ——每条故事白烧 200s 扩容链再 failover。真·空包的「首挂原谅」不得覆盖它。"""
+        eng = self._engine()
+        client = MagicMock()
+
+        def _mk(content, finish):
+            r = self._resp(content)
+            r.choices[0].finish_reason = finish
+            return r
+
+        partial = "残句开头" + "盘面信号明确。" * 30
+        # 非推理短讯 600→2100→3600→4000 到顶；到顶那次必须首挂进断路器
+        client.chat.completions.create.side_effect = [
+            _mk(partial, "length"), _mk(partial, "length"),
+            _mk(partial, "length"), _mk(partial, "length"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch.object(m, "append_metrics") as mock_metrics:
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        self.assertIn("stub", eng._breaker_state(),
+                      "预算截断首挂即进断路器，不得按偶发空包原谅")
+        reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
+                   if c.args and isinstance(c.args[0], dict)]
+        self.assertTrue(any("残句" in r and "预算" in r for r in reasons), reasons)
+
+    def test_true_empty_first_hit_stays_isolated(self):
+        """对照：真·空包首挂仍原谅（R331 不得误伤空回政策 v2）。"""
+        eng = self._engine()
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [self._resp(None), self._resp("")]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        self.assertNotIn("stub", eng._breaker_state(),
+                         "真·空包首挂不得进断路器")
+
     def test_success_resets_trouble(self):
         eng = self._engine()
         c1 = MagicMock()

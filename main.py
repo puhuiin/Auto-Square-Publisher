@@ -2660,6 +2660,14 @@ class _EmptyContentError(ValueError):
     """空回专用异常：网关截断/代理空包/推理预算吞思考链导致的 200 空包。
     同质量门处理——切下一家但不计入跨运行断路器（通道没死，只是这一次没吐东西；
     否则健康通道会被偶发空包误伤进冷却）"""
+
+
+class _BudgetExhaustedError(_EmptyContentError):
+    """预算到顶仍截断（残句非空）：确定性失败，不是偶发空包。
+
+    R331：生产 03:11 openrouter 残句 14100 字符却记「空回…孤立事件，不计入
+    断路器」——同预算重试必现同款截断，首挂原谅 = 每条故事白烧 200s 再 failover。
+    子类化保持 failover 路径不变，仅把断路语义从「偶发」改「确定」。"""
     pass
 
 
@@ -4242,9 +4250,11 @@ class MultiLLMEngine:
                     raise _EmptyContentError(
                         "模型返回了空内容（已即时重试 1 次）" if max_attempts > 1
                         else "模型返回了空内容（同运行连挂窗口，不再重试）")
-                # 预算到顶仍截断：残句宁可拒稿走 failover，也不能发半句话
+                # 预算到顶仍截断：残句宁可拒稿走 failover，也不能发半句话。
+                # R331：用 _BudgetExhaustedError——残句非空=确定性预算耗尽，
+                # 勿与偶发空包共用「首挂原谅」（见异常类注释）。
                 if final_finish == "length":
-                    raise _EmptyContentError(
+                    raise _BudgetExhaustedError(
                         f"预算 {effective_max_tokens}（封顶 {budget_cap}）到顶仍 finish=length 截断"
                         f"（残句 {len(content)} 字符），拒稿换提供商")
 
@@ -4393,6 +4403,9 @@ class MultiLLMEngine:
                 # 回填熔断使其冷却（生产：b.ai 连挂窗口本应被冷却，而非每条烧两次调用）。
                 # 注 _fail_counts 与 quality 门共用：连挂定义 = 连续故事失败（任何原因），
                 # 连续挂两个故事的通道进冷却是合理的。
+                # R331：_BudgetExhaustedError（残句到顶截断）是确定性失败，首挂即进
+                # 断路器——同预算重试必现，按偶发空包原谅只会让每条故事白烧扩容链。
+                is_budget_exhausted = isinstance(e, _BudgetExhaustedError)
                 fails = self._fail_counts.get(provider.name, 0) + 1
                 self._fail_counts[provider.name] = fails
                 # R170：空回也带 finish_reason——区分「思考链吃满预算」(length)
@@ -4404,10 +4417,11 @@ class MultiLLMEngine:
                                  persona=persona["name"],
                                  finish_reason=_ff_empty or None)
                 fail_reason = str(e)
-                enter_breaker = fails >= 2
+                enter_breaker = is_budget_exhausted or fails >= 2
                 if enter_breaker:
                     self._breaker_record_failure(provider.name)
-                logger.warning(f"提供商 [{provider.name}] 空回: {e}"
+                logger.warning(f"提供商 [{provider.name}] "
+                               f"{'预算截断' if is_budget_exhausted else '空回'}: {e}"
                                f"（{'已计入断路器' if enter_breaker else '孤立事件，不计入断路器'}）")
             except Exception as e:
                 err_msg = str(e)
