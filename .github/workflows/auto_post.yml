@@ -81,6 +81,9 @@ jobs:
           SC_KEY: ${{ secrets.SERVERCHAN_KEY }}
           PP_KEY: ${{ secrets.PUSHPLUS_TOKEN }}
           BARK_KEY: ${{ secrets.BARK_KEY }}
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          HOOK_URL: ${{ secrets.WEBHOOK_URL }}
         run: |
           echo "================ 运行环境与 Secrets 状态体检 ================"
           if [ -n "$SQUARE_KEY" ]; then echo "✔ SQUARE_API_KEY: 已检测到"; else echo "❌ SQUARE_API_KEY: 未检测到 (请在 Repository Secrets 中配置)"; fi
@@ -91,6 +94,10 @@ jobs:
           if [ -n "$SC_KEY" ]; then echo "✔ SERVERCHAN_KEY (微信推送): 已检测到"; fi
           if [ -n "$PP_KEY" ]; then echo "✔ PUSHPLUS_TOKEN (微信推送): 已检测到"; fi
           if [ -n "$BARK_KEY" ]; then echo "✔ BARK_KEY (iOS推送): 已检测到"; fi
+          # R330：0 通知渠道时错误报警全部静默丢弃（R301 permanent 报警实测进黑洞）
+          if [ -z "$SC_KEY" ] && [ -z "$PP_KEY" ] && [ -z "$BARK_KEY" ] && { [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT" ]; } && [ -z "$HOOK_URL" ]; then
+            echo "⚠️ 通知渠道 0 个 —运营报警（permanent 失败/崩溃）将静默丢弃，请配置 SERVERCHAN_KEY/PUSHPLUS_TOKEN/BARK_KEY/TELEGRAM_*/WEBHOOK_URL 任一"
+          fi
           echo "============================================================"
 
       - name: 调度看门狗（上轮调度触发距今超阈值则报警）

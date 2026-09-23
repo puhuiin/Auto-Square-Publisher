@@ -2543,6 +2543,70 @@ class TestAlertThrottling(unittest.TestCase):
             intel = json.load(f)
         self.assertNotIn("_alert_state", intel)
 
+    def test_no_channel_error_alert_leaves_telemetry(self):
+        """R330：0 渠道丢弃错误报警必须留痕——生产 R301 permanent 报警进黑洞
+        （logger.info 等同消失，_alert_state 全史为空才发现渠道根本没配）。
+        成功通知（is_error=False）不写：非错误、无运营损失。"""
+        for k in ("SERVERCHAN_KEY", "PUSHPLUS_TOKEN", "BARK_KEY",
+                  "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "WEBHOOK_URL"):
+            os.environ.pop(k, None)
+        with patch.object(m, "append_metrics") as mock_metrics, \
+             patch.object(m, "CAMPAIGN_INTEL_FILE", self.tmp):
+            m.Notifier.send_notification("LLM 提供商永久失败: stub", "内容", is_error=True)
+            m.Notifier.send_notification("发帖成功", "内容", is_error=False)
+        outcomes = [c.args[0].get("outcome") for c in mock_metrics.call_args_list
+                    if c.args and isinstance(c.args[0], dict)]
+        self.assertEqual(outcomes, ["alert_dropped_no_channel"],
+                         "仅 is_error 且 0 渠道时写丢弃遥测")
+
+    def test_healthcheck_reports_notification_channels(self):
+        """R330：docstring 承诺的「5. 通知渠道配置」此前整节缺失——0 渠道时
+        运营报警静默丢弃而体检只字不提。必须列出已配置渠道或明确报 0。"""
+        for k in ("SERVERCHAN_KEY", "PUSHPLUS_TOKEN", "BARK_KEY",
+                  "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "WEBHOOK_URL"):
+            os.environ.pop(k, None)
+        os.environ["SQUARE_API_KEY"] = "test"
+        fake_syms = {f"T{i}" for i in range(200)} | {"BTC"}
+        printed = []
+        try:
+            with patch.object(m, "_safe_print", side_effect=lambda *a, **k: printed.append(" ".join(str(x) for x in a))), \
+                 patch.object(m.SymbolValidator, "get_valid_symbols", return_value=fake_syms), \
+                 patch.object(m.MarketDataProvider, "get_fear_and_greed", return_value="50/100"), \
+                 patch.object(m.MarketDataProvider, "get_trending_symbols", return_value=["BTC"]), \
+                 patch.object(m, "probe_reasonix_gateway", return_value=None), \
+                 patch.object(m.NewsFetcher, "_feed_health", return_value={}), \
+                 patch.object(m.MultiLLMEngine, "_breaker_state", return_value={}):
+                try:
+                    m.run_healthcheck()
+                except SystemExit:
+                    pass
+        finally:
+            os.environ.pop("SQUARE_API_KEY", None)
+        blob = "\n".join(printed)
+        self.assertIn("通知渠道", blob, "体检必须含通知渠道配置节")
+        self.assertIn("0 个", blob, "0 渠道必须点名，不得静默省略")
+        self.assertIn("静默丢弃", blob, "要说明后果：报警会被丢弃")
+
+        os.environ["SERVERCHAN_KEY"] = "k"
+        printed.clear()
+        try:
+            with patch.object(m, "_safe_print", side_effect=lambda *a, **k: printed.append(" ".join(str(x) for x in a))), \
+                 patch.object(m.SymbolValidator, "get_valid_symbols", return_value=fake_syms), \
+                 patch.object(m.MarketDataProvider, "get_fear_and_greed", return_value="50/100"), \
+                 patch.object(m.MarketDataProvider, "get_trending_symbols", return_value=["BTC"]), \
+                 patch.object(m, "probe_reasonix_gateway", return_value=None), \
+                 patch.object(m.NewsFetcher, "_feed_health", return_value={}), \
+                 patch.object(m.MultiLLMEngine, "_breaker_state", return_value={}):
+                try:
+                    m.run_healthcheck()
+                except SystemExit:
+                    pass
+        finally:
+            os.environ.pop("SERVERCHAN_KEY", None)
+        blob = "\n".join(printed)
+        self.assertIn("SERVERCHAN_KEY", blob, "已配置渠道须点名")
+        self.assertIn("1 个已配置", blob)
+
 
 class TestTokenDailyLimit(unittest.TestCase):
     """同一代币 24h 发帖限流"""

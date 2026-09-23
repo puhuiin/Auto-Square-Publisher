@@ -882,6 +882,13 @@ def render_text(s, rows=None):
         + (f"，其中 {s['dry_skipped']} 行 dry-run 已排除" if s["dry_skipped"] else ""),
         f"- outcome 分布: {dict(s['by_outcome']) or '—'}",
     ]
+    # R330：错误报警因 0 渠道被丢弃必须单独成行——混在 outcome 分布里等于消失
+    # （生产实锤：R301 permanent 报警进黑洞，_alert_state 全史为空才发现）。
+    if s['by_outcome'].get('alert_dropped_no_channel'):
+        lines.append(
+            f"  📵 运营报警静默丢弃 ×{s['by_outcome']['alert_dropped_no_channel']}"
+            f"（通知渠道 0 个，permanent 失败/崩溃等错误报警未能送达——请配置"
+            f" SERVERCHAN_KEY/PUSHPLUS_TOKEN/BARK_KEY/TELEGRAM_*/WEBHOOK_URL 任一）")
     if rows is not None:
         f = funnel(rows)
         if f["attempted"]:

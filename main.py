@@ -6576,9 +6576,18 @@ class Notifier:
 
     @staticmethod
     def send_notification(title: str, message: str, is_error: bool = False):
-        # 无任何通知渠道时直接返回：避免空跑写入节流状态，消耗未来真实报警的额度
+        # 无任何通知渠道时直接返回：避免空跑写入节流状态，消耗未来真实报警的额度。
+        # R330：错误报警被丢弃时必须留痕——生产 0 渠道实锤 R301 permanent 报警进黑洞
+        # （_alert_state 全史为空），logger.info 与「跳过推送」在运行日志里等同消失。
         if not Notifier._any_channel_configured():
-            logger.info(f"[通知未配置渠道，跳过推送] {title}")
+            if is_error:
+                logger.warning(f"[通知未配置渠道，错误报警被丢弃] {title}")
+                append_metrics({
+                    "outcome": "alert_dropped_no_channel",
+                    "reason": title[:80],
+                })
+            else:
+                logger.info(f"[通知未配置渠道，跳过推送] {title}")
             return
 
         # 错误报警 12h 同题节流（成功通知不去重，每条成功都有价值）。
@@ -6810,7 +6819,8 @@ def run_healthcheck():
     2. Reasonix 本地网关 + LLM 提供商链
     3. RSS 源可达性
     4. 币安现货接口 + 恐慌贪婪指数
-    5. 通知渠道配置
+    5. 通知渠道配置（R330：docstring 此前承诺本节但代码从未实现——0 渠道时
+       R301 permanent 报警静默进黑洞，健康自检也只字不提）
     """
     _safe_print("\n" + "=" * 60)
     _safe_print("🏥 Binance Square Auto Poster - 全链路健康自检")
@@ -6953,18 +6963,38 @@ def run_healthcheck():
     else:
         checks.append(("发布退避", "ℹ", "无停放故事、无风控否认"))
 
-    # ---- 5. 币安现货 API ----
+    # ---- 5. 通知渠道配置（R330：docstring 承诺的本节——此前整节缺失）----
+    # 0 渠道 = 所有运营报警（permanent 失败/崩溃/RSS 全线故障）静默丢弃，
+    # 与「推运营报警」的 R301 设计直接矛盾，必须在体检里可见。
+    _ch_names = {
+        "SERVERCHAN_KEY": bool(os.getenv("SERVERCHAN_KEY", "").strip()),
+        "PUSHPLUS_TOKEN": bool(os.getenv("PUSHPLUS_TOKEN", "").strip()),
+        "BARK_KEY": bool(os.getenv("BARK_KEY", "").strip()),
+        "Telegram": bool(os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+                         and os.getenv("TELEGRAM_CHAT_ID", "").strip()),
+        "WEBHOOK_URL": bool(os.getenv("WEBHOOK_URL", "").strip()),
+    }
+    _ch_on = [n for n, on in _ch_names.items() if on]
+    if _ch_on:
+        checks.append(("通知渠道", "✔", f"{len(_ch_on)} 个已配置（{'、'.join(_ch_on)}）"))
+    else:
+        # ⚠ 而非 ✗：渠道全部可选（README），0 渠道不构成发帖故障，但必须可见
+        checks.append(("通知渠道", "⚠",
+                       "0 个 —所有运营报警将静默丢弃（请配置 SERVERCHAN_KEY/"
+                       "PUSHPLUS_TOKEN/BARK_KEY/TELEGRAM_*/WEBHOOK_URL 任一）"))
+
+    # ---- 6. 币安现货 API ----
     syms = SymbolValidator.get_valid_symbols()
     if len(syms) > 100:
         checks.append(("币安现货接口", "✔", f"在线（{len(syms)} 个交易对）"))
     else:
         checks.append(("币安现货接口", "✗", "无法获取交易对（网络或接口异常）"))
 
-    # ---- 6. 恐慌贪婪指数 ----
+    # ---- 7. 恐慌贪婪指数 ----
     fng = MarketDataProvider.get_fear_and_greed()
     checks.append(("恐慌贪婪指数", "✔" if "中立" not in fng else "⚠", fng))
 
-    # ---- 6.5 全网热搜源（CoinGecko，R94 新外部依赖）----
+    # ---- 7.5 全网热搜源（CoinGecko，R94 新外部依赖）----
     # 拉取失败时加权静默降级为零行为（by design），但健康检查必须让它可见——
     # 热搜加权长期失效等于"追随热点趋势"的核心信号悄然失明。
     trending_syms = MarketDataProvider.get_trending_symbols()
@@ -6974,7 +7004,7 @@ def run_healthcheck():
     else:
         checks.append(("全网热搜源", "⚠", "CoinGecko Trending 拉取失败（加权已降级为零行为）"))
 
-    # ---- 6.7 24h 发帖配额（R115：一键体检直接看配额位与下一槽时间）----
+    # ---- 7.7 24h 发帖配额（R115：一键体检直接看配额位与下一槽时间）----
     if MAX_DAILY_POSTS > 0:
         try:
             cache_mgr = CacheManager(CACHE_FILE)
@@ -7004,7 +7034,7 @@ def run_healthcheck():
         except Exception:
             checks.append(("24h 发帖配额", "⚠", "无法读取 sent_cache（缓存文件异常）"))
 
-    # ---- 7. 发布通道级开关 ----
+    # ---- 8. 发布通道级开关 ----
     checks.append(("运行策略", "ℹ", f"日配额={MAX_DAILY_POSTS} | 单币种限流={TOKEN_DAILY_LIMIT}"
                                  f"（热度≥{TOKEN_LIMIT_BYPASS_IMPACT} 放行） | "
                                   f"时效={MAX_NEWS_AGE_HOURS}h | 去重={DUP_SIMILARITY_THRESHOLD} | "

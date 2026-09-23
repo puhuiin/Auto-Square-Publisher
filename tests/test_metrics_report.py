@@ -181,6 +181,23 @@ class TestMetricsReport(unittest.TestCase):
         s = mr.summarize(rows)
         self.assertEqual(sum(s["permanent_failures"].values()), 0)
         self.assertNotIn("💀 永久失败", mr.render_text(s))
+
+    def test_alert_dropped_no_channel_rendered(self):
+        """R330：0 渠道丢弃的错误报警必须单独成行——混在 outcome 分布里等于消失
+        （生产实锤：R301 permanent 报警进黑洞，_alert_state 全史为空才发现）。"""
+        rows = [
+            {"ts": "2026-09-22T03:03:34+00:00", "outcome": "alert_dropped_no_channel",
+             "reason": "LLM 提供商永久失败: Preset-b.ai"},
+            {"ts": "2026-09-22T03:04:00+00:00", "outcome": "run_summary",
+             "candidates": 0, "published": 0},
+        ]
+        out = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("运营报警静默丢弃", out)
+        self.assertIn("×1", out)
+        self.assertIn("通知渠道 0 个", out)
+        # 零丢弃时不渲染（零噪音惯例）
+        out2 = mr.render_text(mr.summarize([rows[1]]), [rows[1]])
+        self.assertNotIn("运营报警静默丢弃", out2)
         self.assertEqual(mr._format_permanent_failures({}), "")
 
     def test_intel_degraded_counted_and_rendered(self):
