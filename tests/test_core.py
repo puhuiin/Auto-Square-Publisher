@@ -4159,6 +4159,45 @@ class TestIntelSchema(unittest.TestCase):
         self.assertEqual(intel["incentivized_tokens"], ["$BTC"])
         self.assertIn("last_updated", intel)
 
+    def test_credit_exhausted_in_intel_marks_permanent(self):
+        """R332：情报路径的余额耗尽必须回填 permanent——此前只记遥测，
+        直到 summarize 撞上才冷却（生产 09-21 13:53 起 campaign_intel 连续
+        credit 错误，09-22 03:03 才 permanent，其间每次刷新都白撞空账户）。
+        R300「无条件走 permanent 快道」适用于一切 LLM 调用，不只故事。"""
+        eng = self._stub_engine("ignored")
+        eng._get_client.return_value.chat.completions.create.side_effect = RuntimeError(
+            "Error code: 400 - {'error': {'message': 'credit insufficient balance: 0'}}")
+        self.assertIsNone(m.CampaignScanner.analyze_with_ai(eng, ["t1"]))
+        eng._breaker_record_permanent.assert_called()
+        args, kwargs = eng._breaker_record_permanent.call_args
+        self.assertEqual(args[0], "stub")
+        self.assertIn("余额", kwargs.get("reason", args[1] if len(args) > 1 else ""))
+
+    def test_404_in_intel_marks_permanent(self):
+        """模型下架/404 在情报路径同样标 permanent（非路由别名）。"""
+        eng = self._stub_engine("ignored")
+        eng._get_client.return_value.chat.completions.create.side_effect = RuntimeError(
+            "Error code: 404 - {'error': {'message': 'This model is unavailable for free.}}")
+        self.assertIsNone(m.CampaignScanner.analyze_with_ai(eng, ["t1"]))
+        eng._breaker_record_permanent.assert_called()
+
+    def test_transient_error_in_intel_skips_permanent(self):
+        """对照：超时/5xx 等瞬时故障不得标 permanent（R332 只收持久故障）。"""
+        eng = self._stub_engine("ignored")
+        eng._get_client.return_value.chat.completions.create.side_effect = RuntimeError(
+            "Request timed out.")
+        self.assertIsNone(m.CampaignScanner.analyze_with_ai(eng, ["t1"]))
+        eng._breaker_record_permanent.assert_not_called()
+
+    def test_intel_success_records_breaker_success(self):
+        """R332：情报成功回填 _breaker_record_success——充值恢复/到期重败的
+        对称半边（permanent 旗标须在成功时清掉，否则到期复活后旗标滞留）。"""
+        eng = self._stub_engine('{"active_tags": ["#A"], "incentivized_tokens": ["$BTC"], '
+                                '"strategy_guidance": "guide"}')
+        intel = m.CampaignScanner.analyze_with_ai(eng, ["t1"])
+        self.assertIsNotNone(intel)
+        eng._breaker_record_success.assert_called_with("stub")
+
     def test_intel_reject_carries_finish_reason(self):
         """R180：情报空回拒稿也带 finish_reason（length=思考链吃满 / stop=真·空包）"""
         import tempfile, json as _json

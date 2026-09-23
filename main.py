@@ -2658,8 +2658,9 @@ class _QualityGateRejection(ValueError):
 
 class _EmptyContentError(ValueError):
     """空回专用异常：网关截断/代理空包/推理预算吞思考链导致的 200 空包。
-    同质量门处理——切下一家但不计入跨运行断路器（通道没死，只是这一次没吐东西；
-    否则健康通道会被偶发空包误伤进冷却）"""
+    同质量门处理——切下一家；真·空包不计入跨运行断路器（通道没死，只是这一次
+    没吐东西，否则健康通道会被偶发空包误伤进冷却）。
+    子类 _BudgetExhaustedError 语义相反（确定性失败、首挂进断路器），见其注释。"""
 
 
 class _BudgetExhaustedError(_EmptyContentError):
@@ -4776,6 +4777,11 @@ class CampaignScanner:
                             "stale_date_refs": len(stale_refs),
                         })
                         logger.info(f"🎉 币安活动情报分析完成: {data.get('strategy_guidance')}")
+                        # R332：情报路径同样回填断路器——成功清旗标（到期重败/
+                        # 充值恢复的对称半边），失败半边见下方 except。
+                        _rec_ok = getattr(llm_engine, "_breaker_record_success", None)
+                        if callable(_rec_ok):
+                            _rec_ok(provider.name)
                         return data
                     logger.warning(f"提供商 [{provider.name}] 返回的情报缺字段/类型不对，已丢弃换下一家: "
                                    f"{str(data)[:120]}")
@@ -4792,6 +4798,17 @@ class CampaignScanner:
                     # 情报分析失败同样记耗时/ token，便于定位是哪家 provider 在抖
                     # R180：finish_reason——「思考链吃满预算」(length) 与真·空包 (stop)
                     # 此前只在 reason 文本里，与 summarize 拒稿对齐
+                    # R332：通道级持久故障必须回填断路器——此前只记遥测，
+                    # 余额耗尽/404 在情报路径不标 permanent，直到 summarize 撞上
+                    # 才冷却（生产 09-21 13:53 起 campaign_intel 连续 credit 错误，
+                    # 09-22 03:03 才 permanent，其间每次刷新都白撞空账户）。
+                    # R300「无条件走 permanent 快道」适用于一切 LLM 调用，不只故事。
+                    _rec_perm = getattr(llm_engine, "_breaker_record_permanent", None)
+                    if callable(_rec_perm):
+                        if _is_credit_exhausted(e):
+                            _rec_perm(provider.name, reason="账户余额/额度耗尽")
+                        elif _is_permanent_failure(e) and not _is_router_model(provider.model):
+                            _rec_perm(provider.name, reason="模型下架/404")
                     _ff_intel = _fin if isinstance(_fin, str) else None
                     append_metrics({
                         "provider": provider.name,
