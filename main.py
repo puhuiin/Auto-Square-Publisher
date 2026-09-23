@@ -2932,10 +2932,13 @@ def _is_reasoning_channel(provider_name: str, model: str = "") -> bool:
         return True
     if provider_name == "Preset-b.ai":
         return True
-    if provider_name == "Preset-stepfun":
+    if provider_name.startswith("Preset-stepfun"):
         # step-5-preview 官方文档带 reasoning_effort(low/medium/high) 思考档，
         # 与 b.ai 的 glm-5.3-flash 同型（思考链吃 1000~2300 token）。按非推理
         # 配 25s/600 会复刻 R218 的系统性空包；误升无成本（预算上限非下限）。
+        # startswith 一并覆盖 Preset-stepfun-flash：即便 step-3.7-flash 是非思考模型，
+        # 大预算/长超时也只是上界——它更快时自然更早返回、用更少 token，无成本；
+        # 若它其实带思考档，则避免 600 预算被思考链吃满导致 content 系统性 None。
         return True
     ml = (model or "").lower()
     if "thinking" in ml or "reasoning" in ml:
@@ -3561,16 +3564,45 @@ class MultiLLMEngine:
                 "https://api.stepfun.com/step_plan/v1",
                 os.getenv("STEPFUN_MODEL", "").strip() or "step-5-preview",
             ),
+            # 同一订阅 Credit 池的更快模型（用户 2026-09-23 指定"多用 step5、让
+            # step-3.7-flash 也能用、稍微快一点"）：走同 key、同 /step_plan/v1 端点，
+            # 与 step-5-preview 同计订阅额度，仅模型名不同。去重键已放宽到 (key, model)，
+            # 故同一订阅 key 的双模型可并存（见下方 append 循环注释）。
+            "stepfun-flash": (
+                os.getenv("STEPFUN_API_KEY", "").strip(),
+                "https://api.stepfun.com/step_plan/v1",
+                os.getenv("STEPFUN_FLASH_MODEL", "").strip() or "step-3.7-flash",
+            ),
         }
 
         for name, (k, url, m) in extra_keys.items():
-            if k and not any(p.api_key == k for p in chain):
+            # 去重键 =(api_key, model)：放宽自原先的纯 api_key——同一订阅 key 挂多个
+            # 模型（阶跃 step-5-preview + step-3.7-flash 同 Credit 池）应各成一条独立
+            # 通道；仅"同 key 同 model 在两个 env 槽重复配置"才去重，避免断路器/失败
+            # 计数/遥测 provider 字段按 name 归档时两条通道互相污染状态。
+            if k and not any(p.api_key == k and p.model == m for p in chain):
                 # 超时与预算规则联动：推理通道（思考链吃 1000~2300 token，高峰期实测单次
                 # 挂 50~79s）按默认 25s 会在生成到一半时被掐死——timeout 拒单烧掉整次调用。
                 # 凡是按推理通道给 1500 预算的提供商，超时同样抬到 90s（同一谓词判定）。
                 chain.append(LLMProviderConfig(
                     name=f"Preset-{name}", base_url=url, api_key=k, model=m,
                     timeout=90.0 if _is_reasoning_channel(f"Preset-{name}", m) else 25.0))
+
+        # 阶跃订阅=用户 2026-09-23 指定"多用"的付费稳定源：显式抬到免费池之上
+        # （STEPFUN_PRIORITY，默认 1；置 0 则退回纯延迟排序、不促销）。priority 越大
+        # 越先试（见 _ordered_providers 的 -priority 排序层，排在成本/延迟分之前）。
+        # step-3.7-flash 比 step-5-preview 快，再高一档——保证冷启动（无延迟遥测时
+        # 成本分恒 +inf）也先试 flash，而非先撞 80s 的 step-5-preview（保住"稍微快一点"）。
+        try:
+            _sf_prio = int(os.getenv("STEPFUN_PRIORITY", "1") or "0")
+        except ValueError:
+            _sf_prio = 1
+        if _sf_prio > 0:
+            for p in chain:
+                if p.name == "Preset-stepfun-flash":
+                    p.priority = _sf_prio + 1
+                elif p.name == "Preset-stepfun":
+                    p.priority = _sf_prio
 
         # 4. 本地 Reasonix 免费模型网关：存活则置顶（返回首选+备份模型链，网关自身再兜底上游）
         gw_cfgs = probe_reasonix_gateway()

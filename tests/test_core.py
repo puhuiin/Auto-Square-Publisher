@@ -10787,7 +10787,10 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
         R279 白名单扩 stepfun：订阅制旗舰、文档明示 reasoning_effort 思考档
         （非免费池推论，不破坏"免费名短配"的初衷）。"""
         chain = {p.name: p for p in self._build()}
-        reasoning = {"Preset-b.ai", "Preset-openrouter", "Preset-stepfun"}  # 生产实证/路由别名/订阅旗舰
+        # R338：Preset-stepfun-flash 与 step-5-preview 同订阅通道，谓词 startswith
+        # 一并覆盖（误升无成本：更快时自然更早返回、用更少 token）。
+        reasoning = {"Preset-b.ai", "Preset-openrouter", "Preset-stepfun",
+                     "Preset-stepfun-flash"}  # 生产实证/路由别名/订阅双模型
         for name, cfg in chain.items():
             if not name.startswith("Preset-"):
                 continue
@@ -10844,6 +10847,57 @@ class TestStepfunPreset(unittest.TestCase):
             if saved is not None:
                 os.environ["STEPFUN_API_KEY"] = saved
         self.assertFalse(any(p.name == "Preset-stepfun" for p in chain))
+        self.assertFalse(any(p.name == "Preset-stepfun-flash" for p in chain))
+
+    def test_flash_coexists_on_shared_key(self):
+        """R338：step-3.7-flash 与 step-5-preview 共用 STEPFUN_API_KEY，去重键放宽到
+        (key, model) 后两条通道必须并存——旧的纯 api_key 去重会静默吞掉第二条。"""
+        chain = self._build()
+        sf = [p for p in chain if p.name.startswith("Preset-stepfun")]
+        names = {p.name for p in sf}
+        self.assertEqual(names, {"Preset-stepfun", "Preset-stepfun-flash"},
+                         f"同 key 双模型应各成一条独立通道，实际 {names}")
+        # 同 key、同端点、异模型
+        self.assertEqual({p.api_key for p in sf}, {"k-stepfun-x"})
+        self.assertEqual({p.base_url for p in sf},
+                         {"https://api.stepfun.com/step_plan/v1"})
+        flash = next(p for p in sf if p.name == "Preset-stepfun-flash")
+        self.assertEqual(flash.model, "step-3.7-flash")
+        # flash 同属订阅通道 → 推理配给（startswith 覆盖，误升无成本）
+        self.assertEqual(flash.timeout, 90.0)
+        self.assertEqual(m._summarize_max_tokens("Preset-stepfun-flash", "step-3.7-flash"), 1500)
+
+    def test_flash_model_env_override(self):
+        flash = next(p for p in self._build({"STEPFUN_FLASH_MODEL": "step-3.7-turbo"})
+                     if p.name == "Preset-stepfun-flash")
+        self.assertEqual(flash.model, "step-3.7-turbo")
+
+    def test_flash_ranked_before_step5_by_default(self):
+        """R338：用户 2026-09-23 指定"多用 step5、稍微快一点"。默认 STEPFUN_PRIORITY=1
+        把订阅通道抬到免费池之上，且 flash 比 step-5-preview 再高一档——冷启动
+        （无延迟遥测=+inf 成本分）时也先试 flash 而非 80s 的 step-5。"""
+        chain = self._build({"BAI_API_KEY": "k-bai"})
+        flash = next(p for p in chain if p.name == "Preset-stepfun-flash")
+        step5 = next(p for p in chain if p.name == "Preset-stepfun")
+        self.assertGreater(flash.priority, step5.priority, "flash 应排在 step-5 之前")
+        self.assertGreater(step5.priority, 0, "step-5 应被抬到免费池之上（多用 step5）")
+        # 冷启动实序：flash → step-5 → 免费池（无遥测时按 -priority 主导排序）
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts, eng._clients = {}, {}
+        eng.providers = chain
+        with patch.object(eng, "_breaker_state", return_value={}), \
+             patch.object(eng, "_provider_cost_latency_scores", return_value={}), \
+             patch.object(eng, "_quality_fails", return_value={}):
+            order = [p.name for p in eng._ordered_providers()]
+        self.assertLess(order.index("Preset-stepfun-flash"), order.index("Preset-stepfun"))
+        self.assertLess(order.index("Preset-stepfun"), order.index("Preset-b.ai"))
+
+    def test_priority_zero_disables_promotion(self):
+        """STEPFUN_PRIORITY=0 = 退回纯延迟排序（不促销），两条通道 priority 归 0。"""
+        chain = self._build({"STEPFUN_PRIORITY": "0"})
+        for name in ("Preset-stepfun", "Preset-stepfun-flash"):
+            p = next(x for x in chain if x.name == name)
+            self.assertEqual(p.priority, 0, f"{name} 关闭促销后不应带 priority")
 
 
 class TestProviderPriorityOrdering(unittest.TestCase):
