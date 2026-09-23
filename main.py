@@ -5944,7 +5944,7 @@ class SquarePublisher(BasePublisher):
         return head.rstrip()
 
     @classmethod
-    def _enforce_max_chars(cls, content: str, max_chars: int) -> str:
+    def _enforce_max_chars(cls, content: str, max_chars: int, keep_tags=None) -> str:
         """把内容压到 max_chars 以内，并**保住末尾的标签行**。
 
         #Write2Earn / #BinanceSquare 是创作激励返佣的归因依据，被截掉等于白发，
@@ -5984,6 +5984,25 @@ class SquarePublisher(BasePublisher):
         have = {mm.group(0)[1:].lower() for mm in re.finditer(r"#[^\s#]+", content)}
         suffix_tags = [t for t in ("#Write2Earn", "#BinanceSquare")
                        if t[1:].lower() in have]
+        # R354：活动标签（R291"活动入口第 3 席、不容丢"）与保底双标签同为创作激励
+        # 归因依据，却被下面 re.sub 连同普通标签一起清空——单行帖（保底与活动标签
+        # 都行内追加、无独立标签行）在 publish() 注入活动标签后溢出走本兜底分支时，
+        # #TradingTournament 之类被静默丢失（生产可达：密集裸代币名 weave 加 $ 后
+        # 追加超 _APPEND_HEADROOM）。R352/R353 只自持保底双标签，漏了活动标签这一
+        # 对称席位。故把调用方点名保留的标签（keep_tags，publish() 传
+        # last_campaign_tag）在场者接在保底之后一并保留（大小写按原文、去重、排除
+        # 保底重复）。keep_tags 为空（sanitize 内部调用，此时活动标签尚未注入）时
+        # 行为与 R353 逐字一致（零回归）；仍受 ≤3 标签口径约束（保底 2 + 活动 1）。
+        for kt in (keep_tags or []):
+            kt = str(kt).strip()
+            if not kt.startswith("#"):
+                continue
+            kt_low = kt[1:].lower()
+            if kt_low in ("write2earn", "binancesquare") or kt_low not in have:
+                continue
+            if any(kt_low == s[1:].lower() for s in suffix_tags):
+                continue
+            suffix_tags.append(kt)
         suffix = (" " + " ".join(suffix_tags)) if suffix_tags else ""
         trimmed = cls._truncate_at_boundary(content, max(0, max_chars - len(suffix)))
         trimmed = re.sub(r"#[^\s#]+", "", trimmed).strip()
@@ -6258,7 +6277,12 @@ class SquarePublisher(BasePublisher):
         # 复检，越界时压缩正文、保住标签行——否则平台侧会以 220094 之类的错误拒稿。
         if len(content) > char_limit:
             logger.warning(f"追加挂件/标签后超出上限（{len(content)} > {char_limit}），压缩正文并保留标签行")
-            content = self._enforce_max_chars(content, char_limit)
+            # R354：把本轮注入的活动标签点名交给兜底分支保留——单行帖溢出走 re.sub
+            # 兜底时，活动标签（#TradingTournament 等，R291 活动入口第 3 席）否则会被
+            # 连同普通标签一起清空。保底双标签由 _enforce_max_chars 内部恒定自持。
+            content = self._enforce_max_chars(
+                content, char_limit,
+                keep_tags=[self.last_campaign_tag] if self.last_campaign_tag else None)
         if len(content) < 15:
             logger.error(f"发帖内容过短 ({len(content)} 字符)，拒绝发布以防被系统封禁")
             return False

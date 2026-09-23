@@ -11474,6 +11474,68 @@ class TestLongFormLengthBudget(unittest.TestCase):
         self.assertIn("#BinanceSquare", c)
         self.assertGreaterEqual(SP._count_valid_widgets(c), 1, "全文仍须 ≥1 个挂件")
 
+    def test_enforce_max_chars_fallback_keeps_campaign_tag_via_keep_tags(self):
+        """R354（变异哨兵）：单行帖（保底+活动标签行内追加、无独立标签行）溢出走
+        兜底分支时，活动标签（R291 活动入口第 3 席、不容丢）必须靠 keep_tags 点名
+        保留；而未点名的非保底标签仍按 R353 契约脱壳（≤3 标签口径不破）。"""
+        text = "市" * 880 + " #Write2Earn #BinanceSquare #TradingTournament #Alt"
+        self.assertNotIn("\n", text)  # 单行：走兜底分支（无独立标签行）
+        out = m.SquarePublisher._enforce_max_chars(
+            text, 900, keep_tags=["#TradingTournament"])
+        self.assertLessEqual(len(out), 900)
+        self.assertIn("#Write2Earn", out)
+        self.assertIn("#BinanceSquare", out)
+        self.assertIn("#TradingTournament", out, "活动标签经 keep_tags 点名必须保留")
+        self.assertNotIn("#Alt", out, "未点名的非保底标签仍按 R353 契约脱壳")
+
+    def test_enforce_max_chars_fallback_drops_campaign_without_keep_tags(self):
+        """R354 对照/变异哨兵：不传 keep_tags 时活动标签仍随普通标签脱壳——证明
+        keep_tags 是保留活动标签的唯一开关（防 publish() 调用点回退成 2 参形式而
+        活动入口静默丢失）。保底双标签则恒定自持、与是否传 keep_tags 无关。"""
+        text = "市" * 880 + " #Write2Earn #BinanceSquare #TradingTournament"
+        out = m.SquarePublisher._enforce_max_chars(text, 900)
+        self.assertLessEqual(len(out), 900)
+        self.assertIn("#Write2Earn", out, "保底双标签恒定自持")
+        self.assertIn("#BinanceSquare", out)
+        self.assertNotIn("#TradingTournament", out,
+                         "未点名 keep_tags 时活动标签按旧契约脱壳")
+
+    def test_enforce_max_chars_keep_tags_ignores_absent_or_mandatory(self):
+        """R354 反向零回归：keep_tags 里不在文中的标签不得凭空补回，保底名（大小写
+        不敏感）不得因 keep_tags 造成重复；无保底无活动时行为与旧实现逐字一致。"""
+        text = "甲" * 2000 + " #Write2Earn #BinanceSquare"
+        out = m.SquarePublisher._enforce_max_chars(
+            text, 900, keep_tags=["#TradingTournament", "#write2earn", "notahash"])
+        self.assertLessEqual(len(out), 900)
+        self.assertIn("#Write2Earn", out)
+        self.assertIn("#BinanceSquare", out)
+        self.assertNotIn("#TradingTournament", out, "keep_tags 中不在文里的标签不得补回")
+        self.assertEqual(out.count("#Write2Earn"), 1, "保底名不得因 keep_tags 大小写重复补")
+
+    def test_publish_call_site_keeps_campaign_tag_end_to_end(self):
+        """R354 端到端（接线防护）：真实 publish() 单段长文 + 密集裸代币，注入活动
+        标签后越界，最终复检走兜底分支，活动标签必须经 publish() keep_tags 接线存活。
+        R353 手搓链路测试不传 keep_tags，正是活动标签丢失的接线盲区。"""
+        pub = m.SquarePublisher(api_key="k")
+        fake_resp = MagicMock(status_code=200, text='{"code":"000000"}')
+        fake_resp.json.return_value = {"code": "000000", "data": {"contentId": "c-ct"}}
+        body = "行情 BTC 全线异动资金反复博弈情绪拉满盘口持续承压。" * 90
+        self.assertNotIn("\n", body)  # 单段：注入后无独立标签行，最终复检走兜底分支
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.return_value = fake_resp
+            ok = pub.publish(body, ensure_tokens=["BTC"],
+                             campaign_intel={"active_tags": ["#TradingTournament"]},
+                             title="主流币午后集体异动的深层信号")
+        self.assertTrue(ok)
+        self.assertLessEqual(len(pub.last_final_content),
+                             m.SquarePublisher.LONG_FORM_MAX_CHARS)
+        self.assertEqual(pub.last_campaign_tag, "#TradingTournament", "活动标签应已注入")
+        self.assertIn("#Write2Earn", pub.last_final_content)
+        self.assertIn("#BinanceSquare", pub.last_final_content)
+        self.assertIn("#TradingTournament", pub.last_final_content,
+                      "活动标签必须经 keep_tags 接线在最终复检存活")
+
 
 class TestArticleTitleTolerance(unittest.TestCase):
     """R9：模型给标题加 Markdown 加粗时不得误判"缺 TITLE 行"整篇拒稿"""
