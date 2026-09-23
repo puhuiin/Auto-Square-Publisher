@@ -858,6 +858,33 @@ class TestMetricsReport(unittest.TestCase):
         s2 = mr.summarize([rows[0]])
         self.assertNotIn("注入截断", mr.render_text(s2, [rows[0]]))
 
+    def test_feed_health_sources_consumed_and_rendered(self):
+        """R335：R276 写侧的 feeds_empty_sources / fetch_timeout_sources 此前
+        只进日志 + Step Summary，metrics_report 零消费——生产 09-22 BlockTempo
+        空 feed ×3 有数据无出口。必须按源聚合并渲染，零命中零噪音。"""
+        rows = [
+            {"outcome": "run_summary", "candidates": 5,
+             "feeds_empty": 1, "feeds_empty_sources": "BlockTempo (动区动趋中文)"},
+            {"outcome": "run_summary", "candidates": 5,
+             "feeds_empty": 1, "feeds_empty_sources": "BlockTempo (动区动趋中文) | Decrypt (Web3/AI/Meme)"},
+            {"outcome": "run_summary", "candidates": 5,
+             "fetch_timeout": 2, "fetch_timeout_sources": ["SlowFeed", "BlockTempo (动区动趋中文)"]},
+            {"outcome": "run_summary", "candidates": 5},  # 干净轮
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["feeds_empty_sources"].get("BlockTempo (动区动趋中文)"), 2)
+        self.assertEqual(s["runs"]["feeds_empty_sources"].get("Decrypt (Web3/AI/Meme)"), 1)
+        self.assertEqual(s["runs"]["fetch_timeout_sources"].get("SlowFeed"), 1)
+        text = mr.render_text(s, rows)
+        self.assertIn("源健康异常", text)
+        self.assertIn("BlockTempo (动区动趋中文) ×2", text, "空 feed 命中降序")
+        self.assertIn("空feed", text)
+        self.assertIn("超时", text)
+        self.assertIn("请评估换源/撤源", text)
+        # 零命中零噪音
+        s2 = mr.summarize([rows[3]])
+        self.assertNotIn("源健康异常", mr.render_text(s2, [rows[3]]))
+
     def test_campaign_off_pool_surfaced(self):
         """R201：off-pool 活动币进报表——Alpha 上新竞赛标的可见性"""
         rows = [

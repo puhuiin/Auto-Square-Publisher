@@ -415,6 +415,11 @@ def summarize(rows):
         # （持久巡检面）零消费——R276 同族「有数据无出口」。命中才显形。
         "injection_hits": 0,
         "injection_feeds": collections.Counter(),
+        # R335：R276 写侧的源健康细化（feeds_empty_sources / fetch_timeout_sources）
+        # 此前只进日志 + Step Summary，metrics_report 零消费——生产 09-22 BlockTempo
+        # 空 feed ×3 有数据无出口。按源名累加轮次，命中才显形。
+        "feeds_empty_sources": collections.Counter(),
+        "fetch_timeout_sources": collections.Counter(),
         "trend_freq": collections.Counter(),
         "last_hot_topics": "",  # R190：全网实时热点钩子供给（HN 等）
         "hot_topic_hits": 0,    # 出现过 hot_topics 的发帖轮数
@@ -755,6 +760,18 @@ def summarize(rows):
                     _v = _num(_fc)
                     if _v is not None and _v > 0:
                         runs_tmp["injection_feeds"][str(_fn)] += int(_v)
+            # R335：源健康细化（R276 写侧，报表此前零出口）
+            for _sk, _dk in (("feeds_empty_sources", "feeds_empty_sources"),
+                             ("fetch_timeout_sources", "fetch_timeout_sources")):
+                _sv = r.get(_sk)
+                if isinstance(_sv, str) and _sv.strip():
+                    for _fn in _sv.split(" | "):
+                        if _fn.strip():
+                            runs_tmp[_dk][_fn.strip()] += 1
+                elif isinstance(_sv, (list, tuple)):
+                    for _fn in _sv:
+                        if _fn:
+                            runs_tmp[_dk][str(_fn)] += 1
             # R177：分段耗时（有则收，历史行无字段不进）
             _sl = _num(r.get("sleep_elapsed_sec"))
             if _sl is not None and _sl > 0:
@@ -1043,6 +1060,17 @@ def render_text(s, rows=None):
             _detail = "、".join(f"{n} ×{v}" for n, v in _pairs) if _pairs else ""
             _note = f"（{_detail}）" if _detail else ""
             lines.append(f"  🚨 注入截断: {runs['injection_hits']} 条{_note}——请评估停放该源")
+        # R335：源健康细化（R276 写侧）——空 feed / 抓取超时按源可见，
+        # 与源入选率同属源治理面。零命中零噪音。
+        _sh = []
+        if runs.get("feeds_empty_sources"):
+            _pairs = sorted(runs["feeds_empty_sources"].items(), key=lambda x: -x[1])[:4]
+            _sh.append("空feed " + "、".join(f"{n} ×{v}" for n, v in _pairs))
+        if runs.get("fetch_timeout_sources"):
+            _pairs = sorted(runs["fetch_timeout_sources"].items(), key=lambda x: -x[1])[:4]
+            _sh.append("超时 " + "、".join(f"{n} ×{v}" for n, v in _pairs))
+        if _sh:
+            lines.append(f"  ⚠️ 源健康异常: {' / '.join(_sh)}——请评估换源/撤源")
     if rows is not None:
         q = quality_scan(rows)
         if q["scanned"]:
