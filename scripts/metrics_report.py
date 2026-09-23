@@ -369,6 +369,12 @@ def summarize(rows):
         "intel_age_hours": [],
         # R199：最近一次情报成功刷新时刻（campaign_intel llm_success）
         "last_intel_refresh_ts": None,
+        # R333：stale_date_refs 写侧（main analyze_with_ai）自 R127 起逐次落盘
+        # 「guidance 残留过期日期」计数，但报表零消费——有数据无出口（R276 同族）。
+        # 三元组：命中刷新次数 / 引用总数 / 单次最大。
+        "stale_date_refs_refreshes": 0,
+        "stale_date_refs_hits": 0,
+        "stale_date_refs_max": 0,
         # R175：情报刷新被失败退避跳过的轮次（区分「配额早退没刷」vs「想刷被退避挡」）
         "intel_cooldown_skips": 0,
         "reject_by_stage": collections.Counter(),
@@ -595,6 +601,13 @@ def summarize(rows):
             if isinstance(ts, str) and ts:
                 if s["last_intel_refresh_ts"] is None or ts > s["last_intel_refresh_ts"]:
                     s["last_intel_refresh_ts"] = ts
+            # R333：consume stale_date_refs（R127 写侧，报表此前零出口）
+            _sdr = _num(r.get("stale_date_refs"))
+            if _sdr is not None and _sdr > 0:
+                s["stale_date_refs_refreshes"] += 1
+                s["stale_date_refs_hits"] += int(_sdr)
+                if int(_sdr) > s["stale_date_refs_max"]:
+                    s["stale_date_refs_max"] = int(_sdr)
         elif outcome == "llm_rejected":
             s["reject_by_stage"][str(r.get("stage", "unknown"))] += 1
             s["reject_by_provider"][who] += 1
@@ -1160,6 +1173,12 @@ def render_text(s, rows=None):
     # R199：最近成功刷新时刻——对照 12h 过期窗，判断饱和轮是否在喂陈旧情报
     if s.get("last_intel_refresh_ts"):
         lines.append(f"  🔄 最近情报刷新: {str(s['last_intel_refresh_ts'])[:19]}")
+    # R333：R127 写侧的 stale_date_refs 此前零出口——有残留时必须可见
+    if s.get("stale_date_refs_refreshes"):
+        lines.append(
+            f"  ⚠️ 情报 guidance 残留过期日期: {s['stale_date_refs_refreshes']} 次刷新命中"
+            f"（共 {s['stale_date_refs_hits']} 处，单次最多 {s['stale_date_refs_max']}）"
+            f"——模型未完全遵守剔除指令")
     n_rej = sum(s["reject_by_stage"].values())
     if n_rej:
         lines.append(f"- 拦截 {n_rej} 次：阶段 {_top(s['reject_by_stage'])} / 模型 {_top(s['reject_by_provider'])}")

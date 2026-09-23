@@ -806,6 +806,33 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("最近情报刷新", text)
         self.assertIn("2026-09-15T15:48:19", text)
 
+    def test_stale_date_refs_consumed_and_rendered(self):
+        """R333：stale_date_refs 写侧（main analyze_with_ai R127）逐次落盘
+        「guidance 残留过期日期」计数，报表此前零消费——有数据无出口（R276 同族）。
+        必须聚合（次数/总数/单次最大）并渲染，且零残留时零噪音。"""
+        rows = [
+            {"outcome": "llm_success", "stage": "campaign_intel",
+             "ts": "2026-09-14T10:00:00+00:00", "stale_date_refs": 2},
+            {"outcome": "llm_success", "stage": "campaign_intel",
+             "ts": "2026-09-15T10:00:00+00:00", "stale_date_refs": 0},
+            {"outcome": "llm_success", "stage": "campaign_intel",
+             "ts": "2026-09-16T10:00:00+00:00", "stale_date_refs": 3},
+            {"outcome": "llm_success", "stage": "summarize",
+             "ts": "2026-09-16T11:00:00+00:00", "stale_date_refs": 9},  # 非情报行不计
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["stale_date_refs_refreshes"], 2, "仅 >0 的情报成功行计入次数")
+        self.assertEqual(s["stale_date_refs_hits"], 5, "2+3 引用总数")
+        self.assertEqual(s["stale_date_refs_max"], 3, "单次最大")
+        text = mr.render_text(s, rows)
+        self.assertIn("情报 guidance 残留过期日期", text)
+        self.assertIn("2 次刷新命中", text)
+        self.assertIn("共 5 处", text)
+        self.assertIn("单次最多 3", text)
+        # 零残留零噪音
+        s2 = mr.summarize([rows[1]])
+        self.assertNotIn("残留过期日期", mr.render_text(s2, [rows[1]]))
+
     def test_campaign_off_pool_surfaced(self):
         """R201：off-pool 活动币进报表——Alpha 上新竞赛标的可见性"""
         rows = [
