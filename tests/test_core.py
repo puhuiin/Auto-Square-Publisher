@@ -11423,6 +11423,57 @@ class TestLongFormLengthBudget(unittest.TestCase):
         self.assertFalse(out.rstrip().endswith("赚了 $100 就跑别贪"),
                          "普通正文末行不应被当作标签行豁免压缩")
 
+    def test_enforce_max_chars_inline_mandatory_tags_survive_fallback(self):
+        """R353（变异哨兵）：保底标签行内追加、无独立标签行时，兜底分支必须
+        自持保住 #Write2Earn/#BinanceSquare。R352 只覆盖"$挂件独立成行"，本例
+        末行是"正文+行内保底标签"（长文 TITLE\\n\\n单段、保底由 6106 行内补进）——
+        pre-fix 走 re.sub 兜底把双标签连同其余标签一起清空（"被截掉等于白发"），
+        且 publish() 6246 复检之后再无补齐步骤。"""
+        text = "行情正文一整段没有独立标签行。" * 300 + " #Write2Earn #BinanceSquare #Alt"
+        self.assertNotIn("\n", text)  # 单段：兜底分支（无独立标签行）
+        out = m.SquarePublisher._enforce_max_chars(text, 900)
+        self.assertLessEqual(len(out), 900)
+        self.assertIn("#Write2Earn", out, "返佣归因标签不得因行内追加+兜底截断被清空")
+        self.assertIn("#BinanceSquare", out)
+        self.assertNotIn("#Alt", out, "非保底标签仍按旧契约脱壳")
+
+    def test_enforce_max_chars_longform_prose_taildline_keeps_mandatory(self):
+        """R353：长文有换行但末行是"正文+行内标签"（非独立标签行、非 $挂件行），
+        溢出时旧兜底分支照样清空保底双标签。修复后必须保留。"""
+        text = "标题行\n\n" + "这是一整段长文正文没有独立标签行。" * 300 \
+            + " $BTC #Write2Earn #BinanceSquare #TradingTournament"
+        out = m.SquarePublisher._enforce_max_chars(text, 2500)
+        self.assertLessEqual(len(out), 2500)
+        self.assertIn("#Write2Earn", out)
+        self.assertIn("#BinanceSquare", out)
+
+    def test_enforce_max_chars_fallback_without_mandatory_unchanged(self):
+        """反向零回归：兜底内容不含保底双标签时，行为与修复前逐字一致——
+        全部 #标签脱壳、无任何标签补回、长度贴上限。"""
+        out = m.SquarePublisher._enforce_max_chars("甲" * 2000 + " #Foo #Bar", 900)
+        self.assertLessEqual(len(out), 900)
+        self.assertGreater(len(out), 800)
+        self.assertNotIn("#", out, "无保底标签时不得凭空补回任何标签")
+
+    def test_publish_pipeline_dense_token_longform_keeps_lifeline(self):
+        """R353 端到端：over-budget 长文 + 密集裸代币名，走完 sanitize→weave→
+        widget→campaign→最终复检 (6246) 后返佣双标签必须仍在（复现链的集成防护）。"""
+        SP = m.SquarePublisher
+        sentence = "盘面上 BTC ETH SOL BNB XRP ADA DOGE 全线异动资金反复博弈情绪拉满，"
+        raw = "TITLE: 主流币午后集体异动的深层信号\n\n" + sentence * 60
+        char_limit = SP.LONG_FORM_MAX_CHARS
+        tokens = ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE"]
+        c = SP._sanitize_content(raw, max_chars=char_limit)
+        c = SP._weave_cashtags(c, tokens)
+        c = SP._ensure_token_widget(c, tokens)
+        c = SP._inject_campaign_tag(c, {"active_tags": ["#TradingTournament"]})
+        if len(c) > char_limit:
+            c = SP._enforce_max_chars(c, char_limit)
+        self.assertLessEqual(len(c), char_limit)
+        self.assertIn("#Write2Earn", c, "端到端：返佣归因标签不得在最终复检丢失")
+        self.assertIn("#BinanceSquare", c)
+        self.assertGreaterEqual(SP._count_valid_widgets(c), 1, "全文仍须 ≥1 个挂件")
+
 
 class TestArticleTitleTolerance(unittest.TestCase):
     """R9：模型给标题加 Markdown 加粗时不得误判"缺 TITLE 行"整篇拒稿"""

@@ -5971,8 +5971,23 @@ class SquarePublisher(BasePublisher):
             room = max(0, max_chars - len(tail_stripped) - 1)
             trimmed = cls._truncate_at_boundary(body, room) if room else ""
             return f"{trimmed}\n{tail_stripped}" if trimmed else tail_stripped
-        trimmed = cls._truncate_at_boundary(content, max_chars)
-        return re.sub(r"#[^\s#]+", "", trimmed).strip()
+        # R353：兜底分支（没有可整体保留的独立标签行——末行是"正文+行内标签"或
+        # 纯长段）旧实现 re.sub 清掉**全部** #标签，依赖"截断处残留的半截标签第 6
+        # 步会重补"。但该前提只对 sanitize 内部调用 (6062) 成立；publish() 追加
+        # 挂件/活动标签后的最终复检 (6246) 之后**再无任何补齐步骤**——保底标签由
+        # 6106 行内追加而非独立成行、正文又一整段（长文 TITLE\n\n单段）时，weave
+        # 给裸代币加 $ 使追加后溢出即触发，#Write2Earn/#BinanceSquare 被连同半截
+        # 标签一起永久清空（"被截掉等于白发"，生产可达：over-budget 长文 + 密集
+        # 裸代币名，端到端复现）。R352 只覆盖"$挂件独立成行"的对称场景。故在函数
+        # 层面自持保底：给在场的保底双标签预留席位再截断，清掉其余标签后补回文末，
+        # 与调用方无关。无保底标签时 suffix 为空，行为与旧实现逐字一致（零回归）。
+        have = {mm.group(0)[1:].lower() for mm in re.finditer(r"#[^\s#]+", content)}
+        suffix_tags = [t for t in ("#Write2Earn", "#BinanceSquare")
+                       if t[1:].lower() in have]
+        suffix = (" " + " ".join(suffix_tags)) if suffix_tags else ""
+        trimmed = cls._truncate_at_boundary(content, max(0, max_chars - len(suffix)))
+        trimmed = re.sub(r"#[^\s#]+", "", trimmed).strip()
+        return f"{trimmed}{suffix}".strip()
 
     @classmethod
     def _sanitize_content(cls, content: str, max_chars: int = None) -> str:
