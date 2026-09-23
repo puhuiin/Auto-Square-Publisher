@@ -919,6 +919,29 @@ def _format_permanent_failures(counter, last_seen=None):
     return " | ".join(parts)
 
 
+def _provider_dispatch_order(by_provider, reject_by_provider, latency_by_provider):
+    """R337：把「发/拒」计数按 failover 实际调用顺序（延迟↑=先试）汇总成每通道一
+    行，回答反复出现的「某源份额低=没在用？」误读——慢而稳的兜底源（如 stepfun）
+    天然排在链尾、只在前序全挂时才够得到，份额小不等于闲置。键统一折叠到短通道名
+    （who.split('/',1)[0]，与 latency_by_provider 同粒度=failover 单元；openrouter
+    名下多模型合并计入一个通道）；剔除 '-'/'unknown'/空通道（非真实通道无法归位）。
+    无延迟样本的通道排在有延迟者之后（视为链尾未知位）。返回
+    [(prov, 发, 拒, 延迟或None), ...] 已按 failover 顺序排好；无可归位数据返回 []。"""
+    pub = collections.Counter()
+    rej = collections.Counter()
+    for who, cnt in (by_provider or {}).items():
+        pub[str(who).split("/", 1)[0]] += cnt
+    for who, cnt in (reject_by_provider or {}).items():
+        rej[str(who).split("/", 1)[0]] += cnt
+    provs = {p for p in (set(pub) | set(rej)) if p and p not in ("-", "unknown")}
+    lat = latency_by_provider or {}
+    inf = float("inf")
+    rows = [(p, pub.get(p, 0), rej.get(p, 0), lat.get(p)) for p in provs]
+    # 延迟升序=failover 调用顺序；无延迟样本视为链尾；同位次按尝试量降序稳定收敛
+    rows.sort(key=lambda t: (t[3] if t[3] is not None else inf, -(t[1] + t[2]), t[0]))
+    return rows
+
+
 def render_text(s, rows=None):
     """人类可读简报"""
     lines = [
@@ -1252,6 +1275,15 @@ def render_text(s, rows=None):
                     f"{item.get('preview', '')}")
     if s["latency_by_provider"]:
         lines.append(f"- 平均延迟(s) {dict(sorted(s['latency_by_provider'].items()))}")
+        _disp = _provider_dispatch_order(
+            s.get("by_provider"), s.get("reject_by_provider"), s["latency_by_provider"])
+        if _disp:
+            _segs = [
+                f"{p} 发{pub}/拒{rej}" + (f"·{lat}s" if lat is not None else "·延迟?")
+                for p, pub, rej, lat in _disp
+            ]
+            lines.append("- 通道位次（延迟↑=failover 调用顺序，靠前先试；慢而稳的源"
+                         "天然靠后·份额小≠闲置）: " + " › ".join(_segs))
     if s["tokens_by_provider"]:
         lines.append(f"- token 消耗 {dict(sorted(s['tokens_by_provider'].items()))}")
     if s["errors"]:

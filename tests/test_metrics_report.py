@@ -1893,6 +1893,71 @@ class TestContentStatsReportJoin(unittest.TestCase):
         self.assertEqual(rows["stats_posts"], 0)
         self.assertNotIn("内容数据", mr.render_text(rows, self._rows()))
 
+    def test_provider_dispatch_order_folds_and_ranks_by_latency(self):
+        """R337：通道位次行——发/拒计数折叠到短通道名（同一 preset 名下多模型合并），
+        按延迟↑=failover 调用顺序排列，'-'/'unknown' 剔除，无延迟样本的通道落链尾。
+        锁住「慢而稳的兜底源份额小≠闲置」的可读性契约（对应 stepfun 现实定位）。"""
+        rows = [
+            # Preset-fast：跨两模型 3 发 + 4 拒，延迟 20（链首先试）
+            {"ts": "2026-09-20T01:00:00+00:00", "outcome": "binance_published",
+             "provider": "Preset-fast", "model": "model-a", "platforms": ["binance"],
+             "llm_latency_sec": 20},
+            {"ts": "2026-09-20T01:01:00+00:00", "outcome": "binance_published",
+             "provider": "Preset-fast", "model": "model-a", "platforms": ["binance"]},
+            {"ts": "2026-09-20T01:02:00+00:00", "outcome": "binance_published",
+             "provider": "Preset-fast", "model": "model-b", "platforms": ["binance"]},
+        ] + [
+            {"ts": f"2026-09-20T02:0{i}:00+00:00", "outcome": "llm_rejected",
+             "stage": "quality", "provider": "Preset-fast", "model": "model-a",
+             "reason": "短"} for i in range(4)
+        ] + [
+            # Preset-mid：2 发 + 1 拒，延迟 50
+            {"ts": "2026-09-20T03:00:00+00:00", "outcome": "binance_published",
+             "provider": "Preset-mid", "model": "m", "platforms": ["binance"],
+             "llm_latency_sec": 50},
+            {"ts": "2026-09-20T03:01:00+00:00", "outcome": "binance_published",
+             "provider": "Preset-mid", "model": "m", "platforms": ["binance"]},
+            {"ts": "2026-09-20T03:02:00+00:00", "outcome": "llm_rejected",
+             "stage": "numbers", "provider": "Preset-mid", "model": "m", "reason": "编造"},
+        ] + [
+            # Preset-slow：5 发 0 拒，延迟 80（链尾兜底、份额小但近乎零失败）
+            {"ts": f"2026-09-20T04:0{i}:00+00:00", "outcome": "binance_published",
+             "provider": "Preset-slow", "model": "s", "platforms": ["binance"],
+             "llm_latency_sec": 80} for i in range(5)
+        ] + [
+            # 无延迟样本的通道：只有 1 发，应落在有延迟通道之后（链尾未知位）
+            {"ts": "2026-09-20T05:00:00+00:00", "outcome": "binance_published",
+             "provider": "Preset-nolat", "model": "n", "platforms": ["binance"]},
+            # no_provider 拒稿（provider '-'）必须剔除，不得占位
+            {"ts": "2026-09-20T06:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "no_provider", "provider": "-", "reason": "无可用 LLM"},
+        ]
+        s = mr.summarize(rows)
+        disp = mr._provider_dispatch_order(
+            s["by_provider"], s["reject_by_provider"], s["latency_by_provider"])
+        self.assertEqual(
+            [d[0] for d in disp],
+            ["Preset-fast", "Preset-mid", "Preset-slow", "Preset-nolat"],
+            "延迟↑=failover 顺序；无延迟样本落链尾")
+        self.assertEqual(disp[0], ("Preset-fast", 3, 4, 20.0), "同 preset 多模型发/拒需折叠")
+        self.assertEqual(disp[2], ("Preset-slow", 5, 0, 80.0), "慢而稳兜底源计数如实")
+        self.assertEqual(disp[3][3], None, "无延迟样本通道延迟为 None")
+        self.assertNotIn("-", [d[0] for d in disp], "'-' 非真实通道须剔除")
+        out = mr.render_text(s)
+        self.assertIn("通道位次", out)
+        self.assertIn("Preset-slow 发5/拒0·80.0s", out)
+        self.assertIn("Preset-nolat 发1/拒0·延迟?", out)
+        self.assertLess(
+            out.index("Preset-fast 发3"), out.index("Preset-slow 发5"),
+            "渲染顺序须为 failover 顺序（快源在前、慢源在后）")
+
+    def test_provider_dispatch_order_empty_when_no_channels(self):
+        """全空 / 仅 '-'/'unknown' 时通道位次行沉默（零噪音惯例）"""
+        self.assertEqual(mr._provider_dispatch_order({}, {}, {}), [])
+        self.assertEqual(
+            mr._provider_dispatch_order(
+                {"-": 3}, {"unknown": 2}, {"unknown": 10.0}), [])
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
