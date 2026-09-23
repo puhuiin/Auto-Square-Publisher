@@ -3185,14 +3185,23 @@ class MultiLLMEngine:
         与目录全空/Key 失效/RSS 全线故障同级——那些都推运营报警，唯独 LLM 通道永久死
         此前只 logger.warning 埋在运行日志里（b.ai 余额耗尽 20 小时全靠翻 metrics.jsonl
         才发现，其间静默降级到弱后端 openrouter/free = 17 字符残句/9202 字残句/单位误算
-        全出自它）。只在**首次进入** permanent 时报警（Notifier 另有 12h 同题节流兜底），
-        冷却期内每轮重撞不重复轰炸。"""
-        was_permanent_holder: List[bool] = []
+        全出自它）。
+
+        报警边沿（R328 收窄）：同一班 24h 冷却期内重入不报（防刷屏）；首次进入报一次；
+        **冷却到期后再次失败必须再报**——那是给了一整天仍未恢复的新一班，也是 R301 注释里
+        「Notifier 另有 12h 同题节流兜底」唯一能生效的入口。旧实现只看 permanent 旗标，
+        到期重败被永久静音（_ordered_providers 本就跳过冷却中商，到期重试是唯一重入路径），
+        兜底承诺落空。"""
+        should_alert_holder: List[bool] = []
 
         def _record(state):
             state = dict(state or {})
             info = dict(state.get(name, {"fails": 0}))
-            was_permanent_holder.append(bool(info.get("permanent")))
+            was_permanent = bool(info.get("permanent"))
+            prev_until = self._parse_cooldown(info.get("cooldown_until"))
+            still_cooled = prev_until is not None and datetime.now(timezone.utc) < prev_until
+            # 同班冷却期内重入 → 不报；首次进入 / 冷却已到期后重败 → 报
+            should_alert_holder.append(not (was_permanent and still_cooled))
             info["fails"] = int(info.get("fails", 0)) + 1
             self._extend_cooldown(info, datetime.now(timezone.utc) + timedelta(hours=24))
             info["permanent"] = True
@@ -3201,8 +3210,7 @@ class MultiLLMEngine:
 
         intel_state_update(self._BREAKER_STATE_KEY, _record, default={})
         logger.warning(f"提供商 [{name}] 永久失败（{reason}），进入 24 小时节约冷却")
-        # 边沿触发：仅在 permanent 状态的首次进入报警，避免 24h 冷却期内每轮重撞刷屏。
-        if not (was_permanent_holder and was_permanent_holder[0]):
+        if should_alert_holder and should_alert_holder[0]:
             Notifier.send_notification(
                 f"LLM 提供商永久失败: {name}",
                 f"提供商 [{name}] 因「{reason}」被标记永久失败，已冷却 24 小时。\n"

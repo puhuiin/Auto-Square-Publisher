@@ -9417,6 +9417,24 @@ class TestPermanentFailure(unittest.TestCase):
             eng._breaker_record_permanent("stub", reason="模型下架/404")
             self.assertEqual(mock_notify.call_count, 1, "已 permanent 再撞不得重复报警")
 
+    def test_permanent_failure_alert_refired_after_cooldown_expiry(self):
+        """R328：上一班 permanent 的 24h 冷却已到期后再次失败，必须再报一次。
+
+        旧实现只看 permanent 旗标，到期重败被永久静音——R301 注释承诺的
+        「Notifier 另有 12h 同题节流兜底」因从不调用 Notifier 而永远无法生效。
+        _ordered_providers 本就跳过冷却中商，到期重试是唯一重入路径，那一班
+        正是「给了一整天仍未恢复、需要人工再看一眼」的时刻。"""
+        eng = self._engine()
+        expired = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+        m.intel_state_update(m.MultiLLMEngine._BREAKER_STATE_KEY,
+                             lambda s: {**dict(s or {}), "stub": {
+                                 "fails": 1, "permanent": True, "cooldown_until": expired}},
+                             default={})
+        with patch.object(m.Notifier, "send_notification") as mock_notify:
+            eng._breaker_record_permanent("stub", reason="账户余额/额度耗尽")
+            self.assertEqual(mock_notify.call_count, 1,
+                             "冷却到期后重败必须再报警（否则人工只收到开服那一次）")
+
     def test_router_model_404_not_permanent(self):
         """R169：openrouter/free 是聚合路由，404=当前路由目标挂了，不是通道死亡。
         生产 8 次 permanent 404 全打在 Preset-openrouter 上，把整通道砍 24h，
