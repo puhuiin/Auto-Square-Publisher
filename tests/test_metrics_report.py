@@ -408,6 +408,64 @@ class TestMetricsReport(unittest.TestCase):
         out = mr.render_text(mr.summarize(rows))
         self.assertNotIn("扫描漏斗", out)
 
+    def test_feed_source_health_aggregated_and_rendered(self):
+        """R344：源硬故障/停放频率进报表——feeds_failed/feeds_parked 计数自 R90 起
+        写 run_summary，R278 补了源名但只在新故障时落；生产三个实证轮 09-17×2/
+        09-18×1 的 feeds_failed=1 只有计数无源名，metrics_report 零消费=写侧无出口。
+        空feed/超时/注入各有源名出口，硬故障是仅剩的静默源健康信号。累加轮次+源次
+        总量+单轮峰值；零故障轮/缺字段行不进（不抬分母）。"""
+        rows = [
+            # 实证故障轮：feeds_failed=1（09-17×2 / 09-18×1 同型）
+            {"ts": "2026-09-17T18:26:52+00:00", "outcome": "run_summary",
+             "candidates": 40, "published": 1, "feeds_ok": 8, "feeds_failed": 1,
+             "feeds_parked": 0},
+            # 多源故障 + 首次停放：峰值应抓单轮 2（不得退化成总量）
+            {"ts": "2026-09-17T23:24:46+00:00", "outcome": "run_summary",
+             "candidates": 39, "published": 1, "feeds_ok": 7, "feeds_failed": 2,
+             "feeds_parked": 1},
+            # 健康轮：feeds_failed=0 不计入故障轮
+            {"ts": "2026-09-18T13:00:00+00:00", "outcome": "run_summary",
+             "candidates": 45, "published": 1, "feeds_ok": 9, "feeds_failed": 0,
+             "feeds_parked": 0},
+            # 仅停放：停放峰值应抓单轮 3
+            {"ts": "2026-09-18T18:28:43+00:00", "outcome": "run_summary",
+             "candidates": 41, "published": 1, "feeds_ok": 6, "feeds_failed": 0,
+             "feeds_parked": 3},
+            # 历史行无这些字段：不进聚合、不抬分母
+            {"ts": "2026-09-14T12:00:00+00:00", "outcome": "run_summary",
+             "candidates": 0, "published": 0, "quota_blocked": True},
+        ]
+        s = mr.summarize(rows)
+        runs = s["runs"]
+        # 故障轮 2（feeds_failed>0 的两轮），源次总量 1+2=3，单轮峰值 2
+        self.assertEqual(runs["feed_fail_runs"], 2)
+        self.assertEqual(runs["feed_fail_total"], 3)
+        self.assertEqual(runs["feed_fail_peak"], 2)
+        # 停放轮 2，源次总量 1+3=4，单轮峰值 3
+        self.assertEqual(runs["feed_park_runs"], 2)
+        self.assertEqual(runs["feed_park_total"], 4)
+        self.assertEqual(runs["feed_park_peak"], 3)
+        out = mr.render_text(s)
+        self.assertIn("🩺 源故障/停放", out)
+        # 峰值守卫：硬故障两轮 1+2，峰必须是 2（单轮最大）而非 3（总量）
+        self.assertIn("硬故障 2 轮/共 3 源次（峰 2）", out)
+        # 峰值守卫：停放两轮 1+3，峰必须是 3（单轮最大）而非 4（总量）
+        self.assertIn("停放 2 轮/共 4 源次（峰 3）", out)
+
+    def test_feed_source_health_silent_when_no_failures(self):
+        """R344 变异守卫：全窗零硬故障零停放（或缺字段）时源故障行完全静默——
+        否则每个健康饱和轮都甩一行 硬故障 0 淹没报表，且把 feeds_failed=0 的
+        健康表象误读成告警。"""
+        rows = [
+            {"ts": "2026-09-14T12:00:00+00:00", "outcome": "run_summary",
+             "candidates": 0, "published": 0, "quota_blocked": True},
+            {"ts": "2026-09-14T12:20:00+00:00", "outcome": "run_summary",
+             "candidates": 40, "published": 1, "feeds_ok": 9, "feeds_failed": 0,
+             "feeds_parked": 0},
+        ]
+        out = mr.render_text(mr.summarize(rows))
+        self.assertNotIn("源故障/停放", out)
+
     def test_weekday_distribution_aggregated_and_rendered(self):
         """R343：投递篇分周——weekday_bj 与 hour_bj 同源写在每行，此前只有 hour
         有出口，周维静默。按自然周序渲染（非频次），缺勤日一眼可见。"""

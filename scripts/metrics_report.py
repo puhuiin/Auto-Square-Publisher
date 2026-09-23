@@ -434,6 +434,13 @@ def summarize(rows):
         # 出口。累加总量+单轮峰值：峰值抓单轮异常尖刺，总量给基线。{字段:[总,峰]}
         "fetch_funnel": {"fetched": [0, 0], "stale": [0, 0],
                          "cached": [0, 0], "near_dup": [0, 0]},
+        # R344：源硬故障/停放频率（feeds_failed/feeds_parked 计数自 R90 起写
+        # run_summary，R278 补了源名但只在新故障时落；生产三个实证轮 09-17×2/
+        # 09-18×1 的 feeds_failed=1 只有计数、无源名，metrics_report 零消费=写侧
+        # 无出口）。空feed/超时/注入各有源名出口，硬故障（网络/HTTP≠200/畸形XML）
+        # 与停放是仅剩的静默源健康信号。轮次分母+源次总量+单轮峰值；全零不渲染。
+        "feed_fail_runs": 0, "feed_fail_total": 0, "feed_fail_peak": 0,
+        "feed_park_runs": 0, "feed_park_total": 0, "feed_park_peak": 0,
         "trend_freq": collections.Counter(),
         "last_hot_topics": "",  # R190：全网实时热点钩子供给（HN 等）
         "hot_topic_hits": 0,    # 出现过 hot_topics 的发帖轮数
@@ -800,6 +807,21 @@ def summarize(rows):
                     _acc[0] += int(_fv)
                     if int(_fv) > _acc[1]:
                         _acc[1] = int(_fv)
+            # R344：源硬故障/停放计数累加（R90/R278 写侧，报表此前零出口）——
+            # int 字段且 >0 才计入"故障轮/停放轮"（历史行无字段或零值不进，
+            # 不抬分母、零故障轮不渲染，与漏斗/源健康同零噪音口径）。
+            _ffl = _num(r.get("feeds_failed"))
+            if _ffl is not None and _ffl > 0:
+                runs_tmp["feed_fail_runs"] += 1
+                runs_tmp["feed_fail_total"] += int(_ffl)
+                if int(_ffl) > runs_tmp["feed_fail_peak"]:
+                    runs_tmp["feed_fail_peak"] = int(_ffl)
+            _fpk = _num(r.get("feeds_parked"))
+            if _fpk is not None and _fpk > 0:
+                runs_tmp["feed_park_runs"] += 1
+                runs_tmp["feed_park_total"] += int(_fpk)
+                if int(_fpk) > runs_tmp["feed_park_peak"]:
+                    runs_tmp["feed_park_peak"] = int(_fpk)
             # R177：分段耗时（有则收，历史行无字段不进）
             _sl = _num(r.get("sleep_elapsed_sec"))
             if _sl is not None and _sl > 0:
@@ -1122,6 +1144,18 @@ def render_text(s, rows=None):
             _sh.append("超时 " + "、".join(f"{n} ×{v}" for n, v in _pairs))
         if _sh:
             lines.append(f"  ⚠️ 源健康异常: {' / '.join(_sh)}——请评估换源/撤源")
+        # R344：源硬故障/停放频率（feeds_failed/feeds_parked 写侧，报表此前零出口）——
+        # 空feed/超时按源名已在上方，硬故障（网络/HTTP≠200/畸形XML）与停放的历史
+        # 故障轮只有计数无源名，是仅剩的静默源健康信号。全窗零故障零停放不渲染。
+        _fh = []
+        if runs.get("feed_fail_runs"):
+            _fh.append(f"硬故障 {runs['feed_fail_runs']} 轮/共 {runs.get('feed_fail_total', 0)} 源次"
+                       f"（峰 {runs.get('feed_fail_peak', 0)}）")
+        if runs.get("feed_park_runs"):
+            _fh.append(f"停放 {runs['feed_park_runs']} 轮/共 {runs.get('feed_park_total', 0)} 源次"
+                       f"（峰 {runs.get('feed_park_peak', 0)}）")
+        if _fh:
+            lines.append(f"  🩺 源故障/停放: {' / '.join(_fh)}——失败被候选健康表象掩盖，请查源名")
         # R342：扫描漏斗（R276 写侧，报表此前零出口）——去重/缓存/陈旧趋势，
         # 单轮峰值抓尖刺（near_dup 抬升=去重吞事件 / cached 跳涨=缓存失效 /
         # stale 峰值=源劣化）；全零不渲染（零噪音，沿用源健康惯例）。
