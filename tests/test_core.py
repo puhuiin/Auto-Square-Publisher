@@ -519,6 +519,17 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertEqual(self._banned_leadins(), {"刚出"},
                          "静态表领词必须 1 次即禁，不得等联锁攒够 3 次")
 
+    def test_jifenzhong_proven_fingerprint_leadin_banned_at_first_use(self):
+        """R323：晋升'几分'（覆盖几分钟前全家）——生产 09-13~09-22 开场
+        '几分钟前'×7（R124 报警 ×3），与'刚出'同为时效行推荐词结构性复发。
+        R282 同法：窗口内 1 次即禁，时效行同步撤下推荐。"""
+        self._append([
+            {"outcome": "binance_published",
+             "final_preview": "几分钟前刷到个扎心对比,$BNB 却趴在 719 刀。后续略。"},
+        ])
+        self.assertEqual(self._banned_leadins(), {"几分"},
+                         "静态表领词必须 1 次即禁，不得等联锁攒够 3 次")
+
     def test_freshness_line_not_suggesting_banned_leadin(self):
         """R138：<1h 时效行曾建议"用'刚刚/最新'等词强调时效"——与 R121 守卫、
         R132 联锁自相矛盾（一边递开手册一边禁用），"刚刚"指纹正是 <1h 高频期
@@ -533,7 +544,9 @@ class TestRecentOpeners(unittest.TestCase):
         item = {"title": "BTC news", "summary": "s", "age_hours": 0.4}
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
         self.assertNotIn("用'刚刚/最新'", prompt, "时效行不得再建议被禁领词")
-        self.assertIn("最新/几分钟前", prompt, "未撞禁令的时效表述保留")
+        self.assertIn("最新", prompt, "未撞禁令的时效表述保留")
+        self.assertNotIn("几分钟前", prompt,
+                         "R323：'几分'已进静态禁词表，不得再推荐'几分钟前'")
         self.assertNotIn("刚出炉", prompt,
                          "R297：'刚出'已进静态禁词表，干净窗口下也绝不推荐'刚出炉'")
         self.assertIn("开头不得用被禁的领句", prompt)
@@ -556,7 +569,9 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("刚出", prompt, "联锁必须已禁用'刚出'")
         self.assertNotIn("刚出炉", fresh_line.split("等表述")[0],
                          f"时效行推荐词不得包含被禁表述: {fresh_line}")
-        self.assertIn("最新/几分钟前", fresh_line, "其余推荐词保留")
+        self.assertIn("最新", fresh_line, "其余推荐词保留")
+        self.assertNotIn("几分钟前", fresh_line.split("等表述")[0],
+                         "R323：'几分'晋升后时效行不得再推荐'几分钟前'")
 
     def test_freshness_line_drops_banned_leadin_on_first_use(self):
         """R282：R156 动态剔除按静态表口径提前——'刚出炉'晋升静态领词后，窗口内
@@ -575,7 +590,9 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("刚出", prompt, "静态表必须已禁用'刚出'")
         self.assertNotIn("刚出炉", fresh_line.split("等表述")[0],
                          f"时效行推荐词不得包含被禁表述: {fresh_line}")
-        self.assertIn("最新/几分钟前", fresh_line, "其余推荐词保留")
+        self.assertIn("最新", fresh_line, "其余推荐词保留")
+        self.assertNotIn("几分钟前", fresh_line.split("等表述")[0],
+                         "R323：'几分'晋升后时效行不得再推荐'几分钟前'")
 
     def test_article_prompt_carries_opener_guard(self):
         """R298：开场/FNG 指纹守卫此前全拼进 ending_hint，而长文分支只取 fresh_art

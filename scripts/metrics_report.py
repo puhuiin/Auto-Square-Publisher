@@ -40,7 +40,7 @@ _OVERUSED_DEVICES = ("先泼盆冷水",)  # main._OVERUSED_OPENING_DEVICES
 # TestQualityPatternSync）。R121/R282 守卫只覆盖正文开场句，而标题是信息流里
 # 决定点不点开的第一触点、比正文开场更显眼：生产实录 11 篇长文标题里
 # "刚出炉：Fed升息落地…"命中 R282 刚晋升进静态表的"刚出"族。
-_TITLE_LEADINS = ("刚刚", "突发", "重磅", "快讯", "注意", "刚出")
+_TITLE_LEADINS = ("刚刚", "突发", "重磅", "快讯", "注意", "刚出", "几分")
 _AI_FLAVOR_HARD = (  # main.MultiLLMEngine._AI_FLAVOR_HARD
     "拭目以待", "未来可期", "保驾护航", "谱写", "新篇章", "扬帆起航",
     "值得注意的是", "值得一提的是", "综上所述", "总而言之", "让我们一起",
