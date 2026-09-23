@@ -6485,6 +6485,46 @@ class TestHotTopics(unittest.TestCase):
         with patch.object(m, "http_get", side_effect=RuntimeError("x")):
             self.assertEqual(m.MarketDataProvider.get_hot_topics(), [])
 
+    def test_fetch_is_streamed_for_memory_bound(self):
+        """R342：热点抓取必须 stream=True——否则 _read_response_capped 的计数
+        上限只剩解析保护、没有内存保护（见其 docstring），被攻陷/畸形的 hnrss
+        源仍能在 requests 发送阶段把整个 body 落内存吃爆 runner。"""
+        xml = ('<?xml version="1.0"?><rss><channel>'
+               '<item><title>OpenAI buys camera maker for $300M</title></item>'
+               '</channel></rss>')
+        resp = _StreamFeedResp([xml.encode("utf-8")],
+                               headers={"Content-Length": str(len(xml))})
+        with patch.object(m, "http_get", return_value=resp) as get:
+            titles = m.MarketDataProvider.get_hot_topics()
+        self.assertEqual(titles[0], "OpenAI buys camera maker for $300M")
+        self.assertTrue(get.call_args.kwargs.get("stream"),
+                        "热点抓取必须流式，计数上限才有内存意义")
+        self.assertTrue(resp.closed, "读完必须关闭连接，不得占满连接池")
+
+    def test_declared_oversize_feed_fails_closed(self):
+        """Content-Length 明超 FEED_MAX_BYTES：一字节不读、降级空表，
+        绝不把超大 body 喂给 feedparser（与主新闻循环同一防线）。"""
+        xml = b'<?xml version="1.0"?><rss><channel>' \
+              b'<item><title>Should never be parsed here</title></item></channel></rss>'
+        resp = _StreamFeedResp([xml],
+                               headers={"Content-Length": str(m.FEED_MAX_BYTES + 1)})
+        with patch.object(m, "http_get", return_value=resp):
+            titles = m.MarketDataProvider.get_hot_topics()
+        self.assertEqual(titles, [], "超限响应体不得产出热点")
+        self.assertEqual(resp.consumed, 0, "预检拒绝时不得开始流式读取")
+        self.assertTrue(resp.closed)
+
+    def test_lying_body_oversize_stream_aborted(self):
+        """谎报体积（无/小 Content-Length）实吐超限流：边读边计数在 cap+1
+        处掐断、降级空表，不读完整个流。"""
+        resp = _StreamFeedResp([b"x" * 512] * 10, headers={})
+        with patch.object(m, "FEED_MAX_BYTES", 1024), \
+             patch.object(m, "http_get", return_value=resp):
+            titles = m.MarketDataProvider.get_hot_topics()
+        self.assertEqual(titles, [])
+        self.assertLess(resp.consumed, 10, "超限后必须立即掐断，不得读完整个流")
+        self.assertTrue(resp.closed)
+
     def test_keyword_extract_proper_nouns_and_tickers_only(self):
         keys = m.MarketDataProvider._extract_hot_keywords([
             "OpenAI buys smartphone camera maker for $300M",

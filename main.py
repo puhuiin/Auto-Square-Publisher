@@ -1210,9 +1210,19 @@ class MarketDataProvider:
             return cached
         titles: List[str] = []
         try:
-            r = http_get("https://hnrss.org/frontpage", timeout=8, retries=1)
+            r = http_get("https://hnrss.org/frontpage", timeout=8, retries=1, stream=True)
+            body = None
             if r is not None and r.status_code == 200:
-                feed = feedparser.parse(r.text)
+                # 有界读取：与主新闻循环同一防线——hnrss.org 亦第三方源，被攻陷/
+                # 畸形时倾泻超大 body 一样吃爆 runner 内存。_read_response_capped
+                # 需 stream=True 才有内存意义；超限/读取失败 = 源故障，降级空表。
+                body = _read_response_capped(r, FEED_MAX_BYTES)
+                try:
+                    r.close()
+                except Exception:
+                    pass
+            if body is not None:
+                feed = feedparser.parse(body)
                 seen_norm: set = set()
                 for e in (feed.entries or [])[:20]:
                     raw = (e.get("title") or "").strip()
@@ -2282,7 +2292,7 @@ class NewsFetcher:
                 self._feed_record(name, ok=False)
                 return items
 
-            # 有界读取：feed 是唯一还会把外部响应体整块喂给解析器的入口，
+            # 有界读取：与 HN 热点钩子同为把外部响应体整块喂给解析器的入口，
             # 必须和配图一样对体积设防（畸形/被攻陷的源倾泻超大 body 会吃爆
             # runner 内存）。超限/读取失败 = 源故障，绝不放行。
             body = _read_response_capped(resp, FEED_MAX_BYTES)
