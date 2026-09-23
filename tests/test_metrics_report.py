@@ -360,6 +360,54 @@ class TestMetricsReport(unittest.TestCase):
         for k in ("fetch_elapsed", "image_elapsed", "publish_elapsed"):
             self.assertNotIn(k, s["runs"])
 
+    def test_fetch_funnel_aggregated_and_rendered(self):
+        """R342：扫描漏斗（fetched/stale/cached/near_dup）进报表——R276 写侧起
+        只有扫描日志 + Step Summary「管线吞吐」两个易失出口，metrics_report
+        （持久巡检面）零消费，near_dup 抬升 / cached 跳涨 / stale 峰值这类趋势
+        无行内证据。累加总量+单轮峰值；零值/缺字段行不进。"""
+        rows = [
+            {"ts": "2026-09-14T13:09:00+00:00", "outcome": "run_summary",
+             "candidates": 40, "published": 1, "unprocessed": 39,
+             "fetched": 40, "stale": 2, "cached": 5, "near_dup": 3},
+            {"ts": "2026-09-14T13:29:00+00:00", "outcome": "run_summary",
+             "candidates": 45, "published": 1, "unprocessed": 44,
+             "fetched": 67, "stale": 14, "cached": 4, "near_dup": 8},
+            # 全零轮次不抬计数
+            {"ts": "2026-09-14T20:44:00+00:00", "outcome": "run_summary",
+             "candidates": 45, "published": 1,
+             "fetched": 0, "stale": 0, "cached": 0, "near_dup": 0},
+            # 历史行无这些字段：不进漏斗聚合
+            {"ts": "2026-09-14T12:00:00+00:00", "outcome": "run_summary",
+             "candidates": 0, "published": 0, "quota_blocked": True},
+        ]
+        s = mr.summarize(rows)
+        ff = s["runs"]["fetch_funnel"]
+        # [总量, 单轮峰值]——峰值抓尖刺，不得退化成总量
+        self.assertEqual(ff["fetched"], [107, 67])
+        self.assertEqual(ff["near_dup"], [11, 8])
+        self.assertEqual(ff["cached"], [9, 5])
+        self.assertEqual(ff["stale"], [16, 14])
+        out = mr.render_text(s)
+        self.assertIn("🔻 扫描漏斗", out)
+        self.assertIn("抓取 107(峰67)", out)
+        # 峰值守卫：near_dup 两轮 3+8，峰必须是 8（单轮最大）而非 11（总量）
+        self.assertIn("近重 11(峰8)", out)
+        self.assertIn("缓存 9(峰5)", out)
+        self.assertIn("陈旧 16(峰14)", out)
+
+    def test_fetch_funnel_silent_when_all_zero(self):
+        """R342 变异守卫：全零/缺字段时漏斗行完全静默（零噪音，沿用源健康惯例）——
+        否则每个饱和轮都甩一行 抓取 0/近重 0 淹没报表。"""
+        rows = [
+            {"ts": "2026-09-14T12:00:00+00:00", "outcome": "run_summary",
+             "candidates": 0, "published": 0, "quota_blocked": True},
+            {"ts": "2026-09-14T12:20:00+00:00", "outcome": "run_summary",
+             "candidates": 40, "published": 1,
+             "fetched": 0, "stale": 0, "cached": 0, "near_dup": 0},
+        ]
+        out = mr.render_text(mr.summarize(rows))
+        self.assertNotIn("扫描漏斗", out)
+
     def test_empty_file_renders(self):
         _write(self.path, [])
         rows, bad = mr.load_rows(self.path)

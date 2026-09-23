@@ -420,6 +420,13 @@ def summarize(rows):
         # 空 feed ×3 有数据无出口。按源名累加轮次，命中才显形。
         "feeds_empty_sources": collections.Counter(),
         "fetch_timeout_sources": collections.Counter(),
+        # R342：R276 写侧扫描漏斗（fetched/stale/cached/near_dup）自写侧起只有
+        # 扫描日志 + Step Summary「管线吞吐」两个易失出口，metrics_report（持久
+        # 巡检面）零消费——R276 注释明言 durable 趋势可查（near_dup 抬升=去重过
+        # 紧吞事件 / cached 跳涨=缓存失效 / stale 峰值=源新鲜度劣化）却无报表
+        # 出口。累加总量+单轮峰值：峰值抓单轮异常尖刺，总量给基线。{字段:[总,峰]}
+        "fetch_funnel": {"fetched": [0, 0], "stale": [0, 0],
+                         "cached": [0, 0], "near_dup": [0, 0]},
         "trend_freq": collections.Counter(),
         "last_hot_topics": "",  # R190：全网实时热点钩子供给（HN 等）
         "hot_topic_hits": 0,    # 出现过 hot_topics 的发帖轮数
@@ -772,6 +779,15 @@ def summarize(rows):
                     for _fn in _sv:
                         if _fn:
                             runs_tmp[_dk][str(_fn)] += 1
+            # R342：扫描漏斗累加（R276 写侧，报表此前零出口）——总量给基线、
+            # 单轮峰值抓异常尖刺；有则收，历史行无字段/零值不进（不抬计数）。
+            for _fk in ("fetched", "stale", "cached", "near_dup"):
+                _fv = _num(r.get(_fk))
+                if _fv is not None and _fv > 0:
+                    _acc = runs_tmp["fetch_funnel"][_fk]
+                    _acc[0] += int(_fv)
+                    if int(_fv) > _acc[1]:
+                        _acc[1] = int(_fv)
             # R177：分段耗时（有则收，历史行无字段不进）
             _sl = _num(r.get("sleep_elapsed_sec"))
             if _sl is not None and _sl > 0:
@@ -1094,6 +1110,18 @@ def render_text(s, rows=None):
             _sh.append("超时 " + "、".join(f"{n} ×{v}" for n, v in _pairs))
         if _sh:
             lines.append(f"  ⚠️ 源健康异常: {' / '.join(_sh)}——请评估换源/撤源")
+        # R342：扫描漏斗（R276 写侧，报表此前零出口）——去重/缓存/陈旧趋势，
+        # 单轮峰值抓尖刺（near_dup 抬升=去重吞事件 / cached 跳涨=缓存失效 /
+        # stale 峰值=源劣化）；全零不渲染（零噪音，沿用源健康惯例）。
+        _ff = runs.get("fetch_funnel") or {}
+        _ffp = []
+        for _fk, _lbl in (("fetched", "抓取"), ("near_dup", "近重"),
+                          ("cached", "缓存"), ("stale", "陈旧")):
+            _tm = _ff.get(_fk)
+            if isinstance(_tm, (list, tuple)) and len(_tm) == 2 and _tm[0] > 0:
+                _ffp.append(f"{_lbl} {_tm[0]}(峰{_tm[1]})")
+        if _ffp:
+            lines.append(f"  🔻 扫描漏斗: {' / '.join(_ffp)}")
     if rows is not None:
         q = quality_scan(rows)
         if q["scanned"]:
