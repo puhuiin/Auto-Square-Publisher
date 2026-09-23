@@ -1133,6 +1133,11 @@ class MarketDataProvider:
         # LEARNING/NEITHER/SERIES/WISDOM。SERIES 命中融资稿「Series A/B」、
         # LEARNING 命中 AI 学习类加密稿。专有名词 FIFA/FINLAND/VERDA 保留。
         antithetical learning neither punning series type wisdom
+        # R324：23:47 批次再漏——「The JavaScript Midlife Crisis / Native apps」
+        # 抽出 CRISIS/NATIVE/ANYWAY/MIDLIFE。CRISIS 命中加密稿「Banking/Liquidity
+        # crisis」、NATIVE 命中「Native token/asset/chain」。专有名词
+        # FOXPRO/JAVASCRIPT/MICROSOFT/RUST/SLOPTOBER 保留。
+        crisis native anyway midlife
     """.split())
 
     @classmethod

@@ -6505,6 +6505,32 @@ class TestHotTopics(unittest.TestCase):
         m.NewsFetcher.apply_hot_topic_boost(cands, keys)
         self.assertEqual(cands[0]["impact_score"], 6, "SERIES/LEARNING 不得误加权融资稿")
 
+    def test_production_2026_09_22_2347_titles_do_not_leak_generic_words(self):
+        """R324：23:47 批次再漏 CRISIS/NATIVE/ANYWAY/MIDLIFE。
+        CRISIS 命中「Banking/Liquidity crisis」、NATIVE 命中「Native token/chain」。
+        专有名词 FOXPRO/JAVASCRIPT/MICROSOFT/RUST/SLOPTOBER 保留。"""
+        titles = [
+            "The current balance of power in open models",
+            "Microsoft killed FoxPro in 2007. Anyway, here's FoxPro revived",
+            "The JavaScript Midlife Crisis",
+            "Native apps written in TypeScript and Rust",
+            "No Sloptober",
+            "The UV index is not the warm sensation of sunlight on bare skin",
+        ]
+        keys = m.MarketDataProvider._extract_hot_keywords(titles)
+        for bad in ("CRISIS", "NATIVE", "ANYWAY", "MIDLIFE", "CURRENT",
+                    "BALANCE", "POWER", "OPEN", "MODELS", "WRITTEN"):
+            self.assertNotIn(bad, keys, f"{bad} 是通用词，不得进热点词表")
+        for good in ("FOXPRO", "JAVASCRIPT", "MICROSOFT", "RUST", "SLOPTOBER"):
+            self.assertIn(good, keys, f"{good} 专有名词应保留")
+        cands = [
+            {"title": "Banking crisis fears ease as native token staking rises",
+             "summary": "", "impact_score": 6, "base_impact_score": 6},
+        ]
+        m.NewsFetcher.apply_hot_topic_boost(cands, keys)
+        self.assertEqual(cands[0]["impact_score"], 6,
+                         "CRISIS/NATIVE 不得误加权加密稿")
+
     def test_live_hn_frontpage_batch_do_not_leak_generic_words(self):
         """R295：2026-09-21 HN 前页实测词表全量审计（R233 方法论=主动扫不等事故）。
         40 个抽取词里约 31 个是句式大写/标题腔通用词：句首词（Why/Winning/What）、
