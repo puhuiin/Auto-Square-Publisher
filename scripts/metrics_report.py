@@ -42,6 +42,9 @@ _OVERUSED_DEVICES = ("先泼盆冷水",)  # main._OVERUSED_OPENING_DEVICES
 # R296（2026-09-21）已把该表写进长文 TITLE 指令做预防；R329 修本注释与告警
 # 文案——旧文案"守卫只覆盖正文开场"在 R296 后为假，会把历史残留读成开放缺口。
 _TITLE_LEADINS = ("刚刚", "突发", "重磅", "快讯", "注意", "刚出", "几分")
+# R343：weekday_bj（0=周一）自 append_metrics base 起写在每行，与 hour_bj 同源，
+# 渲染按自然周序（非频次序）读，缺勤日一眼可见
+_WEEKDAY_NAMES = ("周一", "周二", "周三", "周四", "周五", "周六", "周日")
 # R296 落地日（UTC）：命中日全早于该日 = 历史残留；含当日及之后 = 预防侧需复查
 _TITLE_BAN_DEPLOYED = "2026-09-21"
 _AI_FLAVOR_HARD = (  # main.MultiLLMEngine._AI_FLAVOR_HARD
@@ -313,6 +316,10 @@ def summarize(rows):
         "total": len(rows),
         "by_outcome": collections.Counter(),
         "by_hour": collections.Counter(),
+        # R343：投递篇分周（0=周一）——weekday_bj 与 by_hour 同源同粒度，此前
+        # 只有 hour_bj 有出口（分时 + 时段均浏览），周维静默；周末/工作日节奏与
+        # 缺勤日不可查。写侧 base 每行都写（1542/1542），零消费=写侧无出口。
+        "by_weekday": collections.Counter(),
         "by_source": collections.Counter(),
         "by_provider": collections.Counter(),
         "by_token": collections.Counter(),
@@ -480,6 +487,11 @@ def summarize(rows):
             except (TypeError, ValueError):
                 hour = "unknown"
             s["by_hour"][hour] += 1
+            # R343：投递篇分周——weekday_bj 恒为 int 0~6（append_metrics 写
+            # bj_now.weekday()）；越界/缺字段/历史行不进桶
+            _wd = r.get("weekday_bj")
+            if isinstance(_wd, int) and 0 <= _wd <= 6:
+                s["by_weekday"][_wd] += 1
             if r.get("source"):
                 s["by_source"][str(r["source"])] += 1
             toks = r.get("tokens")
@@ -1154,6 +1166,13 @@ def render_text(s, rows=None):
     n_pub = sum(s["by_provider"].values())
     if n_pub:
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")
+        # R343：分周节奏（自然周序，缺勤日不渲染）——周末/工作日发布分布，配合
+        # 时段均浏览回答「哪天发」；无投递周维数据时整行静默（零噪音）
+        if s.get("by_weekday"):
+            _wd = " ".join(f"{_WEEKDAY_NAMES[i]}×{s['by_weekday'][i]}"
+                           for i in range(7) if s["by_weekday"].get(i))
+            if _wd:
+                lines.append(f"  分周: {_wd}")
         lines.append(f"  模型 {_top(s['by_provider'])} / 首标的 {_top(s['by_token'])} / 配图率 "
                      f"{s['images']}/{n_pub}")
         # R222：内容新鲜度漂移监控——生产基线中位 ~1.9h / P75 ~3.1h（109 篇全史

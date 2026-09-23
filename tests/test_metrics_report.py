@@ -408,6 +408,57 @@ class TestMetricsReport(unittest.TestCase):
         out = mr.render_text(mr.summarize(rows))
         self.assertNotIn("扫描漏斗", out)
 
+    def test_weekday_distribution_aggregated_and_rendered(self):
+        """R343：投递篇分周——weekday_bj 与 hour_bj 同源写在每行，此前只有 hour
+        有出口，周维静默。按自然周序渲染（非频次），缺勤日一眼可见。"""
+        rows = [
+            # 周一(0) ×2、周三(2) ×1，均已投递（platforms 非空）
+            {"ts": "2026-09-14T13:00:00+00:00", "hour_bj": 21, "weekday_bj": 0,
+             "provider": "B.ai", "platforms": ["binance"],
+             "outcome": "binance_published"},
+            {"ts": "2026-09-14T14:00:00+00:00", "hour_bj": 22, "weekday_bj": 0,
+             "provider": "B.ai", "platforms": ["binance"],
+             "outcome": "binance_published"},
+            {"ts": "2026-09-16T13:00:00+00:00", "hour_bj": 21, "weekday_bj": 2,
+             "provider": "B.ai", "platforms": ["binance"],
+             "outcome": "binance_published"},
+            # 拒稿行带 weekday_bj 但未投递：不得进分周桶
+            {"ts": "2026-09-18T13:00:00+00:00", "hour_bj": 21, "weekday_bj": 4,
+             "provider": "X", "stage": "numbers", "outcome": "llm_rejected"},
+            # 越界值：不进桶
+            {"ts": "2026-09-19T13:00:00+00:00", "hour_bj": 21, "weekday_bj": 9,
+             "provider": "B.ai", "platforms": ["binance"],
+             "outcome": "binance_published"},
+        ]
+        s = mr.summarize(rows)
+        # 仅投递行计入；拒稿/越界不进分母
+        self.assertEqual(s["by_weekday"][0], 2)
+        self.assertEqual(s["by_weekday"][2], 1)
+        self.assertEqual(s["by_weekday"][4], 0)
+        self.assertEqual(s["by_weekday"][9], 0)
+        out = mr.render_text(s)
+        self.assertIn("分周:", out)
+        self.assertIn("周一×2", out)
+        self.assertIn("周三×1", out)
+        # 缺勤日（周二/周四…）不渲染
+        self.assertNotIn("周二×", out)
+        self.assertNotIn("周四×", out)
+        # 周序守卫：周一 must render before 周三（自然周序，非 most_common 频次序）
+        line = next(l for l in out.splitlines() if l.strip().startswith("分周:"))
+        self.assertLess(line.index("周一"), line.index("周三"))
+
+    def test_weekday_silent_when_no_delivered(self):
+        """R343 变异守卫：无投递（只有拒稿/汇总行）时分周行完全静默——
+        累加必须门控在 _is_delivered 内，否则拒稿行的 weekday 会污染节奏面。"""
+        rows = [
+            {"ts": "2026-09-14T12:00:00+00:00", "outcome": "run_summary",
+             "weekday_bj": 0, "candidates": 0, "published": 0},
+            {"ts": "2026-09-14T13:00:00+00:00", "hour_bj": 21, "weekday_bj": 2,
+             "provider": "X", "stage": "numbers", "outcome": "llm_rejected"},
+        ]
+        out = mr.render_text(mr.summarize(rows))
+        self.assertNotIn("分周:", out)
+
     def test_empty_file_renders(self):
         _write(self.path, [])
         rows, bad = mr.load_rows(self.path)
