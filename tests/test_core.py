@@ -1893,6 +1893,38 @@ class TestContentSanitizer(unittest.TestCase):
         self.assertNotIn("稳赚", s)
         self.assertNotIn("带单", s)
 
+    def test_sanitize_title_scrubs_risky_words(self):
+        """R355：标题走 _sanitize_title 同源过滤敏感词（此前只截 80 字裸发）"""
+        t = m.SquarePublisher._sanitize_title("稳赚不亏！内幕消息带你必暴涨")
+        self.assertNotIn("稳赚", t)
+        self.assertNotIn("内幕消息", t)
+        self.assertNotIn("带单", t)
+        self.assertNotIn("必暴涨", t)
+
+    def test_sanitize_title_strips_markdown_and_empty(self):
+        """标题剥 **/__ 残迹；空标题原样返回（不炸）"""
+        self.assertEqual(m.SquarePublisher._sanitize_title("**深度复盘**"), "深度复盘")
+        self.assertEqual(m.SquarePublisher._sanitize_title(""), "")
+        self.assertIsNone(m.SquarePublisher._sanitize_title(None))
+
+    def test_sanitize_title_covers_same_words_as_body(self):
+        """对称防御同源守卫：正文过滤的每个禁词，标题必须一并过滤（防未来两处裂开）。
+        _RISKY_WORDS 是唯一真源——任何人给正文加词或把局部 dict 复活，此断言即报警。"""
+        for bad_kw, safe_kw in m.SquarePublisher._RISKY_WORDS.items():
+            body = m.SquarePublisher._sanitize_content(f"提示：{bad_kw}操作要点")
+            title = m.SquarePublisher._sanitize_title(f"提示：{bad_kw}操作要点")
+            self.assertNotIn(bad_kw, body, f"正文未过滤禁词 {bad_kw}")
+            self.assertNotIn(bad_kw, title, f"标题未过滤禁词 {bad_kw}（对称防御裂开）")
+            self.assertIn(safe_kw, title, f"标题未替换为安全词 {safe_kw}")
+
+    def test_sanitize_title_no_body_only_transforms(self):
+        """标题净化绝不套用正文管线：不补保底标签、不织 $ 挂件、不按正文预算腰斩"""
+        t = m.SquarePublisher._sanitize_title("BTC 资金面深度复盘")
+        self.assertNotIn("#Write2Earn", t)
+        self.assertNotIn("#BinanceSquare", t)
+        self.assertNotIn("$", t)
+        self.assertEqual(t, "BTC 资金面深度复盘")
+
 
 class TestCampaignTagInjection(unittest.TestCase):
     """R291：活动标签注入——few-shot 教模型写 3 个标签（第 3 席=核心代币名），
@@ -6975,6 +7007,25 @@ class TestArticlePipeline(unittest.TestCase):
             self.assertEqual(payload["title"], "BTC 行情深度复盘标题")
             self.assertEqual(payload["cover"], "https://cdn.example/cover.jpg")
             self.assertNotIn("imageList", payload)
+
+    def test_publish_article_title_sanitized_in_payload(self):
+        """R355 送发路径守卫：标题里的敏感词必须在 payload['title'] 已被替换。
+        正文早在 6263 过滤，标题此前只截 80 字裸发——本用例锁死"标题也过滤"的接线，
+        任何人退回 title[:80] 即红。"""
+        pub = m.SquarePublisher(api_key="k")
+        fake_resp = MagicMock(status_code=200, text='{"code":"000000"}')
+        fake_resp.json.return_value = {"code": "000000", "data": {"contentId": "c3"}}
+        content = "一、背景\n" + "这是一段足够长的长文正文内容，用于验证长文发布载荷结构。" * 10
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.return_value = fake_resp
+            self.assertTrue(pub.publish(content, ensure_tokens=["BTC"],
+                                        title="稳赚不亏内幕消息抢先看必暴涨"))
+            payload = mock_sess.post.call_args.kwargs["json"]
+            self.assertEqual(payload["contentType"], 2)
+            self.assertNotIn("稳赚", payload["title"])
+            self.assertNotIn("内幕消息", payload["title"])
+            self.assertNotIn("必暴涨", payload["title"])
 
     def test_publish_short_post_payload_unchanged(self):
         """短讯不传 title：维持 contentType=1 + imageList（回归守卫）"""

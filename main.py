@@ -5923,6 +5923,40 @@ class SquarePublisher(BasePublisher):
     # 追加后越界"（R9）
     _APPEND_HEADROOM = 80
 
+    # 敏感词安全过滤表（防封号/防平台风控拦截 20002/20022）。R355：提到类级
+    # 常量作为唯一真源——此前是 _sanitize_content 内的局部 dict，只净化正文；
+    # 长文标题（contentType=2 必带 title）走独立发送路径，只截 80 字从不过滤，
+    # 于是同一批禁词在正文被替换、在标题原样发出（标题同样被平台审核扫描，
+    # 且由模型自由生成，clickbait 标题极易写出"稳赚"/"必暴涨"/"内幕消息"）。
+    # 正文与标题是对称暴露面，防御必须同源，否则改一处不同步另一处必再裂开。
+    _RISKY_WORDS = {
+        "稳赚": "博弈",
+        "保本": "控制回撤",
+        "带单": "实盘交流",
+        "必暴涨": "有望走强",
+        "必大跌": "存在回调风险",
+        "加微信": "看主页",
+        "群号": "社区",
+        "返现": "返佣",
+        "内幕消息": "前沿资讯",
+    }
+
+    @classmethod
+    def _sanitize_title(cls, title: str) -> str:
+        """长文标题净化：只做敏感词替换 + Markdown 残迹剥离。
+
+        标题绝不能套用 _sanitize_content 的全套逻辑——那会给标题补 #Write2Earn/
+        #BinanceSquare 保底标签、织挂件、按正文预算腰斩，全是正文语义，会毁掉标题。
+        标题真正缺的只是与正文同源的敏感词过滤（_parse_article 已剥引号，但对
+        `**加粗**` 残迹再兜一手，与 _sanitize_content 第 0.5 步同规则）。
+        """
+        if not title:
+            return title
+        title = title.replace("**", "").replace("__", "")
+        for bad_kw, safe_kw in cls._RISKY_WORDS.items():
+            title = title.replace(bad_kw, safe_kw)
+        return title.strip()
+
     @staticmethod
     def _truncate_at_boundary(text: str, limit: int) -> str:
         """把文本截到 limit 以内，尽量落在换行/句末边界上。
@@ -6071,19 +6105,8 @@ class SquarePublisher(BasePublisher):
         # 2. 移除生硬破折号
         content = content.replace("——", "，")
 
-        # 3. 敏感词安全过滤（防封号/防拦截）
-        risky_words = {
-            "稳赚": "博弈",
-            "保本": "控制回撤",
-            "带单": "实盘交流",
-            "必暴涨": "有望走强",
-            "必大跌": "存在回调风险",
-            "加微信": "看主页",
-            "群号": "社区",
-            "返现": "返佣",
-            "内幕消息": "前沿资讯",
-        }
-        for bad_kw, safe_kw in risky_words.items():
+        # 3. 敏感词安全过滤（防封号/防拦截）——与 _sanitize_title 共用 _RISKY_WORDS 真源
+        for bad_kw, safe_kw in cls._RISKY_WORDS.items():
             content = content.replace(bad_kw, safe_kw)
 
         # 4. 长度保护先行：按模式取上限，并预留追加余量（挂件/活动标签在第 6 步之后
@@ -6301,7 +6324,10 @@ class SquarePublisher(BasePublisher):
             # 长文模式（官方 square-post 技能语义）：contentType=2 + title 必带；
             # 配图走 cover 单封面字段（与短讯的 imageList 互斥），绝不发 imageList
             payload["contentType"] = 2
-            payload["title"] = title[:80]
+            # R355：标题与正文同源过滤敏感词——净化在截断之前（保本→控制回撤 等
+            # 替换会变长，先过滤再 [:80] 才不会把安全词半途截断）。正文早在 6263 走
+            # _sanitize_content 过滤，标题此前只截 80 字裸发，是对称防御的漏口。
+            payload["title"] = self._sanitize_title(title)[:80]
             if image_url:
                 payload["cover"] = image_url
                 logger.info(f"本次长文发布带封面: {image_url}")
