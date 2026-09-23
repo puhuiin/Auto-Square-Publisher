@@ -9299,6 +9299,86 @@ class TestEmptyContentRetry(unittest.TestCase):
                          "finish=stop 空回是偶发，首挂不得进断路器")
         self.assertEqual(eng._fail_counts.get("stub"), 1)
 
+    def test_overlength_runaway_length_rejects_without_burning_expansion(self):
+        """R350：残句已越过「过长」门（短讯 1200）仍 finish=length = 失控啰嗦而非
+        「差一点写完」。扩容只抬高 token 上限、只会让输出更长绝不会更短，续扩到封顶
+        只是每级白烧一次封顶级调用后照样撞「过长」拒稿——必须立即拒稿换提供商。
+        生产 openrouter/free L1333 9202字耗7302 / L1531 12340字耗7358 token 均如此。"""
+        eng = self._engine()
+        client = MagicMock()
+
+        def _mk(content, finish):
+            r = self._resp(content)
+            r.choices[0].finish_reason = finish
+            return r
+
+        runaway = "盘面信号明确。" * 220  # 7*220=1540 字符 > 1200 过长门
+        # 5 份等值备用响应：若错误地续扩，call_count 会 >1 被断言抓住
+        client.chat.completions.create.side_effect = [_mk(runaway, "length")] * 5
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch.object(m, "append_metrics") as mock_metrics:
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out, "失控啰嗦残句必须拒稿")
+        self.assertEqual(client.chat.completions.create.call_count, 1,
+                         "越过过长门必须立即拒稿，不得再扩容白烧封顶级调用")
+        self.assertIn("stub", eng._breaker_state(),
+                      "失控啰嗦=确定性预算耗尽，首挂即进跨运行断路器")
+        reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
+                   if c.args and isinstance(c.args[0], dict)]
+        self.assertTrue(any("越过过长门" in r for r in reasons),
+                        f"拒稿原因须标注失控啰嗦（越过过长门），实得 {reasons}")
+
+    def test_article_overlength_runaway_rejects_without_burning_cap(self):
+        """R350 长文分支：长文残句越过 2500 过长门仍 finish=length → 立即拒稿，不得
+        扩容到 6000 封顶白烧。生产 L1495 长文 14100字耗9176 token 即此类失控啰嗦。"""
+        eng = self._engine()
+        client = MagicMock()
+
+        def _mk(content, finish):
+            r = self._resp(content)
+            r.choices[0].finish_reason = finish
+            return r
+
+        runaway = "TITLE: 盘面复盘\n\n" + "盘面信号明确，资金博弈加剧。" * 250  # ~3263 字符 > 2500
+        client.chat.completions.create.side_effect = [_mk(runaway, "length")] * 5
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch.object(m, "append_metrics") as mock_metrics:
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"],
+                                article=True)
+        self.assertIsNone(out)
+        self.assertEqual(client.chat.completions.create.call_count, 1,
+                         "长文越过 2500 过长门必须立即拒稿，不得扩容到 6000 封顶")
+        reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
+                   if c.args and isinstance(c.args[0], dict)]
+        self.assertTrue(any("2500" in r and "越过过长门" in r for r in reasons),
+                        f"长文拒稿原因须标注越过 2500 过长门，实得 {reasons}")
+
+    def test_underlength_truncation_below_gate_still_expands(self):
+        """R350 边界对照（不得过度纠正）：残句仍短于「过长」门（未越 1200）时，
+        finish=length 仍须正常扩容重试——把「差一点写完」误杀成失控啰嗦会毁掉
+        R68/R80 的合法救回路径。"""
+        eng = self._engine()
+        client = MagicMock()
+
+        def _mk(content, finish):
+            r = self._resp(content)
+            r.choices[0].finish_reason = finish
+            return r
+
+        short_partial = "盘面。" * 100  # 300 字符 < 1200，属「差一点写完」
+        client.chat.completions.create.side_effect = [
+            _mk(short_partial, "length"), _mk(self._good_body(), "stop"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out, "未越过长门的残句必须扩容救回而非拒稿")
+        self.assertEqual(client.chat.completions.create.call_count, 2)
+        budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
+        self.assertGreater(budgets[1], budgets[0], "未越门残句 finish=length 必须扩容")
+
     def test_exhausted_retry_skips_breaker(self):
         eng = self._engine()
         client = MagicMock()

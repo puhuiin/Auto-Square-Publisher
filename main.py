@@ -4289,14 +4289,28 @@ class MultiLLMEngine:
                         # 句子写到一半被掐（"想博波"直接挂在时间线上）。残句能过所有
                         # 质量门（长度/中文字数全达标），必须同样走扩容重试；预算到顶
                         # 仍截断时宁可拒稿，也不能把半句话发出去。
-                        if finish == "length" and effective_max_tokens < budget_cap:
-                            expansions += 1
-                            effective_max_tokens = min(effective_max_tokens + 1500, budget_cap)
-                            logger.warning(f"提供商 [{provider.name}] finish=length 截断"
-                                           f"（{'空回' if not content else f'残句 {len(content)} 字符'}，"
-                                           f"耗 {tokens_used or '?'} token），预算动态扩容至 {effective_max_tokens} 重试"
-                                           f"（第 {expansions} 次扩容，不占重试配额）")
-                            continue
+                        if finish == "length":
+                            # R350：扩容只抬高 token 上限、只会让输出更长绝不会更短。残句
+                            # 一旦已越过「过长」质量门（短讯 1200 / 长文正文 2500），就是失控
+                            # 啰嗦（openrouter/free 常态）而非「差一点写完」——续扩到封顶只是
+                            # 每级白烧一次封顶级调用后照样撞「过长」拒稿（生产 L1333 9202字耗
+                            # 7302 / L1495 长文14100字耗9176 / L1531 12340字耗7358 token 均如此）。
+                            # 立即拒稿走 failover：换别家比同一啰嗦模型在更高预算上重掷更省、
+                            # 更可能救回。（空回 len=0 不命中此支，仍走下方扩容→4306 空回路径。）
+                            _content_len_cap = 2500 if article else 1200
+                            if len(content) >= _content_len_cap:
+                                raise _BudgetExhaustedError(
+                                    f"残句 {len(content)} 字符已越过过长门 {_content_len_cap} 仍 "
+                                    f"finish=length（预算 {effective_max_tokens}，耗 "
+                                    f"{tokens_used or '?'} token），失控啰嗦扩容无益，拒稿换提供商")
+                            if effective_max_tokens < budget_cap:
+                                expansions += 1
+                                effective_max_tokens = min(effective_max_tokens + 1500, budget_cap)
+                                logger.warning(f"提供商 [{provider.name}] finish=length 截断"
+                                               f"（{'空回' if not content else f'残句 {len(content)} 字符'}，"
+                                               f"耗 {tokens_used or '?'} token），预算动态扩容至 {effective_max_tokens} 重试"
+                                               f"（第 {expansions} 次扩容，不占重试配额）")
+                                continue
                     if content:
                         break
                     attempt += 1
