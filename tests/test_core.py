@@ -9243,6 +9243,62 @@ class TestEmptyContentRetry(unittest.TestCase):
         self.assertEqual(budgets[-1], 4000, "短讯封顶必须仍是 4000")
         self.assertLessEqual(len(budgets), 4, "到 4000 后不得继续扩容")
 
+    def test_empty_at_budget_cap_length_enters_breaker(self):
+        """R349：空回 + finish=length 顶到封顶 = 确定性预算耗尽（思考链吃满整个封顶
+        仍吐空），必须与残句到顶同权、首挂即进跨运行断路器；不得当偶发空包原谅，
+        否则同款吐空提供商每条故事白烧一次封顶级调用（生产 L1259 7973 / L1413
+        6810 token，finish=length 空回却被记「已即时重试」当偶发原谅）。"""
+        eng = self._engine()
+        client = MagicMock()
+
+        def _mk(content, finish):
+            r = self._resp(content)
+            r.choices[0].finish_reason = finish
+            return r
+
+        # 非推理短讯 600→2100→3600→4000（封顶），全 length 空包 → 到顶吐空；
+        # 封顶后偶发原谅配额（max_attempts=2）再补一次同预算空回 → 共 5 次调用
+        client.chat.completions.create.side_effect = [
+            _mk(None, "length"), _mk(None, "length"),
+            _mk(None, "length"), _mk(None, "length"), _mk(None, "length"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch.object(m, "append_metrics") as mock_metrics:
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out, "到顶吐空必须拒稿")
+        # 关键回归：确定性预算耗尽 → 首挂即进断路器（对比偶发空包 fails<2 不进）
+        self.assertIn("stub", eng._breaker_state(),
+                      "空回到顶 finish=length 是确定性耗尽，必须首挂进断路器")
+        budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
+        self.assertEqual(budgets, [600, 2100, 3600, 4000, 4000], "扩容序列必须精确，到顶即停")
+        reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
+                   if c.args and isinstance(c.args[0], dict)]
+        self.assertTrue(any("finish=length 吐空" in r for r in reasons),
+                        f"拒稿原因必须标注确定性预算耗尽（finish=length 吐空），实得 {reasons}")
+
+    def test_empty_finish_stop_to_exhaustion_still_forgiven(self):
+        """边界对照（R349 不得误伤）：空回但 finish≠length（上游偶发空包）即使重试
+        耗尽，仍按偶发原谅——首挂不得进断路器，健康通道的一次抽风不该被冷却。"""
+        eng = self._engine()
+        client = MagicMock()
+
+        def _mk(content, finish):
+            r = self._resp(content)
+            r.choices[0].finish_reason = finish
+            return r
+
+        client.chat.completions.create.side_effect = [
+            _mk(None, "stop"), _mk(None, "stop"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        self.assertNotIn("stub", eng._breaker_state(),
+                         "finish=stop 空回是偶发，首挂不得进断路器")
+        self.assertEqual(eng._fail_counts.get("stub"), 1)
+
     def test_exhausted_retry_skips_breaker(self):
         eng = self._engine()
         client = MagicMock()

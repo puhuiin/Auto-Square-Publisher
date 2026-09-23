@@ -4304,6 +4304,18 @@ class MultiLLMEngine:
                         logger.warning(f"提供商 [{provider.name}] 第 {attempt}/{max_attempts} 次返回空内容"
                                        f"（累计耗时 {latency_sec}s）...")
                 if not content:
+                    # R349：空回 + finish=length = 思考链吃满整个封顶预算仍吐空。
+                    # 与 R331 残句到顶同根因（同预算重试必现同款截断），是确定性
+                    # 预算耗尽而非「上游偶发空包」——能走到这里 finish 仍是 length，
+                    # 就意味着 4292 的扩容链已把 effective 顶到 budget_cap（否则早已
+                    # continue 扩容）。必须首挂即进断路器，勿与偶发空包共用「首挂原谅」，
+                    # 否则同款吐空的提供商每条故事白烧一次封顶级调用（生产 L1259 耗
+                    # 7973 / L1413 耗 6810 token，均被误判为可原谅偶发空回）。
+                    if final_finish == "length":
+                        raise _BudgetExhaustedError(
+                            f"预算 {effective_max_tokens}（封顶 {budget_cap}）到顶仍 "
+                            f"finish=length 吐空（耗 {tokens_used or '?'} token），"
+                            f"确定性预算耗尽，拒稿换提供商")
                     raise _EmptyContentError(
                         "模型返回了空内容（已即时重试 1 次）" if max_attempts > 1
                         else "模型返回了空内容（同运行连挂窗口，不再重试）")
