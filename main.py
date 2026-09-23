@@ -125,17 +125,31 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+# R336：外部可控 max_posts 的硬上限。用于把 repository_dispatch 注入 / 手误的
+# 巨值（999999 之类）钉死在合理量级，防单轮刷屏封号。日配额默认 12、单轮实际发
+# 1~2 篇，50 对任何正当批量都留足余量，只截断异常值。
+MAX_POSTS_HARD_CAP = 50
+
+
 def _parse_max_posts(raw: str) -> int:
     """MAX_POSTS_PER_RUN 容错解析：外部可控值（workflow_dispatch 输入 /
-    repository_dispatch client_payload），空/非整数/负数一律回落 1（保留"≥1"地板）。
+    repository_dispatch client_payload），空/非整数/负数一律回落 1（保留"≥1"地板），
+    并在 MAX_POSTS_HARD_CAP 处封顶。
     不用 `int(x) if x.isdigit() else 1` 守卫——str.isdigit() 对上标/带圈 Unicode
     数字（"²"、"①" 等数字类字符）返回 True，但 int() 拒收会抛 ValueError 崩运行；
-    外部可控值能崩启动就是输入校验缺口。上限由 24h 配额在下游钳制，此处不设。"""
+    外部可控值能崩启动就是输入校验缺口。
+    R336：上限不再假手下游。旧注释称"上限由 24h 配额在下游钳制，此处不设"，但那段
+    收敛（含逐条复查）整体裹在 `if MAX_DAILY_POSTS > 0` 内——运营一旦把
+    MAX_DAILY_POSTS 设为 0（"不限制"，代码显式支持的模式），外部可控的
+    client_payload.max_posts 就毫无上限地成为发帖循环上界。输入校验层才是钉死这个
+    边界的正确位置，与本函数自述职责一致。"""
     try:
         n = int((raw or "").strip())
     except (ValueError, TypeError):
         return 1
-    return n if n >= 1 else 1
+    if n < 1:
+        return 1
+    return n if n <= MAX_POSTS_HARD_CAP else MAX_POSTS_HARD_CAP
 
 
 def _env_float(name: str, default: float) -> float:

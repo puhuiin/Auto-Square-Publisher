@@ -2272,6 +2272,14 @@ class TestEnvParsing(unittest.TestCase):
         for uni in ("²", "³", "①", "⑤"):
             self.assertTrue(uni.isdigit(), f"{uni} 应触发旧 isdigit 守卫")
             self.assertEqual(m._parse_max_posts(uni), 1, uni)
+        # R336：外部可控巨值必须在输入层封顶。下游 24h 配额收敛整体裹在
+        # `if MAX_DAILY_POSTS > 0` 内，运营设 0（不限制）时那层全失效，不能假手它。
+        # 边界内原样、超上限钳到硬上限。
+        cap = m.MAX_POSTS_HARD_CAP
+        self.assertEqual(m._parse_max_posts(str(cap - 1)), cap - 1)
+        self.assertEqual(m._parse_max_posts(str(cap)), cap)
+        self.assertEqual(m._parse_max_posts(str(cap + 1)), cap)
+        self.assertEqual(m._parse_max_posts("999999"), cap)
 
     def test_clamp01(self):
         self.assertEqual(m._clamp01("T", 0.65), 0.65)
