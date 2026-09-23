@@ -1206,11 +1206,12 @@ class TestArticleTitleHookCensus(unittest.TestCase):
     def test_hook_census_and_leadin_alert(self):
         """数字/$挂件/疑问三类眼钩各自计数；命中禁用领词的标题单独告警"""
         _write(self.path, [
-            self._row("20天狂买1.07亿美元，Bitwise悄悄吸筹$SOL"),
-            self._row("$SHIB掌门失联4个月，改个资料就想搞事？"),
-            self._row("BTC $82000 Battle"),
-            self._row("刚出炉：Fed升息落地，$BTC守住7.65万"),
-            self._row("突发，某交易所又出事了", article=False),  # 短讯也可能带标题
+            self._row("20天狂买1.07亿美元，Bitwise悄悄吸筹$SOL", ts="2026-09-10T00:00:00+00:00"),
+            self._row("$SHIB掌门失联4个月，改个资料就想搞事？", ts="2026-09-11T00:00:00+00:00"),
+            self._row("BTC $82000 Battle", ts="2026-09-12T00:00:00+00:00"),
+            self._row("刚出炉：Fed升息落地，$BTC守住7.65万", ts="2026-09-17T02:09:28+00:00"),
+            self._row("突发，某交易所又出事了", article=False,
+                      ts="2026-09-18T00:00:00+00:00"),  # 短讯也可能带标题
             self._row(""),  # 空标题（短讯常态）不进分母
         ])
         rows, _ = mr.load_rows(self.path)
@@ -1224,7 +1225,45 @@ class TestArticleTitleHookCensus(unittest.TestCase):
         self.assertIn("长文标题（5 篇", text)
         self.assertIn("数字钩子 4/5", text)
         self.assertIn("标题命中禁用领词 2/5", text)
-        self.assertIn("更显眼的指纹位", text)
+        self.assertIn("2026-09-17", text, "命中日期必须可见，否则历史残留读成开放缺口")
+        self.assertIn("2026-09-18", text)
+
+    def test_leadin_alert_marks_pre_r296_hits_as_historical(self):
+        """R329：命中日全早于 R296（2026-09-21）时，告警不得再称「守卫只覆盖正文开场」
+        ——那句在 R296 后为假，会把 09-17 历史残留永久读成开放缺口（R280 同型）。"""
+        _write(self.path, [
+            self._row("刚出炉：Fed升息落地，$BTC守住7.65万", ts="2026-09-17T02:09:28+00:00"),
+            self._row("20天狂买1.07亿美元", ts="2026-09-20T00:00:00+00:00"),
+        ])
+        rows, _ = mr.load_rows(self.path)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("历史残留", text)
+        self.assertNotIn("守卫只覆盖正文开场", text,
+                         "R296 已补 TITLE 禁令，旧叙事=假告警")
+
+    def test_leadin_alert_flags_post_r296_hits(self):
+        """R296 后新命中必须升格为「预防侧需复查」，不得混进历史残留口径。"""
+        _write(self.path, [
+            self._row("刚出炉：Fed升息落地", ts="2026-09-17T02:09:28+00:00"),
+            self._row("突发，新命中", ts="2026-09-22T00:00:00+00:00"),
+        ])
+        rows, _ = mr.load_rows(self.path)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("R296 后命中", text)
+        self.assertNotIn("历史残留", text)
+        self.assertNotIn("守卫只覆盖正文开场", text)
+
+    def test_leadin_detects_leading_whitespace_titles(self):
+        """R329：startswith 必须对 strip 后的串——前导空格/全角空格/Tab 会漏检。"""
+        _write(self.path, [
+            self._row(" 刚出炉：Fed", ts="2026-09-17T00:00:00+00:00"),
+            self._row("　突发：x", ts="2026-09-17T00:00:00+00:00"),
+            self._row("\t注意：y", ts="2026-09-17T00:00:00+00:00"),
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(len(s["title_leadin_hits"]), 3,
+                         "前导空白标题必须命中（strip 后再 startswith）")
 
     def test_no_titles_renders_nothing(self):
         """全是短讯（标题为空）时整块不渲染（零噪音）"""

@@ -37,10 +37,13 @@ _FNG_ANCHOR_RE = re.compile(
     r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^\s。！？，、；：\nA-Za-z0-9]{0,4}\s?\d{2}")
 _OVERUSED_DEVICES = ("先泼盆冷水",)  # main._OVERUSED_OPENING_DEVICES
 # R286：长文标题禁用领词表——与 main._GENERIC_LEADINS 同步（防漂移测试见
-# TestQualityPatternSync）。R121/R282 守卫只覆盖正文开场句，而标题是信息流里
-# 决定点不点开的第一触点、比正文开场更显眼：生产实录 11 篇长文标题里
-# "刚出炉：Fed升息落地…"命中 R282 刚晋升进静态表的"刚出"族。
+# TestQualityPatternSync）。标题是信息流里决定点不点开的第一触点：生产实录
+# 11 篇长文标题里 "刚出炉：Fed升息落地…"命中 R282 刚晋升进静态表的"刚出"族。
+# R296（2026-09-21）已把该表写进长文 TITLE 指令做预防；R329 修本注释与告警
+# 文案——旧文案"守卫只覆盖正文开场"在 R296 后为假，会把历史残留读成开放缺口。
 _TITLE_LEADINS = ("刚刚", "突发", "重磅", "快讯", "注意", "刚出", "几分")
+# R296 落地日（UTC）：命中日全早于该日 = 历史残留；含当日及之后 = 预防侧需复查
+_TITLE_BAN_DEPLOYED = "2026-09-21"
 _AI_FLAVOR_HARD = (  # main.MultiLLMEngine._AI_FLAVOR_HARD
     "拭目以待", "未来可期", "保驾护航", "谱写", "新篇章", "扬帆起航",
     "值得注意的是", "值得一提的是", "综上所述", "总而言之", "让我们一起",
@@ -525,15 +528,19 @@ def summarize(rows):
             # 第一触点，数字/$挂件/疑问三类眼钩元素的覆盖率要有基线可查
             _at = r.get("article_title")
             if isinstance(_at, str) and _at.strip():
-                s["article_titles"].append(_at.strip())
+                _at = _at.strip()
+                s["article_titles"].append(_at)
                 if any(c.isdigit() for c in _at):
                     s["title_hooks"]["数字钩子"] += 1
                 if "$" in _at:
                     s["title_hooks"]["$挂件"] += 1
                 if "？" in _at or "?" in _at:
                     s["title_hooks"]["疑问钩子"] += 1
+                # R329：startswith 必须对 strip 后的串——" 刚出炉：…"/全角空格前缀
+                # 会漏检；命中带日期，供告警区分 R296 前历史残留 vs 新命中
                 if any(_at.startswith(w) for w in _TITLE_LEADINS):
-                    s["title_leadin_hits"].append(_at.strip())
+                    s["title_leadin_hits"].append(
+                        (str(r.get("ts") or "")[:10], _at))
             # R130：结尾套路分布——验证 ShuffleBag 生产轮换均匀性
             if r.get("ending_style"):
                 s["by_ending"][str(r["ending_style"])] += 1
@@ -1073,10 +1080,17 @@ def render_text(s, rows=None):
             lines.append(f"  📐 长文标题（{_n} 篇 · 均长 {_avg:.0f} 字）: {_hooks}")
         if s.get("title_leadin_hits"):
             _hits = s["title_leadin_hits"]
-            _pref = "、".join(sorted({h[:2] for h in _hits}))
+            _pref = "、".join(sorted({h[1][:2] for h in _hits}))
+            _dates = sorted({h[0] for h in _hits if h[0]})
+            _date_note = f"，日期 {'/'.join(_dates)}" if _dates else ""
+            # R296 起 TITLE 指令已列全禁令；只有 R296 后的新命中才提示复查
+            if _dates and all(d < _TITLE_BAN_DEPLOYED for d in _dates):
+                _guard = ("历史残留（命中日均早于 R296 标题禁令），预防侧已闭环"
+                          "——勿再当开放缺口追")
+            else:
+                _guard = "含 R296 后命中，标题禁令预防侧需复查"
             lines.append(f"  ⚠️ 长文标题命中禁用领词 {len(_hits)}/"
-                         f"{len(s['article_titles'])} 篇（{_pref}…）——R121/R282 "
-                         f"守卫只覆盖正文开场，标题是更显眼的指纹位")
+                         f"{len(s['article_titles'])} 篇（{_pref}…{_date_note}）——{_guard}")
         # R130：结尾套路分布（验证 ShuffleBag 轮换均匀性；旧 schema 无字段则不渲染）
         if s["by_ending"]:
             ending_str = " · ".join(f"{k} ×{v}" for k, v in s["by_ending"].most_common(5))
