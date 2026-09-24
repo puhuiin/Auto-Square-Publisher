@@ -5970,6 +5970,18 @@ class SquarePublisher(BasePublisher):
     }
 
     @classmethod
+    def _replace_risky_words(cls, text: str) -> str:
+        """敏感词安全替换的唯一实现（防封号/防 20002/20022 拦截，_RISKY_WORDS 为唯一真源）。
+        正文（_sanitize_content 第 3 步）、长文标题（_sanitize_title）、活动标签
+        （_inject_campaign_tag 追加前）三条直发 bodyTextOnly/title 的出海口共用本函数——
+        任一条漏接即对称暴露面裂口（R355 标题/R358 活动标签皆此类）。"""
+        if not text:
+            return text
+        for bad_kw, safe_kw in cls._RISKY_WORDS.items():
+            text = text.replace(bad_kw, safe_kw)
+        return text
+
+    @classmethod
     def _sanitize_title(cls, title: str) -> str:
         """长文标题净化：只做敏感词替换 + Markdown 残迹剥离。
 
@@ -5981,9 +5993,7 @@ class SquarePublisher(BasePublisher):
         if not title:
             return title
         title = title.replace("**", "").replace("__", "")
-        for bad_kw, safe_kw in cls._RISKY_WORDS.items():
-            title = title.replace(bad_kw, safe_kw)
-        return title.strip()
+        return cls._replace_risky_words(title).strip()
 
     @staticmethod
     def _truncate_at_boundary(text: str, limit: int) -> str:
@@ -6133,9 +6143,8 @@ class SquarePublisher(BasePublisher):
         # 2. 移除生硬破折号
         content = content.replace("——", "，")
 
-        # 3. 敏感词安全过滤（防封号/防拦截）——与 _sanitize_title 共用 _RISKY_WORDS 真源
-        for bad_kw, safe_kw in cls._RISKY_WORDS.items():
-            content = content.replace(bad_kw, safe_kw)
+        # 3. 敏感词安全过滤（防封号/防拦截）——三条出海口共用 _replace_risky_words 单一实现
+        content = cls._replace_risky_words(content)
 
         # 4. 长度保护先行：按模式取上限，并预留追加余量（挂件/活动标签在第 6 步之后
         #    还会追加，卡着上限净化会让追加后的正文越界）。截断走 _enforce_max_chars：
@@ -6211,7 +6220,12 @@ class SquarePublisher(BasePublisher):
         have = {mm.group(0)[1:].lower()
                 for mm in re.finditer(r"#[^\s#]+", content)}
         for tag in campaign_intel.get("active_tags") or []:
-            tag = str(tag).strip()
+            # R358：活动标签同为直发 bodyTextOnly 的文本，却在 publish() 里 _sanitize_content
+            # 之后才追加（净化→织挂件→保底挂件→本注入），绕过正文/标题共用的敏感词过滤。
+            # active_tags 由 AI 从官方活动标题自由拟词（analyze_with_ai），schema 门只校验
+            # list-of-str 不校内容——"返现"之类既是币安运营高频主题又是 _RISKY_WORDS 禁词，
+            # 裸发即 20002/20022 审核风险。追加前过同一门（对称暴露面第 4 例，续 R355/356/357）。
+            tag = cls._replace_risky_words(str(tag).strip())
             if not tag.startswith("#") or tag[1:].lower() in have:
                 continue
             if tag[1:].lower() in ("write2earn", "binancesquare"):

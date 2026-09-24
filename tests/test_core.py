@@ -1982,6 +1982,40 @@ class TestCampaignTagInjection(unittest.TestCase):
         self.assertEqual(
             m.SquarePublisher._inject_campaign_tag("正文。", {"active_tags": []}), "正文。")
 
+    def test_scrubs_risky_word_in_campaign_tag(self):
+        """R358：活动标签在 _sanitize_content 之后才追加，绕过正文/标题共用的敏感词门。
+        AI 从官方活动标题自由拟词，"返现"既是币安运营高频主题又是 _RISKY_WORDS 禁词——
+        追加前必须过同一门（对称暴露面第 4 例）。"""
+        out = m.SquarePublisher._inject_campaign_tag(
+            "正文略。", {"active_tags": ["#返现活动"]})
+        self.assertNotIn("返现", out, "活动标签裸发禁词=20002/20022 审核风险")
+        self.assertIn("#返佣活动", out, "禁词须替换为安全词后再入帖")
+
+    def test_campaign_tag_covers_same_words_as_body(self):
+        """对称防御同源守卫：正文过滤的每个禁词，活动标签必须一并过滤。
+        _replace_risky_words 是唯一实现——把注入接线回退（不过门）此断言即报警。"""
+        for bad_kw, safe_kw in m.SquarePublisher._RISKY_WORDS.items():
+            out = m.SquarePublisher._inject_campaign_tag(
+                "正文。", {"active_tags": [f"#{bad_kw}攻略"]})
+            self.assertNotIn(bad_kw, out, f"活动标签未过滤禁词 {bad_kw}（对称防御裂开）")
+            self.assertIn(safe_kw, out, f"活动标签未替换为安全词 {safe_kw}")
+
+    def test_clean_campaign_tag_unchanged(self):
+        """零回归哨兵：无禁词的干净活动标签逐字追加，过门绝不篡改。"""
+        out = m.SquarePublisher._inject_campaign_tag(
+            "正文略。", {"active_tags": ["#TradingTournament"]})
+        self.assertTrue(out.rstrip().endswith("#TradingTournament"))
+        self.assertEqual(out.count("#TradingTournament"), 1)
+
+    def test_publish_order_tag_scrubbed_after_body_sanitize(self):
+        """接线哨兵：复刻 publish() 真实顺序（先净化正文、再注入活动标签），
+        证明尽管注入在净化之后，最终 bodyTextOnly 里仍无裸禁词——回退注入过门即 RED。"""
+        body = m.SquarePublisher._sanitize_content("BTC 资金面复盘。")
+        final = m.SquarePublisher._inject_campaign_tag(
+            body, {"active_tags": ["#稳赚必暴涨"]})
+        self.assertNotIn("稳赚", final)
+        self.assertNotIn("必暴涨", final)
+
 
 class TestTokenWidgetEnforcement(unittest.TestCase):
     """交易挂件保底：无挂件内容自动补齐"""
