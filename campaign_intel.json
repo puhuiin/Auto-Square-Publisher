@@ -3,24 +3,25 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Futures"
+    "#Futures",
+    "#新币上线"
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$BABY",
-    "$BANK",
-    "$NEAR",
-    "$PROVE",
+    "$BTC",
+    "$HYPE",
     "$OUR",
-    "$AGPUB",
-    "$AMCB"
+    "$VTHO",
+    "$BABY",
+    "$PROVE",
+    "$RLUSD"
   ],
-  "strategy_guidance": "优先围绕刚公告上线的OUR永续合约、3个新增bStocks交易对，以及仍在进行的BABY/BANK/NEAR/PROVE交易竞赛、邀请好友自选奖励活动产出快讯，结合#Write2Earn标签引导用户参与交易赚取返佣；可搭配Binance Points任务、P2P 0手续费活动等内容覆盖不同风险偏好的用户，提升内容曝光与转化，还可结合无截止日的September Back to Markets Class活动引导用户参与存交易获取额外收益。",
-  "last_updated": "2026-09-24T00:24:03.384475Z",
+  "strategy_guidance": "优先追贴刚上线1天的OURAUSDT预IPO合约交易与$HYPE全生态上线热点，结合Write2Earn活动输出新币/新合约参与攻略，引导用户交易获取返佣；其次结合当前多赛道并行的高奖金额交易锦标赛（VTHO/BABY/BANK/NEAR/PROVE）、Starter Carnival任务活动输出实操指南，挂载活动链接提升转化；还可蹭bStocks新增抵押品、P2P TJS对0手续费、持币$RLUSD分$XRP等福利热点，覆盖不同用户群体的参与需求。",
+  "last_updated": "2026-09-24T12:42:26.611204Z",
   "_feed_health": {},
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
+    "date": "2026-09-09"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-09-24",
