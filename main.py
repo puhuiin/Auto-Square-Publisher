@@ -3680,24 +3680,26 @@ class MultiLLMEngine:
     _AI_FLAVOR_SOFT = ("赋能", "标志着", "显而易见")
 
     @classmethod
-    def _passes_ai_flavor_gate(cls, content: str) -> Tuple[bool, str]:
+    def _passes_ai_flavor_gate(cls, content: str, label: str = "正文") -> Tuple[bool, str]:
         """
         AI 腔检测门：拦截"一眼机器人"的文风特征。发布出去等于挂着机器人横幅，
         点击率与返佣直接归零；同批质量问题走 _QualityGateRejection 换模型重写，
         不计入跨运行断路器（通道没死，是这一次写坏了）。
+        R357：label 区分正文/标题。长文标题与正文同源、同标准过本门（标题恰是
+        AI 腔硬词重灾区），默认"正文"让既有正文调用点原样零回归。
         """
         for pat in cls._AI_FLAVOR_HARD:
             if pat in content:
-                return False, f"AI 腔硬命中「{pat}」（真人交易员不会这么说话）"
+                return False, f"{label} AI 腔硬命中「{pat}」（真人交易员不会这么说话）"
         if content.count("——") >= 2:
-            return False, "AI 腔硬命中：破折号出现 2 次以上（AI 写作最可靠的指纹之一）"
+            return False, f"{label} AI 腔硬命中：破折号出现 2 次以上（AI 写作最可靠的指纹之一）"
         soft_hits = [w for w in cls._AI_FLAVOR_SOFT if w in content]
         if re.search(r"不仅[^。！？\n]{0,24}(更|还|也|而且)", content):
             soft_hits.append("不仅…更/还 句式")
         if "首先" in content and "其次" in content:
             soft_hits.append("首先…其次 结构")
         if len(soft_hits) >= 2:
-            return False, f"AI 腔软特征累计 {len(soft_hits)} 项: {'、'.join(soft_hits[:3])}"
+            return False, f"{label} AI 腔软特征累计 {len(soft_hits)} 项: {'、'.join(soft_hits[:3])}"
         return True, ""
 
     # 长文 TITLE 行解析（contentType=2 硬性要求 title 字段，缺失会被 API 拒）
@@ -4400,6 +4402,17 @@ class MultiLLMEngine:
 
                 # 0.2 AI 腔门：标志性机器人文风直接判废换模型重写（发布出去等于自曝身份）
                 flavor_ok, flavor_reason = self._passes_ai_flavor_gate(content)
+                # R357：标题与正文同源过 AI 腔门。长文 TITLE 早在 _parse_article 被切走，
+                # 此后本门只扫正文——而标题恰是 clickbait 重灾区，硬词表（未来可期/扬帆起航/
+                # 新篇章/谱写/共同见证/拭目以待）正是模型爱堆的标题辞藻，挂在最显眼的标题上
+                # 等于自曝机器人（gate 自陈"点击率与返佣直接归零"），且 _sanitize_title 只做
+                # 禁词替换不碰 AI 腔词、无从补救。这是 R355 敏感词、R356 数字之后同类对称暴露
+                # 面第三处（正文过某内容门、标题从没进过）。复用同一函数（label=标题 让原因可
+                # 区分），标题 8~40 字不触发长度/软特征累计误杀，短讯 article_title 为 None
+                # 不触发，逐字零回归。
+                if flavor_ok and article_title:
+                    flavor_ok, flavor_reason = self._passes_ai_flavor_gate(
+                        article_title, label="标题")
                 if not flavor_ok:
                     self._log_reject(news_item, provider.name, "ai_flavor", flavor_reason,
                                      tokens_used, latency_sec, provider.model,

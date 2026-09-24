@@ -1515,6 +1515,29 @@ class TestAIFlavorGate(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("软特征累计 2", reason)
 
+    def test_title_flavor_hard_hit_rejected_with_label(self):
+        # R357：标题与正文同标准过 AI 腔门，硬命中必拦且原因署名"标题"（clickbait 标题
+        # 最爱堆"扬帆起航"这类硬词，挂在最显眼处等于自曝机器人）
+        ok, reason = m.MultiLLMEngine._passes_ai_flavor_gate(
+            "以太坊扬帆起航新征程", label="标题")
+        self.assertFalse(ok)
+        self.assertIn("标题", reason)
+        self.assertIn("扬帆起航", reason)
+
+    def test_title_clean_clickbait_passes(self):
+        # 真人味的耸动标题（无 AI 腔硬词/破折号/软特征）照过，不误杀
+        ok, _ = m.MultiLLMEngine._passes_ai_flavor_gate(
+            "比特币暴力拉升多头集体爆赚", label="标题")
+        self.assertTrue(ok)
+
+    def test_default_label_stays_body_zero_regression(self):
+        # 零回归哨兵：默认 label 必须是"正文"，既有正文调用点原因不得漂成"标题"。
+        # 把默认值改成别的立刻 RED。
+        ok, reason = m.MultiLLMEngine._passes_ai_flavor_gate("让我们拭目以待这波行情")
+        self.assertFalse(ok)
+        self.assertIn("正文", reason)
+        self.assertNotIn("标题", reason)
+
 
 class TestMarketCardBarsLayout(unittest.TestCase):
     """情绪卡 bars 布局：真实行情行解析与降级（R55 配图多样化）"""
@@ -5995,6 +6018,25 @@ class TestRejectTelemetry(unittest.TestCase):
         self.assertEqual(rows[0]["stage"], "numbers")
         self.assertIn("标题", rows[0]["reason"])
         self.assertIn("23.7", rows[0]["reason"])
+
+    def test_article_title_ai_flavor_rejected_through_summarize(self):
+        # R357 接线哨兵：长文正文干净（过长文门 + 过正文数字门 + 过正文 AI 腔门），
+        # 但 TITLE 行堆 AI 腔硬词（"扬帆起航"）。summarize 必须在 AI 腔门内拦下、记
+        # ai_flavor 行、拒稿原因署名"标题"。把 4402 附近的标题级 _passes_ai_flavor_gate
+        # 接线回退成只扫正文，这条即 RED（长文标题的机器人文风裸发重现）。
+        eng = self._stub_engine()
+        body = "盘面信号明确，多空资金激烈博弈，短线情绪快速升温，主力借势换手。" * 16
+        content = "TITLE: 以太坊扬帆起航开启新征程\n\n" + body
+        client = self._fake_client(content=content)
+        item = {"title": "ETH news", "summary": "Ethereum rallies", "source": "U.Today"}
+        with patch.object(eng, "_get_client", return_value=client):
+            self.assertIsNone(
+                eng.summarize(item, None, market_context="", token_hints=["ETH"], article=True))
+        rows = self._rows()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["stage"], "ai_flavor")
+        self.assertIn("标题", rows[0]["reason"])
+        self.assertIn("扬帆起航", rows[0]["reason"])
 
 
 class TestCostObservability(unittest.TestCase):
