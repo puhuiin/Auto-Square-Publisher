@@ -303,6 +303,8 @@ python scripts/metrics_report.py --days 1
   | `MAX_TOKENS_PER_POST` | `3` | 单帖 $ 挂件标的上限（清单式行情日评可提取 9+ 币，截断保留显著度前 N） |
   | `ARTICLE_PER_DAY` | `1` | 每日深度长文开关：当天首个高热帖升级为长文（contentType=2，TITLE+500~800 字正文），打专业垂直度与长尾流量 |
   | `ARTICLE_MIN_IMPACT` | `20` | 长文选稿门槛：榜首热度分低于此值则当天不发长文（全发短讯）。与限流放行门槛 `TOKEN_LIMIT_BYPASS_IMPACT` 相互独立 |
+  | `VIDEO_PER_DAY` | `0`（关闭） | 每日视频定投开关：非空非零时，每天从预生产视频库挑一条未发的加密主题竖版视频发布（contentType=3）。默认 `0` 关闭，开闸前须确认视频库就绪 |
+  | `VIDEO_LIBRARY_DIR` | 空（未启用） | 预生产视频库目录（如「讲解」项目产出目录）：每个子目录需备齐 `<slug>-vertical.mp4` + `<slug>-cover-v.jpg` + `content.yaml`，且仅加密/区块链主题选题会被纳入定投；留空则视频定投不启用 |
   | `PUBLISH_PLATFORMS` | `binance` | 发布平台组合（逗号分隔）：`binance` 官方 API / `okx_draft` OKX 草稿直出 / `telegram` 频道镜像 |
   | `FETCH_DEADLINE_SEC` | `300` | 单轮 RSS 抓取的全局 deadline（秒）：到点放弃迟到源、用已完成候选继续，避免卡住的源拖满 workflow 并挤掉后续 cron |
   | `LOG_LEVEL` | `INFO` | 日志级别（排障时可设 `DEBUG`） |
