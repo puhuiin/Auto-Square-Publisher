@@ -4134,6 +4134,32 @@ class TestNumberHallucinationGuard(unittest.TestCase):
             ok, _ = m.MultiLLMEngine._passes_quality_gate(leak * 3)
             self.assertFalse(ok, leak)
 
+    def test_title_fabricated_number_rejected_with_label(self):
+        """R356：长文标题与正文同款「被审核输出」，复用同一白名单做数字幻觉校验。
+        标题里编造的精确小数百分比（源文查无）必须拦下，且拒稿原因署名"标题"以便
+        与正文侧区分（长文 TITLE 早被 _parse_article 切走，此后 _verify_numbers 只
+        扫正文 → 标题裸奔是与 R355 敏感词漏口同类的对称暴露面，触碰数字严禁编造红线）。"""
+        src_no = "比特币价格突破关键位，市场情绪回暖，机构关注度上升。"
+        ok, reason = m.MultiLLMEngine._verify_numbers("比特币暴跌23.7%千亿爆仓", src_no, label="标题")
+        self.assertFalse(ok, "标题编造精确百分比必须拦")
+        self.assertIn("标题", reason, "拒稿原因须署名标题（非正文）")
+        self.assertIn("23.7", reason)
+
+    def test_title_number_in_source_passes(self):
+        # 源文含该精确数字时，标题合法引用不得误杀（与正文侧同一 _in_source 白名单）
+        ok, _ = m.MultiLLMEngine._verify_numbers(
+            "比特币单日大涨5.23%", "Bitcoin surged 5.23% in 24h", label="标题")
+        self.assertTrue(ok, "源文含该数字时标题合法引用必须放行")
+
+    def test_default_label_stays_body_zero_regression(self):
+        """零回归哨兵：label 默认必须是"正文"——R356 把 _verify_numbers 参数化后，
+        既有正文调用点全部走默认值，拒稿文案须逐字不变（把默认值改掉会 RED）。"""
+        ok, reason = m.MultiLLMEngine._verify_numbers(
+            "单日暴涨 12.53%", "no matching number here")
+        self.assertFalse(ok)
+        self.assertIn("正文", reason, "默认 label 必须保持正文，否则正文侧文案回归")
+        self.assertNotIn("标题", reason)
+
 
 class TestInBatchDedup(unittest.TestCase):
     """同批次内近似去重：max_posts>1 时同事件变体不应连发"""
@@ -5950,6 +5976,25 @@ class TestRejectTelemetry(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["stage"], "numbers")
         self.assertIn("12.53", rows[0]["reason"])
+
+    def test_article_title_fabricated_number_rejected_through_summarize(self):
+        # R356 接线哨兵：长文正文本身干净（过长文门 + 过正文数字门），但 TITLE 行
+        # 编造精确百分比（源文查无）。summarize 必须在数字门内拦下并记 numbers 行、
+        # 拒稿原因署名"标题"。把 4381 附近的标题级 _verify_numbers 接线回退成只扫
+        # 正文，这条即 RED（长文标题裸奔重现，数字严禁编造红线破防）。
+        eng = self._stub_engine()
+        body = "盘面信号明确，多空资金激烈博弈，短线情绪快速升温，主力借势换手。" * 16
+        content = "TITLE: 比特币暴跌23.7%千亿爆仓惊魂\n\n" + body
+        client = self._fake_client(content=content)
+        item = {"title": "BTC news", "summary": "Bitcoin dropped sharply", "source": "U.Today"}
+        with patch.object(eng, "_get_client", return_value=client):
+            self.assertIsNone(
+                eng.summarize(item, None, market_context="", token_hints=["BTC"], article=True))
+        rows = self._rows()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["stage"], "numbers")
+        self.assertIn("标题", rows[0]["reason"])
+        self.assertIn("23.7", rows[0]["reason"])
 
 
 class TestCostObservability(unittest.TestCase):

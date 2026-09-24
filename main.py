@@ -3731,11 +3731,14 @@ class MultiLLMEngine:
         return True, "", title, body
 
     @staticmethod
-    def _verify_numbers(content: str, source_text: str) -> Tuple[bool, str]:
+    def _verify_numbers(content: str, source_text: str, label: str = "正文") -> Tuple[bool, str]:
         """
         数字幻觉软校验：正文里出现的精确数字（小数百分比、大额精确金额）必须在源文能找到落点。
         粗略整数（"涨 5%"、"止损 10%"）属于交易员人设的合理推测，不校验。
         只拦截"精确到小数位但源文不存在"的数字——那种数字极大概率是模型编的。
+
+        label：拒稿原因里的主体名（默认"正文"，长文标题复用同一白名单校验时传"标题"，
+        R356——标题与正文是同款「被审核输出」的对称暴露面，见调用点注释）。
         """
         if not source_text:
             return True, ""
@@ -3808,7 +3811,7 @@ class MultiLLMEngine:
         for m in re.finditer(r"([+-]?\d+\.\d+)\s*%", content):
             val = abs(float(m.group(1)))
             if not _in_source(val):
-                return False, f"正文给出精确百分比 {m.group(1)}%，源文中找不到（疑似编造数据）"
+                return False, f"{label}给出精确百分比 {m.group(1)}%，源文中找不到（疑似编造数据）"
 
         # 大额精确美元金额（$120,000 / $450,000,000）
         for m in re.finditer(r"\$(\d{1,3}(?:,\d{3})+|\d{4,})", content):
@@ -3816,7 +3819,7 @@ class MultiLLMEngine:
             if val < 10000:  # 小额不校验（正文里 $100、$500 这种不算数字幻觉）
                 continue
             if not _in_source(val):
-                return False, f"正文给出精确金额 ${m.group(1)}，源文中找不到（疑似编造数据）"
+                return False, f"{label}给出精确金额 ${m.group(1)}，源文中找不到（疑似编造数据）"
 
         # 中文大额单位金额（X亿 / X百万）：只查 ≥100万 的数额数据（"拿 5 万本金"这类口吻不校验）。
         # R128：繁体 億/萬 同权（模型从 TW 源转写时会继承繁体写法）
@@ -3829,7 +3832,7 @@ class MultiLLMEngine:
             if abs_val < 1e6:
                 continue
             if not _in_source(abs_val):
-                return False, f"正文给出精确金额 {m.group(0)}（≈{abs_val:,.0f}），源文中找不到（疑似编造数据）"
+                return False, f"{label}给出精确金额 {m.group(0)}（≈{abs_val:,.0f}），源文中找不到（疑似编造数据）"
 
         # R309：裸阿拉伯数字 + 货币词（无 $ 前缀、无 亿/万 单位）——此前是幻觉门的
         # 盲区：$金额规则要 $ 前缀、CJK 规则要 亿/万，"机构买入 123456 美元" 这种
@@ -3842,7 +3845,7 @@ class MultiLLMEngine:
             if val < 10000:
                 continue
             if not _in_source(val):
-                return False, f"正文给出精确金额 {m.group(0)}（≈{val:,.0f}），源文中找不到（疑似编造数据）"
+                return False, f"{label}给出精确金额 {m.group(0)}（≈{val:,.0f}），源文中找不到（疑似编造数据）"
 
         return True, ""
 
@@ -4376,6 +4379,18 @@ class MultiLLMEngine:
                 source_text = (f"{news_item.get('title','')} {news_item.get('summary','')} "
                                f"{market_context} {self.last_intel_section or ''}")
                 nums_ok, nums_reason = self._verify_numbers(content, source_text)
+                # R356：标题与正文同源做数字幻觉校验。长文 TITLE 行早在 _parse_article
+                # 被切走，此后 _verify_numbers 只扫正文——而标题由模型自由生成、8~40 字
+                # clickbait 最爱写精确到小数/大额的耸动数字（"暴跌 23.7%"/"534 亿爆仓"），
+                # 却从不过数字门直接发为 payload["title"]。这与 R355 标题绕过敏感词过滤
+                # 是同类的对称暴露面漏口，且触碰"数字严禁编造"红线（body 侧该门在生产
+                # 已实锤拦下 534亿刀 编造额，同一 completion 的标题同样高危却裸奔）。
+                # 复用同一 source_text 白名单校验标题（label=标题 让拒稿原因可区分正文/
+                # 标题）：源文有的数字照过，编造的与正文同标准拦下。短讯 article_title 为
+                # None 不触发，逐字零回归。
+                if nums_ok and article_title:
+                    nums_ok, nums_reason = self._verify_numbers(
+                        article_title, source_text, label="标题")
                 if not nums_ok:
                     self._log_reject(news_item, provider.name, "numbers", nums_reason,
                                      tokens_used, latency_sec, provider.model,
