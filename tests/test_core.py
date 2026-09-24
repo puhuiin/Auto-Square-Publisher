@@ -127,6 +127,49 @@ class TestParseFeedEntry(unittest.TestCase):
     def test_empty_title_returns_none(self):
         self.assertIsNone(self.f._parse_feed_entry(self._entry(title=""), "TestFeed", self.mgr))
 
+    # ---- R361：本源旧闻过滤数走线程局部 feed_counters，杜绝全局差分跨线程串号 ----
+    def _stale_entry(self, title="BTC breaks $100K"):
+        old = (datetime.now(timezone.utc) - timedelta(hours=200)).timetuple()
+        e = self._entry(title=title)
+        e["published_parsed"] = old
+        return e
+
+    def test_stale_bumps_feed_counters_and_global(self):
+        """旧闻命中：同步累加线程局部 feed_counters 与全局 stats['stale']。"""
+        fc = {"stale": 0}
+        out = self.f._parse_feed_entry(self._stale_entry(), "FeedA", self.mgr, fc)
+        self.assertIsNone(out)
+        self.assertEqual(fc["stale"], 1)
+        self.assertEqual(self.f.stats["stale"], 1)
+
+    def test_stale_feed_counters_none_backward_compat(self):
+        """薄封装/直调（feed_counters=None）：只维护全局聚合、不报错——锁定既有
+        7 处直调 caller 的 Optional[Dict] 返回契约不被本轮参数化破坏。"""
+        out = self.f._parse_feed_entry(self._stale_entry(), "FeedA", self.mgr)
+        self.assertIsNone(out)
+        self.assertEqual(self.f.stats["stale"], 1)
+
+    def test_fresh_entry_leaves_feed_counters_untouched(self):
+        """零回归哨兵：非旧闻不得碰 feed_counters（过滤计数只统计真旧闻）。"""
+        fc = {"stale": 0}
+        out = self.f._parse_feed_entry(self._entry(), "FeedA", self.mgr, fc)
+        self.assertIsNotNone(out)
+        self.assertEqual(fc["stale"], 0)
+
+    def test_per_feed_stale_isolated_across_feeds(self):
+        """突变哨兵（解析侧）：本源过滤数取线程局部计数、绝非全局 stale 差分。
+        FeedA、FeedB 各跳过 1 条旧闻，全局 stale 累加到 2，但两源各自的
+        feed_counters 仍应是 1——并发下全局前后差分会把对方增量算进来，本源
+        日志随之翻倍/抖动。若把解析侧的 feed_counters 累加删掉、退回让调用方
+        读全局差分，本用例即 RED。"""
+        fc_a = {"stale": 0}
+        self.f._parse_feed_entry(self._stale_entry(title="A stale one"), "FeedA", self.mgr, fc_a)
+        fc_b = {"stale": 0}
+        self.f._parse_feed_entry(self._stale_entry(title="B stale one"), "FeedB", self.mgr, fc_b)
+        self.assertEqual(fc_a["stale"], 1)
+        self.assertEqual(fc_b["stale"], 1)          # 不是 2——本源计数与他源隔离
+        self.assertEqual(self.f.stats["stale"], 2)  # 全局聚合仍照旧累加
+
 
 class TestNearDuplicateDetection(unittest.TestCase):
     """跨源近似去重：同一事件多源报道只发一次"""
@@ -8901,6 +8944,42 @@ class TestFeedBodyBounded(unittest.TestCase):
         self.assertEqual(len(items), 1)
         self.assertTrue(get.call_args.kwargs["stream"], "feed 抓取必须流式，计数上限才有内存意义")
         self.assertTrue(resp.closed)
+
+    def test_stale_log_reports_feed_local_count_not_global_diff(self):
+        """R361 突变哨兵（接线侧）：_fetch_single_feed 报出的「过滤过期旧闻 N 条」
+        取自本源线程局部 feed_counters，绝非全局 stats['stale'] 前后差分。
+
+        构造并发污染：每命中一条旧闻，全局 stale 由「本源+他源」共同 +2，而本源
+        线程局部只 +1。本源有 2 条旧闻 → 局部计数=2、全局被抬到 4。日志必须报
+        本源真实过滤数 2；若回退成 self.stats['stale'] 差分推算会报 4（把他源增量
+        算进本源），本用例即 RED；若接线漏传 feed_counters（局部恒 0）则不打日志、
+        亦 RED。"""
+        xml = ('<?xml version="1.0" encoding="UTF-8"?>'
+               '<rss version="2.0"><channel><title>T</title>'
+               '<item><title>Old news one</title><link>https://x/1</link></item>'
+               '<item><title>Old news two</title><link>https://x/2</link></item>'
+               '</channel></rss>').encode("utf-8")
+        resp = _StreamFeedResp([xml], headers={"Content-Length": str(len(xml))})
+        f = m.NewsFetcher()
+
+        def contaminating_parse(entry, name, cache_mgr, feed_counters=None):
+            # 模拟并发：本源 +1、他源 +1，全局共 +2；本源线程局部只记自己那 1 条
+            f._stat_inc("stale")
+            f._stat_inc("stale")
+            if feed_counters is not None:
+                feed_counters["stale"] = feed_counters.get("stale", 0) + 1
+            return None
+
+        with patch.object(m, "http_get", return_value=resp), \
+             patch.object(f, "_parse_feed_entry", side_effect=contaminating_parse), \
+             self.assertLogs("SquarePosterUltimate", level="INFO") as logs:
+            items = f._fetch_single_feed(self._feed_cfg(), _FakeCache(), 5)
+        self.assertEqual(items, [], "全为旧闻本源应 0 产出")
+        self.assertEqual(f.stats["stale"], 4, "全局聚合按本源+他源共同累加")
+        stale_lines = [ln for ln in logs.output if "过滤过期旧闻" in ln]
+        self.assertEqual(len(stale_lines), 1, "应恰好打一条本源过滤日志")
+        self.assertIn("过滤过期旧闻 2 条", stale_lines[0])       # 本源真实数
+        self.assertNotIn("过滤过期旧闻 4 条", stale_lines[0])    # 全局差分=污染值
 
     def test_read_response_capped_plain_content_fallback(self):
         """无 iter_content 的夹具（离线测试常用）：回退 .content 且受 cap 约束"""

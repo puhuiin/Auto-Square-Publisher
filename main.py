@@ -2327,10 +2327,16 @@ class NewsFetcher:
             self._feed_record(name, ok=True)
             logger.info(f"数据源 [{name}] 抓取到 {len(feed.entries)} 条新闻。")
             stale_skipped = 0
+            # 本源旧闻过滤数用**线程局部**累加器：_fetch_single_feed 跑在 10 线程池里，
+            # 此前按全局 self.stats["stale"] 前后差分推算本源过滤数（before/after），
+            # 但同一时刻其它源也在并发累加同一个全局 stale，差分会把别的源的旧闻数
+            # 算进本源日志（"过滤 N 条"张冠李戴，N 随并发抖动）。feed_counters 每次
+            # 调用独占、绝不跨线程共享，无需加锁；全局 stats["stale"] 聚合仍由
+            # _parse_feed_entry 内的 _stat_inc 照旧维护（报表/遥测口径完全不变）。
+            feed_counters = {"stale": 0}
 
             # 扫描窗口放宽到 20 条：旧闻/缓存条目不吞噬每条源的产出配额，直到收满 limit_per_feed 为止
             scan_window = max(limit_per_feed * 4, 20)
-            stale_skipped_before = self.stats.get("stale", 0)
             for entry in feed.entries[:scan_window]:
                 if len(items) >= limit_per_feed:
                     break
@@ -2340,14 +2346,14 @@ class NewsFetcher:
                 # 一条脏数据就 abort 整源产出，还顺手记一次源故障——3 轮即可把
                 # 健康源停放 6 小时。源级故障（网络/整包解析失败）仍走外层 except。
                 try:
-                    parsed = self._parse_feed_entry(entry, name, cache_mgr)
+                    parsed = self._parse_feed_entry(entry, name, cache_mgr, feed_counters)
                     if parsed is not None:
                         items.append(parsed)
                 except Exception as entry_err:
                     logger.warning(f"数据源 [{name}] 某条目解析异常，已跳过（不影响本源其他条目）: {entry_err}")
                     continue
 
-            stale_skipped = self.stats.get("stale", 0) - stale_skipped_before
+            stale_skipped = feed_counters["stale"]
             if stale_skipped:
                 logger.info(f"数据源 [{name}] 过滤过期旧闻 {stale_skipped} 条（>{MAX_NEWS_AGE_HOURS}h）。")
         except Exception as e:
@@ -2357,9 +2363,13 @@ class NewsFetcher:
         return items
 
     def _parse_feed_entry(self, entry: Dict[str, Any], name: str,
-                          cache_mgr: "CacheManager") -> Optional[Dict[str, Any]]:
+                          cache_mgr: "CacheManager",
+                          feed_counters: Optional[Dict[str, int]] = None) -> Optional[Dict[str, Any]]:
         """单条 RSS 条目 → 候选字典；时效/缓存不通过返回 None（自带 stats 计数）。
-        供 _fetch_single_feed 的条目循环调用——抽取自其循环体（行为等价重构）。"""
+        供 _fetch_single_feed 的条目循环调用——抽取自其循环体（行为等价重构）。
+        feed_counters：调用方传入的**线程局部**计数器（每次 _fetch_single_feed
+        调用独占、绝不跨线程共享），命中旧闻时同步累加本源过滤数，供调用方打出
+        不串号的「过滤 N 条」诊断日志；None（薄封装/直调测试）时只维护全局聚合。"""
         title = self._clean_field(entry.get("title", ""), feed_name=name)
         if not title:
             return None
@@ -2370,7 +2380,9 @@ class NewsFetcher:
         # 时效过滤：仅发布 MAX_NEWS_AGE_HOURS 小时内的热点，杜绝把旧闻当新闻发
         age_h = self.parse_entry_age_hours(entry)
         if age_h is not None and age_h > MAX_NEWS_AGE_HOURS:
-            self._stat_inc("stale")
+            self._stat_inc("stale")            # 全局聚合（报表/遥测口径）
+            if feed_counters is not None:       # 本源线程局部累加（诊断日志，防跨线程串号）
+                feed_counters["stale"] = feed_counters.get("stale", 0) + 1
             return None
 
         news_id = self.generate_news_id(entry, name)
