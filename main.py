@@ -6349,6 +6349,22 @@ class SquarePublisher(BasePublisher):
             content = pattern.sub(f"${tok}", content)
         return content
 
+    def _degrade_to_text_retry(self, content: str, title: Optional[str]) -> bool:
+        """R365：带图发布失败 → 纯文本降级重发（三条出海口共用）。
+        降级递归复用已烘焙好的 content（活动标签早在首过注入进正文），但 image_url=None、
+        且不再透传 campaign_intel——而 _inject_campaign_tag 见标签已在 content 中即跳过
+        （R291 差分口径：content 未变 → last_campaign_tag 归 None）。于是递归把首过算好的
+        活动标签回执清成 None，可发出去的正文其实仍带该标签（final_content 里在），主循环
+        读 last_campaign_tag 落遥测的 campaign_tag（R291 返佣归因显式字段）遂谎报缺席，
+        退回本被显式字段取代的不可靠 proxy——正是 R364「实发 vs 曾处理」回执谎报的同族。
+        修复=跨降级递归保留首过的活动标签回执：递归成功且仍带标签（未被净化/压缩删掉）时回填。"""
+        _outer_tag = self.last_campaign_tag
+        result = self.publish(content, image_url=None, title=title)
+        if result and self.last_campaign_tag is None and _outer_tag \
+                and isinstance(self.last_final_content, str) and _outer_tag in self.last_final_content:
+            self.last_campaign_tag = _outer_tag
+        return result
+
     def publish(self, content: str, image_url: Optional[str] = None,
                 ensure_tokens: Optional[List[str]] = None,
                 campaign_intel: Optional[Dict[str, Any]] = None,
@@ -6489,7 +6505,8 @@ class SquarePublisher(BasePublisher):
                     # R363：降级只丢配图，绝不丢 title——title 缺席会把长文（contentType=2/
                     # 上限 2500）静默降为短讯（上限 900），_sanitize_content 把整篇文章腰斩到
                     # 900 字且标题字段一并蒸发（"平滑降级"本意只撤 cover，不撤文章结构）。
-                    return self.publish(content, image_url=None, title=title)
+                    # R365：经 _degrade_to_text_retry 跨递归保留活动标签回执（见其 docstring）。
+                    return self._degrade_to_text_retry(content, title)
                 diagnosis = self._classify_publish_error(status_code, None)
                 self.last_error = diagnosis
                 logger.error(f"发帖失败！HTTP {status_code} | 诊断: {diagnosis}\n原始响应: {resp_text[:300]}")
@@ -6518,7 +6535,8 @@ class SquarePublisher(BasePublisher):
                 if image_url:
                     logger.warning(f"带图发布返回业务错误 ({resp_json.get('message')})，自动降级为纯文本重试发布...")
                     # R363：同上——保留 title，长文降级后仍是无封面长文而非腰斩短讯。
-                    return self.publish(content, image_url=None, title=title)
+                    # R365：经 _degrade_to_text_retry 跨递归保留活动标签回执。
+                    return self._degrade_to_text_retry(content, title)
                 diagnosis = self._classify_publish_error(status_code, resp_json)
                 self.last_error = diagnosis
                 self.last_error_code = str(resp_json.get("code", "") or "")
@@ -6532,7 +6550,8 @@ class SquarePublisher(BasePublisher):
             if image_url:
                 logger.warning(f"发帖网络请求异常 ({e})，尝试降级为纯文本重发一次...")
                 # R363：同上——保留 title，长文降级后仍是无封面长文而非腰斩短讯。
-                return self.publish(content, image_url=None, title=title)
+                # R365：经 _degrade_to_text_retry 跨递归保留活动标签回执。
+                return self._degrade_to_text_retry(content, title)
             logger.error(f"发帖网络请求异常: {e}")
             return False
 

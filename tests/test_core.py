@@ -7418,6 +7418,56 @@ class TestArticlePipeline(unittest.TestCase):
                                         ensure_tokens=["BTC"]))
         self.assertIs(pub.last_published_with_image, False)
 
+    # --- R365：跨降级递归保留活动标签回执（last_campaign_tag = R291 返佣归因显式字段）---
+    # 三条降级出海口 return self.publish(content, image_url=None, title=title) 丢了
+    # campaign_intel——递归里 _inject_campaign_tag(content, None) 见标签已在 content 中
+    # （首过烘焙进正文）即跳过，last_campaign_tag 被差分口径重置为 None，而实发正文仍带
+    # 该活动标签。主循环据此落遥测 campaign_tag 字段遂谎报缺席（退回被显式字段取代的
+    # 不可靠 proxy）。R364「实发 vs 曾处理」回执谎报同族。以下锁死跨递归回填与无误报。
+    _R365_INTEL = {"active_tags": ["#TradingTournament"]}
+
+    def test_long_cover_degrade_preserves_campaign_tag_receipt(self):
+        """核心缺陷哨兵：长文带封面失败→降级纯文本重试成功后，实发正文仍带活动标签，
+        last_campaign_tag 必须仍是该标签（而非被递归清成 None）——回退到直接
+        return self.publish(...) 即 None → RED。同时校验标签确在实发正文中。"""
+        pub = m.SquarePublisher(api_key="k")
+        resp_fail = MagicMock(status_code=400, text="bad request")
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.side_effect = [resp_fail, self._r363_ok_resp()]
+            self.assertTrue(pub.publish(self._R363_LONG_BODY,
+                                        image_url="https://cdn.example/cover.jpg",
+                                        ensure_tokens=["BTC"], campaign_intel=self._R365_INTEL,
+                                        title="BTC 行情深度复盘长文标题"))
+        self.assertEqual(pub.last_campaign_tag, "#TradingTournament")
+        self.assertIn("#TradingTournament", pub.last_final_content)
+
+    def test_long_cover_degrade_no_intel_leaves_campaign_tag_none(self):
+        """无误报守卫：降级但本轮无活动标签可注入（campaign_intel=None）→ 回填逻辑
+        绝不凭空捏造 last_campaign_tag，必须仍为 None（回填仅在首过确有标签时触发）。"""
+        pub = m.SquarePublisher(api_key="k")
+        resp_fail = MagicMock(status_code=400, text="bad request")
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.side_effect = [resp_fail, self._r363_ok_resp()]
+            self.assertTrue(pub.publish(self._R363_LONG_BODY,
+                                        image_url="https://cdn.example/cover.jpg",
+                                        ensure_tokens=["BTC"], campaign_intel=None,
+                                        title="BTC 行情深度复盘长文标题"))
+        self.assertIsNone(pub.last_campaign_tag)
+
+    def test_no_degrade_publish_reports_campaign_tag(self):
+        """回归控制：一次成功的非降级发布（不走 _degrade_to_text_retry）仍如实
+        置位 last_campaign_tag——确认修复未触碰主发布路径的回执语义。"""
+        pub = m.SquarePublisher(api_key="k")
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.side_effect = [self._r363_ok_resp()]
+            self.assertTrue(pub.publish(self._R363_LONG_BODY, image_url=None,
+                                        ensure_tokens=["BTC"], campaign_intel=self._R365_INTEL,
+                                        title="BTC 行情深度复盘长文标题"))
+        self.assertEqual(pub.last_campaign_tag, "#TradingTournament")
+
     def test_summarize_article_mode_parses_title(self):
         """article=True 生成模式：TITLE 行被剥离出正文并进返回值 title 字段"""
         eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
