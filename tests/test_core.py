@@ -4917,6 +4917,38 @@ class TestRefusalDetection(unittest.TestCase):
             "回调就是上车机会，但别追高，等回踩确认支撑再进。仓位控制在半成以内，止损带好。")
         self.assertTrue(ok, reason)
 
+    def test_identity_gate_title_refusal_labeled(self):
+        # R359 单元：拒答/身份门抽成独立真源后，标题级调用（label=标题）命中身份词
+        # 必须判废，且拒稿原因署名"标题"——8~40 字标题不带长度/CJK 门（那些留在
+        # _passes_quality_gate / _parse_article），所以短标题不会被误杀成"内容过短"。
+        ok, reason = m.MultiLLMEngine._passes_identity_gate(
+            "作为AI助手为你解读今日行情", label="标题")
+        self.assertFalse(ok)
+        self.assertIn("标题", reason)
+        self.assertIn("作为AI", reason)
+        # 上游安全壳同样归"元回复"而非内容问题
+        ok2, reason2 = m.MultiLLMEngine._passes_identity_gate(
+            "User Safety: unsafe", label="标题")
+        self.assertFalse(ok2)
+        self.assertIn("上游元回复", reason2)
+        self.assertNotIn("内容过短", reason2)
+
+    def test_identity_gate_clean_clickbait_title_passes(self):
+        # R359 单元：干净的真人 clickbait 短标题不含身份/拒答词，必须放行——身份门
+        # 绝不套长度门，标题短≠废（否则 8~40 字合法标题会被 60 字下限误杀）。
+        ok, reason = m.MultiLLMEngine._passes_identity_gate(
+            "比特币暴涨突破十二万刀晚间行情引爆", label="标题")
+        self.assertTrue(ok, reason)
+
+    def test_identity_gate_default_label_is_body(self):
+        # R359 零回归哨兵：默认 label 必须是"正文"——_passes_quality_gate 委托本门时
+        # 用默认 label，既有短讯拒稿原因（"作为AI"等子串 + "正文"署名）逐字兼容。
+        # 把默认值改成别的，这条即 RED（短讯拒稿署名漂移，破坏既有 assertIn 断言语义）。
+        ok, reason = m.MultiLLMEngine._passes_identity_gate("作为AI助手，我无法提供投资建议。" * 3)
+        self.assertFalse(ok)
+        self.assertTrue(reason.startswith("正文"), reason)
+        self.assertIn("作为AI", reason)
+
 
 class TestAiSlopStripping(unittest.TestCase):
     """AI 高频套话剥离"""
@@ -6071,6 +6103,46 @@ class TestRejectTelemetry(unittest.TestCase):
         self.assertEqual(rows[0]["stage"], "ai_flavor")
         self.assertIn("标题", rows[0]["reason"])
         self.assertIn("扬帆起航", rows[0]["reason"])
+
+    def test_article_body_refusal_rejected_through_summarize(self):
+        # R359 接线哨兵（正文侧）：长文正文夹带软拒答/身份词（"作为AI，我无法提供投资
+        # 建议"），标题干净。此前长文正文从不过拒答/身份门（该门只内联在短讯专属的
+        # _passes_quality_gate）。summarize 必须在质量门内拦下、记 quality 行、原因署名
+        # "正文"。把 _parse_article 之后新增的长文身份门接线删掉，这条即 RED（长文正文
+        # 自曝机器人裸发重现）。
+        eng = self._stub_engine()
+        body = ("作为AI，我无法提供投资建议，不过从盘面看多空资金激烈换手，短线情绪升温。" * 12)
+        content = "TITLE: 比特币盘面多空拉锯短线情绪升温\n\n" + body
+        client = self._fake_client(content=content)
+        item = {"title": "BTC news", "summary": "Bitcoin choppy", "source": "U.Today"}
+        with patch.object(eng, "_get_client", return_value=client):
+            self.assertIsNone(
+                eng.summarize(item, None, market_context="", token_hints=["BTC"], article=True))
+        rows = self._rows()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["stage"], "quality")
+        self.assertIn("正文", rows[0]["reason"])
+        self.assertIn("作为AI", rows[0]["reason"])
+
+    def test_article_title_refusal_rejected_through_summarize(self):
+        # R359 接线哨兵（标题侧）：长文正文干净（过长文门 + 过拒答/身份门），但 TITLE 行
+        # 自曝身份（"作为AI助手…"）。标题直发 payload["title"] 是信息流第一触点（R296），
+        # 却在 _parse_article 之后从不过拒答/身份门，且 _sanitize_title 只替敏感词、不碰
+        # 身份词、无从补救。summarize 必须拦下、记 quality 行、原因署名"标题"。把标题级
+        # _passes_identity_gate 接线删掉，这条即 RED（长文标题自曝机器人裸发重现）。
+        eng = self._stub_engine()
+        body = "盘面信号明确，多空资金激烈博弈，短线情绪快速升温，主力借势换手。" * 16
+        content = "TITLE: 作为AI助手为你解读今日行情\n\n" + body
+        client = self._fake_client(content=content)
+        item = {"title": "ETH news", "summary": "Ethereum rallies", "source": "U.Today"}
+        with patch.object(eng, "_get_client", return_value=client):
+            self.assertIsNone(
+                eng.summarize(item, None, market_context="", token_hints=["ETH"], article=True))
+        rows = self._rows()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["stage"], "quality")
+        self.assertIn("标题", rows[0]["reason"])
+        self.assertIn("作为AI", rows[0]["reason"])
 
 
 class TestCostObservability(unittest.TestCase):

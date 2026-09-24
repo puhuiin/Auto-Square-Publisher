@@ -3645,6 +3645,24 @@ class MultiLLMEngine:
     _UPSTREAM_META_PREFIX = "User Safety:"
 
     @classmethod
+    def _passes_identity_gate(cls, content: str, label: str = "正文") -> Tuple[bool, str]:
+        """拒答/身份暴露 + 上游元回复壳检测——与长度/CJK 无关的普适内容门（唯一真源）。
+        短讯正文（_passes_quality_gate 委托本函数）、长文正文、长文标题三条出海口共用：
+        长度/CJK 门各自留在 _passes_quality_gate / _parse_article，绝不混进本层，否则
+        8~40 字标题会被短讯长度门误杀（R357 教训）。label 让拒稿原因可区分正文/标题，
+        默认"正文"保持既有短讯调用点子串兼容、逐字零回归。
+        R359：本门此前只内联在 _passes_quality_gate（短讯正文），长文走 _parse_article
+        只验结构、正文与标题（直发 payload["title"]）从未过拒答/身份门——对称暴露面第 5
+        处（续 R355 敏感词/R356 数字/R357 AI 腔/R358 活动标签）。"""
+        stripped = (content or "").strip()
+        if stripped.startswith(cls._UPSTREAM_META_PREFIX):
+            return False, f"{label}疑似上游元回复壳（{stripped[:60]!r}）"
+        for pat in cls._REFUSAL_PATTERNS:
+            if pat in content:
+                return False, f"{label}疑似拒答/身份暴露（命中: {pat}）"
+        return True, ""
+
+    @classmethod
     def _passes_quality_gate(cls, content: str) -> Tuple[bool, str]:
         """
         AI 输出质量硬门槛：防止低质量/跑偏输出被直接发布。
@@ -3652,13 +3670,12 @@ class MultiLLMEngine:
         - 拒答/身份暴露（"作为AI我无法…"）直接判废并切换下一模型
         - 中文字符必须 >= 40（本账号面向中文读者，纯英文输出视为跑偏）
         - 总长度必须在 60~1200 字符之间
+        R359：拒答/身份/元回复检测抽进 _passes_identity_gate（长文正文/标题共用同一真源），
+        本函数只余短讯专属的长度/CJK 门；默认 label="正文" 保持既有拒稿原因子串兼容、零回归。
         """
-        stripped = (content or "").strip()
-        if stripped.startswith(cls._UPSTREAM_META_PREFIX):
-            return False, f"上游元回复而非正文（{stripped[:60]!r}）"
-        for pat in cls._REFUSAL_PATTERNS:
-            if pat in content:
-                return False, f"疑似拒答/身份暴露（命中: {pat}）"
+        ok, reason = cls._passes_identity_gate(content)
+        if not ok:
+            return False, reason
         cjk_count = len(re.findall(r"[一-鿿]", content))
         if len(content) < 60:
             return False, f"内容过短 ({len(content)} 字符)"
@@ -4363,6 +4380,26 @@ class MultiLLMEngine:
                         logger.warning(f"提供商 [{provider.name}] 长文门拦截，"
                                        f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                         raise _QualityGateRejection(art_reason)
+                    # R359：长文正文与标题过拒答/身份门。_parse_article 只验结构（TITLE 行 +
+                    # 篇幅），此前长文两个出海口从未过拒答/身份门——该门只内联在短讯专属的
+                    # _passes_quality_gate。而标题直发 payload["title"]（信息流第一触点 R296），
+                    # 长文正文同样会夹带"作为AI，我无法提供投资建议…"式软拒答/身份暴露，或上游
+                    # 安全壳（User Safety:）；发出去即自曝机器人、点击率与返佣归零，且 _sanitize_title
+                    # 只替敏感词不碰身份词、无从补救。这是 R355 敏感词/R356 数字/R357 AI 腔/R358
+                    # 活动标签之后同类对称暴露面第 5 处（复用同一 _passes_identity_gate 真源，
+                    # label 区分正文/标题）。stage 记"quality"与 _parse_article 失败同类。短讯
+                    # article=False 不入本分支、_passes_quality_gate 仍内联同门，逐字零回归。
+                    for _id_seg, _id_label in ((content, "正文"), (article_title, "标题")):
+                        id_ok, id_reason = self._passes_identity_gate(_id_seg, label=_id_label)
+                        if not id_ok:
+                            self._log_reject(news_item, provider.name, "quality", id_reason,
+                                             tokens_used, latency_sec, provider.model,
+                                             persona=persona["name"],
+                                             content_preview=preview,
+                                             finish_reason=finish_for_telemetry)
+                            logger.warning(f"提供商 [{provider.name}] 长文拒答/身份门拦截，"
+                                           f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
+                            raise _QualityGateRejection(id_reason)
                 else:
                     passed, fail_reason = self._passes_quality_gate(content)
                     if not passed:
