@@ -7359,6 +7359,65 @@ class TestArticlePipeline(unittest.TestCase):
         self.assertNotIn("title", retry_payload)
         self.assertNotIn("imageList", retry_payload)
 
+    # --- R364：last_published_with_image 实发带图回执（遥测 image 字段的真源）---
+    def test_publish_short_image_reports_published_with_image_true(self):
+        """短讯带图一次发布成功 → last_published_with_image 为 True（payload 含 imageList）。"""
+        pub = m.SquarePublisher(api_key="k")
+        content = "这是一段超过十五个中文字符的短讯内容，带 $BTC 挂件 #Write2Earn"
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.side_effect = [self._r363_ok_resp()]
+            self.assertTrue(pub.publish(content, image_url="https://cdn.example/img.jpg",
+                                        ensure_tokens=["BTC"]))
+        self.assertIs(pub.last_published_with_image, True)
+
+    def test_publish_long_cover_reports_published_with_image_true(self):
+        """长文带封面一次成功 → last_published_with_image 为 True（payload 含 cover）。"""
+        pub = m.SquarePublisher(api_key="k")
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.side_effect = [self._r363_ok_resp()]
+            self.assertTrue(pub.publish(self._R363_LONG_BODY,
+                                        image_url="https://cdn.example/cover.jpg",
+                                        ensure_tokens=["BTC"], title="BTC 行情深度复盘长文标题"))
+        self.assertIs(pub.last_published_with_image, True)
+
+    def test_publish_text_only_reports_published_with_image_false(self):
+        """纯文本短讯（无 image_url）→ last_published_with_image 为 False。"""
+        pub = m.SquarePublisher(api_key="k")
+        content = "这是一段超过十五个中文字符的纯文本短讯内容，带 $BTC 挂件 #Write2Earn"
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.side_effect = [self._r363_ok_resp()]
+            self.assertTrue(pub.publish(content, ensure_tokens=["BTC"]))
+        self.assertIs(pub.last_published_with_image, False)
+
+    def test_long_cover_degrade_reports_published_with_image_false(self):
+        """核心缺陷哨兵：长文带封面失败→降级纯文本重试成功后，帖子实际已无封面，
+        last_published_with_image 必须为 False——即便入参 image_url 为真（旧口径
+        bool(uploaded_image_url) 会误报 True，污染带图对照）。回退置位行即 None→RED。"""
+        pub = m.SquarePublisher(api_key="k")
+        resp_fail = MagicMock(status_code=400, text="bad request")
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.side_effect = [resp_fail, self._r363_ok_resp()]
+            self.assertTrue(pub.publish(self._R363_LONG_BODY,
+                                        image_url="https://cdn.example/cover.jpg",
+                                        ensure_tokens=["BTC"], title="BTC 行情深度复盘长文标题"))
+        self.assertIs(pub.last_published_with_image, False)
+
+    def test_short_image_degrade_reports_published_with_image_false(self):
+        """短讯带图失败→降级纯文本重试成功后，last_published_with_image 为 False。"""
+        pub = m.SquarePublisher(api_key="k")
+        resp_fail = MagicMock(status_code=400, text="bad request")
+        content = "这是一段超过十五个中文字符的短讯内容，带 $BTC 挂件 #Write2Earn"
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.side_effect = [resp_fail, self._r363_ok_resp()]
+            self.assertTrue(pub.publish(content, image_url="https://cdn.example/img.jpg",
+                                        ensure_tokens=["BTC"]))
+        self.assertIs(pub.last_published_with_image, False)
+
     def test_summarize_article_mode_parses_title(self):
         """article=True 生成模式：TITLE 行被剥离出正文并进返回值 title 字段"""
         eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)

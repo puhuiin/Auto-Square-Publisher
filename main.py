@@ -6365,6 +6365,10 @@ class SquarePublisher(BasePublisher):
         self.last_widget_count: Optional[int] = None
         # R291：本轮注入的活动标签原文（None=无活动标签可注入/未走注入路径）
         self.last_campaign_tag: Optional[str] = None
+        # R364：本次「实际带图发布」标志——降级重发（配图失败→纯文本重试，image_url=None）
+        # 时帖子最终无封面/无图，遥测的 image 字段必须反映实发形态而非"曾处理过配图"。
+        # None=未走到 payload 构建（缺 key 早退）；由下方 payload 分支据实置位。
+        self.last_published_with_image: Optional[bool] = None
         if not self.api_key:
             logger.error("未配置 SQUARE_API_KEY，无法发布到币安广场！")
             self.last_error = "未配置 SQUARE_API_KEY，无法发布到币安广场！"
@@ -6430,6 +6434,10 @@ class SquarePublisher(BasePublisher):
             logger.info(f"本次发帖已成功附带多媒体配图: {image_url}")
         else:
             logger.info("本次发帖以纯文本形式发布。")
+        # R364：据实记录本次发布是否真带图（cover=长文封面 / imageList=短讯配图）——
+        # 与三条降级重发（image_url=None 再进本函数）解耦：降级递归会用无图 payload
+        # 再置位 False，实例最终值即"实际发出去的那次"的带图形态，供回执如实上报。
+        self.last_published_with_image = ("cover" in payload) or ("imageList" in payload)
 
         try:
             logger.info("正在向币安广场 OpenAPI 提交发帖请求...")
@@ -8010,6 +8018,12 @@ def _run_main():
                     # 整条遥测失败被吞（与 error_code 的 str() 同款模式）
                     _wc = getattr(publisher, "last_widget_count", None)
                     widget_count = _wc if isinstance(_wc, int) else None
+                    # R364：实际带图发布回执——降级重发（配图失败→纯文本重试）后帖子已无
+                    # 封面/配图，而 bool(uploaded_image_url) 只看"是否处理过配图"，会把降级
+                    # 帖误记为带图，污染"带图 vs 无图"互动对照。改读发布器实发标志；
+                    # Mock 替身/异常态（非 bool）防御性回退旧口径，接线回归测试锁死。
+                    _pwi = getattr(publisher, "last_published_with_image", None)
+                    published_with_image = _pwi if isinstance(_pwi, bool) else bool(uploaded_image_url)
                     content_id = raw_cid if isinstance(raw_cid, str) else None
                     # R106：回执 120→200 字——FNG 锚定常出现在第二段（生产实录
                     # 命中点最远 ~110 字，仅贴着旧截断线），合规巡检的覆盖盲区
@@ -8102,13 +8116,13 @@ def _run_main():
                         # 发帖回执侧可做「有钩子供给的帖 vs 无」对照
                         "hot_topics": " | ".join(hot_topics[:3]) if hot_topics else None,
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
-                        "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
+                        "image": published_with_image, "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,
                         "outcome": "binance_published" if persisted else "binance_published_cache_failed",
                     })
                     posted_records.append({
                         "title": title, "source": source,
-                        "provider": llm_result["provider"], "image": bool(uploaded_image_url),
+                        "provider": llm_result["provider"], "image": published_with_image,
                         "article": bool(llm_result.get("title")),
                         "article_title": llm_result.get("title") or "",
                         "content_id": content_id,
@@ -8134,7 +8148,7 @@ def _run_main():
                                  if content_id else "")
                     Notifier.send_notification(
                         "币安广场自动发帖成功",
-                        f"新闻: {title}\n来源: {source}\n附带配图: {'是' if uploaded_image_url else '否'}"
+                        f"新闻: {title}\n来源: {source}\n附带配图: {'是' if published_with_image else '否'}"
                         f"{'｜长文' if use_article else ''}{post_link}\n\n{notify_preview}...")
                 elif not binance_enabled and (draft_exported or telegram_exported):
                     # 仅副平台模式：任一平台完成投递即入缓存，防止每 20 分钟重复处理同一新闻
