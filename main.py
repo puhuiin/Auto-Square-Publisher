@@ -59,6 +59,7 @@ import math
 import threading
 import unicodedata
 import concurrent.futures
+import subprocess
 from datetime import date, datetime, timezone, timedelta
 
 import requests
@@ -196,6 +197,11 @@ MAX_TOKENS_PER_POST = _env_int("MAX_TOKENS_PER_POST", 3)           # 单帖挂�
 # 每日深度长文（contentType=2）：每天首帖若热度达标即升级长文（ARTICLE_PER_DAY=0 关闭）
 ARTICLE_PER_DAY = os.getenv("ARTICLE_PER_DAY", "1").strip()
 ARTICLE_MIN_IMPACT = _env_int("ARTICLE_MIN_IMPACT", 20)            # 长文选稿门槛：榜首热度低于此值不发长文
+# 每日预生产视频定投（contentType=3）：把本机「讲解」项目产出的加密主题竖版视频当预生产库，
+# 每天挑一条未发过的合规视频发布。默认 VIDEO_PER_DAY=0（生产门禁：需用户显式开闸才真发），
+# VIDEO_LIBRARY_DIR="" 时整条链路关闭。发视频是真实副作用，DRY_RUN 下只模拟不真上传/发布。
+VIDEO_PER_DAY = os.getenv("VIDEO_PER_DAY", "0").strip()
+VIDEO_LIBRARY_DIR = os.getenv("VIDEO_LIBRARY_DIR", "").strip()
 # 发布平台组合：binance=币安广场官方API；okx_draft=OKX广场草稿直出（合规半自动，见 OKXDraftExporter）
 PUBLISH_PLATFORMS = [p.strip().lower() for p in os.getenv("PUBLISH_PLATFORMS", "binance").split(",") if p.strip()]
 # 遥测指标文件：每次投递成功或 LLM 拒单都追加一行 JSONL（时段/币种/来源/模型/平台/拦截阶段），
@@ -5839,7 +5845,130 @@ class ImageManager:
 
 
 # ---------------------------------------------------------------------------
-# 多平台发布架构
+# 视频上传流水线 (VideoManager)
+# 复刻 ImageManager 的币安官方 S3 异步上传语义，仅换预签名端点与凭证请求体：
+# 视频走 /video/preSign {fileName, size}（图片走 /image/presignedUrl {imageName}），
+# PUT 原始视频字节到 S3（video/* Content-Type，大文件放宽超时），随后复用
+# imageStatus 轮询（status 1=就绪 2=失败），就绪即返回 fileTicket。
+# 关键差异：视频在发布 payload 里以 fileTicket 关联（图片以托管 URL 关联），
+# 故本类返回 fileTicket 而非 URL；封面另走 ImageManager.upload_to_binance 上传。
+# ---------------------------------------------------------------------------
+class VideoManager:
+    """币安广场视频上传：/video/preSign → S3 PUT → 轮询就绪 → 返回 fileTicket"""
+
+    VIDEO_PRESIGN_API = "https://www.binance.com/bapi/composite/v2/public/pgc/openApi/video/preSign"
+    # 就绪状态复用与图片同一轮询端点（官方 square-post 语义：视频转码也走 imageStatus）
+    STATUS_API = "https://www.binance.com/bapi/composite/v2/public/pgc/openApi/image/imageStatus"
+
+    # 视频容器 → HTTP Content-Type（S3 PUT 必须带正确 MIME，否则托管侧拒绝转码）
+    _CONTENT_TYPES = {
+        ".mp4": "video/mp4",
+        ".mov": "video/quicktime",
+        ".avi": "video/x-msvideo",
+        ".webm": "video/webm",
+        ".mkv": "video/x-matroska",
+    }
+
+    @classmethod
+    def _content_type_for(cls, filename: str) -> str:
+        ext = os.path.splitext(filename or "")[1].lower()
+        return cls._CONTENT_TYPES.get(ext, "video/mp4")
+
+    @classmethod
+    def upload_to_binance(cls, api_key: str, video_bytes: bytes, filename: str) -> Optional[str]:
+        """
+        按币安官方标准流程上传视频至 S3，成功返回 fileTicket（发布 payload 以它关联视频）。
+        与 ImageManager.upload_to_binance 唯一实质差异：凭证端点/请求体（fileName+size）
+        与放宽的 PUT 超时（视频体积大）；就绪轮询共用 imageStatus。
+        """
+        if not api_key or not video_bytes:
+            logger.warning("视频上传缺少 api_key 或字节内容，跳过。")
+            return None
+
+        headers = {
+            "X-Square-OpenAPI-Key": api_key,
+            "Content-Type": "application/json",
+            "clienttype": "binanceSkill",
+            "User-Agent": "BinanceSquareAutoPosterPro/3.0",
+        }
+
+        try:
+            # 步骤 1：申请视频 Presigned URL 与 fileTicket（camelCase fileName + 字节数 size）
+            req_body = {"fileName": filename, "size": len(video_bytes)}
+            res = http_post(cls.VIDEO_PRESIGN_API, headers=headers, json=req_body, timeout=15, retries=1)
+            if res is None or res.status_code != 200:
+                logger.warning(f"获取币安视频上传凭证失败: {'网络错误' if res is None else f'HTTP {res.status_code} {res.text[:200]}'}")
+                return None
+
+            res_json = res.json()
+            if res_json.get("code") != "000000":
+                logger.warning(f"币安视频凭证接口返回业务异常: {res_json}")
+                return None
+
+            data = res_json.get("data") or {}
+            presigned_url = data.get("presignedUrl")
+            file_ticket = data.get("fileTicket")
+            if not presigned_url or not file_ticket:
+                logger.warning("未能从币安返回中提取有效的视频 presignedUrl 或 fileTicket")
+                return None
+
+            # 步骤 2：PUT 原始视频字节到 S3（视频体积大，超时放宽到 120s）
+            s3_headers = {"Content-Type": cls._content_type_for(filename)}
+            s3_res = http_request("PUT", presigned_url, headers=s3_headers, data=video_bytes, timeout=120, retries=1)
+            if s3_res is None or s3_res.status_code not in (200, 204):
+                logger.warning(f"上传视频二进制至币安 S3 失败: {'网络错误' if s3_res is None else f'HTTP {s3_res.status_code}'}")
+                return None
+
+            # 步骤 3：轮询转码就绪（视频转码比图片慢，放宽到 15 次 × 2 秒）
+            logger.info("视频已送达 S3，正在轮询币安视频转码与就绪状态...")
+            for poll_idx in range(15):
+                time.sleep(2)
+                stat_res = http_post(cls.STATUS_API, headers=headers, json={"fileTicket": file_ticket}, timeout=8, retries=1)
+                if stat_res is not None and stat_res.status_code == 200:
+                    stat_data = (stat_res.json().get("data") or {})
+                    status = stat_data.get("status")
+                    if status == 1:
+                        logger.info(f"🎬 币安广场视频转码就绪: fileTicket={file_ticket}")
+                        return file_ticket
+                    elif status == 2:
+                        logger.warning(f"币安视频审核未通过: {stat_data.get('failedReason')}")
+                        return None
+                logger.info(f"等待视频就绪... ({poll_idx + 1}/15)")
+
+            logger.warning("轮询视频状态超时")
+            return None
+
+        except Exception as e:
+            logger.warning(f"上传视频至币安广场发生异常: {e}")
+            return None
+
+    @staticmethod
+    def probe_duration_seconds(video_path: str) -> Optional[int]:
+        """用 ffprobe 读取视频真实时长（秒，四舍五入取整）。
+        ffprobe 不可用/失败/解析异常一律返回 None——绝不编造时长（红线：数字严禁编造），
+        上层据此省略 videoTimeSeconds 字段而非填假值。argument-array 调用、无 shell、有界超时。"""
+        if not video_path or not os.path.isfile(video_path):
+            return None
+        try:
+            proc = subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                 "-of", "default=noprint_wrappers=1:nokey=1", video_path],
+                capture_output=True, text=True, timeout=30, shell=False,
+            )
+            if proc.returncode != 0:
+                logger.info(f"ffprobe 读取视频时长失败（rc={proc.returncode}），videoTimeSeconds 将省略。")
+                return None
+            raw = (proc.stdout or "").strip()
+            secs = float(raw)
+            if secs <= 0:
+                return None
+            return int(round(secs))
+        except (FileNotFoundError, subprocess.TimeoutExpired, ValueError, OSError) as e:
+            logger.info(f"ffprobe 不可用或解析异常（{e}），videoTimeSeconds 将省略（绝不编造）。")
+            return None
+
+
+
 # BasePublisher 定义统一发布接口；平台实现按 PUBLISH_PLATFORMS 组合启用。
 # 现有平台：binance（币安广场官方 OpenAPI）、okx_draft（OKX 广场草稿直出，官方暂无 API）。
 # ---------------------------------------------------------------------------
@@ -6365,6 +6494,40 @@ class SquarePublisher(BasePublisher):
             self.last_campaign_tag = _outer_tag
         return result
 
+    def _post_with_transient_retry(self, payload: Dict[str, Any], headers: Dict[str, str]):
+        """向币安广场 content/add 提交并处理暂态故障（网络异常/429/500/502/503）自动重试一次。
+        504 不在此拦截（官方语义视为已受理，由调用方按 status_code 处理）。返回 requests 响应对象；
+        两次网络异常耗尽则抛出。publish 与 publish_video 共用此机械搬运层（DRY，逐字等价原实现）。"""
+        response = None
+        for attempt in (0, 1):
+            try:
+                # 共享 Session（连接池复用；adapter 已禁用 urllib3 自动重试，暂态退避由下循环接管）
+                response = _HTTP_SESSION.post(
+                    BINANCE_SQUARE_API_URL,
+                    headers=headers,
+                    json=payload,
+                    timeout=15,
+                )
+            except Exception as req_err:
+                if attempt == 0:
+                    logger.warning(f"发帖请求网络异常 ({req_err})，2.5 秒后重试一次...")
+                    time.sleep(2.5)
+                    continue
+                raise
+            if response.status_code in (429, 500, 502, 503) and attempt == 0:
+                # 尊重服务器的 Retry-After 指引；回落到默认 2.5 秒
+                retry_after_raw = (response.headers or {}).get("Retry-After", "")
+                try:
+                    wait = float(retry_after_raw) if retry_after_raw else 2.5
+                    wait = min(max(wait, 0.5), 30.0)
+                except (TypeError, ValueError):
+                    wait = 2.5
+                logger.warning(f"币安接口暂态错误 HTTP {response.status_code}，按 {'Retry-After' if retry_after_raw else '默认'} 等待 {wait}s 后重试...")
+                time.sleep(wait)
+                continue
+            break
+        return response
+
     def publish(self, content: str, image_url: Optional[str] = None,
                 ensure_tokens: Optional[List[str]] = None,
                 campaign_intel: Optional[Dict[str, Any]] = None,
@@ -6458,35 +6621,7 @@ class SquarePublisher(BasePublisher):
         try:
             logger.info("正在向币安广场 OpenAPI 提交发帖请求...")
 
-            # 限流/网关类暂态故障自动重试一次（504 除外：504 按官方语义视为已受理）
-            response = None
-            for attempt in (0, 1):
-                try:
-                    # 共享 Session（连接池复用；adapter 已禁用 urllib3 自动重试，暂态退避由下循环接管）
-                    response = _HTTP_SESSION.post(
-                        BINANCE_SQUARE_API_URL,
-                        headers=headers,
-                        json=payload,
-                        timeout=15,
-                    )
-                except Exception as req_err:
-                    if attempt == 0:
-                        logger.warning(f"发帖请求网络异常 ({req_err})，2.5 秒后重试一次...")
-                        time.sleep(2.5)
-                        continue
-                    raise
-                if response.status_code in (429, 500, 502, 503) and attempt == 0:
-                    # 尊重服务器的 Retry-After 指引；回落到默认 2.5 秒
-                    retry_after_raw = (response.headers or {}).get("Retry-After", "")
-                    try:
-                        wait = float(retry_after_raw) if retry_after_raw else 2.5
-                        wait = min(max(wait, 0.5), 30.0)
-                    except (TypeError, ValueError):
-                        wait = 2.5
-                    logger.warning(f"币安接口暂态错误 HTTP {response.status_code}，按 {'Retry-After' if retry_after_raw else '默认'} 等待 {wait}s 后重试...")
-                    time.sleep(wait)
-                    continue
-                break
+            response = self._post_with_transient_retry(payload, headers)
 
             status_code = response.status_code
             resp_text = response.text
@@ -6553,6 +6688,114 @@ class SquarePublisher(BasePublisher):
                 # R365：经 _degrade_to_text_retry 跨递归保留活动标签回执。
                 return self._degrade_to_text_retry(content, title)
             logger.error(f"发帖网络请求异常: {e}")
+            return False
+
+    def publish_video(self, content: str, file_ticket: str, cover_url: Optional[str],
+                      video_seconds: Optional[int] = None,
+                      ensure_tokens: Optional[List[str]] = None,
+                      campaign_intel: Optional[Dict[str, Any]] = None) -> bool:
+        """发布视频帖（contentType=3）。视频以 fileTicket 关联（VideoManager 上传所得），
+        封面为已托管图片 URL（ImageManager 上传的竖版封面），videoTimeSeconds 为 ffprobe 实测
+        秒数——None 时省略该字段，绝不编造（红线）。文案复用短讯净化（900）+ 织挂件 + 活动标签，
+        以保住 $挂件与活动标签这条返佣生命线。视频无「降级为纯文本」路径（撤掉视频就不成其为视频帖）。"""
+        self.last_error = None
+        self.last_error_code = None
+        self.last_content_id: Optional[str] = None
+        self.last_final_content: Optional[str] = None
+        self.last_widget_count: Optional[int] = None
+        self.last_campaign_tag: Optional[str] = None
+        # 视频帖始终带多媒体（fileTicket + 封面），回执如实置 True
+        self.last_published_with_image: Optional[bool] = True
+        if not self.api_key:
+            logger.error("未配置 SQUARE_API_KEY，无法发布视频到币安广场！")
+            self.last_error = "未配置 SQUARE_API_KEY，无法发布视频到币安广场！"
+            return False
+        if not file_ticket:
+            logger.error("视频 fileTicket 为空，拒绝发布。")
+            self.last_error = "视频 fileTicket 为空"
+            return False
+
+        # 文案：短讯口径净化 + 织挂件 + 挂件保底 + 活动标签（与短讯发布同源，勿弱化）
+        char_limit = self.SHORT_FORM_MAX_CHARS
+        content = self._sanitize_content(content, max_chars=char_limit)
+        content = self._weave_cashtags(content, ensure_tokens)
+        content = self._ensure_token_widget(content, ensure_tokens)
+        self.last_widget_count = self._count_valid_widgets(content)
+        _before_ct = content
+        content = self._inject_campaign_tag(content, campaign_intel)
+        self.last_campaign_tag = None if content == _before_ct else content[len(_before_ct):].strip()
+        if len(content) > char_limit:
+            logger.warning(f"视频文案追加挂件/标签后超出上限（{len(content)} > {char_limit}），压缩正文并保留标签行")
+            content = self._enforce_max_chars(
+                content, char_limit,
+                keep_tags=[self.last_campaign_tag] if self.last_campaign_tag else None)
+        if len(content) < 15:
+            logger.error(f"视频文案过短 ({len(content)} 字符)，拒绝发布以防被系统封禁")
+            self.last_error = "视频文案过短"
+            return False
+
+        headers = {
+            "X-Square-OpenAPI-Key": self.api_key,
+            "Content-Type": "application/json",
+            "clienttype": "binanceSkill",
+            "User-Agent": "BinanceSquareAutoPosterPro/3.0",
+        }
+        payload: Dict[str, Any] = {
+            "contentType": 3,
+            "fileTicket": file_ticket,
+            "isPublish": True,
+            "bodyTextOnly": content,
+        }
+        if cover_url:
+            payload["cover"] = cover_url
+        # videoTimeSeconds 只在 ffprobe 拿到真实时长时才带，缺失则省略（绝不填 0/假值）
+        if isinstance(video_seconds, int) and video_seconds > 0:
+            payload["videoTimeSeconds"] = video_seconds
+
+        try:
+            logger.info("正在向币安广场 OpenAPI 提交视频发帖请求...")
+            response = self._post_with_transient_retry(payload, headers)
+            status_code = response.status_code
+            resp_text = response.text
+            logger.info(f"币安广场视频 API 响应状态码: {status_code}")
+
+            if status_code == 504:
+                logger.warning("视频接口返回 504（内容已进入后台发布队列，按成功处理，杜绝重复发帖）")
+                self.last_final_content = content
+                return True
+            if status_code != 200:
+                diagnosis = self._classify_publish_error(status_code, None)
+                self.last_error = diagnosis
+                logger.error(f"视频发帖失败！HTTP {status_code} | 诊断: {diagnosis}\n原始响应: {resp_text[:300]}")
+                if status_code in (401, 403):
+                    Notifier.send_notification("币安 API Key 失效", diagnosis, is_error=True)
+                return False
+
+            try:
+                resp_json = response.json()
+            except Exception:
+                logger.error(f"解析币安视频响应 JSON 失败: {resp_text}")
+                return False
+
+            code = resp_json.get("code")
+            success = resp_json.get("success", False)
+            if code == "000000" or success is True or code == 0:
+                data = resp_json.get("data") or {}
+                content_id = str(data.get("contentId") or data.get("id") or "")
+                self.last_content_id = content_id or None
+                self.last_final_content = content
+                logger.info(f"🎬 成功发布视频到币安广场！Content ID: {content_id or '未返回'}")
+                return True
+            diagnosis = self._classify_publish_error(status_code, resp_json)
+            self.last_error = diagnosis
+            self.last_error_code = str(resp_json.get("code", "") or "")
+            logger.error(f"币安广场视频返回业务错误: {diagnosis} | 原始: {json.dumps(resp_json, ensure_ascii=False)[:300]}")
+            if str(resp_json.get("code", "")) in ("20002", "20022"):
+                Notifier.send_notification("视频文案被风控拦截", f"文案触发 20002/20022 审核拦截: {diagnosis}", is_error=True)
+            return False
+        except Exception as e:
+            logger.error(f"视频发帖网络请求异常: {e}")
+            self.last_error = f"网络异常: {e}"
             return False
 
 
@@ -7474,6 +7717,198 @@ def _intel_is_degraded(campaign_intel: Optional[Dict[str, Any]]) -> Optional[boo
     return False
 
 
+# ---------------------------------------------------------------------------
+# 每日预生产视频定投（contentType=3）
+# 把本机「讲解」项目产出的竖版视频当预生产库，每天挑一条未发过的**加密主题**合规视频发布。
+# 现阶段只放行加密/DeFi 主题（关键词命中 content.yaml 原文），CS 类（HTTPS/CPU 缓存等）
+# 一律不合格——后续按加密主题产新视频再入库。全链路受 VIDEO_PER_DAY + VIDEO_LIBRARY_DIR
+# 双闸门 + DRY_RUN 保护：默认关闭，DRY_RUN 下只模拟不真上传/发布/写状态。
+# ---------------------------------------------------------------------------
+
+# 加密/DeFi 主题判定关键词（命中 content.yaml 原文即视为加密主题；大小写不敏感）。
+# 只做正向白名单：宁可漏投（等新视频），绝不错投 CS 类离题视频污染账号垂直度。
+_VIDEO_CRYPTO_KEYWORDS = (
+    "crypto", "blockchain", "defi", "web3", "bitcoin", "btc", "ethereum", "eth",
+    "stablecoin", "altcoin", "token", "airdrop", "staking", "on-chain", "onchain",
+    "dex", "cex", "nft", "halving", "wallet", "binance", "solana", "layer2", "l2",
+    "加密", "区块链", "比特币", "以太坊", "稳定币", "代币", "山寨币", "空投", "质押",
+    "链上", "去中心化", "流动性", "交易所", "钱包", "智能合约", "减半", "行情", "币安",
+    "现货", "合约", "期货", "挖矿", "公链", "牛市", "熊市", "做市",
+)
+
+
+def _video_is_crypto_topic(raw_text: str) -> bool:
+    """content.yaml 原文是否命中加密/DeFi 关键词（内容驱动过滤，非硬编码 slug 白名单）。"""
+    if not raw_text:
+        return False
+    low = raw_text.lower()
+    return any(kw in low for kw in _VIDEO_CRYPTO_KEYWORDS)
+
+
+def _discover_video_library(library_dir: str) -> List[Dict[str, Any]]:
+    """扫描视频库目录的直接子目录，收集齐备且为加密主题的视频包。
+    合格条件：子目录内同时存在 <slug>-vertical.mp4 + <slug>-cover-v.jpg + content.yaml，
+    且 content.yaml 原文命中加密关键词。返回 [{slug, video_path, cover_path, title, opening}]。
+    yaml 缺失/解析异常/目录不可读一律跳过该项（视频功能可选，绝不炸主流程）。"""
+    if not library_dir or not os.path.isdir(library_dir):
+        return []
+    try:
+        import yaml  # 惰性导入：视频功能可选，缺 PyYAML 时整条链路静默关闭而非炸主流程
+    except Exception:
+        logger.info("未安装 PyYAML，视频库发现关闭（视频功能可选）。")
+        return []
+    found: List[Dict[str, Any]] = []
+    try:
+        entries = sorted(os.listdir(library_dir))
+    except OSError as e:
+        logger.warning(f"读取视频库目录失败: {e}")
+        return []
+    for slug in entries:
+        sub = os.path.join(library_dir, slug)
+        if not os.path.isdir(sub):
+            continue
+        video_path = os.path.join(sub, f"{slug}-vertical.mp4")
+        cover_path = os.path.join(sub, f"{slug}-cover-v.jpg")
+        yaml_path = os.path.join(sub, "content.yaml")
+        if not (os.path.isfile(video_path) and os.path.isfile(cover_path) and os.path.isfile(yaml_path)):
+            continue
+        try:
+            with open(yaml_path, "r", encoding="utf-8") as f:
+                raw = f.read()
+            meta = yaml.safe_load(raw) or {}
+        except Exception as e:
+            logger.info(f"视频包 [{slug}] content.yaml 解析失败，跳过: {e}")
+            continue
+        if not _video_is_crypto_topic(raw):
+            logger.info(f"视频包 [{slug}] 非加密主题，本期不投（等后续加密视频入库）。")
+            continue
+        title = str(meta.get("title") or slug).strip()
+        opening = ""
+        try:
+            scenes = meta.get("scenes") or []
+            if scenes:
+                lines = scenes[0].get("lines") or []
+                if lines:
+                    opening = str(lines[0].get("say") or "").strip()
+        except Exception:
+            opening = ""
+        found.append({
+            "slug": slug,
+            "video_path": video_path,
+            "cover_path": cover_path,
+            "title": title,
+            "opening": opening,
+        })
+    return found
+
+
+def _build_video_caption(meta: Dict[str, Any]) -> str:
+    """用真实 content.yaml 文本拼视频文案：标题 + 开场白（挂件/活动标签由 publish_video 织入）。
+    绝不编造数字/事件——文案素材全部取自视频脚本原文。"""
+    title = str(meta.get("title") or "").strip()
+    opening = str(meta.get("opening") or "").strip()
+    parts = [p for p in (title, opening) if p]
+    return "\n\n".join(parts) if parts else title
+
+
+def _maybe_post_daily_video(publisher: "SquarePublisher",
+                            campaign_intel: Optional[Dict[str, Any]],
+                            dry_run: bool) -> bool:
+    """每日预生产视频定投调度：当日未投过且库中有未发过的加密视频时，投一条。
+    返回是否发布成功（DRY_RUN 下模拟成功但不产生任何真实副作用）。
+    双闸门：VIDEO_PER_DAY 关闭 或 VIDEO_LIBRARY_DIR 为空 → 直接不启用。"""
+    video_enabled = VIDEO_PER_DAY.strip().lower() not in ("0", "false", "no", "off", "")
+    if not video_enabled or not VIDEO_LIBRARY_DIR:
+        return False
+
+    today_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    if intel_state_get("_video_sent_date", "") == today_utc:
+        logger.info("📹 今日视频定投额度已用，跳过。")
+        return False
+
+    library = _discover_video_library(VIDEO_LIBRARY_DIR)
+    if not library:
+        logger.info("📹 视频库无合格（加密主题且齐备）视频，本轮不投。")
+        return False
+
+    sent = intel_state_get("_video_sent", []) or []
+    sent_set = set(sent) if isinstance(sent, list) else set()
+    pending = [m for m in library if m["slug"] not in sent_set]
+    if not pending:
+        logger.info("📹 视频库中的合格视频均已投过，本轮不投。")
+        return False
+
+    meta = pending[0]
+    slug = meta["slug"]
+    caption = _build_video_caption(meta)
+    logger.info(f"📹 今日视频定投候选: [{slug}] {meta['title']}")
+
+    if dry_run:
+        # DRY_RUN 零副作用：只演练文案与选片，绝不上传/发布/写 intel_state
+        logger.info(f"🧪 [DRY_RUN] 模拟视频发布 [{slug}]：文案预览「{caption[:60]}…」，不真上传/发布。")
+        append_metrics({"event": "video_dry_run", "video_slug": slug, "platform": "binance"})
+        return True
+
+    api_key = publisher.api_key
+    if not api_key:
+        logger.error("未配置 SQUARE_API_KEY，视频定投跳过。")
+        return False
+
+    # 1) 上传视频字节 → fileTicket
+    try:
+        with open(meta["video_path"], "rb") as f:
+            video_bytes = f.read()
+    except OSError as e:
+        logger.warning(f"读取视频文件失败，跳过定投: {e}")
+        return False
+    file_ticket = VideoManager.upload_to_binance(api_key, video_bytes, f"{slug}-vertical.mp4")
+    if not file_ticket:
+        logger.warning(f"视频 [{slug}] 上传失败，本轮不投。")
+        return False
+
+    # 2) 上传预制竖版封面 → 托管 URL（讲解已产好封面，跳过 ffmpeg 抽帧）
+    cover_url = None
+    try:
+        with open(meta["cover_path"], "rb") as f:
+            cover_bytes = f.read()
+        cover_url = ImageManager.upload_to_binance(api_key, cover_bytes, f"{slug}-cover-v.jpg", "image/jpeg")
+    except OSError as e:
+        logger.info(f"读取视频封面失败（将无封面发布）: {e}")
+    if not cover_url:
+        logger.info(f"视频 [{slug}] 封面上传失败，将以无封面发布。")
+
+    # 3) ffprobe 实测时长（拿不到则省略 videoTimeSeconds，绝不编造）
+    video_seconds = VideoManager.probe_duration_seconds(meta["video_path"])
+
+    # $挂件返佣生命线：视频无 LLM 标的识别，用当期扶持代币池兜底一个 $ 挂件（去 $ 前缀
+    # 传给 _ensure_token_widget/_weave_cashtags），否则视频帖零挂件=Write2Earn 组件不渲染=无返佣。
+    ensure_tokens = None
+    if campaign_intel:
+        raw_toks = campaign_intel.get("incentivized_tokens") or []
+        ensure_tokens = [str(t).lstrip("$").strip() for t in raw_toks if str(t).strip()] or None
+
+    ok = publisher.publish_video(
+        caption, file_ticket, cover_url, video_seconds=video_seconds,
+        ensure_tokens=ensure_tokens, campaign_intel=campaign_intel,
+    )
+    if ok:
+        # 去重落盘：当日封顶 + 已投 slug 列表（cap 200 防膨胀）。DRY 下 intel_state_set 自静默
+        intel_state_set("_video_sent_date", today_utc)
+        new_sent = list(sent_set) + [slug]
+        if len(new_sent) > 200:
+            new_sent = new_sent[-200:]
+        intel_state_set("_video_sent", new_sent)
+        append_metrics({
+            "event": "video_published", "video_slug": slug, "platform": "binance",
+            "content_id": publisher.last_content_id,
+            "video_seconds": video_seconds,
+        })
+        logger.info(f"🎬 视频 [{slug}] 定投成功。")
+    else:
+        logger.warning(f"视频 [{slug}] 发布失败: {publisher.last_error}")
+    return ok
+
+
 def _run_main():
     # R126：单轮耗时基线——外部回调 20 分钟一次，若全管线（情报刷新 + LLM 链
     # 容灾 + 配图上传 + 发布）耗时逼近节奏，下一轮就会排队堆积；此前的盲区
@@ -7550,6 +7985,14 @@ def _run_main():
     intel_elapsed = time.time() - t_intel_start
     logger.info(f"💡 当期币安重点活动标签: {campaign_intel.get('active_tags')}")
     logger.info(f"🪙 当期重点扶持代币池: {campaign_intel.get('incentivized_tokens')}")
+
+    # R366：每日预生产视频定投（默认双闸门关闭；开闸后每天投一条加密主题竖版视频）。
+    # 放在配额门之前：配额门有多条早退 sys.exit 分支，尾置会被跳过。视频定投自带
+    # 当日封顶（_video_sent_date）与库存去重（_video_sent），不占用图文帖的日配额语义。
+    try:
+        _maybe_post_daily_video(publisher, campaign_intel, dry_run)
+    except Exception as e:
+        logger.warning(f"视频定投环节异常（不影响图文主流程）: {e}")
 
     if not dry_run and MAX_DAILY_POSTS > 0:
         sent_24h = cache_mgr.count_since(24)

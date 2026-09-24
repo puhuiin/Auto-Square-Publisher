@@ -12943,5 +12943,311 @@ class TestLengthBandSync(unittest.TestCase):
                             f"范文 CJK {cjk} 字落在宣称区间 140~200 之外：{seg[:40]}")
 
 
+class TestVideoManagerUpload(unittest.TestCase):
+    """VideoManager 上传流水线：presign 请求体(fileName+size)、S3 Content-Type、就绪轮询、fileTicket 提取。"""
+
+    def test_content_type_mapping(self):
+        self.assertEqual(m.VideoManager._content_type_for("a.mp4"), "video/mp4")
+        self.assertEqual(m.VideoManager._content_type_for("a.mov"), "video/quicktime")
+        self.assertEqual(m.VideoManager._content_type_for("a.unknown"), "video/mp4")
+
+    def test_missing_key_or_bytes(self):
+        self.assertIsNone(m.VideoManager.upload_to_binance("", b"x", "a.mp4"))
+        self.assertIsNone(m.VideoManager.upload_to_binance("k", b"", "a.mp4"))
+
+    def _presign_ok(self):
+        r = MagicMock(status_code=200)
+        r.json.return_value = {"code": "000000",
+                               "data": {"presignedUrl": "https://s3/put", "fileTicket": "TIX"}}
+        return r
+
+    def test_happy_path_returns_ticket_and_body_shape(self):
+        presign = self._presign_ok()
+        put = MagicMock(status_code=200)
+        status = MagicMock(status_code=200)
+        status.json.return_value = {"data": {"status": 1}}
+        with patch.object(m, "http_post", side_effect=[presign, status]) as mp_post, \
+             patch.object(m, "http_request", return_value=put) as mp_put, \
+             patch.object(m.time, "sleep", lambda *_a, **_k: None):
+            ticket = m.VideoManager.upload_to_binance("k", b"videobytes", "jev-vertical.mp4")
+        self.assertEqual(ticket, "TIX")
+        body = mp_post.call_args_list[0].kwargs["json"]
+        self.assertEqual(body, {"fileName": "jev-vertical.mp4", "size": len(b"videobytes")})
+        self.assertEqual(mp_put.call_args.kwargs["headers"]["Content-Type"], "video/mp4")
+
+    def test_status_failed_returns_none(self):
+        presign = self._presign_ok()
+        put = MagicMock(status_code=204)
+        status = MagicMock(status_code=200)
+        status.json.return_value = {"data": {"status": 2, "failedReason": "nope"}}
+        with patch.object(m, "http_post", side_effect=[presign, status]), \
+             patch.object(m, "http_request", return_value=put), \
+             patch.object(m.time, "sleep", lambda *_a, **_k: None):
+            self.assertIsNone(m.VideoManager.upload_to_binance("k", b"x", "a.mp4"))
+
+
+class TestVideoProbeDuration(unittest.TestCase):
+    """ffprobe 时长探测：成功取整，任何失败一律 None（绝不编造时长——红线）。"""
+
+    def _proc(self, rc, out):
+        return MagicMock(returncode=rc, stdout=out, stderr="")
+
+    def test_valid_duration_rounded(self):
+        with patch("os.path.isfile", return_value=True), \
+             patch.object(m.subprocess, "run", return_value=self._proc(0, "127.47\n")):
+            self.assertEqual(m.VideoManager.probe_duration_seconds("x.mp4"), 127)
+
+    def test_nonzero_returncode_none(self):
+        with patch("os.path.isfile", return_value=True), \
+             patch.object(m.subprocess, "run", return_value=self._proc(1, "")):
+            self.assertIsNone(m.VideoManager.probe_duration_seconds("x.mp4"))
+
+    def test_nonnumeric_stdout_none(self):
+        with patch("os.path.isfile", return_value=True), \
+             patch.object(m.subprocess, "run", return_value=self._proc(0, "N/A")):
+            self.assertIsNone(m.VideoManager.probe_duration_seconds("x.mp4"))
+
+    def test_ffprobe_missing_none(self):
+        with patch("os.path.isfile", return_value=True), \
+             patch.object(m.subprocess, "run", side_effect=FileNotFoundError()):
+            self.assertIsNone(m.VideoManager.probe_duration_seconds("x.mp4"))
+
+    def test_nonexistent_path_none(self):
+        self.assertIsNone(m.VideoManager.probe_duration_seconds("/no/such/file.mp4"))
+
+    def test_zero_or_negative_none(self):
+        with patch("os.path.isfile", return_value=True), \
+             patch.object(m.subprocess, "run", return_value=self._proc(0, "0")):
+            self.assertIsNone(m.VideoManager.probe_duration_seconds("x.mp4"))
+
+
+class TestPublishVideoPayload(unittest.TestCase):
+    """publish_video：contentType=3 载荷、videoTimeSeconds 编造门、封面门、挂件/活动标签生命线、无降级。"""
+
+    def setUp(self):
+        self._sym = getattr(m.SymbolValidator, "_valid_symbols_cache", None)
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP", "BNB", "SOL"}
+        self.pub = m.SquarePublisher(api_key="k")
+
+    def tearDown(self):
+        m.SymbolValidator._valid_symbols_cache = self._sym
+
+    def _ok_resp(self):
+        r = MagicMock(status_code=200, text="{}")
+        r.json.return_value = {"code": "000000", "data": {"contentId": "cid1"}}
+        return r
+
+    def _capture(self, secs=None, cover="https://c/cover.jpg", ensure=None, intel=None):
+        r = self._ok_resp()
+        with patch.object(m._HTTP_SESSION, "post", return_value=r) as mp:
+            ok = self.pub.publish_video(
+                "这是一条足够长的加密视频文案，用于验证发布载荷形态。",
+                "TIX", cover, video_seconds=secs, ensure_tokens=ensure, campaign_intel=intel)
+        return ok, mp
+
+    def test_content_type_ticket_ispublish_body(self):
+        ok, mp = self._capture(secs=120)
+        self.assertTrue(ok)
+        p = mp.call_args.kwargs["json"]
+        self.assertEqual(p["contentType"], 3)
+        self.assertEqual(p["fileTicket"], "TIX")
+        self.assertTrue(p["isPublish"])
+        self.assertIn("bodyTextOnly", p)
+
+    def test_video_seconds_included_when_int(self):
+        _, mp = self._capture(secs=88)
+        self.assertEqual(mp.call_args.kwargs["json"]["videoTimeSeconds"], 88)
+
+    def test_video_seconds_omitted_when_none(self):
+        _, mp = self._capture(secs=None)
+        self.assertNotIn("videoTimeSeconds", mp.call_args.kwargs["json"])
+
+    def test_video_seconds_omitted_when_zero(self):
+        _, mp = self._capture(secs=0)
+        self.assertNotIn("videoTimeSeconds", mp.call_args.kwargs["json"])
+    def test_cover_included_and_omitted(self):
+        _, mp = self._capture(cover="https://c/x.jpg")
+        self.assertEqual(mp.call_args.kwargs["json"]["cover"], "https://c/x.jpg")
+        _, mp2 = self._capture(cover=None)
+        self.assertNotIn("cover", mp2.call_args.kwargs["json"])
+
+    def test_cashtag_widget_woven(self):
+        _, mp = self._capture(ensure=["BTC"])
+        self.assertIn("$BTC", mp.call_args.kwargs["json"]["bodyTextOnly"])
+
+    def test_campaign_tag_injected(self):
+        _, mp = self._capture(intel={"active_tags": ["#TradingTournament"]})
+        self.assertIn("#TradingTournament", mp.call_args.kwargs["json"]["bodyTextOnly"])
+        self.assertEqual(self.pub.last_campaign_tag, "#TradingTournament")
+
+    def test_no_api_key_rejected(self):
+        pub = m.SquarePublisher(api_key="")
+        self.assertFalse(pub.publish_video("这是足够长的加密视频文案内容示例。", "TIX", None))
+
+    def test_empty_ticket_rejected(self):
+        self.assertFalse(self.pub.publish_video("这是足够长的加密视频文案内容示例。", "", None))
+
+    def test_504_treated_as_success(self):
+        r = MagicMock(status_code=504, text="gw")
+        with patch.object(m._HTTP_SESSION, "post", return_value=r):
+            self.assertTrue(self.pub.publish_video("这是足够长的加密视频文案内容示例。", "TIX", None))
+
+    def test_non200_no_degrade_single_post(self):
+        r = MagicMock(status_code=400, text="bad")
+        with patch.object(m._HTTP_SESSION, "post", return_value=r) as mp:
+            ok = self.pub.publish_video("这是足够长的加密视频文案内容示例。", "TIX", None)
+        self.assertFalse(ok)
+        self.assertEqual(mp.call_count, 1)
+
+    def test_business_error_returns_false(self):
+        r = MagicMock(status_code=200, text="{}")
+        r.json.return_value = {"code": "20013", "message": "too long"}
+        with patch.object(m._HTTP_SESSION, "post", return_value=r):
+            self.assertFalse(self.pub.publish_video("这是足够长的加密视频文案内容示例。", "TIX", None))
+
+
+class TestVideoTransientRetryShared(unittest.TestCase):
+    """publish_video 复用 _post_with_transient_retry：429 暂态 → 重试一次后成功（call_count==2）。"""
+
+    def setUp(self):
+        self._sym = getattr(m.SymbolValidator, "_valid_symbols_cache", None)
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH"}
+        self.pub = m.SquarePublisher(api_key="k")
+
+    def tearDown(self):
+        m.SymbolValidator._valid_symbols_cache = self._sym
+
+    def test_429_then_200_retries_once(self):
+        r429 = MagicMock(status_code=429, headers={}, text="rate")
+        r200 = MagicMock(status_code=200, text="{}")
+        r200.json.return_value = {"code": "000000", "data": {"contentId": "c"}}
+        with patch.object(m._HTTP_SESSION, "post", side_effect=[r429, r200]) as mp, \
+             patch.object(m.time, "sleep", lambda *_a, **_k: None):
+            ok = self.pub.publish_video("这是足够长的加密视频文案内容示例。", "TIX", None)
+        self.assertTrue(ok)
+        self.assertEqual(mp.call_count, 2)
+
+
+class TestVideoLibraryDiscovery(unittest.TestCase):
+    """视频库发现：加密主题白名单 + 齐备三件套（mp4/cover/yaml）过滤；缺目录→[]；caption 拼接。"""
+
+    def _pkg(self, root, slug, opening, complete=True, crypto=True):
+        import os as _os
+        sub = _os.path.join(root, slug)
+        _os.makedirs(sub, exist_ok=True)
+        if complete:
+            open(_os.path.join(sub, f"{slug}-vertical.mp4"), "wb").close()
+            open(_os.path.join(sub, f"{slug}-cover-v.jpg"), "wb").close()
+        topic = "比特币与去中心化金融" if crypto else "HTTPS 握手与排序算法"
+        y = (f"title: {slug}标题\n"
+             f"desc: {topic}\n"
+             "scenes:\n  - lines:\n"
+             f"      - say: {opening}\n")
+        with open(_os.path.join(sub, "content.yaml"), "w", encoding="utf-8") as f:
+            f.write(y)
+        return sub
+    def test_crypto_include_exclude(self):
+        self.assertTrue(m._video_is_crypto_topic("聊聊比特币与稳定币"))
+        self.assertFalse(m._video_is_crypto_topic("讲讲 CPU 缓存与排序算法"))
+
+    def test_discovers_only_complete_crypto(self):
+        import tempfile, shutil
+        root = tempfile.mkdtemp()
+        try:
+            self._pkg(root, "aaa", "开场比特币", complete=True, crypto=True)
+            self._pkg(root, "bbb", "开场 HTTPS", complete=True, crypto=False)
+            self._pkg(root, "ccc", "开场以太坊", complete=False, crypto=True)
+            found = m._discover_video_library(root)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+        self.assertEqual([x["slug"] for x in found], ["aaa"])
+        self.assertEqual(found[0]["opening"], "开场比特币")
+
+    def test_missing_dir_returns_empty(self):
+        self.assertEqual(m._discover_video_library("/no/such/video/dir/xyz"), [])
+
+    def test_caption_builder(self):
+        cap = m._build_video_caption({"title": "T", "opening": "O"})
+        self.assertEqual(cap, "T\n\nO")
+
+
+class TestMaybePostDailyVideo(unittest.TestCase):
+    """每日定投调度：双闸门、DRY_RUN 零副作用、当日/slug 去重、真发写状态并透传 ensure_tokens。"""
+
+    def setUp(self):
+        import tempfile
+        self.root = tempfile.mkdtemp()
+        sub = os.path.join(self.root, "lp-pool-explainer")
+        os.makedirs(sub, exist_ok=True)
+        open(os.path.join(sub, "lp-pool-explainer-vertical.mp4"), "wb").close()
+        open(os.path.join(sub, "lp-pool-explainer-cover-v.jpg"), "wb").close()
+        with open(os.path.join(sub, "content.yaml"), "w", encoding="utf-8") as f:
+            f.write("title: 流动性池讲解\ndesc: 去中心化交易所与比特币\n"
+                    "scenes:\n  - lines:\n      - say: 什么是流动性池\n")
+        self._intel = m.CAMPAIGN_INTEL_FILE
+        self.intel_file = os.path.join(self.root, "intel.json")
+        with open(self.intel_file, "w", encoding="utf-8") as f:
+            f.write("{}")
+        m.CAMPAIGN_INTEL_FILE = self.intel_file
+        self._vpd, self._vld = m.VIDEO_PER_DAY, m.VIDEO_LIBRARY_DIR
+        m.VIDEO_PER_DAY, m.VIDEO_LIBRARY_DIR = "1", self.root
+        os.environ.pop("DRY_RUN", None)
+
+    def tearDown(self):
+        import shutil
+        m.CAMPAIGN_INTEL_FILE = self._intel
+        m.VIDEO_PER_DAY, m.VIDEO_LIBRARY_DIR = self._vpd, self._vld
+        os.environ.pop("DRY_RUN", None)
+        shutil.rmtree(self.root, ignore_errors=True)
+    def test_gate_off_video_per_day_zero(self):
+        m.VIDEO_PER_DAY = "0"
+        with patch.object(m, "_discover_video_library") as disc:
+            ok = m._maybe_post_daily_video(MagicMock(), None, True)
+        self.assertFalse(ok)
+        disc.assert_not_called()
+
+    def test_gate_off_empty_library_dir(self):
+        m.VIDEO_LIBRARY_DIR = ""
+        with patch.object(m, "_discover_video_library") as disc:
+            ok = m._maybe_post_daily_video(MagicMock(), None, True)
+        self.assertFalse(ok)
+        disc.assert_not_called()
+
+    def test_dry_run_no_side_effects(self):
+        pub = MagicMock()
+        with patch.object(m, "append_metrics"), \
+             patch.object(m.VideoManager, "upload_to_binance") as up:
+            ok = m._maybe_post_daily_video(pub, {"incentivized_tokens": ["$BTC"]}, True)
+        self.assertTrue(ok)
+        up.assert_not_called()
+        pub.publish_video.assert_not_called()
+        self.assertEqual(m.intel_state_get("_video_sent_date", ""), "")
+
+    def test_already_sent_today(self):
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        m.intel_state_set("_video_sent_date", today)
+        self.assertFalse(m._maybe_post_daily_video(MagicMock(), None, True))
+
+    def test_slug_dedup_skips(self):
+        m.intel_state_set("_video_sent", ["lp-pool-explainer"])
+        with patch.object(m, "append_metrics"):
+            self.assertFalse(m._maybe_post_daily_video(MagicMock(), None, True))
+    def test_live_success_writes_and_passes_ensure_tokens(self):
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        pub = MagicMock()
+        pub.api_key = "k"
+        pub.publish_video.return_value = True
+        pub.last_content_id = "cid"
+        with patch.object(m, "append_metrics"), \
+             patch.object(m.VideoManager, "upload_to_binance", return_value="TICK"), \
+             patch.object(m.ImageManager, "upload_to_binance", return_value="https://cover"), \
+             patch.object(m.VideoManager, "probe_duration_seconds", return_value=42):
+            ok = m._maybe_post_daily_video(pub, {"incentivized_tokens": ["$BTC"]}, False)
+        self.assertTrue(ok)
+        self.assertEqual(pub.publish_video.call_args.kwargs["ensure_tokens"], ["BTC"])
+        self.assertEqual(m.intel_state_get("_video_sent_date", ""), today)
+        self.assertIn("lp-pool-explainer", m.intel_state_get("_video_sent", []))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
