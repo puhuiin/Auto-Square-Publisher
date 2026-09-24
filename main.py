@@ -6478,7 +6478,10 @@ class SquarePublisher(BasePublisher):
                 # 若带图发布返回非 200，自动平滑降级为纯文本重试一次
                 if image_url:
                     logger.warning(f"带图发布遭遇 HTTP {status_code}，自动降级为纯文本重试发布...")
-                    return self.publish(content, image_url=None)
+                    # R363：降级只丢配图，绝不丢 title——title 缺席会把长文（contentType=2/
+                    # 上限 2500）静默降为短讯（上限 900），_sanitize_content 把整篇文章腰斩到
+                    # 900 字且标题字段一并蒸发（"平滑降级"本意只撤 cover，不撤文章结构）。
+                    return self.publish(content, image_url=None, title=title)
                 diagnosis = self._classify_publish_error(status_code, None)
                 self.last_error = diagnosis
                 logger.error(f"发帖失败！HTTP {status_code} | 诊断: {diagnosis}\n原始响应: {resp_text[:300]}")
@@ -6506,7 +6509,8 @@ class SquarePublisher(BasePublisher):
                 # 若带图发布返回业务错误且为图片处理异常，自动降级纯文本重发
                 if image_url:
                     logger.warning(f"带图发布返回业务错误 ({resp_json.get('message')})，自动降级为纯文本重试发布...")
-                    return self.publish(content, image_url=None)
+                    # R363：同上——保留 title，长文降级后仍是无封面长文而非腰斩短讯。
+                    return self.publish(content, image_url=None, title=title)
                 diagnosis = self._classify_publish_error(status_code, resp_json)
                 self.last_error = diagnosis
                 self.last_error_code = str(resp_json.get("code", "") or "")
@@ -6519,7 +6523,8 @@ class SquarePublisher(BasePublisher):
         except Exception as e:
             if image_url:
                 logger.warning(f"发帖网络请求异常 ({e})，尝试降级为纯文本重发一次...")
-                return self.publish(content, image_url=None)
+                # R363：同上——保留 title，长文降级后仍是无封面长文而非腰斩短讯。
+                return self.publish(content, image_url=None, title=title)
             logger.error(f"发帖网络请求异常: {e}")
             return False
 

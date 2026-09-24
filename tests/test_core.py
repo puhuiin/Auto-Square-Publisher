@@ -7279,6 +7279,86 @@ class TestArticlePipeline(unittest.TestCase):
             self.assertNotIn("title", payload)
             self.assertEqual(payload["imageList"], ["https://cdn.example/img.jpg"])
 
+    # R363：长文带封面发布失败后的"平滑降级"三条出海口（HTTP 非 200 / 业务错误 /
+    # 网络异常）此前 return self.publish(content, image_url=None) 丢了 title——长文
+    # 静默降为短讯：char_limit 从 2500 掉到 900，_sanitize_content 把整篇文章腰斩、
+    # 标题字段蒸发。降级本意只撤 cover。以下 3 条锁死"降级重试保留 title"接线，
+    # 任何人退回丢 title 版即红（contentType!=2 / 标题缺席 / 文末锚点被腰斩）。
+    _R363_LONG_BODY = ("一、背景\n"
+                       + "这是一段用于验证长文降级仍保留标题且正文不被腰斩的长文正文内容。" * 34
+                       + "。文章结尾锚点XYZEND")
+
+    def _r363_ok_resp(self):
+        r = MagicMock(status_code=200, text='{"code":"000000"}')
+        r.json.return_value = {"code": "000000", "data": {"contentId": "c363"}}
+        return r
+
+    def test_long_form_http_fail_degrade_preserves_title(self):
+        """长文带封面遇 HTTP 非 200 → 降级重试须仍是 contentType=2 长文、保留标题、
+        正文不腰斩（文末锚点存活），且封面已撤（无 cover/imageList）。"""
+        pub = m.SquarePublisher(api_key="k")
+        resp_fail = MagicMock(status_code=400, text="bad request")
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.side_effect = [resp_fail, self._r363_ok_resp()]
+            self.assertTrue(pub.publish(self._R363_LONG_BODY,
+                                        image_url="https://cdn.example/cover.jpg",
+                                        ensure_tokens=["BTC"], title="BTC 行情深度复盘长文标题"))
+            retry_payload = mock_sess.post.call_args_list[-1].kwargs["json"]
+        self.assertEqual(retry_payload["contentType"], 2)
+        self.assertIn("复盘", retry_payload["title"])
+        self.assertIn("文章结尾锚点XYZEND", retry_payload["bodyTextOnly"])
+        self.assertNotIn("cover", retry_payload)
+        self.assertNotIn("imageList", retry_payload)
+
+    def test_long_form_business_error_degrade_preserves_title(self):
+        """长文带封面遇业务错误码（图片处理失败）→ 降级重试仍保留 title 与长文语义。"""
+        pub = m.SquarePublisher(api_key="k")
+        resp_biz = MagicMock(status_code=200, text="{}")
+        resp_biz.json.return_value = {"code": "20099", "success": False, "message": "图片处理失败"}
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.side_effect = [resp_biz, self._r363_ok_resp()]
+            self.assertTrue(pub.publish(self._R363_LONG_BODY,
+                                        image_url="https://cdn.example/cover.jpg",
+                                        ensure_tokens=["BTC"], title="BTC 行情深度复盘长文标题"))
+            retry_payload = mock_sess.post.call_args_list[-1].kwargs["json"]
+        self.assertEqual(retry_payload["contentType"], 2)
+        self.assertIn("复盘", retry_payload["title"])
+        self.assertIn("文章结尾锚点XYZEND", retry_payload["bodyTextOnly"])
+
+    def test_long_form_network_exception_degrade_preserves_title(self):
+        """长文带封面遇网络异常（两次 attempt 都抛）→ 外层 except 降级重试仍保留 title。"""
+        pub = m.SquarePublisher(api_key="k")
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.time, "sleep"), \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.side_effect = [ConnectionError("boom"), ConnectionError("boom"),
+                                          self._r363_ok_resp()]
+            self.assertTrue(pub.publish(self._R363_LONG_BODY,
+                                        image_url="https://cdn.example/cover.jpg",
+                                        ensure_tokens=["BTC"], title="BTC 行情深度复盘长文标题"))
+            retry_payload = mock_sess.post.call_args_list[-1].kwargs["json"]
+        self.assertEqual(retry_payload["contentType"], 2)
+        self.assertIn("复盘", retry_payload["title"])
+        self.assertIn("文章结尾锚点XYZEND", retry_payload["bodyTextOnly"])
+
+    def test_short_form_image_fail_degrade_stays_short(self):
+        """回归守卫：短讯（无 title）带图失败降级重试后仍是短讯——修复只在有 title
+        时保留长文语义，绝不把短讯强行升为长文（contentType 不置 2、无 title）。"""
+        pub = m.SquarePublisher(api_key="k")
+        resp_fail = MagicMock(status_code=400, text="bad request")
+        content = "这是一段超过十五个中文字符的短讯内容，带 $BTC 挂件 #Write2Earn"
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            mock_sess.post.side_effect = [resp_fail, self._r363_ok_resp()]
+            self.assertTrue(pub.publish(content, image_url="https://cdn.example/img.jpg",
+                                        ensure_tokens=["BTC"]))
+            retry_payload = mock_sess.post.call_args_list[-1].kwargs["json"]
+        self.assertNotEqual(retry_payload.get("contentType"), 2)
+        self.assertNotIn("title", retry_payload)
+        self.assertNotIn("imageList", retry_payload)
+
     def test_summarize_article_mode_parses_title(self):
         """article=True 生成模式：TITLE 行被剥离出正文并进返回值 title 字段"""
         eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
