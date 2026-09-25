@@ -3,21 +3,21 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Futures",
-    "#新币上线"
+    "#BinanceFutures",
+    "#NewListing"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$BTC",
     "$HYPE",
-    "$OUR",
+    "$RLUSD",
+    "$PROVE",
     "$VTHO",
     "$BABY",
-    "$PROVE",
-    "$RLUSD"
+    "$NEAR"
   ],
-  "strategy_guidance": "优先追贴刚上线1天的OURAUSDT预IPO合约交易与$HYPE全生态上线热点，结合Write2Earn活动输出新币/新合约参与攻略，引导用户交易获取返佣；其次结合当前多赛道并行的高奖金额交易锦标赛（VTHO/BABY/BANK/NEAR/PROVE）、Starter Carnival任务活动输出实操指南，挂载活动链接提升转化；还可蹭bStocks新增抵押品、P2P TJS对0手续费、持币$RLUSD分$XRP等福利热点，覆盖不同用户群体的参与需求。",
-  "last_updated": "2026-09-24T12:42:26.611204Z",
+  "strategy_guidance": "当前OURAUSDT预上市合约交易、多赛道TradingTournament活动及新上线$HYPE相关玩法均为未过期高热度官方活动，发帖时可优先输出预上市合约参与攻略、交易竞赛冲刺复盘类内容，结合#Write2Earn规则引导用户参与交易获取返佣，同时蹭新上线$HYPE的热点输出产品使用攻略提升曝光。",
+  "last_updated": "2026-09-25T00:44:00.309000Z",
   "_feed_health": {},
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
