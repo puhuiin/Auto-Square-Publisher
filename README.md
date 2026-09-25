@@ -301,6 +301,7 @@ python scripts/metrics_report.py --days 1
   | `TOKEN_DAILY_LIMIT` | `3` | 同一代币 24h 内最多发帖篇数（0 = 不限）。热度 ≥ `TOKEN_LIMIT_BYPASS_IMPACT` 的高影响故事可绕过 |
   | `TOKEN_LIMIT_BYPASS_IMPACT` | `30` | 单币限流的高影响放行门槛：触顶代币的热度分达到此值仍放行（对齐真实事件档 29~34；20~26 的常规行情帖回到限流，防止高频标的无限穿透） |
   | `MAX_TOKENS_PER_POST` | `3` | 单帖 $ 挂件标的上限（清单式行情日评可提取 9+ 币，截断保留显著度前 N） |
+  | `PRIORITY_SEED_FILE` | `priority_seed.json` | 蹭热点优先种子配置文件：人工精选、事实核验的突发热点候选以最高分注入候选池顶部，抢先蹭上 RSS 尚未覆盖的热点；发够种子内 `max_posts` 篇后经既有去重预算自动停投、回落常规发帖。种子照走全部既有关卡（热度/去重/数字门/质量门/挂件织入），零绕过。设为空字符串则关闭；配置里 `"enabled": false` 亦关闭 |
   | `ARTICLE_PER_DAY` | `1` | 每日深度长文开关：当天首个高热帖升级为长文（contentType=2，TITLE+500~800 字正文），打专业垂直度与长尾流量 |
   | `ARTICLE_MIN_IMPACT` | `20` | 长文选稿门槛：榜首热度分低于此值则当天不发长文（全发短讯）。与限流放行门槛 `TOKEN_LIMIT_BYPASS_IMPACT` 相互独立 |
   | `VIDEO_PER_DAY` | `0`（关闭） | 每日视频定投开关：非空非零时，每天从预生产视频库挑一条未发的加密主题竖版视频发布（contentType=3）。默认 `0` 关闭，开闸前须确认视频库就绪 |

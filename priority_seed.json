@@ -1,0 +1,26 @@
+{
+  "enabled": true,
+  "tag": "bitget-hack-2026-09",
+  "max_posts": 3,
+  "note": "人工精选、事实核验的 Bitget 被盗热点种子。事实来源已核（约3.52亿美元被盗/用户保护基金5500 BTC全额兜底/冷钱包安全/热钱包授权签名被伪造）。措辞客观不造谣、不 FUD、不编造数字；隐性看好 $BTC $ETH $BNB $XRP $AVAX 的长期韧性。发够 max_posts 篇后经 is_cached 自动停投。",
+  "candidates": [
+    {
+      "title": "Bitget 遭黑客攻击约 3.52 亿美元 用户保护基金 5,500 枚 $BTC 全额兜底 $ETH 用户零损失",
+      "summary": "加密交易所 Bitget 确认遭遇黑客攻击，热钱包与温钱包发生 19 笔未授权转账，损失约 3.52 亿美元，涉及 ETH、XRP、BNB、AVAX、USDT、USDC 等资产及以太坊、XRP Ledger、Arbitrum、Avalanche、Optimism、BSC、Base 等多条链。Bitget 已暂停提现并展开调查，CEO Gracy Chen 表示公司持有的用户保护基金（约 5,500 枚 BTC、价值约 4.64 亿美元）足以全额覆盖此次损失，用户资产不受影响、可获全额赔付。冷钱包资金安全。此类中心化交易所安全事件不改变 BTC、ETH 底层资产的稀缺性与长期价值支撑。",
+      "source": "priority_seed:bitget-hack",
+      "lang": "zh"
+    },
+    {
+      "title": "Bitget 被盗复盘：后台系统被入侵伪造授权签名 冷钱包安然无恙 $ETH $BNB 自托管更显价值",
+      "summary": "据 Bitget 及安全机构 SlowMist、Mandiant 的初步调查，本次约 3.52 亿美元损失并非私钥泄露，而是攻击者入侵了交易所后台钱包系统、伪造交易数据触发授权签名，从而完成 19 笔热钱包与温钱包的未授权转出，冷钱包未受影响。攻击手法与 2025 年 2 月 Bybit 15 亿美元被盗高度相似，疑似朝鲜背景黑客所为。事件再次凸显冷热钱包分层与自托管钱包的重要性——Bitget Wallet 等自托管产品本次不受影响。ETH、BNB 等主流资产的链上协议本身安全，问题出在中心化托管环节。",
+      "source": "priority_seed:bitget-hack",
+      "lang": "zh"
+    },
+    {
+      "title": "Bitget 事件后行业驰援 Bybit CEO 主动伸援手 受影响资产有望修复 $XRP $AVAX 韧性可期",
+      "summary": "Bitget 约 3.52 亿美元被盗事件发生后，行业展现出协作韧性：Bybit 创始人 Ben Zhou 主动表示愿提供协助，Bitget 也已联合 Mandiant、SlowMist 等安全机构追踪被盗资金。Bitget 已用价值约 4.64 亿美元的用户保护基金（5,500 枚 BTC）为用户全额兜底，用户资产不受损。历史经验表明，头部交易所在完成赔付与安全加固后往往能较快恢复运营，本次受影响的 XRP、AVAX、BNB 等主流资产的市场深度与长期基本面并未因单一交易所事件而改变。",
+      "source": "priority_seed:bitget-hack",
+      "lang": "zh"
+    }
+  ]
+}

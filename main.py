@@ -194,6 +194,12 @@ TOKEN_DAILY_LIMIT = _env_int("TOKEN_DAILY_LIMIT", 3)               # 同一代�
 # 常规帖还给限流（垂直度保护），事件帖仍放行。独立于长文门槛，可单独调。
 TOKEN_LIMIT_BYPASS_IMPACT = _env_int("TOKEN_LIMIT_BYPASS_IMPACT", 30)  # 限流绕过门槛：触顶代币的热度低于此值仍被限流
 MAX_TOKENS_PER_POST = _env_int("MAX_TOKENS_PER_POST", 3)           # 单帖挂件标的上限（清单式行情日评可提取 9+ 币）
+# 蹭热点：优先种子注入。把人工精选、事实核验过的突发热点候选（如交易所被盗）以最高分注入
+# 候选池顶部，让机器人在 RSS 尚未充分覆盖时抢先蹭上热点；发够 max_posts 篇后经既有
+# record_sent→is_cached 预算机制自动停投、回落常规 RSS 发帖。种子照走全部既有关卡
+# （MIN_IMPACT / 近似去重 / 数字门 / 质量门 / 挂件织入），零绕过。PRIORITY_SEED_FILE="" 关闭。
+PRIORITY_SEED_SCORE = 999                                         # 种子热度分：置顶排序、稳过 MIN_IMPACT
+PRIORITY_SEED_FILE = os.getenv("PRIORITY_SEED_FILE", "priority_seed.json").strip()  # 优先种子配置文件（空=关闭）
 # 每日深度长文（contentType=2）：每天首帖若热度达标即升级长文（ARTICLE_PER_DAY=0 关闭）
 ARTICLE_PER_DAY = os.getenv("ARTICLE_PER_DAY", "1").strip()
 ARTICLE_MIN_IMPACT = _env_int("ARTICLE_MIN_IMPACT", 20)            # 长文选稿门槛：榜首热度低于此值不发长文
@@ -1580,6 +1586,14 @@ class CacheManager:
     def is_cached(self, news_id: str) -> bool:
         return news_id in self.cached_ids
 
+    def cached_id_count(self, prefix: str) -> int:
+        """已发历史里 id 以 prefix 开头的条数——供优先种子(seed::tag::N)全局投放
+        预算：发够 max_posts 篇后停止再注入，自动回落常规 RSS 发帖。"""
+        if not prefix:
+            return 0
+        return sum(1 for cid in self.cached_ids
+                   if isinstance(cid, str) and cid.startswith(prefix))
+
     def count_since(self, hours: float = 24.0) -> int:
         """统计最近 N 小时内已成功发布的条数（用于 24h 防刷屏配额）"""
         cutoff = datetime.now(timezone.utc).timestamp() - hours * 3600
@@ -2554,6 +2568,79 @@ class NewsFetcher:
                     break
         return hits
 
+    def _load_priority_seed(self) -> Optional[Dict[str, Any]]:
+        """读取优先种子配置（PRIORITY_SEED_FILE）。缺失/未启用/任何异常一律返回
+        None（fail-closed）：种子链路绝不能阻断常规 RSS 发帖主流程。"""
+        if not PRIORITY_SEED_FILE:
+            return None
+        path = PRIORITY_SEED_FILE
+        if not os.path.isabs(path):
+            path = os.path.join(BASE_DIR, path)
+        if not os.path.exists(path):
+            return None
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception as e:
+            logger.warning(f"优先种子配置读取失败 ({e})，忽略、走常规发帖。")
+            return None
+        if not isinstance(data, dict) or not data.get("enabled"):
+            return None
+        cands = data.get("candidates")
+        if not isinstance(cands, list) or not cands:
+            return None
+        return data
+
+    def _inject_priority_seeds(self, candidates: List[Dict[str, Any]],
+                               cache_mgr: CacheManager) -> List[Dict[str, Any]]:
+        """把优先种子以最高分注入候选池顶部（蹭热点）。自限：id=seed::{tag}::{idx}
+        经既有 record_sent→is_cached 记账——已发过的种子跳过、累计发够 max_posts
+        篇后彻底停投，机器人自动回落常规 RSS 发帖。种子不绕任何既有关卡：下游
+        MIN_IMPACT / 近似去重 / 数字门 / 质量门 / 挂件织入照常生效。"""
+        cfg = self._load_priority_seed()
+        if not cfg:
+            return candidates
+        tag = str(cfg.get("tag") or "seed").strip() or "seed"
+        try:
+            max_posts = int(cfg.get("max_posts", 3))
+        except (TypeError, ValueError):
+            max_posts = 3
+        if max_posts <= 0:
+            return candidates
+        prefix = f"seed::{tag}::"
+        already = cache_mgr.cached_id_count(prefix)
+        if already >= max_posts:
+            logger.info(f"优先种子[{tag}]已投放 {already}/{max_posts} 篇，预算用尽，回落常规发帖。")
+            return candidates
+        injected = 0
+        for idx, raw in enumerate(cfg["candidates"]):
+            if not isinstance(raw, dict):
+                continue
+            title = str(raw.get("title") or "").strip()
+            if not title:
+                continue
+            sid = f"{prefix}{idx}"
+            if cache_mgr.is_cached(sid):     # 该种子已发过，永不重复
+                continue
+            summary = str(raw.get("summary") or "").strip()
+            candidates.append({
+                "base_impact_score": PRIORITY_SEED_SCORE,
+                "id": sid,
+                "title": title,
+                "summary": summary[:1000],
+                "link": str(raw.get("link") or ""),
+                "source": str(raw.get("source") or f"priority_seed:{tag}"),
+                "lang": str(raw.get("lang") or "zh"),
+                "published": "",
+                "age_hours": 0.0,
+                "impact_score": PRIORITY_SEED_SCORE,
+                "image_url": str(raw.get("image_url") or ""),
+            })
+            injected += 1
+        if injected:
+            logger.info(f"🔥 优先种子[{tag}]注入 {injected} 条（已发 {already}/{max_posts}），置顶蹭热点。")
+        return candidates
+
     def fetch_candidates(self, cache_mgr: CacheManager, limit_per_feed: int = 5,
                          priority_tokens: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         # 自动停放连续故障源：本次运行完全不触碰它们。
@@ -2615,6 +2702,10 @@ class NewsFetcher:
             # R277：源名一并留下——"哪个源在拖"是换源/排查的决策输入，
             # 此前 deadline 路径只留计数，名字随 warning 日志一起蒸发。
             self.stats["fetch_timeout_sources"] = list(timed_out_feeds)
+
+        # 蹭热点：人工精选的优先种子先注入候选池顶部（发够 max_posts 篇即自动
+        # 回落常规发帖，见 _inject_priority_seeds）。种子照走下方所有既有关卡。
+        candidates = self._inject_priority_seeds(candidates, cache_mgr)
 
         # 币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布（只影响排序，不影响准入）
         _cb_hits, _cb_off = self._apply_campaign_boost(candidates, priority_tokens)

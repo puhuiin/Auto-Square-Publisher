@@ -32,6 +32,11 @@ _ORIG_SYMBOL_CACHE = None
 
 
 _ORIG_METRICS_FILE: list = []
+# 优先种子隔离兜底：仓库根真实 priority_seed.json（生产已启用、含 Bitget 事件种子）
+# 会被默认 PRIORITY_SEED_FILE 自动加载——凡走 fetch_candidates 的用例都会被注入 3 条
+# 种子候选，污染候选计数/排序/去重断言。模块级先关闭种子注入（=""），个别测试自身
+# 特性（TestPrioritySeed）再自行覆盖并还原。与上面 METRICS_FILE 隔离同型。
+_ORIG_SEED_FILE: list = []
 
 
 def setUpModule():
@@ -45,12 +50,17 @@ def setUpModule():
     import tempfile
     _ORIG_METRICS_FILE.append(m.METRICS_FILE)
     m.METRICS_FILE = os.path.join(tempfile.mkdtemp(prefix="metrics_test_"), "metrics.jsonl")
+    # 关闭优先种子注入：见上方 _ORIG_SEED_FILE 说明。
+    _ORIG_SEED_FILE.append(m.PRIORITY_SEED_FILE)
+    m.PRIORITY_SEED_FILE = ""
 
 
 def tearDownModule():
     m.SymbolValidator._valid_symbols_cache = _ORIG_SYMBOL_CACHE
     if _ORIG_METRICS_FILE:
         m.METRICS_FILE = _ORIG_METRICS_FILE[0]
+    if _ORIG_SEED_FILE:
+        m.PRIORITY_SEED_FILE = _ORIG_SEED_FILE[0]
 
 
 class TestFreshnessFilter(unittest.TestCase):
@@ -13438,6 +13448,133 @@ class TestMaybePostDailyVideo(unittest.TestCase):
         self.assertEqual(rec.get("outcome"), "video_published")
         self.assertNotIn("event", rec)
         self.assertEqual(rec.get("video_slug"), "lp-pool-explainer")
+
+
+class TestPrioritySeed(unittest.TestCase):
+    """蹭热点优先种子注入：人工精选的突发热点候选以最高分置顶注入候选池，
+    发够 max_posts 篇后经既有 record_sent→is_cached 预算自动停投、回落常规
+    发帖。种子不绕任何既有关卡。RED-on-revert 变异哨兵锁定每条语义。"""
+
+    def setUp(self):
+        import tempfile, json as _json
+        self.tmpdir = tempfile.mkdtemp(prefix="seed_test_")
+        self.seed_path = os.path.join(self.tmpdir, "priority_seed.json")
+        self.cache_path = os.path.join(self.tmpdir, "sent_cache.json")
+        with open(self.cache_path, "w", encoding="utf-8") as fh:
+            _json.dump([], fh)
+        self._orig_seed_file = m.PRIORITY_SEED_FILE
+        m.PRIORITY_SEED_FILE = self.seed_path
+        self.f = m.NewsFetcher()
+        self.mgr = m.CacheManager(self.cache_path)
+
+    def tearDown(self):
+        m.PRIORITY_SEED_FILE = self._orig_seed_file
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _write_seed(self, enabled=True, max_posts=3, tag="bitget-hack",
+                    candidates=None):
+        import json as _json
+        if candidates is None:
+            candidates = [
+                {"title": "Bitget 被盗约 3.52 亿美元 用户保护基金全额兜底 $BTC $ETH",
+                 "summary": "热钱包发生 19 笔未授权转账，冷钱包安全，用户零损失。"},
+                {"title": "Bitget 复盘：后台被入侵伪造授权签名 冷钱包安然无恙 $BNB",
+                 "summary": "手法类似 Bybit 事件，自托管钱包不受影响。"},
+                {"title": "Bitget 事件后行业驰援 受影响资产有望修复 $XRP $AVAX",
+                 "summary": "Bybit CEO 主动伸援手，主流资产基本面未变。"},
+            ]
+        with open(self.seed_path, "w", encoding="utf-8") as fh:
+            _json.dump({"enabled": enabled, "max_posts": max_posts,
+                        "tag": tag, "candidates": candidates}, fh)
+
+    # ---- 加载器 fail-closed ----
+    def test_missing_file_returns_none(self):
+        # 无配置文件：种子链路彻底关闭，绝不阻断常规发帖
+        self.assertIsNone(self.f._load_priority_seed())
+
+    def test_disabled_is_noop(self):
+        self._write_seed(enabled=False)
+        self.assertIsNone(self.f._load_priority_seed())
+        base = [{"id": "rss::1", "title": "常规新闻", "impact_score": 5,
+                 "base_impact_score": 5, "age_hours": 1.0}]
+        out = self.f._inject_priority_seeds(list(base), self.mgr)
+        self.assertEqual(out, base)  # 未启用：候选池原样返回
+
+    def test_corrupt_json_fails_closed(self):
+        with open(self.seed_path, "w", encoding="utf-8") as fh:
+            fh.write("{ not valid json ]]")
+        self.assertIsNone(self.f._load_priority_seed())  # 异常吞掉→None，不抛
+
+    def test_empty_candidates_returns_none(self):
+        self._write_seed(candidates=[])
+        self.assertIsNone(self.f._load_priority_seed())
+
+    # ---- 注入语义 ----
+    def test_enabled_injects_at_top_score(self):
+        self._write_seed(max_posts=3)
+        base = [{"id": "rss::1", "title": "常规新闻", "impact_score": 50,
+                 "base_impact_score": 50, "age_hours": 1.0}]
+        out = self.f._inject_priority_seeds(list(base), self.mgr)
+        seeds = [c for c in out if str(c["id"]).startswith("seed::bitget-hack::")]
+        self.assertEqual(len(seeds), 3)                       # 3 条全注入
+        for s in seeds:
+            # 置顶分 + 稳过 MIN_IMPACT（base 分同为 999）+ 携带 $ 挂件的标题
+            self.assertEqual(s["impact_score"], m.PRIORITY_SEED_SCORE)
+            self.assertEqual(s["base_impact_score"], m.PRIORITY_SEED_SCORE)
+            self.assertGreater(s["impact_score"], base[0]["impact_score"])
+        # 变异哨兵：若注入分退回普通分（非 PRIORITY_SEED_SCORE），本断言崩
+        self.assertTrue(all("$" in s["title"] for s in seeds))
+
+    def test_already_sent_seed_skipped(self):
+        # is_cached 命中的种子永不重复注入（逐条去重）
+        self._write_seed(max_posts=3)
+        self.mgr.record_sent("seed::bitget-hack::0", "t0", "src")
+        out = self.f._inject_priority_seeds([], self.mgr)
+        ids = {c["id"] for c in out}
+        self.assertNotIn("seed::bitget-hack::0", ids)         # 已发那条跳过
+        self.assertIn("seed::bitget-hack::1", ids)            # 其余仍注入
+        self.assertIn("seed::bitget-hack::2", ids)
+
+    def test_budget_exhausted_stops_injection(self):
+        # 累计发够 max_posts 篇→彻底停投，回落常规 RSS 发帖（自动恢复正常）
+        self._write_seed(max_posts=2)
+        self.mgr.record_sent("seed::bitget-hack::0", "t0", "src")
+        self.mgr.record_sent("seed::bitget-hack::1", "t1", "src")
+        base = [{"id": "rss::1", "title": "常规", "impact_score": 5,
+                 "base_impact_score": 5, "age_hours": 1.0}]
+        out = self.f._inject_priority_seeds(list(base), self.mgr)
+        seeds = [c for c in out if str(c["id"]).startswith("seed::")]
+        self.assertEqual(seeds, [])                           # 预算用尽：0 注入
+        self.assertEqual(out, base)                           # 常规候选原样保留
+
+    def test_max_posts_zero_is_noop(self):
+        self._write_seed(max_posts=0)
+        out = self.f._inject_priority_seeds([], self.mgr)
+        self.assertEqual(out, [])                             # max_posts<=0：不注入
+
+    def test_seed_passes_through_dedup_gate(self):
+        # 种子不绕去重：与近期已发标题高度相似的种子应被 fetch 的近似去重淘汰。
+        # 用极相似历史标题喂进 recent_titles，注入后跑 fetch 内同款去重逻辑。
+        self._write_seed(max_posts=3, candidates=[
+            {"title": "Bitget 被盗约 3.52 亿美元 用户保护基金全额兜底 $BTC $ETH",
+             "summary": "冷钱包安全。"}])
+        injected = self.f._inject_priority_seeds([], self.mgr)
+        self.assertEqual(len(injected), 1)
+        seed_title = injected[0]["title"]
+        # 历史里已有几乎一致的标题
+        seen = [seed_title]
+        idx = self.f.build_dedup_index(seen)
+        dup = self.f._match_dedup_index(seed_title, idx, m.DUP_SIMILARITY_THRESHOLD)
+        self.assertIsNotNone(dup)   # 种子标题照样会被近似去重命中→不绕关卡
+
+    def test_cached_id_count_prefix(self):
+        self.mgr.record_sent("seed::bitget-hack::0", "t", "s")
+        self.mgr.record_sent("seed::bitget-hack::1", "t", "s")
+        self.mgr.record_sent("rss::other", "t", "s")
+        self.assertEqual(self.mgr.cached_id_count("seed::bitget-hack::"), 2)
+        self.assertEqual(self.mgr.cached_id_count("seed::none::"), 0)
+        self.assertEqual(self.mgr.cached_id_count(""), 0)     # 空前缀→0，不误全计
 
 
 if __name__ == "__main__":
