@@ -2125,6 +2125,124 @@ class TestTokenWidgetEnforcement(unittest.TestCase):
         finally:
             m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP"}
 
+    def test_cap_cashtag_widgets_demotes_surplus_ascii(self):
+        """R367 核心：清单式行情帖 4+ 唯一有效挂件 → 压到 MAX_TOKENS_PER_POST，
+        多余 $ 挂件按出现顺序降格为纯名（去 $ 留词、句子不断）。复现并防护生产
+        09-24T15:49 code=220095「Coin pair count exceeds the allowed limit」整帖拒稿
+        丢失（tokens=[ETH,XRP,ADA,HYPE]、wc=4、零挂件零返佣）。"""
+        cap = m.SquarePublisher._cap_cashtag_widgets
+        m.SymbolValidator._valid_symbols_cache = {"ETH", "XRP", "ADA", "BNB", "HYPE"}
+        try:
+            content = "行情速览：$ETH 领涨，$XRP 跟随，$ADA 横盘，$BNB 走强，$HYPE 高波动。"
+            out = cap(content, m.MAX_TOKENS_PER_POST)
+            self.assertEqual(m.SquarePublisher._count_valid_widgets(out),
+                             m.MAX_TOKENS_PER_POST, "唯一挂件数须压到 MAX_TOKENS_PER_POST")
+            for kept in ("$ETH", "$XRP", "$ADA"):     # 出现最早的前 3 个保留 $ 前缀
+                self.assertIn(kept, out)
+            for demoted in ("$BNB", "$HYPE"):          # 多余的去 $ 前缀
+                self.assertNotIn(demoted, out)
+            self.assertIn("BNB", out)                  # 但纯名仍在，句子完整不断
+            self.assertIn("HYPE", out)
+        finally:
+            m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP"}
+
+    def test_cap_cashtag_widgets_noop_within_limit(self):
+        """R367 回归：唯一挂件数 ≤ 上限时正文逐字不动（不误伤达标帖）；重复提及同一
+        标的按唯一标的计（与 _count_valid_widgets 同口径），不触发降级。"""
+        cap = m.SquarePublisher._cap_cashtag_widgets
+        exactly_at_limit = "早盘 $BTC 强势，$ETH 跟涨，$XRP 反弹。"   # 3 唯一 = 上限
+        self.assertEqual(cap(exactly_at_limit, m.MAX_TOKENS_PER_POST), exactly_at_limit)
+        repeated = "$BTC 现在 $BTC 还是 $BTC，配合 $ETH。"           # 2 唯一（BTC×3+ETH）
+        self.assertEqual(cap(repeated, m.MAX_TOKENS_PER_POST), repeated)
+
+    def test_cap_cashtag_widgets_floor_and_prefix_collision(self):
+        """R367：地板 ≥1（max<1 归 1，绝不清零挂件——降级只减不增、返佣生命线不破）+
+        前缀撞名保护（负向前瞻护住：降 $ETH 不得误伤 $ETHFI）。"""
+        cap = m.SquarePublisher._cap_cashtag_widgets
+        m.SymbolValidator._valid_symbols_cache = {"ETH", "ETHFI"}
+        try:
+            out = cap("$ETH 与 $ETHFI 并列", 0)      # max<1 → 归 1
+            self.assertEqual(m.SquarePublisher._count_valid_widgets(out), 1,
+                             "地板：至少保留 1 个挂件")
+            self.assertIn("$ETH", out)
+            self.assertNotIn("$ETHFI", out)           # 出现较晚者降级
+            self.assertIn("ETHFI", out)               # 纯名仍在
+            out2 = cap("$ETHFI 领先 $ETH 其后", 1)     # ETHFI 在前 → 保 ETHFI、降 ETH
+            self.assertIn("$ETHFI", out2, "前缀撞名：$ETHFI 不得被 $ETH 降级误伤")
+            self.assertNotIn("$ETH ", out2)           # $ETH 降级（尾随空格避开 $ETHFI 前缀）
+            self.assertEqual(m.SquarePublisher._count_valid_widgets(out2), 1)
+        finally:
+            m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP"}
+
+    def test_cap_cashtag_widgets_cjk(self):
+        """R367：中文标的挂件同样纳入上限压制（与 _count_valid_widgets 的 CJK 口径对齐，
+        勿用 \\b——CJK 相邻不算词边界）。"""
+        cap = m.SquarePublisher._cap_cashtag_widgets
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "牛来", "币安人生"}
+        try:
+            out = cap("冲 $BTC 再看 $牛来 和 $币安人生 三个", 2)
+            self.assertEqual(m.SquarePublisher._count_valid_widgets(out), 2)
+            self.assertIn("$BTC", out)
+            self.assertIn("$牛来", out)
+            self.assertNotIn("$币安人生", out)         # 出现最晚者降级
+            self.assertIn("币安人生", out)             # 纯名仍在
+        finally:
+            m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH", "XRP"}
+
+    def test_publish_caps_widgets_before_count_and_payload(self):
+        """R367 接线哨兵（短讯路径）：真实 publish() 走完管线后，last_widget_count 与
+        实发 payload 的唯一 $ 挂件数都 ≤ MAX_TOKENS_PER_POST，且仍 ≥1（返佣地板）。
+        变异：从 publish 撤掉 _cap_cashtag_widgets 调用 → wc=4>3、payload 4 挂件，本测试 RED。"""
+        pub = m.SquarePublisher(api_key="k")
+        fake_resp = MagicMock(status_code=200, text='{"code":"000000"}')
+        fake_resp.json.return_value = {"code": "000000", "data": {"contentId": "c1"}}
+        body = "行情速览：$ETH 领涨，$XRP 跟随，$ADA 横盘，$BNB 走强，$HYPE 高波动，继续观察。"
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols",
+                          return_value={"ETH", "XRP", "ADA", "BNB", "HYPE"}):
+            mock_sess.post.return_value = fake_resp
+            ok = pub.publish(body, ensure_tokens=["ETH", "XRP", "ADA"])
+            sent_payload = mock_sess.post.call_args.kwargs["json"]
+        self.assertTrue(ok)
+        self.assertLessEqual(pub.last_widget_count, m.MAX_TOKENS_PER_POST,
+                             "last_widget_count 须反映降级后的真实挂件数")
+        self.assertGreaterEqual(pub.last_widget_count, 1, "返佣地板：仍 ≥1 个挂件")
+        self.assertLessEqual(
+            m.SquarePublisher._count_valid_widgets(sent_payload["bodyTextOnly"]),
+            m.MAX_TOKENS_PER_POST, "实发正文唯一挂件数不得超上限（否则触发 220095）")
+
+    def test_publish_video_caps_widgets_before_count(self):
+        """R367 接线哨兵（视频路径）：视频帖无降级为纯文本路径，一旦 220095 拒稿视频与
+        文案一并丢失，故 publish_video 必在提交前把唯一挂件数守到上限。变异：撤掉视频
+        路径的 _cap_cashtag_widgets 调用 → 实发正文 4 挂件，本测试 RED。"""
+        pub = m.SquarePublisher(api_key="k")
+        fake_resp = MagicMock(status_code=200, text='{"code":"000000"}')
+        fake_resp.json.return_value = {"code": "000000", "data": {"contentId": "v1"}}
+        body = "看图说话：$ETH 领涨，$XRP 跟随，$ADA 横盘，$BNB 走强，$HYPE 高波动，速览完毕。"
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols",
+                          return_value={"ETH", "XRP", "ADA", "BNB", "HYPE"}):
+            mock_sess.post.return_value = fake_resp
+            ok = pub.publish_video(body, file_ticket="ft-1", cover_url=None,
+                                   ensure_tokens=["ETH", "XRP", "ADA"])
+            sent_payload = mock_sess.post.call_args.kwargs["json"]
+        self.assertTrue(ok)
+        self.assertEqual(sent_payload["contentType"], 3)
+        self.assertLessEqual(pub.last_widget_count, m.MAX_TOKENS_PER_POST)
+        self.assertGreaterEqual(pub.last_widget_count, 1, "返佣地板：视频文案仍 ≥1 个挂件")
+        self.assertLessEqual(
+            m.SquarePublisher._count_valid_widgets(sent_payload["bodyTextOnly"]),
+            m.MAX_TOKENS_PER_POST, "视频实发正文唯一挂件数不得超上限")
+
+    def test_binance_error_guide_covers_220095(self):
+        """R367：220095（币对超限）此前不在 BINANCE_ERROR_GUIDE（只有 220094 hashtag>3），
+        未知码只能吐通用兜底串。补入后 _classify_publish_error 命中专属排障指引。"""
+        self.assertIn("220095", m.SquarePublisher.BINANCE_ERROR_GUIDE)
+        pub = m.SquarePublisher(api_key="k")
+        diagnosis = pub._classify_publish_error(200, {"code": "220095",
+                                                      "message": "Coin pair count exceeds the allowed limit"})
+        self.assertIn(m.SquarePublisher.BINANCE_ERROR_GUIDE["220095"], diagnosis)
+
 
 class TestProviderHealthScheduling(unittest.TestCase):
     """模型健康度调度：连续失败的提供商沉底"""

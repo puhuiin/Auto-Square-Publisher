@@ -6014,6 +6014,7 @@ class SquarePublisher(BasePublisher):
         "20002":  "内容触发安全风控拦截（如含违禁词/诱导信息），请检查文案或换一篇。",
         "20022":  "内容触发安全风控拦截（高危违规），同题需人工审核。",
         "220094": "Hashtag 数量超过币安限制（>3），已自动切除多余标签仍失败则需查 prompt。",
+        "220095": "币对（$ 挂件）数量超过币安上限，已自动降格多余 $ 挂件为纯名；仍失败则调低 MAX_TOKENS_PER_POST。",
         "20005":  "账户发帖频率或被限流，请降低发帖频率/检查账号状态。",
     }
 
@@ -6478,6 +6479,47 @@ class SquarePublisher(BasePublisher):
             content = pattern.sub(f"${tok}", content)
         return content
 
+    @classmethod
+    def _cap_cashtag_widgets(cls, content: str, max_widgets: int) -> str:
+        """R367：把正文最终的**唯一有效 $ 挂件数**压到 max_widgets 以内。
+        生产 09-24T15:49 清单式行情日评（ETH/XRP/ADA/BNB/HYPE 五币、wc=4）被币安以
+        code=220095「Coin pair count exceeds the allowed limit」整帖拒稿丢失——零挂件
+        零返佣，正是 $挂件返佣生命线被击穿。MAX_TOKENS_PER_POST（L196，默认 3）此前只在
+        选标的（detected_tokens，L8230）时生效，从不约束发出去正文里实际的唯一挂件数；
+        LLM 清单体常内联 4+ 个 $ 币对突破上限。修复=按出现顺序保留前 max_widgets 个唯一
+        有效标的，多余的 $WIDGET 降格为纯名（去 $ 留词，句子完整不断）。识别口径与
+        _count_valid_widgets 完全对齐（ASCII 正则 + CJK f"${sym}" 扫描）。降级只减不增、
+        且 _ensure_token_widget 已先跑 → ≥1 挂件地板仍在（强化而非弱化返佣生命线）。"""
+        content = content or ""
+        if max_widgets < 1:
+            max_widgets = 1
+        valid_symbols = SymbolValidator.get_valid_symbols()
+        cjk_pool = set(_cjk_pool_symbols(valid_symbols))
+        # 按出现位置收集唯一有效挂件（ASCII 归一大写 + CJK 原样），position 排序即"出现顺序"
+        occurrences: List[tuple] = []  # (pos, kind, sym)  kind: "ascii"|"cjk"
+        seen: set = set()
+        for m in re.finditer(r"\$([A-Za-z0-9]{2,10})(?![A-Za-z0-9])", content):
+            sym = m.group(1).upper()
+            if sym in valid_symbols and sym not in seen:
+                seen.add(sym)
+                occurrences.append((m.start(), "ascii", sym))
+        for sym in cjk_pool:
+            idx = content.find(f"${sym}")
+            if idx != -1 and sym not in seen:
+                seen.add(sym)
+                occurrences.append((idx, "cjk", sym))
+        if len(occurrences) <= max_widgets:
+            return content
+        occurrences.sort(key=lambda t: t[0])
+        for _pos, kind, sym in occurrences[max_widgets:]:
+            if kind == "ascii":
+                # 负向前瞻护住前缀撞名（$ETH 降级不会误伤 $ETHFI）
+                content = re.sub(rf"\${re.escape(sym)}(?![A-Za-z0-9])", sym, content,
+                                 flags=re.IGNORECASE)
+            else:
+                content = content.replace(f"${sym}", sym)
+        return content
+
     def _degrade_to_text_retry(self, content: str, title: Optional[str]) -> bool:
         """R365：带图发布失败 → 纯文本降级重发（三条出海口共用）。
         降级递归复用已烘焙好的 content（活动标签早在首过注入进正文），但 image_url=None、
@@ -6560,6 +6602,10 @@ class SquarePublisher(BasePublisher):
         content = self._sanitize_content(content, max_chars=char_limit)
         content = self._weave_cashtags(content, ensure_tokens)
         content = self._ensure_token_widget(content, ensure_tokens)
+        # R367：把最终唯一挂件数压到 MAX_TOKENS_PER_POST 以内（多余 $ 降格纯名），
+        # 否则清单式行情帖 4+ 币对触发币安 220095「Coin pair count exceeds limit」整帖拒稿。
+        # 必在 _count_valid_widgets 之前——last_widget_count 记的须是降格后的真实挂件数。
+        content = self._cap_cashtag_widgets(content, MAX_TOKENS_PER_POST)
         # 回执：全文有效挂件计数。挂件保底保证的是"全文 ≥1 个 $TOKEN"，而
         # final_preview 只存前 200 字钩子区——模型把挂件写在正文尾部时预览区
         # 看不到 $，不记全文计数就无法区分"截断伪影"与"真实丢挂件"。
@@ -6720,6 +6766,9 @@ class SquarePublisher(BasePublisher):
         content = self._sanitize_content(content, max_chars=char_limit)
         content = self._weave_cashtags(content, ensure_tokens)
         content = self._ensure_token_widget(content, ensure_tokens)
+        # R367：视频文案同样压唯一挂件数到上限，杜绝 220095 币对超限（视频帖无降级路径，
+        # 一旦拒稿视频与文案一并丢失，更须在提交前把挂件数守住）。
+        content = self._cap_cashtag_widgets(content, MAX_TOKENS_PER_POST)
         self.last_widget_count = self._count_valid_widgets(content)
         _before_ct = content
         content = self._inject_campaign_tag(content, campaign_intel)
