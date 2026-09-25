@@ -2060,5 +2060,15 @@
       "AVAX",
       "BTC"
     ]
+  },
+  {
+    "id": "seed::bitget-hack-2026-09::1",
+    "title": "Bitget 被盗复盘：后台系统被入侵伪造授权签名 冷钱包安然无恙 $ETH $BNB 自托管更显价值",
+    "source": "priority_seed:bitget-hack",
+    "sent_at": "2026-09-25T15:06:24.651400+00:00",
+    "tokens": [
+      "ETH",
+      "BNB"
+    ]
   }
 ]
