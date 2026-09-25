@@ -3768,6 +3768,21 @@ class MultiLLMEngine:
         return True, "", title, body
 
     @staticmethod
+    def _cjk_amount_scale(unit: str) -> float:
+        """中文金额单位 → 倍率。R368：复合单位 万亿/萬億(=1e12, trillion) 必须与单字
+        万/亿 同权识别——'3.5万亿' 若被单字正则截成 '3.5万'(3.5e4)，会落在 ≥1e6 幻觉门
+        槛之下被 continue 跳过，模型编造的万亿级金额（"某协议锁仓 8万亿美元"）直接过门
+        （数字严禁编造红线的漏洞，与 R233 "假放行削弱红线" 同向）。metrics 实录已有 3 条
+        含"万亿"的真实发帖（1.2万亿枚 $DOG / $1万亿市值 / 万亿资管资金），该解析路径是活
+        的、非假想。调用点的单位正则须把 万亿-族列在单字 万/亿 之前，保证 Python 有序
+        alternation 先吃两字复合单位；源文侧同步识别后，忠实转写的万亿金额也能对称命中。"""
+        if unit in ("万亿", "萬億", "万億", "萬亿"):
+            return 1e12
+        if unit in ("亿", "億"):
+            return 1e8
+        return 1e4  # 万 / 萬
+
+    @staticmethod
     def _verify_numbers(content: str, source_text: str, label: str = "正文") -> Tuple[bool, str]:
         """
         数字幻觉软校验：正文里出现的精确数字（小数百分比、大额精确金额）必须在源文能找到落点。
@@ -3826,10 +3841,10 @@ class MultiLLMEngine:
         # 标题"9,500 萬鎂"的逗号让裸 \d+ 只截到"500"→白名单只有 500万(5e6)，
         # 模型忠实转写的"9500 万"(9.5e7) 查无此数，双通道同因误杀（Zcash 开发
         # 基金新闻整条弃单）。英文分支早有 [\d,]+，CJK 分支漏配。
-        for m in re.finditer(r"(\d[\d,]*(?:\.\d+)?)\s*(万|萬|亿|億)", source_text):
-            scale = 1e4 if m.group(2) in ("万", "萬") else 1e8
+        # R368：万亿/萬億 复合单位列在单字之前（有序 alternation 先吃两字）。
+        for m in re.finditer(r"(\d[\d,]*(?:\.\d+)?)\s*(万亿|萬億|万億|萬亿|亿|億|万|萬)", source_text):
             try:
-                source_nums.append(float(m.group(1).replace(",", "")) * scale)
+                source_nums.append(float(m.group(1).replace(",", "")) * MultiLLMEngine._cjk_amount_scale(m.group(2)))
             except ValueError:
                 continue
 
@@ -3862,10 +3877,11 @@ class MultiLLMEngine:
         # R128：繁体 億/萬 同权（模型从 TW 源转写时会继承繁体写法）
         # R243：内容侧数字组同步支持千分位逗号（源文"9,500 萬"若被原样继承到
         # 正文"9,500 万"，两侧解析须对称，否则同数异形互查无果）
-        for m in re.finditer(r"(\d[\d,]*(?:\.\d+)?)\s*([亿万萬億])\s*(?:美元|美刀|刀|U|u|USDT|usd|资金|美元计|鎂|镁)?", content):
+        # R368：单位组把 万亿/萬億(=1e12) 列在单字 万/亿 之前——否则 "3.5万亿" 被截成
+        # "3.5万"(3.5e4)<1e6 直接 continue 跳过，编造的万亿级金额过门（红线漏洞）。
+        for m in re.finditer(r"(\d[\d,]*(?:\.\d+)?)\s*(万亿|萬億|万億|萬亿|亿|億|万|萬)\s*(?:美元|美刀|刀|U|u|USDT|usd|资金|美元计|鎂|镁)?", content):
             num = float(m.group(1).replace(",", ""))
-            scale = 1e4 if m.group(2) in ("万", "萬") else 1e8
-            abs_val = num * scale
+            abs_val = num * MultiLLMEngine._cjk_amount_scale(m.group(2))
             if abs_val < 1e6:
                 continue
             if not _in_source(abs_val):

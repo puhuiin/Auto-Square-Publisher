@@ -4312,6 +4312,48 @@ class TestNumberHallucinationGuard(unittest.TestCase):
         self.assertFalse(ok3)
         self.assertIn("1.2", reason)
 
+    def test_cjk_trillion_composite_unit(self):
+        """R368：复合单位 万亿/萬億(=1e12, trillion) 此前被单字正则截成 万(1e4)——
+        '8万亿美元' 解析成 8万(8e4)<1e6 幻觉门槛 → continue 跳过，编造的万亿级金额
+        直接过门（数字严禁编造红线漏洞，与 R233 假放行同向）。metrics 实录已有 3 条
+        含"万亿"的真实发帖，该路径是活的。修复后：编造万亿金额必拦，忠实转写必放行，
+        单字 万/亿 行为零回归。"""
+        # ① 红线闭合：源文无此数额，编造的 8万亿美元 必须拒（回退 scale 修复→8e4 跳过→放行→RED）
+        ok, reason = m.MultiLLMEngine._verify_numbers(
+            "某协议锁仓资金高达 8万亿美元，堪称史诗级。", "The protocol saw modest inflows this week.")
+        self.assertFalse(ok, "编造的 8万亿美元不得因复合单位误解析（8万<1e6）而过门")
+        self.assertIn("8万亿", reason)
+        # ② 忠实转写（英文 trillion 源）必放行：两侧同为 3.5e12
+        ok2, _ = m.MultiLLMEngine._verify_numbers(
+            "全球加密总市值突破 3.5万亿美元，创历史新高。",
+            "Global crypto market cap surpassed $3.5 trillion, a record high.")
+        self.assertTrue(ok2, "源文 $3.5 trillion 与正文 3.5万亿 同量级必须互通")
+        # ③ CJK↔CJK 对称：源文与正文同写 2万亿 → 两侧 2e12 命中
+        ok3, _ = m.MultiLLMEngine._verify_numbers(
+            "这轮 2万亿资金入场", "机构预计 2万亿资金将在年内入场")
+        self.assertTrue(ok3, "源文/正文同写 2万亿 两侧解析须对称命中")
+        # ④ 繁体复合 萬億 同权：编造仍拦
+        ok4, reason4 = m.MultiLLMEngine._verify_numbers(
+            "傳某鯨魚砸下 3萬億美元掃貨", "no such figure here")
+        self.assertFalse(ok4, "繁体复合单位 萬億 同样须识别，编造必拦")
+        self.assertIn("3萬億", reason4)
+        # ⑤ 单字 万/亿 行为零回归：5000亿编造仍拦、2.8亿忠实仍放行
+        ok5, _ = m.MultiLLMEngine._verify_numbers("STONK 市值冲到 2.8 亿", "STONK 市值 2.8 億鎂創新高")
+        self.assertTrue(ok5, "单字 亿 忠实转写不得被复合单位改造波及")
+        ok6, reason6 = m.MultiLLMEngine._verify_numbers("凭空喊出 5000亿美元资金", "无任何数额")
+        self.assertFalse(ok6, "单字 亿 的编造拦截不得回归")
+        self.assertIn("5000亿", reason6)
+
+    def test_cjk_amount_scale_unit_map(self):
+        """R368 单位倍率映射直测：万亿-族=1e12，亿/億=1e8，万/萬=1e4（回退任一分支即 RED）。"""
+        s = m.MultiLLMEngine._cjk_amount_scale
+        for u in ("万亿", "萬億", "万億", "萬亿"):
+            self.assertEqual(s(u), 1e12, f"{u} 必须是 trillion(1e12)")
+        for u in ("亿", "億"):
+            self.assertEqual(s(u), 1e8, f"{u} 必须是 1e8")
+        for u in ("万", "萬"):
+            self.assertEqual(s(u), 1e4, f"{u} 必须是 1e4")
+
     def test_plain_numbers_still_pass_after_unit_regex_change(self):
         """单位组改全拼兼容后，普通纯数字/百分比场景不得回归（首版实现曾把
         单位组做成必选，$119850 与 5.23% 全部失配 → 合法内容被误杀）。"""
