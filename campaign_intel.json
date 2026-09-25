@@ -3,25 +3,25 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#BinanceFutures",
-    "#NewListing"
+    "#Futures",
+    "#Hyperliquid"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$BTC",
-    "$HYPE",
     "$RLUSD",
-    "$PROVE",
+    "$XRP",
+    "$HYPE",
     "$VTHO",
     "$BABY",
-    "$NEAR"
+    "$PROVE"
   ],
-  "strategy_guidance": "当前OURAUSDT预上市合约交易、多赛道TradingTournament活动及新上线$HYPE相关玩法均为未过期高热度官方活动，发帖时可优先输出预上市合约参与攻略、交易竞赛冲刺复盘类内容，结合#Write2Earn规则引导用户参与交易获取返佣，同时蹭新上线$HYPE的热点输出产品使用攻略提升曝光。",
-  "last_updated": "2026-09-25T00:44:00.309000Z",
+  "strategy_guidance": "当前未截止的热门活动涵盖新上线$HYPE的多产品支持、OURAUSDT预上市合约、多赛道奖励交易竞赛（VTHO/BABY/BANK/NEAR/PROVE等）及RLUSD持币分$XRP活动，发帖时可优先输出新币交易教程、预上市合约参与攻略、竞赛冲榜技巧类内容，引导用户通过内容内嵌链接参与获取交易返佣，同时带#Write2Earn标签赚取创作激励。",
+  "last_updated": "2026-09-25T12:55:49.289369Z",
   "_feed_health": {},
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
+    "date": "2026-09-09"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-09-25",
