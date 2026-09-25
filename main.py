@@ -7911,7 +7911,7 @@ def _maybe_post_daily_video(publisher: "SquarePublisher",
     if dry_run:
         # DRY_RUN 零副作用：只演练文案与选片，绝不上传/发布/写 intel_state
         logger.info(f"🧪 [DRY_RUN] 模拟视频发布 [{slug}]：文案预览「{caption[:60]}…」，不真上传/发布。")
-        append_metrics({"event": "video_dry_run", "video_slug": slug, "platform": "binance"})
+        append_metrics({"outcome": "video_dry_run", "video_slug": slug, "platform": "binance"})
         return True
 
     api_key = publisher.api_key
@@ -7964,7 +7964,7 @@ def _maybe_post_daily_video(publisher: "SquarePublisher",
             new_sent = new_sent[-200:]
         intel_state_set("_video_sent", new_sent)
         append_metrics({
-            "event": "video_published", "video_slug": slug, "platform": "binance",
+            "outcome": "video_published", "video_slug": slug, "platform": "binance",
             "content_id": publisher.last_content_id,
             "video_seconds": video_seconds,
         })

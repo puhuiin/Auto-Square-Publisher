@@ -13408,6 +13408,37 @@ class TestMaybePostDailyVideo(unittest.TestCase):
         self.assertEqual(m.intel_state_get("_video_sent_date", ""), today)
         self.assertIn("lp-pool-explainer", m.intel_state_get("_video_sent", []))
 
+    def test_dry_run_metrics_uses_outcome_key(self):
+        # R375：视频遥测判别键必须是 outcome（与全库 metrics 行一致），不能是 event。
+        # metrics_report.py / cost_analysis.py 只按 r.get("outcome") 聚合——用 event 会让
+        # video_dry_run 行 outcome 缺席、被报表当 None 桶静默丢弃（R8「按缺失字段聚合失真」族）。
+        pub = MagicMock()
+        with patch.object(m, "append_metrics") as am, \
+             patch.object(m.VideoManager, "upload_to_binance") as up:
+            ok = m._maybe_post_daily_video(pub, {"incentivized_tokens": ["$BTC"]}, True)
+        self.assertTrue(ok)
+        up.assert_not_called()
+        rec = am.call_args.args[0]
+        self.assertEqual(rec.get("outcome"), "video_dry_run")
+        self.assertNotIn("event", rec)
+
+    def test_live_success_metrics_uses_outcome_key(self):
+        # R375 孪生：真发成功行同样必须走 outcome 判别键，否则视频 KPI 在报表里不可见。
+        pub = MagicMock()
+        pub.api_key = "k"
+        pub.publish_video.return_value = True
+        pub.last_content_id = "cid"
+        with patch.object(m, "append_metrics") as am, \
+             patch.object(m.VideoManager, "upload_to_binance", return_value="TICK"), \
+             patch.object(m.ImageManager, "upload_to_binance", return_value="https://cover"), \
+             patch.object(m.VideoManager, "probe_duration_seconds", return_value=42):
+            ok = m._maybe_post_daily_video(pub, {"incentivized_tokens": ["$BTC"]}, False)
+        self.assertTrue(ok)
+        rec = am.call_args.args[0]
+        self.assertEqual(rec.get("outcome"), "video_published")
+        self.assertNotIn("event", rec)
+        self.assertEqual(rec.get("video_slug"), "lp-pool-explainer")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
