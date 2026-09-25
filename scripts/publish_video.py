@@ -1,26 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-一次性视频发布脚本：把本地视频文件上传到币安广场 S3 并发帖。
+一次性视频发布脚本：把本地视频文件上传到币安广场并发帖（长文视频帖，contentType=3）。
 
 用法（需设置 SQUARE_API_KEY 环境变量）：
   export SQUARE_API_KEY="你的Key"
-  python scripts/publish_video.py <视频路径> [--body "正文文本"] [--dry]
+  python scripts/publish_video.py <视频路径> [--title "标题"] [--body "正文"] [--cover 封面图] [--dry]
 
-上传流程复用 main.ImageManager 的 presigned URL 机制（探测确认端点对
-视频文件名与图片文件名行为一致）。发布 payload 走 videoList 字段（与
-imageList 平行的官方字段名）；videoList 被拒时不降级 imageList——把
-mp4 塞进图片字段不可能成功（R6 删除的旧降级路径，docstring 此前仍
-描述它，与实现自相矛盾）。
+R383 修复：旧实现把视频当**图片**发——走 /image/presignedUrl 申请凭证，就绪回执里
+取 imageUrl/videoUrl 当作视频托管 URL，再以 videoList=[URL] + contentType=2 发布。
+但币安广场视频是 **contentType=3 + fileTicket** 关联（图片才用托管 URL），视频就绪
+回执里根本没有 imageUrl/videoUrl，旧实现恒在「转码就绪: None」处失败（生产 workflow
+run 36201217651 实测 100% 失败）。现改为复用 main.py 内经生产验证的
+VideoManager.upload_to_binance（→ fileTicket）与 SquarePublisher.publish_video
+（contentType=3），与每日定投 _maybe_post_daily_video 同源。
 
-正文与标题由调用方提供（或用内置默认文案），走 _sanitize_content
-合规清洗后发布。
+视频帖无独立 title 字段：标题作为文案首行（与 main._build_video_caption 同源）。
+正文经 publish_video 内的短讯净化 + 织挂件 + 挂件保底 + 活动标签，保住 $挂件返佣生命线。
+时长只取 ffprobe 实测秒数，拿不到就省略 videoTimeSeconds——绝不编造（红线：数字严禁编造）。
 """
 import argparse
 import hashlib
 import os
+import re
+import subprocess
 import sys
-import time
+import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import main as m  # noqa: E402
@@ -28,12 +33,9 @@ import main as m  # noqa: E402
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # 币安 S3 单文件上限的保守兜底：防止误传一个几百 MB 的文件把上传窗口耗光
 MAX_VIDEO_BYTES = 200 * 1024 * 1024
-# 转码轮询窗口：图片流程秒级完成，视频转码普遍以分钟计（R110 照抄图片节奏的
-# 60s 窗口对视频太短——超时的失败模式是"200MB 已传完却放弃"，用户重触即整片
-# 重传）。15 次 × 12s = 180s：就绪即早退，只有真在转的才占满窗口；workflow
-# 15 分钟预算下 180s 无压力。
-VIDEO_POLL_ATTEMPTS = 15
-VIDEO_POLL_INTERVAL_SEC = 12
+# $挂件识别（返佣生命线）：ASCII 标的直接匹配；CJK 前后文不能用 \b（中文非单词边界），
+# 用「$ + 2~10 位大写字母/数字」宽松扫描，抽出文案里已有的标的当作挂件保底 ensure_tokens。
+_CASHTAG_RE = re.compile(r"\$([A-Z0-9]{2,10})")
 
 
 def resolve_video_path(raw: str) -> str:
@@ -51,10 +53,7 @@ def resolve_video_path(raw: str) -> str:
 
 def check_duplicate(title: str) -> bool:
     """R111：双发守卫——sent_cache 里已有同标题的帖子时警告（不阻断，由人决定）。
-    视频是一次性手动操作，误触重跑是最常见的双发场景。
-
-    R6：这条守卫此前**恒不命中**——publish() 成功后从不写 sent_cache，
-    表里永远不会有视频帖。现在发布成功会调用 record_sent() 登记。"""
+    视频是一次性手动操作，误触重跑是最常见的双发场景。"""
     try:
         cache = m.CacheManager(m.CACHE_FILE)
         for item in cache.cached_items:
@@ -81,8 +80,32 @@ def record_sent(title: str, source: str = "video") -> bool:
         return False
 
 
-def upload_video(api_key: str, video_path: str) -> str | None:
-    """上传视频到币安 S3，返回托管 URL（None = 失败）。"""
+def build_caption(title: str, body: str) -> str:
+    """标题作首行 + 空行 + 正文（视频帖无独立 title 字段，与 main._build_video_caption 同源）。"""
+    title = (title or "").strip()
+    body = (body or "").strip()
+    parts = [p for p in (title, body) if p]
+    return "\n\n".join(parts) if parts else (title or body)
+
+
+def extract_ensure_tokens(text: str) -> list:
+    """从文案里抽出已有 $标的（去 $ 前缀）当作挂件保底，剔除强制剥离词（ETF/USDT 等）。
+    没抽到就返回空——publish_video 仍会按其自身逻辑处理，正文里的 $挂件不受影响。"""
+    strip = set(getattr(m.SquarePublisher, "FORCE_STRIP_CASHTAGS", []))
+    seen, out = set(), []
+    for sym in _CASHTAG_RE.findall(text or ""):
+        if sym in strip or sym in seen:
+            continue
+        seen.add(sym)
+        out.append(sym)
+    return out
+
+
+def upload_video(api_key: str, video_path: str) -> "str | None":
+    """上传视频到币安 S3，返回 **fileTicket**（None = 失败）。
+
+    委托 main.VideoManager.upload_to_binance：/video/preSign {fileName,size} → S3 PUT →
+    轮询 imageStatus 就绪 → 返回 fileTicket。视频以 fileTicket 关联发布，不是托管 URL。"""
     try:
         size = os.path.getsize(video_path)
     except OSError as e:
@@ -93,139 +116,72 @@ def upload_video(api_key: str, video_path: str) -> str | None:
         return None
     with open(video_path, "rb") as f:
         video_bytes = f.read()
-    size_mb = len(video_bytes) / 1024 / 1024
-    print(f"📤 上传视频 ({size_mb:.1f} MB) 到币安 S3...")
+    print(f"📤 上传视频 ({len(video_bytes) / 1024 / 1024:.1f} MB) 到币安 S3（视频通道 /video/preSign）...")
+    file_ticket = m.VideoManager.upload_to_binance(api_key, video_bytes, os.path.basename(video_path))
+    if file_ticket:
+        print(f"🎉 视频就绪: fileTicket={file_ticket}")
+    else:
+        print("❌ 视频上传/转码失败（未取得 fileTicket）")
+    return file_ticket
 
-    # 复用 presigned URL 三步流程；视频转码轮询给更长窗口（视频比图片慢）
-    headers = {
-        "X-Square-OpenAPI-Key": api_key,
-        "Content-Type": "application/json",
-        "clienttype": "binanceSkill",
-        "User-Agent": "BinanceSquareAutoPosterPro/3.0",
-    }
-    # 步骤 1：申请凭证
-    res = m.http_post(m.ImageManager.PRESIGNED_URL_API, headers=headers,
-                      json={"imageName": "video.mp4"}, timeout=15, retries=1)
-    if res is None or res.status_code != 200:
-        print(f"❌ 获取上传凭证失败: {'网络错误' if res is None else f'HTTP {res.status_code}'}")
-        return None
-    res_json = res.json()
-    if res_json.get("code") != "000000":
-        print(f"❌ 凭证接口业务异常: {res_json.get('message')}")
-        return None
-    data = res_json.get("data") or {}
-    presigned_url = data.get("presignedUrl")
-    file_ticket = data.get("fileTicket")
-    if not presigned_url or not file_ticket:
-        print("❌ 未提取到 presignedUrl/fileTicket")
-        return None
 
-    # 步骤 2：PUT 上传二进制
-    s3_res = m.http_request("PUT", presigned_url,
-                            headers={"Content-Type": "video/mp4"},
-                            data=video_bytes, timeout=120, retries=1)
-    if s3_res is None or s3_res.status_code not in (200, 204):
-        print(f"❌ S3 上传失败: {'网络错误' if s3_res is None else f'HTTP {s3_res.status_code}'}")
-        return None
-    print("✅ 视频已送达 S3，等待转码...")
-
-    # 步骤 3：轮询转码状态（窗口 180s，视频转码以分钟计；就绪即早退）
-    for i in range(VIDEO_POLL_ATTEMPTS):
-        time.sleep(VIDEO_POLL_INTERVAL_SEC)
-        stat = m.http_post(m.ImageManager.IMAGE_STATUS_API, headers=headers,
-                           json={"fileTicket": file_ticket}, timeout=10, retries=1)
-        if stat is not None and stat.status_code == 200:
-            sj = stat.json().get("data") or {}
-            status = sj.get("status")
-            if status == 1:
-                url = sj.get("imageUrl") or sj.get("videoUrl")
-                print(f"🎉 转码就绪: {url}")
-                return url
-            if status == 2:
-                print(f"❌ 审核未通过: {sj.get('failedReason')}")
-                return None
-        print(f"  等待转码... ({i + 1}/{VIDEO_POLL_ATTEMPTS})")
-    print(f"⚠️ 转码轮询超时（{VIDEO_POLL_ATTEMPTS * VIDEO_POLL_INTERVAL_SEC}s），视频可能仍在处理中")
+def extract_cover_frame(video_path: str) -> "str | None":
+    """尽力用 ffmpeg 抽首帧做封面；ffmpeg 不可用/失败一律返回 None（无封面照样能发）。
+    argument-array 调用、无 shell、有界超时。"""
+    try:
+        fd, cover_path = tempfile.mkstemp(suffix="-cover.jpg")
+        os.close(fd)
+        proc = subprocess.run(
+            ["ffmpeg", "-y", "-i", video_path, "-vf", "thumbnail", "-frames:v", "1", cover_path],
+            capture_output=True, text=True, timeout=60, shell=False,
+        )
+        if proc.returncode == 0 and os.path.exists(cover_path) and os.path.getsize(cover_path) > 0:
+            return cover_path
+    except Exception as e:
+        print(f"ℹ️ 封面抽帧跳过（不影响发布）: {e}")
     return None
 
 
-def publish(api_key: str, body: str, video_url: str | None, title: str | None = None) -> bool:
-    """发布到币安广场。
-
-    R6 修了两处让"视频发布"实际不成立的缺陷：
-    1. 旧实现在 title 非空（**默认就非空**）时只写 `cover = video_url`，从不写
-       `videoList` —— 视频被当成封面图提交，而"videoList 被拒则降级 imageList"
-       的分支因为 payload 里永远没有 videoList 而恒不执行（死代码）。
-       现在 videoList 与 title/contentType 正交：只要有视频就下发。
-    2. 删掉 imageList 降级：把 mp4 塞进图片字段不可能成功，只会把视频 URL
-       喂给图片接口。
-    """
-    # 走既有净化管线（合规清洗+挂件+标签）
-    content = m.SquarePublisher._sanitize_content(body)
-    headers = {
-        "X-Square-OpenAPI-Key": api_key,
-        "Content-Type": "application/json",
-        "clienttype": "binanceSkill",
-        "User-Agent": "BinanceSquareAutoPosterPro/3.0",
-    }
-    payload = {"bodyTextOnly": content}
-    if title:
-        payload["contentType"] = 2
-        payload["title"] = title[:80]
+def upload_cover(api_key: str, cover_path: str) -> "str | None":
+    """上传封面图，返回托管 URL（失败返回 None，转为无封面发布）。"""
+    try:
+        with open(cover_path, "rb") as f:
+            cover_bytes = f.read()
+    except OSError as e:
+        print(f"ℹ️ 读取封面失败（将无封面发布）: {e}")
+        return None
+    url = m.ImageManager.upload_to_binance(api_key, cover_bytes, "video-cover-v.jpg", "image/jpeg")
+    if url:
+        print(f"🖼️ 封面已上传: {url}")
     else:
-        payload["contentType"] = 1
-    if video_url:
-        payload["videoList"] = [video_url]
-    print(f"📝 发布 payload 键: {list(payload.keys())}")
-    # retries=0：http_request 会把 504 也纳入重试，而发帖接口的 504 官方语义是
-    # "内容已受理入库"（main.SquarePublisher.publish 同款约定）。带重试 = 重复发帖。
-    res = m.http_post(m.BINANCE_SQUARE_API_URL, headers=headers, json=payload,
-                      timeout=20, retries=0)
-    if res is None:
-        print("❌ 发布失败: 网络错误")
-        return False
-    if res.status_code == 504:
-        print("⚠️ 504 Gateway Timeout：按币安官方语义内容已进入发布队列，"
-              "视为成功且**不重试**（重试等于重复发帖）")
-        return True
-    if res.status_code != 200:
-        print(f"❌ 发布失败: HTTP {res.status_code} {res.text[:200]}")
-        return False
-    rj = res.json()
-    if rj.get("code") == "000000" or rj.get("success"):
-        cid = (rj.get("data") or {}).get("contentId")
-        print(f"🎉 发布成功！Content ID: {cid}")
-        if cid:
-            print(f"   帖子链接: https://www.binance.com/zh-CN/square/post/{cid}")
-        return True
-    print(f"❌ 业务错误: {rj.get('message')} (code={rj.get('code')})")
-    return False
+        print("ℹ️ 封面上传失败，将以无封面发布。")
+    return url
 
 
-# ---- LP 流动性池讲解的默认文案（交易员人设风格） ----
-DEFAULT_TITLE = "3分钟搞懂LP流动性池：你给DEX当庄家，赚的是谁的钱？"
-DEFAULT_BODY = """做了一段3分钟的视频，把 LP 流动性池的运作机制掰开讲透了。
+# ---- LP 流动性池讲解的默认文案（交易员人设风格，$挂件 + 看法 + 活动标签） ----
+DEFAULT_TITLE = "3分钟搞懂LP流动性池：给DEX当庄家，你赚的到底是谁的钱？"
+DEFAULT_BODY = """做了一段3分钟的视频，专门讲 LP 流动性池到底怎么运作、普通人下场当"庄家"该注意什么。
 
-简单说：你往池子里放一对代币（比如 $BNB + USDT），别人来交易时付手续费给你。听起来像躺着赚，但这里面有三个坑必须知道。
+先说原理：你往池子里存一对代币，别人来 swap 就付手续费给你。听着像躺赚，但有三个坑不搞明白迟早交学费。
 
-第一是无常损失。币价一波动，你池子里的资产比例就变，对比单纯拿着，你可能少赚甚至亏钱。视频里用具体数字算了这笔账。
+第一，无常损失。只要两个币的相对价格一动，池子里的比例就被套利者重新配平，跟单纯拿现货比，单边行情里你大概率是少赚的。
 
-第二是费率收益其实跟交易量挂钩。池子越大费率越薄，冷门池子交易少赚的也少。选池子不能只看APY那个大数字。
+第二，手续费收益跟真实交易量强相关，跟标称的那个大 APY 关系不大。池子越冷门，摊到你头上的费越薄，选池子别只盯年化数字。
 
-第三是智能合约风险。池子被黑了，你的钱就没了。这不是理论风险，每年都有大案子。
+第三，合约风险是实打实的，池子被攻击本金可能直接归零，这不是吓唬人。
 
-视频里把这三点用动画演示了一遍，看完你就知道什么币适合做LP，什么情况该撤。
+说说我的看法：真要下场当 LP，我更愿意在交易深度和真实使用量都扎实的生态里做主流对，比如 $BNB 这类链上 DEX 活跃度摆在明面上的资产，安全边际比去追高年化的土狗池子高不少——高 APY 常常是拿无常损失和跑路风险换来的。
 
-觉得有用的话扣个1，想看某个具体协议的LP分析扣2。
+觉得有用扣个1，想看某个具体协议的 LP 拆解扣2。
 
-#Write2Earn #BinanceSquare #LP"""
-
+#Write2Earn #BinanceSquare"""
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="一次性视频发布到币安广场")
-    parser.add_argument("video", help="视频文件路径 (.mp4)")
-    parser.add_argument("--title", default=DEFAULT_TITLE, help="帖子标题（长文模式）")
+    parser = argparse.ArgumentParser(description="一次性视频发布到币安广场 (contentType=3)")
+    parser.add_argument("video", help="视频文件路径 (.mp4/.mov/.webm/.mkv)")
+    parser.add_argument("--title", default=DEFAULT_TITLE, help="标题（作为文案首行）")
     parser.add_argument("--body", default=DEFAULT_BODY, help="正文文本")
+    parser.add_argument("--cover", default="", help="封面图路径（留空则尝试 ffmpeg 抽首帧，失败则无封面）")
     parser.add_argument("--dry", action="store_true", help="DRY 模式：只上传不发帖")
     parser.add_argument("--force", action="store_true", help="跳过双发守卫强制发布")
     args = parser.parse_args()
@@ -242,38 +198,65 @@ def main() -> int:
         print(f"❌ 视频文件不存在: {args.video}（按仓库根解析为 {video_path}）")
         return 1
 
+    caption = build_caption(args.title, args.body)
+    # 双发守卫的标题键：与 record_sent 登记的一致（用首行标题，稳定可比）
+    dedup_key = (args.title or caption.split("\n", 1)[0]).strip()
+
     print(f"🎬 视频发布准备: {video_path}")
-    print(f"   标题: {args.title[:40]}...")
-    print(f"   正文: {args.body[:40]}...")
+    print(f"   标题: {dedup_key[:40]}...")
+    print(f"   文案首段: {caption[:40]}...")
 
     # R111：双发守卫——同标题帖子已存在时警告（不阻断，--force 跳过）
-    if check_duplicate(args.title):
-        print(f"\n⚠️ 警告: sent_cache 中已有同标题「{args.title[:30]}…」的帖子。")
+    if check_duplicate(dedup_key):
+        print(f"\n⚠️ 警告: sent_cache 中已有同标题「{dedup_key[:30]}…」的帖子。")
         if not args.force:
             print("   可能是重复发布。加 --force 跳过此检查继续发布。\n")
             return 1
         print("   --force 已指定，继续发布。\n")
     print()
 
-    # 上传视频
-    video_url = upload_video(api_key, video_path)
-    if not video_url:
+    # 上传视频 → fileTicket（视频以 fileTicket 关联，不是托管 URL）
+    file_ticket = upload_video(api_key, video_path)
+    if not file_ticket:
         print("❌ 视频上传失败，无法发布")
         return 1
 
     if args.dry:
-        print(f"🏁 DRY 模式：视频已上传 ({video_url})，跳过发布")
+        print(f"🏁 DRY 模式：视频已上传 (fileTicket={file_ticket})，跳过发布")
         return 0
 
-    # 发布
-    ok = publish(api_key, args.body, video_url, title=args.title)
+    # 封面：显式 --cover 优先；否则尽力 ffmpeg 抽首帧；都没有就无封面发布
+    cover_url = None
+    cover_src = args.cover.strip() or extract_cover_frame(video_path)
+    if cover_src and os.path.exists(cover_src):
+        cover_url = upload_cover(api_key, cover_src)
+
+    # 时长：ffprobe 实测，拿不到则省略（绝不编造）
+    video_seconds = m.VideoManager.probe_duration_seconds(video_path)
+
+    # $挂件返佣生命线：把文案里已有的标的抽出来当保底 ensure_tokens
+    ensure_tokens = extract_ensure_tokens(caption) or None
+
+    publisher = m.SquarePublisher(api_key)
+    ok = publisher.publish_video(
+        caption, file_ticket, cover_url,
+        video_seconds=video_seconds, ensure_tokens=ensure_tokens, campaign_intel=None,
+    )
     if ok:
-        # 登记去重缓存：这是 R111 双发守卫与 24h 配额唯一的数据来源。
-        # workflow 随后会把 sent_cache.json 提交回仓库，让下次手动触发能看见。
-        if record_sent(args.title):
+        cid = getattr(publisher, "last_content_id", None)
+        if cid:
+            print(f"🎉 发布成功！Content ID: {cid}")
+            print(f"   帖子链接: https://www.binance.com/zh-CN/square/post/{cid}")
+        else:
+            print("🎉 发布成功（未返回 Content ID，可能 504 已入队）")
+        # 登记去重缓存：R111 双发守卫与 24h 配额唯一的数据来源
+        if record_sent(dedup_key):
             print("🧾 已登记 sent_cache（workflow 会随状态回写提交，重跑将被守卫拦下）")
+    else:
+        print(f"❌ 发布失败: {getattr(publisher, 'last_error', '未知错误')}")
     return 0 if ok else 1
 
 
 if __name__ == "__main__":
     sys.exit(main())
+

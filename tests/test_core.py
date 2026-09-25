@@ -11113,70 +11113,94 @@ class TestNumbersWhitelistIncludesIntel(unittest.TestCase):
 
 
 class TestVideoPublisherPayload(unittest.TestCase):
-    """视频通道：videoList 必须下发；不得把 mp4 塞进图片字段；504 不重试（R6）"""
+    """视频通道（R383 起）：视频以 fileTicket + contentType=3 发布，不再走 videoList/托管 URL；
+    上传委托 VideoManager（→ fileTicket），发布委托 main.SquarePublisher.publish_video。"""
 
     def setUp(self):
         import importlib
         self.pv = importlib.import_module("scripts.publish_video")
 
-    def _resp(self, status=200, payload=None):
-        r = MagicMock(status_code=status)
-        r.text = json.dumps(payload or {}, ensure_ascii=False)
-        r.json.return_value = payload or {}
-        return r
+    def test_upload_video_delegates_to_videomanager_returns_fileticket(self):
+        """变异哨兵：撤回图片端点/URL 老路（返回 imageUrl/videoUrl）此断言即 RED。"""
+        import tempfile
+        fd, path = tempfile.mkstemp(suffix=".mp4"); os.close(fd)
+        with open(path, "wb") as f:
+            f.write(b"x" * 1024)
+        try:
+            with patch.object(m.VideoManager, "upload_to_binance", return_value="TICK-1") as up, \
+                 patch.object(m.ImageManager, "upload_to_binance") as img_up:
+                got = self.pv.upload_video("k", path)
+            self.assertEqual(got, "TICK-1")
+            up.assert_called_once()
+            img_up.assert_not_called()
+        finally:
+            os.remove(path)
 
-    def test_video_list_sent_even_with_title(self):
-        """默认就有 title，旧实现因此只写 cover，视频从未真正作为视频发布"""
-        with patch.object(m, "http_post",
-                          return_value=self._resp(200, {"code": "000000", "data": {"contentId": "1"}})) as hp:
-            ok = self.pv.publish("k", "这是一段足够长的正文内容用于测试。",
-                                 "https://cdn.example/v.mp4", title="标题")
-        self.assertTrue(ok)
-        payload = hp.call_args.kwargs["json"]
-        self.assertEqual(payload.get("videoList"), ["https://cdn.example/v.mp4"])
-        self.assertNotIn("imageList", payload)
-        self.assertNotIn("cover", payload)
-        self.assertEqual(payload.get("contentType"), 2)
+    def test_main_publishes_contenttype3_with_fileticket(self):
+        """端到端：main() 用 upload_video 的 fileTicket 调 publish_video，标题作首段、挂件保底。"""
+        import tempfile, sys as _sys
+        fd, vpath = tempfile.mkstemp(suffix=".mp4"); os.close(fd)
+        with open(vpath, "wb") as f:
+            f.write(b"x" * 2048)
+        cache = tempfile.mktemp(suffix=".json")
+        orig_cache, orig_argv = m.CACHE_FILE, _sys.argv
+        m.CACHE_FILE = cache
+        _sys.argv = ["publish_video.py", vpath, "--title", "标题T", "--body", "正文 $BNB 足够长的内容示例。"]
+        os.environ["SQUARE_API_KEY"] = "k"
+        try:
+            with patch.object(m.VideoManager, "upload_to_binance", return_value="TICK"), \
+                 patch.object(m.VideoManager, "probe_duration_seconds", return_value=42), \
+                 patch.object(self.pv, "extract_cover_frame", return_value=None), \
+                 patch.object(m.SquarePublisher, "publish_video", return_value=True) as pubv:
+                rc = self.pv.main()
+            self.assertEqual(rc, 0)
+            pubv.assert_called_once()
+            cargs = pubv.call_args
+            self.assertEqual(cargs.args[1], "TICK")
+            self.assertEqual(cargs.kwargs.get("video_seconds"), 42)
+            self.assertEqual(cargs.kwargs.get("ensure_tokens"), ["BNB"])
+            self.assertTrue(cargs.args[0].startswith("标题T"))
+        finally:
+            m.CACHE_FILE, _sys.argv = orig_cache, orig_argv
+            os.environ.pop("SQUARE_API_KEY", None)
+            if os.path.exists(vpath):
+                os.remove(vpath)
+            if os.path.exists(cache):
+                os.remove(cache)
 
-    def test_video_list_sent_without_title(self):
-        with patch.object(m, "http_post",
-                          return_value=self._resp(200, {"code": "000000"})) as hp:
-            self.pv.publish("k", "这是一段足够长的正文内容用于测试。",
-                            "https://cdn.example/v.mp4", title=None)
-        self.assertEqual(hp.call_args.kwargs["json"].get("videoList"),
-                         ["https://cdn.example/v.mp4"])
 
-    def test_no_video_no_video_list(self):
-        with patch.object(m, "http_post", return_value=self._resp(200, {"code": "000000"})) as hp:
-            self.pv.publish("k", "这是一段足够长的正文内容用于测试。", None, title="标题")
-        self.assertNotIn("videoList", hp.call_args.kwargs["json"])
-
-    def test_504_accepted_without_retry(self):
-        with patch.object(m, "http_post", return_value=self._resp(504)) as hp:
-            self.assertTrue(self.pv.publish("k", "这是一段足够长的正文内容用于测试。",
-                                            "https://cdn.example/v.mp4", title="t"))
-        self.assertEqual(hp.call_count, 1, "504 语义是已受理，重试等于重复发帖")
-        self.assertEqual(hp.call_args.kwargs.get("retries"), 0)
-
-    def test_business_error_not_retried_as_imagelist(self):
-        with patch.object(m, "http_post",
-                          return_value=self._resp(200, {"code": "10001", "message": "bad"})) as hp:
-            self.assertFalse(self.pv.publish("k", "这是一段足够长的正文内容用于测试。",
-                                             "https://cdn.example/v.mp4", title="t"))
-        self.assertEqual(hp.call_count, 1)
-        self.assertNotIn("imageList", hp.call_args.kwargs["json"],
-                         "mp4 不得降级塞进只收图片的字段")
-
-    def test_oversized_video_rejected_before_read(self):
+    def test_oversized_video_rejected_before_upload(self):
         import tempfile
         fd, path = tempfile.mkstemp(suffix=".mp4")
         os.close(fd)
         try:
             with patch.object(self.pv.os.path, "getsize",
-                              return_value=self.pv.MAX_VIDEO_BYTES + 1):
+                              return_value=self.pv.MAX_VIDEO_BYTES + 1), \
+                 patch.object(m.VideoManager, "upload_to_binance") as up:
                 self.assertIsNone(self.pv.upload_video("k", path))
+                up.assert_not_called()
         finally:
             os.remove(path)
+
+    def test_main_dry_uploads_but_skips_publish(self):
+        import tempfile, sys as _sys
+        fd, vpath = tempfile.mkstemp(suffix=".mp4"); os.close(fd)
+        with open(vpath, "wb") as f:
+            f.write(b"x" * 2048)
+        orig_argv = _sys.argv
+        _sys.argv = ["publish_video.py", vpath, "--dry"]
+        os.environ["SQUARE_API_KEY"] = "k"
+        try:
+            with patch.object(m.VideoManager, "upload_to_binance", return_value="TICK"), \
+                 patch.object(m.SquarePublisher, "publish_video") as pubv:
+                rc = self.pv.main()
+            self.assertEqual(rc, 0)
+            pubv.assert_not_called()
+        finally:
+            _sys.argv = orig_argv
+            os.environ.pop("SQUARE_API_KEY", None)
+            if os.path.exists(vpath):
+                os.remove(vpath)
 
     def test_resolve_video_path_falls_back_to_repo_root(self):
         import shutil, tempfile
