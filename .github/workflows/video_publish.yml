@@ -55,6 +55,18 @@ jobs:
       - name: 安装项目依赖
         run: pip install -r requirements.txt
 
+      # ubuntu-latest 默认不带 ffmpeg/ffprobe（已核实：run 36202612131 因此抽不到封面，
+      # 被币安以 220092「Video cover is required」拒）。装上后 extract_cover_frame 能抽
+      # 真首帧、probe_duration_seconds 能拿真实时长（videoTimeSeconds 绝不编造，拿不到就省略）。
+      # 脚本另有 Pillow 兜底封面，即便这步失败也不会无封面发布。
+      - name: 安装 ffmpeg（封面抽帧 + 时长探测；runner 默认不带）
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
+          ffprobe -version | head -1
+
       - name: 验证视频文件存在
         env:
           VIDEO_PATH: ${{ github.event.inputs.video_path }}

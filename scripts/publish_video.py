@@ -158,6 +158,65 @@ def upload_cover(api_key: str, cover_path: str) -> "str | None":
     return url
 
 
+def generate_fallback_cover(title: str) -> "str | None":
+    """无 ffmpeg 时的兜底封面：用 Pillow 画一张品牌暗色卡片（Pillow 已是依赖）。
+
+    币安视频帖强制要求封面（220092），而 runner 默认无 ffmpeg 抽不到真首帧。这里
+    不赌运行环境的系统字体——CI 无 CJK 字体会把中文画成方框，故卡面文字只用 ASCII，
+    保证任何环境都出一张干净可用的封面。真首帧优先（extract_cover_frame），这里只兜底。"""
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        W, H = 1280, 720
+        img = Image.new("RGB", (W, H), (11, 14, 20))
+        d = ImageDraw.Draw(img)
+        # 竖向渐变，避免纯色死板
+        for y in range(H):
+            t = y / H
+            d.line([(0, y), (W, y)], fill=(int(11 + 8 * t), int(14 + 10 * t), int(20 + 26 * t)))
+        # 币安金的强调条
+        d.rectangle([0, 0, W, 10], fill=(240, 185, 11))
+        d.rectangle([0, H - 10, W, H], fill=(240, 185, 11))
+
+        def _font(size: int):
+            for name in ("C:/Windows/Fonts/arialbd.ttf", "C:/Windows/Fonts/arial.ttf",
+                         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                         "DejaVuSans-Bold.ttf", "DejaVuSans.ttf"):
+                try:
+                    return ImageFont.truetype(name, size)
+                except Exception:
+                    continue
+            try:
+                return ImageFont.load_default(size)
+            except Exception:
+                return ImageFont.load_default()
+
+        d.text((70, 300), "BINANCE SQUARE", font=_font(64), fill=(240, 185, 11))
+        d.text((70, 396), "VIDEO", font=_font(120), fill=(234, 236, 240))
+        fd, cover_path = tempfile.mkstemp(suffix="-fallback-cover.jpg")
+        os.close(fd)
+        img.save(cover_path, "JPEG", quality=88)
+        if os.path.getsize(cover_path) > 0:
+            print("🖼️ 已用 Pillow 生成兜底封面（无 ffmpeg 真首帧时的保底）。")
+            return cover_path
+    except Exception as e:
+        print(f"ℹ️ 兜底封面生成失败: {e}")
+    return None
+
+
+def acquire_cover_url(api_key: str, video_path: str, explicit_cover: str, title: str) -> "str | None":
+    """取得并上传视频封面，返回托管 URL（None = 彻底失败）。
+
+    优先级：显式 --cover → ffmpeg 抽首帧 → Pillow 兜底卡片。币安视频帖必须带封面
+    （220092），任一来源产出图片即上传；兜底几乎必成功，故正常不会返回 None。"""
+    cover_src = (explicit_cover or "").strip() or extract_cover_frame(video_path)
+    if not (cover_src and os.path.exists(cover_src)):
+        cover_src = generate_fallback_cover(title)
+    if cover_src and os.path.exists(cover_src):
+        return upload_cover(api_key, cover_src)
+    return None
+
+
 # ---- LP 流动性池讲解的默认文案（交易员人设风格，$挂件 + 看法 + 活动标签） ----
 DEFAULT_TITLE = "3分钟搞懂LP流动性池：给DEX当庄家，你赚的到底是谁的钱？"
 DEFAULT_BODY = """做了一段3分钟的视频，专门讲 LP 流动性池到底怎么运作、普通人下场当"庄家"该注意什么。
@@ -181,7 +240,7 @@ def main() -> int:
     parser.add_argument("video", help="视频文件路径 (.mp4/.mov/.webm/.mkv)")
     parser.add_argument("--title", default=DEFAULT_TITLE, help="标题（作为文案首行）")
     parser.add_argument("--body", default=DEFAULT_BODY, help="正文文本")
-    parser.add_argument("--cover", default="", help="封面图路径（留空则尝试 ffmpeg 抽首帧，失败则无封面）")
+    parser.add_argument("--cover", default="", help="封面图路径（留空则先 ffmpeg 抽首帧，再 Pillow 兜底）")
     parser.add_argument("--dry", action="store_true", help="DRY 模式：只上传不发帖")
     parser.add_argument("--force", action="store_true", help="跳过双发守卫强制发布")
     args = parser.parse_args()
@@ -215,6 +274,15 @@ def main() -> int:
         print("   --force 已指定，继续发布。\n")
     print()
 
+    # 封面：币安视频帖强制要求（220092，已被 run 36202612131 实锤）。DRY 不发帖故跳过；
+    # LIVE 先拿到封面再上传视频——拿不到就中止，避免白传一次视频又必被 220092 拒。
+    cover_url = None
+    if not args.dry:
+        cover_url = acquire_cover_url(api_key, video_path, args.cover, args.title)
+        if not cover_url:
+            print("❌ 未能取得/上传视频封面；币安视频帖必须带封面（220092），已中止（未上传视频）。")
+            return 1
+
     # 上传视频 → fileTicket（视频以 fileTicket 关联，不是托管 URL）
     file_ticket = upload_video(api_key, video_path)
     if not file_ticket:
@@ -224,12 +292,6 @@ def main() -> int:
     if args.dry:
         print(f"🏁 DRY 模式：视频已上传 (fileTicket={file_ticket})，跳过发布")
         return 0
-
-    # 封面：显式 --cover 优先；否则尽力 ffmpeg 抽首帧；都没有就无封面发布
-    cover_url = None
-    cover_src = args.cover.strip() or extract_cover_frame(video_path)
-    if cover_src and os.path.exists(cover_src):
-        cover_url = upload_cover(api_key, cover_src)
 
     # 时长：ffprobe 实测，拿不到则省略（绝不编造）
     video_seconds = m.VideoManager.probe_duration_seconds(video_path)

@@ -11150,13 +11150,14 @@ class TestVideoPublisherPayload(unittest.TestCase):
         try:
             with patch.object(m.VideoManager, "upload_to_binance", return_value="TICK"), \
                  patch.object(m.VideoManager, "probe_duration_seconds", return_value=42), \
-                 patch.object(self.pv, "extract_cover_frame", return_value=None), \
+                 patch.object(self.pv, "acquire_cover_url", return_value="https://cover.jpg"), \
                  patch.object(m.SquarePublisher, "publish_video", return_value=True) as pubv:
                 rc = self.pv.main()
             self.assertEqual(rc, 0)
             pubv.assert_called_once()
             cargs = pubv.call_args
             self.assertEqual(cargs.args[1], "TICK")
+            self.assertEqual(cargs.args[2], "https://cover.jpg")
             self.assertEqual(cargs.kwargs.get("video_seconds"), 42)
             self.assertEqual(cargs.kwargs.get("ensure_tokens"), ["BNB"])
             self.assertTrue(cargs.args[0].startswith("标题T"))
@@ -11192,15 +11193,59 @@ class TestVideoPublisherPayload(unittest.TestCase):
         os.environ["SQUARE_API_KEY"] = "k"
         try:
             with patch.object(m.VideoManager, "upload_to_binance", return_value="TICK"), \
+                 patch.object(self.pv, "acquire_cover_url") as cover, \
                  patch.object(m.SquarePublisher, "publish_video") as pubv:
                 rc = self.pv.main()
             self.assertEqual(rc, 0)
+            pubv.assert_not_called()
+            cover.assert_not_called()  # DRY 不发帖，无需（也不该）取封面
+        finally:
+            _sys.argv = orig_argv
+            os.environ.pop("SQUARE_API_KEY", None)
+            if os.path.exists(vpath):
+                os.remove(vpath)
+
+    def test_main_aborts_when_cover_unavailable(self):
+        """220092 哨兵：封面拿不到必须中止，且在上传视频之前中止（不白传）、不调 publish_video。"""
+        import tempfile, sys as _sys
+        fd, vpath = tempfile.mkstemp(suffix=".mp4"); os.close(fd)
+        with open(vpath, "wb") as f:
+            f.write(b"x" * 2048)
+        orig_argv = _sys.argv
+        _sys.argv = ["publish_video.py", vpath, "--title", "标题T", "--body", "正文 $BNB 内容示例。"]
+        os.environ["SQUARE_API_KEY"] = "k"
+        try:
+            with patch.object(self.pv, "acquire_cover_url", return_value=None), \
+                 patch.object(m.VideoManager, "upload_to_binance") as up, \
+                 patch.object(m.SquarePublisher, "publish_video") as pubv:
+                rc = self.pv.main()
+            self.assertEqual(rc, 1)
+            up.assert_not_called()   # 封面先于视频上传，拿不到就止损
             pubv.assert_not_called()
         finally:
             _sys.argv = orig_argv
             os.environ.pop("SQUARE_API_KEY", None)
             if os.path.exists(vpath):
                 os.remove(vpath)
+
+    def test_fallback_cover_generated_without_ffmpeg(self):
+        """runner 无 ffmpeg 时，acquire_cover_url 必须用 Pillow 兜底出一张真图（headless 可跑）。"""
+        from PIL import Image
+        captured = {}
+
+        def _fake_upload(api_key, cover_path):
+            captured["path"] = cover_path
+            return "https://cover.jpg"
+
+        with patch.object(self.pv, "extract_cover_frame", return_value=None), \
+             patch.object(self.pv, "upload_cover", side_effect=_fake_upload):
+            url = self.pv.acquire_cover_url("k", "no-such-video.mp4", "", "标题T")
+        self.assertEqual(url, "https://cover.jpg")
+        self.assertTrue(os.path.exists(captured["path"]))
+        with Image.open(captured["path"]) as im:
+            self.assertEqual(im.format, "JPEG")
+            self.assertGreater(im.width, 0)
+        os.remove(captured["path"])
 
     def test_resolve_video_path_falls_back_to_repo_root(self):
         import shutil, tempfile
