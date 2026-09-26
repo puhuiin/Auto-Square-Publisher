@@ -4193,6 +4193,39 @@ class TestNumberHallucinationGuard(unittest.TestCase):
         ok, _ = m.MultiLLMEngine._verify_numbers("单日净流入 24 亿美元", "ETF inflows hit $2.4B")
         self.assertTrue(ok)
 
+    def test_english_billion_collapsed_to_yi_rejected(self):
+        """R384 生产实录（09-23/24/25 numbers-stage 拒稿，step-3.7-flash 与
+        openrouter 双通道，近期最主要的数字拒稿型态）：模型把英文标题的
+        'X Billion' 直译成中文 'X亿' —— billion=1e9 但 亿=1e8，忠实换算应是
+        'X0亿'(×10)，直译成 'X亿' 是 10 倍量级坍缩（534 Billion → 应写 5340亿，
+        模型写成 534亿=53.4B）。这不是误杀而是模型真写错了量级，幻觉门必须拒
+        （数字严禁编造红线：放过=静默发出一个 10 倍偏差的编造数字）。此型态此前
+        无显式哨兵——本测试双向锁定：坍缩误译必拒、忠实 ×10 换算必放行，任一方向
+        回归即 RED。"""
+        src_534b = "534 Billion Shiba Inu (SHIB) Traded in 24 Hours"
+        # ① 坍缩误译：534亿(5.34e10) ≠ 534 Billion(5.34e11) → 必拒
+        ok, reason = m.MultiLLMEngine._verify_numbers("24 小时内 534亿 SHIB 换手", src_534b)
+        self.assertFalse(ok, "534亿=53.4B 与源文 534B 差 10 倍，编造量级必拒")
+        self.assertIn("534亿", reason)
+        # ② 忠实换算：5340亿=534 Billion → 必放行（证明哨兵不是"一律拒英文大数"）
+        ok2, _ = m.MultiLLMEngine._verify_numbers("24 小时内 5340亿 SHIB 换手", src_534b)
+        self.assertTrue(ok2, "5340亿=534B 忠实换算两侧同量级必须放行")
+        # ③ 同型第二例（74 Billion）：74亿=7.4B 拒、740亿=74B 放行
+        src_74b = "Shiba Inu Rally May Resume: 74 Billion SHIB Burned"
+        ok3, _ = m.MultiLLMEngine._verify_numbers("销毁 74亿 SHIB", src_74b)
+        self.assertFalse(ok3, "74亿=7.4B 与 74B 差 10 倍必拒")
+        ok4, _ = m.MultiLLMEngine._verify_numbers("销毁 740亿 SHIB", src_74b)
+        self.assertTrue(ok4, "740亿=74B 忠实换算必放行")
+        # ④ 写错具体数值（非 10 倍，纯写错）：源 $388M，正文 3.52亿=352M（差 9.3%）必拒
+        ok5, reason5 = m.MultiLLMEngine._verify_numbers(
+            "受影响资产约 3.52亿美元", "Bitget clarifies $388M in assets affected by exploit")
+        self.assertFalse(ok5, "352M 与源文 388M 超 2% 容差，写错的金额必拒")
+        self.assertIn("3.52亿", reason5)
+        # ⑤ 该值忠实转写（3.88亿=388M）必放行
+        ok6, _ = m.MultiLLMEngine._verify_numbers(
+            "受影响资产约 3.88亿美元", "Bitget clarifies $388M in assets affected by exploit")
+        self.assertTrue(ok6, "3.88亿=388M 忠实转写必放行")
+
     def test_fabricated_cny_rejected(self):
         ok, reason = m.MultiLLMEngine._verify_numbers(
             "24 亿美元资金流入", "ETF inflows were modest at 100 million"
@@ -11184,11 +11217,17 @@ class TestVideoPublisherPayload(unittest.TestCase):
             os.remove(path)
 
     def test_main_dry_uploads_but_skips_publish(self):
+        # R384 遥测测试隔离：DRY 无 --title 走 DEFAULT_TITLE，而该标题已在 R383 LIVE 发布并落进
+        # 生产 sent_cache.json —— main() 的 R111 双发守卫(check_duplicate)在 DRY 分支之前就会命中
+        # 真实缓存、无 --force 时正确 return 1（守卫行为正确、不可弱化）。测试必须把 m.CACHE_FILE
+        # 隔离到临时空缓存，才能对生产状态免疫；否则 rc==0 断言被生产缓存内容左右而假红。
         import tempfile, sys as _sys
         fd, vpath = tempfile.mkstemp(suffix=".mp4"); os.close(fd)
         with open(vpath, "wb") as f:
             f.write(b"x" * 2048)
-        orig_argv = _sys.argv
+        cache = tempfile.mktemp(suffix=".json")
+        orig_cache, orig_argv = m.CACHE_FILE, _sys.argv
+        m.CACHE_FILE = cache
         _sys.argv = ["publish_video.py", vpath, "--dry"]
         os.environ["SQUARE_API_KEY"] = "k"
         try:
@@ -11200,10 +11239,12 @@ class TestVideoPublisherPayload(unittest.TestCase):
             pubv.assert_not_called()
             cover.assert_not_called()  # DRY 不发帖，无需（也不该）取封面
         finally:
-            _sys.argv = orig_argv
+            m.CACHE_FILE, _sys.argv = orig_cache, orig_argv
             os.environ.pop("SQUARE_API_KEY", None)
             if os.path.exists(vpath):
                 os.remove(vpath)
+            if os.path.exists(cache):
+                os.remove(cache)
 
     def test_main_aborts_when_cover_unavailable(self):
         """220092 哨兵：封面拿不到必须中止，且在上传视频之前中止（不白传）、不调 publish_video。"""
