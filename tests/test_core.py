@@ -6312,6 +6312,26 @@ class TestRejectTelemetry(unittest.TestCase):
         self.assertEqual(rows[0]["stage"], "numbers")
         self.assertIn("12.53", rows[0]["reason"])
 
+    def test_numbers_reject_carries_persona_for_attribution(self):
+        # R392 归因哨兵：numbers 门（"数字严禁编造"红线门）拒稿行必须像其兄弟门
+        # （quality/ai_flavor/transport 均传 persona=persona["name"]）一样署写派人设，
+        # 否则"哪个人设最爱编数字"的按 persona 归因面被致盲——生产实测 15/15 条
+        # numbers 拒稿 persona 全为 None，正是 4559 处独漏 persona= 实参所致（此前
+        # 唯一漏署 persona 的内容门）。把该实参删掉，这条即 RED。
+        eng = self._stub_engine()
+        content = ("比特币放量突破关键位，短线情绪转多，单日暴涨12.53%点燃全场。"
+                   "回调就是上车机会，但别追高，等回踩确认支撑再进，仓位控制好。")
+        client = self._fake_client(content=content)
+        item = {"title": "BTC news", "summary": "Bitcoin surged", "source": "U.Today"}
+        with patch.object(eng, "_get_client", return_value=client):
+            self.assertIsNone(eng.summarize(item, None, market_context="", token_hints=["BTC"]))
+        rows = self._rows()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["stage"], "numbers")
+        valid = {p["name"] for p in m.WRITING_PERSONAS}
+        self.assertIn(rows[0].get("persona"), valid,
+                      "numbers 拒稿行必须署有效写派人设，供按 persona 归因红线门")
+
     def test_article_title_fabricated_number_rejected_through_summarize(self):
         # R356 接线哨兵：长文正文本身干净（过长文门 + 过正文数字门），但 TITLE 行
         # 编造精确百分比（源文查无）。summarize 必须在数字门内拦下并记 numbers 行、

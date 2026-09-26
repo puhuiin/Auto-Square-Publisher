@@ -4558,6 +4558,7 @@ class MultiLLMEngine:
                 if not nums_ok:
                     self._log_reject(news_item, provider.name, "numbers", nums_reason,
                                      tokens_used, latency_sec, provider.model,
+                                     persona=persona["name"],
                                      content_preview=self._reject_preview(content),
                                      finish_reason=finish_for_telemetry)
                     raise _QualityGateRejection(nums_reason)
