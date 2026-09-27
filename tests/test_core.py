@@ -688,9 +688,15 @@ class TestRecentOpeners(unittest.TestCase):
         eng._clients = {}
         item = {"title": "BTC news", "summary": "s", "age_hours": 5.0}
         art, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=True)
+        article_ending_style = eng.last_ending_style
         short, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=False)
+        short_ending_style = eng.last_ending_style
         self.assertNotIn("本条结尾站队提问的套路", art, "长文不吃短讯站队 CTA")
+        self.assertIsNone(article_ending_style,
+                          "长文没有注入短讯 CTA，不得记录未生效的 ending style")
         self.assertIn("本条结尾站队提问的套路", short, "短讯仍带站队 CTA")
+        self.assertIsNotNone(short_ending_style,
+                             "短讯注入 CTA 后仍须记录实际生效的 ending style")
 
     def test_persona_and_ending_avoid_recently_seen(self):
         """R287：跨运行不扎堆——最近 K=池大小 次回执里出现过的人设/结尾套路，

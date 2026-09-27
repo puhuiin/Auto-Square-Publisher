@@ -4115,6 +4115,8 @@ class MultiLLMEngine:
         抽取自 summarize：prompt 组装与提供商容灾循环职责分离，组装规则可独立测试。
         article=True 走深度长文模板（800~1200 字，contentType=2），否则短讯模板。"""
         # 组织活动背景提示（仅作为潜意识背景，避免生搬硬套非相关代币）。
+        # 清空逐帖回执，防止长文或失败调用沿用同一引擎上一条短讯的 CTA 标签。
+        self.last_ending_style = None
         # R83 时效标注：情报正文可能沿用过期缓存（刷新失败退避最长 2h+，正文却引用
         # 具体截止日期——生产实录：09-10 仍在喂"09-04 双重截止，抢最后48小时"，已过期
         # 6 天。模型照它写帖 = 把过期活动当事实发布，违反"事件严禁编造"红线）。
@@ -4183,12 +4185,17 @@ class MultiLLMEngine:
         # R287：draw_fresh 接近期回执预热——进程内洗牌跨运行失效（每轮新进程），
         # 近期出现过的套路排到袋子末尾先抽别的
         recent_published = self._recent_published_rows(20)
-        ending_style = _ENDING_BAG.draw_fresh(
-            (r.get("ending_style") for r in recent_published),
-            key=lambda s: s.split("：")[0])  # 回执只存冒号前短标签（R130）
-        # R130：回执遥测——验证 ShuffleBag 轮换均匀性（只存冒号前短标签便于聚合）
-        self.last_ending_style = ending_style.split("：")[0]
-        ending_hint = f"【本条结尾站队提问的套路】：{ending_style}\n"
+        if article:
+            # 长文模板不注入短讯 CTA，因此不能把抽取标签记成实际生效的结尾套路。
+            self.last_ending_style = None
+            ending_hint = ""
+        else:
+            ending_style = _ENDING_BAG.draw_fresh(
+                (r.get("ending_style") for r in recent_published),
+                key=lambda s: s.split("：")[0])  # 回执只存冒号前短标签（R130）
+            # R130：回执遥测——验证 ShuffleBag 轮换均匀性（只存冒号前短标签便于聚合）
+            self.last_ending_style = ending_style.split("：")[0]
+            ending_hint = f"【本条结尾站队提问的套路】：{ending_style}\n"
 
         # R298：开场/FNG 指纹守卫抽成独立 opener_guard——此前四条守卫全拼进
         # ending_hint，但长文分支（article）只取 fresh_art 不取 ending_hint，故
