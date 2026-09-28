@@ -3,21 +3,20 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Futures",
-    "#NewListing"
+    "#Futures"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$BTC",
+    "$XRP",
     "$HYPE",
     "$PROVE",
-    "$NEAR",
-    "$VTHO",
-    "$BABY",
-    "$BANK"
+    "$RLUSD",
+    "$USDT",
+    "$USDC"
   ],
-  "strategy_guidance": "当前币安正密集推进 VTHO、BABY、BANK、PROVE、NEAR 等多场交易锦标赛，且 HYPE 刚上线现货并同步开通 Earn、Margin 与 VIP Loan，发帖机器人应将日常行情快讯与这些在跑的活动强绑定，用‘参赛攻略+奖励瓜分’角度引导读者下单以获取 Write to Earn 交易返佣；同时可结合 OURAUSDT 永续合约 Pre-IPO 与 bStocks 抵押上新，做‘新合约/新资产’的抢先解读，进一步放大曝光。",
-  "last_updated": "2026-09-28T02:05:01.283249Z",
+  "strategy_guidance": "优先围绕今日新上线的$HYPE全生态功能接入及新USDⓈ-Margined Perpetual合约发布快讯，搭配VTHO、BABY、BANK、NEAR等BNB奖励交易赛、PROVE交易赛及RLUSD持仓分XRP活动的参与攻略输出内容，引导用户参与交易获取返佣；日常可结合#Write2Earn规则输出活动实操抄作业类内容，若遇限时冲刺类活动可优先追贴复盘与冲刺指引，最大化内容曝光与收益。",
+  "last_updated": "2026-09-28T15:22:13.188658Z",
   "_feed_health": {},
   "_fallback_image": {
     "date": "2026-09-09",
