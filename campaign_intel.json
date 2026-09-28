@@ -4,24 +4,24 @@
     "#BinanceSquare",
     "#TradingTournament",
     "#Futures",
-    "#BinanceEarn"
+    "#NewListing"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$BTC",
-    "$RLUSD",
-    "$XRP",
     "$HYPE",
-    "$OUR",
+    "$PROVE",
+    "$NEAR",
     "$VTHO",
-    "$BABY"
+    "$BABY",
+    "$BANK"
   ],
-  "strategy_guidance": "优先追贴即将上线的OURAUSDT预IPO合约相关快讯，结合合约交易玩法、新资产上线预期角度切入；同步联动当前多赛道BNB奖励交易赛、RLUSD持仓分XRP活动、USDT灵活理财高收益等官方活动，引导用户参与交易、持仓获取奖励，附Write2Earn任务指引与交易返佣链接，最大化内容曝光与收益。",
-  "last_updated": "2026-09-27T13:44:00.308723Z",
+  "strategy_guidance": "当前币安正密集推进 VTHO、BABY、BANK、PROVE、NEAR 等多场交易锦标赛，且 HYPE 刚上线现货并同步开通 Earn、Margin 与 VIP Loan，发帖机器人应将日常行情快讯与这些在跑的活动强绑定，用‘参赛攻略+奖励瓜分’角度引导读者下单以获取 Write to Earn 交易返佣；同时可结合 OURAUSDT 永续合约 Pre-IPO 与 bStocks 抵押上新，做‘新合约/新资产’的抢先解读，进一步放大曝光。",
+  "last_updated": "2026-09-28T02:05:01.283249Z",
   "_feed_health": {},
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
+    "date": "2026-09-09"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-09-28",
