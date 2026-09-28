@@ -10926,6 +10926,40 @@ class TestImageTier(unittest.TestCase):
         mock_dl.assert_not_called()   # 走势卡命中：绝不下载新闻原图
         mock_card.assert_not_called()
 
+    def test_prefer_raw_over_chart_for_variety(self):
+        """配图轮换：prefer=raw 打头时，即使 K 线可用也先用新闻原图（避免"全是走势卡"单调）"""
+        blob = ("jpeg-bytes", "cover.jpg", "image/jpeg")
+        with patch.object(m.MarketDataProvider, "get_kline_closes", return_value=[1.0] * 48), \
+             patch.object(m.ImageManager, "render_chart_card", return_value=blob) as mock_chart, \
+             patch.object(m.ImageManager, "_is_safe_image_url", return_value=True), \
+             patch.object(m.ImageManager, "download_image", return_value=blob), \
+             patch.object(m.ImageManager, "upload_to_binance", return_value="https://cdn/raw.jpg"):
+            out = m.ImageManager.prepare_and_upload(
+                "k", "https://news.example/a.jpg",
+                token_lines=["$BTC: $67234 (24H: +2.35%)"], fng_text="F&G 50",
+                prefer=["raw", "chart", "card"])
+        self.assertEqual(out, "https://cdn/raw.jpg")
+        self.assertEqual(m.ImageManager.last_image_tier, "raw")
+        mock_chart.assert_not_called()   # raw 打头命中，不渲染走势卡
+
+    def test_prefer_card_first_over_chart_and_raw(self):
+        """配图轮换：prefer=card 打头 → 情绪卡优先，即使 K 线与新闻图都可用"""
+        blob = ("jpeg-bytes", "cover.jpg", "image/jpeg")
+        with patch.object(m.MarketDataProvider, "get_kline_closes", return_value=[1.0] * 48), \
+             patch.object(m.ImageManager, "render_chart_card", return_value=blob) as mock_chart, \
+             patch.object(m.ImageManager, "_is_safe_image_url", return_value=True), \
+             patch.object(m.ImageManager, "download_image", return_value=blob) as mock_dl, \
+             patch.object(m.ImageManager, "render_market_card", return_value=blob), \
+             patch.object(m.ImageManager, "upload_to_binance", return_value="https://cdn/card.jpg"):
+            out = m.ImageManager.prepare_and_upload(
+                "k", "https://news.example/a.jpg",
+                token_lines=["$BTC: $67234 (24H: +2.35%)"], fng_text="F&G 50",
+                prefer=["card", "chart", "raw"])
+        self.assertEqual(out, "https://cdn/card.jpg")
+        self.assertEqual(m.ImageManager.last_image_tier, "card")
+        mock_chart.assert_not_called()
+        mock_dl.assert_not_called()
+
     def test_none_tier(self):
         with patch.object(m.ImageManager, "download_image", return_value=None), \
              patch.object(m.MarketDataProvider, "get_kline_closes", return_value=[]), \

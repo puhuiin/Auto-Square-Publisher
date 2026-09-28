@@ -5869,107 +5869,100 @@ class ImageManager:
     @classmethod
     def prepare_and_upload(cls, api_key: str, raw_image_url: Optional[str],
                            token_lines: Optional[List[str]] = None,
-                           fng_text: str = "") -> Optional[str]:
+                           fng_text: str = "",
+                           prefer: Optional[List[str]] = None) -> Optional[str]:
         """
-        一站式准备配图，级联 chart > raw > card > fng > none：
-        - 首选 48H 走势卡（chart）：对所提币种（token_lines 里第一个能拉到币安
-          K 线的标的）渲染真实 K 线走势卡——即"所提币种的 K 线小组件"，把真实行情
-          与帖子强绑定，是行情帖最强眼钩。此前走势卡仅作"无新闻图时的兜底"（约
-          23% 帖命中），绝大多数帖用的是与所提币种无关的通用新闻照片。
-        - K 线不可用（币无币安 K 线/渲染失败）才退新闻原图（raw，带 SSRF 门）。
-        - 原图缺席/下载失败再退实时市场情绪卡（card，每帖一图不重样）。
-        - 卡片链路全败才降级 FNG 情绪仪表盘外链（fng，当日缓存复用）。
-        失败时把细分原因写进 self.last_image_fail_reason 供遥测采集；成功时把实际
-        生效的图源层级写进 self.last_image_tier（chart/raw/card/fng/none），供遥测
-        回答"配图是否单一"。
+        一站式准备配图，三种主图源 + 兜底：chart(48H走势卡) / raw(新闻原图) / card(情绪卡)
+        →（都不成再）fng(情绪仪表盘外链) → none(纯文本)。
+        - **prefer 轮换**：调用方按帖传入主图源尝试顺序（如 ['raw','chart','card']），
+          避免"每帖都是涨跌走势卡"的单调（用户反馈：太单调不吸引人）。三种主图源都保留、
+          按 prefer 顺序尝试，任一成功即用；prefer 缺省时 chart 优先（向后兼容）。
+        - chart：所提币种真实 K 线走势卡；raw：新闻原图（带 SSRF 门）；card：实时情绪卡。
+        - R8：任一主图源"上传失败"= S3/凭证故障，后续本地渲染同样传不上去 → 跳过剩余主图源
+          直接走 FNG 外链兜底（当日缓存复用，零额外上传）。
+        失败时把细分原因写进 self.last_image_fail_reason；成功时把实际生效层级写进
+        self.last_image_tier（chart/raw/card/fng/none）供遥测回答"配图是否单一"。
         """
         cls.last_image_fail_reason = None
         cls.last_image_tier = None
         if token_lines is None:
             token_lines = []
+        order = list(prefer) if prefer else ["chart", "raw", "card"]
 
-        # ---- Tier1 CHART（首选）：所提币种的真实 48H 走势卡 ----
-        # 数据行里第一个能拉到币安 K 线的标的（最多试 3 个）渲染真实走势曲线。
-        chart_upload_failed = False
-        for line in token_lines[:3]:
-            m_sym = re.match(r"\$([A-Za-z0-9]+)", line.strip())
-            if not m_sym:
-                continue
-            closes = MarketDataProvider.get_kline_closes(m_sym.group(1))
-            if not closes:
-                continue
-            chart = cls.render_chart_card(m_sym.group(1), closes, fng_text)
-            if chart:
-                hosted_url = cls.upload_to_binance(api_key, chart[0], chart[1], chart[2])
-                if hosted_url:
-                    cls.last_image_tier = "chart"
-                    return hosted_url
-                # 走势卡上传失败 = S3/凭证问题：换标的/换图同样传不上去（R8），
-                # 后续原图/情绪卡的注定失败上传一并跳过，直接走外链兜底。
-                chart_upload_failed = True
-                break
-
-        # ---- Tier2 RAW（兜底）：K 线不可用时才用新闻原图 ----
-        fail_stage = "upload_failed" if chart_upload_failed else None
+        # 新闻原图目标 + SSRF 门（只算一次；不可信 RSS 的内网/元数据/file 一律拒绝并降级）
         target_url = raw_image_url.strip() if raw_image_url else cls.DEFAULT_FALLBACK_IMAGE
-        # SSRF 门禁：配图 URL 来自不可信 RSS，内网/元数据/file 等一律拒绝并静默降级
         if target_url != cls.DEFAULT_FALLBACK_IMAGE and not cls._is_safe_image_url(target_url):
             logger.warning(f"配图 URL 未通过 SSRF 安全校验（内网/非 http(s)/解析异常），拒绝拉取: {target_url[:80]}")
             target_url = cls.DEFAULT_FALLBACK_IMAGE
-        using_fallback = target_url == cls.DEFAULT_FALLBACK_IMAGE
+        raw_available = target_url != cls.DEFAULT_FALLBACK_IMAGE
 
-        download_result = None
-        if not chart_upload_failed and not using_fallback:
-            download_result = cls.download_image(target_url)
-            if not download_result:
-                fail_stage = "download_failed"
+        # 每个主图源返回 (status, url)：ok / upload_failed(S3故障) / unavailable / download_failed / render_failed
+        def _try_chart():
+            for line in token_lines[:3]:
+                m_sym = re.match(r"\$([A-Za-z0-9]+)", line.strip())
+                if not m_sym:
+                    continue
+                closes = MarketDataProvider.get_kline_closes(m_sym.group(1))
+                if not closes:
+                    continue
+                chart = cls.render_chart_card(m_sym.group(1), closes, fng_text)
+                if chart:
+                    url = cls.upload_to_binance(api_key, chart[0], chart[1], chart[2])
+                    return ("ok", url) if url else ("upload_failed", None)
+            return ("unavailable", None)
 
-        if not download_result:
-            # 走势卡上传失败（S3 故障）→ 跳过原图/情绪卡的二次上传，直接外链兜底（R8）；
-            # 否则原图缺席/下载失败 → 退实时市场情绪卡（bars/随机布局，每帖唯一）。
-            if chart_upload_failed:
-                logger.info("走势卡上传失败（疑似 S3/凭证问题），跳过原图/情绪卡的二次上传，直接走外链兜底。")
-            else:
-                logger.info("走势卡不可用、新闻原图缺席或抓取失败，改用本地渲染情绪卡配图...")
-                card = cls.render_market_card(token_lines, fng_text)
-                if card:
-                    hosted_url = cls.upload_to_binance(api_key, card[0], card[1], card[2])
-                    if hosted_url:
-                        cls.last_image_tier = "card"
-                        return hosted_url
-                    fail_stage = "upload_failed"
-                else:
-                    fail_stage = "render_failed"
-            # 情绪卡不可用：降级 FNG 情绪仪表盘外链（先看当日缓存，零额外下载/上传）
-            cached_url = cls._read_fallback_cache()
-            if cached_url:
+        def _try_raw():
+            if not raw_available:
+                return ("unavailable", None)
+            dl = cls.download_image(target_url)
+            if not dl:
+                return ("download_failed", None)
+            url = cls.upload_to_binance(api_key, dl[0], dl[1], dl[2])
+            return ("ok", url) if url else ("upload_failed", None)
+
+        def _try_card():
+            card = cls.render_market_card(token_lines, fng_text)
+            if not card:
+                return ("render_failed", None)
+            url = cls.upload_to_binance(api_key, card[0], card[1], card[2])
+            return ("ok", url) if url else ("upload_failed", None)
+
+        # 按 prefer 顺序尝试三种主图源，任一成功即用
+        attempts = {"chart": _try_chart, "raw": _try_raw, "card": _try_card}
+        fail_stage = None
+        for tier in order:
+            fn = attempts.get(tier)
+            if not fn:
+                continue
+            status, url = fn()
+            if status == "ok":
+                cls.last_image_tier = tier
+                return url
+            if status == "upload_failed":
+                # S3/凭证故障：后续主图源同样传不上去（R8），跳过直接走外链兜底
+                fail_stage = "upload_failed"
+                break
+            if status != "unavailable":
+                fail_stage = status  # 记住最后一环真实失败（download_failed/render_failed）
+
+        # ---- FNG 情绪仪表盘外链兜底（当日缓存优先，零额外上传）----
+        cached_url = cls._read_fallback_cache()
+        if cached_url:
+            cls.last_image_tier = "fng"
+            return cached_url
+        download_result = cls.download_image(cls.DEFAULT_FALLBACK_IMAGE)
+        if download_result:
+            url = cls.upload_to_binance(api_key, download_result[0], download_result[1], download_result[2])
+            if url:
                 cls.last_image_tier = "fng"
-                return cached_url
-            download_result = cls.download_image(cls.DEFAULT_FALLBACK_IMAGE)
-            if download_result:
-                fail_stage = None  # 兜底图交付成功
-                cls.last_image_tier = "fng"
-                using_fallback = True  # 尾巴据此写当日缓存
+                cls._write_fallback_cache(url)
+                return url
+            fail_stage = "upload_failed"
 
-        if not download_result:
-            cls.last_image_fail_reason = fail_stage or "download_failed"
-            cls.last_image_tier = "none"
-            logger.warning("配图全链路失败（走势卡/原图/情绪卡/FNG 外链），将以纯文本格式继续发布。")
-            return None
-
-        # 原图直达与 FNG 现下共用上传尾巴：层级以实际生效者为准，
-        # FNG 分支上已赋值则不再覆盖（原图直达时 using_fallback 为 False → raw）。
-        if cls.last_image_tier is None:
-            cls.last_image_tier = "fng" if using_fallback else "raw"
-        image_bytes, filename, content_type = download_result
-        hosted_url = cls.upload_to_binance(api_key, image_bytes, filename, content_type)
-        if not hosted_url:
-            cls.last_image_fail_reason = "upload_failed"
-            cls.last_image_tier = "none"  # 上传失败 = 最终无图（覆盖上游已赋的尝试层级）
-
-        if hosted_url and using_fallback:
-            cls._write_fallback_cache(hosted_url)
-        return hosted_url
+        cls.last_image_fail_reason = fail_stage or "download_failed"
+        cls.last_image_tier = "none"
+        logger.warning("配图全链路失败（走势卡/原图/情绪卡/FNG 外链），将以纯文本格式继续发布。")
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -8567,12 +8560,21 @@ def _run_main():
                 # 卡片 bars 布局依赖可解析的涨跌幅；无行情数据时退化为 $TOKEN 裸行）
                 card_lines = [ln for ln in live_market_data.split(" | ") if ln] \
                     or [f"${t}" for t in detected_tokens[:3]]
+                # 配图轮换（用户反馈"全是走势卡太单调"）：每帖轮换主图源打头，
+                # raw(新闻图)/chart(走势卡)/card(情绪卡) 各得其位，保留级联兜底。
+                # fng/none 不占轮换位（只在三种主图源都不成时才降级）。
+                _img_rot = intel_state_get("_img_rot", 0)
+                _prefer = (["raw", "chart", "card"], ["chart", "raw", "card"],
+                           ["card", "chart", "raw"])[_img_rot % 3]
                 uploaded_image_url = ImageManager.prepare_and_upload(
                     square_api_key, raw_img,
-                    token_lines=card_lines, fng_text=f"Fear&Greed {fng_index}")
+                    token_lines=card_lines, fng_text=f"Fear&Greed {fng_index}",
+                    prefer=_prefer)
                 stage_timings["image"] += time.time() - t_img_start
                 image_fail_reason = getattr(ImageManager, "last_image_fail_reason", None)
                 image_tier = getattr(ImageManager, "last_image_tier", None) or "none"
+                if image_tier in ("chart", "raw", "card"):
+                    intel_state_set("_img_rot", (_img_rot + 1) % 3)
             elif not binance_enabled and raw_img:
                 # 草稿模式无 S3 上传：直接给新闻原图直链，供手动下载后上传 OKX
                 uploaded_image_url = raw_img
