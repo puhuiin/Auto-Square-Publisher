@@ -17,13 +17,19 @@
   ],
   "strategy_guidance": "优先围绕今日新上线的$HYPE全生态功能接入及新USDⓈ-Margined Perpetual合约发布快讯，搭配VTHO、BABY、BANK、NEAR等BNB奖励交易赛、PROVE交易赛及RLUSD持仓分XRP活动的参与攻略输出内容，引导用户参与交易获取返佣；日常可结合#Write2Earn规则输出活动实操抄作业类内容，若遇限时冲刺类活动可优先追贴复盘与冲刺指引，最大化内容曝光与收益。",
   "last_updated": "2026-09-28T15:22:13.188658Z",
-  "_feed_health": {},
+  "_feed_health": {
+    "CryptoPotato (山寨币/Meme热点)": {
+      "fails": 1,
+      "last_fail": "2026-09-28T16:57:13.621041+00:00"
+    }
+  },
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
+    "date": "2026-09-09"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-09-28",
   "_publish_park": {},
-  "_intel_refresh_fail": {}
+  "_intel_refresh_fail": {},
+  "_img_rot": 2
 }
