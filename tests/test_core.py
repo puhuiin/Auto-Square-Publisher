@@ -10884,14 +10884,32 @@ class TestImageTier(unittest.TestCase):
         mock_up.assert_not_called()
 
     def test_raw_tier(self):
+        # chart-first：K 线不可用（get_kline_closes→[]）时才轮到新闻原图，raw 胜出
         blob = ("jpeg-bytes", "cover.jpg", "image/jpeg")
-        with patch.object(m.ImageManager, "_is_safe_image_url", return_value=True), \
+        with patch.object(m.MarketDataProvider, "get_kline_closes", return_value=[]), \
+             patch.object(m.ImageManager, "_is_safe_image_url", return_value=True), \
              patch.object(m.ImageManager, "download_image", return_value=blob), \
              patch.object(m.ImageManager, "render_market_card") as mock_card, \
              patch.object(m.ImageManager, "upload_to_binance", return_value="https://cdn/r.jpg"):
             out = self._prepare(raw_image_url="https://news.example/a.jpg")
         self.assertEqual(out, "https://cdn/r.jpg")
         self.assertEqual(m.ImageManager.last_image_tier, "raw")
+        mock_card.assert_not_called()
+
+    def test_chart_preferred_over_raw_when_kline_available(self):
+        # chart-first 核心：既有新闻原图 URL 又有可用 K 线时，走势卡胜出，新闻原图不下载
+        chart_blob = ("chart-jpeg", "cover.jpg", "image/jpeg")
+        with patch.object(m.MarketDataProvider, "get_kline_closes", return_value=[1.0] * 48), \
+             patch.object(m.ImageManager, "render_chart_card", return_value=chart_blob) as mock_chart, \
+             patch.object(m.ImageManager, "_is_safe_image_url", return_value=True), \
+             patch.object(m.ImageManager, "download_image") as mock_dl, \
+             patch.object(m.ImageManager, "render_market_card") as mock_card, \
+             patch.object(m.ImageManager, "upload_to_binance", return_value="https://cdn/chart.jpg"):
+            out = self._prepare(raw_image_url="https://news.example/a.jpg")
+        self.assertEqual(out, "https://cdn/chart.jpg")
+        self.assertEqual(m.ImageManager.last_image_tier, "chart")
+        mock_chart.assert_called_once()
+        mock_dl.assert_not_called()   # 走势卡命中：绝不下载新闻原图
         mock_card.assert_not_called()
 
     def test_none_tier(self):
