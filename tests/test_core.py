@@ -772,6 +772,29 @@ class TestRecentOpeners(unittest.TestCase):
         pool_labels = {s.split("：")[0] for s in m.ENDING_STYLE_POOL}
         self.assertIn(label, pool_labels, f"标签 {label} 必须来自结尾池")
 
+    def test_opening_hook_stashed_and_injected(self):
+        """R521：抽中的开场钩子套路要暂存到引擎（回执遥测/跨帖去重读它）并注入短讯 prompt。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        label = getattr(eng, "last_opening_hook", None)
+        self.assertIsNotNone(label, "prompt 组装后引擎必须暂存开场钩子标签")
+        self.assertNotIn("：", label, "必须是短标签（不含冒号）")
+        pool_labels = {s.split("：")[0] for s in m.OPENING_HOOK_POOL}
+        self.assertIn(label, pool_labels, f"标签 {label} 必须来自开场钩子池")
+        self.assertIn("开场钩子套路", prompt, "短讯 prompt 必须注入开场钩子指令")
+
+    def test_article_prompt_has_no_opening_hook(self):
+        """长文分支不注入短讯开场钩子套路，last_opening_hook 应保持 None（防沿用上一条短讯）"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        eng._build_user_prompt(item, None, "", ["BTC"], article=True)
+        self.assertIsNone(getattr(eng, "last_opening_hook", None))
+
 
 class TestIntelFreshnessInPrompt(unittest.TestCase):
     """R83：过期情报正文注入 prompt 必须降权——生产实录 09-10 仍喂

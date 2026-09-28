@@ -2959,6 +2959,20 @@ ENDING_STYLE_POOL = [
 _PERSONA_BAG = ShuffleBag([p["name"] for p in WRITING_PERSONAS])
 _ENDING_BAG = ShuffleBag(ENDING_STYLE_POOL)
 
+# 开场钩子套路池（R521 用户诉求"多加吸引人阅读的开头/标题、提升阅读量"）：
+# 每条是一种**开场模式**（非固定句子，故不与 opener_guard 的整句去重冲突），
+# 每帖轮换一种，逼模型把第一句写成信息流里让人停下来的钩子。数字只用真实资料。
+OPENING_HOOK_POOL = [
+    "反差冲击：第一句甩一个反直觉的事实或真实数字，让人「等等，什么？」愣一下",
+    "痛点直击：第一句就戳中此刻读者最扎心的处境（踏空/套牢/怕错过），像说中心事",
+    "悬念设问：抛一个让人必须知道答案的问题开场，逼着往下读（别急着自问自答）",
+    "内幕爆料腔：以「多数人还没反应过来…」的知情者口吻开场，制造信息差诱惑",
+    "结论先行：把最犀利的判断甩在第一句，理由后置（倒金字塔，先给暴论再论证）",
+    "热点反转：先顺着大众情绪半句、第二句反转打脸，制造认知冲突把人钉住",
+    "利益直给：第一句点明「这事和你的钱包/持仓有什么关系」，把宏观新闻落到读者身上",
+]
+_OPENING_BAG = ShuffleBag(OPENING_HOOK_POOL)
+
 # R104：永久禁用的开场装置——生产三次实录同一比喻（R75 两次 + R104 一次），
 # 窗口式去重管不住跨天复用，升级为硬禁令（与 AI 腔硬清单同语义）
 _OVERUSED_OPENING_DEVICES = ("先泼盆冷水",)
@@ -3148,6 +3162,8 @@ class MultiLLMEngine:
         self._clients: Dict[str, OpenAI] = {}
         # R130：最近一次 prompt 组装抽中的结尾套路（回执遥测用，验证轮换均匀性）
         self.last_ending_style: Optional[str] = None
+        # R521：最近一次抽中的开场钩子套路（回执遥测 + 跨帖不扎堆的 draw_fresh 依据）
+        self.last_opening_hook: Optional[str] = None
         # R268：最近一次稿子的帖内 CTA 剥离数（0=无需清理；回执直录测频率）
         self.last_cta_dedupes: Optional[int] = None
         # R162：FNG 禁令状态遥测——R158 呼吸周期此前只能靠扫 preview 间接推断，
@@ -4122,6 +4138,7 @@ class MultiLLMEngine:
         # 组织活动背景提示（仅作为潜意识背景，避免生搬硬套非相关代币）。
         # 清空逐帖回执，防止长文或失败调用沿用同一引擎上一条短讯的 CTA 标签。
         self.last_ending_style = None
+        self.last_opening_hook = None
         # R83 时效标注：情报正文可能沿用过期缓存（刷新失败退避最长 2h+，正文却引用
         # 具体截止日期——生产实录：09-10 仍在喂"09-04 双重截止，抢最后48小时"，已过期
         # 6 天。模型照它写帖 = 把过期活动当事实发布，违反"事件严禁编造"红线）。
@@ -4200,7 +4217,13 @@ class MultiLLMEngine:
                 key=lambda s: s.split("：")[0])  # 回执只存冒号前短标签（R130）
             # R130：回执遥测——验证 ShuffleBag 轮换均匀性（只存冒号前短标签便于聚合）
             self.last_ending_style = ending_style.split("：")[0]
-            ending_hint = f"【本条结尾站队提问的套路】：{ending_style}\n"
+            # R521：每帖轮换一种开场钩子套路（跨帖不扎堆），把第一句写成信息流眼钩
+            opening_hook = _OPENING_BAG.draw_fresh(
+                (r.get("opening_hook") for r in recent_published),
+                key=lambda s: s.split("：")[0])
+            self.last_opening_hook = opening_hook.split("：")[0]
+            ending_hint = (f"【本条开场钩子套路（第一句照这个思路写，抓住停留）】：{opening_hook}\n"
+                           f"【本条结尾站队提问的套路】：{ending_style}\n")
 
         # R298：开场/FNG 指纹守卫抽成独立 opener_guard——此前四条守卫全拼进
         # ending_hint，但长文分支（article）只取 fresh_art 不取 ending_hint，故
@@ -4316,7 +4339,7 @@ class MultiLLMEngine:
 
 【核心要求】：
 1. 彻底去 AI 味！禁用词（出现即废稿）：拭目以待/未来可期/保驾护航/谱写/新篇章/值得注意的是/综上所述/让我们一起/毋庸置疑。禁句式：不仅…更…、首先…其次…、排比三连。破折号最多 1 次。
-2. 开头第一行输出「TITLE: 」+ 10~25 字标题（有数字或反差更抓人），空一行后写正文。标题严禁以「{title_leadin_ban}」等时效领词开头（信息流首触点最忌套路化，直接用数字、反差或当事人切入）。
+2. 开头第一行输出「TITLE: 」+ 10~25 字标题：像爆款财经号那样抓人——用数字、反差、悬念或利益点让人忍不住点开（如"4.7 亿爆仓，多头这次栽在哪"），空一行后写正文。标题严禁以「{title_leadin_ban}」等时效领词开头（信息流首触点最忌套路化，直接用数字、反差或当事人切入）。
 3. 正文 500~800 字，用纯文本小标题分 3~4 段（如「一、发生了什么」「二、资金在赌什么」「三、接下来盯什么」），每段 3~6 句，长短句交错。
 4. 多空两面都要讲：先摆事实（只引用上面资料里的数字），再给一听就懂的解读，最后给值得跟踪的变量或风险。严禁喊单（"必涨/翻倍/冲"）。
 5. 每次提到代币一律 $大写（如 $ETH），全文累计不超过 5 次，织在句子里。严禁在 ETF/SEC/AI/CEO/FED 等非代币词前加 $。
@@ -4334,8 +4357,8 @@ class MultiLLMEngine:
 【核心要求】：
 1. 彻底去 AI 味！模仿真人老韭菜/交易员在社区发帖的极简口吻。禁用词（出现即废稿）：拭目以待/未来可期/保驾护航/谱写/新篇章/扬帆起航/值得注意的是/综上所述/让我们一起/毋庸置疑。禁句式：不仅…更…、首先…其次…、排比三连（X、Y、Z 三连发同一语气）。破折号最多用 1 次。
 2. 篇幅严格控制在 140~200 字之间，分 3~4 个短段落，短句为主，每段 1~2 句话。长短句交错，别每句都一个节奏。
-3. 【首两行定生死】信息流只展示前两行，第一段必须放钩子：一个反差结论、一个具体数字、或一个悬念（如"4.7 亿直接把盘面砸活了""全网贪婪都 65 了还在喊多"）。严禁"最近/今天聊聊/家人们"式慢热铺垫开场。
-4. 每次提到代币一律用 $大写 形式（如 $PEPE、$WIF），并织在句子里（首段点名异动标的、后文至少再提一次核心标的）——这是交易挂件与创作激励返佣的生命线，严禁只写裸名或只在文末补一个。严禁在 ETF/SEC/AI/CEO/FED 等非代币词前加 $。
+3. 【首两行定生死】信息流只展示前两行，第一段必须按上面给的「开场钩子套路」把第一句写成让人停下来的钩子（一个反差结论/一个真实数字/一个悬念，如"4.7 亿直接把盘面砸活了""全网贪婪都 65 了还在喊多"）。严禁"最近/今天聊聊/家人们"式慢热铺垫开场。观点要犀利、敢站队、一针见血，像内行人给出过硬判断，别和稀泥两头讨好。
+4. 每次提到代币一律用 $大写 形式（如 $PEPE、$WIF），并织在句子里（首段点名异动标的、后文至少再提一次核心标的）——这是交易挂件与创作激励返佣的生命线，严禁只写裸名或只在文末补一个。严禁在 ETF/SEC/AI/CEO/FED 等非代币词前加 $。让读者读完有"想点开这个 $币 去看盘口、去交易"的冲动：靠犀利有据的观点和一个此刻值得关注的真实理由驱动，绝不靠喊单承诺收益（"必涨/翻倍/冲/梭哈"出现即废稿）。
 5. 结尾设计一句极简的站队提问（如“看多的扣1，看空的扣2”），最后附带 3~4 个标签：#Write2Earn #BinanceSquare #核心代币，再按内容板块加 1 个垂直标签（Meme 帖 #MemeCoin、合约帖 #Futures、ETF 帖 #ETF、公链帖用公链名），精准标签比泛流量标签更容易进对的信息流。
 6. 所有数字（价格/涨跌幅/资金量/贪婪指数）只能来自上面给的资料，一个都不许编造。
 直接输出正文，不要任何开场白或多余解释："""
@@ -8698,6 +8721,9 @@ def _run_main():
                     # R130：抽中的结尾套路标签（Mock 替身/异常态防御性降级 None）
                     _es = getattr(llm_engine, "last_ending_style", None)
                     ending_style_used = _es if isinstance(_es, str) else None
+                    # R521：抽中的开场钩子套路（Mock/异常态防御性降级 None）
+                    _oh = getattr(llm_engine, "last_opening_hook", None)
+                    opening_hook_used = _oh if isinstance(_oh, str) else None
                     # R268：帖内 CTA 剥离数（Mock 替身/异常态防御性降级 None；
                     # append_metrics 过滤 None，0 也过滤=只在真剥离时留痕）
                     _cd = getattr(llm_engine, "last_cta_dedupes", None)
@@ -8746,6 +8772,7 @@ def _run_main():
                         # R291：注入的活动标签原文（None=本轮无活动标签可注入）
                         "campaign_tag": campaign_tag_used,
                         "ending_style": ending_style_used,
+                        "opening_hook": opening_hook_used,
                         "cta_dedupes": cta_dedupes_used if cta_dedupes_used else None,
                         # R162：禁令状态三件套——违反时（ban 武装+仍引用锚点）
                         # 报表合规巡检可直接点名，执法升级（拒稿重写）待违规实证再议
