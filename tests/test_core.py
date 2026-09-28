@@ -1214,6 +1214,20 @@ class TestTokenExtraction(unittest.TestCase):
         self.assertEqual(m.NewsFetcher.extract_tokens(
             "Sleepless AI ($AI) Announces Season 2 mint", self.VALID | {"AI"}), ["AI"])
 
+    def test_news_acronym_collisions_require_cashtag(self):
+        """R510：全大写英文缩写（ATM 自动柜员机 / GENIUS 稳定币法案）撞名真实币安
+        ticker（ATMUSDT / GENIUSUSDT）——遥测实锤两帖误挂 $ATM/$GENIUS，R508
+        chart-first 下会拿无关币的真实 K 线做主图（错配，违"真实交易↔内容关联"）。
+        裸全大写不采信；$ 显式引用才放行。"""
+        pool = self.VALID | {"ATM", "GENIUS"}
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "Visa and Mastercard Paying $167,500,000 To Settle ATM Suit", pool), [])
+        self.assertEqual(m.NewsFetcher.extract_tokens(
+            "Fed proposes new rules under the GENIUS Act for stablecoins", pool), [])
+        # 显式 $ATM / $GENIUS = 真在说该代币，放行
+        self.assertEqual(m.NewsFetcher.extract_tokens("accumulate $ATM before the derby", pool), ["ATM"])
+        self.assertEqual(m.NewsFetcher.extract_tokens("$GENIUS pumps 20% today", pool), ["GENIUS"])
+
     def test_filter_valid_tokens_drops_ai_self_report(self):
         """模型自报的 $AI 也不采信（模型有挂件返佣动机硬蹭），两道口子一起堵。
         新闻侧 token_hints 不过滤：真 AI 代币新闻仍能发。"""

@@ -601,6 +601,11 @@ STRICT_TICKERS = {
     "SUN",     # URL slug "justin-sun-trx"（BlockTempo 帖）
     "VIRTUAL", # URL slug "virtual-asset-forum"（繁中帖）
     "IO",      # 图片域名 ctmedia.io（Cointelegraph 每帖 ×25，预清洗前最大误报源）
+    # R510 遥测实锤（chart-first 后果放大）：全大写英文缩写撞名真实币安 ticker，
+    # 裸写会被 extract_tokens 采信 → R508 chart-first 下会拿无关币的真实 K 线渲染
+    # "错配主图"（与用户"真实交易↔内容关联"诉求背道而驰）。必须 $ 显式引用才采信。
+    "ATM",     # "Visa/Mastercard…ATM Suit"（自动柜员机）撞 ATMUSDT（马竞球迷币）
+    "GENIUS",  # "GENIUS Act"（稳定币法案缩写）撞 GENIUSUSDT
 }
 
 # 全大写缩写噪音词：裸写（无 $）时不当代币识别。
