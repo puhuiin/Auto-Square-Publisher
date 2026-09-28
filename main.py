@@ -8560,12 +8560,11 @@ def _run_main():
                 # 卡片 bars 布局依赖可解析的涨跌幅；无行情数据时退化为 $TOKEN 裸行）
                 card_lines = [ln for ln in live_market_data.split(" | ") if ln] \
                     or [f"${t}" for t in detected_tokens[:3]]
-                # 配图轮换（用户反馈"全是走势卡太单调"）：每帖轮换主图源打头，
-                # raw(新闻图)/chart(走势卡)/card(情绪卡) 各得其位，保留级联兜底。
-                # fng/none 不占轮换位（只在三种主图源都不成时才降级）。
+                # 配图（用户反馈"全是走势卡太单调、要恢复好看的新闻图"）：
+                # 新闻原图（每张各异、最"好看"）优先；只有该帖无新闻图时，才在
+                # 走势卡/情绪卡之间【按帖轮换】兜底——既恢复新闻图多样性，又不让走势卡刷屏。
                 _img_rot = intel_state_get("_img_rot", 0)
-                _prefer = (["raw", "chart", "card"], ["chart", "raw", "card"],
-                           ["card", "chart", "raw"])[_img_rot % 3]
+                _prefer = ["raw", "chart", "card"] if _img_rot % 2 == 0 else ["raw", "card", "chart"]
                 uploaded_image_url = ImageManager.prepare_and_upload(
                     square_api_key, raw_img,
                     token_lines=card_lines, fng_text=f"Fear&Greed {fng_index}",
@@ -8573,8 +8572,10 @@ def _run_main():
                 stage_timings["image"] += time.time() - t_img_start
                 image_fail_reason = getattr(ImageManager, "last_image_fail_reason", None)
                 image_tier = getattr(ImageManager, "last_image_tier", None) or "none"
-                if image_tier in ("chart", "raw", "card"):
-                    intel_state_set("_img_rot", (_img_rot + 1) % 3)
+                # 只有落到走势卡/情绪卡（无新闻图那部分）才推进轮换，让二者交替；
+                # 新闻图命中不占轮换位（新闻图本就各异、无需轮换）。
+                if image_tier in ("chart", "card"):
+                    intel_state_set("_img_rot", (_img_rot + 1) % 2)
             elif not binance_enabled and raw_img:
                 # 草稿模式无 S3 上传：直接给新闻原图直链，供手动下载后上传 OKX
                 uploaded_image_url = raw_img
