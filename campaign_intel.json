@@ -19,8 +19,8 @@
   "last_updated": "2026-09-28T15:22:13.188658Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
-      "fails": 1,
-      "last_fail": "2026-09-28T16:57:13.621041+00:00"
+      "last_fail": "2026-09-28T16:57:13.621041+00:00",
+      "fails": 1
     }
   },
   "_fallback_image": {
