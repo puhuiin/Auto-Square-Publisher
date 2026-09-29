@@ -465,7 +465,9 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("严禁", prompt)
 
     def test_generic_leadin_guard_silent_when_clean(self):
-        # 近期开场无任何泛化领词：不得注入守卫（避免空转占 prompt）
+        # R558：静态表成员无条件进「永久禁用」行；动态「近期已用过」行在干净
+        # 窗口下仍静默（新涌现词靠雷达，不占 prompt）。旧断言「领句不出现」
+        # 会把静态任意时禁令一并挡掉，已按 R537 契约改写。
         self._append([
             {"outcome": "binance_published", "final_preview": "Bitwise 把 $DOGE 那只 ETF 关了。"},
         ])
@@ -474,7 +476,25 @@ class TestRecentOpeners(unittest.TestCase):
         eng._clients = {}
         item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
-        self.assertNotIn("领句", prompt)
+        self.assertNotIn("近期开场已用过", prompt)
+        self.assertIn("永久禁用的开场领词", prompt, "静态表任意时禁令必须在场")
+        self.assertIn("最新", prompt)
+        self.assertIn("刚爆", prompt)
+
+    def test_static_leadins_banned_without_recent_window(self):
+        """R558：R537 把「最新/刚爆」写进 _GENERIC_LEADINS 并声称「任何时候
+        都不得以它们开头」，但守卫只注入 used_leadins（近 8 帖动态集）——
+        跨天滚出窗口就放行。生产 09-23 起「最新」开场 ×15 仍在复发。
+        干净窗口下静态领词必须仍在禁令区。"""
+        self._append([
+            {"outcome": "binance_published",
+             "final_preview": "Bitwise 把 $DOGE 那只 ETF 关了。后续略。"},
+        ])
+        banned = self._banned_leadins()
+        self.assertIn("最新", banned, "干净窗口下「最新」仍须任意时禁开场")
+        self.assertIn("刚爆", banned, "干净窗口下「刚爆」仍须任意时禁开场")
+        self.assertIn("刚刚", banned)
+        self.assertIn("刚出", banned)
 
     def test_article_title_bans_generic_leadins(self):
         """R296：长文标题是信息流第一触点、比正文开场更显眼的指纹位。长文分支不拼
@@ -501,11 +521,17 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertNotIn("时效领词开头", prompt)
 
     def _banned_leadins(self):
+        """合并动态（近期已用过）与静态（永久禁用）两条守卫行的领词集合。"""
         prompt, _ = self._eng_prompt()
+        banned = set()
         for line in prompt.split("\n"):
             if "已用过" in line and "领句" in line:
-                return set(re.findall(r"已用过 (.+?) 领句", line)[0].split("、"))
-        return set()
+                banned |= set(re.findall(r"已用过 (.+?) 领句", line)[0].split("、"))
+            if "永久禁用的开场领词" in line:
+                m = re.search(r"】：(.+?)——", line)
+                if m:
+                    banned |= {w.strip() for w in m.group(1).split("、") if w.strip()}
+        return banned
 
     def _eng_prompt(self):
         eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
@@ -524,7 +550,10 @@ class TestRecentOpeners(unittest.TestCase):
             {"outcome": "binance_published", "final_preview": "盘面走弱注意防守。"},
             {"outcome": "binance_published", "final_preview": "Bitwise 关了 ETF。"},
         ])
-        self.assertEqual(self._banned_leadins(), {"盘面"})
+        self.assertIn("盘面", self._banned_leadins(),
+                       "雷达聚簇新词必须进禁令区")
+        self.assertLessEqual(set(m._GENERIC_LEADINS), self._banned_leadins(),
+                             "静态表全集应在禁令区（R558 任意时）")
 
     def test_radar_interlock_ignores_entity_prefix(self):
         # Bitwise/BitGo/Bitcoin 共享"Bi"只是不同实体词前半（无词边界），不得禁
@@ -534,7 +563,10 @@ class TestRecentOpeners(unittest.TestCase):
             {"outcome": "binance_published", "final_preview": "Bitcoin 突破关口。"},
             {"outcome": "binance_published", "final_preview": "RLUSD 烧了。"},
         ])
-        self.assertEqual(self._banned_leadins(), set())
+        banned = self._banned_leadins()
+        self.assertNotIn("Bi", banned, "实体名前半不得被雷达禁用")
+        self.assertLessEqual(set(m._GENERIC_LEADINS), banned,
+                             "静态表仍在（R558）；雷达不得把 Bi 加进来")
 
     def test_radar_interlock_bans_cashtag_leadin_cluster(self):
         """R320：「$ETH + 价格 + 24h」式开场是 R75 级模板指纹（生产近 10 帖 ×3，
@@ -558,7 +590,10 @@ class TestRecentOpeners(unittest.TestCase):
             {"outcome": "binance_published", "final_preview": "刚刚 ETH 跟涨。"},
         ])
         banned = self._banned_leadins()
-        self.assertEqual(banned, {"刚刚"}, f"静态表与聚簇去重合并，实际 {banned}")
+        self.assertIn("刚刚", banned, "静态表与聚簇合并且去重")
+        self.assertEqual(list(banned).count("刚刚"), 1, "同词只出现一次")
+        self.assertLessEqual(set(m._GENERIC_LEADINS), banned,
+                             "静态表全集应在禁令区（R558）")
 
     def test_proven_fingerprint_leadin_banned_at_first_use(self):
         """R282：晋升静态表的领词窗口内 1 次即禁——'刚出'族生产实录近 10 帖
@@ -569,8 +604,10 @@ class TestRecentOpeners(unittest.TestCase):
             {"outcome": "binance_published",
              "final_preview": "刚出炉的重磅,$SOL 把出块时间砍了 17%。后续略。"},
         ])
-        self.assertEqual(self._banned_leadins(), {"刚出"},
-                         "静态表领词必须 1 次即禁，不得等联锁攒够 3 次")
+        self.assertIn("刚出", self._banned_leadins(),
+                       "静态表领词必须 1 次即禁，不得等联锁攒够 3 次")
+        self.assertLessEqual(set(m._GENERIC_LEADINS), self._banned_leadins(),
+                             "静态表全集应在禁令区（R558 任意时）")
 
     def test_jifenzhong_proven_fingerprint_leadin_banned_at_first_use(self):
         """R323：晋升'几分'（覆盖几分钟前全家）——生产 09-13~09-22 开场
@@ -580,8 +617,8 @@ class TestRecentOpeners(unittest.TestCase):
             {"outcome": "binance_published",
              "final_preview": "几分钟前刷到个扎心对比,$BNB 却趴在 719 刀。后续略。"},
         ])
-        self.assertEqual(self._banned_leadins(), {"几分"},
-                         "静态表领词必须 1 次即禁，不得等联锁攒够 3 次")
+        self.assertIn("几分", self._banned_leadins(),
+                       "静态表领词必须 1 次即禁，不得等联锁攒够 3 次")
 
     def test_freshness_line_not_suggesting_banned_leadin(self):
         """R138：<1h 时效行曾建议"用'刚刚/最新'等词强调时效"——与 R121 守卫、
@@ -597,11 +634,13 @@ class TestRecentOpeners(unittest.TestCase):
         item = {"title": "BTC news", "summary": "s", "age_hours": 0.4}
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
         self.assertNotIn("用'刚刚/最新'", prompt, "时效行不得再建议被禁领词")
-        self.assertNotIn("最新", prompt,
-                         "R537：'最新'已进静态禁词表，干净窗口下也不得推荐")
-        self.assertNotIn("几分钟前", prompt,
+        # R558：「最新」在禁令区（任意时禁）是应该的；不得出现在时效推荐里
+        _fresh = next((l for l in prompt.split("\n") if "本条新闻时效" in l), "")
+        self.assertNotIn("最新", _fresh,
+                         "R537：'最新'已进静态禁词表，时效行不得再推荐")
+        self.assertNotIn("几分钟前", _fresh,
                          "R323：'几分'已进静态禁词表，不得再推荐'几分钟前'")
-        self.assertNotIn("刚出炉", prompt,
+        self.assertNotIn("刚出炉", _fresh,
                          "R297：'刚出'已进静态禁词表，干净窗口下也绝不推荐'刚出炉'")
         self.assertIn("开头不得用被禁的领句", prompt)
 
@@ -619,7 +658,7 @@ class TestRecentOpeners(unittest.TestCase):
         eng._clients = {}
         item = {"title": "BTC news", "summary": "s", "age_hours": 0.4}
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
-        fresh_line = next(l for l in prompt.split("\n") if "突发" in l)
+        fresh_line = next(l for l in prompt.split("\n") if "本条新闻时效" in l)
         self.assertIn("刚出", prompt, "联锁必须已禁用'刚出'")
         self.assertNotIn("刚出炉", fresh_line.split("等表述")[0],
                          f"时效行推荐词不得包含被禁表述: {fresh_line}")
@@ -641,7 +680,7 @@ class TestRecentOpeners(unittest.TestCase):
         eng._clients = {}
         item = {"title": "BTC news", "summary": "s", "age_hours": 0.4}
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
-        fresh_line = next(l for l in prompt.split("\n") if "突发" in l)
+        fresh_line = next(l for l in prompt.split("\n") if "本条新闻时效" in l)
         self.assertIn("刚出", prompt, "静态表必须已禁用'刚出'")
         self.assertNotIn("刚出炉", fresh_line.split("等表述")[0],
                          f"时效行推荐词不得包含被禁表述: {fresh_line}")
@@ -824,14 +863,16 @@ class TestRecentOpeners(unittest.TestCase):
         self._append([
             {"outcome": "binance_published", "final_preview": "最新,$AAVE 上线新模块。略。"},
         ])
-        self.assertEqual(self._banned_leadins(), {"最新"},
-                         "'最新'必须 1 次即禁（静态表成员）")
+        self.assertIn("最新", self._banned_leadins(),
+                       "'最新'必须 1 次即禁（静态表成员）")
+        self.assertLessEqual(set(m._GENERIC_LEADINS), self._banned_leadins(),
+                             "静态表全集应在禁令区（R558 任意时）")
         eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
         eng._fail_counts = {}
         eng._clients = {}
         item = {"title": "BTC news", "summary": "s", "age_hours": 0.4}
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
-        fresh_line = next(l for l in prompt.split("\n") if "突发" in l)
+        fresh_line = next(l for l in prompt.split("\n") if "本条新闻时效" in l)
         self.assertNotIn("最新", fresh_line,
                          "晋升静态表后时效行不得再推荐'最新'（禁令区出现它是应该的）")
 
