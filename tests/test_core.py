@@ -4456,6 +4456,33 @@ class TestNumberHallucinationGuard(unittest.TestCase):
         )
         self.assertTrue(ok)
 
+    def test_unsupported_precise_support_price_rejected(self):
+        """R585：整数价位此前不进数字幻觉门。来源缺失的支撑/目标/回踩价不能伪装成建议。"""
+        for body in (
+            "等回踩 240 刀支撑确认再分批挂单",
+            "分析师给出 240 刀的支撑判断，后续继续观察",
+            "现在报 255.87 刀，短线先观察",
+        ):
+            ok, reason = m.MultiLLMEngine._verify_numbers(body, "Quant rallied sharply after whale activity.")
+            self.assertFalse(ok, f"未证实价位应拦: {body}")
+            self.assertIn("来源未证实的价位", reason)
+
+    def test_supported_price_anchor_passes(self):
+        """R585 零回归：源文或实时盘面出现同一数值时，价位锚点正常放行。"""
+        for body, source in (
+            ("BTC 回踩 62,000 美元支撑后企稳", "BTC tested support at $62,000"),
+            ("BTC 现在报 83,142 刀，24小时跌 1.03%", "BTC spot $83,142, down 1.03%"),
+            ("等回踩 240 支撑确认", "QNT price 255.87; support around 240"),
+        ):
+            ok, reason = m.MultiLLMEngine._verify_numbers(body, source)
+            self.assertTrue(ok, f"有来源的价位应放行: {body} / {reason}")
+
+    def test_non_price_integer_advice_stays_unchecked(self):
+        """R585 零回归：普通整数仓位/杠杆/互动数字不是行情价位，不应误杀。"""
+        ok, reason = m.MultiLLMEngine._verify_numbers(
+            "合约杠杆控制在 3 倍以内，看多扣 1，看空扣 2", "BTC price is volatile")
+        self.assertTrue(ok, reason)
+
     def test_fabricated_percentage_rejected(self):
         ok, reason = m.MultiLLMEngine._verify_numbers(
             "单日暴涨 12.53%，ETF 流入 8.4 亿",

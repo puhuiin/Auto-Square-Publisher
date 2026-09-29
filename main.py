@@ -4073,6 +4073,27 @@ class MultiLLMEngine:
             if not _in_source(val):
                 return False, f"{label}给出精确金额 {m.group(0)}（≈{val:,.0f}），源文中找不到（疑似编造数据）"
 
+        # R585：数字门此前只检查精确小数百分比/大额金额，交易建议里的整数价位（「回踩 240 支撑」/
+        #「目标价 62,000 刀」）完全裸奔。生产 09-29 帖出现 240 支撑、62,000 刀目标价，
+        # 而其是否来自源文/实时盘面无法由现有遥测证明；来源不明的精确价位会伪装成「实操建议」。
+        # 只在明确价位语境（支撑/阻力/目标价/回踩/现价/报…刀）检查，普通整数仓位/编号不受影响。
+        price_patterns = (
+            r"(?:支撑(?:位)?|阻力(?:位)?|目标价|公允价|回踩(?:到)?|跌到|砸到|涨到|现价|报价|报)"
+            r"[^。！？\n]{0,12}?([+-]?\d[\d,]*(?:\.\d+)?)\s*(?:美元|美金|美刀|刀|usd|usdt)?",
+            # 顺序补位：「回踩 240 支撑」主方向价位在 cue 前，避免被常见「支撑 240」漏过。
+            r"([+-]?\d[\d,]*(?:\.\d+)?)\s*(?:美元|美金|美刀|刀|usd|usdt)?"
+            r"[^。！？\n]{0,8}(?:支撑(?:位)?|阻力(?:位)?|目标价)",
+        )
+        for pattern in price_patterns:
+            for m in re.finditer(pattern, content, re.IGNORECASE):
+                raw = m.group(1).replace(",", "")
+                try:
+                    val = abs(float(raw))
+                except ValueError:
+                    continue
+                if not _in_source(val):
+                    return False, f"{label}给出来源未证实的价位 {m.group(0)}（源文/实时盘面中找不到）"
+
         return True, ""
 
     @staticmethod
