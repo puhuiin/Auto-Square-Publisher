@@ -11407,6 +11407,43 @@ class TestVideoPublisherPayload(unittest.TestCase):
             if os.path.exists(cache):
                 os.remove(cache)
 
+    def test_main_passes_cached_campaign_intel(self):
+        """R564：手动发视频此前恒传 campaign_intel=None → 活动标签从不织入
+        （返佣归因第 3 席丢失），与两侧 docstring「织入活动标签」相反。
+        必须读缓存 campaign_intel.json 并传给 publish_video。"""
+        import tempfile, sys as _sys, json as _json
+        fd, vpath = tempfile.mkstemp(suffix=".mp4"); os.close(fd)
+        with open(vpath, "wb") as f:
+            f.write(b"x" * 2048)
+        cache = tempfile.mktemp(suffix=".json")
+        intel = tempfile.mktemp(suffix=".json")
+        with open(intel, "w", encoding="utf-8") as f:
+            _json.dump({"active_tags": ["#Write2Earn", "#BinanceSquare", "#Futures"],
+                        "incentivized_tokens": ["$BNB"]}, f)
+        orig_cache, orig_argv, orig_intel = m.CACHE_FILE, _sys.argv, m.CAMPAIGN_INTEL_FILE
+        m.CACHE_FILE = cache
+        m.CAMPAIGN_INTEL_FILE = intel
+        _sys.argv = ["publish_video.py", vpath, "--title", "标题T",
+                     "--body", "正文 $BNB 足够长的内容示例。"]
+        os.environ["SQUARE_API_KEY"] = "k"
+        try:
+            with patch.object(m.VideoManager, "upload_to_binance", return_value="TICK"), \
+                 patch.object(m.VideoManager, "probe_duration_seconds", return_value=42), \
+                 patch.object(self.pv, "acquire_cover_url", return_value="https://cover.jpg"), \
+                 patch.object(m.SquarePublisher, "publish_video", return_value=True) as pubv:
+                rc = self.pv.main()
+            self.assertEqual(rc, 0)
+            cargs = pubv.call_args
+            ci = cargs.kwargs.get("campaign_intel")
+            self.assertIsNotNone(ci, "手动发视频必须传缓存情报，不得 None")
+            self.assertIn("#Futures", ci.get("active_tags") or [])
+        finally:
+            m.CACHE_FILE, _sys.argv, m.CAMPAIGN_INTEL_FILE = orig_cache, orig_argv, orig_intel
+            os.environ.pop("SQUARE_API_KEY", None)
+            for p in (vpath, cache, intel):
+                if os.path.exists(p):
+                    os.remove(p)
+
 
     def test_oversized_video_rejected_before_upload(self):
         import tempfile

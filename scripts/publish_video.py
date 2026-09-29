@@ -21,6 +21,7 @@ VideoManager.upload_to_binance（→ fileTicket）与 SquarePublisher.publish_vi
 """
 import argparse
 import hashlib
+import json
 import os
 import re
 import subprocess
@@ -99,6 +100,22 @@ def extract_ensure_tokens(text: str) -> list:
         seen.add(sym)
         out.append(sym)
     return out
+
+
+def load_cached_campaign_intel() -> dict:
+    """读 campaign_intel.json 里已有的当期情报（不触发刷新）。
+
+    R564：此前手动发视频恒传 campaign_intel=None → _inject_campaign_tag 空转，
+    活动标签（返佣归因第 3 席）从不进视频帖——与本脚本/publish_video 两侧
+    docstring「织入活动标签、保住返佣生命线」直接相反。每日定投路径
+    （_maybe_post_daily_video）一直有传，手动脚本漏了。读缓存即可：视频是
+    一次性手动操作，不必为一条视频烧 LLM 刷新情报。"""
+    try:
+        with open(m.CAMPAIGN_INTEL_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
 
 
 def upload_video(api_key: str, video_path: str) -> "str | None":
@@ -300,9 +317,11 @@ def main() -> int:
     ensure_tokens = extract_ensure_tokens(caption) or None
 
     publisher = m.SquarePublisher(api_key)
+    # R564：传缓存情报，让 _inject_campaign_tag 真的织入活动标签（返佣第 3 席）
+    campaign_intel = load_cached_campaign_intel() or None
     ok = publisher.publish_video(
         caption, file_ticket, cover_url,
-        video_seconds=video_seconds, ensure_tokens=ensure_tokens, campaign_intel=None,
+        video_seconds=video_seconds, ensure_tokens=ensure_tokens, campaign_intel=campaign_intel,
     )
     if ok:
         cid = getattr(publisher, "last_content_id", None)
