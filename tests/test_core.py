@@ -597,7 +597,8 @@ class TestRecentOpeners(unittest.TestCase):
         item = {"title": "BTC news", "summary": "s", "age_hours": 0.4}
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
         self.assertNotIn("用'刚刚/最新'", prompt, "时效行不得再建议被禁领词")
-        self.assertIn("最新", prompt, "未撞禁令的时效表述保留")
+        self.assertNotIn("最新", prompt,
+                         "R537：'最新'已进静态禁词表，干净窗口下也不得推荐")
         self.assertNotIn("几分钟前", prompt,
                          "R323：'几分'已进静态禁词表，不得再推荐'几分钟前'")
         self.assertNotIn("刚出炉", prompt,
@@ -622,7 +623,8 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("刚出", prompt, "联锁必须已禁用'刚出'")
         self.assertNotIn("刚出炉", fresh_line.split("等表述")[0],
                          f"时效行推荐词不得包含被禁表述: {fresh_line}")
-        self.assertIn("最新", fresh_line, "其余推荐词保留")
+        self.assertNotIn("最新", fresh_line,
+                         "R537：'最新'晋升静态领词后时效行不得再推荐它")
         self.assertNotIn("几分钟前", fresh_line.split("等表述")[0],
                          "R323：'几分'晋升后时效行不得再推荐'几分钟前'")
 
@@ -643,7 +645,8 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("刚出", prompt, "静态表必须已禁用'刚出'")
         self.assertNotIn("刚出炉", fresh_line.split("等表述")[0],
                          f"时效行推荐词不得包含被禁表述: {fresh_line}")
-        self.assertIn("最新", fresh_line, "其余推荐词保留")
+        self.assertNotIn("最新", fresh_line,
+                         "R537：'最新'晋升静态领词后时效行不得再推荐它")
         self.assertNotIn("几分钟前", fresh_line.split("等表述")[0],
                          "R323：'几分'晋升后时效行不得再推荐'几分钟前'")
 
@@ -785,6 +788,35 @@ class TestRecentOpeners(unittest.TestCase):
         pool_labels = {s.split("：")[0] for s in m.OPENING_HOOK_POOL}
         self.assertIn(label, pool_labels, f"标签 {label} 必须来自开场钩子池")
         self.assertIn("开场钩子套路", prompt, "短讯 prompt 必须注入开场钩子指令")
+
+    def test_hook_number_rule_injected_in_short_form(self):
+        """R537：公验证规律（dwell time/500 条病毒帖分析）——第一句必须含具体
+        真实数字或未闭合问题。短讯 prompt 必须注入该硬规则。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        self.assertIn("钩子硬规则", prompt, "短讯 prompt 必须注入钩子硬规则")
+        self.assertIn("具体真实数字", prompt)
+        self.assertIn("未闭合问题", prompt)
+
+    def test_proven_freshness_leadins_banned_statically(self):
+        """R537：'最新'(16/237=6.8%)与'刚爆'(合计 18 次)是生产实证的高频时效
+        领词，晋升静态禁词表——窗口内 1 次即禁，时效行同步撤下推荐。"""
+        self._append([
+            {"outcome": "binance_published", "final_preview": "最新,$AAVE 上线新模块。略。"},
+        ])
+        self.assertEqual(self._banned_leadins(), {"最新"},
+                         "'最新'必须 1 次即禁（静态表成员）")
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 0.4}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        fresh_line = next(l for l in prompt.split("\n") if "突发" in l)
+        self.assertNotIn("最新", fresh_line,
+                         "晋升静态表后时效行不得再推荐'最新'（禁令区出现它是应该的）")
 
     def test_article_prompt_has_no_opening_hook(self):
         """长文分支不注入短讯开场钩子套路，last_opening_hook 应保持 None（防沿用上一条短讯）"""
