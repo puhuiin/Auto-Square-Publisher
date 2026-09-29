@@ -1169,6 +1169,15 @@ class MarketDataProvider:
         # crisis」、NATIVE 命中「Native token/asset/chain」。专有名词
         # FOXPRO/JAVASCRIPT/MICROSOFT/RUST/SLOPTOBER 保留。
         crisis native anyway midlife
+        # R566：2026-09-29 生产热点回放续补（R295 同方法）。「Bluegraph – Explore
+        # NOAA… / Tank Body Problem / Language model / Coding Is Not Solved /
+        # Hacker News / Pirating the Pirates / 13 Months Sober」抽出 NEWS/PROBLEM/
+        # CODING/EXPLORE/LANGUAGE/SOLVED/BODY/HACKER/PIRATES/PIRATING/SOBER/TANK——
+        # 全是标题腔通用词，命中加密稿即白吃 +4 排序加权。专有名词 BLUEGRAPH/
+        # ESP32S3/BITNET/DEUTSCHE/BAHN/PALANTIR/JENSEN/HUANG/JEFF/NOAA/NTUI/
+        # PARLEY/SWEDEN/JEV-COMPATIBLE 保留。
+        news problem coding explore language solved body hacker
+        pirates pirating sober tank month
     """.split())
 
     @classmethod

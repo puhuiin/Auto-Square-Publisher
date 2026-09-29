@@ -7354,6 +7354,47 @@ class TestHotTopics(unittest.TestCase):
         self.assertEqual(cands[0]["impact_score"], 6,
                          "CRISIS/NATIVE 不得误加权加密稿")
 
+    def test_production_2026_09_29_titles_do_not_leak_generic_words(self):
+        """R566：2026-09-29 生产热点回放续补（R295 同方法）。
+        「Explore NOAA… / Tank Body Problem / Language model / Coding Is Not
+        Solved / Hacker News / Pirating the Pirates / 13 Months Sober」抽出
+        NEWS/PROBLEM/CODING/EXPLORE/LANGUAGE/SOLVED/BODY/HACKER/PIRATES/
+        PIRATING/SOBER/TANK——全是标题腔通用词，命中加密稿即白吃 +4。
+        专有名词 BLUEGRAPH/ESP32S3/BITNET/DEUTSCHE/BAHN/PALANTIR/JENSEN/
+        HUANG/JEFF/NOAA/NTUI/PARLEY/SWEDEN/JEV-COMPATIBLE 保留。"""
+        titles = [
+            "Bluegraph – Explore NOAA buoy data, rebuilt in 3D from measured spectra",
+            "Tank Body Problem",
+            "ESP32S3 cluster running 1.58-bit (BitNet) Language model",
+            "Deutsche Bahn \"joke\" is no longer funny",
+            "Jeff – Jev-compatible 0.8B decision models, trained at home",
+            "Palantir founder purchases large swath of forest in Sweden",
+            "The problem is not the AI code, but nobody knows anything anymore",
+            "13 Months Sober (2025)",
+            "Pirating the Pirates",
+            "Jensen Huang says AI distillation is 'competition.'",
+            "Coding Is Not Solved",
+            "Hntui – A TUI for Hacker News",
+            "Parley: Fed",
+        ]
+        keys = m.MarketDataProvider._extract_hot_keywords(titles)
+        for bad in ("NEWS", "PROBLEM", "CODING", "EXPLORE", "LANGUAGE",
+                    "SOLVED", "BODY", "HACKER", "PIRATES", "PIRATING",
+                    "SOBER", "TANK", "MONTHS", "MONTH"):
+            self.assertNotIn(bad, keys, f"{bad} 是通用词，不得进热点词表")
+        for good in ("BLUEGRAPH", "ESP32S3", "BITNET", "DEUTSCHE", "BAHN",
+                     "PALANTIR", "JENSEN", "HUANG", "JEFF", "NOAA",
+                     "PARLEY", "SWEDEN"):
+            self.assertIn(good, keys, f"{good} 专有名词应保留")
+        cands = [
+            {"title": "Crypto exchange hacker news: body problem of cold wallet",
+             "summary": "explore the language of coding solutions", "impact_score": 6,
+             "base_impact_score": 6},
+        ]
+        m.NewsFetcher.apply_hot_topic_boost(cands, keys)
+        self.assertEqual(cands[0]["impact_score"], 6,
+                         "NEWS/PROBLEM/HACKER 等不得误加权加密稿")
+
     def test_live_hn_frontpage_batch_do_not_leak_generic_words(self):
         """R295：2026-09-21 HN 前页实测词表全量审计（R233 方法论=主动扫不等事故）。
         40 个抽取词里约 31 个是句式大写/标题腔通用词：句首词（Why/Winning/What）、
