@@ -314,13 +314,13 @@ def rotate_metrics_if_needed(keep: int = 5000) -> int:
 
 def _is_delivery_outcome(outcome) -> bool:
     """投递成功回执（R211）。写侧：binance → binance_published*；
-    副平台-only → {delivered_by}_delivered*。
+    副平台-only → {delivered_by}_delivered*；视频帖 → video_published（R572）。
     already_delivered 是幂等跳过标记（skipped_reason），不是投递回执。
     消费方（调度分/开场回看/成本面板）必须与写侧对账——只认
     binance_published 会让 okx/telegram 发帖的 LLM 延迟/token 与
     内容多样性防线全部失明。"""
     o = str(outcome or "")
-    if o.startswith("binance_published"):
+    if o.startswith("binance_published") or o == "video_published":
         return True
     if o == "already_delivered":
         return False

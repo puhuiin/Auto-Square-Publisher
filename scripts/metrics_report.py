@@ -293,11 +293,11 @@ def _is_delivered(row):
 
 
 def _is_delivery_outcome(outcome) -> bool:
-    """与 cost_analysis.is_delivery_outcome / main._is_delivery_outcome 同语义（R211）：
-    binance_published* 与副平台 *_delivered* 都算投递成功；
+    """与 cost_analysis.is_delivery_outcome / main._is_delivery_outcome 同语义（R211/R572）：
+    binance_published*、video_published 与副平台 *_delivered* 都算投递成功；
     already_delivered 是幂等跳过标记，排除。"""
     o = str(outcome or "")
-    if o.startswith("binance_published"):
+    if o.startswith("binance_published") or o == "video_published":
         return True
     if o == "already_delivered":
         return False

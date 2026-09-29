@@ -333,6 +333,19 @@ def main() -> int:
         # 登记去重缓存：R111 双发守卫与 24h 配额唯一的数据来源
         if record_sent(dedup_key):
             print("🧾 已登记 sent_cache（workflow 会随状态回写提交，重跑将被守卫拦下）")
+        # R572：投递回执进 metrics——此前只写 sent_cache，交付/成本/开场回看
+        # 面板全看不见视频帖（与每日定投 video_published 同名对齐）。
+        m.append_metrics({
+            "outcome": "video_published",
+            "platform": "binance",
+            "content_id": cid,
+            "video_seconds": video_seconds,
+            "widget_count": getattr(publisher, "last_widget_count", None),
+            "campaign_tag": getattr(publisher, "last_campaign_tag", None),
+            "final_preview": (caption or "")[:200],
+            "provider": "manual",
+            "model": None,
+        })
     else:
         print(f"❌ 发布失败: {getattr(publisher, 'last_error', '未知错误')}")
     return 0 if ok else 1

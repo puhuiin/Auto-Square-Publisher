@@ -52,15 +52,16 @@ def _parse_ts(ts: str) -> datetime | None:
 
 
 def is_delivery_outcome(outcome) -> bool:
-    """投递成功回执判定（R211）。
+    """投递成功回执判定（R211/R572）。
     写侧：binance 成功 → binance_published[_cache_failed]；
     副平台-only 成功 → delivered_by + '_delivered[_cache_failed]'
-    （okx_draft_delivered / okx_draft+telegram_delivered）。
+    （okx_draft_delivered / okx_draft+telegram_delivered）；
+    视频帖 → video_published。
     already_delivered 是幂等跳过标记（skipped_reason），不是投递回执，
     不得 endswith 误收。旧消费方只认 binance_published*，okx/telegram
     发帖的 LLM token/延迟在成本面板与调度分里完全不可见（R120/R165 同族）。"""
     o = str(outcome or "")
-    if o.startswith("binance_published"):
+    if o.startswith("binance_published") or o == "video_published":
         return True
     if o == "already_delivered":
         return False

@@ -5827,12 +5827,15 @@ class TestMetrics(unittest.TestCase):
 
     def test_delivery_outcome_covers_mirror_platforms(self):
         """R211：写侧副平台-only 回执 outcome={okx|okx+tg}_delivered*，
-        消费方只认 binance_published* 会让调度分/开场回看/成本面板全部失明。"""
+        消费方只认 binance_published* 会让调度分/开场回看/成本面板全部失明。
+        R572：视频帖 video_published 同样是投递回执。"""
         self.assertTrue(m._is_delivery_outcome("binance_published"))
         self.assertTrue(m._is_delivery_outcome("binance_published_cache_failed"))
         self.assertTrue(m._is_delivery_outcome("okx_draft_delivered"))
         self.assertTrue(m._is_delivery_outcome("okx_draft+telegram_delivered"))
         self.assertTrue(m._is_delivery_outcome("telegram_delivered_cache_failed"))
+        self.assertTrue(m._is_delivery_outcome("video_published"),
+                        "R572：视频帖必须算投递回执，否则交付/成本面板全盲")
         self.assertFalse(m._is_delivery_outcome("already_delivered"))
         self.assertFalse(m._is_delivery_outcome("run_summary"))
         self.assertFalse(m._is_delivery_outcome(None))
@@ -11498,6 +11501,42 @@ class TestVideoPublisherPayload(unittest.TestCase):
                 if os.path.exists(p):
                     os.remove(p)
 
+    def test_main_writes_video_published_metrics(self):
+        """R572：手动发视频此前零遥测（只写 sent_cache）——交付/成本/开场回看
+        面板全看不见视频帖。成功时必须写 outcome=video_published 投递回执。"""
+        import tempfile, sys as _sys, json as _json
+        fd, vpath = tempfile.mkstemp(suffix=".mp4"); os.close(fd)
+        with open(vpath, "wb") as f:
+            f.write(b"x" * 2048)
+        cache = tempfile.mktemp(suffix=".json")
+        metrics = tempfile.mktemp(suffix=".jsonl")
+        open(metrics, "w").close()
+        orig_cache, orig_argv = m.CACHE_FILE, _sys.argv
+        orig_metrics = m.METRICS_FILE
+        m.CACHE_FILE = cache
+        m.METRICS_FILE = metrics
+        _sys.argv = ["publish_video.py", vpath, "--title", "标题T",
+                     "--body", "正文 $BNB 足够长的内容示例。"]
+        os.environ["SQUARE_API_KEY"] = "k"
+        try:
+            with patch.object(m.VideoManager, "upload_to_binance", return_value="TICK"), \
+                 patch.object(m.VideoManager, "probe_duration_seconds", return_value=42), \
+                 patch.object(self.pv, "acquire_cover_url", return_value="https://cover.jpg"), \
+                 patch.object(m.SquarePublisher, "publish_video", return_value=True):
+                rc = self.pv.main()
+            self.assertEqual(rc, 0)
+            with open(metrics, encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            vids = [r for r in rows if r.get("outcome") == "video_published"]
+            self.assertEqual(len(vids), 1, "手动发视频必须写 video_published 遥测")
+            self.assertEqual(vids[0].get("platform"), "binance")
+            self.assertTrue(m._is_delivery_outcome(vids[0]["outcome"]))
+        finally:
+            m.CACHE_FILE, _sys.argv, m.METRICS_FILE = orig_cache, orig_argv, orig_metrics
+            os.environ.pop("SQUARE_API_KEY", None)
+            for p in (vpath, cache, metrics):
+                if os.path.exists(p):
+                    os.remove(p)
 
     def test_oversized_video_rejected_before_upload(self):
         import tempfile
