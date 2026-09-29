@@ -869,6 +869,21 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("具体真实数字", prompt)
         self.assertIn("未闭合问题", prompt)
 
+    def test_fact_speculation_separation_in_long_form(self):
+        """R582：R581 的事实/推测分离只注入了短讯——长文 500~800 字空间更大、
+        把「机构借利好拉盘换手/主力洗盘」等无证据动机写成既定事实的风险更高
+        （与 R356/R357/R569「规则只覆盖短讯漏了长文」同型对称缺口）。长文 prompt
+        必须同样带该约束（数字来自源文由 item4 覆盖，动机归因需标推测由本条覆盖）。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "ETF inflows rise", "summary": "Spot ETF inflows increased.",
+                "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=True)
+        self.assertIn("事实和推测必须分开", prompt, "长文 prompt 必须注入事实/推测分离")
+        self.assertIn("动机归因没有直接证据时必须标明是个人判断", prompt)
+        self.assertIn("不得把别的币热搜或无关热点硬扯成本币走势因果", prompt)
+
     def test_cashtag_buy_click_guidance_in_prompt(self):
         """R578：$挂件是读者点进交易页的入口——prompt 必须引导给出「值得看盘/交易」
         的具体理由（明确的货币符号引导点击购买），同时保留反喊单红线。"""
