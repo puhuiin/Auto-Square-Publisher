@@ -1750,6 +1750,56 @@ class TestAIFlavorGate(unittest.TestCase):
         self.assertIn("正文", reason)
         self.assertNotIn("标题", reason)
 
+    def test_r580_new_hard_written_register_words_rejected(self):
+        """R580：新增书面语寄存器强 AI 指纹逐个必拦（真人操盘手随手敲广场帖不会用）"""
+        for word in ("由此可见", "众所周知", "简而言之", "简言之", "换言之",
+                     "一言以蔽之", "备受瞩目"):
+            body = (f"$BTC 这波拉升很猛，资金还在进场，{word}多头暂时占优，"
+                    f"回踩不破就是机会。\n\n看多的扣1，看空的扣2。\n\n#Write2Earn #BinanceSquare #BTC")
+            ok, reason = m.MultiLLMEngine._passes_ai_flavor_gate(body)
+            self.assertFalse(ok, f"硬词「{word}」应被拦")
+            self.assertIn(word, reason)
+
+    def test_r580_fence_sitting_pattern_rejected(self):
+        """R580：一方面…另一方面 骑墙句式 SYSTEM_PROMPT 明令禁止，本门补上执行"""
+        body = ("$ETH 这波怎么看，一方面机构还在进场撑着盘面，另一方面散户情绪已经过热，"
+                "追高要谨慎。\n\n看多的扣1，看空的扣2。\n\n#Write2Earn #BinanceSquare #ETH")
+        ok, reason = m.MultiLLMEngine._passes_ai_flavor_gate(body)
+        self.assertFalse(ok)
+        self.assertIn("骑墙", reason)
+
+    def test_r580_grand_intro_is_soft_needs_second_feature(self):
+        """R580：随着…发展 宏大开场是软特征——单出现不拦（真人偶写"随着行情升温"），
+        叠加第二个软特征才废稿，防误杀。"""
+        body = ("随着以太坊生态的不断发展，$ETH 的链上活跃度在回升，短线看关键位争夺。"
+                "\n\n看多的扣1，看空的扣2。\n\n#Write2Earn #BinanceSquare #ETH")
+        ok, _ = m.MultiLLMEngine._passes_ai_flavor_gate(body)
+        self.assertTrue(ok, "单个软特征不应拦")
+        ok, reason = m.MultiLLMEngine._passes_ai_flavor_gate(body + " 这标志着新周期开启。")
+        self.assertFalse(ok)
+        self.assertIn("软特征累计 2", reason)
+
+    def test_r580_new_soft_words_single_pass_double_reject(self):
+        """R580：新增软词单出现放行、两两叠加才拦"""
+        single = ("$SOL 今天横住给了上车机会，总的来说结构没坏，联动看 $BTC。"
+                  "\n\n看多的扣1，看空的扣2。\n\n#Write2Earn #BinanceSquare #SOL")
+        ok, _ = m.MultiLLMEngine._passes_ai_flavor_gate(single)
+        self.assertTrue(ok, "单个新软词应放行")
+        double = ("$SOL 今天横住给了上车机会，总的来说结构没坏，换句话说主力还在场。"
+                  "\n\n看多的扣1，看空的扣2。\n\n#Write2Earn #BinanceSquare #SOL")
+        ok, reason = m.MultiLLMEngine._passes_ai_flavor_gate(double)
+        self.assertFalse(ok)
+        self.assertIn("软特征累计 2", reason)
+
+    def test_r580_clean_trader_voice_still_passes_zero_regression(self):
+        """R580 零回归：干净真人口吻（无新老 AI 词/骑墙/宏大开场）必须照过，不误杀。
+        含"另一方面"近义但无"一方面"配对时不应命中骑墙正则。"""
+        body = ("$BTC 拉得太急，一小时爆了两个亿多头。短线追高风险不小，"
+                "回踩 6 万附近再看承接。现货拿稳别慌，合约把杠杆降下来。"
+                "\n\n看多冲前高的扣1，觉得诱多出货的扣2。\n\n#Write2Earn #BinanceSquare #BTC")
+        ok, reason = m.MultiLLMEngine._passes_ai_flavor_gate(body)
+        self.assertTrue(ok, f"干净真人帖被误杀: {reason}")
+
 
 class TestMarketCardBarsLayout(unittest.TestCase):
     """情绪卡 bars 布局：真实行情行解析与降级（R55 配图多样化）"""
