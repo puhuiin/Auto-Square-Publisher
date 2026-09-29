@@ -1437,6 +1437,33 @@ class TestQualityPatternSync(unittest.TestCase):
         self.assertEqual(tuple(mr._TITLE_LEADINS), tuple(m._GENERIC_LEADINS),
                          "标题领词表与正文领词表不一致——改 main 必须同步 metrics_report")
 
+    def test_is_delivery_outcome_triple_in_sync(self):
+        """R211/R572：is_delivery_outcome 三份拷贝（main / metrics_report /
+        cost_analysis）——投递口径漂移会让交付/成本/调度分各说各话。R572 刚
+        手改三处加 video_published，必须有锁防再漏。行为对账（同输入同输出）
+        比字节对账更稳（函数实现可不同，语义必须一致）。"""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "cost_analysis", os.path.join(os.path.dirname(os.path.dirname(
+                os.path.abspath(__file__))), "scripts", "cost_analysis.py"))
+        ca = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ca)
+        cases = (
+            "binance_published", "binance_published_cache_failed",
+            "video_published", "okx_draft_delivered",
+            "okx_draft+telegram_delivered", "telegram_delivered_cache_failed",
+            "already_delivered", "run_summary", "llm_success",
+            "alert_dropped_no_channel", None, "",
+        )
+        for c in cases:
+            mv = m._is_delivery_outcome(c)
+            rv = mr._is_delivery_outcome(c)
+            cv = ca.is_delivery_outcome(c)
+            self.assertEqual(mv, rv,
+                             f"is_delivery_outcome 两份不一致 on {c!r}——改 main 必须同步 metrics_report")
+            self.assertEqual(mv, cv,
+                             f"is_delivery_outcome 两份不一致 on {c!r}——改 main 必须同步 cost_analysis")
+
 
 class TestArticleTitleHookCensus(unittest.TestCase):
     """R286：长文标题眼钩普查——article_title 落盘 129 条零消费面的缺口闭合"""
