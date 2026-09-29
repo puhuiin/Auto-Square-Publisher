@@ -855,7 +855,10 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("更不能把「明显/摆明了/九成」当证据", prompt)
         self.assertIn("拿不准就删掉动机归因", prompt)
         self.assertIn("不得把别的币热搜或无关热点硬扯成本币走势因果", prompt)
-        self.assertIn("$币名挂件是读者点进交易页的入口", prompt)
+        self.assertIn("活动导流必须单独成句", prompt)
+        self.assertIn("活动只是 CTA，不是行情证据", prompt)
+        self.assertIn("严禁与", prompt)
+        self.assertIn("写成因果", prompt)
         self.assertIn("观点要犀利、敢站队", prompt)
         self.assertNotIn("若与本条加密新闻无关则禁止生硬提及", prompt,
                          "测试未传 hot_topics，不应凭空出现无关热点限制")
@@ -888,6 +891,10 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("不能只在相邻句加一次免责声明", prompt)
         self.assertIn("更不能把「明显/摆明了/九成」当证据", prompt)
         self.assertIn("不得把别的币热搜或无关热点硬扯成本币走势因果", prompt)
+        self.assertIn("活动导流必须单独成句", prompt)
+        self.assertIn("活动只是 CTA，不是行情证据", prompt)
+        self.assertIn("严禁与", prompt)
+        self.assertIn("写成因果", prompt)
 
     def test_cashtag_buy_click_guidance_in_prompt(self):
         """R578：$挂件是读者点进交易页的入口——prompt 必须引导给出「值得看盘/交易」
