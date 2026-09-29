@@ -3,24 +3,25 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Futures"
+    "#Futures",
+    "#BinanceEarn"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$BTC",
-    "$XRP",
     "$HYPE",
+    "$XRP",
     "$PROVE",
-    "$RLUSD",
     "$USDT",
-    "$USDC"
+    "$RLUSD",
+    "$VTHO"
   ],
-  "strategy_guidance": "优先围绕今日新上线的$HYPE全生态功能接入及新USDⓈ-Margined Perpetual合约发布快讯，搭配VTHO、BABY、BANK、NEAR等BNB奖励交易赛、PROVE交易赛及RLUSD持仓分XRP活动的参与攻略输出内容，引导用户参与交易获取返佣；日常可结合#Write2Earn规则输出活动实操抄作业类内容，若遇限时冲刺类活动可优先追贴复盘与冲刺指引，最大化内容曝光与收益。",
-  "last_updated": "2026-09-28T15:22:13.188658Z",
+  "strategy_guidance": "优先追贴当前并行开展的VTHO/BABY/BANK/PROVE多赛道交易竞赛、bStocks交易赛及$HYPE新上线相关活动，以「活动冲刺/参赛攻略」角度切入，晒交易战绩、分享套利思路引导用户参与交易赚取Write2Earn返佣；同时结合Binance Earn十月排行榜、RLUSD持仓分$XRP等无截止日长线活动做科普，带对应活动标签提升曝光。",
+  "last_updated": "2026-09-29T04:39:20.692408Z",
   "_feed_health": {},
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-09-28",
