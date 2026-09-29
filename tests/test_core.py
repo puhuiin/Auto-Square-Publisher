@@ -841,15 +841,19 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("未闭合问题", prompt)
 
     def test_prompt_separates_verified_facts_from_market_motive_speculation(self):
-        """R581：避免模型把博弈推测伪装成内幕事实，且禁止无关热点硬凑代币因果。"""
+        """R583：实发帖显示同一段先用"明显/摆明了"断言，后句才补"我倾向于"；
+        R581 的提示没有要求逐句标推测，免责声明无法覆盖前一句。守住逐句标注纪律。"""
         eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
         eng._fail_counts = {}
         eng._clients = {}
         item = {"title": "ETF inflows rise", "summary": "Spot ETF inflows increased.",
                 "age_hours": 1.0}
         prompt, _ = eng._build_user_prompt(item, None, "BTC spot: $60,000 (+1.2%)", ["BTC"])
-        self.assertIn("事实和推测必须分开写", prompt)
-        self.assertIn("没有直接证据时一律标明是个人猜测", prompt)
+        self.assertIn("逐句证据纪律（最高优先级）", prompt)
+        self.assertIn("该句必须用", prompt)
+        self.assertIn("不能只在相邻句加一次免责声明", prompt)
+        self.assertIn("更不能把「明显/摆明了/九成」当证据", prompt)
+        self.assertIn("拿不准就删掉动机归因", prompt)
         self.assertIn("不得把别的币热搜或无关热点硬扯成本币走势因果", prompt)
         self.assertIn("$币名挂件是读者点进交易页的入口", prompt)
         self.assertIn("观点要犀利、敢站队", prompt)
@@ -880,8 +884,9 @@ class TestRecentOpeners(unittest.TestCase):
         item = {"title": "ETF inflows rise", "summary": "Spot ETF inflows increased.",
                 "age_hours": 1.0}
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=True)
-        self.assertIn("事实和推测必须分开", prompt, "长文 prompt 必须注入事实/推测分离")
-        self.assertIn("动机归因没有直接证据时必须标明是个人判断", prompt)
+        self.assertIn("逐句证据纪律（最高优先级）", prompt)
+        self.assertIn("不能只在相邻句加一次免责声明", prompt)
+        self.assertIn("更不能把「明显/摆明了/九成」当证据", prompt)
         self.assertIn("不得把别的币热搜或无关热点硬扯成本币走势因果", prompt)
 
     def test_cashtag_buy_click_guidance_in_prompt(self):
