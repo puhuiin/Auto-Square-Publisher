@@ -7516,8 +7516,33 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
         # 错误报警丢进 log+metrics（用户不翻全量日志就看不见）——这里把本轮丢掉的
         # 报警标题渲染成运行页第一屏的显式告警，直接回答"这轮为什么 0 发布/出故障"。
         # 同本项目惯例（R275/R277/R278）：只在有丢警时显形，零丢警轮零噪音。
-        if Notifier._dropped_error_titles:
-            uniq = list(dict.fromkeys(Notifier._dropped_error_titles))  # 保序去重
+        # R561：进程内累积器漏掉跨进程丢警——schedule_watchdog 是 workflow 里
+        # 先于 main 的独立步骤，其 _dropped_error_titles 随进程退出即失（生产
+        # 7/8 丢警正是「发帖机器人调度中断恢复」）。合并 metrics 今日同 outcome
+        # 行，使人类面覆盖全部丢警，不只 main 本进程。
+        _dropped = list(Notifier._dropped_error_titles)
+        try:
+            _today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            if os.path.exists(METRICS_FILE):
+                with open(METRICS_FILE, encoding="utf-8") as f:
+                    for _ln in f:
+                        if "alert_dropped_no_channel" not in _ln:
+                            continue
+                        try:
+                            _row = json.loads(_ln)
+                        except ValueError:
+                            continue
+                        if _row.get("outcome") != "alert_dropped_no_channel":
+                            continue
+                        if str(_row.get("ts") or "")[:10] != _today:
+                            continue
+                        _r = str(_row.get("reason") or "")
+                        if _r:
+                            _dropped.append(_r)
+        except Exception:
+            pass
+        if _dropped:
+            uniq = list(dict.fromkeys(_dropped))  # 保序去重
             shown = "；".join(t[:60] for t in uniq[:5])
             more = f"（等共 {len(uniq)} 条）" if len(uniq) > 5 else ""
             lines.append(f"- **🚨 被丢弃的报警**: {shown}{more}"

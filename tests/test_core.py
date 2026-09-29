@@ -12280,9 +12280,19 @@ class TestDroppedAlertStepSummary(unittest.TestCase):
         os.environ["GITHUB_STEP_SUMMARY"] = self.tmp
         # 丢警累积器是类级共享状态，测试间必须隔离
         m.Notifier._dropped_error_titles.clear()
+        # R561：step summary 会并读 METRICS_FILE 的今日丢警行——全量跑时真
+        # metrics.jsonl 里有别的用例/生产写入的丢警，会污染"零噪音/条数"断言。
+        self._metrics_tmp = tempfile.mktemp(suffix=".jsonl")
+        with open(self._metrics_tmp, "w", encoding="utf-8"):
+            pass
+        self._orig_metrics = m.METRICS_FILE
+        m.METRICS_FILE = self._metrics_tmp
 
     def tearDown(self):
         m.Notifier._dropped_error_titles.clear()
+        m.METRICS_FILE = self._orig_metrics
+        if os.path.exists(self._metrics_tmp):
+            os.remove(self._metrics_tmp)
         if self._orig is None:
             os.environ.pop("GITHUB_STEP_SUMMARY", None)
         else:
@@ -12327,6 +12337,55 @@ class TestDroppedAlertStepSummary(unittest.TestCase):
         # 去重后 7 条（同一条报警/A~F），只显前 5，末尾标注总数
         self.assertIn("等共 7 条", text)
         self.assertEqual(text.count("同一条报警"), 1, "重复标题应去重")
+
+    def test_cross_process_dropped_alerts_from_metrics(self):
+        """R561：schedule_watchdog 是 workflow 里先于 main 的独立步骤，其丢警
+        随进程退出即失（生产 7/8 丢警=「发帖机器人调度中断恢复」）。进程内
+        累积器为空时，metrics 的 alert_dropped_no_channel 行也必须进人类面。"""
+        import json as _json, tempfile
+        from datetime import datetime as dt, timezone as tz
+        metrics_tmp = tempfile.mktemp(suffix=".jsonl")
+        today = dt.now(tz.utc).strftime("%Y-%m-%d")
+        with open(metrics_tmp, "w", encoding="utf-8") as f:
+            f.write(_json.dumps({"ts": f"{today}T01:08:00+00:00",
+                                 "outcome": "alert_dropped_no_channel",
+                                 "reason": "发帖机器人调度中断恢复"}, ensure_ascii=False) + "\n")
+            f.write(_json.dumps({"ts": f"{today}T02:00:00+00:00",
+                                 "outcome": "run_summary", "candidates": 0}) + "\n")
+        orig = m.METRICS_FILE
+        m.METRICS_FILE = metrics_tmp
+        try:
+            m.Notifier._dropped_error_titles.clear()  # 模拟新进程、累积器为空
+            m.write_github_step_summary(m.NewsFetcher(), "—", {"active_tags": []}, [], False)
+            text = self._text()
+        finally:
+            m.METRICS_FILE = orig
+            if os.path.exists(metrics_tmp):
+                os.remove(metrics_tmp)
+        self.assertIn("被丢弃的报警", text)
+        self.assertIn("发帖机器人调度中断恢复", text, "跨进程丢警必须进人类面")
+
+    def test_cross_process_drops_older_than_today_ignored(self):
+        """只收当日 metrics 丢警——历史丢警不得永久霸屏。"""
+        import json as _json, tempfile
+        from datetime import datetime as dt, timezone as tz, timedelta
+        metrics_tmp = tempfile.mktemp(suffix=".jsonl")
+        old = (dt.now(tz.utc) - timedelta(days=3)).strftime("%Y-%m-%d")
+        with open(metrics_tmp, "w", encoding="utf-8") as f:
+            f.write(_json.dumps({"ts": f"{old}T01:08:00+00:00",
+                                 "outcome": "alert_dropped_no_channel",
+                                 "reason": "三天前的丢警"}, ensure_ascii=False) + "\n")
+        orig = m.METRICS_FILE
+        m.METRICS_FILE = metrics_tmp
+        try:
+            m.Notifier._dropped_error_titles.clear()
+            m.write_github_step_summary(m.NewsFetcher(), "—", {"active_tags": []}, [], False)
+            text = self._text()
+        finally:
+            m.METRICS_FILE = orig
+            if os.path.exists(metrics_tmp):
+                os.remove(metrics_tmp)
+        self.assertNotIn("三天前的丢警", text, "过期丢警不得渲染")
 
 
 class TestS3FailureSkipsSecondUpload(unittest.TestCase):
