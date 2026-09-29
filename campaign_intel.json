@@ -2,22 +2,22 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#TradingTournament",
     "#Futures",
-    "#BinanceEarn"
+    "#TradingTournament",
+    "#SimpleEarn"
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$BTC",
-    "$HYPE",
-    "$XRP",
-    "$PROVE",
+    "$USDC",
     "$USDT",
-    "$RLUSD",
-    "$VTHO"
+    "$HYPE",
+    "$XDP",
+    "$XRP",
+    "$ALGO",
+    "$RLUSD"
   ],
-  "strategy_guidance": "优先追贴当前并行开展的VTHO/BABY/BANK/PROVE多赛道交易竞赛、bStocks交易赛及$HYPE新上线相关活动，以「活动冲刺/参赛攻略」角度切入，晒交易战绩、分享套利思路引导用户参与交易赚取Write2Earn返佣；同时结合Binance Earn十月排行榜、RLUSD持仓分$XRP等无截止日长线活动做科普，带对应活动标签提升曝光。",
-  "last_updated": "2026-09-29T04:39:20.692408Z",
+  "strategy_guidance": "当前最紧迫的是今日截止的XDP Alpha交易竞赛，发帖需优先以「最后冲刺参与机会」角度切入，提醒用户抓住最后窗口瓜分20万USDC奖池；同时可将今日新上线的TradFi USDⓈ-Margined永续合约、$HYPE多产品支持、5支新增可交易股票等快讯，与VTHO/BABY/BANK交易锦标赛、USDC/USDT高APR理财、RLUSD持币分红等未过期活动结合，引导用户参与交易与理财，同步获取Write to Earn曝光与交易返佣收益。",
+  "last_updated": "2026-09-29T16:43:56.430214Z",
   "_feed_health": {},
   "_fallback_image": {
     "date": "2026-09-09",
