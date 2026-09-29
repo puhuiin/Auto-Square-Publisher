@@ -840,6 +840,19 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("具体真实数字", prompt)
         self.assertIn("未闭合问题", prompt)
 
+    def test_hook_number_rule_injected_in_long_form(self):
+        """R569：钩子硬规则此前只注入短讯——长文正文首句数字率仅 62%（短讯 91%），
+        R554 目标「第一句含具体数字率 100%」覆盖不到长文。长文 prompt 必须同样
+        注入该硬规则（作用于第一段正文首句）。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=True)
+        self.assertIn("钩子硬规则", prompt, "长文 prompt 必须注入钩子硬规则")
+        self.assertIn("具体真实数字", prompt)
+        self.assertIn("未闭合问题", prompt)
+
     def test_freshness_line_itself_free_of_banned_prefix(self):
         """R537 收尾：三个候选推荐词全部晋升静态禁词表后，时效行自身也不得
         含任何禁词前缀——旧文案「x 小时前刚爆出」含禁词'刚爆'，等于提示行带着
