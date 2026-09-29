@@ -853,6 +853,19 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("具体真实数字", prompt)
         self.assertIn("未闭合问题", prompt)
 
+    def test_cashtag_buy_click_guidance_in_prompt(self):
+        """R578：$挂件是读者点进交易页的入口——prompt 必须引导给出「值得看盘/交易」
+        的具体理由（明确的货币符号引导点击购买），同时保留反喊单红线。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        self.assertIn("交易页的入口", prompt, "必须点明 $ 挂件是购买入口")
+        self.assertIn("点开挂件去交易", prompt, "必须引导点击购买")
+        self.assertIn("绝不靠喊单", prompt, "反喊单红线不得弱化")
+        self.assertIn("$大写", prompt, "货币符号写法指引必须在场")
+
     def test_freshness_line_itself_free_of_banned_prefix(self):
         """R537 收尾：三个候选推荐词全部晋升静态禁词表后，时效行自身也不得
         含任何禁词前缀——旧文案「x 小时前刚爆出」含禁词'刚爆'，等于提示行带着
@@ -3044,6 +3057,35 @@ class TestTokenDailyLimit(unittest.TestCase):
             self.assertEqual(mgr.token_posts_since("BTC", 24), 2)
             self.assertEqual(mgr.token_posts_since("ETH", 24), 1)
             self.assertEqual(mgr.token_posts_since("SOL", 24), 0)
+        finally:
+            os.unlink(path)
+
+    def test_minutes_since_last_sent(self):
+        """R578：发帖最小间隔判据——返回距最近一次发布的分钟数（取最新而非最旧）。"""
+        import tempfile, json
+        now = datetime.now(timezone.utc)
+        items = [
+            {"id": "1", "title": "a", "source": "s",
+             "sent_at": (now - timedelta(hours=5)).isoformat(), "tokens": ["BTC"]},
+            {"id": "2", "title": "b", "source": "s",
+             "sent_at": (now - timedelta(minutes=7)).isoformat(), "tokens": ["ETH"]},
+        ]
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+            json.dump(items, f)
+            path = f.name
+        try:
+            mgr = m.CacheManager(path)
+            gap = mgr.minutes_since_last_sent()
+            self.assertIsNotNone(gap)
+            self.assertAlmostEqual(gap, 7.0, delta=1.0, msg="取最新 sent_at，7 分钟前")
+        finally:
+            os.unlink(path)
+        # 空缓存 → None
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
+            json.dump([], f)
+            path = f.name
+        try:
+            self.assertIsNone(m.CacheManager(path).minutes_since_last_sent())
         finally:
             os.unlink(path)
 
@@ -7934,6 +7976,10 @@ class TestRunMainSemantics(unittest.TestCase):
                   "GITHUB_STEP_SUMMARY"):
             os.environ.pop(k, None)
         os.environ["MAX_POSTS_PER_RUN"] = max_posts
+        # R578：默认最小间隔 20min 会让单轮第 2 篇被拦——本类测的是配额/限流/去重
+        # 语义不是发帖节奏，关掉间隔以免误伤（节奏测试单独开）。
+        # MIN_POST_GAP_MIN 是模块级常量，必须 patch 属性而非只改 env。
+        os.environ["MIN_POST_GAP_MIN"] = "0"
         if dry:
             os.environ["DRY_RUN"] = "true"
             os.environ.pop("SQUARE_API_KEY", None)
@@ -7951,6 +7997,7 @@ class TestRunMainSemantics(unittest.TestCase):
         _start(patch.object(m, "CAMPAIGN_INTEL_FILE", paths["intel"]))
         _start(patch.object(m, "METRICS_FILE", paths["metrics"]))
         _start(patch.object(m, "ACTIVE_HOURS_BEIJING", ""))
+        _start(patch.object(m, "MIN_POST_GAP_MIN", 0))  # R578：本类测投递语义非节奏
         _start(patch.object(m, "PUBLISH_PLATFORMS", ["binance"]))
         _start(patch.object(m.CampaignScanner, "get_campaign_intel",
                             return_value={"active_tags": [], "incentivized_tokens": []}))

@@ -194,6 +194,9 @@ TOKEN_DAILY_LIMIT = _env_int("TOKEN_DAILY_LIMIT", 3)               # 同一代�
 # 常规帖还给限流（垂直度保护），事件帖仍放行。独立于长文门槛，可单独调。
 TOKEN_LIMIT_BYPASS_IMPACT = _env_int("TOKEN_LIMIT_BYPASS_IMPACT", 30)  # 限流绕过门槛：触顶代币的热度低于此值仍被限流
 MAX_TOKENS_PER_POST = _env_int("MAX_TOKENS_PER_POST", 3)           # 单帖挂件标的上限（清单式行情日评可提取 9+ 币）
+# R578：发帖最小间隔（分钟）——生产实录 253 篇里 99 个间隔<30min（最快 2min 连发）
+# 与 60 个>180min 空窗并存，节奏像刷屏不像人。0=关闭；默认 20 对齐 cron 心跳。
+MIN_POST_GAP_MIN = _env_int("MIN_POST_GAP_MIN", 20)
 # 蹭热点：优先种子注入。把人工精选、事实核验过的突发热点候选（如交易所被盗）以最高分注入
 # 候选池顶部，让机器人在 RSS 尚未充分覆盖时抢先蹭上热点；发够 max_posts 篇后经既有
 # record_sent→is_cached 预算机制自动停投、回落常规 RSS 发帖。种子照走全部既有关卡
@@ -1621,6 +1624,23 @@ class CacheManager:
             except Exception:
                 continue
         return count
+
+    def minutes_since_last_sent(self) -> Optional[float]:
+        """距离最近一次成功发布的分钟数（无记录/解析失败返回 None）。
+
+        R578：发帖最小间隔的判据——2min 连发是刷屏感来源，跨运行也要守住。"""
+        latest = None
+        for item in self.cached_items:
+            raw = item.get("sent_at", "")
+            try:
+                ts = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+            except Exception:
+                continue
+            if latest is None or ts > latest:
+                latest = ts
+        if latest is None:
+            return None
+        return (datetime.now(timezone.utc) - latest).total_seconds() / 60.0
 
     def recent_titles(self, limit: int = 150) -> List[str]:
         """最近已发布的标题列表（新→旧），用于跨源近似重复检测"""
@@ -4394,7 +4414,7 @@ class MultiLLMEngine:
 1. 彻底去 AI 味！模仿真人老韭菜/交易员在社区发帖的极简口吻。禁用词（出现即废稿）：拭目以待/未来可期/保驾护航/谱写/新篇章/扬帆起航/值得注意的是/综上所述/让我们一起/毋庸置疑。禁句式：不仅…更…、首先…其次…、排比三连（X、Y、Z 三连发同一语气）。破折号最多用 1 次。
 2. 篇幅严格控制在 140~200 字之间，分 3~4 个短段落，短句为主，每段 1~2 句话。长短句交错，别每句都一个节奏。
 3. 【首两行定生死】信息流只展示前两行，第一段必须按上面给的「开场钩子套路」把第一句写成让人停下来的钩子（一个反差结论/一个真实数字/一个悬念，如"4.7 亿直接把盘面砸活了""全网贪婪都 65 了还在喊多"）。严禁"最近/今天聊聊/家人们"式慢热铺垫开场。观点要犀利、敢站队、一针见血，像内行人给出过硬判断，别和稀泥两头讨好。
-4. 每次提到代币一律用 $大写 形式（如 $PEPE、$WIF），并织在句子里（首段点名异动标的、后文至少再提一次核心标的）——这是交易挂件与创作激励返佣的生命线，严禁只写裸名或只在文末补一个。严禁在 ETF/SEC/AI/CEO/FED 等非代币词前加 $。让读者读完有"想点开这个 $币 去看盘口、去交易"的冲动：靠犀利有据的观点和一个此刻值得关注的真实理由驱动，绝不靠喊单承诺收益（"必涨/翻倍/冲/梭哈"出现即废稿）。
+4. 每次提到代币一律用 $大写 形式（如 $PEPE、$WIF），并织在句子里（首段点名异动标的、后文至少再提一次核心标的）——这是交易挂件与创作激励返佣的生命线，严禁只写裸名或只在文末补一个。严禁在 ETF/SEC/AI/CEO/FED 等非代币词前加 $。**$币名挂件是读者点进交易页的入口**：正文要自然给出「此刻值得看这个 $币 盘口/交易对」的具体理由（价差/资金流/事件窗口），让读者想点开挂件去交易——靠犀利有据的观点驱动，绝不靠喊单承诺收益（"必涨/翻倍/冲/梭哈"出现即废稿）。
 5. 结尾设计一句极简的站队提问（如“看多的扣1，看空的扣2”），最后附带 3~4 个标签：#Write2Earn #BinanceSquare #核心代币，再按内容板块加 1 个垂直标签（Meme 帖 #MemeCoin、合约帖 #Futures、ETF 帖 #ETF、公链帖用公链名），精准标签比泛流量标签更容易进对的信息流。
 6. 所有数字（价格/涨跌幅/资金量/贪婪指数）只能来自上面给的资料，一个都不许编造。
 直接输出正文，不要任何开场白或多余解释："""
@@ -8495,6 +8515,15 @@ def _run_main():
                 and cache_mgr.count_since(24) >= MAX_DAILY_POSTS:
             logger.info(f"24h 配额已满 ({MAX_DAILY_POSTS} 篇)，本轮不再继续发帖")
             break
+
+        # R578：发帖最小间隔——2min 连发是刷屏感来源（生产 253 篇里 99 个<30min）。
+        # 与 cron 心跳对齐后自然形成 ~20min 稳定节奏；间隔未到则本轮不发（槽位留给下轮）。
+        if MIN_POST_GAP_MIN > 0:
+            gap = cache_mgr.minutes_since_last_sent()
+            if gap is not None and gap < MIN_POST_GAP_MIN:
+                logger.info(f"⏱️ 距上一篇仅 {gap:.0f} 分钟（< {MIN_POST_GAP_MIN}min 最小间隔），"
+                            f"本轮不发，保持节奏稳定")
+                break
 
         news_id = item["id"]
         title = item["title"]
