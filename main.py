@@ -5680,12 +5680,22 @@ class ImageManager:
             pts = [(x0 + i * step, y_bot - (c - lo) / span * (y_bot - y_top))
                    for i, c in enumerate(closes)]
 
+            # R579：横向网格 + 价标（专业交易终端感，只标注真实 lo/hi/中位）
+            f_grid = _font(22)
+            for frac, lab in ((0.0, lo), (0.5, (lo + hi) / 2), (1.0, hi)):
+                gy = y_bot - frac * (y_bot - y_top)
+                d.line([(x0, gy), (x1, gy)], fill=(255, 255, 255, 28) if False else (42, 48, 60), width=1)
+                gl = (f"${lab:,.2f}" if lab > 100 else f"${lab:.4f}" if lab > 1 else f"${lab:.6f}")
+                d.text((x1 + 8, gy - 12), gl, font=f_grid, fill=(100, 110, 125))
+
             # 曲线下方渐变面积：RGBA 合成，弱化到 22% 透明度垫底
             overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
             od = ImageDraw.Draw(overlay)
             od.polygon(pts + [(x1, y_bot + 24), (x0, y_bot + 24)], fill=accent + (56,))
             img = Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
             d = ImageDraw.Draw(img)
+            # R579：曲线柔光（宽半透明描边垫底）增强眼钩
+            d.line(pts, fill=tuple(int(c * 0.35) for c in accent), width=14, joint="curve")
             d.line(pts, fill=accent, width=5, joint="curve")
             last_pt = pts[-1]
             d.ellipse([last_pt[0] - 9, last_pt[1] - 9, last_pt[0] + 9, last_pt[1] + 9], fill=accent)
@@ -5701,6 +5711,9 @@ class ImageManager:
             d.text((60, 118), price_str, font=f_price, fill=(240, 242, 248))
             d.text((470, 128), chg_str, font=f_chg, fill=accent)
             d.rectangle([60, 212, W - 60, 216], fill=accent)
+            # R579：x 轴时间锚点（真实 48h 窗口，不编造刻度值）
+            d.text((x0, y_bot + 34), "-48H", font=f_grid, fill=(100, 110, 125))
+            d.text((x1 - 52, y_bot + 34), "NOW", font=f_grid, fill=(100, 110, 125))
             foot = " | ".join(x for x in (fng_text, "DATA: BINANCE SPOT 1H KLINE") if x)
             d.text((60, H - 66), foot, font=f_small, fill=(120, 128, 140))
 

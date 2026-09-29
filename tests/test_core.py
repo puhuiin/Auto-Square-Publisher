@@ -12031,6 +12031,20 @@ class TestCardTextIsAsciiOnly(unittest.TestCase):
                                              "Fear&Greed 50/100 (中立)")
         self._assert_no_cjk(self._drawn_texts(run))
 
+    def test_chart_card_draws_grid_and_time_anchors(self):
+        """R579：走势卡视觉升级——横向网格价标（真实 lo/mid/hi）+ x 轴 -48H/NOW
+        锚点 + 曲线柔光。这些是「好看的吸引人图片」维度，数字仍全部来自真实 K 线。"""
+        drawn = self._drawn_texts(lambda: m.ImageManager.render_chart_card(
+            "BTC", [100.0 + i * 0.5 for i in range(48)], "Fear&Greed 50/100"))
+        blob = " ".join(drawn)
+        self.assertIn("-48H", blob, "x 轴起点锚点")
+        self.assertIn("NOW", blob, "x 轴终点锚点")
+        # 价标来自真实 lo/hi（100.0 / 123.5），非编造
+        self.assertTrue(any("100.00" in t or "100.0" in t for t in drawn),
+                        f"网格价标应含真实最低价，got {drawn}")
+        self.assertTrue(any("123" in t for t in drawn),
+                        f"网格价标应含真实最高价，got {drawn}")
+
     def test_cards_still_render_with_chinese_input(self):
         """ASCII 化不得把卡片搞成 None（那会整条配图链路降级）"""
         card = m.ImageManager.render_market_card(["$BTC"], "50/100 (中立)")
