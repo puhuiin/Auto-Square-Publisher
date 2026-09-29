@@ -12226,6 +12226,68 @@ class TestStepSummarySkipReason(unittest.TestCase):
         self.assertNotIn("本轮跳过", text)
 
 
+class TestDroppedAlertStepSummary(unittest.TestCase):
+    """R557：无通知渠道时被丢弃的错误报警必须进 step summary 人类面。
+    R330 只让丢警在 log+metrics 留痕，但用户巡检看的是 Actions 运行页第一屏——
+    不翻全量日志就看不见"为什么这轮 0 发布/出故障"。验证丢警标题被渲染成显式
+    告警块，且零丢警轮零噪音（同 R275/R277/R278 惯例）。"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".md")
+        self._orig = os.environ.get("GITHUB_STEP_SUMMARY")
+        os.environ["GITHUB_STEP_SUMMARY"] = self.tmp
+        # 丢警累积器是类级共享状态，测试间必须隔离
+        m.Notifier._dropped_error_titles.clear()
+
+    def tearDown(self):
+        m.Notifier._dropped_error_titles.clear()
+        if self._orig is None:
+            os.environ.pop("GITHUB_STEP_SUMMARY", None)
+        else:
+            os.environ["GITHUB_STEP_SUMMARY"] = self._orig
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _text(self):
+        with open(self.tmp, encoding="utf-8") as f:
+            return f.read()
+
+    def test_dropped_error_alert_surfaced(self):
+        m.Notifier._dropped_error_titles.append("LLM 提供商永久失败: stub")
+        m.write_github_step_summary(m.NewsFetcher(), "—", {"active_tags": []}, [], False)
+        text = self._text()
+        self.assertIn("被丢弃的报警", text)
+        self.assertIn("LLM 提供商永久失败", text)
+        self.assertIn("SERVERCHAN_KEY", text, "必须给出配置渠道的指引")
+
+    def test_no_dropped_alerts_zero_noise(self):
+        m.write_github_step_summary(m.NewsFetcher(), "—", {"active_tags": []}, [], False)
+        text = self._text()
+        self.assertNotIn("被丢弃的报警", text, "零丢警轮不得渲染告警块")
+
+    def test_send_notification_populates_accumulator_only_on_error(self):
+        for k in ("SERVERCHAN_KEY", "PUSHPLUS_TOKEN", "BARK_KEY",
+                  "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "WEBHOOK_URL"):
+            os.environ.pop(k, None)
+        with patch.object(m, "append_metrics"), \
+             patch.object(m, "CAMPAIGN_INTEL_FILE", self.tmp):
+            m.Notifier.send_notification("崩溃报警", "内容", is_error=True)
+            self.assertEqual(m.Notifier._dropped_error_titles, ["崩溃报警"])
+            # 成功通知不进丢警累积器（非错误、无运营损失）
+            m.Notifier.send_notification("发帖成功", "内容", is_error=False)
+            self.assertEqual(m.Notifier._dropped_error_titles, ["崩溃报警"])
+
+    def test_dropped_titles_dedup_and_cap(self):
+        for t in ["同一条报警", "同一条报警", "A", "B", "C", "D", "E", "F"]:
+            m.Notifier._dropped_error_titles.append(t)
+        m.write_github_step_summary(m.NewsFetcher(), "—", {"active_tags": []}, [], False)
+        text = self._text()
+        # 去重后 7 条（同一条报警/A~F），只显前 5，末尾标注总数
+        self.assertIn("等共 7 条", text)
+        self.assertEqual(text.count("同一条报警"), 1, "重复标题应去重")
+
+
 class TestS3FailureSkipsSecondUpload(unittest.TestCase):
     """R8：上传失败= S3/凭证问题，换张图同样传不上去，不该再渲染并二次上传"""
 

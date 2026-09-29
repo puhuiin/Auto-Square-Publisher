@@ -7245,6 +7245,13 @@ class Notifier:
 
     _ALERT_THROTTLE_HOURS = 12
 
+    # 本轮（本进程）因未配置任何通知渠道而被丢弃的**错误**报警标题。
+    # R330 让丢警在 log+metrics 留了痕，但用户巡检看的是 Actions 运行页第一屏的
+    # step summary，不翻全量日志就看不见"为什么这轮 0 发布/出故障"。把这些标题攒在
+    # 本进程，由 write_github_step_summary 渲染成显式告警块（只在有丢警时显形）。
+    # _run_main 启动时清空，保证只反映当前轮次。
+    _dropped_error_titles: List[str] = []
+
     @classmethod
     def _alert_in_cooldown(cls, title: str) -> bool:
         """只读判断：该标题是否仍在冷却期内（不写任何状态）"""
@@ -7361,6 +7368,8 @@ class Notifier:
         if not Notifier._any_channel_configured():
             if is_error:
                 logger.warning(f"[通知未配置渠道，错误报警被丢弃] {title}")
+                # R330 续：除了 log+metrics，再攒进本进程列表，供 step summary 显形
+                Notifier._dropped_error_titles.append(title[:120])
                 append_metrics({
                     "outcome": "alert_dropped_no_channel",
                     "reason": title[:80],
@@ -7494,6 +7503,18 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
         else:
             lines.append(f"- **管线吞吐**: 扫描 {s['fetched']} 条 → 过滤旧闻 {s['stale']} / "
                          f"已发 {s['cached']} / 近似重复 {s['near_dup']} → 候选 {s['kept']} 条")
+        # R330 续：被丢弃的错误报警进人类面。无通知渠道时 send_notification 只能把
+        # 错误报警丢进 log+metrics（用户不翻全量日志就看不见）——这里把本轮丢掉的
+        # 报警标题渲染成运行页第一屏的显式告警，直接回答"这轮为什么 0 发布/出故障"。
+        # 同本项目惯例（R275/R277/R278）：只在有丢警时显形，零丢警轮零噪音。
+        if Notifier._dropped_error_titles:
+            uniq = list(dict.fromkeys(Notifier._dropped_error_titles))  # 保序去重
+            shown = "；".join(t[:60] for t in uniq[:5])
+            more = f"（等共 {len(uniq)} 条）" if len(uniq) > 5 else ""
+            lines.append(f"- **🚨 被丢弃的报警**: {shown}{more}"
+                         f" —— 未配置任何通知渠道，错误报警无法送达；"
+                         f"请配置 SERVERCHAN_KEY / PUSHPLUS_TOKEN / BARK_KEY / "
+                         f"TELEGRAM_* / WEBHOOK_URL 任一")
         if feeds_parked := s.get("feeds_parked"):
             lines.append(f"- **停放的源**: {', '.join(feeds_parked)}")
         # R278：硬故障源名进人类面——计数自 R90 起只在扫描日志（易失）里，运行页
@@ -8125,6 +8146,9 @@ def _run_main():
     # 容灾 + 配图上传 + 发布）耗时逼近节奏，下一轮就会排队堆积；此前的盲区
     # 让"变慢"只能在 CI 日志里人肉翻。遥测进 run_summary 后报表可聚合监控。
     t_run_start = time.time()
+    # 每轮开局清空上轮/上次调用的丢警缓存，保证 step summary 只反映当前轮次
+    # （生产上每轮是新进程本就为空；此处防御同进程内重复调用 main 的累积）。
+    Notifier._dropped_error_titles.clear()
     # R184：配额边界追赶的等待时长单列——R177 分段耗时上线后，生产 18:06/18:29
     # 两轮 run_elapsed 197.5s/361.0s 里各有 150.3s/270.3s 无法归因（分段合计只
     # 覆盖 LLM/配图/发布），实际是 R154 的 time.sleep 追赶等待；不分段会被误读成
