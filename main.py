@@ -8004,12 +8004,14 @@ def _intel_is_degraded(campaign_intel: Optional[Dict[str, Any]]) -> Optional[boo
 # 只做正向白名单：宁可漏投（等新视频），绝不错投 CS 类离题视频污染账号垂直度。
 _VIDEO_CRYPTO_KEYWORDS = (
     "crypto", "blockchain", "defi", "web3", "bitcoin", "btc", "ethereum", "eth",
-    "stablecoin", "altcoin", "token", "airdrop", "staking", "on-chain", "onchain",
+    "stablecoin", "altcoin", "airdrop", "staking", "on-chain", "onchain",
     "dex", "cex", "nft", "halving", "wallet", "binance", "solana", "layer2",
     # R565：裸 l2 被 CPU 缓存行/L2 cache 误命中（生产库 cpu-cache-lines 实测），
     # 按「宁可漏投绝不错投」去掉；layer2/layer-2 保留。
     # R565：「加密」被 HTTPS 的加密/认证/完整性误命中（https-basics 实测），
     # 语义双关子串救不了，去掉；加密货币类靠 比特币/交易所/代币 等专有词兜底。
+    # R571：裸 token 被 LLM「逐 token 输出」误命中（jev AI 视频实测），
+    # 同宁可漏投去掉；加密代币类靠 代币/altcoin/stablecoin 等兜底。
     "区块链", "比特币", "以太坊", "稳定币", "代币", "山寨币", "空投", "质押",
     "链上", "去中心化", "流动性", "交易所", "钱包", "智能合约", "减半", "行情", "币安",
     "现货", "合约", "期货", "挖矿", "公链", "牛市", "熊市", "做市",

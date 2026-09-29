@@ -13867,6 +13867,15 @@ class TestVideoLibraryDiscovery(unittest.TestCase):
         self.assertFalse(m._video_is_crypto_topic("答案可以压缩成三件事：加密、认证、完整性"))
         self.assertTrue(m._video_is_crypto_topic("这波加密货币行情怎么看"))
 
+    def test_crypto_keyword_token_not_llm_token(self):
+        """R571：裸 token 被 LLM「逐 token 输出自由文本」误命中（jev AI 视频实测），
+        按宁可漏投去掉；加密代币类靠 代币/altcoin/stablecoin 等兜底。"""
+        self.assertFalse(m._video_is_crypto_topic(
+            "生成式大模型：逐 token 输出自由文本，结果需要解析和校验"))
+        self.assertFalse(m._video_is_crypto_topic("Jev：一支不会写作文的 AI 模型"))
+        self.assertTrue(m._video_is_crypto_topic("这波 altcoin 反弹，stablecoin 也在涨"))
+        self.assertTrue(m._video_is_crypto_topic("比特币和以太坊的代币经济"))
+
     def test_discovers_only_complete_crypto(self):
         import tempfile, shutil
         root = tempfile.mkdtemp()
