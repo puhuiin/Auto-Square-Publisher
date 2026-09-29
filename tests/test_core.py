@@ -840,6 +840,22 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("具体真实数字", prompt)
         self.assertIn("未闭合问题", prompt)
 
+    def test_prompt_separates_verified_facts_from_market_motive_speculation(self):
+        """R581：避免模型把博弈推测伪装成内幕事实，且禁止无关热点硬凑代币因果。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "ETF inflows rise", "summary": "Spot ETF inflows increased.",
+                "age_hours": 1.0}
+        prompt, _ = eng._build_user_prompt(item, None, "BTC spot: $60,000 (+1.2%)", ["BTC"])
+        self.assertIn("事实和推测必须分开写", prompt)
+        self.assertIn("没有直接证据时一律标明是个人猜测", prompt)
+        self.assertIn("不得把别的币热搜或无关热点硬扯成本币走势因果", prompt)
+        self.assertIn("$币名挂件是读者点进交易页的入口", prompt)
+        self.assertIn("观点要犀利、敢站队", prompt)
+        self.assertNotIn("若与本条加密新闻无关则禁止生硬提及", prompt,
+                         "测试未传 hot_topics，不应凭空出现无关热点限制")
+
     def test_hook_number_rule_injected_in_long_form(self):
         """R569：钩子硬规则此前只注入短讯——长文正文首句数字率仅 62%（短讯 91%），
         R554 目标「第一句含具体数字率 100%」覆盖不到长文。长文 prompt 必须同样
