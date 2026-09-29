@@ -801,6 +801,23 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("具体真实数字", prompt)
         self.assertIn("未闭合问题", prompt)
 
+    def test_freshness_line_itself_free_of_banned_prefix(self):
+        """R537 收尾：三个候选推荐词全部晋升静态禁词表后，时效行自身也不得
+        含任何禁词前缀——旧文案「x 小时前刚爆出」含禁词'刚爆'，等于提示行带着
+        被禁措辞出现(还可能被模型照抄)。改为「x 小时内的新事件」。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 0.4}
+        prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        fresh_line = next(l for l in prompt.split("\n") if "小时内的新事件" in l)
+        for w in m._GENERIC_LEADINS:
+            if w == "突发":
+                continue  # "突发"是时效行自身的分类标签(prompt 结构词)，非开场领词
+            self.assertNotIn(w, fresh_line,
+                             f"时效行自身不得含禁词「{w}」: {fresh_line}")
+        self.assertIn("小时内的新事件", fresh_line)
+
     def test_proven_freshness_leadins_banned_statically(self):
         """R537：'最新'(16/237=6.8%)与'刚爆'(合计 18 次)是生产实证的高频时效
         领词，晋升静态禁词表——窗口内 1 次即禁，时效行同步撤下推荐。"""

@@ -4314,12 +4314,17 @@ class MultiLLMEngine:
         age_h = news_item.get("age_hours")
         if age_h is not None:
             if age_h < 1:
+                # R537 后三个候选推荐词全部晋升静态禁词表（最新/刚出/几分）——
+                # approved 恒空。此时时效行若还写"突发（x 小时前刚爆出）"，其中
+                # "刚爆出"含静态禁词"刚爆"前缀，等于提示行自己带着被禁措辞出现
+                # （与"禁令优先于推荐"自相矛盾，还可能被模型照抄）。改为不含任何
+                # 禁词前缀的纯时效事实 + 速度感约束。
                 approved = [expr for expr in ("最新", "刚出炉", "几分钟前")
                             if expr[:2] not in used_leadins
                             and expr[:2] not in _GENERIC_LEADINS]
                 expr_part = f"用'{'/'.join(approved)}'等表述强调时效，" if approved else ""
-                freshness = (f"突发（{age_h:.1f} 小时前刚爆出），{expr_part}"
-                             "速度感优先，但开头不得用被禁的领句")
+                freshness = (f"突发（{age_h:.1f} 小时内的新事件），{expr_part}"
+                             "速度感优先：直接讲事件本身与数字，开头不得用被禁的领句")
             elif age_h < 12:
                 freshness = f"上午热点（{age_h:.0f} 小时前），可以复盘盘中走势并给出后市思路"
             else:
