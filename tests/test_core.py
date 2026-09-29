@@ -13793,6 +13793,26 @@ class TestVideoLibraryDiscovery(unittest.TestCase):
         self.assertTrue(m._video_is_crypto_topic("聊聊比特币与稳定币"))
         self.assertFalse(m._video_is_crypto_topic("讲讲 CPU 缓存与排序算法"))
 
+    def test_crypto_keyword_ascii_word_boundary(self):
+        """R565：ASCII 关键词裸子串会把 CS 视频误放行污染账号垂直度——
+        生产库实测 db-index-basics 的 index 含 dex、vllm_wsl2 的 wsl2 含 l2、
+        ethernet 含 eth。词边界后这些必须 False，真 DEX/L2/ETH 必须 True。"""
+        self.assertFalse(m._video_is_crypto_topic("python cli.py compile db-index-basics"))
+        self.assertFalse(m._video_is_crypto_topic("vllm_wsl2_enable_pin_memory"))
+        self.assertFalse(m._video_is_crypto_topic("接一根 ethernet 网线"))
+        self.assertFalse(m._video_is_crypto_topic("先查 l1 缓存，未命中再查 l2"),
+                         "裸 l2 已按宁可漏投去掉，CPU L2 缓存不得命中")
+        self.assertTrue(m._video_is_crypto_topic("去 dex 交易所 swap 一下"))
+        self.assertTrue(m._video_is_crypto_topic("arbitrum 是以太坊 layer2 扩容"))
+        self.assertTrue(m._video_is_crypto_topic("btc 现在八万"))
+        self.assertTrue(m._video_is_crypto_topic("eth 质押收益"))
+
+    def test_crypto_keyword_cjk_no_overgeneric(self):
+        """R565：「加密」被 HTTPS 的「加密、认证、完整性」误命中（语义双关），
+        按宁可漏投去掉；加密货币类靠比特币/交易所/代币等专有词兜底。"""
+        self.assertFalse(m._video_is_crypto_topic("答案可以压缩成三件事：加密、认证、完整性"))
+        self.assertTrue(m._video_is_crypto_topic("这波加密货币行情怎么看"))
+
     def test_discovers_only_complete_crypto(self):
         import tempfile, shutil
         root = tempfile.mkdtemp()

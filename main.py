@@ -7996,19 +7996,34 @@ def _intel_is_degraded(campaign_intel: Optional[Dict[str, Any]]) -> Optional[boo
 _VIDEO_CRYPTO_KEYWORDS = (
     "crypto", "blockchain", "defi", "web3", "bitcoin", "btc", "ethereum", "eth",
     "stablecoin", "altcoin", "token", "airdrop", "staking", "on-chain", "onchain",
-    "dex", "cex", "nft", "halving", "wallet", "binance", "solana", "layer2", "l2",
-    "加密", "区块链", "比特币", "以太坊", "稳定币", "代币", "山寨币", "空投", "质押",
+    "dex", "cex", "nft", "halving", "wallet", "binance", "solana", "layer2",
+    # R565：裸 l2 被 CPU 缓存行/L2 cache 误命中（生产库 cpu-cache-lines 实测），
+    # 按「宁可漏投绝不错投」去掉；layer2/layer-2 保留。
+    # R565：「加密」被 HTTPS 的加密/认证/完整性误命中（https-basics 实测），
+    # 语义双关子串救不了，去掉；加密货币类靠 比特币/交易所/代币 等专有词兜底。
+    "区块链", "比特币", "以太坊", "稳定币", "代币", "山寨币", "空投", "质押",
     "链上", "去中心化", "流动性", "交易所", "钱包", "智能合约", "减半", "行情", "币安",
     "现货", "合约", "期货", "挖矿", "公链", "牛市", "熊市", "做市",
 )
 
 
 def _video_is_crypto_topic(raw_text: str) -> bool:
-    """content.yaml 原文是否命中加密/DeFi 关键词（内容驱动过滤，非硬编码 slug 白名单）。"""
+    """content.yaml 原文是否命中加密/DeFi 关键词（内容驱动过滤，非硬编码 slug 白名单）。
+
+    R565：ASCII 关键词必须带词边界——裸子串会把 CS 视频误放行污染账号垂直度
+    （生产库实测：'db-index-basics' 的 index 含 dex、'cpu-cache-lines' 的 L2 缓存、
+    'vllm_wsl2' 的 wsl2 都能命中）。CJK 无词边界概念，继续子串匹配（项目规约
+    CJK 正则勿用 \\b）；短别名 l2/dex/eth 等靠边界避免嵌进英文单词里。"""
     if not raw_text:
         return False
     low = raw_text.lower()
-    return any(kw in low for kw in _VIDEO_CRYPTO_KEYWORDS)
+    for kw in _VIDEO_CRYPTO_KEYWORDS:
+        if kw.isascii():
+            if re.search(r"(?<![a-z0-9])" + re.escape(kw.lower()) + r"(?![a-z0-9])", low):
+                return True
+        elif kw in low:
+            return True
+    return False
 
 
 def _discover_video_library(library_dir: str) -> List[Dict[str, Any]]:
