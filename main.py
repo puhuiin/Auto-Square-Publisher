@@ -2493,15 +2493,7 @@ class NewsFetcher:
                               priority_tokens: Optional[List[str]]) -> tuple:
         """币安官方活动重点代币加权：与当期竞赛/新币相关的热点优先发布。
         返回 (命中的候选数, off-pool 活动币列表)——供 run_summary 度量四路
-        信号供给与「活动币不在池」缺口。
-        非字符串条目直接丢弃——脏情报里的 dict/数字走到 t.replace 会炸掉整轮；
-        存量脏文件由 get_campaign_intel 拦截，这里是消费侧第二道门。
-        R95：在池币命中判定走 _candidate_hits_tokens（四层防线），词形活动币
-        （MOVE/FORM 等严格词表成员）不再误boost普通英文标题。
-        R200：不在池的活动币（Alpha 上新如 PIEVERSE，09-15 生产实证
-        extract_tokens 恒空 → 加权永不命中）改词边界匹配。
-        R201：off-pool 列表回传进 stats → run_summary（此前只打日志，
-        报表看不到「当前有几颗活动币不在池」）。"""
+        信号供给与「活动币不在池」缺口。"""
         if not priority_tokens:
             return 0, []
         campaign_set = {t.replace("$", "").strip().upper()
@@ -3219,6 +3211,8 @@ class MultiLLMEngine:
         self.last_intel_degraded: Optional[bool] = None
         # R181：情报陈旧小时数——bool 只说降级，age 说多旧（生产 14h→16h 在涨）
         self.last_intel_age_hours: Optional[float] = None
+        # R587：仅新鲜活动情报可用于候选排序和 campaign tag 注入。
+        self.last_campaign_guidance_usable: bool = False
         # R168：故事级 llm_failed 行此前只有 reason 无提供商——生产 31 条失败
         # 无法回答"最后撞的是谁"（质量门/超时原因里不带通道名）。
         self.last_attempted_provider: Optional[str] = None
@@ -4221,26 +4215,23 @@ class MultiLLMEngine:
         # 清空逐帖回执，防止长文或失败调用沿用同一引擎上一条短讯的 CTA 标签。
         self.last_ending_style = None
         self.last_opening_hook = None
-        # R83 时效标注：情报正文可能沿用过期缓存（刷新失败退避最长 2h+，正文却引用
-        # 具体截止日期——生产实录：09-10 仍在喂"09-04 双重截止，抢最后48小时"，已过期
-        # 6 天。模型照它写帖 = 把过期活动当事实发布，违反"事件严禁编造"红线）。
-        # fresh（<12h）正常注入；过期正文降权为"仅背景参考、严禁引用其中的日期与
-        # 倒计时"，代币与标签加权不受影响（那只影响排序，不进正文事实）。
-        intel_section = ""
+        # R587：过期/降级情报是 fail-closed——不把历史 campaign guidance 的句
+        # 子喂给模型（生产 09-30 01:25/02:04 两帖仍复述「今日截止 XDP / 20 万奖池」，
+        # 情报时间戳 11h+，活动来自前一日）。fresh 路径保留原文与过期日期守卫。
+        self.last_campaign_guidance_usable = False
         self.last_intel_degraded = None
         self.last_intel_age_hours = None
+        intel_section = ""
         if campaign_intel and campaign_intel.get("strategy_guidance"):
-            # R198：与 quota 路径共用同一套判定 helper——R179/R197 两处各自
-            # 算陈旧度已过分叉一次（无 last_updated 时 prompt 降级、遥测 None）。
-            self.last_intel_age_hours = _intel_age_hours(campaign_intel)
-            degraded = _intel_is_degraded(campaign_intel)
+            degraded = campaign_intel.get("_consumer_degraded")
+            if not isinstance(degraded, bool):
+                degraded = _intel_is_degraded(campaign_intel)
             self.last_intel_degraded = degraded
-            intel_fresh = degraded is False
-            if intel_fresh:
-                # R127 运行时守卫：R127 修复只作用于下次刷新，当前缓存里的
-                # guidance 仍可能带着过期竞赛指导（生产实录：XPIN 09-04 已过期
-                # 一周仍因 last_updated 新鲜走正常注入）。注入前检测过期日期
-                # 引用，命中即追加禁提注记——新鲜路径不再无条件信任内容。
+            self.last_intel_age_hours = campaign_intel.get("_consumer_age_hours")
+            if self.last_intel_age_hours is None:
+                self.last_intel_age_hours = _intel_age_hours(campaign_intel)
+            if degraded is False:
+                self.last_campaign_guidance_usable = True
                 stale_refs = _past_date_refs(str(campaign_intel.get("strategy_guidance") or ""),
                                              written_on=_intel_written_on(campaign_intel))
                 intel_section = f"【官方活动风向参考】：{campaign_intel.get('strategy_guidance')}（若与本条新闻无关则切勿生硬提及）。\n"
@@ -4248,14 +4239,9 @@ class MultiLLMEngine:
                     intel_section += (f"⚠️ 上述参考中引用的 {'、'.join(stale_refs)} 均为已过期活动的日期，"
                                       "严禁在正文中提及这些活动及其截止时间。\n")
             else:
-                intel_section = (f"【官方活动风向参考（已过缓存期，仅作背景感知）】："
-                                 f"{campaign_intel.get('strategy_guidance')}"
-                                 "（⚠️ 以上活动信息可能已过期：严禁在正文中引用其中的任何具体日期、"
-                                 "截止时间或倒计时，只可化用代币与话题方向，且若与本条新闻无关则切勿提及）。\n")
-
-        # R6：把实际注入的活动情报文本暂存到实例。数字软校验的白名单必须包含它——
-        # 模型被明确要求参考这段 guidance，忠实引用其中的奖池/费率/日期却被判"编造"
-        # 是系统性误杀（旧白名单只有 title+summary+market_context）。
+                intel_section = ("【官方活动情报状态】：缓存已过期或写作日期引用已失效，"
+                                 "本条不注入历史 campaign guidance；不得引用其中活动、奖池、"
+                                 "收益率、截止日期或倒计时，只围绕当前新闻和实时盘面写作。\n")
         self.last_intel_section = intel_section
 
         # R101 情绪锚点禁令（R103 补全）：触发时必须同步把情绪行从盘面上下文
@@ -8066,6 +8052,25 @@ def _intel_is_degraded(campaign_intel: Optional[Dict[str, Any]]) -> Optional[boo
     return False
 
 
+def _campaign_intel_snapshot(campaign_intel: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Single consumer snapshot: stale guidance, activity-token boosts and campaign tags
+    are disabled together, while the source file remains intact for retry/diagnostics."""
+    snapshot = dict(campaign_intel) if isinstance(campaign_intel, dict) else {}
+    degraded = _intel_is_degraded(snapshot)
+    age_hours = _intel_age_hours(snapshot)
+    snapshot["_consumer_fresh"] = degraded is False
+    snapshot["_consumer_degraded"] = degraded
+    snapshot["_consumer_age_hours"] = age_hours
+    if degraded is not False:
+        snapshot["strategy_guidance"] = ""
+        snapshot["incentivized_tokens"] = []
+        snapshot["active_tags"] = [
+            tag for tag in (snapshot.get("active_tags") or [])
+            if str(tag).strip().lower() in ("#write2earn", "#binancesquare")
+        ]
+    return snapshot
+
+
 # ---------------------------------------------------------------------------
 # 每日预生产视频定投（contentType=3）
 # 把本机「讲解」项目产出的竖版视频当预生产库，每天挑一条未发过的**加密主题**合规视频发布。
@@ -8350,8 +8355,19 @@ def _run_main():
     # 刷新被饿死到下一配额槽（18:04Z）。get_campaign_intel 自带新鲜/退避短路，
     # 饱和期调用几乎零成本；仅当过期且冷却清空才真正烧 LLM（正是我们想刷的时刻）。
     t_intel_start = time.time()
-    campaign_intel = CampaignScanner.get_campaign_intel(llm_engine)
+    campaign_intel = _campaign_intel_snapshot(
+        CampaignScanner.get_campaign_intel(llm_engine))
     intel_elapsed = time.time() - t_intel_start
+    campaign_intel_degraded = campaign_intel.get("_consumer_degraded")
+    campaign_intel_age_before_filter = campaign_intel.get("_consumer_age_hours")
+    campaign_intel_fresh = campaign_intel.get("_consumer_fresh") is True
+    llm_engine.last_campaign_guidance_usable = campaign_intel_fresh
+    # R587: preserve run-level freshness scalars before building the filtered consumer snapshot.
+    campaign_intel["_consumer_degraded"] = campaign_intel_degraded
+    campaign_intel["_consumer_age_hours"] = campaign_intel_age_before_filter
+    campaign_intel["_consumer_fresh"] = campaign_intel_fresh
+    if not campaign_intel_fresh:
+        logger.warning("Campaign intel stale/unverified: suppressing old guidance, campaign token boosts and tags.")
     logger.info(f"💡 当期币安重点活动标签: {campaign_intel.get('active_tags')}")
     logger.info(f"🪙 当期重点扶持代币池: {campaign_intel.get('incentivized_tokens')}")
 
@@ -8395,8 +8411,9 @@ def _run_main():
                 # 不记则 run_elapsed 里的刷新成本无法与「纯短路读缓存」区分
                 intel_elapsed_sec=round(intel_elapsed, 1),
                 # R195：饱和轮的情报陈旧度——R182 后饱和轮也刷情报，但此前只有
-                intel_age_hours=_intel_age_hours(campaign_intel),
-                intel_degraded=_intel_is_degraded(campaign_intel),
+                intel_age_hours=campaign_intel_age_before_filter,
+                intel_degraded=campaign_intel_degraded,
+                campaign_guidance_usable=campaign_intel_fresh,
                 # R184：等待后仍饱和 = 追赶失败（如估算偏差/槽未按时释放），
                 # 这笔等待同样是 run_elapsed 的一部分，单列才能对上账
                 quota_wait_elapsed_sec=round(quota_wait_sec, 1),
@@ -8434,6 +8451,9 @@ def _run_main():
         # R90：零候选轮同样记 run_summary——否则"没新闻"与"没跑"在遥测里
         # 无法区分（该早退路径此前完全隐形）。字段与主路径同 schema。
         append_run_summary(
+            intel_age_hours=campaign_intel_age_before_filter,
+            intel_degraded=campaign_intel_degraded,
+            campaign_guidance_usable=campaign_intel_fresh,
             feeds_ok=fetcher.stats.get("feeds_ok", 0),
             feeds_failed=len(fetcher.stats.get("feeds_failed", [])),
             feeds_parked=len(fetcher.stats.get("feeds_parked", [])),
@@ -9152,6 +9172,9 @@ def _run_main():
         "skipped_risk_blocked": skip_counts["risk_blocked"],
         "skipped_parked": skip_counts["parked"],
         "skipped_exception": exception_skipped,
+        "campaign_guidance_usable": campaign_intel_fresh,
+        "intel_age_hours": campaign_intel_age_before_filter,
+        "intel_degraded": campaign_intel_degraded,
         # R215：限流放行计数——与 skipped_token_limit 互补，放行/拦截两侧都可观测
         "token_limit_bypassed": token_limit_bypassed,
         # R216：门槛校准两端顶分——拦截顶分贴门槛 = 真事件被吞需复评；放行顶分

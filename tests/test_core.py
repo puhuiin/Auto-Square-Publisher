@@ -995,7 +995,7 @@ class TestIntelFreshnessInPrompt(unittest.TestCase):
                  "last_updated": stale}
         prompt, _ = eng._build_user_prompt(self._item(), intel, "", ["BTC"])
         self.assertTrue(eng.last_intel_degraded)
-        self.assertIn("已过缓存期", prompt)
+        self.assertIn("活动情报状态", prompt)
 
     def test_no_intel_leaves_degraded_none(self):
         eng = self._eng()
@@ -1014,7 +1014,7 @@ class TestIntelFreshnessInPrompt(unittest.TestCase):
         self.assertIs(eng.last_intel_degraded, True)
         self.assertIsNone(eng.last_intel_age_hours)
         self.assertIs(m._intel_is_degraded(intel), True)
-        self.assertIn("已过缓存期", eng._build_user_prompt(self._item(), intel, "", ["BTC"])[0])
+        self.assertIn("活动情报状态", eng._build_user_prompt(self._item(), intel, "", ["BTC"])[0])
 
     def test_intel_age_hours_recorded(self):
         """R181：bool 只说降级，age 说多旧——生产 14h→16h 在涨，可聚合"""
@@ -1196,40 +1196,78 @@ class TestPastDateRefs(unittest.TestCase):
 
     def test_fresh_intel_injected_normally(self):
         intel = {"strategy_guidance": "结合当期新合约引导交易",
+                 "active_tags": ["#TradingTournament"],
+                 "incentivized_tokens": ["$XRP"],
                  "last_updated": self._ts(2)}
-        prompt, _ = self._eng()._build_user_prompt(
+        eng = self._eng()
+        prompt, _ = eng._build_user_prompt(
             {"title": "t", "summary": "s"}, intel, "", ["BTC"])
         self.assertIn("【官方活动风向参考】", prompt)
         self.assertIn("结合当期新合约引导交易", prompt)
         self.assertNotIn("仅作背景感知", prompt)
+        self.assertTrue(eng.last_campaign_guidance_usable)
 
-    def test_stale_intel_demoted_with_no_dates_warning(self):
-        intel = {"strategy_guidance": "09-04 双重截止，抢最后48小时",
-                 "last_updated": self._ts(30)}  # > 12h 过期
-        prompt, _ = self._eng()._build_user_prompt(
-            {"title": "t", "summary": "s"}, intel, "", ["BTC"])
-        self.assertIn("仅作背景感知", prompt)
-        self.assertIn("严禁在正文中引用其中的任何具体日期", prompt)
+    def test_stale_intel_demoted_without_replaying_campaign_guidance(self):
+        """R587: stale cache must not feed yesterday's CTA back into the new post.
+        Keep only an explicit status marker; caller must disable campaign ranking/tag injection."""
+        intel = {"strategy_guidance": "XDP 竞赛今天截止，最后冲刺瓜分20万USDC",
+                 "active_tags": ["#Futures", "#TradingTournament"],
+                 "incentivized_tokens": ["$USDC", "$ONDO"],
+                 "last_updated": self._ts(30)}
+        eng = self._eng()
+        prompt, _ = eng._build_user_prompt(
+            {"title": "ONDO market update", "summary": "ONDO activity rises"},
+            intel, "", ["ONDO"])
+        self.assertIn("活动情报状态", prompt)
+        self.assertNotIn("今天截止", prompt)
+        self.assertNotIn("20万USDC", prompt)
+        self.assertNotIn("#TradingTournament", prompt)
+        self.assertNotIn("XDP 竞赛", prompt)
+        self.assertFalse(eng.last_campaign_guidance_usable)
+
+    def test_fresh_campaign_guidance_usable_flag_resets_per_prompt(self):
+        """R587: no intel/stale intel after fresh intel must not inherit a prior True flag."""
+        eng = self._eng()
+        fresh = {"strategy_guidance": "结合当期新合约引导交易", "last_updated": self._ts(1)}
+        eng._build_user_prompt({"title": "t", "summary": "s"}, fresh, "", ["BTC"])
+        self.assertTrue(eng.last_campaign_guidance_usable)
+        eng._build_user_prompt({"title": "t", "summary": "s"}, None, "", ["BTC"])
+        self.assertFalse(eng.last_campaign_guidance_usable)
 
     def test_stale_intel_without_timestamp_also_demoted(self):
-        # last_updated 缺失/畸形：fail-closed 按过期处理，不冒险当新鲜
-        intel = {"strategy_guidance": "guidance text"}
-        prompt, _ = self._eng()._build_user_prompt(
+        # last_updated 缺失/畸形：fail-closed 按过期处理；历史正文不得仍注入。
+        intel = {"strategy_guidance": "XDP 竞赛今天截止，瓜分20万USDC"}
+        eng = self._eng()
+        prompt, _ = eng._build_user_prompt(
             {"title": "t", "summary": "s"}, intel, "", ["BTC"])
-        self.assertIn("仅作背景感知", prompt)
+        self.assertIn("活动情报状态", prompt)
+        self.assertNotIn("XDP 竞赛", prompt)
+        self.assertNotIn("瓜分20万USDC", prompt)
+        self.assertFalse(eng.last_campaign_guidance_usable)
+
+    def test_stale_intel_demoted_with_no_dates_warning(self):
+        intel = {"strategy_guidance": "XDP 竞赛结束，最后48小时冲刺瓜分20万USDC",
+                 "last_updated": self._ts(30)}
+        eng = self._eng()
+        prompt, _ = eng._build_user_prompt(
+            {"title": "t", "summary": "s"}, intel, "", ["BTC"])
+        self.assertIn("活动情报状态", prompt)
+        self.assertNotIn("XDP 竞赛", prompt)
+        self.assertNotIn("20万USDC", prompt)
+        self.assertFalse(eng.last_campaign_guidance_usable)
 
     def test_fresh_intel_with_stale_date_refs_annotated(self):
-        """R127/R206：新鲜缓存的 guidance 可能仍带着过期竞赛指导
-        （生产实录：XPIN 09-04；2026-09-16T00:13Z age 8.3h 仍写「今天 09-15」）。
-        R206 起含过期日期引用即视为 degraded，走降权注入（更强禁提）。"""
+        """R127/R206：新鲜缓存的 guidance 仍可能含过期竞赛指导；旧活动日期触发
+        degraded 后不再把正文喂给模型。"""
         intel = {"strategy_guidance": "最紧迫的是 XPIN 竞赛（2026-09-04 截止），立即追贴",
-                 "last_updated": self._ts(2)}  # 2h 前刷新 = 时间戳新鲜
-        prompt, _ = self._eng()._build_user_prompt(
+                 "last_updated": self._ts(2)}
+        eng = self._eng()
+        prompt, _ = eng._build_user_prompt(
             {"title": "t", "summary": "s"}, intel, "", ["BTC"])
-        self.assertIn("官方活动风向参考", prompt)
-        self.assertIn("2026-09-04", prompt)
-        # R206：含过期日期 → degraded 路径（禁止引用具体日期/截止）
-        self.assertIn("严禁在正文中引用", prompt)
+        self.assertIn("活动情报状态", prompt)
+        self.assertNotIn("XPIN 竞赛", prompt)
+        self.assertNotIn("2026-09-04", prompt)
+        self.assertFalse(eng.last_campaign_guidance_usable)
 
     def test_fresh_intel_clean_guidance_untouched(self):
         # 干净 guidance：不得注入多余注记（prompt 干扰最小化）
@@ -8120,7 +8158,8 @@ class TestRunMainSemantics(unittest.TestCase):
         _start(patch.object(m, "MIN_POST_GAP_MIN", 0))  # R578：本类测投递语义非节奏
         _start(patch.object(m, "PUBLISH_PLATFORMS", ["binance"]))
         _start(patch.object(m.CampaignScanner, "get_campaign_intel",
-                            return_value={"active_tags": [], "incentivized_tokens": []}))
+                            return_value={"active_tags": [], "incentivized_tokens": [],
+                                          "last_updated": datetime.now(timezone.utc).isoformat()}))
         _start(patch.object(m.MarketDataProvider, "get_fear_and_greed", return_value="50/100"))
         _start(patch.object(m.MarketDataProvider, "get_token_market_data", return_value=""))
         # R94：热搜拉取走真实网络，集成测试一律 mock 为空（加权链路另有单测）
@@ -8256,6 +8295,41 @@ class TestRunMainSemantics(unittest.TestCase):
             s = [r for r in rows if r.get("outcome") == "run_summary"][0]
             self.assertEqual(s["skipped_no_token"], 0, "混合新闻不得当 no_token 跳过")
             self.assertEqual(s["published"], 1, "含真实山寨币应正常发布")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_run_summary_skips_stale_campaign_intel_boost_and_tags(self):
+        """R587: a refreshed consumer must pass one stale-safe intel snapshot downstream.
+        If old campaign symbols/tags survive, candidate ranking and publish can still
+        promote yesterday's event after prompt demotion."""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True)
+        try:
+            stale = {
+                "active_tags": ["#Futures", "#TradingTournament", "#Write2Earn", "#BinanceSquare"],
+                "incentivized_tokens": ["$XRP", "$USDC"],
+                "strategy_guidance": "XDP ended yesterday; final hours for a 200,000 USDC reward",
+                "last_updated": (datetime.now(timezone.utc) - timedelta(hours=30)).isoformat(),
+            }
+            m.CampaignScanner.get_campaign_intel.return_value = stale
+            m._run_main()
+            passed = m.CampaignScanner.get_campaign_intel.return_value
+            self.assertEqual(passed["incentivized_tokens"], ["$XRP", "$USDC"],
+                             "source intel object must remain untouched")
+            fetcher_instance = m.NewsFetcher.return_value
+            self.assertEqual(fetcher_instance.fetch_candidates.call_args.kwargs["priority_tokens"], [],
+                             "stale campaign tokens must not influence candidate order")
+            llm_intel = self._engine.summarize.call_args.args[1]
+            self.assertEqual(llm_intel["active_tags"], ["#Write2Earn", "#BinanceSquare"])
+            self.assertEqual(llm_intel["strategy_guidance"], "")
+            self.assertEqual(llm_intel["_consumer_fresh"], False)
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            summary = [r for r in rows if r.get("outcome") == "run_summary"][0]
+            self.assertEqual(summary.get("published"), 1)
+            self.assertEqual(summary.get("intel_degraded"), True)
+            self.assertEqual(summary.get("campaign_guidance_usable"), False)
+            self.assertAlmostEqual(summary.get("intel_age_hours"), 30.0, delta=0.2)
         finally:
             self._teardown(patches, tmpdir)
 
