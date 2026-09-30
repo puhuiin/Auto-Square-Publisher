@@ -18,16 +18,21 @@
   ],
   "strategy_guidance": "优先追贴今日刚上线的7个bStocks交易对及对应美股标的，结合LATAM/Brazil新用户USDC Simple Earn限时高APR福利切入，输出新资产参与攻略绑定交易返佣；针对无明确截止日的ALGO/VTHO交易竞赛、RLUSD持仓分XRP、十月Earn排行榜等长线活动，可输出实操教程类内容，引导用户参与交易、质押获取奖励，同步完成Write2Earn任务提升曝光。",
   "last_updated": "2026-09-30T05:04:05.755933Z",
-  "_feed_health": {},
+  "_feed_health": {
+    "CryptoPotato (山寨币/Meme热点)": {
+      "fails": 1,
+      "last_fail": "2026-09-30T12:23:29.245840+00:00"
+    }
+  },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {
     "Preset-b.ai": {
-      "permanent": true,
       "cooldown_until": "2026-09-30T12:46:29.673859+00:00",
-      "fails": 1
+      "fails": 1,
+      "permanent": true
     }
   },
   "_article_sent_date": "2026-09-30",
