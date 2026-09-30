@@ -2,32 +2,32 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#Futures",
-    "#TradingTournament",
+    "#TradingCompetition",
+    "#bStocks",
     "#SimpleEarn"
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$USDC",
-    "$USDT",
-    "$HYPE",
-    "$XDP",
-    "$XRP",
     "$ALGO",
-    "$RLUSD"
+    "$RLUSD",
+    "$XRP",
+    "$USDC",
+    "$PDDB",
+    "$ZMB",
+    "$BTC"
   ],
-  "strategy_guidance": "当前最紧迫的是今日截止的XDP Alpha交易竞赛，发帖需优先以「最后冲刺参与机会」角度切入，提醒用户抓住最后窗口瓜分20万USDC奖池；同时可将今日新上线的TradFi USDⓈ-Margined永续合约、$HYPE多产品支持、5支新增可交易股票等快讯，与VTHO/BABY/BANK交易锦标赛、USDC/USDT高APR理财、RLUSD持币分红等未过期活动结合，引导用户参与交易与理财，同步获取Write to Earn曝光与交易返佣收益。",
-  "last_updated": "2026-09-29T16:43:56.430214Z",
+  "strategy_guidance": "优先追贴今日刚上线的7个bStocks交易对及对应美股标的，结合LATAM/Brazil新用户USDC Simple Earn限时高APR福利切入，输出新资产参与攻略绑定交易返佣；针对无明确截止日的ALGO/VTHO交易竞赛、RLUSD持仓分XRP、十月Earn排行榜等长线活动，可输出实操教程类内容，引导用户参与交易、质押获取奖励，同步完成Write2Earn任务提升曝光。",
+  "last_updated": "2026-09-30T05:04:05.755933Z",
   "_feed_health": {},
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
+    "date": "2026-09-09"
   },
   "_llm_breaker": {
     "Preset-b.ai": {
       "cooldown_until": "2026-09-30T12:46:29.673859+00:00",
-      "permanent": true,
-      "fails": 1
+      "fails": 1,
+      "permanent": true
     }
   },
   "_article_sent_date": "2026-09-30",
