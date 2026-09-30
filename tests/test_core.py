@@ -5244,6 +5244,33 @@ class TestCampaignBoost(unittest.TestCase):
         self.assertEqual(hits, 0)
         self.assertEqual(off, ["PIEVERSE"], "在池 BNB/MOVE 不得进 off-pool")
 
+    def test_off_pool_common_word_no_false_boost(self):
+        """R591：情报 incentivized_tokens 混入常见英文词/短缩写（生产 off-pool 实录
+        OUR×40/CAP×9/META×28）时，大写文本匹配会命中普通标题词（our/market cap），
+        给几乎每条候选 +8 假加权，稀释活动信号并污染配额饱和下的选题排序。
+        风险词只认原文大写独立/$前缀，普通小写英文词不得触发加权。"""
+        cands = [
+            {"title": "Analysts weigh in on our market outlook", "summary": "", "impact_score": 10},
+            {"title": "Bitcoin market cap tops $2T milestone", "summary": "", "impact_score": 10},
+            {"title": "SHIB whales accumulate quietly", "summary": "", "impact_score": 10},
+        ]
+        hits, off = m.NewsFetcher._apply_campaign_boost(cands, ["$OUR", "$CAP"])
+        self.assertEqual(hits, 0, "普通英文词 our/cap 不得触发假加权")
+        for c in cands:
+            self.assertEqual(c["impact_score"], 10, f"不应加权: {c['title']}")
+
+    def test_off_pool_common_word_legit_uppercase_still_boosts(self):
+        """R591 零回归：风险词以合法形态（$前缀 / 全大写独立 / CJK 紧贴大写）出现时仍加权。"""
+        cands = [
+            {"title": "$OUR token debuts on Binance Alpha", "summary": "", "impact_score": 10},   # $前缀
+            {"title": "META获批新一轮 Alpha 上线", "summary": "", "impact_score": 10},             # 大写贴 CJK
+            {"title": "our quiet market note", "summary": "", "impact_score": 10},                # 小写不命中
+        ]
+        m.NewsFetcher._apply_campaign_boost(cands, ["$OUR", "$META"])
+        self.assertEqual(cands[0]["impact_score"], 10 + m.CAMPAIGN_TOKEN_BOOST, "$OUR 合法引用应命中")
+        self.assertEqual(cands[1]["impact_score"], 10 + m.CAMPAIGN_TOKEN_BOOST, "META获批 大写应命中")
+        self.assertEqual(cands[2]["impact_score"], 10, "小写 our 不得命中")
+
     def test_ignore_word_campaign_token_hits_on_cashtag(self):
         """R202：活动币 $THE（IGNORE_WORDS ∩ 标的池）必须能加权命中——
         旧实现 extract_tokens 整表丢弃 THE，在池活动币变死信号。"""

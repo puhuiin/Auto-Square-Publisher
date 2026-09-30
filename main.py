@@ -2488,6 +2488,16 @@ class NewsFetcher:
         detected = NewsFetcher.extract_tokens(text, SymbolValidator.get_valid_symbols())
         return bool(tickers.intersection(detected))
 
+    # R591：off-pool 活动币里的常见英文词/缩写撞名黑名单——情报 incentivized_tokens
+    # 偶混入这些（生产 off-pool 实录 OUR/CAP/META/AVGO 等），小写形态会被大写文本
+    # 匹配命中普通标题词（"market cap"/"our outlook"），给几乎每条候选 +8 假加权。
+    # 这些词只认「原文大写独立词或 $前缀」才采信（真活动币标题里通常大写）。
+    # 与 _HOT_TOPIC_STOPWORDS 合并使用；此处补 stopword 集没有的财经高频撞名词。
+    _CAMPAIGN_OFFPOOL_COMMON_WORDS = frozenset({
+        "cap", "our", "meta", "arc", "act", "ai", "cash", "gods", "move",
+        "form", "home", "bank", "win", "cake", "gas", "pro", "top", "buy",
+    })
+
     @staticmethod
     def _apply_campaign_boost(candidates: List[Dict[str, Any]],
                               priority_tokens: Optional[List[str]]) -> tuple:
@@ -2513,18 +2523,29 @@ class NewsFetcher:
                 hits += 1
                 continue
             if off_set:
-                text = ((item.get("title") or "") + " " + (item.get("summary") or "")).upper()
-                if not text:
+                # R591：off-pool 用大写文本 + 词边界匹配——但情报的 incentivized_tokens
+                # 里混入常见英文词/短缩写（生产实录 off-pool 高频 OUR×40 / CAP×9 /
+                # META×28 / AVGO×33）时，`(?<![A-Za-z0-9])OUR(?![A-Za-z0-9])` 会命中
+                # 标题里的 "our"/"market cap"/"META stocks"，给几乎每条候选 +8 假加权，
+                # 把活动信号稀释成人人有份（同 R207 蓝筹稀释 trend boost 的失效模式），
+                # 并在配额饱和下污染选题排序。风险词（≤3 字且是英文停用词，或纯 2 字母）
+                # 收窄为「原文大写独立词」才采信——真活动币在标题里通常大写（PIEVERSE/
+                # META获批），普通英文词 our/cap 是小写，天然区分。
+                orig_text = (item.get("title") or "") + " " + (item.get("summary") or "")
+                text = orig_text.upper()
+                if not text.strip():
                     continue
                 for tok in off_set:
-                    # 词边界：PIEVERSE 不得命中普通句子；Alpha 标题里的
-                    # 「Pieverse」大写化后可命中。R313：不能用 \b——汉字是 word char，
-                    # 中文标题里 off-pool 活动币紧贴汉字（"META获批"/"ARC领涨"）\b 无边界
-                    # 会漏命中；配额长期饱和下加权决定单槽花落谁家，漏 boost=活动相关帖
-                    # 丢槽（返佣相关）。改 ASCII 边界环视（CJK 相邻不算边界、防子串误命中
-                    # 与 \b 等价：PIEVERSED/METAVERSE 因后随字母仍不命中）。in-pool 分支走
-                    # _candidate_hits_tokens（已由 R308 修复 CJK），此处 off-pool 非有效
-                    # 交易标的走不了四层闸，故用环视文本匹配。
+                    risky = (tok.lower() in NewsFetcher._CAMPAIGN_OFFPOOL_COMMON_WORDS
+                             or tok.lower() in MarketDataProvider._HOT_TOPIC_STOPWORDS
+                             or len(tok) <= 2)
+                    if risky:
+                        # 风险词只认原文里的大写独立出现（$前缀或全大写词形）
+                        if re.search(r"(?<![A-Za-z0-9])" + re.escape(tok) + r"(?![A-Za-z0-9])", orig_text):
+                            item["impact_score"] += CAMPAIGN_TOKEN_BOOST
+                            hits += 1
+                            break
+                        continue
                     if re.search(r"(?<![A-Za-z0-9])" + re.escape(tok) + r"(?![A-Za-z0-9])", text):
                         item["impact_score"] += CAMPAIGN_TOKEN_BOOST
                         hits += 1
