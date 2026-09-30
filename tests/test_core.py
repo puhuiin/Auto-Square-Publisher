@@ -6748,7 +6748,7 @@ class TestRejectTelemetry(unittest.TestCase):
         # "正文"。把 _parse_article 之后新增的长文身份门接线删掉，这条即 RED（长文正文
         # 自曝机器人裸发重现）。
         eng = self._stub_engine()
-        body = ("作为AI，我无法提供投资建议，不过从盘面看多空资金激烈换手，短线情绪升温。" * 12)
+        body = ("作为AI，我无法提供投资建议，不过从盘面看多空资金激烈换手，短线情绪升温。" * 15)
         content = "TITLE: 比特币盘面多空拉锯短线情绪升温\n\n" + body
         client = self._fake_client(content=content)
         item = {"title": "BTC news", "summary": "Bitcoin choppy", "source": "U.Today"}
@@ -7862,6 +7862,19 @@ class TestArticlePipeline(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("过短", reason)
 
+    def test_parse_article_floor_raised_to_420(self):
+        """R590：下沿 350→420。生产长文 CJK 中位仅 455、363/390/411 三篇偏短却过旧门。
+        CJK≈400 的正文（旧门放行）现在应被拦；CJK≥420 的正文照常放行。"""
+        body_400 = "一、盘面在演什么\n" + "复盘一下今天的行情走势和资金结构变化。" * 20  # ~400 CJK
+        cjk_400 = len(__import__("re").findall(r"[一-鿿]", body_400))
+        ok, reason, _, _ = m.MultiLLMEngine._parse_article(f"TITLE: 一个足够长的合格标题\n\n{body_400}")
+        if cjk_400 < 420:
+            self.assertFalse(ok, f"CJK {cjk_400} < 420 应拦")
+            self.assertIn("过短", reason)
+        body_450 = "一、盘面在演什么\n" + "复盘一下今天的行情走势和资金结构变化观察。" * 24  # ~460 CJK
+        ok2, reason2, _, _ = m.MultiLLMEngine._parse_article(f"TITLE: 一个足够长的合格标题\n\n{body_450}")
+        self.assertTrue(ok2, f"CJK≥420 的正文应放行: {reason2}")
+
     def test_publish_article_payload_content_type_2(self):
         """长文发布：contentType=2 + title + cover（image_url 转 cover，绝无 imageList）"""
         pub = m.SquarePublisher(api_key="k")
@@ -8110,7 +8123,7 @@ class TestArticlePipeline(unittest.TestCase):
         eng._clients = {}
         eng.providers = [m.LLMProviderConfig("stub", "https://x", "k", "mm")]
         article_body = ("TITLE: ETH 资金面异动深度复盘\n\n一、发生了什么\n"
-                        + "盘面给出的信号已经比较明确，资金在悄悄换仓。" * 20
+                        + "盘面给出的信号已经比较明确，资金在悄悄换仓。" * 24
                         + "\n\n#Write2Earn #BinanceSquare #ETH")
         client = MagicMock()
         client.chat.completions.create.return_value = MagicMock(
