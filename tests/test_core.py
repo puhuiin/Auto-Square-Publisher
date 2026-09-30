@@ -8222,6 +8222,43 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_run_summary_skips_stablecoin_only_candidate(self):
+        """R586：识别到的标的全是 FORCE_STRIP 稳定币时视同无抓手跳过。
+        R316 稳定币不做挂件、_ensure_token_widget 不兜底 → 这类帖 widget_count=0、
+        零 Write2Earn 抓手（生产 09-30 02:04 USDC-only 帖实录）。必须在选稿阶段
+        当 no_token 跳过，不进 LLM/发布。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True)
+        try:
+            m.NewsFetcher.extract_tokens.return_value = ["USDC"]
+            m._run_main()
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            s = [r for r in rows if r.get("outcome") == "run_summary"][0]
+            self.assertEqual(s["candidates"], 1)
+            self.assertEqual(s["skipped_no_token"], 1, "稳定币-only 必须计入 no_token 跳过")
+            self.assertEqual(s["published"], 0, "稳定币-only 不得发布（零挂件）")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_run_summary_keeps_mixed_stablecoin_and_real_token(self):
+        """R586 零回归：新闻同时含稳定币和真实山寨币时，保留真实币照常发布，
+        不能因为混进 USDC 就误杀整条。"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=True)
+        try:
+            m.NewsFetcher.extract_tokens.return_value = ["USDC", "LINK"]
+            m._run_main()
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            s = [r for r in rows if r.get("outcome") == "run_summary"][0]
+            self.assertEqual(s["skipped_no_token"], 0, "混合新闻不得当 no_token 跳过")
+            self.assertEqual(s["published"], 1, "含真实山寨币应正常发布")
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_run_summary_counts_published(self):
         tmpdir, paths = self._iso_files()
         patches = self._base_patches(tmpdir, paths, dry=True)

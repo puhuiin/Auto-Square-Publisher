@@ -8616,6 +8616,17 @@ def _run_main():
                 skip_counts["no_token"] += 1
                 continue
 
+            # R586：识别到的标的全是 FORCE_STRIP 稳定币/非交易词（USDC/USDT…）时同样跳过。
+            # R316 明确稳定币不做挂件，_ensure_token_widget 也不会兜底 → 这类帖发出去
+            # widget_count=0、零 Write2Earn 抓手（生产 09-30 02:04 USDC-only 帖实录 wc=0）。
+            # 与上面的 no_token 同根因（没有可交易挂件），只是走了"检测到 token 但都不可挂件"
+            # 的另一条路。混合新闻（USDC + 真实山寨币）保留真实币照发，不受影响。
+            _strip = set(SquarePublisher.FORCE_STRIP_CASHTAGS)
+            if all(t.upper() in _strip for t in detected_tokens):
+                logger.info(f"识别标的 {detected_tokens} 全为稳定币/非交易词，无可挂件的 Write2Earn 抓手，跳过: {title}")
+                skip_counts["no_token"] += 1
+                continue
+
             # 单代币 24h 限流：BTC 热点刷屏会拉低账号垂直度画像
             if TOKEN_DAILY_LIMIT > 0:
                 capped = [t for t in detected_tokens if cache_mgr.token_posts_since(t, 24) >= TOKEN_DAILY_LIMIT]
