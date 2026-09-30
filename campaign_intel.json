@@ -18,15 +18,10 @@
   ],
   "strategy_guidance": "当前高流量未过期活动包含PUMP交易锦标赛、ALGO交易锦标赛、今日刚上线的7支bStocks tokenized证券交易对及多组USDⓈ-Margined永续合约，发帖可优先围绕新上线资产输出「首日交易抄作业」类内容，结合交易竞赛规则引导用户参与获取返佣；其中10月Affiliate Dual-Star Program为限时活动，可优先输出邀请好友参与交易的活动冲刺类攻略，叠加#Write2Earn标签获取内容激励。",
   "last_updated": "2026-09-30T17:23:57.314473Z",
-  "_feed_health": {
-    "CryptoPotato (山寨币/Meme热点)": {
-      "fails": 1,
-      "last_fail": "2026-09-30T12:23:29.245840+00:00"
-    }
-  },
+  "_feed_health": {},
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
+    "date": "2026-09-09"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-09-30",
