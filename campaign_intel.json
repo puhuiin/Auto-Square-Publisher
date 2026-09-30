@@ -2,26 +2,26 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#TradingCompetition",
-    "#bStocks",
-    "#SimpleEarn"
+    "#TradingTournament",
+    "#Futures",
+    "#bStocks"
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$ALGO",
-    "$RLUSD",
-    "$XRP",
+    "$PUMP",
     "$USDC",
-    "$PDDB",
-    "$ZMB",
-    "$BTC"
+    "$BTC",
+    "$XRP",
+    "$O",
+    "$ALGO",
+    "$VTHO"
   ],
-  "strategy_guidance": "优先追贴今日刚上线的7个bStocks交易对及对应美股标的，结合LATAM/Brazil新用户USDC Simple Earn限时高APR福利切入，输出新资产参与攻略绑定交易返佣；针对无明确截止日的ALGO/VTHO交易竞赛、RLUSD持仓分XRP、十月Earn排行榜等长线活动，可输出实操教程类内容，引导用户参与交易、质押获取奖励，同步完成Write2Earn任务提升曝光。",
-  "last_updated": "2026-09-30T05:04:05.755933Z",
+  "strategy_guidance": "当前高流量未过期活动包含PUMP交易锦标赛、ALGO交易锦标赛、今日刚上线的7支bStocks tokenized证券交易对及多组USDⓈ-Margined永续合约，发帖可优先围绕新上线资产输出「首日交易抄作业」类内容，结合交易竞赛规则引导用户参与获取返佣；其中10月Affiliate Dual-Star Program为限时活动，可优先输出邀请好友参与交易的活动冲刺类攻略，叠加#Write2Earn标签获取内容激励。",
+  "last_updated": "2026-09-30T17:23:57.314473Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
-      "last_fail": "2026-09-30T12:23:29.245840+00:00",
-      "fails": 1
+      "fails": 1,
+      "last_fail": "2026-09-30T12:23:29.245840+00:00"
     }
   },
   "_fallback_image": {
