@@ -25,8 +25,8 @@
   },
   "_llm_breaker": {
     "Preset-b.ai": {
-      "permanent": true,
       "fails": 1,
+      "permanent": true,
       "cooldown_until": "2026-09-30T12:46:29.673859+00:00"
     }
   },
