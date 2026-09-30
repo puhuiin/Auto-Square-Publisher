@@ -4521,6 +4521,28 @@ class TestNumberHallucinationGuard(unittest.TestCase):
             "合约杠杆控制在 3 倍以内，看多扣 1，看空扣 2", "BTC price is volatile")
         self.assertTrue(ok, reason)
 
+    def test_price_level_near_spot_fabrication_rejected(self):
+        """R589：生产 09-30 五帖漏过——正文「回踩 1.45 附近支撑」而源文现价
+        1.5033，_in_source 的百分比取整容差（round(1.5033,1)=1.5，|1.45-1.5|=0.05<0.051）
+        误判为命中，编造支撑价过门。价位是具体点位断言，须与源文数字 2% 内严格匹配。"""
+        for body, source in (
+            ("想参与的等回踩 1.45 附近支撑确认再分批", "XRP 报 1.5033 美元 24H -0.93%"),
+            ("老老实实等回踩 1.4 美元附近再考虑", "XRP 现价 1.4962 美元 24H +0.34%"),
+            ("等回踩 0.0000055 附近支撑确认", "SHIB 报价 0.000006 美元 24H -0.34%"),
+        ):
+            ok, reason = m.MultiLLMEngine._verify_numbers(body, source)
+            self.assertFalse(ok, f"贴近现价的编造支撑价应拦: {body}")
+            self.assertIn("来源未证实的价位", reason)
+
+    def test_price_level_exact_source_match_still_passes(self):
+        """R589 零回归：正文引用的价位与源文数字 2% 内严格一致时必须放行。"""
+        for body, source in (
+            ("回踩 1.50 附近支撑再进", "XRP 报 1.5033 美元"),
+            ("现价 84274 美元附近震荡", "BTC 报 84274 美元 24H +1.43%"),
+        ):
+            ok, reason = m.MultiLLMEngine._verify_numbers(body, source)
+            self.assertTrue(ok, f"有来源的价位应放行: {body} / {reason}")
+
     def test_fabricated_percentage_rejected(self):
         ok, reason = m.MultiLLMEngine._verify_numbers(
             "单日暴涨 12.53%，ETF 流入 8.4 亿",

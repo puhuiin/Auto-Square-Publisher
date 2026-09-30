@@ -4078,6 +4078,18 @@ class MultiLLMEngine:
             r"([+-]?\d[\d,]*(?:\.\d+)?)\s*(?:美元|美金|美刀|刀|usd|usdt)?"
             r"[^。！？\n]{0,8}(?:支撑(?:位)?|阻力(?:位)?|目标价)",
         )
+        # R589：价位语境用严格匹配，不复用 _in_source 的百分比取整容差。
+        # 生产 09-30 实录：正文「回踩 1.45 附近支撑」而源文现价 1.5033——_in_source
+        # 的 `round(sv,1)` 容差（本为 5.23%≈5.2% 而设）把 1.45 判成命中 1.5033，
+        # 编造支撑价漏过（同型漏过 1.4/0.0000055，五帖里五中）。价位是具体点位断言，
+        # 不是可取整的百分比：必须与源文/实时盘面某个数字在 2% 相对误差内才算有据。
+        def _price_in_source(val: float) -> bool:
+            for sv in source_nums:
+                base = max(abs(sv), 1e-12)
+                if abs(val - sv) / base < 0.02:
+                    return True
+            return False
+
         for pattern in price_patterns:
             for m in re.finditer(pattern, content, re.IGNORECASE):
                 raw = m.group(1).replace(",", "")
@@ -4085,7 +4097,7 @@ class MultiLLMEngine:
                     val = abs(float(raw))
                 except ValueError:
                     continue
-                if not _in_source(val):
+                if not _price_in_source(val):
                     return False, f"{label}给出来源未证实的价位 {m.group(0)}（源文/实时盘面中找不到）"
 
         return True, ""
