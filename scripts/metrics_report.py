@@ -65,6 +65,28 @@ QUALITY_SCAN_WINDOW = 20  # 最近 N 篇发布帖做合规扫描
 # 加固 R596 的信号（避免在 n=3 上过拟合重复打补丁）。信息性，非门禁。
 _MANIPULATION_FRAME = ("出货", "洗盘", "烟雾弹", "送流动性", "派筹", "诱多", "压盘")
 
+# R605：句长 burstiness（节奏方差）——整合自全网最新研究（textpulse 2026 对 6 万+
+# 文本的实证）：AI 文本最稳的「机器味」信号之一是**句长过于均匀**（标准差小），人类
+# 写作句长起伏大。该研究量化：人类句长变异系数 CV≈0.449、AI≈0.376，79% 的 AI 改写
+# 比人类原文更「平」。我们 prompt 早有「长短句交错/别每句一个节奏」的指令，但从无
+# 度量——此指标把它变成可观测：按帖算句长 CV，跨帖看中位 + 偏平尾。研究同时警告
+# burstiness 是「群体信号、个体判决不可靠」（阈值抓 62% AI 也误伤 39% 人类），故**只
+# 追踪不设门禁**（承 R603 纪律），偏平阈值 0.35（低于 AI 均值）仅作尾部计数。
+def _sentence_cv(text):
+    """正文句长变异系数 CV=σ/μ（句=以。！？及换行切分，长度按去空白字符数）。
+    句数 <2 返 None（短帖不足以判节奏）。标签行先剥除。"""
+    import re as _re
+    import statistics as _st
+    t = _re.sub(r"#\S+", "", text or "")
+    segs = [_re.sub(r"\s", "", s) for s in _re.split(r"[。！？!?\n]+", t)]
+    lens = [len(s) for s in segs if s]
+    if len(lens) < 2:
+        return None
+    mean = _st.mean(lens)
+    if mean <= 0:
+        return None
+    return _st.pstdev(lens) / mean
+
 
 def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     """对最近 N 篇发布帖的 final_preview 做禁令合规扫描（信息性，非门禁）。
@@ -86,7 +108,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     out = {"scanned": len(previews), "fng_anchor": 0, "banned_device": 0,
            "ai_flavor": 0, "offenders": collections.Counter(),
            "fng_ban_armed": 0, "fng_violation": 0, "fng_avoided": 0,
-           "manip_frame": 0}
+           "manip_frame": 0, "burstiness_cvs": []}
     for pv, ban_active in previews:
         m_fng = _FNG_ANCHOR_RE.search(pv)
         if m_fng:
@@ -114,6 +136,10 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
         # （那是「N 处命中」的硬合规口径），只走独立的 🎭 趋势行，避免两个口径互相污染。
         if any(w in pv for w in _MANIPULATION_FRAME):
             out["manip_frame"] += 1
+        # R605：句长 burstiness（节奏方差）——句数≥2 才计入，短帖跳过
+        _cv = _sentence_cv(pv)
+        if _cv is not None:
+            out["burstiness_cvs"].append(_cv)
     out["offenders"] = dict(out["offenders"])
     return out
 
@@ -1272,6 +1298,19 @@ def render_text(s, rows=None):
                 _pct = 100 * _mf / q["scanned"]
                 _warn = " ⚠️（叙事指纹，若持续高位需加固 R596）" if _pct >= 40 else ""
                 lines.append(f"  🎭 操纵归因叙事: {_mf}/{q['scanned']} 篇（{_pct:.0f}%）{_warn}")
+            # R605：句长 burstiness（节奏方差）——整合自 textpulse 2026 6万+文本研究：
+            # AI 文本句长偏均匀（CV 小），人类起伏大（人≈0.449/AI≈0.376）。我们 prompt
+            # 的「长短句交错」此前无度量，这里给中位 CV + 偏平尾；研究自陈个体判决不可靠，
+            # 故只观测不设门。中位 ≥0.449 说明节奏比人类基线还活。
+            _cvs = q.get("burstiness_cvs") or []
+            if len(_cvs) >= 3:
+                _cvs_sorted = sorted(_cvs)
+                _med = _cvs_sorted[len(_cvs_sorted) // 2]
+                _flat = sum(1 for c in _cvs if c < 0.35)
+                _tag = "（节奏健康，优于人类基线0.449）" if _med >= 0.449 else (
+                    "（偏平，接近 AI 基线0.376，建议强化长短句交错）" if _med < 0.40 else "")
+                lines.append(f"  🎵 句长节奏 CV 中位 {_med:.2f}（{len(_cvs)} 篇；人≈0.45/AI≈0.38）"
+                             f" · 偏平 {_flat} 篇{_tag}")
         # R289：FNG 三件套收口——滞回驱动量直方图 + 武装未剥离一致性告警。
         # hook_count 是近窗引入次数（武装条件 ≥2，故 1 = 距武装一步之遥的压力面）；
         # armed 但 market_stripped=False = R101 互补剥离疑似失效（禁令与盘面行

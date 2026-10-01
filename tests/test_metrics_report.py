@@ -1155,6 +1155,30 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("操纵归因叙事: 2/3 篇", text)
         self.assertIn("⚠️", text)  # 67% ≥ 40% 阈值 → 告警
 
+    def test_r605_sentence_burstiness_cv(self):
+        """R605：句长 burstiness（整合自 textpulse 2026 研究——AI 文本句长偏均匀=机器味）。
+        _sentence_cv 算句长变异系数；节奏起伏大→CV 高，均匀→CV 低；句数<2 返 None。
+        只观测不设门（研究自陈个体判决不可靠），面板给中位 CV + 偏平尾。"""
+        # 起伏大：3 字 / 很长的一句 / 2 字 → CV 高
+        bursty = "跌了。" + "这波资金面链上活跃解锁节奏成交承接全都在同一时间点共振非常罕见。" + "别追。"
+        # 均匀：每句长度接近 → CV 低
+        flat = "资金面持续流入。链上活跃度回升。成交承接力度足。中期趋势偏强。"
+        self.assertGreater(mr._sentence_cv(bursty), mr._sentence_cv(flat),
+                           "句长起伏大的 CV 必须高于均匀的")
+        self.assertIsNone(mr._sentence_cv("只有一句话没有句末标点"), "句数<2 返 None")
+        self.assertLess(mr._sentence_cv(flat), 0.35, "均匀句长应判偏平(<0.35)")
+        # 渲染：≥3 篇才出行
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published", "final_preview": flat},
+            {"platforms": ["binance"], "outcome": "binance_published", "final_preview": flat},
+            {"platforms": ["binance"], "outcome": "binance_published", "final_preview": bursty},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(len(q["burstiness_cvs"]), 3, "三篇均有≥2句，都计入")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("句长节奏 CV 中位", text)
+
     def test_quality_scan_clean_and_dry_excluded(self):
         _write(self.path, [
             {"platforms": ["binance"], "outcome": "binance_published",
