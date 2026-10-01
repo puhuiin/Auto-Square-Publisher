@@ -935,6 +935,21 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn(label, pool_labels, f"标签 {label} 必须来自开场钩子池")
         self.assertIn("开场钩子套路", prompt, "短讯 prompt 必须注入开场钩子指令")
 
+    def test_opening_hooks_describe_technique_not_verbatim_opener(self):
+        """R597：开场钩子池要给「技法描述」而非可逐字照抄的开场白。内幕爆料腔原文
+        「以「多数人还没反应过来…」的知情者口吻开场」被模型逐字复制——实录 4/4 篇
+        内幕帖都以这同一句开头（与 R596「我猜」同根：prompt 里加引号的范例短语会被
+        当成逐字模板）。首两行定生死，1/7 的帖同一句开场是强指纹。池中不得再出现该
+        范例句，内幕爆料腔须改成技法描述并显式要求轮换开场白。"""
+        pool = m.OPENING_HOOK_POOL
+        joined = "\n".join(pool)
+        self.assertNotIn("多数人还没反应过来", joined,
+                         "开场范例句被逐字照抄，必须改为技法描述")
+        self.assertNotIn("还没反应过来", joined, "残留近似范例句仍会被照抄")
+        insider = next((s for s in pool if s.startswith("内幕爆料腔")), None)
+        self.assertIsNotNone(insider, "内幕爆料腔 钩子应保留")
+        self.assertIn("换种说法", insider, "内幕爆料腔须显式要求每次轮换开场白")
+
     def test_hook_number_rule_injected_in_short_form(self):
         """R537：公验证规律（dwell time/500 条病毒帖分析）——第一句必须含具体
         真实数字或未闭合问题。短讯 prompt 必须注入该硬规则。"""
