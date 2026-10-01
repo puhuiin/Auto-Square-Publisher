@@ -1403,6 +1403,53 @@ class TestOpenerFingerprintRadar(unittest.TestCase):
         self.assertIn("刚刚", text)
 
 
+class TestBodyFingerprintRadar(unittest.TestCase):
+    """R600：分析段（第二正文段）指纹雷达——开场雷达只看第一段，漏了
+    「我猜这波是主力…」这类分析段开场的复读（R596 实录 47% dashboard 全程
+    没报、靠人工读 preview 才发现）。同口径扫第二段，补上盲区。"""
+
+    @staticmethod
+    def _rows(previews):
+        return [{"outcome": "binance_published", "final_preview": t} for t in previews]
+
+    def test_second_paragraph_cluster_detected(self):
+        # 开场句各异（第一段不聚簇），但第二段都以「我猜这波」开头 → 必须报
+        rows = self._rows([
+            "$BTC 突破 8 万。我猜这波是主力借利好出货。扣1扣2。",
+            "$ETH 放量拉升。我猜这波是主力压盘洗筹。扣1扣2。",
+            "$SOL 异动明显。我猜这波是主力诱多接盘。扣1扣2。",
+            "$XRP 盘整待变。资金面观察一下。扣1扣2。",
+        ])
+        ofp = mr.opener_fingerprint(rows)
+        self.assertEqual(ofp["alerts"], {}, "第一段各异不应报开场指纹")
+        bfp = mr.body_fingerprint(rows)
+        self.assertEqual(bfp["alerts"].get("我猜这波"), 3, "第二段「我猜这波」×3 必须报")
+
+    def test_no_alert_when_second_paragraph_diverse(self):
+        rows = self._rows([
+            "$BTC 新高。资金费率转正值得注意。扣1扣2。",
+            "$ETH 回调。链上活跃度回落了。扣1扣2。",
+            "$SOL 横盘。解锁节奏是关键变量。扣1扣2。",
+        ])
+        self.assertEqual(mr.body_fingerprint(rows)["alerts"], {})
+
+    def test_article_header_skipped_in_body(self):
+        # 长文分节头不占正文段序：首段=正文首句、第二段=正文第二句
+        rows = self._rows([
+            "一、发生了什么\n\n$BTC 破位。我猜这波是主力出货。后续。",
+            "一、发生了什么\n\n$ETH 拉升。我猜这波是主力洗盘。后续。",
+            "一、发生了什么\n\n$SOL 异动。我猜这波是主力诱多。后续。",
+        ])
+        self.assertEqual(mr.body_fingerprint(rows)["alerts"].get("我猜这波"), 3)
+
+    def test_render_line_present(self):
+        rows = self._rows([
+            "甲一。我猜这波是主力出货。尾。", "乙一。我猜这波是主力洗盘。尾。",
+            "丙一。我猜这波是主力诱多。尾。", "丁一。正常分析。尾。"])
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("分析段指纹预警", text)
+
+
 class TestQualityPatternSync(unittest.TestCase):
     """R106：质量模式双份维护的同步守卫——main.py（防线本体）与 metrics_report
     （合规巡检）各有一份禁用装置/AI 腔/FNG 模式，静默漂移会让巡检度量失真

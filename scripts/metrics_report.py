@@ -140,26 +140,31 @@ def _extract_opener(preview):
     return ""
 
 
-def opener_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_MIN_HITS):
-    """抽最近 N 帖开场句的首 2/4 字前缀，同一前缀 ≥min_hits 次即报预警。
-    长文分节头（"一、发生了什么"）不是开场句，跳过取正文段（与 main.py
-    _recent_openers 的 R121 修复同语义）。返回 {"scanned", "alerts": {前缀: 次数}}。"""
-    openers = []
-    for r in reversed(rows if isinstance(rows, list) else []):
-        if not isinstance(r, dict) or r.get("dry_run") is True:
+def _extract_body_opener(preview):
+    """R600：取开场句之后第二个正文段的首句——「我猜这波是主力…」这类分析段
+    开场是开场雷达（_extract_opener 只看第一段）的盲区：R596 实录「我猜」从 0%
+    猛升到最近 30 篇 47%、几乎全在第 2 段开头，dashboard 全程没报、靠人工读
+    final_preview 才发现。把分析段开场也纳入指纹扫描，补上这块盲区。
+    长文分节头（"一、发生了什么"）不是正文段，跳过。"""
+    pv = (preview or "").strip()
+    if not pv:
+        return ""
+    segs = []
+    for seg in (s.strip() for s in re.split(r"[。\n]", pv)):
+        if not seg or _ARTICLE_HEADER_RE.match(seg):
             continue
-        if not _is_delivery_outcome(r.get("outcome")):
-            continue
-        opener = _extract_opener(r.get("final_preview"))
-        if opener:
-            openers.append(opener)
-        if len(openers) >= window:
+        segs.append(seg)
+        if len(segs) >= 2:
             break
-    # 4 字簇优先，2 字簇仅在其不是任何 4 字簇前缀时才报（去重：同簇只报最长）。
-    # R131：2 字簇要求词边界——"Bitwise/BitGo"共享的"Bi"只是词的前半，不是
-    # 指纹；"刚刚,$SHIB"/"刚刚 Solana"的"刚刚"后接标点/空格才是完整领词。
-    # 生产实录：雷达报"Bi…"×3 实为两个不同实体名。边界=第 3 字符非 ASCII
-    # 字母数字（CJK 跟随算边界："刚刚看涨"就是"刚刚"领句）。
+    return segs[1] if len(segs) >= 2 else ""
+
+
+def _cluster_openers(openers, min_hits):
+    """共享前缀聚簇（opener_fingerprint 与 body_fingerprint 共用，保口径不漂移）。
+    4 字簇优先，2 字簇仅在其不是任何 4 字簇前缀时才报（去重：同簇只报最长）。
+    R131：2 字簇要求词边界——"Bitwise/BitGo"共享的"Bi"只是词的前半，不是指纹；
+    "刚刚,$SHIB"/"刚刚 Solana"的"刚刚"后接标点/空格才是完整领词。边界=第 3 字符
+    非 ASCII 字母数字（CJK 跟随算边界："刚刚看涨"就是"刚刚"领句）。"""
     def _lead_word_boundary(opener: str) -> bool:
         nxt = opener[2:3]
         return nxt == "" or not (nxt.isascii() and nxt.isalnum())
@@ -173,8 +178,40 @@ def opener_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_M
                         if len(o) >= 2 and _lead_word_boundary(o)).items():
         if c >= min_hits and not any(p4.startswith(p) for p4 in clusters4):
             alerts[p] = c
-    return {"scanned": len(openers), "alerts": dict(sorted(alerts.items(),
-                                                           key=lambda kv: -kv[1]))}
+    return dict(sorted(alerts.items(), key=lambda kv: -kv[1]))
+
+
+def _collect_segments(rows, extractor, window):
+    """按投递口径从近及远收集 extractor 产出的非空段（dry_run/非投递跳过）。"""
+    out = []
+    for r in reversed(rows if isinstance(rows, list) else []):
+        if not isinstance(r, dict) or r.get("dry_run") is True:
+            continue
+        if not _is_delivery_outcome(r.get("outcome")):
+            continue
+        seg = extractor(r.get("final_preview"))
+        if seg:
+            out.append(seg)
+        if len(out) >= window:
+            break
+    return out
+
+
+def opener_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_MIN_HITS):
+    """抽最近 N 帖开场句的首 2/4 字前缀，同一前缀 ≥min_hits 次即报预警。
+    长文分节头（"一、发生了什么"）不是开场句，跳过取正文段（与 main.py
+    _recent_openers 的 R121 修复同语义）。返回 {"scanned", "alerts": {前缀: 次数}}。"""
+    openers = _collect_segments(rows, _extract_opener, window)
+    return {"scanned": len(openers), "alerts": _cluster_openers(openers, min_hits)}
+
+
+def body_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_MIN_HITS):
+    """R600：第二正文段（分析/观点段）开场的共享前缀预警——与 opener_fingerprint
+    同口径同阈值，只是扫 _extract_body_opener。补开场雷达只看第一段的盲区
+    （R596「我猜这波是主力」47% 复读就藏在这里）。"""
+    bodies = _collect_segments(rows, _extract_body_opener, window)
+    return {"scanned": len(bodies), "alerts": _cluster_openers(bodies, min_hits)}
+
 
 
 def _num(v):
@@ -1205,6 +1242,13 @@ def render_text(s, rows=None):
         if fp["alerts"]:
             detail = "、".join(f"“{p}…”×{c}" for p, c in fp["alerts"].items())
             lines.append(f"  🔭 开场指纹预警（近 {fp['scanned']} 帖开场共享前缀）: {detail}")
+        # R600：分析段指纹雷达——开场雷达只看第一段，漏了第 2 段「我猜这波是主力…」
+        # 这类分析段开场的复读（R596 实录 47% dashboard 全程没报，靠人工读 preview
+        # 才发现）。同口径扫第二正文段开场，把人工发现过程继续产品化。
+        bfp = body_fingerprint(rows)
+        if bfp["alerts"]:
+            bdetail = "、".join(f"“{p}…”×{c}" for p, c in bfp["alerts"].items())
+            lines.append(f"  🔭 分析段指纹预警（近 {bfp['scanned']} 帖第二段共享前缀）: {bdetail}")
     n_pub = sum(s["by_provider"].values())
     if n_pub:
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")
