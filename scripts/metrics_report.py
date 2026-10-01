@@ -164,19 +164,29 @@ def _cluster_openers(openers, min_hits):
     4 字簇优先，2 字簇仅在其不是任何 4 字簇前缀时才报（去重：同簇只报最长）。
     R131：2 字簇要求词边界——"Bitwise/BitGo"共享的"Bi"只是词的前半，不是指纹；
     "刚刚,$SHIB"/"刚刚 Solana"的"刚刚"后接标点/空格才是完整领词。边界=第 3 字符
-    非 ASCII 字母数字（CJK 跟随算边界："刚刚看涨"就是"刚刚"领句）。"""
+    非 ASCII 字母数字（CJK 跟随算边界："刚刚看涨"就是"刚刚"领句）。
+    R601：$挂件/币代码前缀不是文风指纹——「$XRP 现在报…」「$XRP Ledger 销毁…」
+    「$XRP现价…」三条开场各不相同，只是热门币 $XRP 连续领头（内容集中度，不是
+    套路复读）；而账号本就「追踪热门币种」会让 BTC/XRP/SHIB 反复打头，不排除就会
+    让币名噪音淹没真·文风指纹（我猜/多数人/全网）。前缀去掉可选 $ 后若纯 ASCII 字母
+    （币代码/实体名 XRP/BTC/Bitwise）即视为实体名、不报，与 R131 实体名不算指纹同理。"""
     def _lead_word_boundary(opener: str) -> bool:
         nxt = opener[2:3]
         return nxt == "" or not (nxt.isascii() and nxt.isalnum())
 
+    def _is_entity_prefix(prefix: str) -> bool:
+        core = prefix[1:] if prefix.startswith("$") else prefix
+        return len(core) >= 2 and core.isascii() and core.isalpha()
+
     from collections import Counter
     alerts = {}
     clusters4 = {p: c for p, c in
-                 Counter(o[:4] for o in openers if len(o) >= 4).items() if c >= min_hits}
+                 Counter(o[:4] for o in openers if len(o) >= 4).items()
+                 if c >= min_hits and not _is_entity_prefix(p)}
     alerts.update(clusters4)
     for p, c in Counter(o[:2] for o in openers
                         if len(o) >= 2 and _lead_word_boundary(o)).items():
-        if c >= min_hits and not any(p4.startswith(p) for p4 in clusters4):
+        if c >= min_hits and not _is_entity_prefix(p) and not any(p4.startswith(p) for p4 in clusters4):
             alerts[p] = c
     return dict(sorted(alerts.items(), key=lambda kv: -kv[1]))
 

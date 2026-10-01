@@ -1390,6 +1390,25 @@ class TestOpenerFingerprintRadar(unittest.TestCase):
                            "Bitcoin 突破关口。", "RLUSD 烧了。", "量子攻击。"])
         self.assertEqual(mr.opener_fingerprint(rows)["alerts"], {})
 
+    def test_cashtag_prefix_not_a_fingerprint(self):
+        """R601：$挂件/币代码前缀是内容集中度（热门币连续领头），不是文风指纹——
+        「$XRP 现在报…」「$XRP Ledger 销毁…」「$XRP现价…」三条开场各不相同，只是
+        $XRP 连续打头（生产实录雷达误报"$XRP"×3）。账号「追踪热门币种」会让
+        BTC/XRP/SHIB 反复领头，不排除就会淹没真·文风指纹。前缀去 $ 后纯 ASCII 字母
+        即视为币代码/实体名，不报。"""
+        rows = self._rows([
+            "$XRP 现在报 1.51 刀,全网都在等三连阳。后续。",
+            "$XRP Ledger 销毁率暴涨 848%。后续。",
+            "$XRP现价1.5058,24小时才蠕动。后续。",
+            "别的新闻甲。", "别的新闻乙。"])
+        self.assertEqual(mr.opener_fingerprint(rows)["alerts"], {},
+                         "$XRP 连续领头是内容集中度，不是文风指纹")
+        # 对照：CJK 文风领词仍须正常聚簇报警（不被误伤）
+        cjk = self._rows(["全网贪婪 73 了。甲。", "全网都在盯这位置。乙。",
+                          "全网情绪高涨。丙。", "别的。"])
+        self.assertEqual(mr.opener_fingerprint(cjk)["alerts"].get("全网"), 3,
+                         "CJK 文风领词不得被实体名排除规则误伤")
+
     def test_cjk_follower_counts_as_boundary(self):
         # "刚刚看涨"的"看"是 CJK——非 ASCII 字母数字即词边界，正常聚簇
         rows = self._rows(["刚刚看涨情绪升温。", "刚刚跌破关键位。",
