@@ -921,6 +921,27 @@ class TestRecentOpeners(unittest.TestCase):
         pool_labels = {s.split("：")[0] for s in m.ENDING_STYLE_POOL}
         self.assertIn(label, pool_labels, f"标签 {label} 必须来自结尾池")
 
+    def test_ending_pool_describes_technique_and_drops_whale_conspiracy(self):
+        """R598：ENDING_STYLE_POOL 原来每条都是整句范例（「庄家这步棋是吸筹还是
+        出货？吸筹扣1，出货扣2」等），既是 R596/R597 同款逐字模板，又让 多空辩论
+        结尾把 R596 刚压下去的「庄家出货」阴谋论原样塞回来（实录 5% 帖含「吸筹还是
+        出货」）。改为技法描述：保留扣1/扣2 投票机制但不给可照抄整句；多空辩论改为
+        围绕可观察事件分歧提问、显式弃用庄家操纵归因。"""
+        pool = m.ENDING_STYLE_POOL
+        joined = "\n".join(pool)
+        # 旧整句范例模板不得残留（否则被逐字照抄）
+        self.assertNotIn("庄家这步棋是吸筹还是出货", joined)
+        self.assertNotIn("你现在手里有这个币吗", joined)
+        self.assertNotIn("这波行情能撑几天", joined)
+        # 扣1/扣2 投票互动抓手必须保留（Square 评论激励，用户要的是互动）
+        self.assertTrue(any(("扣 1" in s or "扣1" in s) for s in pool),
+                        "须保留扣1/扣2 投票机制")
+        # 多空辩论须导向可观察事件分歧并显式弃用操纵归因模板（与 R596 一致）
+        debate = next((s for s in pool if s.startswith("多空辩论")), None)
+        self.assertIsNotNone(debate, "多空辩论 结尾应保留")
+        self.assertIn("可观察", debate, "多空辩论须导向可观察事件分歧")
+        self.assertIn("操纵归因", debate, "多空辩论须显式弃用庄家操纵归因模板")
+
     def test_opening_hook_stashed_and_injected(self):
         """R521：抽中的开场钩子套路要暂存到引擎（回执遥测/跨帖去重读它）并注入短讯 prompt。"""
         eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
