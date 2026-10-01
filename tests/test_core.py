@@ -985,6 +985,21 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("具体真实数字", prompt)
         self.assertIn("未闭合问题", prompt)
 
+    def test_r606_sentence_rhythm_guidance_in_both_forms(self):
+        """R606：句长 burstiness 整合落到生成端——R605 的 🎵 指标 + 实读 54 篇偏平帖
+        确认 20% 短讯是「清一色中长句」（34~72 字、无短句），正是 textpulse 研究点名
+        的 AI 平铺腔（AI 删掉人类爱用的短促句）。prompt 原有「短句为主/长短句交错」
+        被模型欠执行，故补具体化：短讯+长文都要显式禁「清一色中长句」并要求穿插短句。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        for article in (False, True):
+            prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=article)
+            tag = "长文" if article else "短讯"
+            self.assertIn("清一色中长句", prompt, f"{tag} 应显式禁整篇中长句平铺")
+            self.assertIn("短句", prompt, f"{tag} 应要求穿插短句制造节奏差")
+
     def test_prompt_separates_verified_facts_from_market_motive_speculation(self):
         """R583：实发帖显示同一段先用"明显/摆明了"断言，后句才补"我倾向于"；
         R581 的提示没有要求逐句标推测，免责声明无法覆盖前一句。守住逐句标注纪律。
