@@ -768,6 +768,26 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("绝不为显得专业编", sp)
         self.assertIn("回踩X/目标价Y", sp)
 
+    def test_prompt_diversifies_hedging_and_deters_manipulation_trope(self):
+        """R596：R583/R594「用「我猜/我倾向于」标推测」被模型当固定模板——生产
+        实录「我猜」占比从前 232 篇 0% 猛升到最近 30 篇 47%，几乎都是第 2 段开头
+        「我猜这波是主力…出货/洗盘」，且 50% 的帖都在讲主力操纵，正是用户厌恶的
+        单调 AI 腔。逐句证据纪律要保留（推测仍须标注、不得当事实断言），但须
+        (a) 轮换 hedge 词别每条都「我猜」(b) 不默认甩「主力出货/洗盘」万能阴谋论、
+        无证据时优先可观察驱动——短讯与长文两处 user_prompt 都要带该指导。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        for article in (False, True):
+            prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=article)
+            tag = "长文" if article else "短讯"
+            self.assertIn("别每条都用「我猜」开头", prompt, f"{tag} 应指导轮换 hedge 词")
+            self.assertIn("主力借利好出货/洗盘", prompt, f"{tag} 应点名要避免的万能阴谋论")
+            self.assertIn("可观察驱动", prompt, f"{tag} 应导向可观察驱动解释")
+            # R583 的推测标注纪律不得被弱化
+            self.assertIn("否则必须标成推测", prompt, f"{tag} 仍须要求推测标注")
+
     def test_trade_cta_style_avoids_recently_seen(self):
         """R592：CTA 角度跨运行 draw_fresh——近期 N-1 篇出现过的标签排后，
         唯一未出现的先抽（新进程首抽也生效，不像进程内洗牌会退化随机）。"""
@@ -929,7 +949,9 @@ class TestRecentOpeners(unittest.TestCase):
 
     def test_prompt_separates_verified_facts_from_market_motive_speculation(self):
         """R583：实发帖显示同一段先用"明显/摆明了"断言，后句才补"我倾向于"；
-        R581 的提示没有要求逐句标推测，免责声明无法覆盖前一句。守住逐句标注纪律。"""
+        R581 的提示没有要求逐句标推测，免责声明无法覆盖前一句。守住逐句标注纪律。
+        R596：措辞由「该句必须用「我猜/…」」改为「必须标成推测」+ 轮换 hedge 词，
+        标注纪律本身不弱化（见 test_prompt_diversifies_hedging...）。"""
         eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
         eng._fail_counts = {}
         eng._clients = {}
@@ -937,7 +959,7 @@ class TestRecentOpeners(unittest.TestCase):
                 "age_hours": 1.0}
         prompt, _ = eng._build_user_prompt(item, None, "BTC spot: $60,000 (+1.2%)", ["BTC"])
         self.assertIn("逐句证据纪律（最高优先级）", prompt)
-        self.assertIn("该句必须用", prompt)
+        self.assertIn("否则必须标成推测", prompt)
         self.assertIn("不能只在相邻句加一次免责声明", prompt)
         self.assertIn("更不能把「明显/摆明了/九成」当证据", prompt)
         self.assertIn("拿不准就删掉动机归因", prompt)
