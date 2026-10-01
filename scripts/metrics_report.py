@@ -56,6 +56,14 @@ _AI_FLAVOR_HARD = (  # main.MultiLLMEngine._AI_FLAVOR_HARD
     "一言以蔽之", "备受瞩目",
 )
 QUALITY_SCAN_WINDOW = 20  # 最近 N 篇发布帖做合规扫描
+# R603：操纵归因（万能阴谋论）扫描词——R596 用轮换 hedge 词+可观察驱动指导压
+# 「我猜这波是主力出货」的腔调，但实发验证（R596 后首 3 帖）显示：逐字「我猜」确实
+# 消失、hedge 已多样化，可**语义上的「利好不涨=有人出货/烟雾弹/送流动性」操纵叙事
+# 仍在 2/3 帖出现**——它靠 R596 多样化后的词汇绕过了前缀指纹雷达（我猜/现在那套
+# 按前缀聚簇的探测看不见语义框架）。这里按操纵归因标记词计数，让这个「叙事指纹」
+# 像 FNG/AI 腔一样可跨帖追踪：若 R596 真起效，占比会随新帖下行；若长期高位，才是
+# 加固 R596 的信号（避免在 n=3 上过拟合重复打补丁）。信息性，非门禁。
+_MANIPULATION_FRAME = ("出货", "洗盘", "烟雾弹", "送流动性", "派筹", "诱多", "压盘")
 
 
 def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
@@ -77,7 +85,8 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     previews = previews[-window:]
     out = {"scanned": len(previews), "fng_anchor": 0, "banned_device": 0,
            "ai_flavor": 0, "offenders": collections.Counter(),
-           "fng_ban_armed": 0, "fng_violation": 0, "fng_avoided": 0}
+           "fng_ban_armed": 0, "fng_violation": 0, "fng_avoided": 0,
+           "manip_frame": 0}
     for pv, ban_active in previews:
         m_fng = _FNG_ANCHOR_RE.search(pv)
         if m_fng:
@@ -101,6 +110,10 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
             if w in pv:
                 out["ai_flavor"] += 1
                 out["offenders"][f"AI腔:{w}"] += 1
+        # R603：操纵归因叙事——每帖最多计一次（按帖占比，不按词频）。不进 offenders
+        # （那是「N 处命中」的硬合规口径），只走独立的 🎭 趋势行，避免两个口径互相污染。
+        if any(w in pv for w in _MANIPULATION_FRAME):
+            out["manip_frame"] += 1
     out["offenders"] = dict(out["offenders"])
     return out
 
@@ -1251,6 +1264,14 @@ def render_text(s, rows=None):
                 flag = " ⚠️" if q["fng_violation"] else ""
                 lines.append(f"  🚦 FNG 禁令咬合{flag}: 武装 {q['fng_ban_armed']} 篇中避开 "
                              f"{q['fng_avoided']} / 违反 {q['fng_violation']}")
+            # R603：操纵归因叙事占比——R596 压「利好不涨=有人出货」的腔调，逐字「我猜」
+            # 已消失但语义框架仍在（靠多样化词汇绕过前缀指纹雷达）。按帖占比跨窗追踪：
+            # 持续下行=R596 起效；长期高位（>40%）才是加固 R596 的信号，避免 n 小时过拟合。
+            if q["manip_frame"]:
+                _mf = q["manip_frame"]
+                _pct = 100 * _mf / q["scanned"]
+                _warn = " ⚠️（叙事指纹，若持续高位需加固 R596）" if _pct >= 40 else ""
+                lines.append(f"  🎭 操纵归因叙事: {_mf}/{q['scanned']} 篇（{_pct:.0f}%）{_warn}")
         # R289：FNG 三件套收口——滞回驱动量直方图 + 武装未剥离一致性告警。
         # hook_count 是近窗引入次数（武装条件 ≥2，故 1 = 距武装一步之遥的压力面）；
         # armed 但 market_stripped=False = R101 互补剥离疑似失效（禁令与盘面行

@@ -1133,6 +1133,28 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("内容合规巡检（最近 4 篇", text)
         self.assertIn("3 处命中", text)
 
+    def test_r603_manipulation_frame_tracked_separately(self):
+        """R603：操纵归因叙事（利好不涨=有人出货/烟雾弹/送流动性）按帖占比独立追踪。
+        R596 后逐字「我猜」消失但语义框架仍在、绕过前缀指纹雷达——这里按帖计一次，
+        且**不进 offenders**（那是「N 处命中」硬口径），只走独立 🎭 行；占比 ≥40% 带告警。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "利好出来盘面不涨，看着像主力借机出货的烟雾弹。"},  # 操纵归因
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "现在无脑冲进去纯是给庄家送流动性。"},  # 操纵归因（送流动性）
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "大概率是利好被 price in 了，等成交量确认再说。"},  # 干净（无操纵词）
+        ])
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["manip_frame"], 2, "两篇含操纵归因叙事")
+        # 不污染硬合规口径：这三篇无 FNG/装置/AI腔，offenders 应为空、命中为 0
+        self.assertNotIn("操纵归因:出货", q["offenders"])
+        self.assertEqual(q["fng_anchor"] + q["banned_device"] + q["ai_flavor"], 0)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("操纵归因叙事: 2/3 篇", text)
+        self.assertIn("⚠️", text)  # 67% ≥ 40% 阈值 → 告警
+
     def test_quality_scan_clean_and_dry_excluded(self):
         _write(self.path, [
             {"platforms": ["binance"], "outcome": "binance_published",
