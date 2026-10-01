@@ -351,6 +351,7 @@ def summarize(rows):
         "stats_by_genre": {},        # 长文/短讯 -> [浏览样本]
         "stats_by_source": {},       # 来源 -> [浏览样本]
         "by_ending": collections.Counter(),
+        "by_trade_cta_style": collections.Counter(),
         # R288：人设分布与近期集中度（R287 修的是生成端，报表端监测其效果）
         "by_persona": collections.Counter(),
         "persona_seq": [],
@@ -590,6 +591,10 @@ def summarize(rows):
             # R130：结尾套路分布——验证 ShuffleBag 生产轮换均匀性
             if r.get("ending_style"):
                 s["by_ending"][str(r["ending_style"])] += 1
+            # R592：实操建议角度分布——与开场钩子/结尾套路同为 prompt 轮换槽，监测跨帖建议
+            # 是否又收敛到「回踩/现货拿稳/杠杆降到最低」固定套话；legacy 行无字段跳过。
+            if r.get("trade_cta_style"):
+                s["by_trade_cta_style"][str(r["trade_cta_style"])] += 1
             # R288：人设分布 + 时序（集中度告警要按发布顺序取近窗）
             if r.get("persona"):
                 s["by_persona"][str(r["persona"])] += 1
@@ -1277,6 +1282,9 @@ def render_text(s, rows=None):
         if s["by_ending"]:
             ending_str = " · ".join(f"{k} ×{v}" for k, v in s["by_ending"].most_common(5))
             lines.append(f"  结尾套路分布: {ending_str}")
+        if s["by_trade_cta_style"]:
+            cta_str = " · ".join(f"{k} ×{v}" for k, v in s["by_trade_cta_style"].most_common(5))
+            lines.append(f"  实操角度分布: {cta_str}")
         # R288：人设分布 + 近期集中度告警（R287 跨运行预热后的效果监测面）
         if s["by_persona"]:
             persona_str = " · ".join(f"{k} ×{v}" for k, v in s["by_persona"].most_common())

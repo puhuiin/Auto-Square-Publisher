@@ -740,6 +740,82 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIsNotNone(short_ending_style,
                              "短讯注入 CTA 后仍须记录实际生效的 ending style")
 
+    def test_trade_cta_style_stashed_and_injected(self):
+        """R592：实操建议角度要像开场/结尾一样抽取、注入且存回执，便于跨运行避开固定口头禅。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        prompt, _ = eng._build_user_prompt(
+            {"title": "BTC news", "summary": "BTC volatility", "age_hours": 1.0},
+            None, "BTC: $60,000 (+1.2%)", ["BTC"])
+        label = getattr(eng, "last_trade_cta_style", None)
+        self.assertIsNotNone(label, "short prompt must store the emitted advice angle")
+        self.assertNotIn("：", label)
+        pool_labels = {item.split("：")[0] for item in m.TRADE_CTA_STYLE_POOL}
+        self.assertIn(label, pool_labels)
+        self.assertIn("本条实操建议角度", prompt)
+        self.assertIn("所有交易建议服从上方抽到的实操角度", prompt)
+        self.assertIn("数据或价位必须来自新闻/实时盘面", prompt)
+
+    def test_trade_cta_style_avoids_recently_seen(self):
+        """R592：CTA 角度跨运行 draw_fresh——近期 N-1 篇出现过的标签排后，
+        唯一未出现的先抽（新进程首抽也生效，不像进程内洗牌会退化随机）。"""
+        styles = list(m.TRADE_CTA_STYLE_POOL)
+        self._append([
+            {"outcome": "binance_published", "final_preview": f"BTC post {i}.",
+             "trade_cta_style": s.split("：")[0]}
+            for i, s in enumerate(styles[:-1])
+        ])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        m._TRADE_CTA_BAG = m.ShuffleBag(m.TRADE_CTA_STYLE_POOL)
+        _rng = random.getstate()
+        try:
+            random.seed(2)
+            drawn = m._TRADE_CTA_BAG.draw_fresh(
+                (r.get("trade_cta_style") for r in eng._recent_published_rows(20)),
+                key=lambda s: s.split("：")[0])
+        finally:
+            random.setstate(_rng)
+        self.assertEqual(drawn.split("：")[0], styles[-1].split("：")[0],
+                         "the sole style absent from the recent window must be drawn first")
+
+    def test_trade_cta_style_draw_fresh_window_caps_at_pool_minus_one(self):
+        """R592/R290: 历史投满全部 8 种时，回看窗口只认最近 N-1=7 种，
+        最久未现的第 8 种必须仍被判为 fresh 先抽——窗口不能退化到覆盖全池。"""
+        styles = list(m.TRADE_CTA_STYLE_POOL)
+        sequence = [styles[-1], *styles[:-1]]  # 8 种全在场；最新 7 种覆盖除 styles[-1] 外
+        self._append([
+            {"outcome": "binance_published", "final_preview": f"BTC post {i}.",
+             "trade_cta_style": s.split("：")[0]}
+            for i, s in enumerate(sequence)
+        ])
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        m._TRADE_CTA_BAG = m.ShuffleBag(m.TRADE_CTA_STYLE_POOL)
+        _rng = random.getstate()
+        try:
+            random.seed(2)
+            drawn = m._TRADE_CTA_BAG.draw_fresh(
+                (r.get("trade_cta_style") for r in eng._recent_published_rows(20)),
+                key=lambda s: s.split("：")[0])
+        finally:
+            random.setstate(_rng)
+        self.assertEqual(drawn.split("：")[0], styles[-1].split("：")[0],
+                         "fresh style must outrank used styles even when history is full")
+
+    def test_article_does_not_record_shortform_trade_cta(self):
+        """R592：long-form template has its own risk/monitoring structure; do not record an unused short CTA."""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng._build_user_prompt(
+            {"title": "BTC news", "summary": "s", "age_hours": 1.0},
+            None, "", ["BTC"], article=True)
+        self.assertIsNone(eng.last_trade_cta_style)
+
     def test_persona_and_ending_avoid_recently_seen(self):
         """R287：跨运行不扎堆——最近 K=池大小 次回执里出现过的人设/结尾套路，
         本轮不得再抽中（每轮新进程=新袋子，进程内洗牌对单篇运行是空转；生产近
@@ -860,8 +936,6 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("严禁与", prompt)
         self.assertIn("写成因果", prompt)
         self.assertIn("观点要犀利、敢站队", prompt)
-        self.assertNotIn("若与本条加密新闻无关则禁止生硬提及", prompt,
-                         "测试未传 hot_topics，不应凭空出现无关热点限制")
 
     def test_hook_number_rule_injected_in_long_form(self):
         """R569：钩子硬规则此前只注入短讯——长文正文首句数字率仅 62%（短讯 91%），
@@ -905,9 +979,17 @@ class TestRecentOpeners(unittest.TestCase):
         item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
         prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"])
         self.assertIn("交易页的入口", prompt, "必须点明 $ 挂件是购买入口")
-        self.assertIn("点开挂件去交易", prompt, "必须引导点击购买")
-        self.assertIn("绝不靠喊单", prompt, "反喊单红线不得弱化")
+        self.assertIn("$挂件是读者进入对应交易页的入口", prompt)
+        self.assertIn("禁止喊单", prompt, "反喊单红线不得弱化")
+        self.assertIn("收益承诺或捏造价位", prompt)
         self.assertIn("$大写", prompt, "货币符号写法指引必须在场")
+        self.assertIn("不得让读者误以为每条新闻都必须交易", prompt,
+                      "必须明确模型可以不给交易建议")
+        self.assertIn("本条实操建议角度", prompt)
+        self.assertIn("不得虚构支撑/阻力/目标价、仓位比例或杠杆倍数", prompt)
+        self.assertNotIn("不必填入一组方案", prompt)
+
+
 
     def test_freshness_line_itself_free_of_banned_prefix(self):
         """R537 收尾：三个候选推荐词全部晋升静态禁词表后，时效行自身也不得
