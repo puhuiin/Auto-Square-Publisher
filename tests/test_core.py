@@ -4644,6 +4644,81 @@ class TestNumberHallucinationGuard(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("12.53", reason)
 
+    def test_fabricated_target_verbs_rejected(self):
+        """R595：R589 价位门只覆盖 涨到/跌到/回踩，漏了「突破/跌破/站上/看至/反弹到/
+        挑战」等目标价动词——生产实录「突破5000/站上3300/看至10万/跌穿2600/反弹到
+        2900/挑战3200」六种编造目标价全部过门。且 R592 场景角度+R594 定性指导恰恰
+        高频用「放量突破/跌破关键支撑」，门必须盯住这些动词后的数字。"""
+        fabricated = (
+            "看至 10 万美元的超级目标",
+            "多头站上 3300 再说",
+            "突破 5000 指日可待",
+            "跌穿 2600 就要认输",
+            "反弹到 2900 附近",
+            "挑战 3200 前高",
+        )
+        for body in fabricated:
+            ok, reason = m.MultiLLMEngine._verify_numbers(body, "BTC spot 2705, no target given")
+            self.assertFalse(ok, f"编造目标价应拦: {body}")
+            self.assertIn("来源未证实的价位", reason)
+
+    def test_marketcap_scale_with_target_verb_not_misjudged(self):
+        """R595 零回归（首版翻车实录）：给价位门补「突破」等动词 cue 后，
+        「总市值突破 3.5万亿美元」里 3.5 是万亿级 mantissa（源文 3.5e12）；
+        抓成裸 3.5 与 3.5e12 比对必然失配，合法市值句被误判成编造目标价。
+        数字捕获必须带上中文单位并套 _cjk_amount_scale 后再比对。"""
+        for body, source in (
+            ("全球加密总市值突破 3.5万亿美元，创历史新高。",
+             "Global crypto market cap surpassed $3.5 trillion, a record high."),
+            ("交易量一举突破 24 亿美元，热度回来了。", "Daily volume topped $2.4B"),
+        ):
+            ok, reason = m.MultiLLMEngine._verify_numbers(body, source)
+            self.assertTrue(ok, f"带单位的市值/成交量句不应误伤: {body} / {reason}")
+
+    def test_non_price_unit_after_verb_stays_unchecked(self):
+        """R595b 零回归：动词后的非价位单位数字不是点位——「站上 20 日线」（均线
+        天数）、「突破 3 倍」（杠杆倍数）、「挑战 5 次前高」（计数）都放行。
+        首版用纯负前瞻被数字回退绕过：抓"20"时前瞻见"日线"失败，数字组吐回尾位"0"
+        退化成"2"，前瞻只看到"0 日线"不匹配词表 → 均线条被当成 2 刀价位拦下；
+        前瞻里容许前导数字就是为堵这个回退。"""
+        for body in (
+            "BTC 突破 2705 后站上 20 日线",
+            "站上 60 日均线才算多头回归",
+            "突破 5 倍杠杆的仓位管理没必要",
+            "收复 20 日线后挑战 5 次前高",
+            "现价 2705 美元附近震荡，5 日线走平",
+            "60 分钟线放量，站上 20 日线",
+        ):
+            ok, reason = m.MultiLLMEngine._verify_numbers(body, "BTC spot 2705, no target given")
+            self.assertTrue(ok, f"均线/杠杆/计数数字不应当价位拦: {body} / {reason}")
+
+    def test_sourced_target_verbs_pass(self):
+        """R595 零回归：动词价位若有同值来源数字必须放行，避免误杀有据行情句。"""
+        for body, source in (
+            ("看至 62,000 美元目标", "BTC target $62,000"),
+            ("突破 2705 再看一线", "BTC just broke above 2705"),
+            ("回落到 240 附近接", "QNT pullback zone near 240"),
+        ):
+            ok, reason = m.MultiLLMEngine._verify_numbers(body, source)
+            self.assertTrue(ok, f"有来源的价位应放行: {body} / {reason}")
+
+    def test_qualitative_breakout_stays_unchecked(self):
+        """R595 零回归：定性说法（无数字）不能被 cue 词误伤——R594 就是要「放量突破
+        近期前高」这种定性触发，门只在动词后跟具体数字时才拦。"""
+        for body in (
+            "放量突破近期前高再看一线",
+            "跌破关键支撑就先观望",
+            "资金转为净流入才是真突破",
+        ):
+            ok, reason = m.MultiLLMEngine._verify_numbers(body, "BTC spot 2705, no target given")
+            self.assertTrue(ok, f"定性触发句不应被价位门误伤: {body} / {reason}")
+
+    def test_non_price_verb_sentence_stays_unchecked(self):
+        """R595 零回归：新 cue 词不得把普通建议里的整数误判为价位。"""
+        ok, reason = m.MultiLLMEngine._verify_numbers(
+            "仓位最多 5 成，突破自己的纪律就别追", "BTC price is volatile")
+        self.assertTrue(ok, reason)
+
     def test_rough_integer_passes(self):
         # 交易员人设的"涨 5%"、"止损 10%"这种是合理建议，不算幻觉
         ok, _ = m.MultiLLMEngine._verify_numbers("止损带好别超过 -5%，仓位最多 5 成", "no numbers")
