@@ -757,6 +757,17 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("所有交易建议服从上方抽到的实操角度", prompt)
         self.assertIn("数据或价位必须来自新闻/实时盘面", prompt)
 
+    def test_system_prompt_prefers_qualitative_trigger_over_fabricated_level(self):
+        """R594：R592 场景角度诱导模型编价位——生产 numbers 门 3 次拒稿
+        （回踩0.092/目标价8.4/回踩1.4，spot 分别 0.094/—/1.5058，均 >2% 偏差）。
+        SYSTEM_PROMPT 实操角度段必须指令：触发条件优先定性说法，只有 sourced
+        数字才写价位，无来源绝不编「回踩X/目标价Y」——从生成端减少撞数字门重写。"""
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        self.assertIn("定性说法", sp, "必须指导用定性触发条件")
+        self.assertIn("只有新闻或实时盘面确实给了具体数字时才写价位", sp)
+        self.assertIn("绝不为显得专业编", sp)
+        self.assertIn("回踩X/目标价Y", sp)
+
     def test_trade_cta_style_avoids_recently_seen(self):
         """R592：CTA 角度跨运行 draw_fresh——近期 N-1 篇出现过的标签排后，
         唯一未出现的先抽（新进程首抽也生效，不像进程内洗牌会退化随机）。"""
