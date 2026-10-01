@@ -784,7 +784,9 @@ class TestRecentOpeners(unittest.TestCase):
             tag = "长文" if article else "短讯"
             self.assertIn("别每条都用「我猜」开头", prompt, f"{tag} 应指导轮换 hedge 词")
             self.assertIn("主力借利好出货/洗盘", prompt, f"{tag} 应点名要避免的万能阴谋论")
-            self.assertIn("可观察驱动", prompt, f"{tag} 应导向可观察驱动解释")
+            # R604：把「利好不涨」重构为可观察的市场行为（犀利但有据），而非点名反派
+            self.assertIn("利好出尽/卖事实", prompt, f"{tag} 应给可观察的市场行为重构")
+            self.assertIn("别点名某方在出货/撒烟雾弹", prompt, f"{tag} 应禁止无据点名反派")
             # R583 的推测标注纪律不得被弱化
             self.assertIn("否则必须标成推测", prompt, f"{tag} 仍须要求推测标注")
 
