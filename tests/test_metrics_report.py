@@ -2143,6 +2143,47 @@ class TestContentStatsReportJoin(unittest.TestCase):
         self.assertEqual(rows["stats_posts"], 0)
         self.assertNotIn("内容数据", mr.render_text(rows, self._rows()))
 
+    def test_r602_style_dimension_view_attribution(self):
+        """R602：文风维度 × 浏览——R521/R288/R130/R592 轮换的开场钩子/人设/结尾/
+        实操角度各自的真实浏览量要能分桶，否则这些文风旋钮即便拿到互动数据也无从
+        判断「哪种套路带流量」。按已落盘的轮换标签分桶、空标签不进分母。"""
+        style_rows = [
+            {"platforms": ["binance"], "outcome": "binance_published", "content_id": "s1",
+             "hour_bj": 21, "article": False, "source": "U.Today",
+             "opening_hook": "反差冲击", "persona": "毒舌老韭菜",
+             "ending_style": "灵魂拷问", "trade_cta_style": "失效位优先"},
+            {"platforms": ["binance"], "outcome": "binance_published", "content_id": "s2",
+             "hour_bj": 22, "article": False, "source": "U.Today",
+             "opening_hook": "反差冲击", "persona": "数据拆解派",
+             "ending_style": "灵魂拷问", "trade_cta_style": "风险先说"},
+            {"platforms": ["binance"], "outcome": "binance_published", "content_id": "s3",
+             "hour_bj": 20, "article": False, "source": "Decrypt",
+             "opening_hook": "悬念设问", "persona": "毒舌老韭菜",
+             "ending_style": "对比站队"},  # trade_cta_style 缺失 → 不进 CTA 分母
+        ]
+        stats = {"s1": {"views": 100}, "s2": {"views": 300}, "s3": {"views": 800}}
+        sp = self._stats_file(stats)
+        orig = mr._STATS_CACHE.copy()
+        try:
+            mr._STATS_CACHE.update({"loaded": True, "data": mr.load_content_stats(sp)})
+            _write(self.path, style_rows)
+            rows, _ = mr.load_rows(self.path)
+            summ = mr.summarize(rows)
+        finally:
+            mr._STATS_CACHE.update(orig)
+        self.assertEqual(sorted(summ["stats_by_hook"]["反差冲击"]), [100, 300])
+        self.assertEqual(summ["stats_by_hook"]["悬念设问"], [800])
+        self.assertEqual(sorted(summ["stats_by_persona"]["毒舌老韭菜"]), [100, 800])
+        self.assertEqual(summ["stats_by_ending"]["灵魂拷问"], [100, 300])
+        self.assertEqual(summ["stats_by_cta"]["失效位优先"], [100])
+        self.assertNotIn("", summ["stats_by_cta"], "缺失标签不得建空桶")
+        self.assertEqual(len(summ["stats_by_cta"]), 2, "s3 无 trade_cta_style 不进 CTA 分母")
+        text = mr.render_text(summ, style_rows)
+        self.assertIn("开场钩子均浏览", text)
+        self.assertIn("人设均浏览", text)
+        self.assertIn("结尾套路均浏览", text)
+        self.assertIn("实操角度均浏览", text)
+
     def test_provider_dispatch_order_folds_and_ranks_by_latency(self):
         """R337：通道位次行——发/拒计数折叠到短通道名（同一 preset 名下多模型合并），
         按延迟↑=failover 调用顺序排列，'-'/'unknown' 剔除，无延迟样本的通道落链尾。

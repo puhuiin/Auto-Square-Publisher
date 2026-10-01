@@ -397,6 +397,14 @@ def summarize(rows):
         "stats_by_hourbucket": {},   # 时段桶 -> [浏览样本]
         "stats_by_genre": {},        # 长文/短讯 -> [浏览样本]
         "stats_by_source": {},       # 来源 -> [浏览样本]
+        # R602：文风维度 × 浏览归因——R521/R288/R130/R592 分别轮换开场钩子/人设/
+        # 结尾套路/实操角度来破单调，但「哪种钩子/人设/结尾/角度真能带来浏览」此前
+        # 无出口：浏览只按时段/体裁/来源分桶，恰好漏掉我在优化的那几个旋钮。等互动
+        # CSV 一到，这四个桶就把 R592-R601 的文风投入变成可度量的 engagement 结论。
+        "stats_by_hook": {},         # 开场钩子 -> [浏览样本]
+        "stats_by_persona": {},      # 人设 -> [浏览样本]
+        "stats_by_ending": {},       # 结尾套路 -> [浏览样本]
+        "stats_by_cta": {},          # 实操角度 -> [浏览样本]
         "by_ending": collections.Counter(),
         "by_trade_cta_style": collections.Counter(),
         # R288：人设分布与近期集中度（R287 修的是生成端，报表端监测其效果）
@@ -618,6 +626,14 @@ def summarize(rows):
                 _src = str(r.get("source") or "")
                 if _src:
                     s["stats_by_source"].setdefault(_src, []).append(st["views"])
+                # R602：文风维度 × 浏览——按已落盘的轮换标签分桶（空值不进分母）
+                for _field, _bucket in (("opening_hook", "stats_by_hook"),
+                                        ("persona", "stats_by_persona"),
+                                        ("ending_style", "stats_by_ending"),
+                                        ("trade_cta_style", "stats_by_cta")):
+                    _lab = r.get(_field)
+                    if isinstance(_lab, str) and _lab.strip():
+                        s[_bucket].setdefault(_lab.strip(), []).append(st["views"])
             # R286：长文标题眼钩普查（article_title 仅长文帖非空）——标题是信息流
             # 第一触点，数字/$挂件/疑问三类眼钩元素的覆盖率要有基线可查
             _at = r.get("article_title")
@@ -1312,6 +1328,16 @@ def render_text(s, rows=None):
             _sc = _bucket_line(s["stats_by_source"], top=3)
             if _sc:
                 lines.append(f"    来源均浏览: {_sc}")
+            # R602：文风维度 × 浏览——把 R521/R288/R130/R592 轮换的开场/人设/结尾/
+            # 实操角度各自的真实浏览量摆出来，回答「哪种套路真能带来流量」，让文风
+            # 旋钮从「凭最佳实践猜」转向「按 engagement 调」。无样本的维度整行静默。
+            for _label, _key in (("开场钩子均浏览", "stats_by_hook"),
+                                  ("人设均浏览", "stats_by_persona"),
+                                  ("结尾套路均浏览", "stats_by_ending"),
+                                  ("实操角度均浏览", "stats_by_cta")):
+                _bl = _bucket_line(s[_key])
+                if _bl:
+                    lines.append(f"    {_label}: {_bl}")
         # R286：长文标题眼钩基线（有长文标题才渲染）+ 禁用领词告警
         if s.get("article_titles"):
             _n = len(s["article_titles"])
