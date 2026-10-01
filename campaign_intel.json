@@ -3,25 +3,25 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Futures",
-    "#bStocks"
+    "#SimpleEarn",
+    "#P2P"
   ],
   "incentivized_tokens": [
-    "$BNB",
     "$PUMP",
+    "$BNB",
     "$USDC",
-    "$BTC",
-    "$XRP",
-    "$O",
     "$ALGO",
-    "$VTHO"
+    "$VTHO",
+    "$BABY",
+    "$RLUSD",
+    "$XRP"
   ],
-  "strategy_guidance": "当前高流量未过期活动包含PUMP交易锦标赛、ALGO交易锦标赛、今日刚上线的7支bStocks tokenized证券交易对及多组USDⓈ-Margined永续合约，发帖可优先围绕新上线资产输出「首日交易抄作业」类内容，结合交易竞赛规则引导用户参与获取返佣；其中10月Affiliate Dual-Star Program为限时活动，可优先输出邀请好友参与交易的活动冲刺类攻略，叠加#Write2Earn标签获取内容激励。",
-  "last_updated": "2026-09-30T17:23:57.314473Z",
+  "strategy_guidance": "当前无临近截止的紧迫活动，优先围绕仍在进行的PUMP交易锦标赛、ALGO/VTHO/BABY多赛道交易锦标赛、10月专属理财及邀请活动，结合新增7个bStocks证券交易对、多款TradFi期货合约上线的快讯，引导用户参与交易获取Write2Earn返佣的同时瓜分活动奖励；针对巴西、拉美新用户专属高APR理财活动输出区域向内容，针对P2P新手商家返佣活动输出入驻攻略，覆盖不同用户群体需求；结合每日一词“链上IPO”热点输出Web3与传统金融融合的解读内容，绑定Write2Earn奖励提升曝光。",
+  "last_updated": "2026-10-01T05:43:52.581771Z",
   "_feed_health": {},
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-01",
