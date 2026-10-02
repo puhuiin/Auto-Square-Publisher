@@ -8235,6 +8235,230 @@ class TestFetcherStatsThreadSafety(unittest.TestCase):
         self.assertEqual(fetcher.stats["per_feed"]["Feed-X"]["entries"], n_threads)
 
 
+class _StubCache:
+    """R621 测试用缓存桩：is_cached 查显式集合，recent_titles 返回可控历史"""
+
+    def __init__(self, seen=None, titles=None):
+        self.seen = set(seen or ())
+        self.titles = list(titles or ())
+
+    def is_cached(self, news_id):
+        return news_id in self.seen
+
+    def recent_titles(self, n=150):
+        return list(self.titles[:n])
+
+
+class TestR621FeedYieldAttribution(unittest.TestCase):
+    """R621：per_feed 按源记丢弃归因——入选率必须可归因。
+
+    离线复现（真实 NewsFetcher，无网络）证明修复前的指标无法支撑换源决策：
+    「好源被跨源去重吃掉」与「坏源发旧闻」都渲染成同一个低入选率，而处置
+    动作完全相反（前者什么都不用做，后者换源）。
+    """
+
+    def test_bucket_has_all_three_discard_keys(self):
+        """桶形状单点定义：entries/kept + 三个 discarded_*，缺一即读-改-写 KeyError"""
+        fetcher = m.NewsFetcher()
+        fetcher._stat_feed_entry("F")
+        bucket = fetcher.stats["per_feed"]["F"]
+        self.assertEqual(bucket["entries"], 1)
+        for k in ("kept", "discarded_stale",
+                  "discarded_cached", "discarded_dup"):
+            self.assertIn(k, bucket)
+            self.assertEqual(bucket[k], 0)
+
+    def test_discard_reasons_recorded_per_source(self):
+        """丢弃必须按源记，且互不串号"""
+        fetcher = m.NewsFetcher()
+        fetcher._stat_feed_discard("A", "stale")
+        fetcher._stat_feed_discard("A", "stale")
+        fetcher._stat_feed_discard("A", "cached")
+        fetcher._stat_feed_discard("B", "dup")
+        pf = fetcher.stats["per_feed"]
+        self.assertEqual(pf["A"]["discarded_stale"], 2)
+        self.assertEqual(pf["A"]["discarded_cached"], 1)
+        self.assertEqual(pf["A"]["discarded_dup"], 0)
+        self.assertEqual(pf["B"]["discarded_dup"], 1)
+        self.assertEqual(pf["B"]["discarded_stale"], 0)
+
+    def test_discard_creates_bucket_if_absent(self):
+        """先丢弃后扫描（near_dup 在扫描后，但防御性）不得 KeyError"""
+        fetcher = m.NewsFetcher()
+        fetcher._stat_feed_discard("Z", "dup")
+        self.assertEqual(fetcher.stats["per_feed"]["Z"]["discarded_dup"], 1)
+
+    def test_unknown_reason_ignored_not_raised(self):
+        """未知 reason 静默忽略——遥测侧新增调用点绝不能把整轮抓取带崩
+        （旁路组件不得阻塞主流程）"""
+        fetcher = m.NewsFetcher()
+        fetcher._stat_feed_discard("A", "不存在的理由")
+        self.assertEqual(fetcher.stats["per_feed"], {})
+
+    def test_stale_discard_attributed_in_parse(self):
+        """旧闻条目：全局 stale 与按源 discarded_stale 必须**成对**增加"""
+        from datetime import datetime, timedelta, timezone
+        fetcher = m.NewsFetcher()
+        old = datetime.now(timezone.utc) - timedelta(hours=m.MAX_NEWS_AGE_HOURS + 10)
+        entry = {"title": "stale headline", "summary": "s",
+                 "published_parsed": old.timetuple()}
+        out = fetcher._parse_feed_entry(entry, "Feed-S", _StubCache())
+        self.assertIsNone(out)
+        self.assertEqual(fetcher.stats["stale"], 1)
+        self.assertEqual(fetcher.stats["per_feed"]["Feed-S"]["discarded_stale"], 1)
+        self.assertEqual(fetcher.stats["per_feed"]["Feed-S"]["entries"], 1)
+
+    def test_cached_discard_attributed_in_parse(self):
+        """已发过的条目：全局 cached 与按源 discarded_cached 成对增加"""
+        fetcher = m.NewsFetcher()
+        entry = {"title": "already sent", "summary": "s",
+                 "link": "https://x.test/a"}
+        cache = _StubCache()
+        cache.seen.add(m.NewsFetcher.generate_news_id(entry, "Feed-C"))
+        out = fetcher._parse_feed_entry(entry, "Feed-C", cache)
+        self.assertIsNone(out)
+        self.assertEqual(fetcher.stats["cached"], 1)
+        self.assertEqual(fetcher.stats["per_feed"]["Feed-C"]["discarded_cached"], 1)
+
+    def test_cross_source_dup_attributed_to_loser_feed(self):
+        """跨源同题：被吃掉的源记 discarded_dup，**胜出的源不受影响**。
+
+        这是 R621 的核心——修复前 near_dup 只有全局单计数，看板无法回答
+        「哪个源专发同题」。
+        """
+        ut = "U.Today (Meme)"
+        cd = "CoinDesk"
+        titles = [
+            "Shiba Inu price prediction: analysts eye $0.00012 rebound",
+            "Shiba Inu burns 1 trillion tokens, price eyes breakout",
+            "DOGE ETF inflows surge as institutional interest grows",
+        ]
+        payloads = {ut: [self._feed_entry(t) for t in titles],
+                    cd: [self._feed_entry(t) for t in titles]}
+        fetcher = self._run_fetch({ut: "https://ut.test/rss", cd: "https://cd.test/rss"},
+                                  payloads)
+        pf = fetcher.stats["per_feed"]
+        self.assertEqual(fetcher.stats["near_dup"], 3, "三条同题应全被去重")
+        # 三项之和恒等于缺口（复现里精确闭合）
+        for name, d in pf.items():
+            self.assertEqual(d["entries"] - d["kept"],
+                             d["discarded_stale"] + d["discarded_cached"]
+                             + d["discarded_dup"],
+                             f"{name} 的缺口未被归因完整覆盖")
+        # 被吃光的那源 dup 计数 == 其全部缺口
+        loser = [n for n, d in pf.items() if d["kept"] == 0]
+        self.assertEqual(len(loser), 1, "应恰有一个源被吃光（排序靠后）")
+        self.assertEqual(pf[loser[0]]["discarded_dup"], 3)
+        winner = [n for n, d in pf.items() if d["kept"] == 3][0]
+        self.assertEqual(pf[winner]["discarded_dup"], 0, "胜出的源不该记dup")
+
+    def test_stale_outage_and_dup_give_different_attribution(self):
+        """对照：源劣化（旧闻）与跨源同题必须归因到不同键。
+
+        修复前两者都只表现为 kept=0，指标无法区分。
+        """
+        ut, cd = "U.Today (Meme)", "CoinDesk"
+        titles = ["Shiba Inu price prediction: analysts eye rebound",
+                  "DOGE ETF inflows surge as institutional interest grows"]
+        stale_entry = {"title": "old news", "summary": "s",
+                       "link": "https://x.test/old",
+                       "published_parsed": (
+                           datetime.now(timezone.utc)
+                           - timedelta(hours=m.MAX_NEWS_AGE_HOURS + 10)).timetuple()}
+        fetcher = self._run_fetch(
+            {ut: "https://ut.test/rss", cd: "https://cd.test/rss"},
+            {ut: [self._feed_entry(t) for t in titles],
+             cd: [dict(stale_entry, title=f"old {i}") for i in range(6)]})
+        pf = fetcher.stats["per_feed"]
+        self.assertEqual(pf[cd]["discarded_stale"], 6, "劣化源的缺口全在旧闻")
+        self.assertEqual(pf[cd]["discarded_dup"], 0, "劣化源不该记跨源同题")
+        self.assertEqual(pf[ut]["discarded_stale"], 0, "好源不该记旧闻")
+
+    def test_discard_increments_thread_safe(self):
+        """R621：按源丢弃也是10 线程并发的读-改-写，必须持锁。
+
+        不持锁会丢增量 → 归因数小于实际 → 缺口恒等式在生产里悄悄不成立，
+        而这正是本轮唯一的判据。锁用 _stats_lock（与既有 helper 同规约）。
+        """
+        import threading
+        fetcher = m.NewsFetcher()
+        n_threads, n_each = 8, 500
+
+        def _hammer():
+            for _ in range(n_each):
+                fetcher._stat_feed_discard("Feed-Y", "dup")
+
+        ts = [threading.Thread(target=_hammer) for _ in range(n_threads)]
+        for t in ts:
+            t.start()
+        for t in ts:
+            t.join()
+        self.assertEqual(fetcher.stats["per_feed"]["Feed-Y"]["discarded_dup"],
+                         n_threads * n_each)
+
+    @staticmethod
+    def _feed_entry(title):
+        return {"title": title, "summary": "summary " + title[:20],
+                "link": "https://x.test/" + title[:20].replace(" ", "-")}
+
+    def _run_fetch(self, urls, payloads):
+        """以假 http_get/feedparser 驱动真实 fetch_candidates（全程离线）"""
+        class _Fp:
+            def __init__(self, entries):
+                self.entries = entries
+                self.bozo = 0
+
+        class _Resp:
+            def __init__(self, name):
+                self.status_code = 200
+                self._name = name
+
+            def close(self):
+                pass
+
+        def _http_get(url, **kw):
+            for name, u in urls.items():
+                if url == u:
+                    return _Resp(name)
+            raise AssertionError(f"未预期的 URL: {url}")
+
+        feeds = [{"name": n, "url": u, "lang": "en"} for n, u in urls.items()]
+        fetcher = m.NewsFetcher()
+        orig_rread = m._read_response_capped
+        m._read_response_capped = lambda resp, cap: {"__feed__": resp._name}
+        # R621：feedparser.parse 必须用 patch.object 上下文管理器还原——直接赋值
+        # （`m.feedparser.parse = ...`）是**永久改写模块对象**，会泄漏给后续测试。
+        # 实测本类跑在 TestFeedBodyBounded 之前时，泄漏导致 4 例失败
+        # （真实解析器被永久换成桩，后续用例拿到的body 形态全错）。
+        try:
+            with patch.object(m, "RSS_FEEDS", feeds), \
+                 patch.object(m, "http_get", _http_get), \
+                 patch.object(m.feedparser, "parse",
+                              lambda body: _Fp(payloads[body["__feed__"]])):
+                fetcher.fetch_candidates(_StubCache(), limit_per_feed=10)
+        finally:
+            m._read_response_capped = orig_rread
+        return fetcher
+
+    def test_run_fetch_does_not_leak_global_patches(self):
+        """R621 回归守卫：_run_fetch 不得永久改写模块级对象。
+
+        首版用 `m.feedparser.parse = lambda ...` 赋值（而非 patch.object），
+        **永久替换了模块对象**，泄漏给后续测试：全量回归里 TestFeedBodyBounded
+        等 4 例因此失败，而它们单独跑全过——典型的顺序依赖污染。
+        这类 bug 只在「全量」下暴露，必须有守卫钉住。
+        """
+        before = m.feedparser.parse
+        urls = {"F1": "https://a.test/rss"}
+        self._run_fetch(urls, {"F1": [self._feed_entry("some headline here")]})
+        self.assertIs(m.feedparser.parse, before, "feedparser.parse 被永久改写了")
+
+    def test_helper_drops_zero_entry_sources(self):
+        """entries==0 的源不落（该源本轮没被抓到，区别于"抓到但空"）"""
+        stats = {"per_feed": {"A": {"entries": 0, "kept": 0}, "B": {"entries": 3}}}
+        self.assertEqual(list(m.per_feed_yield_telemetry(stats)), ["B"])
+
+
 class TestMergeScriptAtomic(unittest.TestCase):
     """合并脚本原子写：成功后无 tmp 残留（残留会被 workflow 的 git add 误收）"""
 
@@ -9518,10 +9742,16 @@ class TestRunMainSemantics(unittest.TestCase):
                 rows = [json.loads(l) for l in f if l.strip()]
             run_row = next(r for r in rows if r.get("outcome") == "run_summary")
             # 源名首词规约（与 Step Summary 渲染一致）；零入选源同样留痕——
-            # 死重候选的判定依据就是它
+            # 死重候选的判定依据就是它。
+            # R621：三个 discarded_* 一并落行，且桶里缺键时补 0——遥测写侧永远
+            # 字段齐全，报表侧因此不必区分"缺键"与"值为 0"。
             self.assertEqual(run_row.get("per_feed_yield"), {
-                "CryptoPotato": {"entries": 5, "kept": 2},
-                "Decrypt": {"entries": 4, "kept": 0},
+                "CryptoPotato": {"entries": 5, "kept": 2,
+                                 "discarded_stale": 0, "discarded_cached": 0,
+                                 "discarded_dup": 0},
+                "Decrypt": {"entries": 4, "kept": 0,
+                            "discarded_stale": 0, "discarded_cached": 0,
+                            "discarded_dup": 0},
             })
         finally:
             self._teardown(patches, tmpdir)
@@ -9698,6 +9928,73 @@ class TestRunMainSemantics(unittest.TestCase):
             self.assertEqual(run_row.get("feeds_empty_sources"), "EmptyFeed (测试源)")
         finally:
             self._teardown(patches, tmpdir)
+
+    def test_zero_candidate_run_summary_records_per_feed_yield(self):
+        """R621：per_feed_yield 补进零候选轮——最需要归因的轮次恰恰看不到它。
+
+        该路径注释自称"字段与主路径同 schema"，但此字段一直缺席。于是
+        「源全被去重吃掉」与「源根本没出活」在遥测里同貌（都只有
+        candidates=0），而这正是最需要逐源归因的场景。
+        """
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[])
+        try:
+            import json
+            m.NewsFetcher.return_value.stats["per_feed"] = {
+                "CryptoPotato (山寨币/Meme热点)": {
+                    "entries": 9, "kept": 0, "discarded_stale": 1,
+                    "discarded_cached": 2, "discarded_dup": 6},
+                "SilentFeed (测试源)": {"entries": 0, "kept": 0},
+            }
+            with self.assertRaises(SystemExit) as cm:
+                m._run_main()
+            self.assertEqual(cm.exception.code, 0)
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertEqual(run_row.get("per_feed_yield"), {
+                "CryptoPotato": {"entries": 9, "kept": 0, "discarded_stale": 1,
+                                 "discarded_cached": 2, "discarded_dup": 6},
+            })
+            self.assertNotIn("SilentFeed", run_row.get("per_feed_yield", {}),
+                             "entries==0 的源按设计不落（该源本轮没被抓到）")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_both_run_summary_paths_share_one_yield_shape(self):
+        """R621：成功路径与零候选早退路径必须共用 per_feed_yield_telemetry。
+
+        口径曾写成两处字面量——加字段时必漏一处（本次即先写一处、审 diff
+        时才发现另一处还缺）。守卫钉住"两条路径产出同构"，口径漂移在测试里就红。
+        """
+        per_feed = {"U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)": {
+            "entries": 6, "kept": 2, "discarded_stale": 1,
+            "discarded_cached": 1, "discarded_dup": 2}}
+        via_helper = m.per_feed_yield_telemetry({"per_feed": per_feed})
+        self.assertEqual(via_helper, {"U.Today": {
+            "entries": 6, "kept": 2, "discarded_stale": 1,
+            "discarded_cached": 1, "discarded_dup": 2}})
+
+        for dry, label in ((True, "成功路径"), (False, "零候选早退路径")):
+            tmpdir, paths = self._iso_files()
+            patches = self._base_patches(
+                tmpdir, paths, dry=dry,
+                candidates=[self._candidate()] if dry else [])
+            try:
+                import json
+                m.NewsFetcher.return_value.stats["per_feed"] = per_feed
+                if dry:
+                    m._run_main()
+                else:
+                    with self.assertRaises(SystemExit):
+                        m._run_main()
+                with open(paths["metrics"], encoding="utf-8") as f:
+                    rows = [json.loads(l) for l in f if l.strip()]
+                run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+                self.assertEqual(run_row.get("per_feed_yield"), via_helper,
+                                 f"{label} 与 helper 口径不一致")
+            finally:
+                self._teardown(patches, tmpdir)
 
     def test_quota_recheck_blocks_second_post_mid_run(self):
         """R237：max_posts>1 时的 24h 配额逐条复查——workflow 的 max_posts

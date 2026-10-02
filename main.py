@@ -251,6 +251,31 @@ _RUN_SUMMARY_ZERO_COUNTS = {
 }
 
 
+def per_feed_yield_telemetry(stats: Dict[str, Any]) -> Dict[str, Dict[str, int]]:
+    """R621：fetcher.stats["per_feed"] → run_summary 的 per_feed_yield 字段。
+
+    单点定义，供成功路径与零候选早退路径共用——R621 补零候选路径的 per_feed_yield
+    时，两处各写一份字面量，加字段就得改两处（本次即先写了一处、差点漏另一处）。
+    口径：
+    - 键取源名首词（R220 规约，与 Step Summary 渲染一致，9 源首词互不冲突）
+    - entries==0 的源不落（本轮该源没被抓到，区别于"抓到但空"——后者走
+      feeds_empty_sources）
+    - 缺失键补 0（R621 原则 4：遥测字段必须"可缺失"，但写侧永远给齐，
+      这样报表侧不必区分"缺键"与"值为 0"）
+    """
+    return {
+        name.split(" ")[0]: {
+            "entries": int(d.get("entries") or 0),
+            "kept": int(d.get("kept") or 0),
+            "discarded_stale": int(d.get("discarded_stale") or 0),
+            "discarded_cached": int(d.get("discarded_cached") or 0),
+            "discarded_dup": int(d.get("discarded_dup") or 0),
+        }
+        for name, d in (stats.get("per_feed") or {}).items()
+        if isinstance(d, dict) and (d.get("entries") or 0) > 0
+    }
+
+
 def append_run_summary(**overrides) -> None:
     """写一条 run_summary 遥测，维护"每个 dispatch 恰好一条"的不变量。
 
@@ -1830,9 +1855,26 @@ class NewsFetcher:
                       "injection_feeds": {},
                       "campaign_boost_hits": 0,  # R193：活动币加权命中候选数
                       "campaign_off_pool": [],    # R201：不在标的池的活动币
-                      "per_feed": {}}  # feed_name -> {"entries": 扫描, "kept": 入选}
-        # _fetch_single_feed 跑在 10 线程池里：计数器 += 非原子，list.append/setdefault
-        # 混用会丢增量，Step Summary 的吞吐数字对不上。工作线程一律走下面三个带锁 helper。
+                      # R621：feed_name -> {"entries" 扫描, "kept" 入选,
+                      # "discarded_stale"/"discarded_cached"/"discarded_dup" 归因}；
+                      # 桶形状由 _per_feed_bucket 单点定义，勿在此另写字面量
+                      "per_feed": {}}
+        # R621：per_feed 每源补discarded_stale / discarded_cached / discarded_dup 三个
+        # 归因计数。入选率此前只记entries/kept，把三种根因压成一个数——离线复现
+        # （两源报道完全同题事件）证明：好源被打成 0%、坏源也是 0%，指标无法区分，
+        # 而三者处置动作完全不同（换源 / 调时效 / 什么都不用做）。这三个键让
+        # 「某源入选率低」第一次可归因。历史遥测无这些键，报表一律 .get(...,0)。
+        #
+        # 为什么必须按源记而不能靠全局 stale/cached/near_dup 反推：
+        #  - cached 的 news_id seed 含 feed_name（generate_news_id），**不跨源命中**，
+        #    它拦的是「本源 RSS 重复推送自己已发过的条目」，纯属本源现象；
+        #  - stale 是本源条目自身的时效问题；
+        #  - near_dup 是跨源去重，**被吃的是排序靠后的那个源**（谁被吃取决于
+        #    impact_score 排序，逐轮会变），全局单计数无法归因到源。
+        # 实测U.Today 缺口与全局 cached 的 r=+0.77（强相关），而 near_dup 仅
+        # +0.26——但没有按源记录就只能靠相关系数猜，这正是要补的证据。
+        # R621：默认值 0 保证 _stat_feed_entry 建表即带齐三个键，避免读-改-写时
+        # KeyError；dict 读-改-写在线程池里非原子，一律持锁（与既有 helper 同规约）。
         self._stats_lock = threading.Lock()
 
     def _stat_inc(self, key: str, delta: int = 1) -> None:
@@ -1843,9 +1885,32 @@ class NewsFetcher:
         with self._stats_lock:
             self.stats["feeds_failed"].append(name)
 
+    # R621：per_feed 单源桶的初始化集中在此 —— 三个归因键与 entries/kept 同步建齐。
+    # 缺一处就会在 _stat_feed_discard 的读-改-写里抛 KeyError（跨源的偶然时序下
+    # 才发作，属最坏形态），故不允许调用方各写各的字典字面量。
+    _PER_FEED_KEYS = ("entries", "kept", "discarded_stale", "discarded_cached", "discarded_dup")
+
+    @classmethod
+    def _per_feed_bucket(cls, name: str) -> Dict[str, int]:
+        return {k: 0 for k in cls._PER_FEED_KEYS}
+
     def _stat_feed_entry(self, name: str) -> None:
         with self._stats_lock:
-            self.stats["per_feed"].setdefault(name, {"entries": 0, "kept": 0})["entries"] += 1
+            self.stats["per_feed"].setdefault(name, self._per_feed_bucket(name))["entries"] += 1
+
+    def _stat_feed_discard(self, name: str, reason: str) -> None:
+        """R621：按源记丢弃原因（reason ∈ stale / cached / dup）。
+
+        与 _stat_inc 的全局计数**成对调用**，不是替代：全局数回答"这一轮总共
+        扔了多少"，按源数回答"是谁扔的"。两者缺一，看板就退回R621 修复前的
+        不可归因状态。未知 reason 静默忽略（不抛）——遥测侧绝不能因为新增了
+        调用点就把整轮抓取带崩（旁路组件不得阻塞主流程）。
+        """
+        if reason not in ("stale", "cached", "dup"):
+            return
+        key = f"discarded_{reason}"
+        with self._stats_lock:
+            self.stats["per_feed"].setdefault(name, self._per_feed_bucket(name))[key] += 1
 
     def _stat_empty(self, name: str) -> None:
         with self._stats_lock:
@@ -2458,6 +2523,7 @@ class NewsFetcher:
         age_h = self.parse_entry_age_hours(entry)
         if age_h is not None and age_h > MAX_NEWS_AGE_HOURS:
             self._stat_inc("stale")            # 全局聚合（报表/遥测口径）
+            self._stat_feed_discard(name, "stale")   # R621：按源归因（与全局成对，不替代）
             if feed_counters is not None:       # 本源线程局部累加（诊断日志，防跨线程串号）
                 feed_counters["stale"] = feed_counters.get("stale", 0) + 1
             return None
@@ -2465,6 +2531,9 @@ class NewsFetcher:
         news_id = self.generate_news_id(entry, name)
         if cache_mgr.is_cached(news_id):
             self._stat_inc("cached")
+            # R621：news_id 的 seed 含 feed_name，故cached 只拦「本源 RSS 重复推送
+            # 自己已发过的条目」，不跨源。它是纯粹的本源现象，按源记是准确的。
+            self._stat_feed_discard(name, "cached")
             return None
 
         # summary 访问统一用 dict 式 .get()：feedparser 的 FeedParserDict 是 dict 子类
@@ -2885,6 +2954,13 @@ class NewsFetcher:
             dup_of = self._match_dedup_index(item["title"], dedup_index, DUP_SIMILARITY_THRESHOLD)
             if dup_of is not None:
                 self.stats["near_dup"] += 1
+                # R621：按源归因。被吃掉的是**排序靠后**的那个源（谁被吃取决于
+                # impact_score 排序，逐轮会变），所以全局 near_dup 单计数无法回答
+                # 「哪个源专发同题」——这正是入选率不可归因的另一半根因。
+                # source 缺失/为 ? 时不入桶：那是候选字典异常，不是源的现象。
+                _dsrc = item.get("source")
+                if _dsrc and _dsrc != "?":
+                    self._stat_feed_discard(_dsrc, "dup")
                 logger.info(f"近似重复热点已跳过: {item['title'][:60]} (≈ 历史: {dup_of[:60]})")
                 continue
             unique_candidates.append(item)
@@ -8718,6 +8794,10 @@ def _run_main():
             feeds_failed_sources=" | ".join(fetcher.stats.get("feeds_failed") or []) or None,
             feeds_parked_sources=" | ".join(fetcher.stats.get("feeds_parked") or []) or None,
             feeds_empty_sources=" | ".join(fetcher.stats.get("feeds_empty_sources") or []) or None,
+            # R621：per_feed_yield 补进零候选轮——上方注释自称"字段与主路径同 schema"，
+            # 但此字段一直缺席，于是**最需要归因的轮次（一条候选都没出）恰恰看不到
+            # 每源扫描/入选**：「源全被去重吃掉」与「源根本没出活」在遥测里同貌。
+            per_feed_yield=per_feed_yield_telemetry(fetcher.stats),
             # R273：注入截断计数（零候选轮同样可能刚截过注入源——与源健康同维度）
             injection_hits=fetcher.stats.get("injection_hits", 0),
             # R274：按源归因（空 dict 转 None——未命中不落空壳字段）
@@ -9446,11 +9526,13 @@ def _run_main():
         #（且只列前 5 名），历史不可回查；"某源扫了 N 条却 0 入选"的源治理决策
         #（换源/撤源）一直没有数据面。键取源名首词（与 Step Summary 渲染同规约，
         # 9 源首词互不冲突），entries==0 的源不落（本轮该源没被抓到）。
-        "per_feed_yield": {
-            name.split(" ")[0]: {"entries": int(d.get("entries") or 0),
-                                 "kept": int(d.get("kept") or 0)}
-            for name, d in (fetcher.stats.get("per_feed") or {}).items()
-            if isinstance(d, dict) and (d.get("entries") or 0) > 0},
+        # R621：三个 discarded_* 一并落行——只有 entries/kept 时，入选率把
+        # 「源专发同题（dup）」「源重复推送已发条目（cached）」「源发旧闻（stale）」
+        # 三种根因压成一个数，离线复现已证明好源与坏源都能被打成同一个低入选率，
+        # 换源决策因此无依据。缺失键一律 0（历史行/旧代码路径都安全，R621 原则 4）。
+        # R621：口径由 per_feed_yield_telemetry 单点定义，成功路径与零候选
+        # 早退路径共用——两处各写一份字面量时，加字段必漏一处（本次即然）。
+        "per_feed_yield": per_feed_yield_telemetry(fetcher.stats),
         "feeds_ok": fetcher.stats.get("feeds_ok", 0),
         "feeds_failed": len(fetcher.stats.get("feeds_failed", [])),
         # R278：硬故障源名——计数自 R90 起就在，但生产三个实证轮（09-17 ×2、

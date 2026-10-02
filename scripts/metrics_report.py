@@ -637,7 +637,11 @@ def summarize(rows):
         # R216：门槛校准两端顶分（窗口内最大，None=窗口内没有该类候选）
         "token_limit_capped_top": None, "token_limit_bypass_top": None,
         # R220：每源入选率——源名首词 → [扫描, 入选]（源治理数据面）
+        # R621：桶扩为 [扫描, 入选, 旧闻, 重复推送, 跨源同题]；另置
+        # feed_yield_attr 记录窗口内是否**出现过**归因字段（区别于"归因累加为 0"
+        # = 观测到确实没丢，见累加处注释）
         "feed_yield": {},
+        "feed_yield_attr": False,
         # R334：R273/R274 注入截断（injection_hits/injection_feeds）自写侧起
         # 只有日志 + Step Summary 两个易失出口；R275 明言「人工第一眼巡检的页面
         # 完全静默…最后缺口」但只补了 write_github_step_summary。metrics_report
@@ -1116,9 +1120,22 @@ def summarize(rows):
             # R220：每源入选率累加（有则收，历史行无字段不进）
             for _fname, _fy in (r.get("per_feed_yield") or {}).items():
                 if isinstance(_fy, dict):
-                    _agg = runs_tmp["feed_yield"].setdefault(_fname, [0, 0])
+                    # R621：桶从 [扫描, 入选] 扩到 5 元组，末三位是丢弃归因。
+                    # 历史行只有前两项 => 归因累加 0（R621 原则 4：缺失即 0，
+                    # 不因旧数据缺字段而崩）。**但"累加出 0"与"字段缺失"必须
+                    # 可区分**：前者是观测到没丢，后者是没观测过。故另置
+                    # feed_yield_attr 布尔，而不是靠桶长度去反推（桶总是 5 长，
+                    # 反推必然误判——这正是 R617 isinstance(int/float) 那类坑）。
+                    _agg = runs_tmp["feed_yield"].setdefault(
+                        _fname, [0, 0, 0, 0, 0])
                     _agg[0] += int(_fy.get("entries") or 0)
                     _agg[1] += int(_fy.get("kept") or 0)
+                    _agg[2] += int(_fy.get("discarded_stale") or 0)
+                    _agg[3] += int(_fy.get("discarded_cached") or 0)
+                    _agg[4] += int(_fy.get("discarded_dup") or 0)
+                    if any(k in _fy for k in ("discarded_stale",
+                                              "discarded_cached", "discarded_dup")):
+                        runs_tmp["feed_yield_attr"] = True
             # R334：注入截断（R273/R274 写侧，报表此前零出口）
             _ih = _num(r.get("injection_hits"))
             if _ih is not None and _ih > 0:
@@ -1591,14 +1608,44 @@ def render_text(s, rows=None):
         if calib:
             lines.append(f"  🎚️ 限流门槛校准: {' / '.join(calib)}（顶分贴门槛即复评）")
         # R220：每源入选率——0% 源是"扫描了却从未进入候选池"的死重候选，
-        # 换源/撤源决策首次有可回查数据面（此前只进易失 Step Summary）
+        # 换源/撤源决策首次有可回查数据面（此前只进易失 Step Summary）。
+        # R621：入选率带丢弃归因。此前只有 入选/扫描 两个数，把三种根因压成
+        # 一个比率——离线复现证明「好源被跨源去重吃掉」与「坏源发旧闻」都能
+        # 渲染成同一个低入选率，换源决策因此无依据。现在每个入选率数字后面
+        # 附主导丢弃原因，且 ⚠️ 只在**源自身问题**（旧闻/重复推送）时点亮：
+        # 被跨源去重吃掉不是源的过错（R621 判据：告警必须指向可处置的根因）。
         if runs.get("feed_yield"):
             parts = []
-            for _fname, (_ents, _kept) in sorted(runs["feed_yield"].items(),
-                                                 key=lambda x: (-x[1][1], -x[1][0])):
-                flag = " ⚠️" if _ents >= 20 and _kept == 0 else ""
-                parts.append(f"{_fname} {_kept}/{_ents}{flag}")
+            # R621：判据是「窗口内有没有行携带 discarded_* 字段」（累加期置位
+            # feed_yield_attr），而**不是**「有没有非零丢弃值」——一个真的一条
+            # 都没被丢的源（25/25）也必须免于"归因暂无数据"的误报，那会把健康源
+            # 说成不可信。
+            _has_attr = bool(runs.get("feed_yield_attr"))
+            for _fname, _v in sorted(runs["feed_yield"].items(),
+                                     key=lambda x: (-x[1][1], -x[1][0])):
+                _ents, _kept = _v[0], _v[1]
+                # 归因取最大项；并列时不猜（留空），避免把"原因不明"渲染成有因
+                _ds, _dc, _dd = (_v + [0, 0, 0])[2:5]
+                _dom, _domn = max(((_ds, "旧闻"), (_dc, "重复推送"), (_dd, "跨源同题")),
+                                  key=lambda t: t[0])
+                # 并列时不猜（渲染成"原因不明"），避免把不确定的归因说成有因
+                _tied = sum(1 for x in (_ds, _dc, _dd) if x == _dom) > 1
+                _why = ""
+                if _dom > 0:
+                    _why = f"，主因{'并列' if _tied else _domn} {_dom}"
+                # ⚠️ 的判据从「kept==0」收紧为「kept==0 且主因是源自身问题」。
+                # R621：被跨源去重吃光是**别的源更优**的正常结果（离线复现里
+                # 那个 0% 入选的源是好源），标⚠️ 会把运营引去撤掉健康源。
+                flag = " ⚠️" if (_ents >= 20 and _kept == 0
+                                  and (_dom > 0 and not _tied and _domn != "跨源同题")) else ""
+                parts.append(f"{_fname} {_kept}/{_ents}{_why}{flag}")
             lines.append(f"  📡 源入选率(入选/扫描): {' · '.join(parts)}")
+            if not _has_attr:
+                # R621：归因全缺= 窗口内全是R621 上线前的历史行。此时**不能**
+                # 读成"这些源一条都没被丢"，那会把未知显示成通过（R617纪律：
+                # 沉默不是通过）。
+                lines.append("     ℹ️ 丢弃归因暂无数据（本窗口遥测均为 R621 之前的历史行，"
+                             "入选率低无法区分源劣化与跨源同题，暂勿据此换源）")
         # R613：源健康告警的新鲜度。三类都是全史累计，缺时间维度时陈迹与活警
         # 同貌（生产：注入截断最后发生距今 49h、空 feed 67h、硬故障 42h，面板
         # 仍与事发当日完全一样）。这里按"距最后一次发生多久"给新鲜度标签：

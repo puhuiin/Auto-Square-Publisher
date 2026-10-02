@@ -2987,5 +2987,115 @@ class TestR620ProviderQuality(unittest.TestCase):
         self.assertEqual(s["provider_quality"], {})
 
 
+class TestR621FeedYieldAttribution(unittest.TestCase):
+    """R621：源入选率的丢弃归因——低入选率必须能区分根因。
+
+    动机（离线复现实证，非推测）：`per_feed_yield` 此前只有 入选/扫描 两个数。
+    用真实 NewsFetcher 跑两个场景，入选率**完全一样**：
+      - 场景 A：U.Today与 CoinDesk 报道完全同题→ U.Today 0/3（它只是排序
+        靠后被跨源去重吃掉，**内容是好的**）；
+      - 场景 B：CoinDesk 全是 200h+ 旧闻 → CoinDesk 0/6（**源真的坏了**）。
+    两者都只表现为「kept 少」，而处置动作完全相反（前者什么都不用做，后者换源）。
+    R620 已立「告警必须指向可处置的根因」，本类把该纪律落到源治理面。
+    """
+
+    @staticmethod
+    def _row(pf, ts="2026-10-02T12:00:00+00:00"):
+        return {"ts": ts, "outcome": "run_summary", "candidates": 10,
+                "published": 1, "drafts": 0, "skipped_batch_dup": 0,
+                "skipped_no_token": 0, "skipped_token_limit": 0,
+                "skipped_risk_blocked": 0, "skipped_parked": 0,
+                "skipped_exception": 0, "per_feed_yield": pf}
+
+    def test_discard_reasons_accumulated_per_source(self):
+        """三个discarded_* 必须按源独立累加，不混进全局数"""
+        rows = [self._row({"A": {"entries": 10, "kept": 4,
+                                 "discarded_stale": 3, "discarded_cached": 2,
+                                 "discarded_dup": 1}}),
+                self._row({"A": {"entries": 5, "kept": 1,
+                                 "discarded_stale": 1, "discarded_cached": 2,
+                                 "discarded_dup": 1}},
+                           ts="2026-10-02T13:00:00+00:00")]
+        fy = mr.summarize(rows)["runs"]["feed_yield"]["A"]
+        self.assertEqual(fy, [15, 5, 4, 4, 2])
+        # 恒等式：缺口 = 三类丢弃之和（复现里两个场景都精确闭合）
+        self.assertEqual(fy[0] - fy[1], fy[2] + fy[3] + fy[4])
+
+    def test_main_cause_rendered_next_to_rate(self):
+        """主因必须显示在入选率旁边（否则归因数据没有消费面）"""
+        rows = [self._row({"CoinDesk": {"entries": 28, "kept": 0,
+                                         "discarded_stale": 26,
+                                         "discarded_cached": 1, "discarded_dup": 1}})]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("CoinDesk 0/28", text)
+        self.assertIn("主因旧闻 26", text)
+
+    def test_cross_source_dup_not_flagged_as_alarm(self):
+        """核心判据：被跨源去重吃光**不是源的过错**，不得标⚠️。
+
+        R621 的核心修复。离线复现里这个源是健康源，只是排序靠后。
+        报警会把运营引去撤掉好源——比不报警更坏。
+        """
+        rows = [self._row({"BlockTempo": {"entries": 22, "kept": 0,
+                                           "discarded_stale": 0,
+                                           "discarded_cached": 0,
+                                           "discarded_dup": 22}})]
+        s = mr.summarize(rows)
+        text = mr.render_text(s, rows)
+        self.assertIn("主因跨源同题 22", text)
+        line = next(ln for ln in text.splitlines() if "源入选率" in ln)
+        self.assertNotIn("⚠️", line, "跨源同题不该触发源告警")
+
+    def test_stale_dominated_zero_yield_does_flag(self):
+        """对照：主因是源自身问题（旧闻）且 0 入选 → 必须告警"""
+        rows = [self._row({"CoinDesk": {"entries": 28, "kept": 0,
+                                         "discarded_stale": 26,
+                                         "discarded_cached": 1, "discarded_dup": 1}})]
+        text = mr.render_text(mr.summarize(rows), rows)
+        line = next(ln for ln in text.splitlines() if "源入选率" in ln)
+        self.assertIn("⚠️", line)
+
+    def test_tied_causes_not_guessed(self):
+        """并列主因不得选一个当答案（不确定就说并列）"""
+        rows = [self._row({"DailyHodl": {"entries": 24, "kept": 0,
+                                         "discarded_stale": 10,
+                                         "discarded_cached": 10, "discarded_dup": 4}})]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("主因并列", text)
+        line = next(ln for ln in text.splitlines() if "源入选率" in ln)
+        self.assertNotIn("⚠️", line, "原因不明时不得升级成告警")
+
+    def test_legacy_rows_without_attribution_say_so(self):
+        """R621 原则 4 + R617「沉默不是通过」：归因全缺必须显式说明。
+
+        否则 194 行历史遥测（全无 discarded_*）会被读成"这些源一条都没被丢"，
+        把未知显示成通过。
+        """
+        rows = [self._row({"U.Today": {"entries": 1246, "kept": 899}})]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("丢弃归因暂无数据", text)
+        self.assertIn("暂勿据此换源", text)
+
+    def test_zero_discarded_renders_no_cause_clause(self):
+        """真的一条都没被丢时不该编出主因（_dom==0 → 无归因子句）"""
+        rows = [self._row({"Decrypt": {"entries": 25, "kept": 25,
+                                       "discarded_stale": 0, "discarded_cached": 0,
+                                       "discarded_dup": 0}})]
+        text = mr.render_text(mr.summarize(rows), rows)
+        line = next(ln for ln in text.splitlines() if "源入选率" in ln)
+        self.assertIn("Decrypt 25/25", line)
+        self.assertNotIn("主因", line)
+        self.assertNotIn("丢弃归因暂无数据", text)
+
+    def test_small_sample_zero_yield_not_flagged(self):
+        """样本不足（entries<20）维持旧口径不告警——避免噪声（R617 告警预算）"""
+        rows = [self._row({"Tiny": {"entries": 6, "kept": 0,
+                                    "discarded_stale": 5, "discarded_cached": 0,
+                                    "discarded_dup": 0}})]
+        text = mr.render_text(mr.summarize(rows), rows)
+        line = next(ln for ln in text.splitlines() if "源入选率" in ln)
+        self.assertNotIn("⚠️", line)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
