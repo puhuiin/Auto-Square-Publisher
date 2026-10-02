@@ -602,6 +602,17 @@ def summarize(rows):
         # 永久失败与今天 b.ai 余额耗尽同框而无时间线索，运营分不清"当前该处理"vs
         # "两周前的历史簇"（minimax R261 早已撤），加末次日期让 💀 行真正可行动。
         "permanent_failures_last": {},
+        # R616：每 provider 的**末次成功投递**时刻。R304 补了"末次永久失败"日期，
+        # 但单看日期仍无法行动——必须与"该provider 此后再没成功过"对比才能分清
+        # 两种性质完全相反的状态：
+        #   失败早于最后成功 → 已自愈（当时那个模型被换掉了，如09-08 的 minimax
+        #     随默认名改为 openrouter/free 退役，而该通道 09-29 还在成功出稿）
+        #     → 标 ℹ️ 退役簇，**不该催人工处置**（催了会让人去改一个早已修好的配置）
+        #   失败晚于最后成功 → 仍死（如 b.ai 余额 09-29 耗尽，此后没再出一篇）
+        #     → 标 ⚠️ 真需处置
+        # 生产实锤：两项都是"💀 永久失败"，但一项已自愈、一项仍需充值，
+        # 修复前同貌（都只印一个"需人工处置"）。
+        "provider_last_success": {},
         # R163：质量门拒稿正文快照（最近几条）——短回/拒答型故障只报长度无法归因
         "reject_previews": [],
         "latency_by_provider": {},
@@ -709,6 +720,18 @@ def summarize(rows):
         who = f"{prov}/{model}" if model else str(prov)
         if _is_delivered(r):
             s["by_provider"][who] += 1
+            # R616：末次成功投递时刻。**键是 provider（不含 model）**——判定"永久
+            # 失败是否已自愈"必须用provider 粒度，不能用 provider/model：
+            # 生产实锤 `Preset-openrouter/minimax/minimax-m3:free` 09-08 因模型
+            # 下架永久失败，但同一 provider 后来换成默认名 openrouter/free，
+            # 09-29 仍在成功出稿——按 model 粒度会误判成"仍死"（该模型确实
+            # 再没成功过），而运营真正要决定的是"这条通道还要不要管"。
+            # 换个模型就救活一条通道 = 已自愈。
+            if isinstance(ts, str) and ts:
+                _pp = str(prov)
+                _prev_ok = s["provider_last_success"].get(_pp)
+                if _prev_ok is None or ts > _prev_ok:
+                    s["provider_last_success"][_pp] = ts
             hour = r.get("hour_bj", "unknown")
             try:
                 hour = int(hour)
@@ -1236,23 +1259,39 @@ def _top(counter, n=TOP_N):
     return counter.most_common(n)
 
 
-def _format_permanent_failures(counter, last_seen=None):
+def _format_permanent_failures(counter, last_seen=None, last_success=None):
     """R302：把 (provider, 原因) → 次数 渲染成 '提供商 (原因 ×N)'，命中数降序
     （最该处理的排最前）；空计数器返回空串（沿用"停放的源"零命中零噪音惯例）。
-    R304：带 last_seen（(provider,原因)→末次 ISO ts）时追加 '最近 MM-DD'——
-    区分"当前该处理"与"历史退役簇"（09-08 的 minimax vs 今天的 b.ai）。"""
+    R304：带 last_seen（(provider,原因)→末次 ISO ts）时追加 '最近 MM-DD'。
+
+    R616：返回 (活警段, 退役段) 两段而非单串。判据是**末次失败与末次成功的时间
+    先后**，不是日期本身：
+      - 末次成功晚于末次失败 → 该通道此后仍在成功出稿，永久失败**已自愈**
+        （典型：某个免费模型被下架后默认名换成聚合路由，通道反而更健康了）
+        → 归入退役段，只保留信息不催人工处置；
+      - 末次失败晚于末次成功 → 此后再没成功过，**仍死**，需人工处置。
+    缺时间戳时归入活警（未知 ≠ 已解决，与 R613 同一方向）。
+    """
     if not counter:
-        return ""
+        return ("", "")
     last_seen = last_seen or {}
-    parts = []
+    last_success = last_success or {}
+    live, retired = [], []
     for (prov, label), cnt in counter.most_common():
-        seg = f"{prov} ({label} ×{cnt}"
         ts = last_seen.get((prov, label))
+        # 失败键是 provider/model，成功键只有 provider —— 取前缀匹配到最近的
+        # provider 段（键内不含空格，直接按 "/" 切第一段即 provider 名）。
+        ok = last_success.get(prov.split("/", 1)[0])
+        recovered = (isinstance(ts, str) and isinstance(ok, str)
+                     and len(ts) >= 10 and len(ok) >= 10 and ok > ts)
+        seg = f"{prov} ({label} ×{cnt}"
         if isinstance(ts, str) and len(ts) >= 10:
             seg += f", 最近 {ts[5:10]}"
+        if recovered:
+            seg += "，此后该通道已恢复出稿"
         seg += ")"
-        parts.append(seg)
-    return " | ".join(parts)
+        (retired if recovered else live).append(seg)
+    return (" | ".join(live), " | ".join(retired))
 
 
 def _provider_dispatch_order(by_provider, reject_by_provider, latency_by_provider):
@@ -1860,10 +1899,18 @@ def render_text(s, rows=None):
         lines.append(f"- 拦截 {n_rej} 次：阶段 {_top(s['reject_by_stage'])} / 模型 {_top(s['reject_by_provider'])}")
         if s["reject_reasons"]:
             lines.append(f"  高频原因 {_top(s['reject_reasons'], 5)}")
-        _perm = _format_permanent_failures(s.get("permanent_failures"),
-                                            s.get("permanent_failures_last"))
-        if _perm:
-            lines.append(f"  💀 永久失败(24h冷却): {_perm}（需人工处置：余额耗尽→充值 / 模型下架→改配置）")
+        _perm_live, _perm_retired = _format_permanent_failures(
+            s.get("permanent_failures"), s.get("permanent_failures_last"),
+            s.get("provider_last_success"))
+        # R616：活警与退役簇分两行。退役簇**不删**（安全面：曾发生过永久失败这件事
+        # 是事实），但降为ℹ️ 且不再挂"需人工处置"——那会把人引去改一个早已
+        # 自愈的配置，浪费的注意力比噪音更贵。
+        if _perm_live:
+            lines.append(f"  💀 永久失败(24h冷却): {_perm_live}"
+                         f"（需人工处置：余额耗尽→充值 / 模型下架→改配置）")
+        if _perm_retired:
+            lines.append(f"  ℹ️ 永久失败退役簇: {_perm_retired}"
+                         f"（无需处置）")
         if s.get("reject_previews"):
             lines.append("  拒稿快照（最近）:")
             for item in s["reject_previews"][-3:]:

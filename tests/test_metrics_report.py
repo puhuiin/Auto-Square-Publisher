@@ -3,6 +3,7 @@
 metrics_report.py 的离线单测（独立文件：不碰主套件，避免与他人在途改动交织）。
 CI 里与 tests/test_core.py 一起跑（见 ci.yml）。
 """
+import collections
 import importlib.util
 import io
 import json
@@ -168,9 +169,9 @@ class TestMetricsReport(unittest.TestCase):
         # 末次日期贴在各自条目：minimax→09-08，b.ai→09-22
         self.assertIn("Preset-openrouter/minimax (模型下架/404 ×2, 最近 09-08)", perm_line)
         self.assertIn("Preset-b.ai (余额/额度耗尽 ×1, 最近 09-22)", perm_line)
-        # helper 无 last_seen 时向后兼容（不带日期，不炸）
+        # helper 无 last_seen 时向后兼容（不带日期，不炸）；R616 起返回 (活警, 退役) 二元组
         self.assertEqual(
-            mr._format_permanent_failures(s["permanent_failures"]).count("最近"), 0)
+            mr._format_permanent_failures(s["permanent_failures"])[0].count("最近"), 0)
 
     def test_permanent_failures_silent_when_none(self):
         """零永久失败时不渲染 💀 行（沿用零命中零噪音惯例）；helper 契约：空→空串。"""
@@ -202,7 +203,7 @@ class TestMetricsReport(unittest.TestCase):
         # 零丢弃时不渲染（零噪音惯例）
         out2 = mr.render_text(mr.summarize([rows[1]]), [rows[1]])
         self.assertNotIn("运营报警静默丢弃", out2)
-        self.assertEqual(mr._format_permanent_failures({}), "")
+        self.assertEqual(mr._format_permanent_failures({}), ("", ""))
 
     def test_intel_degraded_counted_and_rendered(self):
         """R173：R171 写侧 intel_degraded 必须进报表——过期情报注入可聚合"""
@@ -1123,6 +1124,78 @@ class TestMetricsReport(unittest.TestCase):
         # 零残留零噪音
         s2 = mr.summarize([rows[1]])
         self.assertNotIn("残留过期日期", mr.render_text(s2, [rows[1]]))
+
+    def test_r616_permanent_failure_recovered_vs_still_dead(self):
+        """R616：💀 永久失败必须区分「已自愈」与「仍死」——两者都要处置吗？**不**。
+
+        生产实锤两例并存且此前完全同貌：
+          openrouter/minimax-m3:free 09-08 因模型下架永久失败 →但该 provider
+            后来换默认名为 openrouter/free，09-29 仍在成功出稿 → **已自愈**
+          b.ai/glm-5.3-flash 09-29 余额耗尽 → 此后再没成功出过一��� → **仍死**
+
+        判据是**末次成功 vs 末次失败的先后**，且粒度必须是 provider 而非
+        provider/model：换个模型就救活一条通道，算已自愈。
+        把已自愈的挂在「需人工处置」下，会把人引去改一个早已修好的配置。
+        """
+        rows = [
+            # 永久失败（两例）
+            {"ts": "2026-09-08T10:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "transport", "provider": "Preset-openrouter",
+             "model": "minimax/minimax-m3:free",
+             "reason": "[permanent 24h] Error code: 404 - model unlisted"},
+            {"ts": "2026-09-29T12:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "transport", "provider": "Preset-b.ai",
+             "model": "glm-5.3-flash",
+             "reason": "[credit 24h] Error code: 400 - credit insufficient"},
+            # 成功：只有 openrouter 在失败之后又成功（换了模型名）
+            {"ts": "2026-09-29T13:00:00+00:00", "outcome": "binance_published",
+             "platforms": ["binance"], "provider": "Preset-openrouter",
+             "model": "openrouter/free", "tokens": ["BTC"]},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["provider_last_success"].get("Preset-openrouter")[:10],
+                         "2026-09-29")
+        text = mr.render_text(s, rows)
+        live_line = next(ln for ln in text.split("\n") if "💀 永久失败" in ln)
+        retired_line = next(ln for ln in text.split("\n") if "永久失败退役簇" in ln)
+        # b.ai 失败晚于最后成功 → 仍在活警行
+        self.assertIn("Preset-b.ai/glm-5.3-flash", live_line)
+        # minimax 已自愈 → 只进退役簇，且不再挂"需人工处置"
+        self.assertIn("minimax-m3:free", retired_line)
+        self.assertIn("已恢复出稿", retired_line)
+        self.assertNotIn("minimax", live_line)
+        self.assertIn("需人工处置", live_line)
+        self.assertNotIn("需人工处置", retired_line)
+
+    def test_r616_no_success_record_counts_as_still_dead(self):
+        """R616 方向守卫：某通道只有永久失败记录、**从无成功投递**时，
+        判据无对照数据 → 必须归入活警（未知 ≠ 已解决，同 R613 方向），
+        绝不能因为"找不到成功记录"就当成已自愈而漏报。"""
+        rows = [
+            {"ts": "2026-09-29T12:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "transport", "provider": "Preset-zai",
+             "model": "glm-4.7-flash",
+             "reason": "[credit 24h] Error code: 400 - credit insufficient"},
+        ]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("💀 永久失败", text)
+        self.assertNotIn("退役簇", text)
+
+    def test_r616_recovered_flag_needs_both_timestamps(self):
+        """R616：缺任一时间戳都不得判已自愈（helper 层直接构造边界）。"""
+        cnt = collections.Counter({("P/m", "余额/额度耗尽"): 1})
+        last_seen = {("P/m", "余额/额度耗尽"): "2026-09-29T00:00:00+00:00"}
+        # 无成功记录 → 活警
+        live, retired = mr._format_permanent_failures(cnt, last_seen, {})
+        self.assertTrue(live and not retired)
+        # 成功早于失败 → 仍死
+        live, retired = mr._format_permanent_failures(
+            cnt, last_seen, {"P": "2026-09-20T00:00:00+00:00"})
+        self.assertTrue(live and not retired)
+        # 成功晚于失败 → 已自愈
+        live, retired = mr._format_permanent_failures(
+            cnt, last_seen, {"P": "2026-10-01T00:00:00+00:00"})
+        self.assertTrue(retired and not live)
 
     def test_r613_stale_source_alarm_downgraded(self):
         """R613：源健康告警必须带新鲜度。注入截断/空 feed/硬故障都是**全史累计**，
