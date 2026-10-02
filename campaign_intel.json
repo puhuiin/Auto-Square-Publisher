@@ -7,15 +7,15 @@
     "#Megadrop"
   ],
   "incentivized_tokens": [
-    "$CT",
     "$PUMP",
-    "$BTC",
-    "$USDC",
     "$USD1",
-    "$NVDAB"
+    "$BTC",
+    "$CTUSDT",
+    "$ALGO",
+    "$USDC"
   ],
-  "strategy_guidance": "优先追贴冲刺明日（10月2日）截止的USD1 Airdrop活动，输出参与攻略引导用户瓜分奖励；结合今日新上线的CTUSDT永续合约与同期启动的CT Alpha交易竞赛，输出交易教程、冲榜技巧，引导用户参与交易获取Write to Earn返佣；还可联动PUMP交易锦标赛、10月邀请锦标赛、Binance Earn月度排行榜等活动，覆盖交易、邀请、理财多场景需求，提升内容曝光与转化。",
-  "last_updated": "2026-10-01T17:50:18.699591Z",
+  "strategy_guidance": "今日为USD1空投活动最后截止日，优先追贴输出空投参与冲刺攻略抢占流量；同时结合10月1日新上线的CTUSDT合约、 ongoing的PUMP与ALGO交易锦标赛输出交易参与指南，引导用户交易获取返佣，还可搭配Starter Carnival任务攻略、新上线bStocks交易对解读等内容带对应活动标签，最大化获取Write2Earn奖励。",
+  "last_updated": "2026-10-02T06:04:08.256852Z",
   "_feed_health": {},
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
