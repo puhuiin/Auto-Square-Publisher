@@ -11,6 +11,7 @@ import random
 import re
 import sys
 import ast
+import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
@@ -15434,6 +15435,75 @@ class TestR627StepSummarySourceStarvation(unittest.TestCase):
         seg = line.split("LegacyFeed")[1].split("（入选")[0]
         self.assertNotIn("主因", seg,
                          "无归因数据时编了主因（行尾处置说明里的不算）")
+
+class TestR632DraftExistsReturnsEvidence(unittest.TestCase):
+    """R632：草稿存在性检查必须返回**哪个文件**，而不只是 bool。
+
+    原实现 `_draft_exists(news_id) -> bool` 在 `os.walk` 里**拿到了文件名却丢掉
+    it**，于是 publish() 的日志只能跟`meta['title'][:40]`——而 title 在部分路径下
+    为空。CI 日志实录就是「跳过重复导出: 」（冒号后什么都没有）。
+
+    危害不是"日志不好看"：**看不到是哪个草稿，就无法判断跳过是否正确**
+    （草稿已被 KEEP_DRAFTS 清理？slug 规则变了？文件名撞车？），也就无法处置。
+    这是 R617「结论必须有出口」的又一形态：**检测存在了，但证据没出口**。
+    """
+
+    def _exporter(self, tmpdir):
+        exp = m.OKXDraftExporter()
+        old = m.OKXDraftExporter.DRAFTS_DIR
+        m.OKXDraftExporter.DRAFTS_DIR = tmpdir
+        self.addCleanup(lambda: setattr(m.OKXDraftExporter, "DRAFTS_DIR", old))
+        return exp
+
+    def test_returns_path_when_found(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, "2026-10-03"))
+            exp = self._exporter(d)
+            slug = re.sub(r"[^\w-]", "", "newsid1234567890abcdef")[:24]
+            fn = f"20261003_120000_{slug}.md"
+            with open(os.path.join(d, "2026-10-03", fn), "w", encoding="utf-8") as f:
+                f.write("x")
+            found = exp._find_existing_draft("newsid1234567890abcdef")
+            self.assertIsNotNone(found, "已有草稿却没找到")
+            self.assertTrue(found.endswith(fn), f"返回的不是该文件: {found}")
+
+    def test_returns_none_when_absent(self):
+        with tempfile.TemporaryDirectory() as d:
+            exp = self._exporter(d)
+            self.assertIsNone(exp._find_existing_draft("nothing-here"))
+
+    def test_empty_news_id_returns_none(self):
+        with tempfile.TemporaryDirectory() as d:
+            exp = self._exporter(d)
+            self.assertIsNone(exp._find_existing_draft(""))
+
+    def test_log_message_contains_evidence_not_empty_title(self):
+        """回归：日志里必须出现文件名，不能是空的 title。
+
+        用真实 publish() 路径验证（不经patch）——原来那条日志跟的是
+        `meta['title'][:40]`，title 缺失时就是「跳过重复导出: 」。
+        """
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, "2026-10-03"))
+            exp = self._exporter(d)
+            nid = "newsid_evidence_check_001"
+            slug = re.sub(r"[^\w-]", "", nid)[:24]
+            fn = f"20261003_120000_{slug}.md"
+            with open(os.path.join(d, "2026-10-03", fn), "w", encoding="utf-8") as f:
+                f.write("x")
+            # logger 名是 SquarePosterUltimate（项目自定义），不是 "main"——
+            # assertLogs 用错名字会报 "no logs triggered"，看起来像"日志没打"
+            with self.assertLogs(m.logger.name, level="INFO") as cm:
+                # meta 不带 title —— 这正是原实现打出空字符串的场景
+                exp.publish("正文", meta={"news_id": nid})
+            joined = "\n".join(cm.output)
+            self.assertIn(fn, joined,
+                          "日志未指出是哪个草稿文件——无法判断跳过是否正确")
+
+    def test_old_bool_api_is_gone(self):
+        """守卫：不得退回 bool 版（证据出口会再次丢失）"""
+        self.assertFalse(hasattr(m.OKXDraftExporter, "_draft_exists"),
+                         "_draft_exists 复活了——会再次丢掉文件名")
 
 
 if __name__ == "__main__":

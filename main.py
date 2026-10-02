@@ -7428,26 +7428,47 @@ class OKXDraftExporter(BasePublisher):
     DRAFTS_DIR = os.path.join(BASE_DIR, "drafts")
     KEEP_DRAFTS = 30  # 草稿保留上限，防止仓库膨胀
 
-    def _draft_exists(self, news_id: str) -> bool:
-        """按 news_id 检查是否已有草稿：币安失败重试时不再重复导出同一故事"""
+    def _find_existing_draft(self, news_id: str) -> Optional[str]:
+        """按 news_id 找出已有草稿的**文件名**：币安失败重试时不重复导出同一故事。
+
+        R632：原实现叫 `_draft_exists` 且返回 bool——**它知道是哪个文件却不说**，
+        于是「跳过重复导出」这条日志后面跟的是 `meta['title'][:40]`，而title
+        在部分路径下为空（日志实录就是空），读者只看到「跳过重复导出: 」。
+        **看不到是哪个草稿，就无法判断跳过是否正确**（草稿早被清理？slug
+        规则变了？文件名撞车？），也就无法处置——这是 R617「结论必须有出口」
+        的又一形态：**检测存在了，但证据没出口**。
+
+        返回完整路径（找不到返�� None），日志与测试都按"证据"用。
+        顺带修 R209 式的 `title` 空值兜底：**有文件名就不该再依赖 title**。
+        """
         if not news_id or not os.path.isdir(self.DRAFTS_DIR):
-            return False
+            return None
         slug = re.sub(r"[^\w-]", "", news_id)[:24]
         if not slug:
-            return False
+            return None
         for root, _dirs, fnames in os.walk(self.DRAFTS_DIR):
-            for fn in fnames:
+            for fn in sorted(fnames):
                 if fn.endswith(f"_{slug}.md"):
-                    return True
-        return False
+                    return os.path.join(root, fn)
+        return None
 
     def publish(self, content: str, image_url: Optional[str] = None,
                 ensure_tokens: Optional[List[str]] = None, meta: Optional[Dict[str, Any]] = None) -> bool:
         self.skipped_reason = None
         try:
             meta = meta or {}
-            if self._draft_exists(meta.get("news_id", "")):
-                logger.info(f"📝 该新闻已有草稿（此前币安失败待重试），跳过重复导出: {meta.get('title', '')[:40]}")
+            _existing = self._find_existing_draft(meta.get("news_id", ""))
+            if _existing:
+                # R632：日志必须带**证据**（是哪个草稿文件），不能只说"已存在"。
+                # 原来跟的是 meta['title'][:40]，而 title 在部分路径下为空 ⇒
+                # 日志实录是「跳过重复导出: 」，读者无法判断跳过是否正确
+                # （草稿已被清理？slug 规则变了？撞车？）。有文件名就不必依赖 title。
+                try:
+                    _shown = os.path.relpath(_existing, BASE_DIR)
+                except ValueError:
+                    _shown = _existing
+                logger.info(f"📝 该新闻已有草稿（此前币安失败待重试），跳过重复导出: "
+                            f"{_shown}")
                 # 仍返回 False（保持"未产生新动作"的语义），但显式标记为幂等跳过，
                 # 交由主流程按"已投递"处理，不再计入失败与熔断。
                 self.skipped_reason = IDEMPOTENT_SKIP
@@ -7500,7 +7521,7 @@ class OKXDraftExporter(BasePublisher):
             ]
 
             # 原子替换：草稿随 git 同步进仓库，半截 md 会污染历史；tmp 后缀非 .md，
-            # 既不会被 _draft_exists 误判，也不会被 _prune_old_drafts 误删
+            # 既不会被 _find_existing_draft 误判，也不会被 _prune_old_drafts 误删
             _atomic_write_text(path, "\n".join(lines))
             self._prune_old_drafts()
             try:
