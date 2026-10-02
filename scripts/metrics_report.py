@@ -1289,11 +1289,24 @@ def render_text(s, rows=None):
     ]
     # R330：错误报警因 0 渠道被丢弃必须单独成行——混在 outcome 分布里等于消失
     # （生产实锤：R301 permanent 报警进黑洞，_alert_state 全史为空才发现）。
+    # R614：与 R613 同源——这行是全史累计，缺时间维度时陈迹与"此刻仍在丢报警"
+    # 同貌。生产实测最后一条静默丢弃距今 66h，渠道 0 个是**持续状态**（不是
+    # 瞬时事件），所以主体措辞不变（配置指引长期有效），只补"最后发生"让
+    # 读者知道最近一次丢的是什么、隔了多久。
     if s['by_outcome'].get('alert_dropped_no_channel'):
+        _drop = [r for r in (rows or [])
+                 if r.get("outcome") == "alert_dropped_no_channel"]
+        _dlast = ""
+        if _drop:
+            _ts_d = max((str(r.get("ts") or "") for r in _drop), default="")
+            if _ts_d:
+                _dlast = _ts_d[:16].replace("T", " ")
+        _note_d = f"，最后发生 {_dlast}" if _dlast else ""
         lines.append(
             f"  📵 运营报警静默丢弃 ×{s['by_outcome']['alert_dropped_no_channel']}"
-            f"（通知渠道 0 个，permanent 失败/崩溃等错误报警未能送达——请配置"
-            f" SERVERCHAN_KEY/PUSHPLUS_TOKEN/BARK_KEY/TELEGRAM_*/WEBHOOK_URL 任一）")
+            f"（通知渠道 0 个{_note_d}，permanent 失败/崩溃等错误报警未能送达"
+            f"——请配置 SERVERCHAN_KEY/PUSHPLUS_TOKEN/BARK_KEY/TELEGRAM_*/"
+            f"WEBHOOK_URL 任一）")
     if rows is not None:
         f = funnel(rows)
         if f["attempted"]:

@@ -196,6 +196,9 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("运营报警静默丢弃", out)
         self.assertIn("×1", out)
         self.assertIn("通知渠道 0 个", out)
+        # R614：补"最后发生"时刻——这行是全史累计，缺时间维度时分不清
+        # "此刻仍在丢报警"与"半年前丢过一次"（生产：最后一条距今 66h）
+        self.assertIn("最后发生 2026-09-22 03:03", out)
         # 零丢弃时不渲染（零噪音惯例）
         out2 = mr.render_text(mr.summarize([rows[1]]), [rows[1]])
         self.assertNotIn("运营报警静默丢弃", out2)
