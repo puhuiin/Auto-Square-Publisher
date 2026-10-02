@@ -206,6 +206,12 @@ jobs:
           # （网络抖动/站点限流/目录改版）绝不让本步骤非零退出、带崩主发帖——
           # 旁路组件不得阻塞主流程（同schedule_watchdog 的 continue-on-error
           # 纪律，但这里用 shell 级兜底，省掉一个 step 的开销）。
+          #
+          # R617：覆盖面改为 AST 解析 main.py 的 extra_keys（全池 12 站，
+          # R615 只列了 2 站——历史 3 次僵尸名事件有 2 次落在盲区）；结论写入
+          # metrics.jsonl（outcome=provider_probe），由 metrics_report 消费。
+          # 遥测落盘失败也只warn 不抛，绝不阻塞发帖。metrics.jsonl 已在下方
+          # 回写白名单里，结论会随状态提交回仓库，体检面板才看得到。
           python scripts/probe_provider_models.py || echo "⚠️ 模型名核对探针失败（不影响发帖）"
           python main.py
 

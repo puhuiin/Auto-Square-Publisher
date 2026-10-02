@@ -651,6 +651,16 @@ def summarize(rows):
         # 49h、空 feed 67h、硬故障 42h——面板却与事发当日完全同貌。
         # 加"最后发生"让告警自带新鲜度，陈迹降级为ℹ️、不再占用⚠️ 视觉预算。
         "source_alarm_last": {},
+        # R617：provider 默认模型名探针（scripts/probe_provider_models.py）的消费面。
+        # 动机是 R612 原则的极端形态——R615 把「默认名是否还是僵尸名」自动化了，
+        # 但结论只print 到 Actions 日志，而 R614 已确认通知渠道 0 个：日志不会
+        # 到达任何人。**探针在跑，答案被丢弃**，比没有探针更危险（它看起来
+        # 在防R263）。这里消费 outcome=provider_probe 行，取**最新一轮**结论
+        # （行按时间序追加，后写覆盖先写 = 最新值，同 R113 next_slot_frees 口径）。
+        # 关键：sites_ok 与 sites_total 必须**同时**渲染。只显存活数会让
+        # 「核实 3/12」被读成「全绿」——未核实站（无 key / 目录不可达）是
+        # **未知**，不是通过（原则：未知 ≠ 已解决，同 R613方向）。
+        "provider_probe": None,
         # R342：R276 写侧扫描漏斗（fetched/stale/cached/near_dup）自写侧起只有
         # 扫描日志 + Step Summary「管线吞吐」两个易失出口，metrics_report（持久
         # 巡检面）零消费——R276 注释明言 durable 趋势可查（near_dup 抬升=去重过
@@ -954,6 +964,24 @@ def summarize(rows):
         tok = _num(r.get("tokens_used"))
         if tok is not None:
             tok_tmp[str(prov)].append(tok)
+        # R617：provider 默认名探针结论。每轮一行，取最新一轮（后写覆盖先写）。
+        # 三态严格区分，这是本条存在的全部意义：
+        #   probe_ok=True  且 sites_ok == sites_total → 全部核实通过
+        #   probe_ok=True  但 sites_ok <  sites_total → **部分未核实**（无 key /
+        #       目录不可达）。绝不能只显存活数：那会让「核实 3/12」读成「全绿」，
+        #       而未核实站的默认名随时可能已经是僵尸名（R263 正是这么发生的）。
+        #   probe_ok=False → 探针自身没跑成，结论不可信，按活警渲染。
+        if outcome == "provider_probe":
+            runs_tmp["provider_probe"] = {
+                "ts": str(r.get("ts") or ""),
+                "ok": r.get("probe_ok") is True,
+                "total": _num(r.get("sites_total")),
+                "sites_ok": _num(r.get("sites_ok")),
+                "unknown": _num(r.get("sites_unknown")),
+                "unknown_sites": str(r.get("unknown_sites") or ""),
+                "error": str(r.get("probe_error") or ""),
+                "elapsed": _num(r.get("probe_elapsed_sec")),
+            }
         # R92：run_summary 行聚合——饱和/零候选/跳过分布的报表端消费，
         # 不再需要手写临时脚本回答"配额是否该调"（R90/R91 分析实录）
         if outcome == "run_summary":
@@ -1346,6 +1374,55 @@ def render_text(s, rows=None):
             f"（通知渠道 0 个{_note_d}，permanent 失败/崩溃等错误报警未能送达"
             f"——请配置 SERVERCHAN_KEY/PUSHPLUS_TOKEN/BARK_KEY/TELEGRAM_*/"
             f"WEBHOOK_URL 任一）")
+    # R617：provider 默认模型名探针（R263 僵尸名检查）的结论消费面。
+    # 放在报警静默丢弃行之后：两者是同一族缺口——「本该被看到的运维信号没有
+    # 到达人」。R615 把僵尸名检查自动化了，但只 print 到 Actions 日志，而上一行
+    # 刚证明通知渠道是 0 个：探针在跑，答案被丢弃。这里给它一个持久出口。
+    # 数据挂在 s["runs"] 下（与 run_summary 同族：都是「本轮跑下来怎么样」的
+    # 轮次级结论，而非投递事件）。
+    _pp = (s.get("runs") or {}).get("provider_probe")
+    if _pp:
+        _ppt = str(_pp.get("ts") or "")[:16].replace("T", " ")
+        _tot = _pp.get("total")
+        _okc = _pp.get("sites_ok")
+        _unk = _pp.get("unknown")
+        # _num() 归一化后返回 **float**（不是 int），所以这里按数值有效性判断，
+        # 不能用 isinstance(x, int) —— 那样会让分母恒为假、把「核实 3/12」渲染成
+        # 「核实 —」，进而让"部分未核实"分支永不触发、退化成"全部通过"。
+        # 教训同原则 2：判断字段是否存在时，要用字段实际会被归一化成的那种类型。
+        _tot_i = int(_tot) if isinstance(_tot, (int, float)) else None
+        _okc_i = int(_okc) if isinstance(_okc, (int, float)) else None
+        _unk_i = int(_unk) if isinstance(_unk, (int, float)) else None
+        # 分母不成立时不显示比例（避免 "None/None"），只报绝对数。
+        _cov = (f"{_okc_i}/{_tot_i}" if _okc_i is not None and _tot_i else "—")
+        _unk_note = f"，未核实 {_unk_i} 站" if _unk_i else ""
+        if not _pp.get("ok"):
+            # 探针自己没跑成 → 活警：此时面板上关于 provider 健康的一切结论都不可信。
+            # probe_error 本身就带未核实站数，不再叠加 _unk_note（同一事实说两遍）。
+            _why = _pp.get("error") or "原因未记录"
+            lines.append(
+                f"  🩺 provider 默认名探针未完成（{_why}，"
+                f"最近 {_ppt or '?'}）——本轮僵尸名结论不可信，"
+                f"检查 scripts/probe_provider_models.py")
+        elif _unk_i:
+            # 部分未核实：默认名"没被报死"≠"还活着"。R263 的三次事故里有两次
+            # 就发生在未核实的站上，所以这行必须显式给出未核实站名，
+            # 否则读者会把「没告警」当成「都活着」。
+            _names = _pp.get("unknown_sites") or ""
+            lines.append(
+                f"  ⚠️ provider 默认名仅部分核实：存活 {_cov}{_unk_note}"
+                f"（{_names}，最近 {_ppt or '?'}）"
+                f"——未核实≠存活，这些站的默认名可能已是僵尸名（R263）")
+        else:
+            lines.append(
+                f"  🩺 provider 默认名全部核实通过 {_cov}"
+                f"（最近 {_ppt or '?'}）")
+    elif rows is not None:
+        # 有遥测但一条 provider_probe 都没有：探针从未成功落盘过。这与
+        # 「核实通过」必须区分——沉默不是通过（R612：没人看=等于没有）。
+        lines.append(
+            "  ℹ️ provider 默认名探针: 本窗口无结论行（探针未接入或未落盘）"
+            "——僵尸名检查处于失明状态")
     if rows is not None:
         f = funnel(rows)
         if f["attempted"]:

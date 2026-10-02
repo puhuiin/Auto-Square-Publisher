@@ -2707,5 +2707,104 @@ class TestContentStatsReportJoin(unittest.TestCase):
                 {"-": 3}, {"unknown": 2}, {"unknown": 10.0}), [])
 
 
+class TestR617ProviderProbe(unittest.TestCase):
+    """R617：provider 默认模型名探针的结论消费面。
+
+    背景：R615 把 R263 僵尸名检查自动化了，但结论只 print 到 Actions 日志，
+    而 R614 实测通知渠道 0 个——**探针在跑，答案被丢弃**。这里锁定三态渲染，
+    尤其是「部分未核实」绝不能退化成「全部通过」这个会骗人的读法。
+    """
+
+    @staticmethod
+    def _probe(**kw):
+        row = {"ts": "2026-10-02T01:00:00+00:00", "outcome": "provider_probe",
+               "probe_ok": True, "sites_total": 12, "sites_ok": 12,
+               "sites_unknown": 0}
+        row.update(kw)
+        return [row]
+
+    def test_partial_coverage_never_renders_as_all_pass(self):
+        """R617 核心守卫：9站未核实 + 3 站存活 → 必须显示「仅部分核实」。
+
+        这条锁的是我自己实跑时差点上线的 bug：_num() 归一化返回 float，
+        渲染层用 isinstance(x, int) 判分母恒为假 → 覆盖率渲染成「—」→
+        未核实分支永不触发 →「核实 3/12」被显示成「全部核实通过」。
+        """
+        rows = self._probe(probe_ok=True, sites_total=12, sites_ok=3,
+                           sites_unknown=9,
+                           unknown_sites="aihubmix,b.ai,tokenrouter")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("仅部分核实", text)
+        self.assertNotIn("全部核实通过", text)
+        self.assertIn("3/12", text, "覆盖率必须带分母，只显存活数会读成全绿")
+        self.assertIn("aihubmix", text, "未核实站名必须列出，否则读者无法行动")
+        self.assertIn("未核实≠存活", text)
+
+    def test_full_coverage_renders_all_pass(self):
+        """12/12 全部核实 → 才允许显示「全部核实通过」"""
+        rows = self._probe()
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("全部核实通过", text)
+        self.assertIn("12/12", text)
+        self.assertNotIn("仅部分核实", text)
+
+    def test_probe_itself_failed_is_live_alarm(self):
+        """探针自己没跑成（probe_ok=False）→ 活警，且不得同时宣称"部分核实"。
+
+        L3 缺口：`|| echo` 兜底让"探针挂了"与"检查通过"同貌。此处必须分开。
+        """
+        rows = self._probe(probe_ok=False, sites_ok=3, sites_unknown=9,
+                           probe_error="池解析为空")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("探针未完成", text)
+        self.assertIn("不可信", text)
+        self.assertNotIn("全部核实通过", text)
+        self.assertNotIn("仅部分核实", text)
+        # probe_error 已含未核实站数，不得再叠加一遍造成复读
+        self.assertNotIn("未核实，未核实", text)
+
+    def test_no_probe_row_reports_blindness_not_pass(self):
+        """一条 provider_probe 都没有 → 显式报「失明」，绝不沉默。
+
+        沉默不是通过（R612：没人看=等于没有）。这条防止探针被误删/失联后
+        面板毫无反应——那正是 R615 之前的原始状态。
+        """
+        rows = [{"ts": "2026-10-02T00:00:00+00:00", "outcome": "run_summary",
+                 "candidates": 0, "published": 0}]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("无结论行", text)
+        self.assertIn("失明", text)
+        self.assertNotIn("全部核实通过", text)
+
+    def test_latest_probe_row_wins(self):
+        """多轮探针取最新一轮（后写覆盖先写，同 R113 口径）"""
+        rows = [
+            {"ts": "2026-10-01T01:00:00+00:00", "outcome": "provider_probe",
+             "probe_ok": True, "sites_total": 12, "sites_ok": 12,
+             "sites_unknown": 0},
+            {"ts": "2026-10-02T01:00:00+00:00", "outcome": "provider_probe",
+             "probe_ok": True, "sites_total": 12, "sites_ok": 2,
+             "sites_unknown": 10, "unknown_sites": "xkiro,tokenrouter"},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["provider_probe"]["sites_ok"], 2.0)
+        text = mr.render_text(s, rows)
+        self.assertIn("2/12", text)
+        self.assertNotIn("全部核实通过", text)
+
+    def test_probe_row_not_counted_as_publish_attempt(self):
+        """探针行绝不能混进发布漏斗：它不是发帖尝试。
+
+        若混入 ATTEMPT_OUTCOMES，探针每轮都会给成功率分母加 1，发布成功率
+        会被无声稀释——这类"辅助遥测污染主指标"是报表最隐蔽的失真来源。
+        """
+        rows = self._probe() + [
+            {"ts": "2026-10-02T00:00:00+00:00", "outcome": "llm_success",
+             "title": "T", "provider": "P", "model": "m"}]
+        f = mr.funnel(rows)
+        self.assertEqual(f["attempted"], 1, "探针行不得计入尝试数")
+        self.assertEqual(f["delivered"], 0)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
