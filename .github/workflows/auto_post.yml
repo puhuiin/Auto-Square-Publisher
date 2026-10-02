@@ -145,6 +145,15 @@ jobs:
           GOOGLE_MODEL: ${{ secrets.GOOGLE_MODEL }}
           BAI_API_KEY: ${{ secrets.BAI_API_KEY }}
           BAI_MODEL: ${{ secrets.BAI_MODEL }}
+          # R619 补录：下面两个 key 此前**在整个 workflow 里0 次出现**，
+          # 而 main.py 的 extra_keys 明确在用它们 → 两条通道在 CI 里必然
+          # 无 key 静默失效，池内 12 站实际只有 10 站在跑。
+          # 该缺口由 R618 上线后的探针暴露：zai/bluesminds 被标"未核实"，
+          # 而它们并非网络不通，是**根本没拿到凭据**。
+          # 补注入本身只是恢复既有意图（这两条通道本就在池里），不新增依赖。
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          ZAI_MODEL: ${{ secrets.ZAI_MODEL }}
+          BLUESMINDS_API_KEY: ${{ secrets.BLUESMINDS_API_KEY }}
           XKIRO_API_KEY: ${{ secrets.XKIRO_API_KEY }}
           AIHUBMIX_API_KEY: ${{ secrets.AIHUBMIX_API_KEY }}
           INFERERA_API_KEY: ${{ secrets.INFERERA_API_KEY }}

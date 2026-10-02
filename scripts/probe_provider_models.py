@@ -39,24 +39,38 @@ _ROOT = os.path.dirname(_HERE)
 MAIN_PY = os.path.join(_ROOT, "main.py")
 METRICS_FILE = os.path.join(_ROOT, "metrics.jsonl")
 
-# 目录需要 key 才能列的站点：把key 拼进 query 而不是 Authorization 头。
-# 实测（2026-10-02）z.ai / siliconflow / stepfun 无 key 均返回 401。
-# stepfun 走 /step_plan/v1 订阅端点，不能删前缀（否则静默落入按量计费通道），
-# 故只在末尾追加 /models 走同一条订阅面。
-QUERY_KEY_SITES = {
-    "google": "GOOGLE_API_KEY",
-    "zai": "ZAI_API_KEY",
-    "siliconflow": "SILICONFLOW_API_KEY",
-    "stepfun": "STEPFUN_API_KEY",
-    "stepfun-flash": "STEPFUN_API_KEY",
+# 目录需要 key 才能列的站点 → key env 名。
+#
+# R619修正：R617 只列了 4 站，且**一律用 `?key=` 拼query**。生产实跑暴露两个
+# 问题——「已注入 key 却报未核实」的 7 站里有 5 站其实卡在这里：
+#   - tokenrouter / b.ai：只认 `Authorization: Bearer <key>`，用 ?key= 拼
+#     实测拿回 `{"code":30014,...,"message":"Token is invalid."}` ——认证
+#     方式错了，不是 key 错了；
+#   - stepfun：走 step_plan 订阅端点，同样吃 Bearer。
+# 判据：**认证方式不能猜**，逐站实测过（见下方 AUTH_MODE 的注释）。
+#
+# 为什么不能对全池无脑发 key：多数站的/models 公开，附带凭据只是把 key 放进
+# 一次外部请求；只有确认需要认证的站才带。
+AUTH_MODE = {
+    # 站名→ (key env 名, 认证方式)
+    "google":("GOOGLE_API_KEY", "query"),   # ?key=
+    "zai":        ("ZAI_API_KEY", "query"),        # ?key=
+    "siliconflow":("SILICONFLOW_API_KEY", "query"),  # ?key= 实测可用
+    "stepfun":("STEPFUN_API_KEY", "bearer"),  # Bearer（订阅端点）
+    "stepfun-flash": ("STEPFUN_API_KEY", "bearer"),
+    "tokenrouter":("TOKENROUTER_API_KEY", "bearer"),  # Bearer 实测
+    "b.ai":        ("BAI_API_KEY", "bearer"),        # Bearer 实测
 }
 
 # 目录 URL 拼接方式：绝大多数 OpenAI 兼容站是 {base}/models。
 MODELS_PATH = "/models"
 
 
-def _get_json(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "Auto-Square-Publisher/1.0"})
+def _get_json(url, bearer=None):
+    headers = {"User-Agent": "Auto-Square-Publisher/1.0"}
+    if bearer:
+        headers["Authorization"] = f"Bearer {bearer}"
+    req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
         return json.load(r)
 
@@ -114,6 +128,18 @@ def _model_ids(payload):
     return ids
 
 
+def _try_auth(url, key, mode):
+    """按指定认证方式取目录，成功返回 payload，失败抛 HTTPError。
+
+    单独抽出是为了让 check_site 能在 401 时**换一种方式重试**：R619 实测发现
+    各站认证方式不统一（tokenrouter 吃 ?key= 也吃 Bearer，而 stepfun 走
+    Bearer），只押一种方式会把"方式错了"误报成"key 失效"——两者处置完全不同。
+    """
+    if mode == "query":
+        return _get_json(f"{url}?key={key}")
+    return _get_json(url, bearer=key)
+
+
 def check_site(entry):
     """核对单站默认名。返回 dict，必含 site / default / ok 三键。
 
@@ -126,23 +152,61 @@ def check_site(entry):
     site, base, default = entry["site"], entry["base"], entry["default"]
     if not base or not default:
         return {"site": site, "default": default, "ok": None,
-                "note": "无法从 main.py 静态解析 base_url/默认名，需人工核对"}
+                "note": "无法从 main.py静态解析 base_url/默认名，需人工核对"}
     url = base.rstrip("/") + MODELS_PATH
-    key_env = QUERY_KEY_SITES.get(site)
-    if key_env:
-        key = os.getenv(key_env, "").strip()
-        if not key:
-            return {"site": site, "default": default, "ok": None,
-                    "note": f"未设 {key_env}，跳过（CI 里由 secret 注入）"}
-        url = f"{url}?key={key}"
-    payload = _get_json(url)
+    auth = AUTH_MODE.get(site)
+    if not auth:
+        payload = _get_json(url)
+        return _judge(site, default, payload)
+
+    key_env, mode = auth
+    key = os.getenv(key_env, "").strip()
+    if not key:
+        # R619：区分"配置漏注入"与"本机无凭据"。CI 里若真的漏注入，
+        # 这句会被运维看到并去补 secret；笼统说"跳过"会让人以为正常。
+        return {"site": site, "default": default, "ok": None,
+                "note": f"未设 {key_env}（若在 CI 里出现=workflow 漏注入 secret）"}
+    try:
+        payload = _try_auth(url, key, mode)
+    except urllib.error.HTTPError as e:
+        if e.code not in (401, 403):
+            raise
+        # R619：认证被拒时换另一种方式再试一次，两种都不行才判"未核实"。
+        # 不这样做就会把"我猜错了认证方式"报成"你的 key 坏了"——后者会把人
+        # 引去重置一个其实没坏的 key，真正的问题（方式）却留在原地。
+        alt = "bearer" if mode == "query" else "query"
+        try:
+            payload = _try_auth(url, key, alt)
+        except urllib.error.HTTPError as e2:
+            raise
+        except Exception:
+            raise e
+        out = _judge(site, default, payload)
+        out["note"] = (f"以 {mode} 方式被拒(HTTP {e.code})，换 {alt} 成功"
+                       f"——AUTH_MODE 已自动纠正")
+        return out
+    except urllib.error.HTTPError:
+        raise
+    except Exception:
+        raise
+    out = _judge(site, default, payload)
+    out["note"] = f"以 {mode} 方式成功"
+    return out
+
+
+def _judge(site, default, payload):
+    """比对默认名是否在目录里，产出 ok 三态 + 目录规模信息。
+
+    与认证完全解耦（R619）：check_site 负责"怎么拿到 payload"，这里只负责
+    "拿到之后怎么判"。这样认证降级重试（换方式再试）不必重复判定逻辑。
+    """
     ids = _model_ids(payload)
-    out = {"site": site, "default": default, "ok": default in ids,
-           "total": len(ids)}
     free = sorted(i for i in ids
                   if i.endswith(":free") or i.endswith("-free")
-                  or i.endswith(":free") or "-free" in i.rsplit("/", 1)[-1]
+                  or "-free" in i.rsplit("/", 1)[-1]
                   or i == "openrouter/free")
+    out = {"site": site, "default": default, "ok": default in ids,
+           "total": len(ids)}
     if free:
         out["free_models"] = free[:40]
         out["free_count"] = len(free)
@@ -226,11 +290,16 @@ def main():
     for r in results:
         print()
         print(f"[{r['site']}] 默认模型: {r.get('default')}")
-        if r.get("note"):
-            print(f"  ⚠️ {r['note']}")
+        _ok = r.get("ok")
+        if _ok is None:
+            # 未核实：未知≠ 通过，图标必须与"通过"区分
+            print(f"  ⚠️ 未核实：{r.get('note') or '原因未记录'}")
             continue
-        print(f"  目录模型数: {r.get('total')}  "
-              f"默认名存活: {'是' if r.get('ok') else '否 ← 僵尸名，需换'}")
+        print(f"  目录模型数: {r.get('total')}  默认名存活: {'是' if _ok else '否 ← 僵尸名，需换'}")
+        # R619：note 现在也可能承载"认证方式降级成功"这类**正常信息**，
+        # 不能一律当警告打——那会把一次成功的核对渲染成告警，训练人忽略 ⚠️。
+        if r.get("note"):
+            print(f"  ℹ️ {r['note']}")
         if r.get("free_models"):
             print(f"  当前免费模型（{r.get('free_count')} 个，列前 10）:")
             for m in r["free_models"][:10]:

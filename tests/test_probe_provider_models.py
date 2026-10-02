@@ -19,6 +19,7 @@ import sys
 import tempfile
 import unittest
 import unittest.mock
+import urllib.error
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _ROOT)
@@ -151,8 +152,9 @@ class TestCheckSite(unittest.TestCase):
 
     def setUp(self):
         self._old = dict(os.environ)
-        for k in list(ppm.QUERY_KEY_SITES.values()):
-            os.environ.pop(k, None)
+        for k in list(os.environ):
+            if k.endswith("_API_KEY"):
+                os.environ.pop(k, None)
 
     def tearDown(self):
         os.environ.clear()
@@ -181,12 +183,27 @@ class TestCheckSite(unittest.TestCase):
         self.assertIsNone(r["ok"])
         self.assertIn("ZAI_API_KEY", r["note"])
 
+    def test_missing_key_note_blames_workflow_when_in_ci(self):
+        """R619：缺 key 的提示必须区分「本机无凭据」与「workflow 漏注入」。
+
+        CI 里若出现「未设 X」，那是配置缺口（该通道静默失效），必须一眼可辨；
+        笼统说「跳过」会让人以为一切正常。
+        """
+        # 注意：必须用 AUTH_MODE 里真实存在的站，否则 check_site 会走
+        # 「无认证直接请求」分支——那会真发网络请求，违反"测试离线可跑"
+        # （MEMORY.md 硬约束），且本机到多数站不通 → URLError 而非预期断言。
+        os.environ.pop("ZAI_API_KEY", None)
+        r = ppm.check_site(
+            {"site": "zai", "base": "https://z.ai/v4", "default": "glm-4.7-flash"})
+        self.assertIn("workflow 漏注入", r["note"])
+
     def test_key_present_appends_query_and_checks(self):
         os.environ["ZAI_API_KEY"] = "secret"
         seen = {}
 
-        def _fake(url):
+        def _fake(url, bearer=None):
             seen["url"] = url
+            seen["bearer"] = bearer
             return {"data": [{"id": "glm-4.7-flash"}]}
 
         with unittest.mock.patch.object(ppm, "_get_json", _fake):
@@ -194,12 +211,112 @@ class TestCheckSite(unittest.TestCase):
                 {"site": "zai", "base": "https://z.ai/v4", "default": "glm-4.7-flash"})
         self.assertIs(r["ok"], True)
         self.assertIn("key=secret", seen["url"])
+        self.assertIsNone(seen["bearer"], "query 模式不得同时发 Bearer")
         self.assertNotIn("secret", json.dumps(r), "key 不得回显到结论里")
+
+    def test_bearer_mode_sends_authorization_header(self):
+        """R619：bearer 模式的站必须走 Authorization 头，而不是 ?key=。
+
+        R617 一律用 ?key= 拼，导致 tokenrouter / b.ai / stepfun 这些
+        吃 Bearer 的站在 CI 里全部报401——「我猜错了认证方式」被误报成
+        「key 坏了」，会把人引去重置一个其实没坏的 key。
+        """
+        os.environ["BAI_API_KEY"] = "bai-secret"
+        seen = {}
+
+        def _fake(url, bearer=None):
+            seen["url"] = seen["bearer"] = bearer
+            seen["url"] = url
+            return {"data": [{"id": "glm-5.3-flash"}]}
+
+        with unittest.mock.patch.object(ppm, "_get_json", _fake):
+            r = ppm.check_site(
+                {"site": "b.ai", "base": "https://api.b.ai/v1",
+                 "default": "glm-5.3-flash"})
+        self.assertIs(r["ok"], True)
+        self.assertEqual(seen["bearer"], "bai-secret")
+        self.assertNotIn("key=", seen["url"], "bearer 模式不应把 key 拼进 query")
+
+    def test_auth_fallback_recovers_on_alternative_mode(self):
+        """R619 核心：一种认证方式被拒（401/403）时换另一种再试并判为成功。
+
+        不做这个降级，就会把「认证方式猜错」与「key 失效」混为一谈——
+        而这两者的处置动作完全不同（改代码 vs 重置凭据）。
+
+        mock 前置须与 AUTH_MODE 一致：tokenrouter 配的是 **bearer**，
+        所以"首次被拒"必须发生在 bearer 分支上（`calls[0][1]` 非 None），
+        否则测的是另��条分支。
+        """
+        os.environ["TOKENROUTER_API_KEY"] = "tr-key"
+        self.assertEqual(ppm.AUTH_MODE["tokenrouter"][1], "bearer",
+                         "前提：tokenrouter 当前配为 bearer")
+        calls = []
+
+        def _fake(url, bearer=None):
+            calls.append((url, bearer))
+            if bearer is not None:                 # 首次 bearer 被拒
+                raise urllib.error.HTTPError(url, 401, "unauthorized", None, None)
+            return {"data": [{"id": "nemotron-3-nano-omni"}]}  # 换 query 成功
+
+        with unittest.mock.patch.object(ppm, "_get_json", _fake):
+            r = ppm.check_site(
+                {"site": "tokenrouter", "base": "https://tr.example/v1",
+                 "default": "nemotron-3-nano-omni"})
+        self.assertIs(r["ok"], True, "换方式后成功就该判存活，不能报未核实")
+        self.assertEqual(len(calls), 2, "应恰好试两次")
+        self.assertIsNotNone(calls[0][1], "首次应走 AUTH_MODE 指定的方式")
+        self.assertIsNone(calls[1][1], "降级后应改走 query")
+        self.assertIn("key=", calls[1][0], "query 方式要把 key 拼进 url")
+        self.assertIn("成功", r["note"])
+
+    def test_auth_failure_both_modes_raises_and_yields_unknown(self):
+        """两种方式都被拒 → 异常上抛，main()捕获成未核实（未知≠通过）。"""
+        os.environ["TOKENROUTER_API_KEY"] = "tr-key"
+
+        def _fake(url, bearer=None):
+            raise urllib.error.HTTPError(url, 401, "unauthorized", None, None)
+
+        entry = {"site": "tokenrouter", "base": "https://tr.example/v1",
+                 "default": "nemotron-3-nano-omni"}
+        with unittest.mock.patch.object(ppm, "_get_json", _fake):
+            # main() 侧的 except 把它降级为 ok=None；此处只验它确实抛了
+            with self.assertRaises(urllib.error.HTTPError):
+                ppm.check_site(entry)
+
+    def test_auth_fallback_not_attempted_on_non_auth_error(self):
+        """非401/403（如 404 端点不存在）不做降级重试。
+
+        404 是集成问题不是认证问题，换方式重试只会掩盖真因。
+        """
+        os.environ["ZAI_API_KEY"] = "z-key"
+
+        def _fake(url, bearer=None):
+            raise urllib.error.HTTPError(url, 404, "not found", None, None)
+
+        with unittest.mock.patch.object(ppm, "_get_json", _fake):
+            with self.assertRaises(urllib.error.HTTPError) as cm:
+                ppm.check_site({"site": "zai", "base": "https://z.ai/v4",
+                                "default": "glm-4.7-flash"})
+        self.assertEqual(cm.exception.code, 404)
 
     def test_unparseable_entry_is_unknown(self):
         r = ppm.check_site({"site": "x", "base": None, "default": None})
         self.assertIsNone(r["ok"])
         self.assertIn("人工核对", r["note"])
+
+    def test_successful_check_note_is_not_warning_text(self):
+        """R619：成功核对的 note 是正常信息，不得带⚠️ 语义词。
+
+        main() 渲染时 note 走ℹ️ 行（此前是 ⚠️ 且会continue 跳过存活判定）。
+        这里锁住 note 内容不出现"跳过/失败"这类会把成功说成失败的措辞。
+        """
+        os.environ["BAI_API_KEY"] = "k"
+        with unittest.mock.patch.object(
+                ppm, "_get_json", return_value={"data": [{"id": "glm-5.3-flash"}]}):
+            r = ppm.check_site({"site": "b.ai", "base": "https://api.b.ai/v1",
+                                "default": "glm-5.3-flash"})
+        self.assertIs(r["ok"], True)
+        self.assertIn("成功", r["note"])
 
 
 class TestWriteTelemetry(unittest.TestCase):
