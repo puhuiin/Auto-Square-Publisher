@@ -1121,6 +1121,63 @@ class TestMetricsReport(unittest.TestCase):
         s2 = mr.summarize([rows[1]])
         self.assertNotIn("残留过期日期", mr.render_text(s2, [rows[1]]))
 
+    def test_r613_stale_source_alarm_downgraded(self):
+        """R613：源健康告警必须带新鲜度。注入截断/空 feed/硬故障都是**全史累计**，
+        此前渲染不带时间维度——已自愈的陈迹与正在发生的问题在面板上完全同貌。
+        生产实锤：注入截断最后发生距今 49h、空 feed 67h、硬故障 42h，面板却与
+        事发当日同貌，运维只能人工翻 jsonl 区分。距今 ≥24h 的降为ℹ️ 陈迹，
+        释放⚠️ 视觉预算给当期真问题。"""
+        rows = [
+            {"outcome": "run_summary", "candidates": 10, "published": 0,
+             "ts": "2026-09-28T00:00:00+00:00",
+             "injection_hits": 3, "injection_feeds": {"EvilFeed": 3},
+             "feeds_empty_sources": "BlockTempo", "feeds_failed": 1},
+            # 末次时间距参考点 3 天 → 陈迹
+            {"outcome": "run_summary", "candidates": 10, "published": 0,
+             "ts": "2026-09-29T00:00:00+00:00",
+             "injection_hits": 1, "injection_feeds": {"EvilFeed": 1}},
+            # 最新一轮（无告警）提供"现在"基准
+            {"outcome": "run_summary", "candidates": 10, "published": 1,
+             "ts": "2026-10-02T00:00:00+00:00"},
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["source_alarm_last"]["injection"],
+                         "2026-09-29T00:00:00+00:00", "取最后一次发生的 ts")
+        text = mr.render_text(s, rows)
+        self.assertIn("注入截断", text, "陈迹也必须留在面板上（安全面告警不能消失）")
+        self.assertIn("历史累计", text)
+        self.assertIn("天前", text)
+        self.assertNotIn("请评估停放该源", text, "陈迹不该再催处置动作")
+        self.assertIn("ℹ️ 源健康异常", text, "空 feed 降为陈迹")
+        self.assertIn("ℹ️ 源故障/停放", text, "硬故障降为陈迹")
+
+    def test_r613_fresh_source_alarm_stays_warning(self):
+        """R613 反向：24h 内发生的源告警**保持⚠️ 与处置指引**，不得被降级。
+        这是本改动的方向性守卫：只降"确证陈旧"，活警必须照旧醒目。"""
+        rows = [
+            {"outcome": "run_summary", "candidates": 10, "published": 0,
+             "ts": "2026-10-02T06:00:00+00:00",
+             "injection_hits": 2, "injection_feeds": {"EvilFeed": 2}},
+            {"outcome": "run_summary", "candidates": 10, "published": 1,
+             "ts": "2026-10-02T06:30:00+00:00"},
+        ]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("🚨 注入截断", text, "2 小时前发生 = 活警，必须 ⚠️")
+        self.assertIn("请评估停放该源", text)
+
+    def test_r613_unknown_freshness_stays_warning(self):
+        """R613 关键安全向：时间戳缺失 → **无法判定新鲜度 → 按活警处理**。
+        把未知态报成陈迹会藏起可能正在发生的问题——告警漏判的代价远大于多报，
+        与本项目"判负向漏判倾斜"的纪律一致。"""
+        rows = [
+            {"outcome": "run_summary", "candidates": 10, "published": 0,
+             "injection_hits": 3, "injection_feeds": {"EvilFeed": 3}},
+        ]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("🚨 注入截断", text, "无时间戳 = 未知，不能降级")
+        self.assertIn("请评估停放该源", text)
+        self.assertNotIn("历史累计", text)
+
     def test_injection_hits_consumed_and_rendered(self):
         """R334：R273/R274 注入截断（injection_hits/injection_feeds）写侧落盘
         run_summary，R275 补了 Step Summary，metrics_report 仍零消费——

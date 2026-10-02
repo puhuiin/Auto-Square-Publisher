@@ -633,6 +633,13 @@ def summarize(rows):
         # 空 feed ×3 有数据无出口。按源名累加轮次，命中才显形。
         "feeds_empty_sources": collections.Counter(),
         "fetch_timeout_sources": collections.Counter(),
+        # R613：三类源健康告警的**最后发生时刻**。这三类都是全史累计计数，
+        # 此前渲染时完全不带时间维度——于是「4 天前已自愈的空 feed」与
+        # 「正在发生的空 feed」在面板上长得一模一样，运维只能每次人工翻
+        # metrics.jsonl 判断是陈迹还是活警。生产实测：注入截断最后发生距今
+        # 49h、空 feed 67h、硬故障 42h——面板却与事发当日完全同貌。
+        # 加"最后发生"让告警自带新鲜度，陈迹降级为ℹ️、不再占用⚠️ 视觉预算。
+        "source_alarm_last": {},
         # R342：R276 写侧扫描漏斗（fetched/stale/cached/near_dup）自写侧起只有
         # 扫描日志 + Step Summary「管线吞吐」两个易失出口，metrics_report（持久
         # 巡检面）零消费——R276 注释明言 durable 趋势可查（near_dup 抬升=去重过
@@ -1028,6 +1035,10 @@ def summarize(rows):
             _ih = _num(r.get("injection_hits"))
             if _ih is not None and _ih > 0:
                 runs_tmp["injection_hits"] += int(_ih)
+                if isinstance(ts, str) and ts:
+                    _p = runs_tmp["source_alarm_last"]
+                    if _p.get("injection") is None or ts > _p["injection"]:
+                        _p["injection"] = ts
             _isrc = r.get("injection_feeds")
             if isinstance(_isrc, dict):
                 for _fn, _fc in _isrc.items():
@@ -1046,6 +1057,17 @@ def summarize(rows):
                     for _fn in _sv:
                         if _fn:
                             runs_tmp[_dk][str(_fn)] += 1
+                if isinstance(_sv, (str, list, tuple)) and _sv and \
+                        isinstance(ts, str) and ts:
+                    _p = runs_tmp["source_alarm_last"]
+                    if _p.get(_sk) is None or ts > _p[_sk]:
+                        _p[_sk] = ts
+            # R613：feeds_failed（硬故障）最后发生时刻
+            if (_num(r.get("feeds_failed")) or 0) > 0 and \
+                    isinstance(ts, str) and ts:
+                _p = runs_tmp["source_alarm_last"]
+                if _p.get("feeds_failed") is None or ts > _p["feeds_failed"]:
+                    _p["feeds_failed"] = ts
             # R342：扫描漏斗累加（R276 写侧，报表此前零出口）——总量给基线、
             # 单轮峰值抓异常尖刺；有则收，历史行无字段/零值不进（不抬计数）。
             for _fk in ("fetched", "stale", "cached", "near_dup"):
@@ -1395,6 +1417,46 @@ def render_text(s, rows=None):
                 flag = " ⚠️" if _ents >= 20 and _kept == 0 else ""
                 parts.append(f"{_fname} {_kept}/{_ents}{flag}")
             lines.append(f"  📡 源入选率(入选/扫描): {' · '.join(parts)}")
+        # R613：源健康告警的新鲜度。三类都是全史累计，缺时间维度时陈迹与活警
+        # 同貌（生产：注入截断最后发生距今 49h、空 feed 67h、硬故障 42h，面板
+        # 仍与事发当日完全一样）。这里按"距最后一次发生多久"给新鲜度标签：
+        # 24h 内=活警（⚠️，按原口径），超过则降为ℹ️ 陈迹——**不删数据**，
+        # 只是不再占用告警视觉预算，让当期真问题浮出来。
+        _al = runs.get("source_alarm_last") or {}
+        _now = s.get("ts_max")
+
+        def _fresh(key, hours=24):
+            """返回 (最后发生 ts, 距今小时数 or None)。
+
+            None = **无法判定新鲜度**（无时间戳/解析失败），调用方须按"活警"
+            处理而不是降级。方向性刻意如此：把未知态报成陈迹会藏起一个可能正在
+            发生的问题（告警漏判的代价远大于多报一条），与本项目"判负向漏判
+            倾斜"的纪律一致。只有拿到**确切的陈旧证据**（距今 ≥24h）才降级。
+            """
+            _t = _al.get(key)
+            if not _t or not _now:
+                return (None, None)
+            try:
+                _a = datetime.fromisoformat(str(_t).replace("Z", "+00:00"))
+                _b = datetime.fromisoformat(str(_now).replace("Z", "+00:00"))
+            except (TypeError, ValueError):
+                return (str(_t), None)
+            if _a.tzinfo is None:
+                _a = _a.replace(tzinfo=timezone.utc)
+            if _b.tzinfo is None:
+                _b = _b.replace(tzinfo=timezone.utc)
+            _h = (_b - _a).total_seconds() / 3600.0
+            return (str(_t), max(0.0, _h))
+
+        def _ago(h):
+            if h is None:
+                return "时间未知"
+            if h < 1:
+                return f"{h * 60:.0f} 分钟前"
+            if h < 48:
+                return f"{h:.0f} 小时前"
+            return f"{h / 24:.1f} 天前"
+
         # R334：注入截断（R273/R274 写侧）——R275 补了 Step Summary，metrics_report
         # 此前仍零消费。安全面：某源夹带 payload 时持久巡检页不得静默。
         if runs.get("injection_hits"):
@@ -1405,30 +1467,57 @@ def render_text(s, rows=None):
                 _pairs = sorted(_srcs.items(), key=lambda x: -int(x[1] or 0))[:5]
             _detail = "、".join(f"{n} ×{v}" for n, v in _pairs) if _pairs else ""
             _note = f"（{_detail}）" if _detail else ""
-            lines.append(f"  🚨 注入截断: {runs['injection_hits']} 条{_note}——请评估停放该源")
+            # R613：注入截断是安全面告警，**陈迹也必须留在面板上**（不能因
+            # 降级而消失——那会变成"看不到就以为没发生过"），只把措辞从"请评估
+            # 停放该源"降为"历史累计"并标注最后发生时间。
+            _t, _h = _fresh("injection")
+            _stale = _h is not None and _h >= 24
+            _icon = "  ℹ️" if _stale else "  🚨"
+            _act = ("（历史累计，最后发生 " + _ago(_h) + "，当期未复现）"
+                    if _stale else "——请评估停放该源")
+            lines.append(f"{_icon} 注入截断: {runs['injection_hits']} 条{_note}{_act}")
         # R335：源健康细化（R276 写侧）——空 feed / 抓取超时按源可见，
         # 与源入选率同属源治理面。零命中零噪音。
         _sh = []
+        _sh_stale = False
         if runs.get("feeds_empty_sources"):
             _pairs = sorted(runs["feeds_empty_sources"].items(), key=lambda x: -x[1])[:4]
             _sh.append("空feed " + "、".join(f"{n} ×{v}" for n, v in _pairs))
+            _t, _h = _fresh("feeds_empty_sources")
+            if _h is not None and _h >= 24:
+                _sh_stale = True
+                _sh[-1] += f"（末次 {_ago(_h)}）"
         if runs.get("fetch_timeout_sources"):
             _pairs = sorted(runs["fetch_timeout_sources"].items(), key=lambda x: -x[1])[:4]
             _sh.append("超时 " + "、".join(f"{n} ×{v}" for n, v in _pairs))
+            _t, _h = _fresh("fetch_timeout_sources")
+            if _h is not None and _h >= 24:
+                _sh_stale = True
+                _sh[-1] += f"（末次 {_ago(_h)}）"
         if _sh:
-            lines.append(f"  ⚠️ 源健康异常: {' / '.join(_sh)}——请评估换源/撤源")
+            _head = "  ℹ️" if _sh_stale else "  ⚠️"
+            _tail = "（陈迹，当期未见复现）" if _sh_stale else "——请评估换源/撤源"
+            lines.append(f"{_head} 源健康异常: {' / '.join(_sh)}{_tail}")
         # R344：源硬故障/停放频率（feeds_failed/feeds_parked 写侧，报表此前零出口）——
         # 空feed/超时按源名已在上方，硬故障（网络/HTTP≠200/畸形XML）与停放的历史
         # 故障轮只有计数无源名，是仅剩的静默源健康信号。全窗零故障零停放不渲染。
         _fh = []
+        _fh_stale = False
         if runs.get("feed_fail_runs"):
             _fh.append(f"硬故障 {runs['feed_fail_runs']} 轮/共 {runs.get('feed_fail_total', 0)} 源次"
                        f"（峰 {runs.get('feed_fail_peak', 0)}）")
+            _t, _h = _fresh("feeds_failed")
+            if _h is not None and _h >= 24:
+                _fh_stale = True
+                _fh[-1] += f"（末次 {_ago(_h)}）"
         if runs.get("feed_park_runs"):
             _fh.append(f"停放 {runs['feed_park_runs']} 轮/共 {runs.get('feed_park_total', 0)} 源次"
                        f"（峰 {runs.get('feed_park_peak', 0)}）")
         if _fh:
-            lines.append(f"  🩺 源故障/停放: {' / '.join(_fh)}——失败被候选健康表象掩盖，请查源名")
+            _head = "  ℹ️" if _fh_stale else "  🩺"
+            _tail = ("（陈迹，当期未见复现）" if _fh_stale
+                     else "——失败被候选健康表象掩盖，请查源名")
+            lines.append(f"{_head} 源故障/停放: {' / '.join(_fh)}{_tail}")
         # R342：扫描漏斗（R276 写侧，报表此前零出口）——去重/缓存/陈旧趋势，
         # 单轮峰值抓尖刺（near_dup 抬升=去重吞事件 / cached 跳涨=缓存失效 /
         # stale 峰值=源劣化）；全零不渲染（零噪音，沿用源健康惯例）。
