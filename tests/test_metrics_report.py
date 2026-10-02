@@ -3551,5 +3551,65 @@ class TestR628ContentCoverageDenominator(unittest.TestCase):
                          before, "内容库缓存未被还原，污染了后续用例")
 
 
+class TestR629NoStaleThroughputClaim(unittest.TestCase):
+    """R629：**代码注释里不许留过时的生产速率数字**。
+
+    R610 判读纪律写于项目低产期，注释里留下"发布速率 4~6 篇/天、20 篇窗口
+    4~5 天才滚干净"。R629 实测该数字**从未成立过**：
+      - 自 09-10 起稳定 12 篇/天（= MAX_DAILY_POSTS，滚动 24h 最多 13 篇）
+      - 即使遥测最早段 09-07~09-11 也是 10 篇/天
+      - 20 篇窗口实际 **1.7 天**滚干净
+    危害不是"数字不好看"，而是它**给判读提供了一个不存在的借口**：
+    近半绝对值高时，下一轮会写"样本还没滚干净"从而放过真问题——
+    而 R610 的原意恰恰相反（纪律本身正确，只是速度依据错了）。
+
+    本守卫盯住**活跃速率不实**的写法，而不是禁掉所有数字（12 篇/天是对的，
+    但它是配置派生量、配置一改就过时，**不该硬编码进注释当依据**）。
+    """
+
+    _WRONG = ("4~6 篇/天", "4-6 篇/天", "4～6 篇/天", "4~5 天", "4-5 天")
+
+    def test_no_stale_throughput_claim_in_source(self):
+        """**引用旧数字的行必须自带"更正"标记**——否则它就是活依据。
+
+        R629 自身的更正文本也含这些数字（要说清"错在哪"），
+        所以守卫不是禁掉字符串，而是要求**出现处必须同时含更正标记**。
+        这样既留下更正记录，又拦住"复制粘贴一份没人察觉"的真退化。
+        """
+        src = open(mr.__file__, encoding="utf-8").read()
+        for lineno, line in enumerate(src.splitlines(), 1):
+            hit = [n for n in self._WRONG if n in line]
+            if not hit:
+                continue
+            # 粒度取**整个注释块**（连续的 `#` 行），而不是固定行数：
+            # 一段注释里更正标记与旧数字可能隔 3~4 行（实测R629 就如此），
+            # 定长窗口会漏判。按块判定才符合"这段话是不是在更正"的语义。
+            lines_all = src.splitlines()
+            lo = lineno - 1
+            while lo > 0 and lines_all[lo - 1].lstrip().startswith("#"):
+                lo -= 1
+            hi = lineno
+            while hi < len(lines_all) and lines_all[hi].lstrip().startswith("#"):
+                hi += 1
+            block = "\n".join(lines_all[lo:hi])
+            self.assertIn(
+                "R629", block,
+                f"metrics_report.py:{lineno} 引用过时速率{hit}却没有更正标记——"
+                f"R629 已实测该数字从未成立，当成判读依据会让「等窗口滚干净」"
+                f"变成放过真问题的借口")
+
+    def test_recent_span_still_computed(self):
+        """R610 的防护本身必须保留：近半跨度要算出来。"""
+        rows = [{"ts": "2026-10-02T12:00:00+00:00", "outcome": "binance_published",
+                 "content_id": f"c{i}", "title": f"t{i}", "source": "S",
+                 "provider": "Preset-x", "model": "m",
+                 "platforms": ["binance"], "hour_bj": 10,
+                 "final_preview": "内容正文示例。", "ban_active": False}
+                for i in range(4)]
+        q = mr.quality_scan(rows)
+        self.assertIsNotNone(q["recent_span"][0],
+                             "R610 的近半跨度丢失——判读近半的前提")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
