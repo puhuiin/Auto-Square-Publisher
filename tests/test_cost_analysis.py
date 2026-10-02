@@ -194,6 +194,88 @@ class TestDryIsolation(unittest.TestCase):
         self.assertEqual(len(ca.load_records(None, include_dry=True)), 1)
         self.assertEqual(len(ca.load_published(None, include_dry=True)), 1)
 
+class TestR631FailedNotCountedAsTransport(unittest.TestCase):
+    """R631：**llm_failed 不得默认归入 transport 桶**。
+
+    旧实现 `r.get("stage") or "transport"` 把两种**完全不同**的事件合成一桶：
+      transport = 调用成功但返回错误/超时（可降性：换通道/调预算）
+      llm_failed = 调用本身未成功（通道/网络/账户问题）
+    生产实录：真实 transport 67 + llm_failed 35 = 旧表显示的"transport ×102"，
+    **让它看起来是最大拒因**，而真实含义是"102 次调用没拿到可用内容"。
+    两者的处置动作不同，混桶后无法引导决策。
+
+    纪律同源：默认桶标签是**猜测**。R621「并列主因不猜」、R628「分母必须显式」
+    都是同一类问题——**不该用一个看起来合理的默认值掩盖"这里本来没数据"**。
+    """
+
+    def _rows(self):
+        return [
+            {"ts": "2026-10-02T12:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "transport", "provider": "Preset-a", "model": "m",
+             "tokens_used": 100, "llm_latency_sec": 10},
+            {"ts": "2026-10-02T12:00:00+00:00", "outcome": "llm_failed",
+             "provider": "Preset-a", "model": "m",
+             "reason": "Request timed out.", "tokens_used": 50,
+             "llm_latency_sec": 25},
+            {"ts": "2026-10-02T12:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "quality", "provider": "Preset-a", "model": "m",
+             "tokens_used": 200, "llm_latency_sec": 15},
+        ]
+
+    def _render(self):
+        rows = self._rows()
+        # 真实 API 是 render_publish_funnel(published, rejected)——
+        # 拒稿漏斗在 published 为空时也要渲染（先断言这一点，别让夹具掩盖）。
+        return ca.render_publish_funnel([], [r for r in rows
+                                             if r.get("outcome") in
+                                             ("llm_rejected", "llm_failed")])
+
+    def test_llm_failed_not_merged_into_transport(self):
+        """两个桶必须分开，且调用失败单列"""
+        text = self._render()
+        line = next(ln for ln in text.splitlines() if "拒稿漏斗" in ln)
+        self.assertIn("调用失败", line,
+                      "llm_failed 仍被并入某个 stage 桶，未单独显形")
+        # transport 应只计真实的 1 条，而不是 2 条
+        self.assertIn("transport ×1", line,
+                      f"transport 桶被 llm_failed 污染: {line}")
+
+    def test_explains_the_distinction(self):
+        """必须说明「无 stage = 调用本身失败」，否则读者仍会把两者当同一类"""
+        text = self._render()
+        line = next(ln for ln in text.splitlines() if "拒稿漏斗" in ln)
+        self.assertIn("与 transport 拒稿不同", line)
+
+    def test_funnel_survives_zero_delivery(self):
+        """**零投递窗口下拒稿漏斗仍须渲染**（R631 第二处修复）。
+
+        旧实现 `if not published: return ...` 会让整段漏斗跟着消失，而
+        「全部候选被拒、零投递」恰恰是**最需要看拒稿原因**的窗口——
+        那是唯一可行动的信息。这是「沉默不是通过」（R617）的形态：
+        不是漏报，是整块覆盖不到。
+        """
+        rows = [r for r in self._rows()
+                if r.get("outcome") in ("llm_rejected", "llm_failed")]
+        text = ca.render_publish_funnel([], rows)
+        self.assertIn("拒稿漏斗", text,
+                      "零投递时拒稿漏斗整段消失——恰是最需要它的窗口")
+        self.assertIn("零投递", text, "应显式说明形态/配图不可算的原因")
+
+    def test_truly_empty_renders_placeholder(self):
+        """零投递且零拒稿才走占位分支（静默仍有兜底、不抛异常）"""
+        text = ca.render_publish_funnel([], [])
+        self.assertIn("无投递记录", text)
+
+    def test_source_has_no_default_stage_coercion(self):
+        """守卫源码：`or "transport"` 这种默认归并不得再出现。
+
+        源码级断言而非输出级：默认值可能换别的标签（如 "unknown"），
+        禁掉的是**「缺标签就猜一个」这个模式**本身。
+        """
+        src = open(ca.__file__, encoding="utf-8").read()
+        self.assertNotIn('or "transport"', src,
+                         "又出现默认归并——缺 stage 时不该猜标签")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -228,11 +228,22 @@ def aggregate(rows: list[dict], price: dict) -> dict:
 
 
 def render_publish_funnel(published: list[dict], rejected: list[dict]) -> str:
-    """运营驾驶舱第二段：内容形态对比 + 配图来源分布 + 拒稿漏斗。"""
+    """运营驾驶舱第二段：内容形态对比 + 配图来源分布 + 拒稿漏斗。
+
+    R631：零投递时**不得整段提前返回**——旧实现 `if not published: return ...`
+    会让拒稿漏斗跟着消失，而**「全是拒稿、零投递」恰恰是最需要看漏斗的窗口**
+    （内容全被拒、原因分布是唯一可行动的信息）。这是「沉默不是通过」
+    （R617）在本脚本的形态：不是漏报，是**整块覆盖不到**。
+    故把提前返回收窄为「零投递且零拒稿」才走。
+    """
     from collections import Counter
     lines = ["\n## 内容形态与配图（投递遥测）"]
-    if not published:
+    if not published and not rejected:
         return "\n".join(lines) + "\n\n| _无投递记录_ |\n|---|"
+    if not published:
+        # 有拒稿无投递：形态/配图不可算，但漏斗必须渲染
+        lines.append("\n| _本窗口零投递（全部候选被拒或调用失败）_|\n|---|")
+        published = []
     articles = [r for r in published if r.get("article")]
     shorts = [r for r in published if not r.get("article")]
 
@@ -254,8 +265,20 @@ def render_publish_funnel(published: list[dict], rejected: list[dict]) -> str:
     lines.append("\n**配图来源分布**: " + " · ".join(f"{k} ×{v}" for k, v in tiers.most_common()))
 
     if rejected:
-        stages = Counter(r.get("stage") or "transport" for r in rejected)
-        lines.append("\n**拒稿漏斗（stage 分布）**: " + " · ".join(f"{k} ×{v}" for k, v in stages.most_common()))
+        # R631：**llm_failed 不得默认归入 transport**——
+        # 原实现用 stage 缺省值当 transport 桶标签（见 git 历史），把「调用失败」（llm_failed，
+        # 35 次，无 stage）与「真实 transport 拒稿」（67）合成同一桶
+        # → transport 看起来是最大拒因（102），实际含义是「102 次调用
+        # 没拿到可用内容」——两种完全不同的事件：
+        #   transport = 调用成功但返回错误/超时（可降性）
+        #   llm_failed = 调用并未成功（通道/网络/账户）
+        # 它们的处置动作不同，混桶后无法引导决策。
+        # 与主报表（metrics_report）同源，两表数字应可对账。
+        stages = Counter(str(r.get("stage")) if r.get("stage")
+                         else "调用失败(无 stage)" for r in rejected)
+        lines.append("\n**拒稿漏斗（stage 分布）**: "
+                     + " · ".join(f"{k} ×{v}" for k, v in stages.most_common())
+                     + "　（无 stage = 调用本身失败，与 transport 拒稿不同）")
         persons = Counter(r.get("persona") for r in published if r.get("persona"))
         if persons:
             lines.append("\n**人设分布（投递）**: " + " · ".join(f"{k} ×{v}" for k, v in persons.most_common()))
