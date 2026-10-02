@@ -616,6 +616,13 @@ def summarize(rows):
         "boost_hits": {"campaign": 0, "trend": 0, "hot": 0,
                        "eng_up": 0, "eng_down": 0},  # R608：浏览加权命中(+/-)
         "boost_runs": 0,
+        # R611：**每路信号各自**有数据的轮数。boost_runs 是"任一路有命中"的轮数，
+        # 四路信号上线时间不同（R608 浏览加权 10-02 才上线），拿它当浏览加权的
+        # 分母会得出"208 轮里只命中 6 次"的假结论——实测那 +2-4 全部来自**唯一
+        # 1 轮**有该字段的run_summary。分母必须是"该信号自己有多少轮数据"，
+        # 否则新上线的信号永远显示成"几乎不命中"，正好掩盖它其实刚跑通。
+        "boost_runs_by_signal": {"campaign": 0, "trend": 0, "hot": 0,
+                                 "eng": 0},
         # R201：off-pool 活动币快照（最近一轮）
         "last_campaign_off_pool": "",
         "elapsed": [],  # R126：单轮耗时样本（秒），聚平均/最长
@@ -944,6 +951,16 @@ def summarize(rows):
                 runs_tmp["boost_runs"] += 1
                 for _k, _v in _bh.items():
                     runs_tmp["boost_hits"][_k] += _v
+            # R611：每路信号各自的有数据轮数（eng 合并 up/down 为一路）。
+            # 判据：字段**存在**即算有数据轮（值为 0 也是有效观测——"这轮没命中"
+            # 与"这轮没这个字段"是两件事，只有前者能进命中率分母）。
+            for _sig, _flds in (("campaign", ("campaign_boost_hits",)),
+                                ("trend", ("trend_boost_hits",)),
+                                ("hot", ("hot_boost_hits",)),
+                                ("eng", ("engagement_boost_up",
+                                         "engagement_boost_down"))):
+                if any(_num(r.get(_f)) is not None for _f in _flds):
+                    runs_tmp["boost_runs_by_signal"][_sig] += 1
             _cop = r.get("campaign_off_pool")
             if isinstance(_cop, str) and _cop.strip():
                 runs_tmp["last_campaign_off_pool"] = _cop
@@ -1241,10 +1258,17 @@ def render_text(s, rows=None):
         # R193：四路信号加权命中——供给≠命中
         bh = runs.get("boost_hits") or {}
         if any(bh.values()):
+            # R611：分母按信号各自的数据轮数给，不用 boost_runs（四路上线时间不同，
+            # 混用分母会让刚上线的信号显示成"几乎不命中"——R611 实测：浏览加权
+            # +2-4 全部来自唯一 1 轮有该字段的 run_summary，与 208 轮无关）。
+            _rs = runs.get("boost_runs_by_signal") or {}
+            _ehr = _rs.get("eng", 0)
             _eng = (f" / 浏览加权 +{bh.get('eng_up', 0)} -{bh.get('eng_down', 0)}"
-                    if (bh.get("eng_up") or bh.get("eng_down")) else "")
+                    f"（{_ehr} 轮有数据）" if _ehr else
+                    f" / 浏览加权 +{bh.get('eng_up', 0)} -{bh.get('eng_down', 0)}"
+                    f"（⚠️ 0 轮有数据，上线后尚无观测）")
             lines.append(
-                f"  📈 加权命中（{runs.get('boost_runs', 0)} 轮）: "
+                f"  📈 加权命中（活动/热搜/热点 {runs.get('boost_runs', 0)} 轮）: "
                 f"活动 {bh.get('campaign', 0)} / 热搜 {bh.get('trend', 0)} / 热点 {bh.get('hot', 0)}{_eng}")
         if runs.get("last_campaign_off_pool"):
             lines.append(f"  🪙 活动币 off-pool: {runs['last_campaign_off_pool']}")

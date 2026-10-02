@@ -929,6 +929,49 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("浏览加权 +2 -5", text)
         self.assertIn("热点 3", text)
 
+    def test_r611_boost_denominator_per_signal(self):
+        """R611：加权命中率的分母必须按**每路信号各自**的数据轮数给，不能用
+        boost_runs（任一路有命中的轮数）。四路上线时间不同，混用分母会让刚上线的
+        信号显示成"几乎不命中"——生产实测：面板原印「浏览加权 +2 -4」配「208轮」，
+        读起来像 208 轮里只命中 6 次，实际那 +2-4 全部来自唯一 1 轮有该字段的
+        run_summary（R608 10-02 才上线）。这会让刚跑通的信号被误判为失效。
+        另：字段存在即计入分母（值为 0 也是有效观测——"没命中"≠"没这个字段"）。"""
+        _write(self.path, [
+            # 只有活动/热搜/热点有数据的 5 轮（无 engagement 字段 = R608 上线前）
+            *[{"outcome": "run_summary", "candidates": 10, "published": 1,
+               "campaign_boost_hits": 1} for _ in range(5)],
+            #浏览加权上线后的 1 轮
+            {"outcome": "run_summary", "candidates": 10, "published": 1,
+             "campaign_boost_hits": 1, "engagement_boost_up": 2,
+             "engagement_boost_down": 4},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        runs = mr.summarize(rows)["runs"]
+        self.assertEqual(runs["boost_runs"], 6, "任一路有命中的轮数")
+        self.assertEqual(runs["boost_runs_by_signal"]["eng"], 1,
+                         "浏览加权只有 1 轮有数据")
+        self.assertEqual(runs["boost_runs_by_signal"]["campaign"], 6)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("浏览加权 +2 -4（1 轮有数据）", text,
+                      "必须显示浏览加权自己的分母，而非 6 轮")
+        self.assertNotIn("浏览加权 +2 -4 /", text)
+
+    def test_r611_boost_zero_coverage_warns(self):
+        """R611 边界：有浏览加权命中数但 0 轮有该字段（不可能同轮发生，但字段
+        顺序/裁剪可能造成）→ 必须显式告警而不是显示成一个看似正常的命中率。"""
+        _write(self.path, [
+            {"outcome": "run_summary", "candidates": 10, "published": 1,
+             "campaign_boost_hits": 1, "engagement_boost_up": 2,
+             "engagement_boost_down": 4},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        runs = mr.summarize(rows)["runs"]
+        # 该轮字段存在 → 分母为 1，不应走 0 轮告警分支
+        self.assertEqual(runs["boost_runs_by_signal"]["eng"], 1)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("1 轮有数据", text)
+        self.assertNotIn("0 轮有数据", text)
+
     def test_quota_intel_age_aggregated(self):
         """R196：饱和轮情报陈旧度——R195 写侧已有，报表必须从 quota_blocked 聚合"""
         rows = [
