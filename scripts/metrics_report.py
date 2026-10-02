@@ -65,6 +65,29 @@ QUALITY_SCAN_WINDOW = 20  # 最近 N 篇发布帖做合规扫描
 # 加固 R596 的信号（避免在 n=3 上过拟合重复打补丁）。信息性，非门禁。
 _MANIPULATION_FRAME = ("出货", "洗盘", "烟雾弹", "送流动性", "派筹", "诱多", "压盘")
 
+# R610：FORCE_STRIP 清单的第二份事实源（与 main.SquarePublisher.
+# FORCE_STRIP_CASHTAGS 同步，防漂移测试见 TestQualityPatternSync）。
+# 用途：把「稳定币-only 的零挂件帖」从R123 生命线告警里摘出来——那是 R316
+# 「稳定币不做挂件」契约下的合规行为，不是保底机制被绕过。
+_FORCE_STRIP_CASHTAGS = frozenset({
+    "ETF", "SEC", "FED", "CEO", "NFT", "AI", "USD", "USDT", "USDC",
+    "CEX", "DEX", "API", "CAGR", "APR", "APY", "ATH", "BAPI", "NEWS", "MEME",
+})
+
+
+def _is_stablecoin_only(tokens):
+    """该帖识别到的标的是否**全部**属于 FORCE_STRIP（稳定币/非交易词）。
+
+    True = 零挂件是 R316 契约的必然结果（合规），不该算 Write2Earn 生命线失守。
+    口径从严：tokens 缺失/为空/含任一非 FORCE_STRIP 词 → 一律判False（进告警
+    分母）。宁可多报不可漏报——这条告警的唯一价值就是「真失守时能响」，
+    漏判会让它重新变成哑炮。混合新闻（USDC + 真实山寨币）返回 False，正确报警。
+    """
+    if not isinstance(tokens, (list, tuple)) or not tokens:
+        return False
+    return all(isinstance(t, str) and t.strip().upper() in _FORCE_STRIP_CASHTAGS
+               for t in tokens)
+
 # R607：「利好不涨」描述复读——读近期全文发现，加密新闻最常见的场景（消息出来、
 # 24h 价格没怎么动）被模型收敛到一小撮固定描述句：「连个像样的反弹都没有」「盘面
 # 不买账」「连个水花都没溅起来」。全史 8% 但近 30 篇升到 33%（倒数60~30=20%→近30=33%）。
@@ -117,13 +140,38 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
             continue
         pv = (r.get("final_preview") or "").strip()
         if pv:
-            previews.append((pv, r.get("fng_ban_active")))
+            previews.append((pv, r.get("fng_ban_active"), r.get("ts")))
     previews = previews[-window:]
     out = {"scanned": len(previews), "fng_anchor": 0, "banned_device": 0,
            "ai_flavor": 0, "offenders": collections.Counter(),
            "fng_ban_armed": 0, "fng_violation": 0, "fng_avoided": 0,
-           "manip_frame": 0, "burstiness_cvs": [], "flat_desc": 0}
-    for pv, ban_active in previews:
+           "manip_frame": 0, "burstiness_cvs": [], "flat_desc": 0,
+           # R610：追踪指标的「修复生效」判据。固定窗口有个致命的观测时滞：
+           # 一次 prompt 加固（R604）刚上线时，窗口里 15/20 篇仍是加固前的旧稿，
+           # 于是面板继续报 50% 命中——看起来像修复无效，实则新帖 0 命中
+           # （生产实录：R604 commit 后 5 篇操纵词全 0，仅部署延迟那篇例外）。
+           # 这种假阴性会诱导下一轮「再去加固一遍已经修好的东西」，正是本项目
+           # 最忌的无数据支撑边际改动。故把同一窗口切成近/远两半分别计数：
+           # 近半是修复后的新帖（真实当期水位），远半是修复前（对照基线）。
+           # 近半显著低于远半 = 修复生效，两者都高 = 修复无效，判据无歧义。
+           "manip_frame_recent": 0, "manip_frame_older": 0,
+           "flat_desc_recent": 0, "flat_desc_older": 0,
+           # R610：近半的时间跨度（最早/最晚 ts）——判读近半的前提。发布速率约
+           # 4~6 篇/天，一次加固上线 1 天后近半仍可能含 4 篇加固前旧稿，此时
+           # 近半 40% 并不代表"修复无效"。把这个跨度显性化，读者才能自己判断
+           # 近半是否已完全落在修复之后，而不是被一个无信息的百分比误导。
+           "recent_span": (None, None)}
+    # 近/远切分点：窗口后一半为「近」（时间上更近=修复后），前一半为「远」（对照）。
+    # 奇数窗时近半多 1 篇；窗口 <2 时不切分（两半都留 0，由渲染层不显示对照）。
+    _split = (len(previews) + 1) // 2
+    for _idx, (pv, ban_active, _ts) in enumerate(previews):
+        _is_recent = _idx >= _split
+        if _is_recent and _ts:
+            # _lo 取首次出现、_hi 每次覆盖为最新（previews 已按时间升序）。
+            # 两者都写成「None 才赋值」会让 _hi 永远停在第一篇，跨度退化成单点。
+            _lo, _hi = out["recent_span"]
+            _s = str(_ts)[:16].replace("T", " ")
+            out["recent_span"] = (_s if _lo is None else _lo, _s)
         m_fng = _FNG_ANCHOR_RE.search(pv)
         if m_fng:
             out["fng_anchor"] += 1
@@ -150,6 +198,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
         # （那是「N 处命中」的硬合规口径），只走独立的 🎭 趋势行，避免两个口径互相污染。
         if any(w in pv for w in _MANIPULATION_FRAME):
             out["manip_frame"] += 1
+            out["manip_frame_recent" if _is_recent else "manip_frame_older"] += 1
         # R605：句长 burstiness（节奏方差）——句数≥2 才计入，短帖跳过
         _cv = _sentence_cv(pv)
         if _cv is not None:
@@ -157,6 +206,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
         # R607：「利好不涨」描述复读——句中短语，前缀雷达抓不到，单独按帖计一次
         if _FLAT_DESC_RE.search(pv):
             out["flat_desc"] += 1
+            out["flat_desc_recent" if _is_recent else "flat_desc_older"] += 1
     out["offenders"] = dict(out["offenders"])
     return out
 
@@ -432,6 +482,9 @@ def summarize(rows):
         "images": 0,
         "image_tiers": collections.Counter(),
         "zero_widget_posts": 0,
+        # R610：稳定币-only 零挂件（合规，不告警）——与上面失守桶分开计数，
+        # 报表显性列出，避免"告警消失"被误读成观测被关掉。
+        "zero_widget_stablecoin_only": 0,
         "zero_tag_posts": 0,
         # R284：活动标签返佣归因覆盖（保底双标签之外的创作激励活动标签）
         "campaign_tag_evaluated": 0,
@@ -633,9 +686,19 @@ def summarize(rows):
                 s["image_tiers"][str(tier)] += 1
             # R123：Write2Earn 生命线度量——全文零有效挂件的帖子数（保底机制
             # 失守的直接信号；预览区无 $ 只可能是截断伪影，不看全文计数会误报）
+            # R610：稳定币-only 的零挂件是**契约合规**不是失守——R316 明确
+            # 「USDC/USDT 等稳定币不做挂件」，R586更进一步在选稿阶段就跳过
+            # 全稳定币的帖子（skip_counts["no_token"]）。生产实录：09-30 02:04
+            # USDC-only 帖 widget_count=0，那正是 R586 修复前的合规帖，不是
+            # 保底被绕过。原先把它计成失守，会让告警长期钉在 1/288 假阳性上，
+            # 真正的失守反而被淹没（R123 告警的第一次失效就是"狼来了"式失效）。
+            # 故按tokens 判定：全为 FORCE_STRIP 词 → 归入合规桶，不进告警分母。
             wc = r.get("widget_count")
             if wc == 0:
-                s["zero_widget_posts"] += 1
+                if _is_stablecoin_only(r.get("tokens")):
+                    s["zero_widget_stablecoin_only"] += 1
+                else:
+                    s["zero_widget_posts"] += 1
             # R125：返佣归因标签覆盖率——零标签帖 = #Write2Earn 归因丢失
             tc = r.get("tag_count")
             if tc == 0:
@@ -1318,8 +1381,40 @@ def render_text(s, rows=None):
             if q["manip_frame"]:
                 _mf = q["manip_frame"]
                 _pct = 100 * _mf / q["scanned"]
-                _warn = " ⚠️（叙事指纹，若持续高位需加固 R596）" if _pct >= 40 else ""
-                lines.append(f"  🎭 操纵归因叙事: {_mf}/{q['scanned']} 篇（{_pct:.0f}%）{_warn}")
+            # R610：判定「修复是否生效」看**近半**（修复后新帖）而非整窗。
+            # 整窗在修复刚上线时 mostly 是修复前旧稿，会把已生效的加固报成无效
+            # （R604 实录：整窗 50% 假警报，近半 0/10 真水位）。近半明显低于
+            # 远半即"已生效、待窗口滚出旧稿"；两半都高才是真的无效，才值得再动手。
+            if q["manip_frame"]:
+                _mf = q["manip_frame"]
+                _pct = 100 * _mf / q["scanned"]
+                _r = q.get("manip_frame_recent", 0)
+                _o = q.get("manip_frame_older", 0)
+                _rn = (q["scanned"] + 1) // 2
+                _on = q["scanned"] - _rn
+                if _rn >= 3 and _on >= 3:
+                    _rpct = 100 * _r / _rn
+                    _opct = 100 * _o / _on
+                    # 判据以**近/远对比**为主、绝对值为辅。理由：发布速率只有
+                    # 4~6 篇/天，一次加固上线当天近半必然混有加固前旧稿，此时
+                    # 近半绝对值高只说明"样本还没滚干净"，不说明修复无效。
+                    # 只有"近半 ≥ 远半"（没降）才值得再动手；降了就是在生效，
+                    # 等窗口滚干净即可。绝不因为近半绝对值高就催"再加固"——
+                    # 那会让下一轮去改已经修好的东西（R604 就是这么被误判的）。
+                    if _rpct >= 40 and _rpct >= _opct:
+                        _warn = " ⚠️（近半未低于远半，加固可能未生效，待更多新帖确认）"
+                    elif _r == 0:
+                        _warn = "（近半已清零↓，加固生效，待旧帖滚出窗口）"
+                    else:
+                        _warn = "（近半 < 远半，加固生效中↓）"
+                    _lo, _hi = q.get("recent_span") or (None, None)
+                    _span = f" · 近半跨度 {_lo}→{_hi}" if _lo else ""
+                    lines.append(f"  🎭 操纵归因叙事: 近半 {_r}/{_rn}（{_rpct:.0f}%）· "
+                                 f"远半对照 {_o}/{_on}（{_opct:.0f}%）· "
+                                 f"整窗 {_mf}/{q['scanned']}（{_pct:.0f}%）{_warn}{_span}")
+                else:
+                    _warn = " ⚠️（叙事指纹，样本不足需继续观察）" if _pct >= 40 else ""
+                    lines.append(f"  🎭 操纵归因叙事: {_mf}/{q['scanned']} 篇（{_pct:.0f}%）{_warn}")
             # R605：句长 burstiness（节奏方差）——整合自 textpulse 2026 6万+文本研究：
             # AI 文本句长偏均匀（CV 小），人类起伏大（人≈0.449/AI≈0.376）。我们 prompt
             # 的「长短句交错」此前无度量，这里给中位 CV + 偏平尾；研究自陈个体判决不可靠，
@@ -1339,8 +1434,32 @@ def render_text(s, rows=None):
             if q.get("flat_desc"):
                 _fd = q["flat_desc"]
                 _fp = 100 * _fd / q["scanned"]
-                _fw = " ⚠️（描述收敛，读样本辨别是风格退化还是近期多利好不涨）" if _fp >= 40 else ""
-                lines.append(f"  📉 利好不涨描述复读: {_fd}/{q['scanned']} 篇（{_fp:.0f}%）{_fw}")
+                # R610：同操纵归因——近半判当期水位、远半作对照。
+                # 这个指标尤其需要：它的 33% 上升本就可能是"近期新闻恰好多为
+                # 利好不涨"的话题假象，近/远对照能把话题驱动与风格收敛分开。
+                _fr = q.get("flat_desc_recent", 0)
+                _fo = q.get("flat_desc_older", 0)
+                _rn = (q["scanned"] + 1) // 2
+                _on = q["scanned"] - _rn
+                if _rn >= 3 and _on >= 3:
+                    _frpct = 100 * _fr / _rn
+                    _fopct = 100 * _fo / _on
+                    # 同 R610：近/远对比优先。近半 < 远半 = 话题驱动（这批新闻
+                    # 恰好多是利好不涨，描述本就该多），非风格退化；只有近半没降
+                    # 甚至升高，才需要读样本甄别是否该给"换着说法"的技法指导。
+                    if _frpct >= 40 and _frpct >= _fopct:
+                        _fw = " ⚠️（近半未低于远半，读样本辨别风格退化还是话题驱动）"
+                    elif _frpct < _fopct:
+                        _fw = "（近半 < 远半，话题驱动特征，无需改 prompt）"
+                    else:
+                        _fw = "（近/远持平，需更多样本）"
+                    lines.append(f"  📉 利好不涨描述复读: 近半 {_fr}/{_rn}（{_frpct:.0f}%）· "
+                                 f"远半对照 {_fo}/{_on}（{_fopct:.0f}%）· "
+                                 f"整窗 {_fd}/{q['scanned']}（{_fp:.0f}%）{_fw}")
+                else:
+                    _fw = (" ⚠️（描述收敛，读样本辨别是风格退化还是近期多利好不涨）"
+                           if _fp >= 40 else "")
+                    lines.append(f"  📉 利好不涨描述复读: {_fd}/{q['scanned']} 篇（{_fp:.0f}%）{_fw}")
         # R289：FNG 三件套收口——滞回驱动量直方图 + 武装未剥离一致性告警。
         # hook_count 是近窗引入次数（武装条件 ≥2，故 1 = 距武装一步之遥的压力面）；
         # armed 但 market_stripped=False = R101 互补剥离疑似失效（禁令与盘面行
@@ -1387,6 +1506,11 @@ def render_text(s, rows=None):
         # R123：全文零挂件帖 = Write2Earn 生命线失守（保底机制被绕过）的直接信号
         if s.get("zero_widget_posts"):
             lines.append(f"  ⚠️ 全文零有效挂件 {s['zero_widget_posts']}/{n_pub} 篇——保底机制被绕过，需排查")
+        # R610：稳定币-only 零挂件显性列出（R316/R586 契约的合规结果，非失守）。
+        # 与上面告警分开：让"告警消失"可归因到口径修正，而不是让人怀疑观测被关掉。
+        if s.get("zero_widget_stablecoin_only"):
+            lines.append(f"  ℹ️ 稳定币-only 零挂件 {s['zero_widget_stablecoin_only']} 篇"
+                         f"（R316「稳定币不做挂件」契约 + R586 选稿跳过，不计失守）")
         # R125：零标签帖 = #Write2Earn 返佣归因丢失
         if s.get("zero_tag_posts"):
             lines.append(f"  ⚠️ 全文零标签 {s['zero_tag_posts']}/{n_pub} 篇——返佣归因丢失，需排查")

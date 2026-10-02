@@ -1205,6 +1205,122 @@ class TestMetricsReport(unittest.TestCase):
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("利好不涨描述复读: 3/4 篇", text)
 
+    def test_r610_tracking_window_split_recent_vs_older(self):
+        """R610：追踪指标按「近半/远半」对照，修复生效才不会被旧稿拖成假警报。
+
+        生产教训（R604）：prompt 加固刚上线，固定 20 篇窗口里 15篇仍是加固前旧稿，
+        面板继续报 50% 命中，看着像加固无效，实则加固后新帖 0 命中。R604 提交
+        时间为 10-01T18:08Z，其后 5 篇操纵词全为 0（仅 18:44 那篇是部署延迟）。
+        这种假阴性会诱导下一轮去"再加固一遍已经修好的东西"。
+
+        这里构造 8 篇：远半 4 篇全含操纵词（加固前），近半 4 篇全干净（加固后）。
+        整窗仍是 4/8=50%（旧口径会告警），但近/远对照应判「加固生效中」。
+        """
+        _dirty = "利好出来盘面不涨，看着像主力借机出货的烟雾弹。"
+        _clean = "量能接不住，等成交承接确认再说，别急着追。"
+        rows_spec = []
+        for _i in range(4):
+            rows_spec.append({"platforms": ["binance"], "outcome": "binance_published",
+                              "ts": f"2026-10-01T1{_i}:00:00+00:00",
+                              "final_preview": _dirty})
+        for _i in range(4):
+            rows_spec.append({"platforms": ["binance"], "outcome": "binance_published",
+                              "ts": f"2026-10-02T0{_i}:00:00+00:00",
+                              "final_preview": _clean})
+        _write(self.path, rows_spec)
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["manip_frame"], 4, "整窗计数不变（向后兼容）")
+        self.assertEqual(q["manip_frame_older"], 4, "远半=对照基线，4 篇全中")
+        self.assertEqual(q["manip_frame_recent"], 0, "近半=加固后新帖，0 命中")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("近半 0/4", text)
+        self.assertIn("远半对照 4/4", text)
+        self.assertIn("加固生效", text)
+        self.assertNotIn("加固可能未生效", text,
+                         "近半清零时绝不能出现催促再加固的判语")
+        # 近半跨度必须首尾都正确（曾退化成单点：_hi 只在首次赋值）
+        lo, hi = q["recent_span"]
+        self.assertEqual(lo, "2026-10-02 00:00")
+        self.assertEqual(hi, "2026-10-02 03:00")
+
+    def test_r610_recent_not_lower_flags_for_more_evidence(self):
+        """R610 反向判据：近半**没有**低于远半（甚至更高）时，才提示加固可能
+        未生效。前半段测试覆盖"降了"，这里覆盖"没降"——两侧都不误判才算判据完备。
+        """
+        _dirty = "这波纯纯是给庄家送流动性，接盘侠注意。"
+        _clean = "放量突破前高，资金净流入，结构健康。"
+        rows_spec = []
+        for _i in range(4):  # 远半：2 中 2 净
+            rows_spec.append({"platforms": ["binance"], "outcome": "binance_published",
+                              "final_preview": _dirty if _i < 2 else _clean})
+        for _i in range(4):  # 近半：3 中 1 净（比远半更高）
+            rows_spec.append({"platforms": ["binance"], "outcome": "binance_published",
+                              "final_preview": _dirty if _i < 3 else _clean})
+        _write(self.path, rows_spec)
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["manip_frame_older"], 2)
+        self.assertEqual(q["manip_frame_recent"], 3)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("近半 3/4", text)
+        self.assertIn("加固可能未生效", text)
+
+    def test_r610_small_window_keeps_legacy_line(self):
+        """R610：窗口太小（两半任一<3篇）时不做近/远对照，回落旧单行格式。
+        小样本下近/远切分没有统计意义，硬切只会把噪声当趋势。
+        """
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "看着像主力出货的烟雾弹。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "纯纯给庄家送流动性。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "量能接不住，等确认。"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("操纵归因叙事: 2/3 篇", text, "小窗口沿用旧格式，不切近/远")
+        self.assertNotIn("近半", text)
+
+    def test_r610_stablecoin_only_zero_widget_not_alarm(self):
+        """R610：稳定币-only 的零挂件是 R316/R586 契约下的**合规**行为，不是
+        Write2Earn 生命线失守。生产实录09-30 02:04 USDC-only 帖widget_count=0，
+        一直被 R123 告警记成"保底机制被绕过"，假阳性长期钉在 1/288，让真失守
+        被淹没（告警的"狼来了"式失效）。修复后它进独立ℹ️ 桶，不进告警分母。
+        """
+        _write(self.path, [
+            # 合规：全稳定币 → 不告警
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tokens": ["USDC"], "widget_count": 0, "final_preview": "USDC 报价 1.0。"},
+            # 真失守：真实山寨币却零挂件 → 必须告警
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tokens": ["SHIB"], "widget_count": 0, "final_preview": "$SHIB 波动大。"},
+            # 混合：USDC + 真实币 → 按真失守处理（从严，宁可多报）
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tokens": ["USDC", "DOGE"], "widget_count": 0, "final_preview": "混合标的。"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        s = mr.summarize(rows)
+        self.assertEqual(s["zero_widget_stablecoin_only"], 1, "仅全稳定币那篇进合规桶")
+        self.assertEqual(s["zero_widget_posts"], 2, "真失守 + 混合标的两篇仍告警")
+        text = mr.render_text(s, rows)
+        self.assertIn("全文零有效挂件 2/3 篇", text)
+        self.assertIn("稳定币-only 零挂件 1 篇", text)
+
+    def test_r610_stablecoin_helper_strict(self):
+        """_is_stablecoin_only 口径必须从严：tokens 缺失/空/含非 FORCE_STRIP 词
+        一律判 False（进告警分母）。这条告警的唯一价值是"真失守时能响"，
+        漏判会让它重新变成哑炮，故不能用"看起来像稳定币"这类宽松判断。"""
+        self.assertTrue(mr._is_stablecoin_only(["USDC"]))
+        self.assertTrue(mr._is_stablecoin_only(["usdc", "USDT"]), "大小写不敏感")
+        self.assertTrue(mr._is_stablecoin_only(["USDC", "ETF"]))
+        self.assertFalse(mr._is_stablecoin_only(["USDC", "SHIB"]), "混合 → 真失守")
+        self.assertFalse(mr._is_stablecoin_only(["SHIB"]))
+        self.assertFalse(mr._is_stablecoin_only([]), "空列表不可当合规")
+        self.assertFalse(mr._is_stablecoin_only(None), "字段缺失不可当合规")
+        self.assertFalse(mr._is_stablecoin_only("USDC"), "非list 不可当合规")
+
     def test_quality_scan_clean_and_dry_excluded(self):
         _write(self.path, [
             {"platforms": ["binance"], "outcome": "binance_published",
@@ -1550,6 +1666,15 @@ class TestQualityPatternSync(unittest.TestCase):
         self.assertEqual(tuple(mr._OVERUSED_DEVICES),
                          tuple(m._OVERUSED_OPENING_DEVICES),
                          "永久禁用装置清单两份不一致——改 main 必须同步 metrics_report")
+
+    def test_force_strip_cashtags_in_sync(self):
+        """R610：FORCE_STRIP 清单成了第二份事实源——main 用它决定「稳定币不做
+        挂件」（R316）+ 选稿跳过全稳定币帖（R586），metrics_report 用它把稳定币
+        only 的零挂件从生命线告警里摘出来。两处若漂移，报表会把合规帖重新报成
+        保底失守（正是 R610 要消灭的假阳性），或反过来把真失守藏进合规桶。"""
+        self.assertEqual(set(mr._FORCE_STRIP_CASHTAGS),
+                         set(m.SquarePublisher.FORCE_STRIP_CASHTAGS),
+                         "FORCE_STRIP 清单两份不一致——改 main 必须同步 metrics_report")
 
     def test_ai_flavor_hard_in_sync(self):
         self.assertEqual(tuple(mr._AI_FLAVOR_HARD),
