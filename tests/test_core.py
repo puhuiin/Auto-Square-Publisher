@@ -15729,6 +15729,77 @@ class TestR634ParkExpiryResetsFailCount(unittest.TestCase):
         self.f._feed_record(self.name, ok=True)
         self.assertEqual(m.intel_state_get("_feed_health", {}), {})
 
+class TestR635PublishParkExpiryResetsFailCount(unittest.TestCase):
+    """R635：发布停放也有 R634 的「到期不归零」同型缺陷。
+
+    `_publish_record` 上方注释明写「连续发布失败 N 次后停放，**到期自动重试**」，
+    而旧实现只累加不归零 ⇒ 实测复现：
+        失败 2 次 → 停放 6h → 到期（`_parked_with` 已 False）
+        → 再失败 1 次 → fails=3 >= 阈值 2 → **立刻又停放**
+    **"自动重试"退化成"永久禁用"**，与注释承诺的语义相悖。
+
+    与 R634 的区别：key 是 `news_id`（故事键）而非源名，且阈值 2。
+    注释还记着「BitMine 同篇 5 次烧 5984tokens」——**说明同一故事确实会被
+    多次尝试**（R634 我曾误判它是死代码，见 MEMORY 57）。
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.mkdtemp()
+        self._old = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = os.path.join(self._tmp, "ci.json")
+        self.p = m.SquarePublisher(api_key="k")
+        self.nid = "story-001"
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._old
+        import shutil
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+    def _expire(self):
+        st = dict(m.intel_state_get("_publish_park", {}))
+        info = dict(st[self.nid])
+        info["parked_until"] = (datetime.now(timezone.utc)
+                                - timedelta(minutes=1)).isoformat()
+        st[self.nid] = info
+        m.intel_state_set("_publish_park", st)
+
+    def test_first_fail_after_expiry_does_not_repark(self):
+        for _ in range(2):
+            self.p._publish_record(self.nid, ok=False)
+        st = m.intel_state_get("_publish_park", {})
+        self.assertTrue(self.p._parked_with(st, self.nid), "前置：应处于停放")
+        self._expire()
+        self.p._publish_record(self.nid, ok=False)
+        cur = m.intel_state_get("_publish_park", {})
+        self.assertEqual(cur[self.nid]["fails"], 1,
+                         f"计数未归零重计（fails={cur[self.nid]['fails']}）")
+        self.assertFalse(self.p._parked_with(cur, self.nid),
+                         "到期后第一次失败就重新停放 ⇒ 自动重试退化成永久禁用")
+
+    def test_normal_path_unchanged(self):
+        """回归：未到期时行为不变（连续 2 次才停放）"""
+        self.p._publish_record("s2", ok=False)
+        c = m.intel_state_get("_publish_park", {})
+        self.assertEqual(c["s2"]["fails"], 1)
+        self.assertFalse(self.p._parked_with(c, "s2"))
+        self.p._publish_record("s2", ok=False)
+        c = m.intel_state_get("_publish_park", {})
+        self.assertEqual(c["s2"]["fails"], 2)
+        self.assertTrue(self.p._parked_with(c, "s2"))
+
+    def test_success_still_clears(self):
+        """回归：成功仍清空停放记录"""
+        self.p._publish_record("s3", ok=False)
+        self.assertIn("s3", m.intel_state_get("_publish_park", {}))
+        self.p._publish_record("s3", ok=True)
+        self.assertEqual(m.intel_state_get("_publish_park", {}), {})
+
+    def test_malformed_fails_value_tolerated(self):
+        """畸形 fails 值不得抛异常（原有TypeError/ValueError 兜底仍在）"""
+        m.intel_state_set("_publish_park", {self.nid: {"fails": "坏值"}})
+        self.p._publish_record(self.nid, ok=False)
+        self.assertEqual(m.intel_state_get("_publish_park", {})[self.nid]["fails"], 1)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

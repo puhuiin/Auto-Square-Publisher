@@ -6671,13 +6671,36 @@ class SquarePublisher(BasePublisher):
             state = dict(state or {})
             info = dict(state.get(news_id, {"fails": 0}))
             try:
-                info["fails"] = int(info.get("fails", 0)) + 1
+                fails = int(info.get("fails", 0))
             except (TypeError, ValueError):
-                info["fails"] = 1
-            if info["fails"] >= self.PUBLISH_PARK_THRESHOLD:
-                info["parked_until"] = (datetime.now(timezone.utc) + timedelta(hours=self.PUBLISH_PARK_HOURS)).isoformat()
-                parked_note.append(info["fails"])
-            info["last_fail"] = datetime.now(timezone.utc).isoformat()
+                fails = 0
+            # R635：**同 R634 的归零纪律**——停放到期后计数必须归零。
+            # 本函数上方注释明写「连续发布失败 N 次后停放，**到期自动重试**」，
+            # 而旧实现只累加不归零 ⇒ 到期后第一次失败就立刻重新停放
+            # （fails=3 vs 阈值 2），**"自动重试"退化成"永久禁用"**。
+            # 实测复现：失败 2 次 → 停放 6h → 到期（`_parked_with` 已 False）
+            # → 再失败 1 次 → fails=3 → 立刻又停放。
+            #
+            # 判据同 R634：`fails` 语义是"连续"，而**停放到期本身是宽限期**。
+            _now = datetime.now(timezone.utc)
+            if info.get("parked_until"):
+                try:
+                    _until = datetime.fromisoformat(
+                        str(info["parked_until"]).replace("Z", "+00:00"))
+                    if _until.tzinfo is None:
+                        _until = _until.replace(tzinfo=timezone.utc)
+                    if _now >= _until:
+                        fails = 0
+                        info.pop("parked_until", None)
+                except Exception:
+                    fails = 0
+                    info.pop("parked_until", None)
+            fails += 1
+            info["fails"] = fails
+            if fails >= self.PUBLISH_PARK_THRESHOLD:
+                info["parked_until"] = (_now + timedelta(hours=self.PUBLISH_PARK_HOURS)).isoformat()
+                parked_note.append(fails)
+            info["last_fail"] = _now.isoformat()
             state[news_id] = info
             # 按故事键 cap 200（已发布故事的孤儿条目自然淘汰），防状态膨胀
             if len(state) > 200:
