@@ -195,12 +195,15 @@ def rebuild_token_engagement(min_n: int = 4) -> int:
             toks = d.get("tokens") or []
             if cid in cs and toks:
                 tok_views[str(toks[0]).upper().replace("$", "")].append(cs[cid])
-    tokens = {t: {"avg_views": round(statistics.mean(v)), "n": len(v)}
+    tokens = {t: {"avg_views": round(statistics.mean(v)),
+                  "median_views": round(statistics.median(v)),  # R609：抗离群值的主指标
+                  "n": len(v)}
               for t, v in tok_views.items()}
     out = {"as_of": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
            "min_n": min_n,
-           "note": "per-token avg Square views (creator-center export); ranking-only engagement boost (R608)",
-           "tokens": dict(sorted(tokens.items(), key=lambda x: -x[1]["avg_views"]))}
+           "note": "per-token avg/median Square views (creator-center export); ranking-only "
+                   "engagement boost (R608/R609; boost uses median_views for outlier robustness)",
+           "tokens": dict(sorted(tokens.items(), key=lambda x: -x[1]["median_views"]))}
     with open(TOKEN_ENG_PATH, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
     return len(tokens)

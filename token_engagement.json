@@ -1,59 +1,72 @@
 {
-  "as_of": "2026-10-02T05:03:54.625561Z",
+  "as_of": "2026-10-02T06:04:14.745428Z",
   "min_n": 4,
-  "note": "per-token avg Square views (creator-center export); ranking-only engagement boost (R608)",
+  "note": "per-token avg/median Square views (creator-center export); ranking-only engagement boost (R608/R609; boost uses median_views for outlier robustness)",
   "tokens": {
     "BNB": {
       "avg_views": 247,
+      "median_views": 247,
       "n": 1
     },
     "HYPE": {
       "avg_views": 236,
+      "median_views": 236,
+      "n": 2
+    },
+    "LINK": {
+      "avg_views": 193,
+      "median_views": 193,
       "n": 2
     },
     "ETH": {
       "avg_views": 218,
+      "median_views": 184,
       "n": 9
-    },
-    "LINK": {
-      "avg_views": 193,
-      "n": 2
-    },
-    "DOGE": {
-      "avg_views": 164,
-      "n": 3
     },
     "COMP": {
       "avg_views": 160,
+      "median_views": 160,
       "n": 1
     },
     "SOL": {
       "avg_views": 158,
-      "n": 4
-    },
-    "QNT": {
-      "avg_views": 137,
+      "median_views": 156,
       "n": 4
     },
     "BTC": {
       "avg_views": 127,
+      "median_views": 109,
       "n": 12
+    },
+    "QNT": {
+      "avg_views": 137,
+      "median_views": 98,
+      "n": 4
     },
     "SHIB": {
       "avg_views": 102,
+      "median_views": 98,
       "n": 4
     },
     "ZEC": {
       "avg_views": 76,
+      "median_views": 96,
       "n": 5
-    },
-    "XRP": {
-      "avg_views": 73,
-      "n": 11
     },
     "USDC": {
       "avg_views": 66,
+      "median_views": 66,
       "n": 1
+    },
+    "XRP": {
+      "avg_views": 73,
+      "median_views": 54,
+      "n": 11
+    },
+    "DOGE": {
+      "avg_views": 164,
+      "median_views": 36,
+      "n": 3
     }
   }
 }

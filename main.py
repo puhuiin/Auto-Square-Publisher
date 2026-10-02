@@ -2659,9 +2659,18 @@ class NewsFetcher:
         for t, rec in toks.items():
             if not isinstance(rec, dict):
                 continue
-            av, n = rec.get("avg_views"), rec.get("n")
-            if isinstance(av, (int, float)) and isinstance(n, int) and n >= min_n and av >= 0:
-                out[str(t).upper().replace("$", "")] = float(av)
+            n = rec.get("n")
+            if not (isinstance(n, int) and n >= min_n):
+                continue
+            # R609：优先用中位浏览（抗离群值）。59 篇数据实测：均值会被单篇爆款带偏——
+            # ZEC 均值 76 但中位 96（被两篇 23/42 的哑弹拖低），按均值罚它=对两篇运气差
+            # 过拟合；QNT 均值 137 但中位 98（被一篇 285 拉高）。中位反映「系统性」触达，
+            # 与本次发现「长文 +30% 全是 414 单篇离群、按中位只 +17%」同源。旧文件无
+            # median_views 时回退 avg_views（向后兼容）。
+            mv, av = rec.get("median_views"), rec.get("avg_views")
+            val = mv if isinstance(mv, (int, float)) and mv >= 0 else av
+            if isinstance(val, (int, float)) and val >= 0:
+                out[str(t).upper().replace("$", "")] = float(val)
         return out
 
     @staticmethod

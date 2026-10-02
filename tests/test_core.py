@@ -7543,6 +7543,20 @@ class TestEngagementBoost(unittest.TestCase):
         out = m.NewsFetcher._load_token_engagement(p)
         self.assertEqual(out, {"ETH": 218.0}, "样本不足的币不进加权表")
 
+    def test_loader_prefers_median_for_outlier_robustness(self):
+        """R609：加权用中位浏览而非均值——均值会被单篇爆款/哑弹带偏。
+        ZEC 实测均值 76（两篇 23/42 哑弹拖低）但中位 96 ≈ 舰队中位，按均值罚它=过拟合。"""
+        import tempfile, json as _json, os as _os
+        p = _os.path.join(tempfile.mkdtemp(), "te.json")
+        with open(p, "w", encoding="utf-8") as f:
+            _json.dump({"min_n": 4, "tokens": {
+                "ZEC": {"avg_views": 76, "median_views": 96, "n": 5},
+                "OLD": {"avg_views": 130, "n": 6},  # 旧文件无 median → 回退均值
+            }}, f)
+        out = m.NewsFetcher._load_token_engagement(p)
+        self.assertEqual(out["ZEC"], 96.0, "有 median_views 必须优先用它（抗离群）")
+        self.assertEqual(out["OLD"], 130.0, "旧文件无 median_views 时回退 avg_views")
+
     def test_loader_missing_file_empty(self):
         self.assertEqual(m.NewsFetcher._load_token_engagement("/nonexistent/te.json"), {})
 
