@@ -7603,8 +7603,15 @@ class TelegramChannelPublisher(BasePublisher):
             return False
 
         meta = meta or {}
-        if self._tg_already_sent(meta.get("news_id", "")):
-            logger.info(f"📢 该新闻此前已镜像到 Telegram，跳过重复发布: {meta.get('title', '')[:40]}")
+        _tg_nid = meta.get("news_id", "")
+        if self._tg_already_sent(_tg_nid):
+            # R632同型：跳过日志必须带**证据**。查重键就是 news_id，它就在
+            # 手上——原先却跟 meta['title'][:40]，而 title 在部分路径下为空 ⇒
+            # 日志实录是「跳过重复发布: 」，读者无法核对跳过的到底是哪条。
+            # 判据同 OKX 草稿那处：**有键就不必再依赖 title**。
+            _shown = str(_tg_nid)[:40] or meta.get("title", "")
+            logger.info(f"📢 该新闻此前已镜像到 Telegram，跳过重复发布: "
+                        f"news_id={_shown}")
             self.skipped_reason = IDEMPOTENT_SKIP
             return False
 

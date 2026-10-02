@@ -15505,6 +15505,54 @@ class TestR632DraftExistsReturnsEvidence(unittest.TestCase):
         self.assertFalse(hasattr(m.OKXDraftExporter, "_draft_exists"),
                          "_draft_exists 复活了——会再次丢掉文件名")
 
+class TestR632TelegramSkipLogCarriesEvidence(unittest.TestCase):
+    """R632 同型：Telegram 镜像通道的跳过日志也要带证据。
+
+    R632 修了 OKX 草稿那处（`_draft_exists -> bool` 丢掉文件名），但**同型
+    缺陷在 Telegram 镜像通道还有一处**：`publish()` 的跳过日志跟
+    `meta['title'][:40]`，而 title 在部分路径下为空 ⇒「跳过重复发布: 」。
+
+    讽刺之处：**查重键就是 news_id，它就在手边**（`_tg_already_sent(_tg_nid)`
+    刚判过），却去打可能为空的 title。判据同R632：**有键就不必再依赖 title**。
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.mkdtemp()
+        self._old = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = os.path.join(self._tmp, "ci.json")
+        self._env = {k: os.environ.get(k) for k in
+                     ("TELEGRAM_BOT_TOKEN", "TELEGRAM_MIRROR_CHANNEL_ID")}
+        os.environ["TELEGRAM_BOT_TOKEN"] = "t"
+        os.environ["TELEGRAM_MIRROR_CHANNEL_ID"] = "c"
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._old
+        for k, v in self._env.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        import shutil
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+    def test_skip_log_contains_news_id_even_without_title(self):
+        """meta **不带 title**（原缺陷场景）时，日志仍须带news_id"""
+        m.intel_state_set("_tg_delivered", {"mynid123": 1})
+        p = m.TelegramChannelPublisher()
+        with self.assertLogs(m.logger.name, level="INFO") as cm:
+            ret = p.publish("正文", meta={"news_id": "mynid123"})
+        self.assertFalse(ret, "已镜像过应返回 False（未产生新动作）")
+        joined = "\n".join(cm.output)
+        self.assertIn("mynid123", joined,
+                      "跳过日志未带 news_id——无法核对跳过的到底是哪条")
+        self.assertIn(m.IDEMPOTENT_SKIP, str(p.skipped_reason))
+
+    def test_not_skipped_when_state_empty(self):
+        """未镜像过时不得误跳（防修复引入假阳性）"""
+        m.intel_state_set("_tg_delivered", {})
+        p = m.TelegramChannelPublisher()
+        self.assertFalse(p._tg_already_sent("never-sent"))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
