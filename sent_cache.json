@@ -2840,5 +2840,16 @@
     "tokens": [
       "XRP"
     ]
+  },
+  {
+    "id": "seed::bitget-hack-2026-09::0",
+    "title": "Bitget 遭黑客攻击约 3.52 亿美元 用户保护基金 5,500 枚 $BTC 全额兜底 $ETH 用户零损失",
+    "source": "priority_seed:bitget-hack",
+    "sent_at": "2026-10-02T17:51:19.459220+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "XRP"
+    ]
   }
 ]
