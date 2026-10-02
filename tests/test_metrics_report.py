@@ -3203,8 +3203,12 @@ class TestR623PoolCoverageBlindSpot(unittest.TestCase):
         line = next(ln for ln in text.splitlines() if "从未被尝试" in ln)
         self.assertNotIn("key 已注入", line)
         self.assertNotIn("非熔断状态", line)
-        # 但必须把"需要人去向别处对账"说出来，否则读者以为面板已给全答案
-        self.assertIn("对账", line)
+        # 但必须把"需要人去向别处对账"说出来，否则读者以为面板已给全答案。
+        #
+        # R630：分组后"对账"落在**待对账组**那一行（探针未报缺 key 不等于
+        # key 有效 —— 那正是需要人工核实的部分），而合计行只作汇总。
+        # 断言放宽到**整段**而不是单行，避免结构优化就要改守卫。
+        self.assertIn("对账", text)
 
     def test_all_channels_tried_renders_no_warning(self):
         """全部池内通道都有遥测时不报⚠️——告警预算纪律（R614）
@@ -3609,6 +3613,78 @@ class TestR629NoStaleThroughputClaim(unittest.TestCase):
         q = mr.quality_scan(rows)
         self.assertIsNotNone(q["recent_span"][0],
                              "R610 的近半跨度丢失——判读近半的前提")
+
+class TestR630PoolCoverageGrouping(unittest.TestCase):
+    """R630：「从未被尝试」按**处置动作**分组，而不是一行"请对账"。
+
+    R623 把"窗口内零尝试"显形是那轮的成果，但**收尾动作写成了"请对账是否缺
+    key / 被熔断"**——8 条通道的处置动作完全不同，混在一行等于没给判据。
+
+    更隐蔽的坑（本轮实测抓到）：**探针未报"缺 key"≠ key 有效**。探针对未
+    登记 AUTH_MODE 的站走"无认证直接请求"，而部分站的 /models 公开可达 ⇒
+    「目录核实通过」与「主流程拿不到 key」**可以同时成立**。
+    生产实锤：`gh secret list` 只有 5 个 secret，而 xkiro / aihubmix / inferera
+    全部未配 key，却因目录公开可查而**不在** unknown_sites 里——
+    若按名单直接分组，会把它们误归为"排序问题"，而真因是缺 key。
+    """
+
+    def _rows(self, unknown_sites):
+        return [{"ts": "2026-10-02T12:00:00+00:00", "outcome": "provider_probe",
+                 "probe_ok": True, "sites_total": 11, "sites_ok": 7,
+                 "sites_unknown": len([x for x in unknown_sites.split(",") if x]),
+                 "unknown_sites": unknown_sites},
+                {"ts": "2026-10-02T12:00:00+00:00", "outcome": "run_summary",
+                 "candidates": 5, "published": 1}]
+
+    def test_missing_key_group_listed_with_actionable_action(self):
+        """探针已定性的缺 key 组必须给确定处置动作（补配 secret）"""
+        rows = self._rows("zai,siliconflow")
+        text = mr.render_text(mr.summarize(rows), rows)
+        line = next(ln for ln in text.splitlines() if "缺 key" in ln)
+        self.assertIn("补配 secret", line, "缺 key 组必须给出确定处置动作")
+
+    def test_not_in_probe_list_not_claimed_key_valid(self):
+        """不在探针缺 key 名单里，**不得断言 key 有效**（R630 核心）。
+
+        目录公开可查的站会因"核实通过"而不在名单里，若据此推断"key 有效"
+        就会把人引去改排序，而真因是没配 secret。
+        """
+        rows = self._rows("zai")
+        text = mr.render_text(mr.summarize(rows), rows)
+        # 断言**不得出现的错误断言**，而不是子串"key 有效"——
+        # 解释性文案里"不等于 key 有效"本身就含这四个字（实测踩到）。
+        # 真正要禁的是把待对账组说成已确诊的那几种说法。
+        for bad in ("key 已生效", "key 正常", "非 key 问题", "排序问题而非 key",
+                    "只需调整排序"):
+            self.assertNotIn(bad, text,
+                             f"待对账组被断言成了已确诊（{bad}）——"
+                             f"目录可查≠ 主流程有 key")
+        pending = next(ln for ln in text.splitlines() if "待对账" in ln)
+        self.assertIn("gh secret list", pending,
+                      "待对账组必须指明用什么手段对账")
+
+    def test_both_groups_shown_with_totals(self):
+        """两组 + 合计都要在，且分母与池一致"""
+        rows = self._rows("zai,tokenrouter")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("缺 key", text)
+        self.assertIn("待对账", text)
+        self.assertIn("从未被尝试合计", text)
+
+    def test_no_probe_data_still_renders_pending_group(self):
+        """无探针结论时也要渲染待对账组，而不是整行消失（沉默不是通过）"""
+        rows = [{"ts": "2026-10-02T12:00:00+00:00", "outcome": "run_summary",
+                 "candidates": 5, "published": 1}]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("待对账", text)
+        self.assertIn("从未被尝试合计", text)
+
+    def test_does_not_repeat_removed_advice(self):
+        """旧的合并式措辞（"请对账是否缺 key / 被熔断"）不得再出现"""
+        rows = self._rows("zai")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertNotIn("请对账是否缺 key / 被熔断", text,
+                         "旧措辞把两类处置混成一行，等于没给判据")
 
 
 if __name__ == "__main__":

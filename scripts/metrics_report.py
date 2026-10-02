@@ -2330,10 +2330,48 @@ def render_text(s, rows=None):
             # 而报表写下一句自己证实不了的话，读者会当成已核实的结论。
             # **"是不是没配 key / 有没有被熔断"是处置动作的前提，须由人去对账**
             # （`gh secret list` + campaign_intel 的 _llm_breaker）。
-            lines.append(f"  ⚠️ 从未被尝试 {len(_never)}/{len(_pool)}: "
-                         f"{' · '.join(_never)}"
-                         "（本窗口零遥测：正确性未被生产验证，"
-                         "前序通道故障时属盲区；请对账是否缺 key / 被熔断）")
+            # R630：**按处置动作分组**——原文案把 8 条一律说成"请对账是否缺key /
+            # 被熔断"，而它们的处置动作**完全不同**，混在一行等于没给判据。
+            # 生产实测（R623 上线后）：
+            #   google          → key 有效、探针已核实目录通过（50 个模型），
+            #                       纯排序问题（上轮通道健康时永不上场）
+            #   zai/aihubmix/…  → 缺 secret（探针报"未设X"），处置= 补配
+            # 而探针结论就在同一个 summarize 里（runs.provider_probe），
+            # **已有数据不用，等于把已知事实重新丢给人工对账**。
+            # **不在探针名单里⛺若等于 key 有效**——探针对
+            # 未登记 AUTH_MODE 的站走「无认证直接请求」，
+            # 而部分站的 /models 公开可达 ⇒ 「目录核实通过」
+            # 与「主流程拿不到 key」同时成立（生产实测：
+            # xkiro / aihubmix / inferera 均未配 secret，但目录可查、
+            # 因此不在 unknown_sites 里。如果直接对照两张名单，
+            # 会把它们误归为「排序问题」。
+            #
+            # 所以分组只能作为「已知漏洞的列举」：
+            #   第一组 = 探针已定论「缺 key」（处置确定）
+            #   第二组 = 探针未报缺 key，**待人工对账**（
+            #             可能是「缺 key 但目录公开可查」，
+            #             也可能是「key 有效但排序不到」）
+            _pp = runs.get("provider_probe") or {}
+            _unk = {x.strip() for x in str(_pp.get("unknown_sites") or "").split(",")
+                    if x.strip()}
+            _needkey, _needcheck = [], []
+            for _k in _never:
+                (_needkey if _k in _unk else _needcheck).append(_k)
+            if _needkey:
+                lines.append(f"  ⚠️ 缺 key（探针已定性）{len(_needkey)}/{len(_pool)}: "
+                             f"{' · '.join(_needkey)}"
+                             f"（处置 = 补配 secret，补配后才有资格被验证）")
+            if _needcheck:
+                lines.append(f"  ⚠️ 零尝试待对账 {len(_needcheck)}/{len(_pool)}: "
+                             f"{' · '.join(_needcheck)}"
+                             f"（探针未报缺 key 不等于 key 有效："
+                             f"部分站 /models 公开可查，目录核实通过"
+                             f"与「主流程拿不到 key」可同时成立；"
+                             f"请用 `gh secret list` 对账）")
+            lines.append(f"  ⚠️ 从未被尝试合计 {len(_never)}/{len(_pool)}"
+                         "：正确性未被生产数据验证，"
+                         "前序通道故障时属盲区"
+                         "（处置前先看上两行分组）")
     elif _pool == [] and (s.get("provider_attempts") or s.get("by_provider")
                           or s.get("reject_by_provider")):
         # 空池只有一种成因：main.py 解析失败（语法错误 / 找不到 extra_keys）。
