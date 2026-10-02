@@ -3,23 +3,25 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Futures",
-    "#Megadrop"
+    "#Megadrop",
+    "#Futures"
   ],
   "incentivized_tokens": [
+    "$CT",
     "$PUMP",
     "$USD1",
-    "$BTC",
-    "$CTUSDT",
+    "$PDDB",
+    "$ADBEB",
     "$ALGO",
-    "$USDC"
+    "$USDC",
+    "$USDT"
   ],
-  "strategy_guidance": "今日为USD1空投活动最后截止日，优先追贴输出空投参与冲刺攻略抢占流量；同时结合10月1日新上线的CTUSDT合约、 ongoing的PUMP与ALGO交易锦标赛输出交易参与指南，引导用户交易获取返佣，还可搭配Starter Carnival任务攻略、新上线bStocks交易对解读等内容带对应活动标签，最大化获取Write2Earn奖励。",
-  "last_updated": "2026-10-02T06:04:08.256852Z",
+  "strategy_guidance": "优先追贴今日（2026-10-02）延期的USD1空投活动，结合10月1日新上线的$CT币安期货合约、未截止的PUMP/ALGO交易锦标赛输出参与攻略，引导读者交易赚取Write2Earn返佣；可同步蹭9月30日新上线的7只bStocks tokenized证券（如$PDDB、$ADBEB）热点，关联Binance Stocks新用户奖励活动提升内容实用性；还可结合拉美/巴西新用户USDC高息理财活动，输出区域专属福利攻略扩大受众覆盖。",
+  "last_updated": "2026-10-02T18:16:20.273825Z",
   "_feed_health": {},
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
+    "date": "2026-09-09"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-02",
