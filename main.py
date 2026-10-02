@@ -7982,6 +7982,35 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
         if productive:
             top = " / ".join(f"{name.split(' ')[0]} {kept}条" for name, kept, _ in productive[:5])
             lines.append(f"- **源产出 TOP**: {top}")
+        # R627：**0 产出的源进人类面**——此前只列有产出的 TOP 5，于是源从
+        # "榜上有名"变成"消失"时，两种截然不同的劣化渲染成同一个现象。
+        # R621 已证：好源被跨源去重吃掉（什么都不用做）与坏源发旧闻（必须换源）
+        # **入选率完全一样**。这个判断此前只在机器面（run_summary + 报表）成立，
+        # Actions 运行页——**运营巡检真正看的那一页**——完全看不到。
+        # 呼应 R612「程序在用 ≠ 人在看」：R621 补的三个 discarded_* 归因键
+        # 在人类面零出口。
+        #
+        # 只在有 0 产出源时显形（零噪音惯例，同"停放的源"/"故障源"）：
+        # 全部源都有产出时，这一行是废话。
+        starved = [(name, d) for name, d in (per_feed or {}).items() if d["kept"] == 0]
+        if starved:
+            # 归因取最大项，并列时不猜（渲染成"原因不明"）——与 R621 报表侧同判据，
+            # 两处必须一致，否则人工面与机器面会给出不同的处置建议。
+            def _why(d):
+                _ds, _dc, _dd = d.get("discarded_stale", 0), d.get("discarded_cached", 0), \
+                    d.get("discarded_dup", 0)
+                _dom, _n = max(((_ds, "旧闻"), (_dc, "重复推送"), (_dd, "跨源同题")), key=lambda t: t[0])
+                if _dom <= 0:
+                    return ""
+                _tied = sum(1 for x in (_ds, _dc, _dd) if x == _dom) > 1
+                return f"，主因{'并列' if _tied else _n} {_dom}"
+
+            lines.append(
+                f"- **⚠️ 0 产出的源**: "
+                + " / ".join(f"{name.split(' ')[0]}（扫描 {d['entries']}{_why(d)}）"
+                            for name, d in sorted(starved, key=lambda t: t[1]["entries"], reverse=True))
+                + "（入选 0：主因旧闻/重复推送= 源该换；主因跨源同题 = 好源被去重吃掉，"
+                  "无需处理）")
         lines.append(f"- **本次发布**: {len(posted_records)} 篇"
                      + (f"（含深度长文 {sum(1 for r in posted_records if r.get('article'))} 篇）"
                         if any(r.get("article") for r in posted_records) else ""))

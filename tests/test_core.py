@@ -15345,5 +15345,96 @@ class TestPrioritySeed(unittest.TestCase):
         self.assertEqual(self.mgr.cached_id_count(""), 0)     # 空前缀→0，不误全计
 
 
+class TestR627StepSummarySourceStarvation(unittest.TestCase):
+    """R627：**0 产出的源**进人类面（Step Summary），此前只在机器面可见。
+
+    动机：R621 补的三个 `discarded_*` 归因键写进了 run_summary 与报表，
+    但 Step Summary ——**运营巡检真正看的那一页**—— 只列"有产出的 TOP 5"。
+    于是源从"榜上有名"变成"消失"时，两种截然不同的劣化渲染成同一个现象：
+      掉到 3/40（还在产） vs 完全没出（从榜上消失）
+    而 R621 已证**好源被跨源去重吃掉（什么都不用做）与坏源发旧闻（必须换源）
+    入选率完全一样**。这个判断此前只在机器面成立，人工面看不到。
+    呼应 R612「程序在用≠ 人在看」。
+
+    判据必须与 R621 报表侧**一致**（并列不猜、⚠️只指向可处置的根因）——
+    两处若给出不同的处置建议，人工面与机器面会互相打脸。
+    """
+
+    def _render(self, per_feed):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "sum.md")
+            open(p, "w").close()
+            os.environ["GITHUB_STEP_SUMMARY"] = p
+            try:
+                f = m.NewsFetcher.__new__(m.NewsFetcher)
+                f.stats = {"per_feed": per_feed, "fetched": 0, "stale": 0,
+                           "cached": 0, "near_dup": 0, "kept": 0}
+                m.write_github_step_summary(f, "—", {"active_tags": []}, [], False)
+                return open(p, encoding="utf-8").read()
+            finally:
+                os.environ.pop("GITHUB_STEP_SUMMARY", None)
+
+    def _b(self, entries, kept, stale=0, cached=0, dup=0):
+        return {"entries": entries, "kept": kept, "discarded_stale": stale,
+                "discarded_cached": cached, "discarded_dup": dup}
+
+    def test_zero_yield_feeds_appear_with_root_cause(self):
+        """0 产出的源必须出现，且带主导丢弃原因"""
+        text = self._render({
+            "CoinDesk": self._b(9, 0, stale=9),
+            "U.Today (Meme)": self._b(6, 0, dup=6),
+        })
+        line = next(ln for ln in text.splitlines() if "0 产出的源" in ln)
+        self.assertIn("CoinDesk", line)
+        self.assertIn("主因旧闻", line)
+        self.assertIn("U.Today", line)
+        self.assertIn("主因跨源同题", line)
+
+    def test_tied_cause_renders_as_unlabeled_not_guessed(self):
+        """并列主因不猜（渲染成「主因并列」），与 R621 报表侧同判据"""
+        text = self._render({
+            "BlockTempo": self._b(4, 0, stale=2, cached=2, dup=1)})
+        line = next(ln for ln in text.splitlines() if "0 产出的源" in ln)
+        # 只取源名后的归因子句——行尾的处置说明里也含"主因"二字，
+        # 全文包含会把"并列不猜"这个断言测成假失败。
+        seg = line.split("BlockTempo")[1].split("（入选")[0]
+        self.assertIn("主因并列", seg)
+        self.assertNotIn("旧闻", seg, "并列时不得挑一个当结论")
+        self.assertNotIn("重复推送", seg)
+
+    def test_actionable_vs_not_actionable_are_distinguished(self):
+        """两种根因的处置动作相反，人类面必须能区分。
+
+        旧闻/重复推送 = 源该换；跨源同题 = 好源被去重吃掉，无需处理。
+        """
+        text = self._render({
+            "CoinDesk": self._b(9, 0, stale=9),
+            "U.Today (Meme)": self._b(6, 0, dup=6),
+        })
+        line = next(ln for ln in text.splitlines() if "0 产出的源" in ln)
+        self.assertIn("源该换", line)
+        self.assertIn("无需处理", line)
+
+    def test_all_feeds_productive_renders_no_starvation_line(self):
+        """全部源都有产出时不渲染该行（零噪音惯例，同"停放的源"/"故障源"）"""
+        text = self._render({
+            "Decrypt": self._b(25, 25),
+            "CoinDesk": self._b(20, 18),
+        })
+        self.assertNotIn("0 产出的源", text)
+        # TOP 行仍在（该行是既有能力，不受影响）
+        self.assertIn("源产出 TOP", text)
+
+    def test_no_cause_data_renders_without_cause_clause(self):
+        """归因键全缺（历史行/旧路径）时不得编造主因"""
+        d = self._b(6, 0)
+        text = self._render({"LegacyFeed": d})
+        line = next(ln for ln in text.splitlines() if "0 产出的源" in ln)
+        seg = line.split("LegacyFeed")[1].split("（入选")[0]
+        self.assertNotIn("主因", seg,
+                         "无归因数据时编了主因（行尾处置说明里的不算）")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
