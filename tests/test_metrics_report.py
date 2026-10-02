@@ -3239,5 +3239,97 @@ class TestR623PoolCoverageBlindSpot(unittest.TestCase):
         self.assertIn("⚠️", text)
 
 
+class TestR624ErrorFreshness(unittest.TestCase):
+    """R624：错误串全史计数补新鲜度分级——陈迹与活警不得同貌。
+
+    动机（生产实测，非推测）：`errors` 是全史 Counter、零新鲜度，而遥测只有
+    25 天历史、报表默认窗口"全史"。于是「近30 天 404 有 20 次」技术上成立、
+    描述的却是全史。实测四类里**三类已绝迹**：
+      404 僵尸名 20 次，末次 09-08（24 天前）—— R263 早已闭环
+      超时      23 次，末次 09-21（11 天前）
+      空内容    24 次，末次 09-22（10 天前）
+      b.ai 余额 11 次，末次 09-29（3.2 天前）—— **仍活**
+    原渲染把它们并排成 `[(404, 20), (超时, 23), ...]`，读起来像"当前有 78 个
+    问题"。这是 R613/R614 已为 alert_dropped_no_channel 立过判据的同一类缺陷。
+    """
+
+    def _row(self, reason, ts="2026-10-02T12:00:00+00:00"):
+        r = {"outcome": "llm_failed", "provider": "Preset-x", "title": "t"}
+        if ts is not None:
+            r["ts"] = ts
+        else:
+            # 无ts 夹具：小时/星期等派生字段也一并省略，模拟历史裸行
+            r["provider"] = "Preset-x"
+        r["reason"] = reason
+        return r
+
+    def test_error_last_tracks_latest_occurrence(self):
+        """末次时刻取**最新**那一行，不是首行也不是末行（行序不保证时序）。"""
+        rows = [self._row("故障 A", "2026-10-01T10:00:00+00:00"),
+                self._row("故障 A", "2026-10-02T11:00:00+00:00"),
+                self._row("故障 A", "2026-10-01T23:00:00+00:00")]
+        s = mr.summarize(rows)
+        self.assertEqual(s["errors"]["故障 A"], 3)
+        self.assertTrue(str(s["error_last"]["故障 A"]).startswith("2026-10-02T11:00"),
+                        f"末次时刻取错: {s['error_last'].get('故障 A')}")
+
+    def test_fresh_error_renders_as_live_alert(self):
+        """≤24h 的错误必须落在活警行"""
+        rows = [self._row("正在发生的故障")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("活警", text)
+        self.assertIn("正在发生的故障", text)
+        self.assertNotIn("陈迹", text)
+
+    def test_stale_error_downgraded_but_not_deleted(self):
+        """>24h 降为 ℹ️ 陈迹，但**绝不消失**（R614：安全面告警消失即"以为没发生"）"""
+        rows = [self._row("已绝迹的故障", "2026-09-08T12:00:00+00:00"),
+                self._row("现在的基准时刻", "2026-10-02T12:00:00+00:00")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("陈迹", text)
+        self.assertIn("已绝迹的故障", text)
+        self.assertIn("ℹ️", text)
+        # 关键：降级不等于删除
+        self.assertIn("已绝迹的故障", text)
+
+    def test_missing_timestamp_treated_as_live_not_stale(self):
+        """无时间戳 → **按活警处理，不降级**。
+
+        判据同R613 的 _fresh：把未知态报成陈迹会藏起一个可能正在发生的问题，
+        告警漏判的代价远大于多报一条。**未知 ≠ 已解决。**
+        """
+        rows = [self._row("无时间戳的故障", ts=None)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("活跃度未知", text)
+        self.assertIn("无时间戳的故障", text)
+        self.assertNotIn("陈迹", text, "无时间戳被误降级为陈迹")
+
+    def test_freshness_reference_is_dataset_not_wallclock(self):
+        """参照点必须是数据集自身的最新时刻，不是 now()。
+
+        否则回看历史数据时（CI 里跑旧 metrics.jsonl、--days 过滤后看旧窗口）
+        **所有行都会被算成陈迹**——"全史"与"当前"两个不同问题会混成一个。
+        """
+        rows = [self._row("2020 年的故障", "2020-01-01T00:00:00+00:00"),
+                self._row("基准", "2020-01-01T06:00:00+00:00")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("活警", text, "以数据集末次为基准时，6 小时前应算活警")
+
+    def test_stale_row_shows_hours_ago(self):
+        """陈迹行必须带末次时刻——读者要能自行判断是否真绝迹"""
+        rows = [self._row("老故障", "2026-09-30T12:00:00+00:00"),
+                self._row("基准", "2026-10-02T12:00:00+00:00")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        line = next(ln for ln in text.splitlines() if "陈迹" in ln)
+        self.assertRegex(line, r"\d+\s*h 前", "陈迹行必须带末次距今小时数")
+
+    def test_no_errors_no_line(self):
+        """无错误时不渲染空行"""
+        rows = [{"ts": "2026-10-02T12:00:00+00:00", "outcome": "binance_published",
+                 "provider": "Preset-x", "title": "t"}]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertNotIn("错误串", text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

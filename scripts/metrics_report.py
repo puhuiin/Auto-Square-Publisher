@@ -637,6 +637,23 @@ def summarize(rows):
         "latency_by_provider": {},
         "tokens_by_provider": {},
         "errors": collections.Counter(),
+        # R624：每条错误串的 {末次时刻, 窗口内命中数} —— 新鲜度维度。
+        #
+        # 为什么必须加：errors 是**全史累计 Counter，零新鲜度**，而遥测只 25 天
+        # 历史、报表默认窗口"全史"——于是「近30 天 404 有 20 次」这种说法技术
+        # 上成立，描述的却是全史。生产实测四类全在陈迹：
+        #   404 僵尸名 全史 20 / 近7 天 0（末次 09-08，24 天前）
+        #   超时     全史 23 / 近7 天 0（末次 09-21，11 天前）
+        #   空内容   全史 24 / 近7 天 0（末次 09-22，10 天前）
+        #   b.ai 余额 全史 11 / 近7 天 1（末次 09-29，3.2 天前，仍活）
+        # **同一行的数字看着像"当前有多少问题"，实际绝大多数早已绝迹。**
+        # R614 已为 alert_dropped_no_channel 立过同一判据（全史累计告警必须带
+        # 新鲜度），errors 这条是同一类缺陷的最后一块。
+        #
+        # 只存末次时刻就够：渲染层拿它与 s["ts_max"]（数据集自身最新时刻）比，
+        # 不另设"近期计数"——**参照点必须是数据集而非 now()**，否则回看历史
+        # 数据时所有行都会被算成陈迹（全史 vs 当前，两个问题混成���个）。
+        "error_last": {},
         "dry_skipped": 0,
         "runs": {},
         "ts_min": None,
@@ -980,7 +997,15 @@ def summarize(rows):
         if outcome == "llm_failed" and not err:
             err = r.get("reason")
         if err:
-            s["errors"][str(err)[:60]] += 1
+            _ek = str(err)[:60]
+            s["errors"][_ek] += 1
+            # R624：末次时刻（后写覆盖先写=取最新）。缺 ts 的历史行**不写**——
+            # 时间戳缺失时按"新鲜度未知"处理，不能当成陈迹（判据：未知≠已解决）。
+            _ets = r.get("ts")
+            if _ets:
+                _prev = s["error_last"].get(_ek)
+                if _prev is None or str(_ets) > str(_prev):
+                    s["error_last"][_ek] = str(_ets)
         lat = _num(r.get("llm_latency_sec"))
         if lat is not None:
             lat_tmp[str(prov)].append(lat)
@@ -2239,7 +2264,57 @@ def render_text(s, rows=None):
     if s["tokens_by_provider"]:
         lines.append(f"- token 消耗 {dict(sorted(s['tokens_by_provider'].items()))}")
     if s["errors"]:
-        lines.append(f"- 错误串 {_top(s['errors'], 5)}")
+        # R624：错误串全史计数补新鲜度分级。
+        #
+        # 为什么必须分级（生产实测四类几乎全是陈迹）：
+        #   404 僵尸名 20 次，末次 09-08（24 天前）—— R263 早已闭环
+        #   超时23 次，末次 09-21（11 天前）
+        #   空内容     24 次，末次 09-22（10 天前）
+        #   b.ai 余额  11 次，末次 09-29（3.2 天前）—— **仍活**
+        # 原渲染把它们并排成 `错误串 [(404, 20), (超时, 23), ...]`，四个数字
+        # 读起来像"当前系统有 78 个问题"，而**陈迹与活警同貌**。
+        #
+        # 分级判据沿用 R613/R614 的**按根因性质分级**（不是一刀切降级）：
+        #   - 陈迹（末次 > 24h）→ ℹ️，**不删数据**（安全面告警：发生过是事实，
+        #     消失即"看不到就以为没发生"），只是不再占用告警视觉预算；
+        #   - 活警（≤24h）→ ⚠️ 保留；
+        #   - **未知（无 ts / 解析失败）→ 按活警处理，不降级**。判据同_fresh：
+        #     把未知态报成陈迹会藏起一个可能正在发生的问题。
+        _e_now = s.get("ts_max")
+        _e_last = s.get("error_last") or {}
+        _live, _stale, _unknown = [], [], []
+        for _k, _v in _top(s["errors"], 5):
+            _t = _e_last.get(_k)
+            _h = None
+            if _t and _e_now:
+                try:
+                    _a = datetime.fromisoformat(str(_t).replace("Z", "+00:00"))
+                    _b = datetime.fromisoformat(str(_e_now).replace("Z", "+00:00"))
+                    if _a.tzinfo is None:
+                        _a = _a.replace(tzinfo=timezone.utc)
+                    if _b.tzinfo is None:
+                        _b = _b.replace(tzinfo=timezone.utc)
+                    _h = max(0.0, (_b - _a).total_seconds() / 3600.0)
+                except (TypeError, ValueError):
+                    _h = None
+            if _h is None:
+                _unknown.append((_k, _v, _t))
+            elif _h <= 24:
+                _live.append((_k, _v, _h))
+            else:
+                _stale.append((_k, _v, _h))
+        if _live:
+            lines.append("- 错误串·活警（末次≤24h，仍在发生）: "
+                         + " · ".join(f"{k} ×{v}（{h:.0f}h 前）" for k, v, h in _live))
+        if _unknown:
+            lines.append(f"- 错误串·活跃度未知（无时间戳，按活警处理）: "
+                         + " · ".join(f"{k} ×{v}" for k, v, _t in _unknown))
+        if _stale:
+            # 陈迹**只降级不消失**（R614）：注入/模型下架这类安全面告警，消失即
+            # "看不到就以为没发生"。措辞带末次时刻让读者自行判断是否真绝迹。
+            lines.append("- ℹ️ 错误串·陈迹（全史累计，末次 >24h，无新发生）: "
+                         + " · ".join(f"{k} ×{v}（末次 {h:.0f}h 前）"
+                                      for k, v, h in _stale))
     return "\n".join(lines)
 
 
