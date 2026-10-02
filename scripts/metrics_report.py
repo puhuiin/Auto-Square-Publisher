@@ -394,6 +394,39 @@ def _stats_lookup(cid):
     return _STATS_CACHE["data"].get(str(cid))
 
 
+def load_token_engagement(path=None):
+    """R612：读 token_engagement.json（R608 浏览加权表）→ {"min_n":int, "tokens":
+    {TOK: {"n":int,"median_views":int}}}。缺失/损坏返回空 dict——报表整块不渲染。
+
+    这张表此前**零消费面**：main.py 用它加权，但没有任何报表告诉运营者
+    「哪些币在表内（会被 ±5）、哪些被 min_n挡在表外」。于是R608 最关键的一个
+    后果完全不可见——见R612 反馈回路分析。
+    """
+    if path is None:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "..", "token_engagement.json")
+    try:
+        with open(path, encoding="utf-8-sig") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    toks = data.get("tokens")
+    if not isinstance(toks, dict):
+        return {}
+    out = {}
+    for t, rec in toks.items():
+        if not isinstance(rec, dict):
+            continue
+        n = rec.get("n")
+        mv = rec.get("median_views")
+        if isinstance(n, int) and isinstance(mv, (int, float)) and mv >= 0:
+            out[str(t).upper().replace("$", "")] = {"n": n, "median_views": int(mv)}
+    mn = data.get("min_n")
+    return {"min_n": mn if isinstance(mn, int) else 4, "tokens": out}
+
+
 def _bucket_line(buckets, top=None):
     """R285：{桶名: [浏览样本]} → "名 均值×n" 串（按均值降序，样本 <3 标注小样本）。"""
     if not buckets:
@@ -492,6 +525,11 @@ def summarize(rows):
         "campaign_tag_zero_fresh": 0,
         # R291：显式活动标签直方图（注入原文，回答"实际在参加哪个活动"）
         "campaign_tags": collections.Counter(),
+        # R612：浏览加权表覆盖审计——表内/表外币的首标的发布量与浏览基线。
+        # 动机见 render_text：该表按 min_n 过滤，而样本量 n 本身由"我们发了多少篇"
+        # 决定，于是高浏览币（发得少→n 小）被挡在表外、低浏览币（发得多→n 大）
+        # 留在表内被罚——一个自我强化的回路，此前零可见性。
+        "eng_boost": None,
         # R285：浏览/互动 join（content_id × content_stats.jsonl）与三维归因样本
         "stats_posts": 0,
         "stats_views_total": 0,
@@ -1110,6 +1148,22 @@ def summarize(rows):
             "avg": int(round(sum(vals) / len(vals), 0)),
             "total": int(sum(vals)),
         }
+    # R612：浏览加权表覆盖审计。回答一个此前没人能回答的问题——
+    #「R608 到底在给哪些币加分/减分，被min_n 挡在表外的又是哪些」。
+    # by_token 已是**首标的**发布量（与 main.apply_engagement_boost 的
+    # extract_tokens(...)[0] 同口径），所以"发得多"与"进表"是直接可比的。
+    _eng = load_token_engagement()
+    if _eng and _eng["tokens"]:
+        _mn = _eng["min_n"]
+        _in, _out = [], []
+        for _tk, _rec in _eng["tokens"].items():
+            _pub_n = int(s["by_token"].get(_tk, 0))
+            _item = {"token": _tk, "n": _rec["n"],
+                     "median_views": _rec["median_views"], "published": _pub_n}
+            (_in if _rec["n"] >= _mn else _out).append(_item)
+        _in.sort(key=lambda x: -x["median_views"])
+        _out.sort(key=lambda x: -x["median_views"])
+        s["eng_boost"] = {"min_n": _mn, "in_table": _in, "out_table": _out}
     return s
 
 
@@ -1546,6 +1600,38 @@ def render_text(s, rows=None):
         if s.get("campaign_tags"):
             _cts = " · ".join(f"{k} ×{v}" for k, v in s["campaign_tags"].most_common(3))
             lines.append(f"  🏷️ 活动标签注入: {_cts}")
+        # R612：浏览加权表覆盖审计——R608 到底在给哪些币 ±5，谁被挡在表外。
+        # 关键不是"表里有谁"，而是**表外那批高浏览币**：它们的样本量 n 小，
+        # 而 n 之所以小恰恰因为"我们发得少"——于是"发得多→n 大→留在表内
+        # → 低浏览币被持续重排到后置 → 继续发得少"的自我强化回路。
+        # 生产实锤：BNB 中位浏览 247（全场最高之一）因 n=1 被挡在表外，
+        # 而中位 36 的 DOGE 因 n=3 差一点进表。数据在，机制在，无人可见。
+        _eb = s.get("eng_boost")
+        if _eb:
+            _mn = _eb["min_n"]
+            _fmt2 = lambda items: " · ".join(
+                f"{i['token']}(浏览{i['median_views']},n={i['n']},发{i['published']})"
+                for i in items) or "无"
+            lines.append(f"  ⚖️ 浏览加权表（min_n={_mn}，{len(_eb['in_table'])} 币在表内"
+                         f"参与 ±5 排序）: {_fmt2(_eb['in_table'][:8])}")
+            if _eb["out_table"]:
+                # 反馈回路告警：表外币的浏览中位显著高于表内中位 = 加权方向
+                # 与数据背离。给阈值而非主观判断：表外最高浏览 > 表内最低浏览。
+                _in_min = min((i["median_views"] for i in _eb["in_table"]),
+                              default=None)
+                _out_max = max((i["median_views"] for i in _eb["out_table"]),
+                               default=None)
+                _loop = (_in_min is not None and _out_max is not None
+                         and _out_max > _in_min)
+                _tag = (" ⚠️ 表外高触达币被min_n 挡在加减分之外"
+                        if _loop else "")
+                lines.append(f"  🚫 表外（样本不足，加权不生效）: "
+                             f"{_fmt2(_eb['out_table'][:8])}{_tag}")
+                if _loop:
+                    lines.append(f"     ↳ 自我强化回路：低浏览币发得多→n 大→留在表内"
+                                 f"→ 被持续重排到后置 → 继续发得少；"
+                                 f"高浏览币发得少→n 小→被挡表外 → 永远得不到加分。"
+                                 f"需人工决定是否放宽 min_n 或改用其他样本来源")
         # R285：浏览/互动面板——有 join 上的样本才渲染（无 stats 时整块不出现）。
         # 三维均浏览是"哪类帖有流量"的第一手答案：时段/体裁/来源各自的样本量
         # 一并给出，样本 <3 的桶只展示不解读（避免小样本误判）。

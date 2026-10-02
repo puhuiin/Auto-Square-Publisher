@@ -10,6 +10,7 @@ import os
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -971,6 +972,89 @@ class TestMetricsReport(unittest.TestCase):
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("1 轮有数据", text)
         self.assertNotIn("0 轮有数据", text)
+
+    def test_r612_engagement_boost_table_coverage_audit(self):
+        """R612：浏览加权表覆盖审计——R608 到底在给哪些币 ±5、谁被 min_n 挡在表外。
+
+        生产实锤的自我强化回路：样本量 n 由"我们发了几篇"决定，于是
+        **发得多的低浏览币**（XRP n=11/浏览54）留在表内被持续重排到后置，
+        **发得少的高浏览币**（BNB n=1/浏览247、HYPE n=2/浏览236）被 min_n 挡在
+        表外永远拿不到加分——而这张表此前在报表里零可见性。
+        """
+        rows_spec = []
+        for _i in range(11):  # XRP 发得多 → n 大 → 留在表内
+            rows_spec.append({"platforms": ["binance"], "outcome": "binance_published",
+                              "tokens": ["XRP", "ETH"]})
+        for _i in range(1):   # BNB 发得少 → n 小 → 被挡表外
+            rows_spec.append({"platforms": ["binance"], "outcome": "binance_published",
+                              "tokens": ["BNB"]})
+        _write(self.path, rows_spec)
+        rows, _ = mr.load_rows(self.path)
+        fake = {"min_n": 4, "tokens": {
+            "XRP": {"n": 11, "median_views": 54},
+            "BNB": {"n": 1, "median_views": 247},
+        }}
+        with unittest.mock.patch.object(mr, "load_token_engagement", return_value=fake):
+            s = mr.summarize(rows)
+            text = mr.render_text(s, rows)
+        eb = s["eng_boost"]
+        self.assertIsNotNone(eb, "加权表审计块必须存在")
+        self.assertEqual([i["token"] for i in eb["in_table"]], ["XRP"])
+        self.assertEqual([i["token"] for i in eb["out_table"]], ["BNB"])
+        self.assertEqual(eb["in_table"][0]["published"], 11, "首标的发布量口径")
+        self.assertEqual(eb["out_table"][0]["published"], 1)
+        self.assertIn("浏览加权表", text)
+        self.assertIn("表外高触达币被min_n 挡在加减分之外", text,
+                      "表外浏览(247) > 表内最低(54) → 必须告警自我强化回路")
+        self.assertIn("自我强化回路", text)
+
+    def test_r612_boost_audit_no_false_loop_warning(self):
+        """R612 反向：表外币浏览**不**高于表内任何币时，不得报自我强化回路
+        （n 小但浏览也低是正常的样本不足，不是回路）。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tokens": ["ETH"]},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        fake = {"min_n": 4, "tokens": {
+            "ETH": {"n": 9, "median_views": 184},
+            "DOGE": {"n": 1, "median_views": 36},
+        }}
+        with unittest.mock.patch.object(mr, "load_token_engagement", return_value=fake):
+            s = mr.summarize(rows)
+            text = mr.render_text(s, rows)
+        self.assertIn("表外", text)
+        self.assertNotIn("自我强化回路", text, "表外浏览(36) < 表内(184) → 不是回路")
+
+    def test_r612_engagement_audit_missing_file_silent(self):
+        """R612：无加权表时审计块为 None 且整块不渲染（零噪音，同停放源惯例）。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "tokens": ["BTC"]},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        with unittest.mock.patch.object(mr, "load_token_engagement", return_value={}):
+            s = mr.summarize(rows)
+            text = mr.render_text(s, rows)
+        self.assertIsNone(s["eng_boost"], "无表时审计块应为 None")
+        self.assertNotIn("浏览加权表", text)
+
+    def test_r612_load_token_engagement_min_n_and_tolerance(self):
+        """R612：读侧口径——只认 n 为 int、median_views 为非负数值的记录；
+        min_n 缺失/非 int 时回退 4（与 main._load_token_engagement 同纪律）。
+        畸形项（n 缺失、median_views 为负/非数）必须跳过而非让整表失效——
+        一条脏数据不该让 R608 加权静默。"""
+        p = os.path.join(self.tmpdir, "eng.json")
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump({"tokens": {
+                "ETH": {"n": 9, "median_views": 184},
+                "BAD_N": {"median_views": 100},        # 无 n → 跳过
+                "BAD_MV": {"n": 5, "median_views": -5},  # 负值 → 跳过
+                "BAD_TY": {"n": 5, "median_views": "x"},  # 非数值 → 跳过
+            }}, f)
+        got = mr.load_token_engagement(p)
+        self.assertEqual(got["min_n"], 4, "min_n 缺失回退 4")
+        self.assertEqual(list(got["tokens"]), ["ETH"], "畸形记录跳过，好数据保留")
 
     def test_quota_intel_age_aggregated(self):
         """R196：饱和轮情报陈旧度——R195 写侧已有，报表必须从 quota_blocked 聚合"""
