@@ -1179,6 +1179,28 @@ class TestMetricsReport(unittest.TestCase):
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("句长节奏 CV 中位", text)
 
+    def test_r607_flat_desc_repetition_tracked(self):
+        """R607：「利好不涨」描述复读——读近期全文发现最常见场景（消息出来价格没动）
+        被收敛到固定描述句（连个像样的反弹都没有/盘面不买账/连个水花都没溅），全史 8%
+        但近30升到33%。句中短语、前缀雷达看不见，按帖计一次、独立 📉 行，只追踪。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "$BTC 利好出来,盘面却连个像样的反弹都没有,量能跟不上。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "消息砸出来,盘面不买账,原地踏步。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "官宣利好,$ETH 连个水花都没溅起来。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "$SOL 放量突破前高,资金净流入,结构健康。"},  # 干净，不含不涨描述
+        ])
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["flat_desc"], 3, "三篇含利好不涨固定描述句")
+        # 不污染硬合规口径
+        self.assertEqual(q["fng_anchor"] + q["banned_device"] + q["ai_flavor"], 0)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("利好不涨描述复读: 3/4 篇", text)
+
     def test_quality_scan_clean_and_dry_excluded(self):
         _write(self.path, [
             {"platforms": ["binance"], "outcome": "binance_published",

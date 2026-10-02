@@ -65,6 +65,20 @@ QUALITY_SCAN_WINDOW = 20  # 最近 N 篇发布帖做合规扫描
 # 加固 R596 的信号（避免在 n=3 上过拟合重复打补丁）。信息性，非门禁。
 _MANIPULATION_FRAME = ("出货", "洗盘", "烟雾弹", "送流动性", "派筹", "诱多", "压盘")
 
+# R607：「利好不涨」描述复读——读近期全文发现，加密新闻最常见的场景（消息出来、
+# 24h 价格没怎么动）被模型收敛到一小撮固定描述句：「连个像样的反弹都没有」「盘面
+# 不买账」「连个水花都没溅起来」。全史 8% 但近 30 篇升到 33%（倒数60~30=20%→近30=33%）。
+# 它藏在句中、不是段首，R600 的前缀指纹雷达抓不到（续 R603「语义/短语框架要单建指标」
+# 的教训）。只追踪不急改 prompt：33% 的上升可能是「近期新闻恰好多为利好不涨、描述本就
+# 该多」的话题假象，而非文风退化——贸然在已很密的 prompt 里禁这些生动短语会误伤恰当
+# 描述。指标跨更多帖确认是「风格收敛」而非「话题驱动」后，再决定是否在 prompt 里
+# 给「换着说法描述『消息出来价格没动』」的技法指导。信息性，非门禁。
+_FLAT_DESC_RE = re.compile(
+    r"连个像样的.{0,4}(?:反弹|脉冲|涨幅|阳线).{0,3}都没"
+    r"|连个水花.{0,4}(?:都没|没溅)"
+    r"|盘面.{0,3}(?:不买账|没动|不跟涨|不领情|没反应)"
+    r"|淡得(?:抠脚|离谱)")
+
 # R605：句长 burstiness（节奏方差）——整合自全网最新研究（textpulse 2026 对 6 万+
 # 文本的实证）：AI 文本最稳的「机器味」信号之一是**句长过于均匀**（标准差小），人类
 # 写作句长起伏大。该研究量化：人类句长变异系数 CV≈0.449、AI≈0.376，79% 的 AI 改写
@@ -108,7 +122,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     out = {"scanned": len(previews), "fng_anchor": 0, "banned_device": 0,
            "ai_flavor": 0, "offenders": collections.Counter(),
            "fng_ban_armed": 0, "fng_violation": 0, "fng_avoided": 0,
-           "manip_frame": 0, "burstiness_cvs": []}
+           "manip_frame": 0, "burstiness_cvs": [], "flat_desc": 0}
     for pv, ban_active in previews:
         m_fng = _FNG_ANCHOR_RE.search(pv)
         if m_fng:
@@ -140,6 +154,9 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
         _cv = _sentence_cv(pv)
         if _cv is not None:
             out["burstiness_cvs"].append(_cv)
+        # R607：「利好不涨」描述复读——句中短语，前缀雷达抓不到，单独按帖计一次
+        if _FLAT_DESC_RE.search(pv):
+            out["flat_desc"] += 1
     out["offenders"] = dict(out["offenders"])
     return out
 
@@ -1311,6 +1328,14 @@ def render_text(s, rows=None):
                     "（偏平，接近 AI 基线0.376，建议强化长短句交错）" if _med < 0.40 else "")
                 lines.append(f"  🎵 句长节奏 CV 中位 {_med:.2f}（{len(_cvs)} 篇；人≈0.45/AI≈0.38）"
                              f" · 偏平 {_flat} 篇{_tag}")
+            # R607：「利好不涨」描述复读——加密新闻最常见场景被收敛到固定描述句
+            # （连个像样的反弹都没有/盘面不买账/连个水花都没溅）。句中短语、前缀雷达
+            # 看不见。只追踪：≥40% 才提示（且可能是话题驱动而非风格退化，需读样本甄别）。
+            if q.get("flat_desc"):
+                _fd = q["flat_desc"]
+                _fp = 100 * _fd / q["scanned"]
+                _fw = " ⚠️（描述收敛，读样本辨别是风格退化还是近期多利好不涨）" if _fp >= 40 else ""
+                lines.append(f"  📉 利好不涨描述复读: {_fd}/{q['scanned']} 篇（{_fp:.0f}%）{_fw}")
         # R289：FNG 三件套收口——滞回驱动量直方图 + 武装未剥离一致性告警。
         # hook_count 是近窗引入次数（武装条件 ≥2，故 1 = 距武装一步之遥的压力面）；
         # armed 但 market_stripped=False = R101 互补剥离疑似失效（禁令与盘面行
