@@ -15622,6 +15622,113 @@ class TestR633DroppedAlertScanFailureVisible(unittest.TestCase):
         text = self._run(broken=False)
         self.assertNotIn("丢警清单不完整", text)
 
+class TestR634ParkExpiryResetsFailCount(unittest.TestCase):
+    """R634：停放**到期后失败计数必须归零**——否则阈值语义失效。
+
+    `FEED_PARK_THRESHOLD = 3` 的注释写的是「连续失败 N 次进入停放」，
+    但 `_record_fail` 只做 `fails += 1`，**从不停放到期后归零**。实测复现：
+        失败 3 次 → 停放 6h → 到期（`_feed_is_parked` 已 False）
+        → 再失败 1 次 → fails=4 >= 3 → **立刻又停放 6h**
+    日志打「连续失败 **4** 次」而阈值明明是 3——一眼看出计数不是"连续"的。
+
+    后果：源被**永久停放**，每轮只有 1 次尝试机会，永远拿不到
+    "连续 3 次才停放"的豁免 ⇒ 停放从"冷却"退化成"永久禁用"。
+
+    判据：`fails` 的语义是"连续"，而**停放到期本身就是一次宽限期**——
+    重新给了它 3 次机会；旧实现把宽限期当惩罚（继续累加）。
+    呼应 R610/R622：**判据（阈值）没变，但它不再表达原意**。
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.mkdtemp()
+        self._old = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = os.path.join(self._tmp, "ci.json")
+        self.f = m.NewsFetcher.__new__(m.NewsFetcher)
+        self.f._FEED_HEALTH_KEY = "_feed_health"
+        self.name = "测试源"
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._old
+        import shutil
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+    def _expire_park(self):
+        """把 parked_until 改到过去，模拟停放到期"""
+        st = dict(m.intel_state_get("_feed_health", {}))
+        info = dict(st[self.name])
+        info["parked_until"] = (datetime.now(timezone.utc)
+                                - timedelta(minutes=1)).isoformat()
+        st[self.name] = info
+        m.intel_state_set("_feed_health", st)
+
+    def test_first_fail_after_expiry_does_not_repark(self):
+        """核心回归：到期后第一次失败不得立刻重新停放"""
+        for _ in range(3):
+            self.f._feed_record(self.name, ok=False)
+        self.assertTrue(self.f._feed_is_parked(self.name), "前置：应处于停放")
+        self._expire_park()
+        self.assertFalse(self.f._feed_is_parked(self.name), "前置：应已到期")
+        self.f._feed_record(self.name, ok=False)
+        info = m.intel_state_get("_feed_health", {})[self.name]
+        self.assertEqual(info["fails"], 1,
+                         f"计数未归零重计（fails={info['fails']}）——阈值语义已失效")
+        self.assertFalse(self.f._feed_is_parked(self.name),
+                         "到期后第一次失败就重新停放 ⇒ 源被永久禁用")
+
+    def test_count_restarts_from_one_after_expiry(self):
+        """归零后重新累积：再失败 2 次（累计到 3）才再次停放
+
+        注意计数：到期后**第 1 次**失败即重计为 1，故再失败 2 次 → 3。
+        """
+        for _ in range(3):
+            self.f._feed_record(self.name, ok=False)
+        self._expire_park()
+        self.f._feed_record(self.name, ok=False)
+        info = m.intel_state_get("_feed_health", {})[self.name]
+        self.assertEqual(info["fails"], 1, "到期后第一次失败应重计为 1")
+        self.assertFalse(self.f._feed_is_parked(self.name))
+        self.f._feed_record(self.name, ok=False)
+        info = m.intel_state_get("_feed_health", {})[self.name]
+        self.assertEqual(info["fails"], 2)
+        self.assertFalse(self.f._feed_is_parked(self.name),
+                         "还差 1 次才到阈值，不该停放")
+        self.f._feed_record(self.name, ok=False)
+        info = m.intel_state_get("_feed_health", {})[self.name]
+        self.assertEqual(info["fails"], 3)
+        self.assertTrue(self.f._feed_is_parked(self.name),
+                        "归零后应重新完整累积到阈值才停放")
+
+    def test_normal_path_unchanged(self):
+        """回归：未到期时行为完全不变（连续 N 次才停放）"""
+        self.f._feed_record(self.name, ok=False)
+        self.f._feed_record(self.name, ok=False)
+        info = m.intel_state_get("_feed_health", {})[self.name]
+        self.assertEqual(info["fails"], 2)
+        self.assertFalse(self.f._feed_is_parked(self.name))
+        self.f._feed_record(self.name, ok=False)
+        self.assertTrue(self.f._feed_is_parked(self.name))
+
+    def test_malformed_parked_until_resets_conservatively(self):
+        """畸形 parked_until：宁可多试，不要永久禁用（与 _feed_is_parked 同向）"""
+        for _ in range(3):
+            self.f._feed_record(self.name, ok=False)
+        st = dict(m.intel_state_get("_feed_health", {}))
+        info = dict(st[self.name])
+        info["parked_until"] = "不是时间"
+        st[self.name] = info
+        m.intel_state_set("_feed_health", st)
+        self.f._feed_record(self.name, ok=False)
+        got = m.intel_state_get("_feed_health", {})[self.name]
+        self.assertEqual(got["fails"], 1,
+                         "畸形停放时间应重置计数（保守：宁可多试）")
+
+    def test_success_still_clears(self):
+        """回归：成功仍清空健康记录（R10 的无记录不写盘优化不受影响）"""
+        self.f._feed_record(self.name, ok=False)
+        self.assertIn(self.name, m.intel_state_get("_feed_health", {}))
+        self.f._feed_record(self.name, ok=True)
+        self.assertEqual(m.intel_state_get("_feed_health", {}), {})
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

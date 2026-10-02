@@ -1968,11 +1968,40 @@ class NewsFetcher:
         def _record_fail(state):
             state = dict(state or {})
             info = dict(state.get(name, {"fails": 0}))
-            info["fails"] = int(info.get("fails", 0)) + 1
+            fails = int(info.get("fails", 0))
+            # R634：**停放到期后计数必须归零**——否则 `fails` 只是"累计失败"而非
+            # "**连续**失败"，阈值 FEED_PARK_THRESHOLD 完全失效。
+            #
+            # 实测复现：失败 3 次 → 停放 6h → 到期（`_feed_is_parked` 已False）
+            # → 再失败 1 次 → fails=4 >= 3 → **立刻又停放 6h**，日志打
+            # 「连续失败 4 次」（阈值明明是 3）。源被**永久停放**，每轮只有
+            # 1 次尝试机会，永远拿不到"连续 3 次才停放"的豁免。
+            #
+            # 判据：`fails` 的语义是"连续"，而**停放到期本身就是一次宽限期**——
+            # 重新给了它 3 次机会。旧实现把宽限期当惩罚（继续累加），
+            # 于是停放从"冷却"退化成"永久禁用"。
+            # 同 R610/R622 的分层纪律：**判据变化后要确认它仍表达原意**。
+            _now = datetime.now(timezone.utc)
+            if info.get("parked_until"):
+                try:
+                    _until = datetime.fromisoformat(
+                        str(info["parked_until"]).replace("Z", "+00:00"))
+                    if _until.tzinfo is None:
+                        _until = _until.replace(tzinfo=timezone.utc)
+                    if _now >= _until:
+                        # 停放已到期 ⇒ 这是到期后的**第一次**失败，重新计
+                        fails = 0
+                        info.pop("parked_until", None)
+                except Exception:
+                    # 畸形 parked_until：`_feed_is_parked` 会 warning 并按未停放
+                    # 处理；这里同样重置（保守：宁可多试，不要永久禁用）
+                    fails = 0
+                    info.pop("parked_until", None)
+            info["fails"] = fails + 1
             if info["fails"] >= self.FEED_PARK_THRESHOLD:
-                info["parked_until"] = (datetime.now(timezone.utc) + timedelta(hours=self.FEED_PARK_HOURS)).isoformat()
+                info["parked_until"] = (_now + timedelta(hours=self.FEED_PARK_HOURS)).isoformat()
                 park_msg_holder.append(f"🔕 数据源 [{name}] 连续失败 {info['fails']} 次，自动停放 {self.FEED_PARK_HOURS} 小时。")
-            info["last_fail"] = datetime.now(timezone.utc).isoformat()
+            info["last_fail"] = _now.isoformat()
             state[name] = info
             return state
 
