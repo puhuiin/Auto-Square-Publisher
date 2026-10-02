@@ -151,6 +151,61 @@ def merge_into_jsonl(records: Dict[str, Dict[str, int]]) -> int:
     return changed
 
 
+# R608：按币种聚合浏览量 → token_engagement.json（committed，供 main.py 发帖选择做
+# 「浏览加权」排序微调）。join content_stats.jsonl（content_id→views）× metrics.jsonl
+# （content_id→首标的 tokens[0]）。min_n 以下的币不进表（避免对噪声加权）。
+TOKEN_ENG_PATH = os.path.join(REPO_ROOT, "token_engagement.json")
+METRICS_PATH = os.path.join(REPO_ROOT, "metrics.jsonl")
+
+
+def rebuild_token_engagement(min_n: int = 4) -> int:
+    """从 content_stats.jsonl × metrics.jsonl 重算每币均浏览，写 token_engagement.json。
+    返回写入的币种数（含 n<min_n 的，便于审阅；main.py 侧按 min_n 过滤）。"""
+    import statistics
+    from collections import defaultdict
+    cs = {}
+    if os.path.exists(OUT_PATH):
+        with open(OUT_PATH, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    d = json.loads(line)
+                except Exception:
+                    continue
+                v = d.get("views")
+                if isinstance(v, int) and v >= 0 and d.get("content_id"):
+                    cs[str(d["content_id"])] = v
+    if not cs or not os.path.exists(METRICS_PATH):
+        return 0
+    tok_views = defaultdict(list)
+    with open(METRICS_PATH, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                d = json.loads(line)
+            except Exception:
+                continue
+            if d.get("outcome") != "binance_published":
+                continue
+            cid = str(d.get("content_id") or "")
+            toks = d.get("tokens") or []
+            if cid in cs and toks:
+                tok_views[str(toks[0]).upper().replace("$", "")].append(cs[cid])
+    tokens = {t: {"avg_views": round(statistics.mean(v)), "n": len(v)}
+              for t, v in tok_views.items()}
+    out = {"as_of": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+           "min_n": min_n,
+           "note": "per-token avg Square views (creator-center export); ranking-only engagement boost (R608)",
+           "tokens": dict(sorted(tokens.items(), key=lambda x: -x[1]["avg_views"]))}
+    with open(TOKEN_ENG_PATH, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+    return len(tokens)
+
+
 def main() -> int:
     path = sys.argv[1] if len(sys.argv) > 1 else os.getenv(
         "CONTENT_STATS_CSV", DEFAULT_CSV)
@@ -161,7 +216,9 @@ def main() -> int:
     if not records:
         raise SystemExit("CSV 未解析出任何有效行（检查 id 列与数值格式）")
     changed = merge_into_jsonl(records)
+    n_tok = rebuild_token_engagement()
     print(f"✅ 导入 {len(records)} 条（更新 {changed} 条）→ {OUT_PATH}")
+    print(f"✅ 刷新币种浏览基线 {n_tok} 币 → {TOKEN_ENG_PATH}（R608 浏览加权数据源）")
     return 0
 
 

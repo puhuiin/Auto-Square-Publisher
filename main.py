@@ -216,6 +216,9 @@ PUBLISH_PLATFORMS = [p.strip().lower() for p in os.getenv("PUBLISH_PLATFORMS", "
 # 遥测指标文件：每次投递成功或 LLM 拒单都追加一行 JSONL（时段/币种/来源/模型/平台/拦截阶段），
 # 随 Git 同步积累，供未来做数据驱动调优（哪些时段/币种/来源的产出值得加权，以及质量门在误杀谁）
 METRICS_FILE = os.path.join(BASE_DIR, "metrics.jsonl")
+# R608：按币种浏览加权的小聚合表（import_content_stats.py 生成/刷新；committed 以便
+# 生产 checkout 可读）。缺失即引擎零行为变化。
+TOKEN_ENGAGEMENT_FILE = os.path.join(BASE_DIR, "token_engagement.json")
 
 
 def append_metrics(record: Dict[str, Any]) -> None:
@@ -401,6 +404,13 @@ TREND_TOKEN_BOOST = 6                                              # 命中全�
                                                                    # 市场正在搜索的币是比新闻时效更强的热点信号，仅影响排序）
 HOT_TOPIC_BOOST = 4                                                # 命中全网实时热点关键词的加权（HN 等综合热榜：
                                                                    # 提升点击率的跨域钩子，低于币种热搜/活动币，仅影响排序）
+# R608：浏览加权（按真实创作者后台浏览数据）——用户导出的互动数据实证：币种间
+# 触达差异巨大（ETH≈218 均浏览 vs XRP≈73、ZEC≈76，且 XRP 被过度发布 11/59 篇却垫底）。
+# 把稀缺配额（12/天）从低触达币往高触达币倾斜：历史高浏览币 +ENGAGEMENT_VIEW_BOOST、
+# 长期低浏览币 -ENGAGEMENT_VIEW_BOOST。幅度刻意小（<freshness10/campaign8），**只影响
+# 排序不碰 base_impact_score（准入）**，绝不盖过真突发、绝不饿死 $挂件（低浏览币照常
+# 可发、仍织挂件，只是边际靠后）。数据不足（无 token_engagement.json）时零行为变化。
+ENGAGEMENT_VIEW_BOOST = 5
 FRESHNESS_BOOST_RULES = ((3, 10), (12, 6), (24, 3))                # (新闻不超过 N 小时, 加分)
 
 
@@ -2627,6 +2637,67 @@ class NewsFetcher:
                     hits += 1
                     break
         return hits
+
+    @staticmethod
+    def _load_token_engagement(path: str = None) -> Dict[str, float]:
+        """R608：读 token_engagement.json → {TOKEN: avg_views}，仅保留样本量 ≥min_n
+        的币（避免对噪声加权）。文件缺失/损坏/空返回 {}——引擎零行为变化（生产 checkout
+        若未带该文件，浏览加权自动静默，与趋势/活动加权空表同纪律）。"""
+        p = path or TOKEN_ENGAGEMENT_FILE
+        try:
+            with open(p, encoding="utf-8-sig") as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            return {}
+        if not isinstance(data, dict):
+            return {}
+        min_n = data.get("min_n", 4) if isinstance(data.get("min_n"), int) else 4
+        toks = data.get("tokens")
+        if not isinstance(toks, dict):
+            return {}
+        out: Dict[str, float] = {}
+        for t, rec in toks.items():
+            if not isinstance(rec, dict):
+                continue
+            av, n = rec.get("avg_views"), rec.get("n")
+            if isinstance(av, (int, float)) and isinstance(n, int) and n >= min_n and av >= 0:
+                out[str(t).upper().replace("$", "")] = float(av)
+        return out
+
+    @staticmethod
+    def apply_engagement_boost(candidates: List[Dict[str, Any]],
+                               token_views: Dict[str, float],
+                               valid_symbols: Set[str]) -> Tuple[int, int]:
+        """R608：按真实浏览量给候选的首标的做**排序加权**——历史高浏览币 +BOOST、
+        长期低浏览币 -BOOST，只碰 impact_score 不碰 base_impact_score（准入）。
+        判定基于有足够样本币种均浏览的中位数：高于 1.3× 中位加分、低于 0.7× 中位减分，
+        中间档中性。空表（无数据）零行为变化。返回 (加分数, 减分数) 供遥测。
+        首标的用与发帖循环同一口径 extract_tokens(标题+摘要)[0]，确保「加权的币」=
+        「实际会织挂件/发布的币」。减分绝不筛除候选（只重排），低浏览币照常可发。"""
+        if not token_views:
+            return 0, 0
+        vals = sorted(token_views.values())
+        median = vals[len(vals) // 2] if vals else 0.0
+        if median <= 0:
+            return 0, 0
+        hi_cut, lo_cut = median * 1.3, median * 0.7
+        up = down = 0
+        for item in candidates:
+            toks = NewsFetcher.extract_tokens(
+                (item.get("title") or "") + " " + (item.get("summary") or ""), valid_symbols)
+            if not toks:
+                continue
+            primary = toks[0].upper().replace("$", "")
+            av = token_views.get(primary)
+            if av is None:
+                continue
+            if av >= hi_cut:
+                item["impact_score"] += ENGAGEMENT_VIEW_BOOST
+                up += 1
+            elif av <= lo_cut:
+                item["impact_score"] -= ENGAGEMENT_VIEW_BOOST
+                down += 1
+        return up, down
 
     def _load_priority_seed(self) -> Optional[Dict[str, Any]]:
         """读取优先种子配置（PRIORITY_SEED_FILE）。缺失/未启用/任何异常一律返回
@@ -8629,6 +8700,21 @@ def _run_main():
         logger.info(f"🌐 全网热点关键词命中加权 +{HOT_TOPIC_BOOST}（命中 {hot_boost_hits}），热点样本: {hot_topics[:3]}")
     else:
         hot_boost_hits = 0
+
+    # 5.7 浏览加权（R608，按真实创作者后台浏览数据）：历史高浏览币前移、长期低浏览币
+    # 后移，把稀缺配额往高触达币倾斜。只影响排序不碰准入；无 token_engagement.json 时
+    # 零行为变化。幅度 ±5 < freshness/campaign，绝不盖过真突发、绝不饿死 $挂件。
+    token_views = NewsFetcher._load_token_engagement()
+    if token_views:
+        eng_up, eng_down = NewsFetcher.apply_engagement_boost(
+            candidates, token_views, valid_symbols_early)
+        if eng_up or eng_down:
+            candidates.sort(key=lambda x: (-x["impact_score"],
+                                           x["age_hours"] if x.get("age_hours") is not None else float("inf")))
+        logger.info(f"📊 浏览加权（{len(token_views)} 币有基线）: 高触达 +{ENGAGEMENT_VIEW_BOOST}×{eng_up} / "
+                    f"低触达 -{ENGAGEMENT_VIEW_BOOST}×{eng_down}（仅排序，不碰准入）")
+    else:
+        eng_up = eng_down = 0
 
     # 6. 执行发帖循环
     posted_count = 0

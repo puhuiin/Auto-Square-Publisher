@@ -7483,6 +7483,70 @@ class TestDownloadImageGate(unittest.TestCase):
             self.assertIsNone(m.ImageManager.download_image("https://x.example/cover.jpg"))
 
 
+class TestEngagementBoost(unittest.TestCase):
+    """R608：按真实创作者后台浏览数据做排序加权——高触达币 +BOOST、低触达币 -BOOST，
+    只碰 impact_score 不碰 base_impact_score（准入），无数据零行为变化。用户导出的
+    互动数据实证 ETH≈218 vs XRP≈73、ZEC≈76，稀缺配额该往高触达币倾斜。"""
+
+    def setUp(self):
+        self._orig = m.SymbolValidator._valid_symbols_cache
+        m.SymbolValidator._valid_symbols_cache = {"ETH", "XRP", "ZEC", "BTC", "SOL"}
+        # median of {ETH218,SOL158,QNT137,BTC127,SHIB102,ZEC76,XRP73}=127；hi=165 lo=89
+        self.teng = {"ETH": 218.0, "SOL": 158.0, "QNT": 137.0, "BTC": 127.0,
+                     "SHIB": 102.0, "ZEC": 76.0, "XRP": 73.0}
+
+    def tearDown(self):
+        m.SymbolValidator._valid_symbols_cache = self._orig
+
+    def _c(self, title, score=20):
+        return {"title": title, "summary": "", "impact_score": score, "base_impact_score": score}
+
+    def test_high_view_boosted_low_penalized_mid_neutral(self):
+        cands = [self._c("$ETH 突破关键位"), self._c("$XRP treasury 上线"),
+                 self._c("$ZEC 隐私叙事"), self._c("$BTC 盘整")]
+        up, down = m.NewsFetcher.apply_engagement_boost(
+            cands, self.teng, m.SymbolValidator._valid_symbols_cache)
+        self.assertEqual((up, down), (1, 2))
+        self.assertEqual(cands[0]["impact_score"], 20 + m.ENGAGEMENT_VIEW_BOOST, "ETH 高触达 +")
+        self.assertEqual(cands[1]["impact_score"], 20 - m.ENGAGEMENT_VIEW_BOOST, "XRP 低触达 -")
+        self.assertEqual(cands[2]["impact_score"], 20 - m.ENGAGEMENT_VIEW_BOOST, "ZEC 低触达 -")
+        self.assertEqual(cands[3]["impact_score"], 20, "BTC 中位附近中性")
+
+    def test_base_impact_score_never_touched(self):
+        """准入分绝不被浏览加权污染（低触达币照常可过 MIN_IMPACT 门、仍织 $挂件）。"""
+        cands = [self._c("$XRP 消息"), self._c("$ETH 消息")]
+        m.NewsFetcher.apply_engagement_boost(cands, self.teng, m.SymbolValidator._valid_symbols_cache)
+        self.assertEqual(cands[0]["base_impact_score"], 20)
+        self.assertEqual(cands[1]["base_impact_score"], 20)
+
+    def test_empty_data_is_noop(self):
+        cands = [self._c("$XRP 消息"), self._c("$ETH 消息")]
+        self.assertEqual(m.NewsFetcher.apply_engagement_boost(
+            cands, {}, m.SymbolValidator._valid_symbols_cache), (0, 0))
+        self.assertTrue(all(c["impact_score"] == 20 for c in cands), "无数据零行为变化")
+
+    def test_unknown_or_tokenless_candidate_neutral(self):
+        # SHIB 不在 valid 集 → 无标的；QNT 不在 valid 集但在 teng——extract 不到就中性
+        cands = [self._c("监管听证会召开"), self._c("$BTC 稳住")]
+        up, down = m.NewsFetcher.apply_engagement_boost(
+            cands, self.teng, m.SymbolValidator._valid_symbols_cache)
+        self.assertEqual((up, down), (0, 0), "无标的/中位币不加权")
+
+    def test_loader_filters_by_min_n(self):
+        import tempfile, json as _json, os as _os
+        p = _os.path.join(tempfile.mkdtemp(), "te.json")
+        with open(p, "w", encoding="utf-8") as f:
+            _json.dump({"min_n": 4, "tokens": {
+                "ETH": {"avg_views": 218, "n": 9},
+                "FOO": {"avg_views": 999, "n": 2},  # n<4 → 过滤
+            }}, f)
+        out = m.NewsFetcher._load_token_engagement(p)
+        self.assertEqual(out, {"ETH": 218.0}, "样本不足的币不进加权表")
+
+    def test_loader_missing_file_empty(self):
+        self.assertEqual(m.NewsFetcher._load_token_engagement("/nonexistent/te.json"), {})
+
+
 class TestTrendBoost(unittest.TestCase):
     """R94：全网热搜加权（借鉴 Easel 热榜发现层）——市场注意力是热点信号。
     CoinGecko Trending 免费无 Key；只影响排序不影响准入；API 失败零行为变化。"""
@@ -8538,6 +8602,9 @@ class TestRunMainSemantics(unittest.TestCase):
         else:
             m.NewsFetcher._find_near_duplicate.return_value = None
         m.NewsFetcher.extract_tokens.return_value = ["BTC"]
+        # R608：浏览加权与趋势/热点加权同纪律——集成测试里置空（NewsFetcher 已被 mock，
+        # 不置空会让 _load_token_engagement 返回 MagicMock、误触发加权并打乱配额/限流断言）。
+        m.NewsFetcher._load_token_engagement.return_value = {}
         engine = MagicMock()
         engine.summarize.return_value = {
             "content": "BTC 放量突破关键位，短线情绪转多，注意回踩确认再进。",

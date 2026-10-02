@@ -1,0 +1,59 @@
+{
+  "as_of": "2026-10-02T05:03:54.625561Z",
+  "min_n": 4,
+  "note": "per-token avg Square views (creator-center export); ranking-only engagement boost (R608)",
+  "tokens": {
+    "BNB": {
+      "avg_views": 247,
+      "n": 1
+    },
+    "HYPE": {
+      "avg_views": 236,
+      "n": 2
+    },
+    "ETH": {
+      "avg_views": 218,
+      "n": 9
+    },
+    "LINK": {
+      "avg_views": 193,
+      "n": 2
+    },
+    "DOGE": {
+      "avg_views": 164,
+      "n": 3
+    },
+    "COMP": {
+      "avg_views": 160,
+      "n": 1
+    },
+    "SOL": {
+      "avg_views": 158,
+      "n": 4
+    },
+    "QNT": {
+      "avg_views": 137,
+      "n": 4
+    },
+    "BTC": {
+      "avg_views": 127,
+      "n": 12
+    },
+    "SHIB": {
+      "avg_views": 102,
+      "n": 4
+    },
+    "ZEC": {
+      "avg_views": 76,
+      "n": 5
+    },
+    "XRP": {
+      "avg_views": 73,
+      "n": 11
+    },
+    "USDC": {
+      "avg_views": 66,
+      "n": 1
+    }
+  }
+}
