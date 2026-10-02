@@ -2682,6 +2682,8 @@ class NewsFetcher:
             return 0, 0
         hi_cut, lo_cut = median * 1.3, median * 0.7
         up = down = 0
+        up_toks: List[str] = []
+        down_toks: List[str] = []
         for item in candidates:
             toks = NewsFetcher.extract_tokens(
                 (item.get("title") or "") + " " + (item.get("summary") or ""), valid_symbols)
@@ -2694,9 +2696,14 @@ class NewsFetcher:
             if av >= hi_cut:
                 item["impact_score"] += ENGAGEMENT_VIEW_BOOST
                 up += 1
+                up_toks.append(primary)
             elif av <= lo_cut:
                 item["impact_score"] -= ENGAGEMENT_VIEW_BOOST
                 down += 1
+                down_toks.append(primary)
+        if up or down:
+            logger.info(f"📊 浏览加权明细: 高触达 +{ENGAGEMENT_VIEW_BOOST} {up_toks} / "
+                        f"低触达 -{ENGAGEMENT_VIEW_BOOST} {down_toks}")
         return up, down
 
     def _load_priority_seed(self) -> Optional[Dict[str, Any]]:
