@@ -906,10 +906,11 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("2 轮有供给", text)
 
     def test_boost_hits_aggregated(self):
-        """R193：四路信号加权命中数——供给快照看不到是否真打中候选"""
+        """R193：四路信号加权命中数——供给快照看不到是否真打中候选。R608：浏览加权(+/-)并入"""
         _write(self.path, [
             {"outcome": "run_summary", "candidates": 10, "published": 1,
-             "campaign_boost_hits": 3, "trend_boost_hits": 1, "hot_boost_hits": 2},
+             "campaign_boost_hits": 3, "trend_boost_hits": 1, "hot_boost_hits": 2,
+             "engagement_boost_up": 2, "engagement_boost_down": 5},
             {"outcome": "run_summary", "candidates": 10, "published": 1,
              "campaign_boost_hits": 1, "hot_boost_hits": 1},
             {"outcome": "run_summary", "candidates": 10, "published": 1},
@@ -919,10 +920,13 @@ class TestMetricsReport(unittest.TestCase):
         self.assertEqual(runs["boost_hits"]["campaign"], 4)
         self.assertEqual(runs["boost_hits"]["trend"], 1)
         self.assertEqual(runs["boost_hits"]["hot"], 3)
+        self.assertEqual(runs["boost_hits"]["eng_up"], 2)
+        self.assertEqual(runs["boost_hits"]["eng_down"], 5)
         self.assertEqual(runs["boost_runs"], 2)
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("加权命中", text)
         self.assertIn("活动 4", text)
+        self.assertIn("浏览加权 +2 -5", text)
         self.assertIn("热点 3", text)
 
     def test_quota_intel_age_aggregated(self):

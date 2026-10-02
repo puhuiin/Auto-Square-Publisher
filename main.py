@@ -9432,6 +9432,9 @@ def _run_main():
         "campaign_boost_hits": int(fetcher.stats.get("campaign_boost_hits") or 0),
         "trend_boost_hits": int(trend_boost_hits or 0),
         "hot_boost_hits": int(hot_boost_hits or 0),
+        # R608：浏览加权命中数（+/- 各记）——验证「按真实流量调」是否真在打中候选
+        "engagement_boost_up": int(eng_up or 0),
+        "engagement_boost_down": int(eng_down or 0),
         # R201：off-pool 活动币——Alpha 上新等未入 SPOT 池的竞赛标的
         "campaign_off_pool": " ".join(fetcher.stats.get("campaign_off_pool") or []) or None,
         # R126：单轮总耗时（秒）——20 分钟外部回调节奏下的堆积预警指标

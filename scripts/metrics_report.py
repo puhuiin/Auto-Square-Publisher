@@ -560,7 +560,8 @@ def summarize(rows):
         "last_hot_topics": "",  # R190：全网实时热点钩子供给（HN 等）
         "hot_topic_hits": 0,    # 出现过 hot_topics 的发帖轮数
         # R193：四路信号加权命中数（供给≠命中，此前不可见）
-        "boost_hits": {"campaign": 0, "trend": 0, "hot": 0},
+        "boost_hits": {"campaign": 0, "trend": 0, "hot": 0,
+                       "eng_up": 0, "eng_down": 0},  # R608：浏览加权命中(+/-)
         "boost_runs": 0,
         # R201：off-pool 活动币快照（最近一轮）
         "last_campaign_off_pool": "",
@@ -870,7 +871,9 @@ def summarize(rows):
             _bh = {}
             for _k, _f in (("campaign", "campaign_boost_hits"),
                            ("trend", "trend_boost_hits"),
-                           ("hot", "hot_boost_hits")):
+                           ("hot", "hot_boost_hits"),
+                           ("eng_up", "engagement_boost_up"),
+                           ("eng_down", "engagement_boost_down")):
                 _v = _num(r.get(_f))
                 if _v is not None and _v > 0:
                     _bh[_k] = int(_v)
@@ -1175,9 +1178,11 @@ def render_text(s, rows=None):
         # R193：四路信号加权命中——供给≠命中
         bh = runs.get("boost_hits") or {}
         if any(bh.values()):
+            _eng = (f" / 浏览加权 +{bh.get('eng_up', 0)} -{bh.get('eng_down', 0)}"
+                    if (bh.get("eng_up") or bh.get("eng_down")) else "")
             lines.append(
                 f"  📈 加权命中（{runs.get('boost_runs', 0)} 轮）: "
-                f"活动 {bh.get('campaign', 0)} / 热搜 {bh.get('trend', 0)} / 热点 {bh.get('hot', 0)}")
+                f"活动 {bh.get('campaign', 0)} / 热搜 {bh.get('trend', 0)} / 热点 {bh.get('hot', 0)}{_eng}")
         if runs.get("last_campaign_off_pool"):
             lines.append(f"  🪙 活动币 off-pool: {runs['last_campaign_off_pool']}")
         # R196：饱和轮情报陈旧度——配额期实际在用多旧的情报
