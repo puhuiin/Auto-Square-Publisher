@@ -715,6 +715,10 @@ def summarize(rows):
         # 与停放是仅剩的静默源健康信号。轮次分母+源次总量+单轮峰值；全零不渲染。
         "feed_fail_runs": 0, "feed_fail_total": 0, "feed_fail_peak": 0,
         "feed_park_runs": 0, "feed_park_total": 0, "feed_park_peak": 0,
+        # R625：feeds_ok（健康源数）——三态里唯一无出口的一态，见累加处注释。
+        # **min 初值不能是 0**：真出现"0 个源健康"时（全集故障/风控）必须能被
+        # min 捕捉到，用 0 起算会把这个最值吃的，只剩 max=9 一档。
+        "feed_ok_runs": 0, "feed_ok_total": 0, "feed_ok_min": 999, "feed_ok_max": 0,
         "trend_freq": collections.Counter(),
         "last_hot_topics": "",  # R190：全网实时热点钩子供给（HN 等）
         "hot_topic_hits": 0,    # 出现过 hot_topics 的发帖轮数
@@ -1247,6 +1251,27 @@ def summarize(rows):
                 runs_tmp["feed_park_total"] += int(_fpk)
                 if int(_fpk) > runs_tmp["feed_park_peak"]:
                     runs_tmp["feed_park_peak"] = int(_fpk)
+            # R625：feeds_ok（正常抓到条目的源数）——**三态里唯一没有出口的一态**。
+            #
+            # 为什么必须补：R344/R613 已把故障(feeds_failed)与停放(feeds_parked)
+            # 做成带新鲜度的告警行，但**"本轮几个源健康"从来没渲染过**。后果是
+            # 面板只能回答"有没有坏源"，回答不了"还剩几个能用的"——而后者才是
+            # 源治理的真正问题（3/9 健康与9/9 健康是两种完全不同的处境）。
+            # 生产实测 feeds_ok 均 8.94/最大 9，**9 源几乎轮轮全健康**，这条
+            # 事实目前完全不可见。
+            #
+            # 分母纪律（R621）：feeds_ok 只在**非配额饱和轮**出现（270/276 轮），
+            # 因为饱和轮 sys.exit 在抓取之前。所以**不抬分母、不与故障轮混算**——
+            # 另立"抓取轮"分母，缺该字段的行不进分母（字段存在即计入，值 0 也是
+            # 有效观测：真的一个源都没抓到时 fields 仍在）。
+            _fok = _num(r.get("feeds_ok"))
+            if _fok is not None:
+                runs_tmp["feed_ok_runs"] += 1
+                runs_tmp["feed_ok_total"] += int(_fok)
+                if int(_fok) < runs_tmp["feed_ok_min"]:
+                    runs_tmp["feed_ok_min"] = int(_fok)
+                if int(_fok) > runs_tmp["feed_ok_max"]:
+                    runs_tmp["feed_ok_max"] = int(_fok)
             # R177：分段耗时（有则收，历史行无字段不进）
             _sl = _num(r.get("sleep_elapsed_sec"))
             if _sl is not None and _sl > 0:
@@ -1828,6 +1853,24 @@ def render_text(s, rows=None):
             _tail = ("（陈迹，当期未见复现）" if _fh_stale
                      else "——失败被候选健康表象掩盖，请查源名")
             lines.append(f"{_head} 源故障/停放: {' / '.join(_fh)}{_tail}")
+        # R625：健康源数——**三态里唯一没有出口的一态**，与上方故障行同框。
+        #
+        # 为什么必须与故障同框而不是单独一行：源治理的问题是"**还剩几个能用**"，
+        # 只报故障数读者要自己用「源总数 − 故障 − 停放 − 空」去心算，而源总数
+        # 又不在面板上（池内 9 源是代码常量）。生产实测 feeds_ok 均 8.94/最大 9，
+        # 也就是说**这9 源几乎轮轮全健康**——而这个结论目前完全不可见，
+        # 面板只能回答"有没有坏源"。
+        #
+        # 分母是「抓取轮」而非全部轮：feeds_ok 只在非配额饱和轮出现
+        # （生产 270/276 轮，饱和轮 sys.exit 在抓取之前）。混算分母会把
+        # 「0.14 个健康源/轮」这种无意义数字渲染出来（R621分母纪律）。
+        if runs.get("feed_ok_runs"):
+            _ok_runs = runs["feed_ok_runs"]
+            _ok_avg = runs.get("feed_ok_total", 0) / _ok_runs
+            lines.append(f"  🟢 源健康: {_ok_runs} 个抓取轮平均 {_ok_avg:.1f} 个源正常"
+                         f"（最少 {runs.get('feed_ok_min')} / 最多 {runs.get('feed_ok_max')}）"
+                         + (f" · 同窗硬故障 {runs.get('feed_fail_runs', 0)} 轮"
+                            if runs.get("feed_fail_runs") else " · 同窗零硬故障"))
         # R342：扫描漏斗（R276 写侧，报表此前零出口）——去重/缓存/陈旧趋势，
         # 单轮峰值抓尖刺（near_dup 抬升=去重吞事件 / cached 跳涨=缓存失效 /
         # stale 峰值=源劣化）；全零不渲染（零噪音，沿用源健康惯例）。

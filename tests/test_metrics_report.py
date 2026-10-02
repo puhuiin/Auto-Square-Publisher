@@ -3331,5 +3331,110 @@ class TestR624ErrorFreshness(unittest.TestCase):
         self.assertNotIn("错误串", text)
 
 
+class TestR625FeedHealthCoverage(unittest.TestCase):
+    """R625：feeds_ok（健康源数）——源健康三态里唯一没有出口的一态。
+
+    动机（生产实测）：R344/R613 已把硬故障(feeds_failed)与停放(feeds_parked)
+    做成带新鲜度的告警行，但「本轮几个源健康」从来没渲染过。后果是面板只能
+    回答"有没有坏源"，回答不了"还剩几个能用"——**而后者才是源治理的真问题**
+    （3/9 健康与 9/9 健康是两种完全不同的处境，且源总数 9 是代码常量、不在
+    面板上，读者连心算的基数都没有）。
+
+    生产实测 feeds_ok 均 8.94 / 最大 9：**9 源几乎轮轮全健康**，这个事实
+    目前完全不可见。
+    """
+
+    def _row(self, **kw):
+        r = {"ts": "2026-10-02T12:00:00+00:00", "outcome": "run_summary",
+             "candidates": 10, "published": 1,
+             "feeds_ok": 9, "feeds_failed": 0, "feeds_parked": 0}
+        r.update(kw)
+        return r
+
+    def test_feed_ok_is_accumulated(self):
+        """抓取轮数 / 总数 / 最小 / 最大四值齐全"""
+        rows = [self._row(feeds_ok=9), self._row(feeds_ok=8), self._row(feeds_ok=9)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["feed_ok_runs"], 3)
+        self.assertEqual(s["runs"]["feed_ok_total"], 26)
+        self.assertEqual(s["runs"]["feed_ok_min"], 8)
+        self.assertEqual(s["runs"]["feed_ok_max"], 9)
+
+    def test_min_captures_true_zero(self):
+        """min 初值不能是 0 —— 真出现「0 个源健康」时必须被捕捉。
+
+        用 0 起算会把这个最值吃掉，只剩 max 一档；而**全集故障/风控恰好是
+        最需要报警的场景**（这正是 feeds_empty 注释里R255 那类降级）。
+        """
+        rows = [self._row(feeds_ok=9), self._row(feeds_ok=0)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["feed_ok_min"], 0,
+                         "min 未捕捉真实的 0 值健康源数")
+
+    def test_missing_field_does_not_enter_denominator(self):
+        """缺 feeds_ok 的行不进分母（R621 分母纪律）。
+
+        feeds_ok 只在非配额饱和轮出现（生产 270/276 轮，饱和轮 sys.exit 在
+        抓取之前）。若把缺字段的行算进分母，会渲染出「0.14 个健康源/轮」
+        这种无意义数字。
+        """
+        rows = [self._row(feeds_ok=9), self._row(feeds_ok=None),
+                {"ts": "2026-10-02T12:00:00+00:00", "outcome": "run_summary",
+                 "candidates": 5, "published": 0, "quota_blocked": True}]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["feed_ok_runs"], 1,
+                         "缺字段的行被算进了抓取轮分母")
+        self.assertEqual(s["runs"]["feed_ok_total"], 9)
+
+    def test_zero_value_is_valid_observation(self):
+        """值为 0 是有效观测（真一个源都没抓到），字段存在即计入分母。"""
+        rows = [self._row(feeds_ok=0)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["feed_ok_runs"], 1)
+        self.assertEqual(s["runs"]["feed_ok_total"], 0)
+
+    def test_health_line_renders_with_denominator(self):
+        """健康行必须渲染，且带抓取轮分母"""
+        rows = [self._row(feeds_ok=9), self._row(feeds_ok=8)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("源健康", text)
+        line = next(ln for ln in text.splitlines() if "源健康:" in ln)
+        self.assertIn("2 个抓取轮", line, "必须带抓取轮分母")
+        self.assertIn("8.5", line, "必须给均值")
+        self.assertIn("最少 8", line)
+        self.assertIn("最多 9", line)
+
+    def test_health_and_failure_shown_together(self):
+        """健康数与故障数必须同框 —— 源治理问的是"还剩几个能用"。
+
+        只报故障数时读者要自己用「源总数 − 故障 − 停放」心算，而源总数
+        （9）是代码常量、不在面板上，连基数都没有。
+        """
+        rows = [self._row(feeds_ok=6, feeds_failed=3),
+                self._row(feeds_ok=6, feeds_failed=3)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        hl = next(ln for ln in text.splitlines() if "源健康:" in ln)
+        self.assertIn("同窗硬故障", hl,
+                      "健康行未与故障同框，读者无法判断还剩几个能用")
+
+    def test_no_field_no_line(self):
+        """全窗无 feeds_ok（如全为饱和轮）时不渲染空行"""
+        rows = [{"ts": "2026-10-02T12:00:00+00:00", "outcome": "run_summary",
+                 "candidates": 5, "published": 0, "quota_blocked": True}]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertNotIn("源健康:", text)
+
+    def test_zero_failures_still_renders_health(self):
+        """零故障时健康行仍要渲染 —— **"没坏源"不等于"源健康"**。
+
+        这是本条存在的全部理由：故障行零故障时不渲染（零噪音惯例），
+        若健康行也跟着不渲染，全健康窗口下面板对源健康**一个字都不说**。
+        """
+        rows = [self._row(feeds_ok=9, feeds_failed=0)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("源健康:", text)
+        self.assertIn("同窗零硬故障", text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
