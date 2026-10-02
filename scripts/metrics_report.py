@@ -597,6 +597,20 @@ def summarize(rows):
         # 差7 倍（openrouter 8% vs stepfun-flash 55%），**按调用量排序会得出
         # 完全相反的结论**。这是"排名指标选错"的典型：量大的通道未必贡献多。
         "provider_quality": {},
+        # R623：provider **尝试计数** {短名: 次数}——「池内哪几条从未被尝试过」
+        # 的分母来源。
+        #
+        # 为什么 provider_quality 不够：它只记 ok/rej/fail 三类，**全被拒或全被
+        # 熔断跳过的通道在遥测里一行都不落**，于是"从未尝试"与"尝试了但全拒"在
+        # 面板上同为空。生产实测这个差别是决定性的——近 30 天池内 12 站有
+        # **8 站（67%）零遥测**，而唯一被验证过的一簇是 stepfun / stepfun-flash，
+        # **两者同base_url 同 api_key**（R337 注：这是同一家网关的两个模型，
+        # 不是两个容灾池）。该网关整体不可用时，链上剩 10 条**从未被验证过**的
+        # 通道，正确性从未被任何生产数据检验。
+        #
+        # 判据（R618 纪律的延伸）：**全史 0 次不是安全信号，是危险信号**——
+        # 它意味着这条通道的正确性从未被生产数据验证。
+        "provider_attempts": {},
         "reject_reasons": collections.Counter(),
         # R302：永久失败（24h 冷却）按 提供商×原因 单列——push 侧 R301 报警只在跃迁沿
         # 响一次，报表是 pull 侧的常驻视图，但此前把 [credit 24h]/[permanent 24h] 标记
@@ -984,6 +998,17 @@ def summarize(rows):
         # llm_success 的 stage都是 campaign_intel，那是情报刷新不是发帖产出；
         # 发帖成功记在投递行上）。分母 = 投递成功 + 拒稿 + 失败，三者同粒度
         # 折叠到 provider 短名（同_provider_dispatch_order）。
+        #
+        # R623：尝试计数在此**单点累加**——口径须与 provider_quality 同源
+        # （同一短名折叠、同一非真实通道过滤），否则两张表会数出不同的通道数，
+        # "池内 12 站 / 有遥测 4 条" 这类对比就失去意义。
+        #
+        # 排除 provider_probe：那是 R617 探针**每轮一次的目录列举**，不是 LLM
+        # 尝试。若计入，会让「每轮都被探针看见」的通道显示成"被尝试过N 次"，
+        # 恰好把本条要抓的盲区（模型可用性从未被验证）伪装成已覆盖。
+        if outcome != "provider_probe" and prov and str(prov) not in ("-", "unknown"):
+            s["provider_attempts"][str(prov).split("/", 1)[0]] = \
+                s["provider_attempts"].get(str(prov).split("/", 1)[0], 0) + 1
         if _is_delivered(r):
             _qp = str(prov).split("/", 1)[0]
             if _qp and _qp not in ("-", "unknown"):
@@ -1374,6 +1399,37 @@ def _format_permanent_failures(counter, last_seen=None, last_success=None):
         seg += ")"
         (retired if recovered else live).append(seg)
     return (" | ".join(live), " | ".join(retired))
+
+
+def _provider_pool_from_main(main_path=None):
+    """R623：AST 解析 main.py 的 extra_keys 字面量键名 → 池内通道清单。
+
+    为什么必须 AST 而不是 import / 正则 / 硬编码（R617 已立判据，此处复用）：
+    - import main 有副作用（读环境、写状态文件），报表必须保持纯只读；
+    - 正则改个缩进就静默漏站（R615 硬编码 2 站、池内 12 站，历史 3 次僵尸名
+      事件 2 次落在盲区）；
+    - 硬编码清单与池定义各改一处，必然漂移。
+
+    解析失败**必须响亮失败并返回空**（空池 = 面板显式报"失明"），
+    绝不能静默退化成"全部通道都已被尝试"——那是把未知显示成通过（R617 纪律：
+    沉默不是通过）。
+    """
+    path = main_path or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "main.py")
+    try:
+        import ast
+        with open(path, "r", encoding="utf-8") as f:
+            tree = ast.parse(f.read())
+    except Exception:
+        return []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for tgt in node.targets:
+                if isinstance(tgt, ast.Name) and tgt.id == "extra_keys":
+                    if isinstance(node.value, ast.Dict):
+                        return [k.value for k in node.value.keys
+                                if isinstance(k, ast.Constant) and isinstance(k.value, str)]
+    return []
 
 
 def _provider_dispatch_order(by_provider, reject_by_provider, latency_by_provider):
@@ -2133,6 +2189,53 @@ def render_text(s, rows=None):
             ]
             lines.append("- 通道位次（延迟↑=failover 调用顺序，靠前先试；慢而稳的源"
                          "天然靠后·份额小≠闲置）: " + " › ".join(_segs))
+    # R623：池内通道的实际覆盖——**「有key」不等于「会上场」**。
+    #
+    # 这条补的是 R617 探针的 L4 缺口：探针验的是"默认模型名还活着吗"（端点/
+    # 目录可达性），但**完全没有回答"这条通道实际会不会被排序选中"**。生产
+    # 实测两者可以彻底脱节：池内 12 站里8 站近30 天零遥测，而它们并非故障、
+    # 非熔断、key 也在 workflow 里注入了——只是 `STEPFUN_PRIORITY` 把stepfun
+    # 系抬到免费池之上，且 stepfun 系次席成功，于是后位通道永不上场。
+    #
+    # 为什么必须显式渲染：前面所有通道行都是**「有数据的那些通道」**的画像，
+    # 缺失的通道在面板上根本不出现——「全绿」与「7/12 通道从未验证」读起来一样。
+    # 呼应 R612「程序在用≠ 人在看」：池在代码里定义了不等于链会用到。
+    _pool = _provider_pool_from_main()
+    _att = s.get("provider_attempts") or {}
+    if _pool:
+        _seen = [k for k in _pool if _att.get("Preset-" + k)]
+        _never = [k for k in _pool if not _att.get("Preset-" + k)]
+        # 分母必须显式：只显"从未被尝试 N 条"会被读成"还有几条在用"之外的孤立
+        # 事实，而读者真正要问的是占比——池里到底有多少是未经验证的。
+        lines.append(f"- 池内通道覆盖: 有遥测 {len(_seen)}/{len(_pool)}"
+                     + (f"（已验证: {' · '.join(_seen)}）" if _seen else ""))
+        if _never:
+            # ⚠️ 的判据是**窗口内零尝试**——这类通道的正确性从未被任何生产数据
+            # 检验，前序通道一挂就会顶上去裸奔（R618 纪律：从未被尝试不是安全信号）。
+            #
+            # 措辞纪律（R620反面）：这里**只陈述遥测能证实的事实**。
+            # 此前草稿写了"key 已注入 workflow 且非熔断状态"——这两句metrics.jsonl
+            # 都无法证实（key 在不在 workflow 里、断路器状态如何，都在别处），
+            # 而报表写下一句自己证实不了的话，读者会当成已核实的结论。
+            # **"是不是没配 key / 有没有被熔断"是处置动作的前提，须由人去对账**
+            # （`gh secret list` + campaign_intel 的 _llm_breaker）。
+            lines.append(f"  ⚠️ 从未被尝试 {len(_never)}/{len(_pool)}: "
+                         f"{' · '.join(_never)}"
+                         "（本窗口零遥测：正确性未被生产验证，"
+                         "前序通道故障时属盲区；请对账是否缺 key / 被熔断）")
+    elif _pool == [] and (s.get("provider_attempts") or s.get("by_provider")
+                          or s.get("reject_by_provider")):
+        # 空池只有一种成因：main.py 解析失败（语法错误 / 找不到 extra_keys）。
+        # 此时**必须响亮报失明**——静默跳过这行等于让"代码损坏"伪装成"全绿"，
+        # 而 R617 探针的判据是"语法错误要响亮失败，空池会让全通过"（同型）。
+        #
+        # 守卫用 provider_attempts / reject_by_provider，**不能用 by_provider**：
+        # 后者只统计投递成功，纯拒稿轮次下它是空 Counter，于是"有通道活动但没
+        # 成功"这个最需要报失明的场景反而静默了——生产实测拒稿占拒单遥测的主体
+        # （quality/numbers/transport 全走llm_rejected），一旦某轮全是拒稿，
+        # 空池就会被吞掉。这与 R617「沉默不是通过」同型，是**覆盖不到的一种形态**。
+        lines.append("  ⚠️ 池内通道覆盖未知（AST 解析 main.py 的 extra_keys 失败）"
+                     "——面板对'哪些通道从未被尝试'已失明，不要读作全部覆盖")
     if s["tokens_by_provider"]:
         lines.append(f"- token 消耗 {dict(sorted(s['tokens_by_provider'].items()))}")
     if s["errors"]:

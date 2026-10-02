@@ -3097,5 +3097,147 @@ class TestR621FeedYieldAttribution(unittest.TestCase):
         self.assertNotIn("⚠️", line)
 
 
+class TestR623PoolCoverageBlindSpot(unittest.TestCase):
+    """R623：池内通道的实际覆盖——「有 key」不等于「会上场」。
+
+    动机（生产实测，非推测）：R617 的探针验的是「默认模型名还活着吗」（端点/
+    目录可达性），**完全没有回答"这条通道实际会不会被排序选中"**。生产实锤：
+    池内 12 站，近 30 天有遥测的只有 4 站，**8 站（67%）零尝试**——而它们
+    既没被熔断（_llm_breaker 为空），key 也在 workflow 里注入了。
+
+    根因不在故障，而在 `STEPFUN_PRIORITY=1`：它把 stepfun 系抬到免费池之上，
+    而链第 1、2 名恰好都是 stepfun 系（**同base_url、同 api_key 的两个模型，
+    不是一个网关两个容灾池**），次席成功 → 后位通道永不上场。于是"唯一被验证过
+    的一簇恰好是同一家"——这是真正的单点故障，而面板对此零输出。
+    """
+
+    def _row(self, **kw):
+        r = {"ts": "2026-10-02T00:00:00+00:00", "outcome": "llm_rejected",
+             "stage": "quality", "provider": "Preset-stepfun-flash", "title": "t"}
+        r.update(kw)
+        return r
+
+    def test_pool_parsed_from_main_ast(self):
+        """覆盖面必须来自 main.py 的 extra_keys，不能自己维护一份列表。
+
+        R617 判据：R615 硬编码 2 站而池内 12 站，历史 3 次僵尸名事件2 次落在
+        盲区——探针恰好漏掉了它要防的那类事故。AST 优于 import（有副作用）
+        与正则（改缩进就静默漏站）。
+        """
+        pool = mr._provider_pool_from_main()
+        self.assertGreaterEqual(len(pool), 10,
+                                "池定义解析异常，池内通道数远低于预期")
+        for name in ("stepfun", "stepfun-flash", "b.ai", "openrouter"):
+            self.assertIn(name, pool)
+
+    def test_pool_parse_failure_returns_empty_not_all_passed(self):
+        """解析失败必须返回空（让渲染层报"失明"），绝不能退化成"全部已覆盖"
+
+        —— 空池会让"代码损坏"伪装成"全绿"，与 R617 探针的响亮失败同判据。
+        """
+        self.assertEqual(mr._provider_pool_from_main("/nonexistent/main.py"), [])
+
+    def test_probe_rows_are_not_counted_as_attempts(self):
+        """探针行不是 LLM 尝试。
+
+        若计入，每轮一次的 provider_probe 会让"被探针看见的通道"显示成
+        "被验证过 N 次"，恰好把本条要抓的盲区（模型可用性从未被验证）
+        伪装成已覆盖。
+        """
+        rows = [{"ts": "2026-10-02T00:00:00+00:00", "outcome": "provider_probe",
+                 "provider": "-", "sites_total": 12, "sites_ok": 12}]
+        s = mr.summarize(rows)
+        self.assertEqual(s.get("provider_attempts"), {},
+                         "provider_probe 被误计为 LLM 尝试")
+
+    def test_never_tried_channels_are_flagged_with_denominator(self):
+        """未被尝试的通道必须显式报警，且带分母（占比）。
+
+        缺分母时"8 条从未被尝试"是一个孤立事实，读者无法判断严重性；
+        呼应 R621「指标的覆盖面要显式」。
+        """
+        rows = [self._row()]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("池内通道覆盖", text)
+        self.assertIn("从未被尝试", text)
+        line = next(ln for ln in text.splitlines() if "从未被尝试" in ln)
+        self.assertIn("/", line, "必须带分母（n/池内总数）")
+        self.assertIn("⚠️", line)
+
+    def test_placeholder_provider_not_counted(self):
+        """占位 provider（非真实通道）不计入尝试数
+
+        —— 否则「无可用提供商」这类行会让某个假通道看起来被验证过。
+        """
+        rows = [self._row(provider="-"),
+                self._row(provider="unknown"),
+                self._row(provider="", stage="no_provider")]
+        s = mr.summarize(rows)
+        self.assertEqual(s.get("provider_attempts"), {})
+
+    def test_slash_folded_to_short_channel_name(self):
+        """`Preset-openrouter/free` 折叠到 `Preset-openrouter`
+
+        —— 与 provider_quality /_provider_dispatch_order 同粒度，否则两张表
+        会数出不同数量的通道，"有遥测 N/12" 这个对比就失去意义。
+        """
+        rows = [self._row(provider="Preset-openrouter/free")]
+        s = mr.summarize(rows)
+        self.assertIn("Preset-openrouter", s["provider_attempts"])
+        self.assertNotIn("Preset-openrouter/free", s["provider_attempts"])
+
+    def test_rendering_claims_only_what_telemetry_proves(self):
+        """R620 反面纪律：措辞不得断言遥测无法证实的事。
+
+        草稿里写过"key 已注入 workflow 且非熔断状态"——这两句 metrics.jsonl
+        都证实不了（key 在 workflow、断路器状态都在别处）。报表写下一句自己
+        证明不了的话，读者会当成已核实结论，而它恰恰是处置动作的前提。
+        """
+        rows = [self._row()]
+        text = mr.render_text(mr.summarize(rows), rows)
+        line = next(ln for ln in text.splitlines() if "从未被尝试" in ln)
+        self.assertNotIn("key 已注入", line)
+        self.assertNotIn("非熔断状态", line)
+        # 但必须把"需要人去向别处对账"说出来，否则读者以为面板已给全答案
+        self.assertIn("对账", line)
+
+    def test_all_channels_tried_renders_no_warning(self):
+        """全部池内通道都有遥测时不报⚠️——告警预算纪律（R614）
+
+        没有 ⚠️ 就没有"什么都好"的额外声明，只需一行覆盖率。
+        """
+        pool = mr._provider_pool_from_main()
+        rows = [self._row(provider="Preset-" + k) for k in pool]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("池内通道覆盖", text)
+        self.assertNotIn("从未被尝试", text)
+        self.assertNotIn("⚠️", text)
+
+    def test_blank_pool_reports_blindness_not_all_green(self):
+        """池解析失败时必须响亮报"失明"，不能静默跳过这行。
+
+        静默跳过 = 让「代码损坏」伪装成「全绿」，与 test_pool_parse_failure
+        是同一判据的渲染侧守卫（R617：沉默不是通过）。
+
+        **回归**：守卫首版用 `s.get("by_provider")` 判定"有通道活动"，而
+        by_provider 只统计**投递成功**——纯拒稿轮次下它是空 Counter，于是
+        最需要报失明的场景（全拒）反而静默。生产实测拒稿才是拒单遥测的主体
+        （quality/numbers/transport 全走 llm_rejected），这不是理论分支。
+        本例用纯拒稿行复现该场景并钉住判据。
+        """
+        rows = [self._row()]   # llm_rejected，无投递 → by_provider 为空
+        self.assertEqual(mr.summarize(rows).get("by_provider") or {},
+                         {}, "前提变了：本用例应改用有投递的行")
+        real = mr._provider_pool_from_main
+        try:
+            mr._provider_pool_from_main = lambda *a, **k: []
+            text = mr.render_text(mr.summarize(rows), rows)
+        finally:
+            mr._provider_pool_from_main = real
+        self.assertIn("覆盖未知", text)
+        self.assertIn("失明", text)
+        self.assertIn("⚠️", text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
