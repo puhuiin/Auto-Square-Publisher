@@ -134,6 +134,7 @@
 | 提供商名称 | Base URL | 常用/推荐免费模型 | 专用 Secret 变量名 |
 | :--- | :--- | :--- | :--- |
 | **OpenRouter** | `https://openrouter.ai/api/v1` | `openrouter/free`（聚合路由，默认）<br>`qwen/qwen3.8-27b:free`<br>`z-ai/glm-5.2:free`<br>`deepseek/deepseek-v4-flash-0731:free` | `OPENROUTER_API_KEY` |
+| **Google AI Studio** | `https://generativelanguage.googleapis.com/v1beta/openai` | `gemini-3-flash-preview`（默认，R615）<br>`gemini-3.1-flash-lite-preview` | `GOOGLE_API_KEY` |
 | **B.ai** | `https://api.b.ai/v1` | `glm-5.3-flash`（生产在跑）<br>`deepseek-v4-flash`<br>`qwen3.8-flash` | `BAI_API_KEY` |
 | **智谱 Z.ai** | `https://api.z.ai/api/paas/v4` | `glm-4.7-flash`（默认，注册赠额度）<br>`glm-4.5-flash`<br>`glm-4.6v-flash`（视觉） | `ZAI_API_KEY` |
 | **xkiro** | `https://api.xkiro.com/v1` | `qwen/qwen3.6-plus:free`<br>`minimax/minimax-m3:free` | `XKIRO_API_KEY` |
@@ -175,6 +176,11 @@
 
 **方式 A：简单配置（单 Key 或常用预置 Key）**
 - `OPENROUTER_API_KEY`: 你的 OpenRouter Key（自动使用内置免费模型池）
+- `GOOGLE_API_KEY`: 你的 Google AI Studio Key（[aistudio.google.com/apikey](https://aistudio.google.com/apikey) 免费领取）。
+  **R615 新增，价值在额度而非模型**：OpenRouter 免费层 50 次/天是本项目当前需求
+  （中位 18 次/天、峰值 50）的硬天花板，打满即产生 transport 拒稿；Google 免费层
+  Flash 系是**另一份额度池**，两家互不挤兑，单池天花板变双池。走官方 OpenAI 兼容
+  端点（`/v1beta/openai`）+ Bearer 认证，与本项目 OpenAI SDK 完全对齐，无需适配层。
 - `BAI_API_KEY`: 你的 B.ai API Key
 - `ZAI_API_KEY`: 智谱 Z.ai Key（自动使用 `glm-4.7-flash` 免费层）
 - `BLUESMINDS_API_KEY`: bluesminds Key（注册赠试用额度，自动使用 `glm-4-flash`）
@@ -311,7 +317,7 @@ python scripts/metrics_report.py --days 1
   | `FETCH_DEADLINE_SEC` | `300` | 单轮 RSS 抓取的全局 deadline（秒）：到点放弃迟到源、用已完成候选继续，避免卡住的源拖满 workflow 并挤掉后续 cron |
   | `LOG_LEVEL` | `INFO` | 日志级别（排障时可设 `DEBUG`） |
   | `MAX_POSTS_PER_RUN` | `2` | 单次运行最大发帖数（workflow 运行参数；配额剩余不足时自动收敛） |
-- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `BAI_MODEL` / `ZAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL` / `STEPFUN_MODEL` / `STEPFUN_FLASH_MODEL` / `BLUESMINDS_MODEL`——想把某平台固定到指定模型时设置。
+- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `BAI_MODEL` / `ZAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL` / `STEPFUN_MODEL` / `STEPFUN_FLASH_MODEL` / `BLUESMINDS_MODEL` / `GOOGLE_MODEL`——想把某平台固定到指定模型时设置。
 - **报警通知渠道**（全部可选，多渠道并发）：`SERVERCHAN_KEY`（Server酱微信）/ `PUSHPLUS_TOKEN`（PushPlus 微信）/ `BARK_KEY`（iOS Bark）/ `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`（Telegram）/ `WEBHOOK_URL`（钉钉/飞书/企微/Discord 通用）。同一错误报警 12 小时同题节流，投递成功才计额度。
 - **CI 回归防线**：`tests/test_core.py` 内置百余个离线回归测试（含断路器/源停放/报错分类/通知编码/跨语言去重/行情缓存/同步契约），`.github/workflows/ci.yml` 在每次 push/PR 时自动编译、校验 workflow 语法并跑测试，防止守护逻辑被后续改动悄悄破坏。
   - **workflow 内嵌脚本校验的环境降级**：`scripts/validate_workflows.py` 只在确认本机 bash **真能执行** `bash -n -c true` 时才校验内嵌 shell；PATH 上只有 WSL 启动器、或 bash 被安全策略拒绝时，一律跳过并说明原因，**绝不把环境故障伪装成 workflow 语法错误**。需强制指定时用环境变量 `BASH_PATH=/path/to/bash`。

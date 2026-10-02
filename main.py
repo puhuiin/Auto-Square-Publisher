@@ -3247,6 +3247,12 @@ def _is_reasoning_channel(provider_name: str, model: str = "") -> bool:
         # 大预算/长超时也只是上界——它更快时自然更早返回、用更少 token，无成本；
         # 若它其实带思考档，则避免 600 预算被思考链吃满导致 content 系统性 None。
         return True
+    if provider_name == "Preset-google":
+        # R615：Gemini 3 Flash 官方支持 thinking_level 思考档（与 step-5-preview /
+        # b.ai glm 同型）。按非推理配 600 预算，正是 R218 复现的形状——思考链吃满
+        # 预算 → content 系统性None → 看起来像"Google 通道质量差"，实则是预算配错。
+        # 同理按推理配给：预算是上限非下限，真不带思考时只会更早自然返回，无成本。
+        return True
     ml = (model or "").lower()
     if "thinking" in ml or "reasoning" in ml:
         return True
@@ -3802,6 +3808,29 @@ class MultiLLMEngine:
                 # 已 404）不会让 preset 通道整体报废。想固定单模型仍可用 OPENROUTER_MODEL 覆盖。
                 # 09-19 实测目录仍有该别名；免费额度 50 次/天（充值 $10 后 1000 次/天）。
                 os.getenv("OPENROUTER_MODEL", "").strip() or "openrouter/free",
+            ),
+            # R615：Google AI Studio 免费层通道（用户 2026-10-02 配GOOGLE_API_KEY）。
+            # 为什么必须是独立通道而不是又一个 OpenRouter 免费模型——**额度池不同**：
+            # OpenRouter 免费层50 次/天是整个项目当前 LLM 需求（中位 18 次/天、
+            # 峰值 50）的天花板，实测09-21 那天就打满过；Preset-openrouter 全史
+            # 23 次 transport 拒稿（拒稿阶段分布里transport 最高）就是额度耗尽的
+            # 直接表现。Google 免费层是另一份额度（Flash 系约 1500 RPD 量级），
+            # 两家额度互不挤兑——这是本通道的**全部价值**：把单池天花板变成双池。
+            #
+            # 协议：Gemini 官方提供 OpenAI 兼容端点 v1beta/openai/chat/completions，
+            # 且接受 `Authorization: Bearer <key>`（本引擎 OpenAI SDK 正是这个
+            # 头），因此**无需任何适配层**即可接入。已实测（2026-10-02 无 key 探测）：
+            # 该端点返回 400 "Please pass a valid API key" 而非 404 → 端点存在且
+            # 认证方式匹配，与 probe_google_free.py 的失败路径区分得开。
+            #
+            # 模型名纪律（R263 的教训照搬）：免费层模型名轮换极快（Gemini 2.5 Pro /
+            # 3.1 Pro 已于 2026-04-01 移除免费层），故默认取 Flash 系、可用
+            # GOOGLE_MODEL 覆盖，且scripts/probe_google_free.py 可随时按官方目录
+            # /v1beta/models 校准真实 id——**不要凭文档快照猜名**。
+            "google": (
+                os.getenv("GOOGLE_API_KEY", "").strip(),
+                "https://generativelanguage.googleapis.com/v1beta/openai",
+                os.getenv("GOOGLE_MODEL", "").strip() or "gemini-3-flash-preview",
             ),
             "b.ai": (
                 os.getenv("BAI_API_KEY", "").strip(),

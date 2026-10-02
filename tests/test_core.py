@@ -4157,6 +4157,91 @@ class TestTimeoutBudgetCoupling(unittest.TestCase):
         self.assertIs(eng._get_client(p), client)
 
 
+class TestGoogleProviderR615(unittest.TestCase):
+    """R615：Google AI Studio 免费层通道。
+
+    价值不在"多一个模型"，而在**额度池独立**：OpenRouter 免费层50 次/天是
+    本项目当前需求（中位 18 次/天、峰值 50）的硬天花板，打满即transport 拒稿
+    （Preset-openrouter 全史 23 次 transport 拒稿即此）。Google 免费层是另一
+    份额度，两家互不挤兑。接入方式的关键前提：Gemini 官方提供 OpenAI 兼容端点
+    且接受 Bearer 认证，与本引擎的 OpenAI SDK 完全对齐，**零适配层**。
+    """
+
+    def _build(self, env_keys):
+        saved = {}
+        for k, v in env_keys.items():
+            saved[k] = os.environ.get(k)
+            os.environ[k] = v
+        try:
+            return m.MultiLLMEngine()._build_provider_chain()
+        finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+    def test_google_channel_uses_openai_compat_endpoint(self):
+        """端点必须是 /v1beta/openai——原生v1beta 是 Gemini 自有协议，本引擎
+        全走 OpenAI SDK，写错会 404 且被误判成"key 无效"。"""
+        chain = self._build({"GOOGLE_API_KEY": "gk"})
+        g = next(p for p in chain if p.name == "Preset-google")
+        self.assertEqual(g.base_url,
+                         "https://generativelanguage.googleapis.com/v1beta/openai")
+        self.assertEqual(g.api_key, "gk")
+
+    def test_google_channel_silent_without_key(self):
+        """无 key 时必须完全静默（不产生空通道），与池内其他通道同纪律——
+        否则 key 缺失会以"每轮都尝试一个废通道"的形式静默烧时间。"""
+        saved = os.environ.pop("GOOGLE_API_KEY", None)
+        try:
+            chain = self._build({})
+            self.assertFalse(any(p.name == "Preset-google" for p in chain),
+                             "未配置 GOOGLE_API_KEY 时不应生成该通道")
+        finally:
+            if saved is not None:
+                os.environ["GOOGLE_API_KEY"] = saved
+
+    def test_google_model_override_env(self):
+        """模型名必须可由 GOOGLE_MODEL 覆盖：免费层模型名轮换极快（Gemini 2.5 Pro
+        / 3.1 Pro 已于 2026-04-01 移除免费层），写死默认值等于埋一个定时 404。
+        真实 id 用scripts/probe_google_free.py 按官方目录校准，不凭文档猜。"""
+        chain = self._build({"GOOGLE_API_KEY": "gk",
+                             "GOOGLE_MODEL": "gemini-3.1-flash-lite-preview"})
+        g = next(p for p in chain if p.name == "Preset-google")
+        self.assertEqual(g.model, "gemini-3.1-flash-lite-preview")
+
+    def test_google_default_model_is_flash_family(self):
+        """默认取 Flash 系：Pro 系已移除免费层（付费），配了 Pro 默认名会让
+        这条通道静默走付费计费或直接 400。"""
+        chain = self._build({"GOOGLE_API_KEY": "gk"})
+        g = next(p for p in chain if p.name == "Preset-google")
+        self.assertIn("flash", g.model.lower(),
+                      "默认模型应是 Flash 系（免费层才有额度）")
+
+    def test_google_and_openrouter_are_separate_channels(self):
+        """两家的额度池必须能**同时**进链——这正是 R615 的全部意义。若去重键
+        或渠道名把它们合并，双池就退化成单池，额度天花板白拆。"""
+        chain = self._build({"GOOGLE_API_KEY": "gk",
+                             "OPENROUTER_API_KEY": "ok"})
+        names = [p.name for p in chain]
+        self.assertIn("Preset-google", names)
+        self.assertIn("Preset-openrouter", names)
+        self.assertEqual(len(names), len(set(names)), "渠道名不得重复")
+
+    def test_google_gets_reasoning_budget(self):
+        """Gemini 3 Flash 带 thinking_level 思考档，必须与 step-5/b.ai 同级
+        配 1500 预算 + 90s 超时。按非推理配 600 会复刻 R218 的形状：思考链
+        吃满预算 → content 系统性 None → 表现为"Google 通道质量差"，实则
+        预算配错。误升无成本（预算是上限非下限），漏升有系统性代价。
+        """
+        chain = self._build({"GOOGLE_API_KEY": "gk"})
+        g = next(p for p in chain if p.name == "Preset-google")
+        self.assertEqual(g.timeout, 90.0, "思考型通道应与推理通道同级 90s")
+        self.assertEqual(m._summarize_max_tokens("Preset-google", g.model), 1500,
+                         "思考型通道应拿 1500 预算，而非 600")
+
+
 class TestReasonixGateway(unittest.TestCase):
     """Reasonix 本地免费模型网关集成"""
 
