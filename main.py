@@ -7946,6 +7946,8 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
         # 7/8 丢警正是「发帖机器人调度中断恢复」）。合并 metrics 今日同 outcome
         # 行，使人类面覆盖全部丢警，不只 main 本进程。
         _dropped = list(Notifier._dropped_error_titles)
+        # R633：非空表示「跨进程那半没扫到」，报告必须显式说不完整
+        _dropped_scan_broken = None
         try:
             _today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
             if os.path.exists(METRICS_FILE):
@@ -7964,8 +7966,24 @@ def write_github_step_summary(fetcher: NewsFetcher, fng_index: str, campaign_int
                         _r = str(_row.get("reason") or "")
                         if _r:
                             _dropped.append(_r)
-        except Exception:
-            pass
+        except Exception as _scan_err:
+            # R633：这块**静默失败会让跨进程丢警凭空消失**，而本进程那部分还在
+            # ⇒ Step Summary 仍显示告警，读者以为看到了全貌。
+            # 比"整段消失"更难察觉：R614 纪律说"陈迹只降级不消失（消失即'看不到
+            # 就以为没发生'）"，这里是**部分消失**——安全面告警的可信度受损。
+            #
+            # 处置：① 记日志留痕 ② 在报告里显式标注**本轮丢警清单不完整**。
+            # 不用 raise/中断——本函数是旁路（末尾已有except 兜底），
+            # 但"旁路不阻塞主流程"≠"旁路失败要静默"（记忆原则5 的正确用法）。
+            _dropped_scan_broken = f"{type(_scan_err).__name__}: {_scan_err}"
+            logger.warning(f"⚠️ 跨进程丢警扫描失败，本轮丢警清单不完整: "
+                           f"{_dropped_scan_broken}")
+        if _dropped_scan_broken:
+            # R633：先于丢警块渲染——读者必须先知道"下面的清单不完整"，
+            # 再看清单（顺序反了会让人以为看到了全貌）。
+            lines.append(f"- **⚠️ 丢警清单不完整**: 跨进程丢警扫描失败"
+                         f"（{_dropped_scan_broken}）——下方仅含本进程丢警，"
+                         f"`schedule_watchdog` 步骤的丢警可能遗漏")
         if _dropped:
             uniq = list(dict.fromkeys(_dropped))  # 保序去重
             shown = "；".join(t[:60] for t in uniq[:5])

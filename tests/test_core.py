@@ -15553,6 +15553,75 @@ class TestR632TelegramSkipLogCarriesEvidence(unittest.TestCase):
         p = m.TelegramChannelPublisher()
         self.assertFalse(p._tg_already_sent("never-sent"))
 
+class TestR633DroppedAlertScanFailureVisible(unittest.TestCase):
+    """R633：跨进程丢警扫描**静默失败**会让安全面告警"部分消失"。
+
+    旧实现 `except Exception: pass` 包住 metrics.jsonl 的丢警扫描。若它抛异常
+    （文件损坏/权限/编码），**跨进程那半丢警凭空消失**，而本进程那半还在 ⇒
+    Step Summary 仍显示告警，读者以为看到了全貌。
+
+    比"整段消失"更难察觉：R614 纪律是"陈迹只降级不消失（消失即'看不到就以为
+    没发生'）"，这里是**部分消失** —— 安全面告警的可信度受损。
+
+    关键设计：**旁路不阻塞主流程 ≠ 旁路失败要静默**（记忆原则 5 的正确用法）。
+    失败时 ① 记日志留痕 ② 报告里显式标注清单不完整，且**该行排在清单之前**
+    （顺序反了读者会先看清单、以为那就是全貌）。
+    """
+
+    def _run(self, broken: bool):
+        import tempfile
+        from unittest import mock
+        tmp = tempfile.mkdtemp()
+        bad = os.path.join(tmp, "metrics.jsonl")
+        with open(bad, "w", encoding="utf-8") as f:
+            f.write("x")
+        old_m, old_dropped = m.METRICS_FILE, list(m.Notifier._dropped_error_titles)
+        sum_path = os.path.join(tmp, "sum.md")
+        with open(sum_path, "w", encoding="utf-8") as f:
+            f.write("")
+        os.environ["GITHUB_STEP_SUMMARY"] = sum_path
+        m.METRICS_FILE = bad
+        m.Notifier._dropped_error_titles = ["本进程丢警X"]
+        fetcher = m.NewsFetcher.__new__(m.NewsFetcher)
+        fetcher.stats = {"per_feed": {}, "fetched": 0, "stale": 0,
+                         "cached": 0, "near_dup": 0, "kept": 0}
+        real_open = open
+
+        def boom(*a, **k):
+            if a and a[0] == bad and broken:
+                raise OSError("模拟读取失败")
+            return real_open(*a, **k)
+
+        try:
+            with mock.patch("builtins.open", boom):
+                m.write_github_step_summary(fetcher, "—", {"active_tags": []},
+                                            [], False)
+            return real_open(sum_path, encoding="utf-8").read()
+        finally:
+            m.METRICS_FILE = old_m
+            m.Notifier._dropped_error_titles = old_dropped
+            os.environ.pop("GITHUB_STEP_SUMMARY", None)
+
+    def test_scan_failure_marks_report_incomplete(self):
+        text = self._run(broken=True)
+        self.assertIn("丢警清单不完整", text,
+                      "扫描失败时报告未标注不完整——部分丢警凭空消失")
+        self.assertIn("本进程丢警X", text, "本进程那半丢警应仍可见")
+
+    def test_incomplete_line_precedes_the_alert_list(self):
+        """顺序纪律：必须先说"不完整"，再看清单"""
+        text = self._run(broken=True)
+        i_incomplete = text.find("丢警清单不完整")
+        i_list = text.find("被丢弃的报警")
+        self.assertTrue(i_incomplete != -1 and i_list != -1)
+        self.assertLess(i_incomplete, i_list,
+                        "「不完整」行必须排在丢警清单之前，否则读者会以为那是全貌")
+
+    def test_no_marker_when_scan_succeeds(self):
+        """正常路径不得有噪声（零噪音惯例）"""
+        text = self._run(broken=False)
+        self.assertNotIn("丢警清单不完整", text)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
