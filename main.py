@@ -3857,14 +3857,29 @@ class MultiLLMEngine:
             "aihubmix": (
                 os.getenv("AIHUBMIX_API_KEY", "").strip(),
                 "https://aihubmix.com/v1",
-                # 09-17 实测仍有效的免费编程路由（-free 后缀=免费 id 约定）；
                 # 限额 5 次/分、500 次/天、100 万 tokens/天，每日重置。
-                os.getenv("AIHUBMIX_MODEL", "").strip() or "coding-glm-5.3-flash-free",
+                #
+                # R618（2026-10-02）：默认名由 coding-glm-5.3-flash-free 改为
+                # coding-glm-5.3-free。R617 把探针覆盖面补到全池 12 站后，
+                # **首次 CI 运行即抓到这个真僵尸名**——该名已不在站点 417 模型
+                # 目录里，现存的是少了 -flash 段的基础名（与 tokenrouter 当初
+                # glm-5.3-free → nemotron-3-nano-omni 是同一套路：站点把
+                # "-flash" 变体下架、保留基础名）。
+                # 为什么这个僵尸名潜伏至今而无人发现：全史 2410 行遥测里
+                # Preset-aihubmix **0 次被尝试**——b.ai/stepfun/openrouter
+                # 总是先成功，failover 根本走不到它。但它正是"前三通道全挂时"
+                # 的长尾兜底，真到那一刻会以 404 空转。
+                # 换名纪律：不要凭文档猜，用 scripts/probe_provider_models.py
+                # 打真目录核对（它现在每轮自动跑并把结论写进体检面板）。
+                os.getenv("AIHUBMIX_MODEL", "").strip() or "coding-glm-5.3-free",
             ),
             "inferera": (
                 os.getenv("INFERERA_API_KEY", "").strip(),
                 "https://api.inferera.com/v1",
-                # ⚠️ 未找到独立可核验来源；如遇 404 按 ZAI_MODEL 套路换名或撤 preset。
+                # R618 修正：原注释写「⚠️ 未找到独立可核验来源」，该判断已被
+                # R617 实测证伪——https://api.inferera.com/v1/models 无需 key
+                # 即可列目录（2026-10-02 实测 417 个模型，默认名存活）。它是一
+                # 家长尾兜底通道，默认名 coding-kimi-k3-free 当前有效。
                 os.getenv("INFERERA_MODEL", "").strip() or "coding-kimi-k3-free",
             ),
             "tokenrouter": (

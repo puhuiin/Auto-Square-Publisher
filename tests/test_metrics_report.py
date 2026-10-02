@@ -2806,5 +2806,79 @@ class TestR617ProviderProbe(unittest.TestCase):
         self.assertEqual(f["delivered"], 0)
 
 
+class TestR618ZombieNotDiluted(unittest.TestCase):
+    """R618：已确证的僵尸名不得被"另一批站未核实"稀释掉。
+
+    生产实锤（2026-10-02 首轮CI 运行）：探针抓到 `Preset-aihubmix` 的默认名
+    `coding-glm-5.3-flash-free` 已从 417 模型目录消失——R263 第四次复发，且正好
+    落在 R615 探针的盲区里。但同一轮有 8 站因缺 key 未核实，于是 R617 首版的
+    单判据 `probe_ok=False` 把整轮渲染成「探针未完成」，**僵尸名被活活吞掉**。
+
+    判据原则：僵尸名是**已确证的事实**（默认名确实不在目录里），未核实只是
+    覆盖缺口；两者处置动作完全不同（换名 vs 补 key），不能合并判。
+    """
+
+    @staticmethod
+    def _row(**kw):
+        row = {"ts": "2026-10-02T09:59:16+00:00", "outcome": "provider_probe",
+               "sites_total": 12, "sites_ok": 3, "sites_unknown": 8,
+               "unknown_sites": "b.ai,tokenrouter",
+               "zombie_count": 1, "zombie_sites": "aihubmix",
+               "probe_ok": False, "probe_error": "8 站未核实"}
+        row.update(kw)
+        return [row]
+
+    def test_zombie_survives_partial_coverage(self):
+        """核心守卫：8站未核实 + 1 僵尸 → 僵尸行必须出现且带处置动作"""
+        rows = self._row()
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("僵尸名", text)
+        self.assertIn("aihubmix", text, "僵尸站名必须显式给出，否则无从处置")
+        self.assertIn("改 *_MODEL", text, "僵尸行必须挂处置动作")
+        # 未核实行仍要独立存在（它是另一个问题，不该被僵尸行吃掉）
+        self.assertIn("仅部分核实", text)
+        # 关键：不得把整轮说成"不可信"而把已确证的僵尸名降级
+        self.assertNotIn("本轮僵尸名结论不可信", text)
+
+    def test_zombie_alone_renders_single_line(self):
+        """仅僵尸、无未核实 → 只出僵尸行，不再补"全部核实通过" """
+        rows = self._row(sites_ok=11, sites_unknown=0, unknown_sites="",
+                         probe_ok=True, probe_error=None)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("僵尸名", text)
+        self.assertNotIn("全部核实通过", text,
+                         "有僵尸时绝不能同时宣称全部通过")
+        self.assertNotIn("仅部分核实", text)
+
+    def test_probe_failure_without_zombie_still_alarm(self):
+        """探针失败且无僵尸 → 仍走"结论不可信"活警（判据未被削弱）"""
+        rows = self._row(sites_total=0, sites_ok=0, sites_unknown=0,
+                         zombie_count=None, zombie_sites="",
+                         probe_error="池解析为空", unknown_sites="")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("探针未完成", text)
+        # 注意不能断言 "僵尸名" not in text —— 活警文案的解释句里含
+        # "本轮僵尸名结论不可信"这个短语。要断言的是**没有僵尸行**，
+        # 即不出现"僵尸名 N 站"这种带站数与站名的行。
+        self.assertNotIn("僵尸名 0 站", text)
+        self.assertNotIn("💀", text, "无确证僵尸时不得出现 💀 活警行")
+
+    def test_legacy_row_without_zombie_field(self):
+        """历史行没有 zombie_count 字段时按 0 处理，不崩、不误报。
+
+        遥测字段可缺失是原则 4（append_metrics 过滤 None，所有新增字段走
+        "缺失即 None"）。R617 首轮写的那行就是这种历史行。
+        """
+        rows = [{"ts": "2026-10-02T09:59:16+00:00", "outcome": "provider_probe",
+                 "sites_total": 12, "sites_ok": 3, "sites_unknown": 8,
+                 "unknown_sites": "b.ai", "probe_ok": False,
+                 "probe_error": "8 站未核实"}]
+        s = mr.summarize(rows)
+        self.assertIsNone(s["runs"]["provider_probe"]["zombies"])
+        text = mr.render_text(s, rows)
+        self.assertNotIn("僵尸名 1 站", text)
+        self.assertIn("探针未完成", text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

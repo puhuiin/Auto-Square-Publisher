@@ -158,16 +158,23 @@ def write_telemetry(results, metrics_file=METRICS_FILE, elapsed_sec=None):
     任何人。print 出去的结论等于不存在（R612：程序在用≠ 人在看）。
 
     单行一条 `provider_probe` 记录，字段设计服从「缺失即 None」（原则 4）：
-      - probe_ok      : 探针自身是否跑完了所有站（bool）
+      - probe_ok      : 探针是否把所有站都判定完（存活+未核实 == 总数）
       - probe_error   : 探针级失败原因（网络/解析失败），无则不写
-      - zombie_sites  : 逗号分隔的僵尸名站名，空则不写（避免与"空=有僵尸"混淆）
+      - zombie_count / zombie_sites : 默认名**已确证**不在目录里的站，逗号分隔
       - unknown_sites : 逗号分隔的未核实站名（含无 key / 目录不可达）
       - sites_total / sites_ok / sites_unknown
+
+    R618：zombie_* 与 unknown_* **必须是两组独立字段**。首版只有 unknown，
+    读侧用 probe_ok 单判据渲染"探针未完成"，结果生产实锤的 aihubmix 僵尸名
+    （同轮有 8 站缺 key 未核实）被整条吞掉——**已确证的事实不该被"另一批
+    未知"稀释**，两者的处置动作也完全不同（换名 vs 补 key）。
+    写侧只写不读，故此字段可缺失；读侧缺失按 0 渲染（见 metrics_report）。
     写失败只warn 不抛——探针是旁路组件，绝不能因遥测落盘失败带崩主发帖（原则 5）。
     """
     total = len(results)
     ok = sum(1 for r in results if r.get("ok") is True)
     unknown = [str(r.get("site")) for r in results if r.get("ok") is None]
+    zombies = [str(r.get("site")) for r in results if r.get("ok") is False]
     rec = {
         "outcome": "provider_probe",
         "sites_total": total,
@@ -178,6 +185,9 @@ def write_telemetry(results, metrics_file=METRICS_FILE, elapsed_sec=None):
         rec["probe_elapsed_sec"] = round(float(elapsed_sec), 2)
     if unknown:
         rec["unknown_sites"] = ",".join(unknown)
+    if zombies:
+        rec["zombie_count"] = len(zombies)
+        rec["zombie_sites"] = ",".join(zombies)
     # probe_ok=False 表示"本轮结论不可信"（有站因异常未判定或池解析为空），
     # 与"全部通过"严格区分。
     rec["probe_ok"] = bool(total) and ok + len(unknown) == total

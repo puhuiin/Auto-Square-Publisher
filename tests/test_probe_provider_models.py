@@ -262,6 +262,39 @@ class TestWriteTelemetry(unittest.TestCase):
         bad = os.path.join(self.tmpdir, "no_such_dir", "m.jsonl")
         ppm.write_telemetry([{"site": "a", "ok": True}], bad)  # 不抛即通过
 
+    def test_zombie_recorded_independently_of_unknown(self):
+        """R618 核心：僵尸名与未核实必须**两组独立字段**。
+
+        生产实锤（2026-10-02 首轮 CI）：探针抓到 aihubmix 默认名
+        coding-glm-5.3-flash-free 已从 417 模型目录消失，而同轮 8 站因缺
+        key 未核实。首版只有 unknown_sites，读侧用单一 probe_ok 判据渲染
+        "探针未完成"，把这个真僵尸名整条吞掉。**已确证的事实不该被
+        "另一批未知"稀释。**
+        """
+        res = [{"site": "aihubmix", "ok": False},
+               {"site": "openrouter", "ok": True}] + \
+              [{"site": f"u{i}", "ok": None} for i in range(8)]
+        ppm.write_telemetry(res, self.path)
+        rec = self._read()[0]
+        self.assertEqual(rec["zombie_count"], 1)
+        self.assertEqual(rec["zombie_sites"], "aihubmix")
+        # 两组字段并存互不覆盖
+        self.assertEqual(len(rec["unknown_sites"].split(",")), 8)
+        self.assertEqual(rec["sites_ok"], 1)
+        # 有僵尸时 probe_ok 仍为 False（有站未判定完），但僵尸事实独立可读
+        self.assertIs(rec["probe_ok"], False)
+
+    def test_no_zombie_omits_zombie_fields(self):
+        """无僵尸时不写 zombie_* 字段（缺失即 None，原则 4）。
+
+        写空串/0 会让读侧无法区分"没有僵尸"与"字段没写"，进而可能渲染出
+        "僵尸名 0 站"这种噪音行。
+        """
+        ppm.write_telemetry([{"site": "a", "ok": True}], self.path)
+        rec = self._read()[0]
+        self.assertNotIn("zombie_count", rec)
+        self.assertNotIn("zombie_sites", rec)
+
     def test_appends_not_truncates(self):
         ppm.write_telemetry([{"site": "a", "ok": True}], self.path)
         ppm.write_telemetry([{"site": "a", "ok": True}], self.path)

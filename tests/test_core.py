@@ -12907,17 +12907,27 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
         "INFERERA_API_KEY": "k-inf", "TOKENROUTER_API_KEY": "k-tr",
         "SILICONFLOW_API_KEY": "k-sf", "STEPFUN_API_KEY": "k-stepfun",
         "BLUESMINDS_API_KEY": "k-bsm",
+        # R618补录：GOOGLE_API_KEY 是 R615 接入的通道，但一直没进这个集合——
+        # 于是下面两条守卫（默认名锁定 / 超时配给）在遍历时**根本看不到
+        # Preset-google**，R615 给它配的 90s 推理预算处于零覆盖状态。
+        # 守卫漏一个通道 = 该通道的预算约定无人看守，与"探针漏一个站"同类。
+        "GOOGLE_API_KEY": "k-goog",
     }
 
-    # 2026-09-19 实测：OpenRouter 官方实时目录 + awesome-free-ai-coding 09-17~19
-    # stepfun 行为 2026-09-20 阶跃官方文档在册名（订阅制，非免费池）
+        # 2026-09-19 实测：OpenRouter 官方实时目录 + awesome-free-ai-coding 09-17~19
+        # stepfun 行为 2026-09-20 阶跃官方文档在册名（订阅制，非免费池）
+    # R618（2026-10-02）：aihubmix 默认名实测校准。R617 把探针覆盖面从 2 站
+    # 补到全池 12 站后，**首次 CI 运行即抓到 coding-glm-5.3-flash-free 是僵尸名**
+    # （已不在该站 417 模型目录内，现存为少了 -flash 段的基础名）。inferera 的
+    # "待第二来源核验"也一并落实：实测其/v1/models 无需 key 即可列 417 模型，
+    # 默认名在册。这两条都是"带证据改"，正是本守卫不变式 1 的设计用途。
     _EXPECTED = {
         "openrouter": "openrouter/free",          # 官方聚合路由别名仍在目录
         "b.ai": "glm-5.3-flash",                  # 生产当日仍在跑，不动
         "zai": "glm-4.7-flash",                   # 智谱官方免费层
         "xkiro": "qwen/qwen3.6-plus:free",        # 原 qwen3.8-max 全目录无条目
-        "aihubmix": "coding-glm-5.3-flash-free",  # 09-17 仍有效
-        "inferera": "coding-kimi-k3-free",        # 待第二来源核验
+        "aihubmix": "coding-glm-5.3-free",        # R618：原 -flash 变体已下架
+        "inferera": "coding-kimi-k3-free",        # R618：目录实测在册（417 模型）
         "tokenrouter": "nemotron-3-nano-omni",    # 原 glm-5.3-free/minimax-3 已失效
         "siliconflow": "qwen3-8b",                # ¥0 免费模型；V3 是计费模型
         "bluesminds": "glm-4-flash",              # 本地《白嫖》注册表目录
@@ -12951,7 +12961,12 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
         # R338：Preset-stepfun-flash 与 step-5-preview 同订阅通道，谓词 startswith
         # 一并覆盖（误升无成本：更快时自然更早返回、用更少 token）。
         reasoning = {"Preset-b.ai", "Preset-openrouter", "Preset-stepfun",
-                     "Preset-stepfun-flash"}  # 生产实证/路由别名/订阅双模型
+                     "Preset-stepfun-flash",  # 生产实证/路由别名/订阅双模型
+                     # R618 补录：Preset-google（R615 接入）在 main.py 里按推理
+                     # 通道配了 90s，但此前不在本白名单——因为 GOOGLE_API_KEY
+                     # 没进 _ALL_KEYS，这个 preset 压根没进遍历范围。补齐后
+                     # 立刻能验它的预算约定，防止后续误降回 25s 掐死思考链。
+                     "Preset-google"}
         for name, cfg in chain.items():
             if not name.startswith("Preset-"):
                 continue

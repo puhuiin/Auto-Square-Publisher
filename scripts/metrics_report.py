@@ -979,6 +979,13 @@ def summarize(rows):
                 "sites_ok": _num(r.get("sites_ok")),
                 "unknown": _num(r.get("sites_unknown")),
                 "unknown_sites": str(r.get("unknown_sites") or ""),
+                # R618：僵尸名单独成字段。必须与 unknown 分开——僵尸名是**已确证
+                # 的事实**（默认名确实不在目录里），未核实只是覆盖缺口。生产
+                # 实锤：aihubmix 的 coding-glm-5.3-flash-free 已从 417 模型目录
+                # 消失，而同轮有 8 站因缺 key 未核实——若用单一 probe_ok 判据，
+                # 这个真僵尸名会被"整轮不可信"吞掉。
+                "zombies": _num(r.get("zombie_count")),
+                "zombie_sites": str(r.get("zombie_sites") or ""),
                 "error": str(r.get("probe_error") or ""),
                 "elapsed": _num(r.get("probe_elapsed_sec")),
             }
@@ -1386,6 +1393,7 @@ def render_text(s, rows=None):
         _tot = _pp.get("total")
         _okc = _pp.get("sites_ok")
         _unk = _pp.get("unknown")
+        _zz = _pp.get("zombies")
         # _num() 归一化后返回 **float**（不是 int），所以这里按数值有效性判断，
         # 不能用 isinstance(x, int) —— 那样会让分母恒为假、把「核实 3/12」渲染成
         # 「核实 —」，进而让"部分未核实"分支永不触发、退化成"全部通过"。
@@ -1393,12 +1401,27 @@ def render_text(s, rows=None):
         _tot_i = int(_tot) if isinstance(_tot, (int, float)) else None
         _okc_i = int(_okc) if isinstance(_okc, (int, float)) else None
         _unk_i = int(_unk) if isinstance(_unk, (int, float)) else None
+        _zom_i = int(_zz) if isinstance(_zz, (int, float)) else None
         # 分母不成立时不显示比例（避免 "None/None"），只报绝对数。
         _cov = (f"{_okc_i}/{_tot_i}" if _okc_i is not None and _tot_i else "—")
         _unk_note = f"，未核实 {_unk_i} 站" if _unk_i else ""
-        if not _pp.get("ok"):
-            # 探针自己没跑成 → 活警：此时面板上关于 provider 健康的一切结论都不可信。
-            # probe_error 本身就带未核实站数，不再叠加 _unk_note（同一事实说两遍）。
+        # R618：僵尸名与未核实必须**分行渲染**，且僵尸名优先。
+        # 我在 R617 首版犯的错：用 probe_ok 单判据，把「有站未核实」当成
+        # 「整轮结论不可信」→ 渲染成"探针未完成"→ 生产实锤的 aihubmix 僵尸名
+        # （coding-glm-5.3-flash-free 已从 417 模型目录消失）被活活吞掉。
+        # **已确证的事实不该被"另一批未知"稀释**——这与 R614「瞬时/持续分级」
+        # 同一方向：僵尸名是确定结论，未核实是覆盖缺口，两者的处置动作完全不同
+        # （换名 vs 补 key）。
+        if _zom_i:
+            _zn = _pp.get("zombie_sites") or ""
+            lines.append(
+                f"  💀 provider 默认名僵尸名 {_zom_i} 站（{_zn}，"
+                f"最近 {_ppt or '?'}）——改 *_MODEL env 指向该站现存活名，"
+                f"或撤掉该 preset；不换则该通道每次调用都404 空转")
+        if not _pp.get("ok") and not _zom_i:
+            # 探针自己没跑成**且**没抓到任何僵尸名 → 活警：此时面板上关于
+            # provider健康的一切结论都不可信。probe_error 本身已带未核实站数，
+            # 不再叠加 _unk_note（同一事实说两遍）。
             _why = _pp.get("error") or "原因未记录"
             lines.append(
                 f"  🩺 provider 默认名探针未完成（{_why}，"
@@ -1413,7 +1436,7 @@ def render_text(s, rows=None):
                 f"  ⚠️ provider 默认名仅部分核实：存活 {_cov}{_unk_note}"
                 f"（{_names}，最近 {_ppt or '?'}）"
                 f"——未核实≠存活，这些站的默认名可能已是僵尸名（R263）")
-        else:
+        elif not _zom_i:
             lines.append(
                 f"  🩺 provider 默认名全部核实通过 {_cov}"
                 f"（最近 {_ppt or '?'}）")
