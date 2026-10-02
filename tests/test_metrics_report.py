@@ -2583,7 +2583,8 @@ class TestContentStatsReportJoin(unittest.TestCase):
         self.assertEqual(rows["stats_by_genre"]["长文"], [900, 150])
         self.assertEqual(sorted(rows["stats_by_source"]["U.Today"]), [300, 500])
         text = mr.render_text(rows, self._rows())
-        self.assertIn("内容数据（6 篇有记录）", text)
+        # R628：文案带分母与覆盖率——「N 篇有记录」会被读成"共 N 篇"
+        self.assertIn("内容数据（6/6 篇已发布帖有浏览数据（100%））", text)
         self.assertIn("均浏览 358", text)
         self.assertIn("时段均浏览", text)
         self.assertIn("体裁均浏览", text)
@@ -3438,6 +3439,116 @@ class TestR625FeedHealthCoverage(unittest.TestCase):
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("源健康:", text)
         self.assertIn("同窗零硬故障", text)
+
+
+class TestR628ContentCoverageDenominator(unittest.TestCase):
+    """R628：内容数据的**分母必须显式**——「59 篇有记录」会被读成「共 59 篇」。
+
+    生产实测：274 篇已发布（有 content_id 的可 join 行），`content_stats.jsonl`
+    只有 59 条，**覆盖 22%**。原文案「59 篇有记录」没有分母，读者会把
+    「均浏览 137」读成全站水平，实际只是**头部 1/5 帖**的水平。
+    判据同 R621/R624：**指标的覆盖面往往比指标本身更重要**。
+
+    采集机制（已核实）：`content_stats.jsonl` 是**每日 04:00Z 一次性快照**、
+    累积式覆盖历史。所以采集日之前的帖永远没有浏览数据（**不是缺口**），
+    采集日当天的帖要等次日快照（当天显示偏低）——两者都不是数据缺失，
+    但读者无法自行区分「没采到」与「没数据」。
+    """
+
+    def _row(self, cid, outcome="binance_published"):
+        # provider 必带：渲染层有 `if n_pub:`（n_pub = by_provider 计数）这一层
+        # 门控，缺 provider 会让整段"内容数据"不渲染——那是**夹具缺字段**，
+        # 不是实现缺陷（第一次就踩了，现象与真缺陷一模一样：静默不输出）。
+        return {"ts": "2026-10-02T12:00:00+00:00", "outcome": outcome,
+                "content_id": cid, "title": f"t{cid}", "source": "S",
+                "provider": "Preset-x", "model": "test-model-1",
+                "platforms": ["binance"], "hour_bj": 10}
+
+    def _rej(self):
+        """一行拒稿。
+
+        R628 发现的**既有耦合**：内容数据（发布帖浏览）这一段被放在
+        `if n_rej:`（拦截数 > 0）大块内，于是**"只有成功、没有拒稿"的
+        窗口下整段不渲染**。本轮先如实记录该现象（测试用它做前提），
+        耦合本身是否要拆见 R628 提交说明。
+        """
+        return {"ts": "2026-10-02T12:00:00+00:00", "outcome": "llm_rejected",
+                "stage": "quality", "provider": "Preset-x",
+                "model": "test-model-1", "title": "bad",
+                "reason": "质量门: 测试"}
+
+    def _with_stats(self, rows, data):
+        """临时注入内容库。**直接改 _STATS_CACHE 而非替换 _stats_lookup**——
+        函数内部读的是模块级缓存，替换函数引用既不生效（模块全局已在函数
+        编译时绑定），又像 R621 那次 `m.attr = fn` 一样**留下永久改写**。
+        finally 完整还原，并另留一条守卫用例钉住它。"""
+        cache = mr._STATS_CACHE
+        old_loaded, old_data = cache["loaded"], dict(cache["data"])
+        try:
+            cache["loaded"], cache["data"] = True, dict(data)
+            return mr.render_text(mr.summarize(rows), rows)
+        finally:
+            cache["loaded"], cache["data"] = old_loaded, old_data
+
+    def test_denominator_counts_joinable_delivery_rows(self):
+        """分母= 带 content_id 的投递行，**不取全部投递行**。
+
+        口径必须与分子（stats_posts = 投递行 ∩ 内容库）同源；若分母混入
+        无 content_id 的历史格式回执，覆盖率会被系统性低估。
+        """
+        rows = [self._row("111"), self._row("222"), self._row("333")]
+        s = mr.summarize(rows)
+        self.assertEqual(s["delivered_joinable_posts"], 3)
+
+    def test_non_delivery_rows_excluded_from_denominator(self):
+        """拒稿行不进分母（它不是"已发布帖"）"""
+        rows = [self._row("111"), self._row("222", outcome="llm_rejected")]
+        s = mr.summarize(rows)
+        self.assertEqual(s["delivered_joinable_posts"], 1,
+                         "拒稿行被算进了已发布帖分母")
+
+    def test_rows_without_content_id_excluded(self):
+        """无 content_id 的投递行不进分母（无法 join，R285 的 join 键）"""
+        r = self._row(None)
+        s = mr.summarize([r])
+        self.assertEqual(s["delivered_joinable_posts"], 0)
+
+    def test_renders_coverage_fraction_and_disclaimer(self):
+        """有数据时必须渲染 n/m 与百分比，并声明"非全站" """
+        rows = [self._row("111"), self._row("222"), self._row("333"),
+                self._rej()]
+        text = self._with_stats(rows, {"111": {"views": 100, "likes": 0,
+                                               "comments": 0}})
+        line = next(ln for ln in text.splitlines() if "内容数据" in ln)
+        self.assertIn("1/3", line, "必须渲染分子/分母")
+        self.assertIn("%", line)
+        self.assertIn("非全站", line, "必须声明均值为子集水平")
+
+    def test_no_disclaimer_when_coverage_is_complete(self):
+        """覆盖 100% 时不画免责声明（否则每行都挂一句噪声）"""
+        rows = [self._row("111"), self._rej()]
+        text = self._with_stats(rows, {"111": {"views": 100, "likes": 0,
+                                               "comments": 0}})
+        line = next(ln for ln in text.splitlines() if "内容数据" in ln)
+        self.assertNotIn("非全站", line)
+        self.assertIn("1/1", line, "完整覆盖时仍给分母")
+
+    def test_no_stats_no_line(self):
+        """内容库全空时整块不渲染（零噪音，沿用 R285 惯例）"""
+        rows = [self._row("111"), self._row("222"), self._rej()]
+        text = self._with_stats(rows, {})
+        self.assertNotIn("内容数据", text)
+
+    def test_stats_cache_restored_after_helper(self):
+        """守卫：测试助手必须还原 _STATS_CACHE，否则污染后续用例。
+
+        R621 教训：`mod.attr = fn` 是永久改写，只有 finally 才是解药——
+        而 finally 可能被后来的人删掉，所以**额外留一条断言**钉住它。
+        """
+        before = (mr._STATS_CACHE["loaded"], dict(mr._STATS_CACHE["data"]))
+        self._with_stats([self._row("111"), self._rej()], {"111": {"views": 1}})
+        self.assertEqual((mr._STATS_CACHE["loaded"], mr._STATS_CACHE["data"]),
+                         before, "内容库缓存未被还原，污染了后续用例")
 
 
 if __name__ == "__main__":

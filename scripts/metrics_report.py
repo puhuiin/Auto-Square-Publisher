@@ -532,6 +532,8 @@ def summarize(rows):
         "eng_boost": None,
         # R285：浏览/互动 join（content_id × content_stats.jsonl）与三维归因样本
         "stats_posts": 0,
+        # R628：分母= 带 content_id 的投递行（与 stats_posts 分子同源，见累加处）
+        "delivered_joinable_posts": 0,
         "stats_views_total": 0,
         # R286：长文标题眼钩分析——article_title 自 R125 起逐帖落盘（注释原话
         # "事后做标题质量/眼钩分析"），129 条回执零消费面。标题是信息流第一触点。
@@ -858,6 +860,18 @@ def summarize(rows):
             # R285：浏览/互动 join——content_id 是 R125 起就落盘的 join 键，
             # 直到本轮才第一次有消费面。三维归因样本按发布行的既有字段分桶，
             # 回答"哪类帖有流量"（时段/体裁/来源），无 stats 的行不进任何分母。
+            # R628：分母（delivered_joinable_posts）——**只数"能被 join 的投递
+            # 行"**，即带 content_id 的那批。口径必须与 stats_posts 的分子同源：
+            # 分子是「投递行 ∩ 内容库」，若分母取全部投递行（含没有 content_id
+            # 的历史格式回执），覆盖率会被系统性低估。
+            #
+            # 缩进纪律：本块处于 activity 分支的 else 层（12 空格），随活动标签
+            # 统计同在 `if/else` 内——**任何整块重排都可能悄悄改执行条件**。
+            # R628 首版就是把这段从 12 空格挪到 8 空格，块被外移一级，16 例既有用例
+            # 行为随之改变（"夹具缺字段"与"块被外移"两种现象在测试里长得一样：
+            # 都是静默不输出）。改此类块时只加行、不动缩进。
+            if r.get("content_id") and _is_delivery_outcome(str(r.get("outcome") or "")):
+                s["delivered_joinable_posts"] += 1
             st = _stats_lookup(r.get("content_id"))
             if st and isinstance(st.get("views"), int):
                 s["stats_posts"] += 1
@@ -2077,14 +2091,30 @@ def render_text(s, rows=None):
         # R285：浏览/互动面板——有 join 上的样本才渲染（无 stats 时整块不出现）。
         # 三维均浏览是"哪类帖有流量"的第一手答案：时段/体裁/来源各自的样本量
         # 一并给出，样本 <3 的桶只展示不解读（避免小样本误判）。
+        #
+        # R628：**分母必须显式**——原文案「59 篇有记录」读起来像"共 59 篇"，
+        # 而生产实测 274 篇已发布、内容库只 59 篇（**22%**）。两者混同会让
+        # "均浏览 137"被读成全站水平，实际只是**头部 1/5 帖**的水平。
+        # 与 R621/R624 同判据：指标的覆盖面往往比指标本身更重要。
+        #
+        # 采集机制（已核实 content_stats.jsonl）：**每日 04:00Z 一次性快照**、
+        # 累积式覆盖历史。所以采集日之前的帖永远没有浏览数据（**不是缺口**），
+        # 采集日当天的帖要等次日快照（当天显示偏低）——两者都不是数据缺失，
+        # 但**读者无法自行区分"没采到"与"没数据"**，故把分母直接摆出来。
         if s.get("stats_posts"):
             _v = s["stats_views"]
             _lk = s["stats_likes"]
             _cm = s["stats_comments"]
             _fmt = lambda xs: f"{sum(xs)/len(xs):.0f}" if xs else "-"
-            lines.append(f"  📊 内容数据（{s['stats_posts']} 篇有记录）: "
+            _den = s.get("delivered_joinable_posts") or 0
+            _pct = f"（{s['stats_posts'] / _den * 100:.0f}%）" if _den else ""
+            lines.append(f"  📊 内容数据（{s['stats_posts']}"
+                         + (f"/{_den} 篇已发布帖有浏览数据{_pct}" if _den else " 篇有记录")
+                         + "）: "
                          f"均浏览 {_fmt(_v)} · 均点赞 {_fmt(_lk)} · 均评论 {_fmt(_cm)}"
-                         f"（总浏览 {s['stats_views_total']}）")
+                         f"（总浏览 {s['stats_views_total']}）"
+                         + (f"—— 均值为该 {_pct.strip('（）')} 子集水平、**非全站**"
+                            if _den and s["stats_posts"] < _den else ""))
             _hb = _bucket_line(s["stats_by_hourbucket"])
             if _hb:
                 lines.append(f"    时段均浏览: {_hb}")
