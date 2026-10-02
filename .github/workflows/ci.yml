@@ -84,7 +84,6 @@ jobs:
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
           LLM_MODEL: ${{ secrets.LLM_MODEL }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          BAI_API_KEY: ${{ secrets.BAI_API_KEY }}
           SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
           # 阶跃 Step Plan 订阅通道——schedule 时随 llm-live 一起实弹验证
           STEPFUN_API_KEY: ${{ secrets.STEPFUN_API_KEY }}

@@ -4100,7 +4100,13 @@ class TestHealthcheck(unittest.TestCase):
 
 class TestTimeoutBudgetCoupling(unittest.TestCase):
     """超时与预算联动：推理通道 1500 预算配 90s 超时，非推理 600/25s。
-    生产实证：b.ai 高峰期单次 50~79s，25s 默认把生成到一半的调用掐死（timeout 拒单）。"""
+    生产实证：b.ai 高峰期单次 50~79s，25s 默认把生成到一半的调用掐死（timeout 拒单）。
+
+    R626：b.ai 已弃用（无免费额度），原`test_reasoning_preset_gets_long_timeout`
+    拿 b.ai 当推理通道样本会 `StopIteration`——**弃用通道时必须同时换掉把它
+    当断言对象的测试**，否则守卫会以"看起来像回归"的形式误导排查方向。
+    改用 `Preset-stepfun`（step-5-preview 带 reasoning_effort 思考档，同为推理
+    通道且 R279 已锁定它），测试意图不变。"""
 
     def _build(self, env_keys):
         saved = {}
@@ -4116,10 +4122,26 @@ class TestTimeoutBudgetCoupling(unittest.TestCase):
                 else:
                     os.environ[k] = v
 
-    def test_reasoning_preset_gets_long_timeout(self):
-        chain = self._build({"BAI_API_KEY": "k1"})
-        bai = next(p for p in chain if p.name == "Preset-b.ai")
-        self.assertEqual(bai.timeout, 90.0, "推理通道 Preset-b.ai 应与 Reasonix 同级 90s")
+    def test_stepfun_preview_gets_long_timeout(self):
+        """推理通道 Preset-stepfun 应与 Reasonix 同级 90s。
+
+        （R626 前此用例名为 test_reasoning_preset_gets_long_timeout，样本是
+        已弃用的 Preset-b.ai。）
+        """
+        chain = self._build({"STEPFUN_API_KEY": "k1"})
+        sf = next(p for p in chain if p.name == "Preset-stepfun")
+        self.assertEqual(sf.timeout, 90.0, "推理通道 Preset-stepfun 应与 Reasonix 同级 90s")
+
+    def test_bai_channel_is_removed(self):
+        """R626：b.ai 已弃用，**即便 BAI_API_KEY 存在也不该进链**。
+
+        这是弃用的守卫——若有人把 extra_keys 的 b.ai 条目加回来却忘了改
+        workflow（反向的不一致），或反过来想"偷偷恢复"而没走完整流程，
+        这个用例会立刻暴露。
+        """
+        chain = self._build({"BAI_API_KEY": "k1", "STEPFUN_API_KEY": "k-sf"})
+        self.assertFalse([p for p in chain if p.name == "Preset-b.ai"],
+                         "b.ai 已弃用，不该出现在 provider 链里")
 
     def test_stepfun_preset_gets_long_timeout(self):
         """R279：step-5-preview 官方文档带 reasoning_effort 思考档，与 b.ai 同型
@@ -13199,16 +13221,26 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
     """
 
     _ALL_KEYS = {
-        "OPENROUTER_API_KEY": "k-or", "BAI_API_KEY": "k-bai", "ZAI_API_KEY": "k-zai",
+        "OPENROUTER_API_KEY": "k-or", "ZAI_API_KEY": "k-zai",
         "XKIRO_API_KEY": "k-xkiro", "AIHUBMIX_API_KEY": "k-ahm",
         "INFERERA_API_KEY": "k-inf", "TOKENROUTER_API_KEY": "k-tr",
         "SILICONFLOW_API_KEY": "k-sf", "STEPFUN_API_KEY": "k-stepfun",
         "BLUESMINDS_API_KEY": "k-bsm",
+        "BAI_API_KEY": "k-bai",
         # R618补录：GOOGLE_API_KEY 是 R615 接入的通道，但一直没进这个集合——
         # 于是下面两条守卫（默认名锁定 / 超时配给）在遍历时**根本看不到
         # Preset-google**，R615 给它配的 90s 推理预算处于零覆盖状态。
         # 守卫漏一个通道 = 该通道的预算约定无人看守，与"探针漏一个站"同类。
         "GOOGLE_API_KEY": "k-goog",
+        # R626：b.ai 已弃用（无免费额度，末次成功投递 09-21），但 BAI_API_KEY
+        # **刻意保留在这个集合里**——这正是上面 R618 那条纪律的反向应用。
+        # 守卫要能看见"它还在不在"：
+        #   - 若连key 一起删掉，将来有人恢复 extra_keys 条目 → 链里多一条，
+        #     而 _EXPECTED 里没有它 → test_defaults_match_measured_catalog
+        #     **遍历不到，红灯变静默**；
+        #   - 留着它，extra_keys 里没有 b.ai → 链里就没有 → _EXPECTED 的 b.ai
+        #     条目触发 KeyError，本守卫立刻报警"有人把它加回来了"。
+        # 弃用要被看见，不是被遗忘。
     }
 
         # 2026-09-19 实测：OpenRouter 官方实时目录 + awesome-free-ai-coding 09-17~19
@@ -13220,7 +13252,6 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
     # 默认名在册。这两条都是"带证据改"，正是本守卫不变式 1 的设计用途。
     _EXPECTED = {
         "openrouter": "openrouter/free",          # 官方聚合路由别名仍在目录
-        "b.ai": "glm-5.3-flash",                  # 生产当日仍在跑，不动
         "zai": "glm-4.7-flash",                   # 智谱官方免费层
         "xkiro": "qwen/qwen3.6-plus:free",        # 原 qwen3.8-max 全目录无条目
         "aihubmix": "coding-glm-5.3-free",        # R618：原 -flash 变体已下架
@@ -13229,7 +13260,20 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
         "siliconflow": "qwen3-8b",                # ¥0 免费模型；V3 是计费模型
         "bluesminds": "glm-4-flash",              # 本地《白嫖》注册表目录
         "stepfun": "step-5-preview",              # 阶跃 Step Plan 订阅旗舰（推理型）
+        # R626：b.ai 从 _EXPECTED 移除（无免费额度、已弃用）。
+        # **它必须被移除，否则本用例会一直红**——但移除后"它被人加回来"就
+        # 变静默了，故另立一条显式断言（见 test_bai_is_retired）双向守住。
     }
+
+    def test_bai_is_retired(self):
+        """R626：b.ai 已弃用，**即便 BAI_API_KEY 存在也不该进链**。
+
+        单独立一条而不是只从 _EXPECTED 删掉：删除只能防"它缺默认名"，
+        这条防的是"**它被加回来了**"。两者方向相反，缺一不可。
+        """
+        chain = {p.name: p for p in self._build()}
+        self.assertNotIn("Preset-b.ai", chain,
+                         "b.ai 已弃用（无免费额度），不该再进 provider 链")
 
     def _build(self):
         saved = {k: os.environ.get(k) for k in self._ALL_KEYS}
@@ -13348,8 +13392,13 @@ class TestStepfunPreset(unittest.TestCase):
     def test_flash_ranked_before_step5_by_default(self):
         """R338：用户 2026-09-23 指定"多用 step5、稍微快一点"。默认 STEPFUN_PRIORITY=1
         把订阅通道抬到免费池之上，且 flash 比 step-5-preview 再高一档——冷启动
-        （无延迟遥测=+inf 成本分）时也先试 flash 而非 80s 的 step-5。"""
-        chain = self._build({"BAI_API_KEY": "k-bai"})
+        （无延迟遥测=+inf 成本分）时也先试 flash 而非 80s 的 step-5。
+
+        R626：末行的排序参照从 b.ai 换成 openrouter（b.ai 已弃用、不再进链）。
+        断言的**语义未变**：step-5 必须排在所有 prio=0 的免费池通道之前——
+        这正是 R338 锁的"订阅通道整体抬到免费池之上"。
+        """
+        chain = self._build({"OPENROUTER_API_KEY": "k-or"})
         flash = next(p for p in chain if p.name == "Preset-stepfun-flash")
         step5 = next(p for p in chain if p.name == "Preset-stepfun")
         self.assertGreater(flash.priority, step5.priority, "flash 应排在 step-5 之前")
@@ -13363,7 +13412,9 @@ class TestStepfunPreset(unittest.TestCase):
              patch.object(eng, "_quality_fails", return_value={}):
             order = [p.name for p in eng._ordered_providers()]
         self.assertLess(order.index("Preset-stepfun-flash"), order.index("Preset-stepfun"))
-        self.assertLess(order.index("Preset-stepfun"), order.index("Preset-b.ai"))
+        # R626：参照通道从 b.ai 换成 openrouter（b.ai 已弃用、不再进链）——
+        # 语义不变：step-5 必须排在所有 prio=0 免费池通道之前（R338 的核心）。
+        self.assertLess(order.index("Preset-stepfun"), order.index("Preset-openrouter"))
 
     def test_priority_zero_disables_promotion(self):
         """STEPFUN_PRIORITY=0 = 退回纯延迟排序（不促销），两条通道 priority 归 0。"""

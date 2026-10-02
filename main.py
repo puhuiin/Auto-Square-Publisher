@@ -3928,13 +3928,22 @@ class MultiLLMEngine:
                 "https://generativelanguage.googleapis.com/v1beta/openai",
                 os.getenv("GOOGLE_MODEL", "").strip() or "gemini-3-flash-preview",
             ),
-            "b.ai": (
-                os.getenv("BAI_API_KEY", "").strip(),
-                "https://api.b.ai/v1",
-                # 09-19 生产仍在产（当日多数帖子由此通道完成），域名有时无法从本机
-                # 探测、无第二手证据源，保持现状不动：生产在跑即活源，不凭猜测换名。
-                os.getenv("BAI_MODEL", "").strip() or "glm-5.3-flash",
-            ),
+            # R626（2026-10-02）：**b.ai 弃用**（用户决定"没有免费额度，先弃用"）。
+            # 依据（生产实测，非推测）：末次成功投递 2026-09-21 13:45Z，距弃用时
+            # 已 **11 天零产出**；最后出现 09-29 12:46（余额耗尽后进 24h 冷却，
+            # R300/R330 熔断链路正常工作）；_llm_breaker 现为空、无待处置项。
+            # 该通道全史通过率 69%（127 发 / 58 拒），历史上是主力之一，但**主力
+            # 身份不能替代额度**——无免费额度意味着它的可用性不由我们控制。
+            #
+            # 为什么真删而不是加开关（R626 决策）：
+            #   - 留着一条"配了 key 但永不产稿"的通道，比删掉更危险——R623 已证
+            #     明这类通道会长期占着池内计数却从不被尝试，面板要靠 extra_keys
+            #     的 AST 解析才能把这种不一致显形，删掉则池定义与实际意图天然一致；
+            #   - `STEPFUN_PRIORITY` 之下它本就被压到第3~4 位、事实上永不尝试，
+            #     删掉不改变任何调度行为（零行为变更的观测面改动）。
+            # 恢复方式：还原本条目并配 BAI_API_KEY，无需改其他代码。
+            # 下方 _is_reasoning_channel 里的 Preset-b.ai 分支**刻意保留**——
+            # 那是该模型"思考链吃 1000~2300 token"的实证记录，恢复通道时仍要靠它。
             # 智谱官方免费层：api.z.ai/paas/v4，注册即赠 tokens 后转免费档。
             # 09-17 实测在册免费模型：glm-4.7-flash / glm-4.5-flash / glm-4.6v-flash。
             # 默认取最新 GLM-4.7-flash；想换视觉版改 ZAI_MODEL=glm-4.6v-flash。

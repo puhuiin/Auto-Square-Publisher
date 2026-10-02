@@ -76,7 +76,6 @@ jobs:
           SQUARE_KEY: ${{ secrets.SQUARE_API_KEY }}
           OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GOOGLE_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          BAI_KEY: ${{ secrets.BAI_API_KEY }}
           STEPFUN_KEY: ${{ secrets.STEPFUN_API_KEY }}
           LLM_KEY: ${{ secrets.LLM_API_KEY }}
           SC_KEY: ${{ secrets.SERVERCHAN_KEY }}
@@ -90,7 +89,6 @@ jobs:
           if [ -n "$SQUARE_KEY" ]; then echo "✔ SQUARE_API_KEY: 已检测到"; else echo "❌ SQUARE_API_KEY: 未检测到 (请在 Repository Secrets 中配置)"; fi
           if [ -n "$OPENROUTER_KEY" ]; then echo "✔ OPENROUTER_API_KEY: 已检测到"; fi
           if [ -n "$GOOGLE_KEY" ]; then echo "✔ GOOGLE_API_KEY: 已检测到 (Gemini 免费层，R615 独立额度池)"; fi
-          if [ -n "$BAI_KEY" ]; then echo "✔ BAI_API_KEY: 已检测到"; fi
           if [ -n "$STEPFUN_KEY" ]; then echo "✔ STEPFUN_API_KEY (阶跃 Step Plan): 已检测到"; fi
           if [ -n "$LLM_KEY" ]; then echo "✔ LLM_API_KEY: 已检测到"; fi
           if [ -n "$SC_KEY" ]; then echo "✔ SERVERCHAN_KEY (微信推送): 已检测到"; fi
@@ -143,8 +141,12 @@ jobs:
           # 走官方 OpenAI 兼容端点，Bearer 认证，模型名可覆盖。
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GOOGLE_MODEL: ${{ secrets.GOOGLE_MODEL }}
-          BAI_API_KEY: ${{ secrets.BAI_API_KEY }}
-          BAI_MODEL: ${{ secrets.BAI_MODEL }}
+          # R626：BAI_API_KEY / BAI_MODEL 已撤——b.ai 无免费额度、用户决定弃用
+          # （末次成功投递 2026-09-21，已11 天零产出），main.py 的 extra_keys
+          # 同步删掉了该条目。三处必须同步撤，理由同R619 补录的那段：
+          # 留着不撤等于 secret 还在被注入一个**不存在的通道**，池内计数与
+          # 实际配置再次脱节（R623 的盲区就是这么来的）。
+          # 需要恢复时：三处一起加回（此处 / 环境体检段的 BAI_KEY / main.py）。
           # R619 补录：下面两个 key 此前**在整个 workflow 里0 次出现**，
           # 而 main.py 的 extra_keys 明确在用它们 → 两条通道在 CI 里必然
           # 无 key 静默失效，池内 12 站实际只有 10 站在跑。

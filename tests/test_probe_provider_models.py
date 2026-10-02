@@ -84,19 +84,26 @@ class TestExtractPool(unittest.TestCase):
         pool = ppm.extract_pool(self._write(src))
         self.assertEqual([p["site"] for p in pool], ["alpha", "beta", "gamma"])
 
-    def test_real_main_pool_has_twelve_sites(self):
+    def test_real_main_pool_has_eleven_sites(self):
         """对真实 main.py 的回归：池内站点数与关键站名。
 
         这是"覆盖面真的对齐了"的事实断言。若有人从 main.py 删站，这里会提醒
         同步更新期望值——**显式的失败好过静默的失明**。
+
+        R626：12 → **11**，b.ai 因无免费额度被弃用（末次成功投递 09-21，
+        已 11 天零产出）。这条断言正是它该响的地方——**删站时若不更新这里，
+        就是"显式的失败"在替我报警**，而不是默默少覆盖一个站。
         """
         pool = ppm.extract_pool(os.path.join(_ROOT, "main.py"))
         sites = {p["site"] for p in pool}
-        self.assertGreaterEqual(len(pool), 12,
-                                f"实际解析到 {len(pool)} 站，期望 ≥12：{sorted(sites)}")
+        self.assertGreaterEqual(len(pool), 11,
+                                f"实际解析到 {len(pool)} 站，期望 ≥11：{sorted(sites)}")
         for must in ("openrouter", "google", "xkiro", "tokenrouter",
                      "inferera", "stepfun"):
             self.assertIn(must, sites, f"{must} 站未纳入探针覆盖")
+        # R626：b.ai 必须已退出池——若它回来，说明有人恢复了条目却没配套
+        # 改workflow（反向不一致），或"偷偷恢复"绕过了弃用决策。
+        self.assertNotIn("b.ai", sites, "b.ai 已弃用，不该在探针覆盖里")
 
     def test_syntax_error_fails_loudly(self):
         """main.py 语法错误必须抛异常，**不能静默返回空池**。
@@ -221,20 +228,19 @@ class TestCheckSite(unittest.TestCase):
         吃 Bearer 的站在 CI 里全部报401——「我猜错了认证方式」被误报成
         「key 坏了」，会把人引去重置一个其实没坏的 key。
         """
-        os.environ["BAI_API_KEY"] = "bai-secret"
+        os.environ["TOKENROUTER_API_KEY"] = "tr-secret"
         seen = {}
 
         def _fake(url, bearer=None):
             seen["url"] = seen["bearer"] = bearer
-            seen["url"] = url
-            return {"data": [{"id": "glm-5.3-flash"}]}
+            return {"data": [{"id": "coding-kimi-k3-free"}]}
 
         with unittest.mock.patch.object(ppm, "_get_json", _fake):
             r = ppm.check_site(
-                {"site": "b.ai", "base": "https://api.b.ai/v1",
-                 "default": "glm-5.3-flash"})
+                {"site": "tokenrouter", "base": "https://api.tokenrouter.io/v1",
+                 "default": "coding-kimi-k3-free"})
         self.assertIs(r["ok"], True)
-        self.assertEqual(seen["bearer"], "bai-secret")
+        self.assertEqual(seen["bearer"], "tr-secret")
         self.assertNotIn("key=", seen["url"], "bearer 模式不应把 key 拼进 query")
 
     def test_auth_fallback_recovers_on_alternative_mode(self):
@@ -310,11 +316,13 @@ class TestCheckSite(unittest.TestCase):
         main() 渲染时 note 走ℹ️ 行（此前是 ⚠️ 且会continue 跳过存活判定）。
         这里锁住 note 内容不出现"跳过/失败"这类会把成功说成失败的措辞。
         """
-        os.environ["BAI_API_KEY"] = "k"
+        os.environ["TOKENROUTER_API_KEY"] = "k"
         with unittest.mock.patch.object(
-                ppm, "_get_json", return_value={"data": [{"id": "glm-5.3-flash"}]}):
-            r = ppm.check_site({"site": "b.ai", "base": "https://api.b.ai/v1",
-                                "default": "glm-5.3-flash"})
+                ppm, "_get_json",
+                return_value={"data": [{"id": "coding-kimi-k3-free"}]}):
+            r = ppm.check_site({"site": "tokenrouter",
+                                "base": "https://api.tokenrouter.io/v1",
+                                "default": "coding-kimi-k3-free"})
         self.assertIs(r["ok"], True)
         self.assertIn("成功", r["note"])
 
@@ -416,6 +424,90 @@ class TestWriteTelemetry(unittest.TestCase):
         ppm.write_telemetry([{"site": "a", "ok": True}], self.path)
         ppm.write_telemetry([{"site": "a", "ok": True}], self.path)
         self.assertEqual(len(self._read()), 2, "必须追加，写坏历史遥测会毁掉全库")
+
+
+class TestR626ModelsUrlOverride(unittest.TestCase):
+    """R626：**目录端点不等于 base_url** —— OpenAI 兼容的 chat 端点没有 /models。
+
+    实证（生产，非假设）：Google AI Studio 的 base_url 在 main.py 里是
+        https://generativelanguage.googleapis.com/v1beta/openai
+    它是 Gemini 的 **OpenAI 兼容层**（R615 选它正是为了零适配层），只提供
+    chat/completions；模型目录在**原生**端点
+        https://generativelanguage.googleapis.com/v1beta/models
+    探针按 `{base}/models` 拼 → `.../v1beta/openai/models` → **HTTP 404**，
+    于是 Google 从 10:02配key 起连续 18 轮探针都被标进 unknown_sites。
+
+    **误报比不报更坏（R619 纪律）**：日志里"已检测到 GOOGLE_API_KEY"与
+    "未核实：目录不可达 404"并排出现，读者只会去重置一个没坏的 key，
+    而真问题（探针 URL 构造错了）在原地。R619 已把404 归类为"端点问题而非
+    认证问题"，本条把它真正修掉。
+    """
+
+    def setUp(self):
+        self._old = dict(os.environ)
+        for k in list(os.environ):
+            if k.endswith("_API_KEY"):
+                os.environ.pop(k, None)
+
+    def tearDown(self):
+        os.environ.clear()
+        os.environ.update(self._old)
+
+    def test_google_uses_native_models_endpoint(self):
+        """google 必须走原生 /v1beta/models，不能拼 openai 兼容层"""
+        os.environ["GOOGLE_API_KEY"] = "fake-key-for-test"
+        seen = {}
+
+        def _fake(url, bearer=None):
+            seen["url"] = url
+            return {"models": [{"name": "models/gemini-3-flash-preview"}]}
+
+        with unittest.mock.patch.object(ppm, "_get_json", side_effect=_fake):
+            r = ppm.check_site({
+                "site": "google",
+                "base": "https://generativelanguage.googleapis.com/v1beta/openai",
+                "default": "gemini-3-flash-preview"})
+        self.assertNotIn("/openai/models", seen["url"],
+                         "又把 OpenAI 兼容层当目录端点了——这正是 R626 的缺陷")
+        self.assertIn("/v1beta/models", seen["url"])
+        self.assertIs(r["ok"], True, "默认名在原生目录里，应判存活")
+
+    def test_override_does_not_affect_other_sites(self):
+        """override 只作用于显式列出的站，其余仍走 {base}/models 拼接。
+
+        否则"给 Google 打补丁"会意外改变全部站点的行为——而那些站是好的。
+        断言用 `startswith` 而非相等：query 认证站会在末尾拼 `?key=`（R619
+        实测 zai 吃?key=），**那是认证行为不是目录端点行为**，本用例只关心
+        目录路径没被 override 动过。
+        """
+        os.environ["ZAI_API_KEY"] = "fake-key-for-test"
+        seen = {}
+        with unittest.mock.patch.object(
+                ppm, "_get_json",
+                side_effect=lambda url, bearer=None: (
+                    seen.__setitem__("url", url),
+                    {"data": [{"id": "glm-4.7-flash"}]})[1]):
+            ppm.check_site({"site": "zai", "base": "https://api.z.ai/v4",
+                            "default": "glm-4.7-flash"})
+        self.assertTrue(seen["url"].startswith("https://api.z.ai/v4/models"),
+                        f"非 override 站的目录 URL 被改变了: {seen['url']}")
+
+    def test_bai_removed_from_auth_mode(self):
+        """R626：b.ai 已弃用，AUTH_MODE 里的悬空条目必须同步删除。
+
+        覆盖面来自 extra_keys 的 AST 解析，不会再遍历到 AUTH_MODE——留着
+        等于给未来的读者一个"这站还在链上"的错误信号。
+        """
+        self.assertNotIn("b.ai", ppm.AUTH_MODE,
+                         "b.ai 已弃用，AUTH_MODE 里有悬空配置")
+
+    def test_google_still_declares_query_auth(self):
+        """override 只换 URL，**认证方式不变**（?key= 实测可用）。
+
+        防止后续维护时把两者混起来改——R619 明确说过"认证方式不能猜"。
+        """
+        self.assertIn("google", ppm.AUTH_MODE)
+        self.assertEqual(ppm.AUTH_MODE["google"][1], "query")
 
 
 if __name__ == "__main__":

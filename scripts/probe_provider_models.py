@@ -59,11 +59,34 @@ AUTH_MODE = {
     "stepfun":("STEPFUN_API_KEY", "bearer"),  # Bearer（订阅端点）
     "stepfun-flash": ("STEPFUN_API_KEY", "bearer"),
     "tokenrouter":("TOKENROUTER_API_KEY", "bearer"),  # Bearer 实测
-    "b.ai":        ("BAI_API_KEY", "bearer"),        # Bearer 实测
+    # R626：b.ai 已弃用（无免费额度），main.py 的 extra_keys 删掉了该条目。
+    # 探针的覆盖面从 extra_keys 的 AST 解析来，**不会**再遍历到这里——
+    # 保留一条悬空配置等于给未来的读者一个"这站还在"的错误信号，故同步删除。
+    # b.ai 吃 Bearer 这条实测结论保留在上面的注释里，恢复通道时直接用。
 }
 
 # 目录 URL 拼接方式：绝大多数 OpenAI 兼容站是 {base}/models。
 MODELS_PATH = "/models"
+
+# R626：**目录端点不等于 base_url** —— OpenAI 兼容的 chat 端点常常没有 /models。
+#
+# Google AI Studio 是实证案例：main.py 里的 base_url 是
+#   https://generativelanguage.googleapis.com/v1beta/openai
+# 它是 Gemini 的 **OpenAI 兼容层**（R615 选它正是为了零适配层），只提供
+# chat/completions；而模型目录在**原生**端点
+#   https://generativelanguage.googleapis.com/v1beta/models
+# 探针按 `{base}/models` 拼接 → `.../v1beta/openai/models` → **HTTP 404**，
+# 于是每轮都把 google 记进 unknown_sites，看起来像"key 配了但通道有问题"。
+#
+# **误报比不报更坏**（R619 纪律）：会把人引去重置一个没坏的 key。而
+# 实际是探针自己的 URL 构造错了。**这不是 Google 的故障，是探针的盲区**，
+# 且它已经连续 6 小时（18 轮探针）把这条通道标成未核实。
+#
+# 语义：key=**要查目录的 URL**（不是 base_url），缺省回落到 {base}/models。
+MODELS_URL_OVERRIDE = {
+    # OpenAI 兼容层无 /models，目录在原生 v1beta（认证仍走 ?key=，已实测）
+    "google": "https://generativelanguage.googleapis.com/v1beta/models",
+}
 
 
 def _get_json(url, bearer=None):
@@ -153,7 +176,10 @@ def check_site(entry):
     if not base or not default:
         return {"site": site, "default": default, "ok": None,
                 "note": "无法从 main.py静态解析 base_url/默认名，需人工核对"}
-    url = base.rstrip("/") + MODELS_PATH
+    # R626：目录 URL 优先取站级override（OpenAI 兼容层的 /models 不存在），
+    # 缺省才按 {base}/models 拼。**不能只看 base_url 里有 openai 就跳过——
+    # 是否有 /models 只有试过才知道，而试错的代价是每轮一条假"未核实"。**
+    url = MODELS_URL_OVERRIDE.get(site) or (base.rstrip("/") + MODELS_PATH)
     auth = AUTH_MODE.get(site)
     if not auth:
         payload = _get_json(url)

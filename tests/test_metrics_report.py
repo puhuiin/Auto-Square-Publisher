@@ -3123,11 +3123,15 @@ class TestR623PoolCoverageBlindSpot(unittest.TestCase):
         R617 判据：R615 硬编码 2 站而池内 12 站，历史 3 次僵尸名事件2 次落在
         盲区——探针恰好漏掉了它要防的那类事故。AST 优于 import（有副作用）
         与正则（改缩进就静默漏站）。
+
+        R626：b.ai 弃用后池从 12 站降到 11，故把站名断言里的 b.ai 换成 google
+        （R615 接入、独立额度池的通道）。精确站数由探针侧的
+        test_real_main_pool_has_eleven_sites 锁定。
         """
         pool = mr._provider_pool_from_main()
         self.assertGreaterEqual(len(pool), 10,
                                 "池定义解析异常，池内通道数远低于预期")
-        for name in ("stepfun", "stepfun-flash", "b.ai", "openrouter"):
+        for name in ("stepfun", "stepfun-flash", "openrouter", "google"):
             self.assertIn(name, pool)
 
     def test_pool_parse_failure_returns_empty_not_all_passed(self):

@@ -135,7 +135,7 @@
 | :--- | :--- | :--- | :--- |
 | **OpenRouter** | `https://openrouter.ai/api/v1` | `openrouter/free`（聚合路由，默认）<br>`qwen/qwen3.8-27b:free`<br>`z-ai/glm-5.2:free`<br>`deepseek/deepseek-v4-flash-0731:free` | `OPENROUTER_API_KEY` |
 | **Google AI Studio** | `https://generativelanguage.googleapis.com/v1beta/openai` | `gemini-3-flash-preview`（默认，R615）<br>`gemini-3.1-flash-lite-preview` | `GOOGLE_API_KEY` |
-| **B.ai** | `https://api.b.ai/v1` | `glm-5.3-flash`（生产在跑）<br>`deepseek-v4-flash`<br>`qwen3.8-flash` | `BAI_API_KEY` |
+| ~~**B.ai**~~ | ~~`https://api.b.ai/v1`~~ | **已弃用（R626）**——无免费额度、余额耗尽（末次成功投递 2026-09-21，已11 天零产出） | ~~`BAI_API_KEY`~~ |
 | **智谱 Z.ai** | `https://api.z.ai/api/paas/v4` | `glm-4.7-flash`（默认，注册赠额度）<br>`glm-4.5-flash`<br>`glm-4.6v-flash`（视觉） | `ZAI_API_KEY` |
 | **xkiro** | `https://api.xkiro.com/v1` | `qwen/qwen3.6-plus:free`<br>`minimax/minimax-m3:free` | `XKIRO_API_KEY` |
 | **aihubmix** | `https://aihubmix.com/v1` | `coding-glm-5.3-flash-free`（默认，500 次/天）<br>`gemini-3.7-flash-free`<br>`minimax-m3-free` | `AIHUBMIX_API_KEY` |
@@ -187,7 +187,8 @@
   token 截断），且 56 次拒稿里 **41% 导致题目彻底丢失**。所以这条通道的作用是
   **补一条高质量、额度独立的产出源**，而不是救急额度池。体检面板的
   「通道质量产出」行按通过率排序，可持续观察各通道的真实效率。
-- `BAI_API_KEY`: 你的 B.ai API Key
+- ~~`BAI_API_KEY`~~: **R626 起不再使用**（b.ai 无免费额度、已弃用）。保留这个
+  secret 不影响运行，但删掉它可以让「哪些通道在用」与仓库配置保持一致。
 - `ZAI_API_KEY`: 智谱 Z.ai Key（自动使用 `glm-4.7-flash` 免费层）
 - `BLUESMINDS_API_KEY`: bluesminds Key（注册赠试用额度，自动使用 `glm-4-flash`）
 - `STEPFUN_API_KEY`: 阶跃星辰 Step Plan 订阅 Key（自动使用 `step-5-preview`，见下方订阅说明）
