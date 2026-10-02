@@ -592,6 +592,11 @@ def summarize(rows):
         "intel_cooldown_skips": 0,
         "reject_by_stage": collections.Counter(),
         "reject_by_provider": collections.Counter(),
+        # R620：provider 质量产出 {短名: {ok, rej, fail}}——通过率的分子分母来源。
+        # 动机：通道位次行只给"发N/拒M"，读者需心算；而生产实测通道间通过率
+        # 差7 倍（openrouter 8% vs stepfun-flash 55%），**按调用量排序会得出
+        # 完全相反的结论**。这是"排名指标选错"的典型：量大的通道未必贡献多。
+        "provider_quality": {},
         "reject_reasons": collections.Counter(),
         # R302：永久失败（24h 冷却）按 提供商×原因 单列——push 侧 R301 报警只在跃迁沿
         # 响一次，报表是 pull 侧的常驻视图，但此前把 [credit 24h]/[permanent 24h] 标记
@@ -964,6 +969,31 @@ def summarize(rows):
         tok = _num(r.get("tokens_used"))
         if tok is not None:
             tok_tmp[str(prov)].append(tok)
+        # R620：provider **质量产出**统计（通过率 + 净产出）。
+        #
+        # 为什么必须单独一栏：已有的「通道位次」行只显示"发N/拒M"，读者要心算
+        # 才知道通道好坏。生产实测差距是 7 倍——Preset-openrouter 通过率 8%
+        # vs Preset-stepfun-flash 55%。而按调用量排序会得出完全相反的结论
+        #（openrouter 109 次调用看着"很常用"，实际每次都在烧额度却几乎不产出）。
+        #
+        # 口径（**分子是 binance_published，不是 llm_success**——实测全部46 条
+        # llm_success 的 stage都是 campaign_intel，那是情报刷新不是发帖产出；
+        # 发帖成功记在投递行上）。分母 = 投递成功 + 拒稿 + 失败，三者同粒度
+        # 折叠到 provider 短名（同_provider_dispatch_order）。
+        if _is_delivered(r):
+            _qp = str(prov).split("/", 1)[0]
+            if _qp and _qp not in ("-", "unknown"):
+                s["provider_quality"].setdefault(
+                    _qp, {"ok": 0, "rej": 0, "fail": 0})["ok"] += 1
+        elif outcome in ("llm_rejected", "llm_failed"):
+            _qp = str(prov).split("/", 1)[0]
+            if _qp and _qp not in ("-", "unknown"):
+                _q = s["provider_quality"].setdefault(
+                    _qp, {"ok": 0, "rej": 0, "fail": 0})
+                if outcome == "llm_rejected":
+                    _q["rej"] += 1
+                else:
+                    _q["fail"] += 1
         # R617：provider 默认名探针结论。每轮一行，取最新一轮（后写覆盖先写）。
         # 三态严格区分，这是本条存在的全部意义：
         #   probe_ok=True  且 sites_ok == sites_total → 全部核实通过
@@ -2018,6 +2048,33 @@ def render_text(s, rows=None):
                     f"    [{item.get('stage')}/{item.get('provider')}] "
                     f"finish={item.get('finish_reason') or '?'} "
                     f"{item.get('preview', '')}")
+    # R620：通道质量产出——按通过率排序（**不按调用量**）。
+    # 排序指标选错是这行的全部理由：openrouter 全史 109 次调用看着"很常用"，
+    # 通过率却只有 8%；stepfun-flash 只有 31 次，通过率 55%。按量排会让人
+    # 把主力通道当废物，按通过率排才能看出"谁在真的产出"。
+    _pq = s.get("provider_quality") or {}
+    if _pq:
+        _qrows = []
+        for _p, _q in _pq.items():
+            _tot = _q["ok"] + _q["rej"] + _q["fail"]
+            if _tot <= 0:
+                continue
+            _qrows.append((_p, _q["ok"], _q["rej"], _q["fail"], _tot,
+                           _q["ok"] / _tot))
+        if _qrows:
+            _qrows.sort(key=lambda t: -t[5])
+            lines.append(
+                "- 通道质量产出（按通过率排序，非调用量）: ")
+            for _p, _ok, _rj, _fl, _tot, _rate in _qrows:
+                # 低通过率且样本足= 真信号；样本小则标注"样本少"避免过度解读
+                _tag = ""
+                if _tot < 5:
+                    _tag = "（样本少，勿过度解读）"
+                elif _rate < 0.25:
+                    _tag = " ⚠️ 大量调用但几乎不产出，考虑降权或换默认模型"
+                lines.append(
+                    f"    {_p}:通过率 {_rate * 100:.0f}% "
+                    f"（成功 {_ok} / 拒 {_rj} / 失败 {_fl}，共 {_tot} 次）{_tag}")
     if s["latency_by_provider"]:
         lines.append(f"- 平均延迟(s) {dict(sorted(s['latency_by_provider'].items()))}")
         _disp = _provider_dispatch_order(

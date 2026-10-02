@@ -3810,12 +3810,32 @@ class MultiLLMEngine:
                 os.getenv("OPENROUTER_MODEL", "").strip() or "openrouter/free",
             ),
             # R615：Google AI Studio 免费层通道（用户 2026-10-02 配GOOGLE_API_KEY）。
-            # 为什么必须是独立通道而不是又一个 OpenRouter 免费模型——**额度池不同**：
-            # OpenRouter 免费层50 次/天是整个项目当前 LLM 需求（中位 18 次/天、
-            # 峰值 50）的天花板，实测09-21 那天就打满过；Preset-openrouter 全史
-            # 23 次 transport 拒稿（拒稿阶段分布里transport 最高）就是额度耗尽的
-            # 直接表现。Google 免费层是另一份额度（Flash 系约 1500 RPD 量级），
-            # 两家额度互不挤兑——这是本通道的**全部价值**：把单池天花板变成双池。
+            #
+            # ⚠️ R620 更正：R615 最初写的理由是「OpenRouter 免费层 50 次/天是
+            # 硬天花板，实测 09-21 打满过，23 次 transport 拒稿就是额度耗尽的
+            # 直接表现」——**该论证已被全史数据证伪，留着会误导后续决策**：
+            #   1. Preset-openrouter 全史 23 次 transport 拒稿**零次**是额度耗尽。
+            #      逐条看：20 次是 404「This model is unavailable for free」
+            #      （即 R263 僵尸名，全部集中在 09-07~09-09），3 次是 token 预算
+            #      到顶截断。**没有一条是 50 次/天打满**。
+            #   2. 09-21 那次不是额度耗尽，是「预算 4000 到顶 finish=length 截断」
+            #      ——单次调用的 token 预算，与每日调用次数无关，两回事。
+            #   3. 真正的"额度/余额耗尽"信号全史只有6+3 条，全部是
+            #      `credit insufficient balance: balance=0`，来自 **b.ai 的付费
+            #      余额**，不是 OpenRouter 的免费额度。
+            # 4. 报表里的 `quota_blocked`（1896 轮里 1621 轮）也是**发帖配额**
+            #      12 篇/天饱和，样本里 candidates=0、skipped_token_limit=0，
+            #      与 LLM 额度无关。
+            #
+            # 那这个通道的真实价值是什么？**接R620 实测的真实痛点**：
+            # Preset-openrouter 质量门通过率仅 **8%**（5 成功 / 56 拒稿 /
+            # 4 失败），换聚合路由后的 09-19~今也只有 16%。拒稿主因是**格式类**
+            # ——内容过短 10、长文缺 TITLE 4、正文过长 1、token 截断 7，合计
+            # 约占非 transport 拒稿的一半，即聚合路由选到的模型遵循格式指令差。
+            # 代价是实打实的：56 次拒稿里 **41% 导致题目彻底丢失**（另 59% 被
+            # 后续 provider 救回）。所以 Google 通道的价值是**补一条高质量、
+            # 额度独立的产出源**，而不是"多一个额度池"——两者都成立，但后者
+            # 并非当时的瓶颈。
             #
             # 协议：Gemini 官方提供 OpenAI 兼容端点 v1beta/openai/chat/completions，
             # 且接受 `Authorization: Bearer <key>`（本引擎 OpenAI SDK 正是这个

@@ -2880,5 +2880,112 @@ class TestR618ZombieNotDiluted(unittest.TestCase):
         self.assertIn("探针未完成", text)
 
 
+class TestR620ProviderQuality(unittest.TestCase):
+    """R620：provider 质量产出（通过率）——排序指标不能选错。
+
+    动机：既有的「通道位次」行只给"发N/拒M"，要心算才知道好坏；且它按
+    **延迟**排序，而生产实测最慢第二的通道同时是通过率垫底的那个
+    （Preset-openrouter 61s / 42% vs Preset-stepfun-flash 25s / 87%）。
+    按调用量排更会误导（openrouter 104 次看着"主力"，实际近半被拒）。
+    """
+
+    @staticmethod
+    def _rows():
+        return [
+            # openrouter：44 成功 / 56 拒 / 4 失败 → 42%
+            *[{"ts": "2026-10-01T00:00:00+00:00", "outcome": "binance_published",
+               "provider": "Preset-openrouter", "title": f"t{i}",
+               "platforms": ["binance"]} for i in range(44)],
+            *[{"ts": "2026-10-01T00:00:00+00:00", "outcome": "llm_rejected",
+               "provider": "Preset-openrouter", "stage": "quality",
+               "title": f"r{i}"} for i in range(56)],
+            {"ts": "2026-10-01T00:00:00+00:00", "outcome": "llm_failed",
+             "provider": "Preset-openrouter", "stage": "transport",
+             "title": "f0"},
+            # stepfun-flash：92/14 → 87%
+            *[{"ts": "2026-10-01T00:00:00+00:00", "outcome": "binance_published",
+               "provider": "Preset-stepfun-flash", "title": f"s{i}",
+               "platforms": ["binance"]} for i in range(92)],
+            *[{"ts": "2026-10-01T00:00:00+00:00", "outcome": "llm_rejected",
+               "provider": "Preset-stepfun-flash", "stage": "quality",
+               "title": f"q{i}"} for i in range(14)],
+        ]
+
+    def test_pass_rate_computed_from_delivered_not_llm_success(self):
+        """口径守卫：分子是**投递成功**，不是 llm_success。
+
+        实测全部 46 条 llm_success 的 stage都是 campaign_intel（情报刷新），
+        把它当发帖成功会让所有通道通过率显示 0%——我第一版就犯了这个错，
+        渲染出"全部 0%"的荒谬结果。
+        """
+        s = mr.summarize(self._rows())
+        pq = s["provider_quality"]
+        self.assertEqual(pq["Preset-openrouter"]["ok"], 44)
+        self.assertEqual(pq["Preset-openrouter"]["rej"], 56)
+        self.assertEqual(pq["Preset-openrouter"]["fail"], 1)
+        rate = pq["Preset-openrouter"]["ok"] / (
+            pq["Preset-openrouter"]["ok"] + pq["Preset-openrouter"]["rej"]
+            + pq["Preset-openrouter"]["fail"])
+        self.assertAlmostEqual(rate, 44 / 101, places=3)
+
+    def test_campaign_intel_success_not_counted_as_post_output(self):
+        """情报刷新成功不得计入发帖产出（否则某通道凭空多出成功数）。
+
+        注意断言口径：那条拒稿**应该**进统计（它确实是一次失败的尝试），
+        要验的是 ok 仍为 0 —— 即情报刷新的成功没有被当成发帖成功。
+        """
+        rows = [{"ts": "2026-10-01T00:00:00+00:00", "outcome": "llm_success",
+                 "stage": "campaign_intel", "provider": "Preset-b.ai"}] + \
+            [{"ts": "2026-10-01T00:00:00+00:00", "outcome": "llm_rejected",
+              "provider": "Preset-b.ai", "stage": "quality", "title": "x"}]
+        s = mr.summarize(rows)
+        pq = s["provider_quality"].get("Preset-b.ai")
+        self.assertIsNotNone(pq)
+        self.assertEqual(pq["ok"], 0, "情报刷新成功不得算作发帖产出")
+        self.assertEqual(pq["rej"], 1)
+
+    def test_ranked_by_pass_rate_not_call_volume(self):
+        """核心：排序必须按通过率，于是高调用低产出的通道排到末位。"""
+        rows = self._rows()
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("按通过率排序", text)
+        # openrouter 调用量最大（101）但通过率最低 → 必须排在 stepfun-flash 之后
+        self.assertLess(text.index("Preset-stepfun-flash:通过率"),
+                        text.index("Preset-openrouter:通过率"))
+        # 夹具里openrouter = 44 成功 / 56 拒 / 1 失败 = 44/101 ≈ 43.6% → 渲染 44%
+        self.assertIn("44%", text)
+        self.assertIn("87%", text)
+
+    def test_low_pass_rate_with_enough_sample_flagged(self):
+        """样本充足且通过率<25% → 必须告警（大量调用但几乎不产出）"""
+        rows = [{"ts": "2026-10-01T00:00:00+00:00", "outcome": "llm_rejected",
+                 "provider": "Preset-x", "stage": "quality", "title": f"z{i}"}
+                for i in range(20)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("大量调用但几乎不产出", text)
+        self.assertIn("考虑降权", text)
+
+    def test_small_sample_not_flagged_as_alarm(self):
+        """样本 <5 不告警——小样本高拒稿多是正常波动，过度解读会制造噪音。"""
+        rows = [{"ts": "2026-10-01T00:00:00+00:00", "outcome": "llm_rejected",
+                 "provider": "Preset-x", "stage": "quality", "title": f"z{i}"}
+                for i in range(3)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("样本少，勿过度解读", text)
+        self.assertNotIn("考虑降权", text)
+
+    def test_absent_when_no_provider_data(self):
+        """无provider 数据时整行沉默（零噪音惯例）"""
+        rows = [{"ts": "2026-10-01T00:00:00+00:00", "outcome": "intel_cooldown_skip"}]
+        self.assertNotIn("通道质量产出", mr.render_text(mr.summarize(rows), rows))
+
+    def test_dash_provider_excluded(self):
+        """'-'/unknown 等非真实通道不得进入质量统计（它不是通道）"""
+        rows = [{"ts": "2026-10-01T00:00:00+00:00", "outcome": "llm_rejected",
+                 "provider": "-", "stage": "quality", "title": "x"}]
+        s = mr.summarize(rows)
+        self.assertEqual(s["provider_quality"], {})
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

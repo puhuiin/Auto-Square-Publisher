@@ -177,10 +177,16 @@
 **方式 A：简单配置（单 Key 或常用预置 Key）**
 - `OPENROUTER_API_KEY`: 你的 OpenRouter Key（自动使用内置免费模型池）
 - `GOOGLE_API_KEY`: 你的 Google AI Studio Key（[aistudio.google.com/apikey](https://aistudio.google.com/apikey) 免费领取）。
-  **R615 新增，价值在额度而非模型**：OpenRouter 免费层 50 次/天是本项目当前需求
-  （中位 18 次/天、峰值 50）的硬天花板，打满即产生 transport 拒稿；Google 免费层
-  Flash 系是**另一份额度池**，两家互不挤兑，单池天花板变双池。走官方 OpenAI 兼容
-  端点（`/v1beta/openai`）+ Bearer 认证，与本项目 OpenAI SDK 完全对齐，无需适配层。
+  **R615 新增，R620 更正其价值定位**：走官方 OpenAI 兼容端点（`/v1beta/openai`）
+  + Bearer 认证，与本项目 OpenAI SDK 完全对齐，无需适配层。
+  额度池确实是独立的（这点成立），但 **"OpenRouter 额度曾打满"这个理由经全史
+  数据证伪**——Preset-openrouter 的 23 次 transport 拒稿全是 404 僵尸名与 token
+  预算截断，**零次是50 次/天用尽**；真正的余额耗尽信号只来自 b.ai 的付费余额。
+  真实痛点是**产出质量**：openrouter 通过率 42%（44 成/ 56 拒 / 4 败），而
+  stepfun-flash 87%、stepfun 93%。它的拒稿主因是格式类（内容过短、长文缺TITLE、
+  token 截断），且 56 次拒稿里 **41% 导致题目彻底丢失**。所以这条通道的作用是
+  **补一条高质量、额度独立的产出源**，而不是救急额度池。体检面板的
+  「通道质量产出」行按通过率排序，可持续观察各通道的真实效率。
 - `BAI_API_KEY`: 你的 B.ai API Key
 - `ZAI_API_KEY`: 智谱 Z.ai Key（自动使用 `glm-4.7-flash` 免费层）
 - `BLUESMINDS_API_KEY`: bluesminds Key（注册赠试用额度，自动使用 `glm-4-flash`）
