@@ -1085,6 +1085,11 @@ def summarize(rows):
                 "sites_ok": _num(r.get("sites_ok")),
                 "unknown": _num(r.get("sites_unknown")),
                 "unknown_sites": str(r.get("unknown_sites") or ""),
+                # R637：未登记 AUTH_MODE 的站（探针走无认证直查）。读侧缺失
+                # 按 0 渲染（沿用 R618「读侧缺失按 0」惯例）——**老行没有这个
+                # 字段是正常的**，不是"全部站都登记了认证方式"。
+                "no_auth_count": _num(r.get("no_auth_count")),
+                "no_auth_sites": str(r.get("no_auth_sites") or ""),
                 # R618：僵尸名单独成字段。必须与 unknown 分开——僵尸名是**已确证
                 # 的事实**（默认名确实不在目录里），未核实只是覆盖缺口。生产
                 # 实锤：aihubmix 的 coding-glm-5.3-flash-free 已从 417 模型目录
@@ -1589,6 +1594,18 @@ def render_text(s, rows=None):
                 f"  💀 provider 默认名僵尸名 {_zom_i} 站（{_zn}，"
                 f"最近 {_ppt or '?'}）——改 *_MODEL env 指向该站现存活名，"
                 f"或撤掉该 preset；不换则该通道每次调用都404 空转")
+        # R637：未登记 AUTH_MODE 的站——它们的「核实通过」**依赖 /models 恰好
+        # 公开**，而这个前提不在任何字段里。生产实锤 5 站（openrouter / xkiro /
+        # aihubmix / inferera / bluesminds）走无认证直查，其中 3 站在主流程
+        # **需要 key**（从未上场）⇒ "存活"不代表"可用"。
+        # `_num` 归一化返 float（MEMORY 附注），直接 f-string 会打 "5.0 站"
+        _noauth_n = int(_pp.get("no_auth_count") or 0)
+        if _noauth_n:
+            _na = _pp.get("no_auth_sites") or ""
+            lines.append(
+                f"  ℹ️ {_noauth_n} 站未登记认证方式（{_na}）——它们的目录核实"
+                f"走**无认证直查**，「存活」依赖 /models 恰好公开；"
+                f"若哪天改为需认证，会集体转为未核实而**原因不出现在任何字段**")
         if not _pp.get("ok") and not _zom_i:
             # 探针自己没跑成**且**没抓到任何僵尸名 → 活警：此时面板上关于
             # provider健康的一切结论都不可信。probe_error 本身已带未核实站数，

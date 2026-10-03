@@ -278,6 +278,26 @@ def write_telemetry(results, metrics_file=METRICS_FILE, elapsed_sec=None):
     if zombies:
         rec["zombie_count"] = len(zombies)
         rec["zombie_sites"] = ",".join(zombies)
+    # R637：**未登记 AUTH_MODE 的站要单独暴露**——它们的"核实通过"依赖
+    # `/models` 恰好公开，而这个前提**不在代码里、也不会出现在任何输出中**。
+    #
+    # 生产实锤：openrouter / xkiro / aihubmix / inferera / bluesminds 五站
+    # 未登记 AUTH_MODE ⇒ 走「无认证直查」。其中 **xkiro / aihubmix / inferera
+    # 在主流程是需要 key 的**（`gh secret list` 无这三个 secret，生产从未
+    # 上场），它们"核实通过"纯粹因为目录公开可查。
+    #
+    # 危害：若哪天这些站的 /models 改为需认证，探针会集体报"未核实"，
+    # 而**原因（没登记 AUTH_MODE）不在任何字段里** ⇒ 排障会去查 key 失效、
+    # 查网络，**真正的问题（探针配置缺条目）留在原地**。R619 的同型：
+    # "方式错了"被报成"key 坏了"。这里更隐蔽——**连note 都不会有**。
+    #
+    # 处置：把名单写进遥测（新增 `no_auth_sites`），让读侧能说清
+    # 「这批站的核实结果依赖目录公开」，并可加守卫防"该登记却没登记"。
+    _noauth = [str(r.get("site")) for r in results
+               if str(r.get("site")) not in AUTH_MODE]
+    if _noauth:
+        rec["no_auth_count"] = len(_noauth)
+        rec["no_auth_sites"] = ",".join(_noauth)
     # probe_ok=False 表示"本轮结论不可信"（有站因异常未判定或池解析为空），
     # 与"全部通过"严格区分。
     rec["probe_ok"] = bool(total) and ok + len(unknown) == total

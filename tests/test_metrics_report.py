@@ -3686,6 +3686,74 @@ class TestR630PoolCoverageGrouping(unittest.TestCase):
         self.assertNotIn("请对账是否缺 key / 被熔断", text,
                          "旧措辞把两类处置混成一行，等于没给判据")
 
+class TestR637UnregisteredAuthModeSurfaced(unittest.TestCase):
+    """R637：未登记 AUTH_MODE 的站要单独暴露——它们的"核实通过"是**借来的**。
+
+    探针对**未登记 AUTH_MODE** 的站走「无认证直查」。生产实锤 5 站如此
+    （openrouter / xkiro / aihubmix / inferera / bluesminds），其中
+    **xkiro / aihubmix / inferera 在主流程是需要 key 的**（`gh secret list`
+    无这三个、从未上场）⇒ 它们"核实通过"纯粹因为 `/models` 恰好公开。
+
+    危害：若哪天这些站的 `/models` 改为需认证，探针会集体报"未核实"，
+    而**原因（没登记 AUTH_MODE）不在任何字段里** ⇒ 排障会去查 key 失效、
+    查网络，真正的问题留在原地。R619 的同型（"方式错了"被报成"key 坏了"），
+    但**更隐蔽——连 `note` 都不会有**。
+
+    纪律：R630 已证「不在探针缺 key 名单 ≠ key 有效」；本条是它的上游——
+    **「核实通过」也可能是借来的**。
+    """
+
+    def _probe(self, **kw):
+        row = {"ts": "2026-10-03T10:00:00+00:00", "outcome": "provider_probe",
+               "probe_ok": True, "sites_total": 11, "sites_ok": 7,
+               "sites_unknown": 1, "unknown_sites": "zai"}
+        row.update(kw)
+        return [row]
+
+    def test_no_auth_sites_rendered(self):
+        rows = self._probe(no_auth_count=5,
+                           no_auth_sites="aihubmix,bluesminds,inferera,openrouter,xkiro")
+        text = mr.render_text(mr.summarize(rows), rows)
+        line = next(ln for ln in text.splitlines() if "未登记认证方式" in ln)
+        self.assertIn("xkiro", line, "必须点名具体站")
+        self.assertIn("无认证直查", line)
+        self.assertIn("恰好公开", line, "必须说清'存活'依赖目录公开这个前提")
+
+    def test_count_rendered_as_int_not_float(self):
+        """`_num` 归一化返 float，f-string 会打 '5.0 站'（MEMORY 附注）"""
+        rows = self._probe(no_auth_count=5, no_auth_sites="a,b")
+        text = mr.render_text(mr.summarize(rows), rows)
+        line = next(ln for ln in text.splitlines() if "未登记认证方式" in ln)
+        self.assertIn("5 站", line)
+        self.assertNotIn("5.0", line, "float 未转int")
+
+    def test_absent_field_renders_nothing(self):
+        """老行没有该字段是正常的（沿用 R618「读侧缺失按 0」）"""
+        rows = self._probe()
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertNotIn("未登记认证方式", text,
+                         "老行不应产生噪声行")
+
+    def test_zero_count_renders_nothing(self):
+        rows = self._probe(no_auth_count=0, no_auth_sites="")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertNotIn("未登记认证方式", text)
+
+    def test_probe_source_computes_no_auth_sites(self):
+        """守卫写侧：探针必须真的算这个字段（否则读侧永远是空）。
+
+        **按路径读文件而非 import**——`probe_provider_models` 不在本测试的
+        import 路径上（`ModuleNotFoundError`），且它带 module 级配置。
+        """
+        import os
+        # 同目录（scripts/），不是 scripts/.. —— 我第一版多加了一层 ..。
+        probe = os.path.join(os.path.dirname(mr.__file__),
+                             "probe_provider_models.py")
+        src = open(probe, encoding="utf-8").read()
+        self.assertIn("no_auth_sites", src,
+                      "探针未写 no_auth_sites——读侧新增的字段恒空")
+        self.assertIn("AUTH_MODE", src)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
