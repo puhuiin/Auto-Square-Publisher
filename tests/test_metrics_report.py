@@ -2586,9 +2586,10 @@ class TestContentStatsReportJoin(unittest.TestCase):
         # R628：文案带分母与覆盖率——「N 篇有记录」会被读成"共 N 篇"
         self.assertIn("内容数据（6/6 篇已发布帖有浏览数据（100%））", text)
         self.assertIn("均浏览 358", text)
-        self.assertIn("时段均浏览", text)
-        self.assertIn("体裁均浏览", text)
-        self.assertIn("来源均浏览", text)
+        # R610：归因桶改报中位数（抗单篇爆款把排名带偏），标签随之改口径
+        self.assertIn("时段浏览中位", text)
+        self.assertIn("体裁浏览中位", text)
+        self.assertIn("来源浏览中位", text)
 
     def test_no_stats_file_renders_nothing(self):
         """没有 content_stats.jsonl 时整块面板不渲染（零噪音）"""
@@ -2637,10 +2638,40 @@ class TestContentStatsReportJoin(unittest.TestCase):
         self.assertNotIn("", summ["stats_by_cta"], "缺失标签不得建空桶")
         self.assertEqual(len(summ["stats_by_cta"]), 2, "s3 无 trade_cta_style 不进 CTA 分母")
         text = mr.render_text(summ, style_rows)
-        self.assertIn("开场钩子均浏览", text)
-        self.assertIn("人设均浏览", text)
-        self.assertIn("结尾套路均浏览", text)
-        self.assertIn("实操角度均浏览", text)
+        self.assertIn("开场钩子浏览中位", text)
+        self.assertIn("人设浏览中位", text)
+        self.assertIn("结尾套路浏览中位", text)
+        self.assertIn("实操角度浏览中位", text)
+
+    def test_r610_bucket_line_ranks_by_median_not_mean(self):
+        """R610：归因桶按中位数排序——单篇爆款不得改写排名。
+
+        实测依据：开场钩子「内幕爆料腔」样本 [10,86,93,111,453] 均值 151 曾排
+        第一（中位仅 93 排第三），「上午6-12」时段均值 163 第一、中位 116 第三
+        （该桶恰好含全场两个最大离群值 414/453）。这些桶驱动下一轮 prompt 调向，
+        按均值调 = 追噪声。展示值与排序键同口径（都是中位），否则面板自相矛盾。
+        """
+        buckets = {"带爆款": [10, 86, 93, 111, 453],
+                   "无爆款": [33, 96, 105, 119, 142]}
+        line = mr._bucket_line(buckets)
+        # 排序：无爆款中位 105 > 带爆款中位 93；展示值也是中位而非均值
+        self.assertIn("无爆款 105×5", line)
+        self.assertIn("带爆款 93×5", line)
+        self.assertLess(line.index("无爆款"), line.index("带爆款"))
+        self.assertNotIn("151", line, "均值 151 是被 R609/R610 证伪的口径，不得再出现")
+
+    def test_r610_even_sample_median_not_upper_value(self):
+        """R610：偶数样本取真中位（两中值的平均），不取上侧值。
+
+        文件里既有的 `sorted(x)[len(x)//2]` 惯例在偶数样本上取的是**上侧值**——
+        对浏览这种右偏分布（长尾爆款）等于系统性地往高估一侧偏，恰好抵消中位数
+        抗离群值的作用。桶里 n=2 的桶很常见（实操角度全表都是 n=1/2），这个
+        偏差会直接落在最需要保护的样本上。
+        """
+        # 均值 150、上侧值 300、真中位 200
+        self.assertIn("某桶 200×2", mr._bucket_line({"某桶": [100, 300]}))
+        # 三个样本时中位即中间值，行为不变
+        self.assertIn("某桶 100×3", mr._bucket_line({"某桶": [50, 100, 400]}))
 
     def test_provider_dispatch_order_folds_and_ranks_by_latency(self):
         """R337：通道位次行——发/拒计数折叠到短通道名（同一 preset 名下多模型合并），

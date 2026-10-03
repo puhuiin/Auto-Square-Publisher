@@ -18,6 +18,7 @@ import json
 import math
 import os
 import re
+import statistics
 import sys
 from datetime import datetime, timedelta, timezone
 
@@ -432,17 +433,28 @@ def load_token_engagement(path=None):
 
 
 def _bucket_line(buckets, top=None):
-    """R285：{桶名: [浏览样本]} → "名 均值×n" 串（按均值降序，样本 <3 标注小样本）。"""
+    """R285：{桶名: [浏览样本]} → "名 中位×n" 串（按中位数降序，样本 <3 标注小样本）。
+
+    R610：排序键与展示值一起改用中位数。此前按均值排、也按均值显示——
+    四个归因桶的实测排名因此全被单篇爆款改写（开场钩子「内幕爆料腔」样本
+    [10,86,93,111,453] 均值 151 排第一、中位仅 93 排第三；「上午6-12」时段
+    均值 163 第一、中位 116 第三，而它恰好含全场两个最大离群值 414/453）。
+    这些桶的用途是「下一轮 prompt 该往哪调」，按均值调等于追噪声。
+    与 R609 同一判据，只把落点从加权层补到报表层——R609 当时靠人工重算
+    才发现，产品化后无需再人工。
+    展示值同步换成中位：只改排序不改显示会让「151 排在 99 后面」这种自相
+    矛盾的面板继续骗人（读者会以为排序坏了，或反向去信那个均值）。
+    """
     if not buckets:
         return ""
-    items = sorted(buckets.items(), key=lambda kv: -(sum(kv[1]) / len(kv[1])))
+    items = sorted(buckets.items(), key=lambda kv: -statistics.median(kv[1]))
     if top:
         items = items[:top]
     parts = []
     for name, vals in items:
-        avg = sum(vals) / len(vals)
+        med = statistics.median(vals)
         mark = "（小样本）" if len(vals) < 3 else ""
-        parts.append(f"{name} {avg:.0f}×{len(vals)}{mark}")
+        parts.append(f"{name} {med:.0f}×{len(vals)}{mark}")
     return " · ".join(parts)
 
 
@@ -2136,31 +2148,40 @@ def render_text(s, rows=None):
             _lk = s["stats_likes"]
             _cm = s["stats_comments"]
             _fmt = lambda xs: f"{sum(xs)/len(xs):.0f}" if xs else "-"
+            _med = lambda xs: f"{statistics.median(xs):.0f}" if xs else "-"
             _den = s.get("delivered_joinable_posts") or 0
             _pct = f"（{s['stats_posts'] / _den * 100:.0f}%）" if _den else ""
             lines.append(f"  📊 内容数据（{s['stats_posts']}"
                          + (f"/{_den} 篇已发布帖有浏览数据{_pct}" if _den else " 篇有记录")
                          + "）: "
-                         f"均浏览 {_fmt(_v)} · 均点赞 {_fmt(_lk)} · 均评论 {_fmt(_cm)}"
+                         # R610：浏览同时给均值与中位。R609 已实证「长文+30%」是单篇
+                         # 414 离群的假象（中位只 +17%），此后凡报浏览必须两个数并排，
+                         # 否则读者（包括下一轮做决策的我）又会被均值单独带走。
+                         f"均浏览 {_fmt(_v)} · 浏览中位 {_med(_v)} · "
+                         f"均点赞 {_fmt(_lk)} · 均评论 {_fmt(_cm)}"
                          f"（总浏览 {s['stats_views_total']}）"
                          + (f"—— 均值为该 {_pct.strip('（）')} 子集水平、**非全站**"
                             if _den and s["stats_posts"] < _den else ""))
             _hb = _bucket_line(s["stats_by_hourbucket"])
             if _hb:
-                lines.append(f"    时段均浏览: {_hb}")
+                lines.append(f"    时段浏览中位: {_hb}")
             _gg = _bucket_line(s["stats_by_genre"])
             if _gg:
-                lines.append(f"    体裁均浏览: {_gg}")
+                lines.append(f"    体裁浏览中位: {_gg}")
             _sc = _bucket_line(s["stats_by_source"], top=3)
             if _sc:
-                lines.append(f"    来源均浏览: {_sc}")
+                lines.append(f"    来源浏览中位: {_sc}")
             # R602：文风维度 × 浏览——把 R521/R288/R130/R592 轮换的开场/人设/结尾/
             # 实操角度各自的真实浏览量摆出来，回答「哪种套路真能带来流量」，让文风
             # 旋钮从「凭最佳实践猜」转向「按 engagement 调」。无样本的维度整行静默。
-            for _label, _key in (("开场钩子均浏览", "stats_by_hook"),
-                                  ("人设均浏览", "stats_by_persona"),
-                                  ("结尾套路均浏览", "stats_by_ending"),
-                                  ("实操角度均浏览", "stats_by_cta")):
+            #
+            # R610：标签从「均浏览」改「浏览中位」——排序键换成中位数后，展示值
+            # 与标签必须同口径。否则「内幕爆料腔 151 排在 悬念设问 99 后面」这种
+            # 面板会让人以为排序坏了，或反向去信那个已被证伪的均值。
+            for _label, _key in (("开场钩子浏览中位", "stats_by_hook"),
+                                  ("人设浏览中位", "stats_by_persona"),
+                                  ("结尾套路浏览中位", "stats_by_ending"),
+                                  ("实操角度浏览中位", "stats_by_cta")):
                 _bl = _bucket_line(s[_key])
                 if _bl:
                     lines.append(f"    {_label}: {_bl}")

@@ -56,6 +56,7 @@ import logging
 from typing import List, Dict, Any, Optional, Set, Tuple, Iterable
 import io
 import math
+import statistics
 import threading
 import unicodedata
 import concurrent.futures
@@ -2784,7 +2785,12 @@ class NewsFetcher:
         if not token_views:
             return 0, 0
         vals = sorted(token_views.values())
-        median = vals[len(vals) // 2] if vals else 0.0
+        # R610：偶数样本取真中位（两中值平均）。原先 vals[len//2] 取的是**上侧值**，
+        # 对右偏的浏览分布系统性偏高——实测表内 7 币时两种口径巧合一致（都是 98），
+        # 但表长到 8 币时上侧值把舰队中位从 103.5 抬到 109，加分门 135→142、
+        # 减分门 72→76，两个门槛凭空各偏 ~5%。表会随更多币种达到 min_n 而变长，
+        # 这不是理论风险。与 R609 同判据：中位数要真中位。
+        median = statistics.median(vals) if vals else 0.0
         if median <= 0:
             return 0, 0
         hi_cut, lo_cut = median * 1.3, median * 0.7

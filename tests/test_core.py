@@ -7668,6 +7668,32 @@ class TestEngagementBoost(unittest.TestCase):
     def test_loader_missing_file_empty(self):
         self.assertEqual(m.NewsFetcher._load_token_engagement("/nonexistent/te.json"), {})
 
+    def test_fleet_median_is_true_median_on_even_count(self):
+        """R610：舰队中位取真中位，偶数样本不得取上侧值。
+
+        原先 vals[len(vals)//2] 在偶数样本上取上侧值，对右偏的浏览分布系统性偏高：
+        表内 8 币 [54,96,98,98,109,120,156,184] 上侧值 109 vs 真中位 103.5，
+        加分门 135→142、减分门 72→76，两个门槛各凭空偏 ~5%。表内 7 币时两种口径
+        巧合一致（都是 98），所以这个偏差一直没被发现——但表会随更多币种达到
+        min_n 而变长，属于必然触发的隐患而非理论风险。
+        与 R609 同判据：中位数要真中位（两中值平均）。
+        """
+        even = {"ETH": 184.0, "SOL": 156.0, "BTC": 120.0, "QNT": 109.0,
+                "SHIB": 98.0, "ZEC": 98.0, "ADA": 96.0, "XRP": 54.0}
+        cands = [self._c("$ETH 消息"), self._c("$XRP 消息"), self._c("$BTC 消息"),
+                 self._c("$QNT 消息")]
+        up, down = m.NewsFetcher.apply_engagement_boost(
+            cands, even, m.SymbolValidator._valid_symbols_cache)
+        # 真中位 103.5 → 加分门 134.55 / 减分门 72.45：ETH(184)+、XRP(54)-、BTC/QNT 中性
+        self.assertEqual((up, down), (1, 1))
+        self.assertEqual(cands[0]["impact_score"], 20 + m.ENGAGEMENT_VIEW_BOOST)
+        self.assertEqual(cands[1]["impact_score"], 20 - m.ENGAGEMENT_VIEW_BOOST)
+        self.assertEqual(cands[2]["impact_score"], 20, "BTC 120 在两个门槛之间 → 中性")
+        self.assertEqual(cands[3]["impact_score"], 20, "QNT 109 在两个门槛之间 → 中性")
+        # 上侧值口径会给出 142/76：QNT(109) 会越过高分门被加分——锁住它不得回归
+        self.assertNotEqual(cands[3]["impact_score"], 20 + m.ENGAGEMENT_VIEW_BOOST,
+                           "QNT 109 < 加分门 134.55，取上侧值中位会误加分")
+
 
 class TestTrendBoost(unittest.TestCase):
     """R94：全网热搜加权（借鉴 Easel 热榜发现层）——市场注意力是热点信号。
