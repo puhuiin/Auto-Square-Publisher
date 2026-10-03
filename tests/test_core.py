@@ -1076,6 +1076,70 @@ class TestRecentOpeners(unittest.TestCase):
         self.assertIn("不得虚构支撑/阻力/目标价、仓位比例或杠杆倍数", prompt)
         self.assertNotIn("不必填入一组方案", prompt)
 
+    def test_system_prompt_teaches_no_manipulation_attribution(self):
+        """R611：操纵归因叙事 post-R604 归零后回升到 50%（R603 的 40% 加固阈值），
+        根因是 R604 只改了 user_prompt，**共享的 SYSTEM_PROMPT 整段没动**——而它
+        恰好在教模型写被禁的那套框架：
+          - 第 2 段指令「戳破利好背后的资金意图（是借利好出货？还是深度洗盘完毕？）」
+          - 第 4 段给了逐字模板「觉得是诱多出货的扣 2」
+          - 范文一示范「纯粹是去给老外机构当出货流动性」
+        实发 02:24 帖几乎照抄了范文（"老外机构正愁没流动性出货，你们冲进去刚好当接盘侠"），
+        12:44 帖照抄了 CTA 模板。system prompt 在 LLM 行为里比 user prompt 更权威，
+        且**具体范例会被逐字复用**（R597/R598 同一教训：池给范例=给模板）。
+        短讯是 137/150 的产出主体，所以这段污染直接主导了生产调性。
+
+        锁住：教唆性模板/范例一句都不许回来；同时 R604 的「可观察重构菜单」必须
+        在 SYSTEM_PROMPT 里在场——只删不给替代会把模型推回「不敢表态」的和稀泥态，
+        伤 R521 起建立的犀利人设。
+        """
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        # 教唆性模板/范例：一句都不许回来（都是 R611 前实证被照抄的原句）
+        for banned in ("是借利好出货", "深度洗盘完毕", "觉得是诱多出货的扣 2",
+                       "给老外机构当出货流动性", "庄家操盘套路",
+                       "机构和大户的小动作", "提示诱多风险"):
+            self.assertNotIn(banned, sp,
+                             f"SYSTEM_PROMPT 不得再教唆操纵归因框架: 「{banned}」")
+        # 替代方案必须在场（只删不给替代=推回和稀泥，伤犀利人设）
+        self.assertIn("利好出尽/卖事实/获利了结/量能接不住/被大盘拖累", sp,
+                      "必须给可观察的重构菜单，而不只是禁止")
+        self.assertIn("别把原因归给某方在出货或洗盘", sp)
+        self.assertIn("没有源文证据就是编内幕", sp)
+        self.assertIn("别默认套「庄家吸筹还是出货」那类操纵归因", sp)
+
+    def test_persona_pool_teaches_no_actor_attribution(self):
+        """R611：人设池同型污染——「毒舌老韭菜」原 angle 写「吐槽庄家套路」、
+        「吃瓜叙事党」原 angle 写「谁在抄底、谁在跑路、机构和大户的小动作」。
+        人设 angle 是每帖必注入的 system prompt 片段，等于每篇都在把模型往
+        「点名某方在操纵」上引。改成可观察的资金流描述（扎堆/抽干/量能接不接得住），
+        叙事感和画面感保留，人设强度不降。
+        """
+        for p in m.WRITING_PERSONAS:
+            angle = p["angle"]
+            for banned in ("庄家套路", "机构和大户", "谁在抄底", "谁在跑路"):
+                self.assertNotIn(banned, angle,
+                                 f"人设「{p['name']}」的 angle 不得引导点名行为方: 「{banned}」")
+        # 犀利人设本身不许被净化掉（R603 教训：过度净化会伤「犀利」）
+        self.assertTrue(any("犀利" in p["angle"] for p in m.WRITING_PERSONAS),
+                        "毒舌人设的犀利度必须保留")
+        self.assertTrue(any("画面感强" in p["angle"] for p in m.WRITING_PERSONAS),
+                        "吃瓜叙事党的画面感必须保留")
+
+    def test_user_prompts_still_carry_evidence_discipline(self):
+        """R611 对账：改了 SYSTEM_PROMPT 之后，两个 user_prompt 的逐句证据纪律
+        必须仍在场（R604 原本就落在那里，本次不是去改它，但要防回归被顺手删掉）。
+        两个分支都要查——短讯与长文的 prompt 是分开构建的。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "ETF inflows rise", "summary": "Spot ETF inflows increased.",
+                "age_hours": 1.0}
+        short, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        long_, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=True)
+        for name, prompt in (("短讯", short), ("长文", long_)):
+            self.assertIn("逐句证据纪律（最高优先级）", prompt, f"{name} prompt 纪律丢失")
+            self.assertIn("没源文证据别点名某方在出货/撒烟雾弹，那是编内幕", prompt,
+                          f"{name} prompt 的 R604 归因禁令丢失")
+
 
 
     def test_freshness_line_itself_free_of_banned_prefix(self):
