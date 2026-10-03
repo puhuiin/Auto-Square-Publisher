@@ -3,19 +3,21 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Futures",
-    "#Megadrop"
+    "#Megadrop",
+    "#Futures"
   ],
   "incentivized_tokens": [
     "$CT",
     "$PUMP",
     "$ALGO",
     "$USD1",
+    "$CTUSDT",
     "$PDDB",
-    "$QQQB"
+    "$NVDAB",
+    "$USDC"
   ],
-  "strategy_guidance": "今日最紧迫的为今日截止的USD1 Airdrop延期活动，发帖机器人优先产出空投参与攻略、申领注意事项类内容，抢占活动最后窗口期的流量红利。可同步结合新上线的CTUSDT永续合约、PUMP/ALGO交易锦标赛、新增bStocks交易对、LATAM/巴西新用户高息理财等官方动态，输出交易策略、产品使用教程类内容，引导读者参与交互获取Write to Earn交易返佣。",
-  "last_updated": "2026-10-02T20:23:56.077520Z",
+  "strategy_guidance": "当前PUMP交易锦标赛与ALGO算法交易锦标赛为限时高热度活动，需优先追贴输出冲刺攻略，结合新上线的CTUSDT期货合约、新增7支bStocks交易对的交易玩法，引导用户参与交易获取返佣；同时可蹭USD1延期空投、拉美/巴西新用户USDC高息理财的热点，输出「新手福利抄作业」类内容，带对应活动标签获取Write2Earn奖励。",
+  "last_updated": "2026-10-03T08:44:01.645571Z",
   "_feed_health": {},
   "_fallback_image": {
     "date": "2026-09-09",
