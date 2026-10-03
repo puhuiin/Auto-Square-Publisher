@@ -706,6 +706,31 @@ class TestRecentOpeners(unittest.TestCase):
         art, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=True)
         self.assertIn("近期已用过的开场句", art, "长文必须带跨帖开场去重守卫")
 
+    def test_article_title_requires_cashtag(self):
+        """R615：长文标题里的核心代币必须带 $大写。
+
+        实测 25 篇长文标题只有 12 篇带 $（48%），且缺口不是"标题没提币"——13 篇
+        无 $ 的标题里 11 篇明明写了 BTC/ETH/SHIB/ZEC/COMP，只是漏了 $ 前缀
+        （如「BTC 86110 稳着，山寨季指标却先反水了」「THORChain拒拉黑黑客，ETH2689
+        躺平装死」）。$挂件在信息流里渲染成价格挂件、是读者点进交易页的第一入口
+        （返佣生命线），而标题是信息流第一触点、比正文开场更显眼——漏 $ 等于在
+        最值钱的位置把入口白扔。prompt 原先只在正文规则里要求 $（"每次提到代币一律
+        $大写…织在句子里"），标题规则只讲"数字/反差/悬念"，模型自然不为标题补 $。
+        本条把 $ 要求显式补进标题规则，效果由 dashboard 的「长文标题 $挂件」基线
+        （R286）跨新帖验证。
+        """
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        art, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=True)
+        self.assertIn("标题里提到的核心代币一律带 $大写", art,
+                      "长文标题必须显式要求 $挂件（正文规则覆盖不到标题）")
+        self.assertIn("价格挂件", art, "要说明为什么（信息流渲染+返佣入口）")
+        # 短讯分支不受影响（它的规则4本就要求 $大写并织在句中）
+        short, _ = eng._build_user_prompt(item, None, "", ["BTC"])
+        self.assertIn("$挂件是读者进入对应交易页的入口", short)
+
     def test_article_prompt_carries_fng_ban(self):
         """R298：FNG 反差梗禁令同属指纹守卫，长文也必须带（长文一样会拿情绪指数
         当反差装置）。market_context 带高压 FNG 钩子触发 fng_ban_active。"""
