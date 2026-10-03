@@ -1917,6 +1917,74 @@ class TestBodyFingerprintRadar(unittest.TestCase):
         self.assertIn("分析段指纹预警", text)
 
 
+class TestEndingFingerprint(unittest.TestCase):
+    """R613：结尾段指纹雷达——第三块盲区。开场雷达（R124）扫第一段、分析段雷达
+    （R600）扫第二段，**结尾段一直无覆盖**，而 R598 已点明「ENDING 是最后一个发
+    整句的池」：模型在结尾最放松、最容易把模板整句抄出来。
+
+    实证依据：全史「庄家这步」×17 做结尾段开头（09-13~09-23，R598 之前的旧帖），
+    这个指纹从诞生到被修掉全程没有任何雷达报过——靠人工翻 ending_style 才发现。
+    同 R600 的教训：人工读全文发现的盲区必须产品化进 dashboard，否则下轮还得人工。
+    """
+
+    @staticmethod
+    def _rows(previews):
+        return [{"outcome": "binance_published", "final_preview": t} for t in previews]
+
+    def test_ending_cluster_detected_and_hashtags_skipped(self):
+        """结尾段共享前缀必须报；#标签行不得被当成结尾段（否则所有帖都聚到
+        「#Wri…」这一个前缀上，雷达直接变哑炮）。fixture 用真实帖结构：结尾问句
+        独占一段、#标签在最后一行。"""
+        rows = self._rows([
+            "开头甲。\n\n中间分析段甲。\n\n庄家这步棋是吸筹还是出货?\n\n#Write2Earn #BinanceSquare #BTC",
+            "开头乙。\n\n中间分析段乙。\n\n庄家这步棋,拉高派货?\n\n#Write2Earn #BinanceSquare #ETH",
+            "开头丙。\n\n中间分析段丙。\n\n庄家这步是洗盘还是真突破?\n\n#Write2Earn #BinanceSquare #SOL",
+            "开头丁。\n\n中间分析段丁。\n\n这消息你信几分?\n\n#Write2Earn #BinanceSquare #XRP",
+        ])
+        efp = mr.ending_fingerprint(rows)
+        self.assertEqual(efp["alerts"].get("庄家这步"), 3, "结尾段「庄家这步」×3 必须报")
+        self.assertNotIn("#Wri", efp["alerts"], "#标签行不得参与聚簇")
+
+    def test_no_alert_when_endings_diverse(self):
+        rows = self._rows([
+            "甲。\n\n分析甲。\n\n看多的扣1。\n\n#Write2Earn",
+            "乙。\n\n分析乙。\n\n你重仓了哪个?\n\n#Write2Earn",
+            "丙。\n\n分析丙。\n\n还能撑多久?\n\n#Write2Earn",
+        ])
+        self.assertEqual(mr.ending_fingerprint(rows)["alerts"], {})
+
+    def test_last_body_paragraph_used_not_second(self):
+        """扫的是**最后一个**正文段，不是第二段——两个雷达扫不同位置才有意义。
+        这里第二段共享前缀但结尾段各异，ending_fingerprint 必须安静
+        （而 body_fingerprint 会报，用来证明两者确实扫不同位置）。"""
+        rows = self._rows([
+            "甲。\n\n我猜这波是主力。\n\n看多的扣1。\n\n#Write2Earn",
+            "乙。\n\n我猜这波是洗盘。\n\n你重仓了哪个?\n\n#Write2Earn",
+            "丙。\n\n我猜这波是诱多。\n\n还能撑多久?\n\n#Write2Earn",
+        ])
+        self.assertEqual(mr.ending_fingerprint(rows)["alerts"], {})
+        self.assertEqual(mr.body_fingerprint(rows)["alerts"].get("我猜这波"), 3)
+
+    def test_article_header_skipped_in_ending(self):
+        """长文结尾常带「四、接下来盯什么」这类分节头，不得当成结尾段首句。"""
+        rows = self._rows([
+            "一、发生了什么\n\n$BTC 破位。分析。\n\n四、接下来盯什么\n\n庄家这步是出货?\n\n#Write2Earn",
+            "一、发生了什么\n\n$ETH 拉升。分析。\n\n四、接下来盯什么\n\n庄家这步是洗盘?\n\n#Write2Earn",
+            "一、发生了什么\n\n$SOL 异动。分析。\n\n四、接下来盯什么\n\n庄家这步是诱多?\n\n#Write2Earn",
+        ])
+        self.assertEqual(mr.ending_fingerprint(rows)["alerts"].get("庄家这步"), 3)
+
+    def test_render_line_present(self):
+        rows = self._rows([
+            "甲。\n\n分析。\n\n庄家这步是吸筹还是出货?\n\n#Write2Earn",
+            "乙。\n\n分析。\n\n庄家这步是拉高派货?\n\n#Write2Earn",
+            "丙。\n\n分析。\n\n庄家这步是洗盘?\n\n#Write2Earn",
+            "丁。\n\n分析。\n\n这消息你信几分?\n\n#Write2Earn",
+        ])
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("结尾段指纹预警", text)
+
+
 class TestQualityPatternSync(unittest.TestCase):
     """R106：质量模式双份维护的同步守卫——main.py（防线本体）与 metrics_report
     （合规巡检）各有一份禁用装置/AI 腔/FNG 模式，静默漂移会让巡检度量失真

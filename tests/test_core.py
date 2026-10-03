@@ -1164,6 +1164,40 @@ class TestRecentOpeners(unittest.TestCase):
         # 软引导而非硬禁：「现在」本身不该被列为禁用词
         self.assertNotIn("严禁使用「现在」", sp, "硬禁会让文字僵硬，超出必要力度")
 
+    def test_action_paragraph_not_defaulting_to_bieji_zhe(self):
+        """R613：第 3 段（实操段）实测近 30 篇 67% 都拿「别急着」当头句——全史仅 23%，
+        是短期急速收敛的复读指纹。且它与 R592 的角度轮换**叠加失效**：trade_cta_style
+        八种角度标签分发是均匀的（近 30 篇每种 3~4 次），但渲染出来的建议却塌成同一句
+        ——「仓位管理」4/4、「分情景表达」4/4、「失效位优先」4/4、「风险先说」3/3 全都
+        用「别急着」开头，只有「现货与合约分开」「时间框架说清」逃掉。
+        即标签在轮换、文字没轮换，读者看到的是 2/3 的帖在同一句劝退上换主语。
+
+        锁住 prompt 侧：点名这个具体tic + 给实测占比说明严重度 + 要求从**抽到的角度
+        本身的 substance** 起笔（失效位先说推翻条件、仓位先说现金分批、风险先说错在哪），
+        再把「等确认」的意思换说法融进去。这是「轮换池生效但输出仍收敛」的标准修法：
+        治的是渲染层，不是轮换层（轮换层 R592 已是对的，勿去动它）。
+        """
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        self.assertIn("别拿「别急着」当头句", sp, "必须点名这个具体tic")
+        self.assertIn("复读指纹", sp, "要说明为什么（含实测占比）")
+        self.assertIn("就从那个角度本身的 substance 起笔", sp,
+                      "必须要求从抽到角度的实质内容起笔，而不是通用劝退句")
+        self.assertIn("别每帖都同一句", sp, "必须要求换说法")
+        # R592 的角度轮换池本身没病（标签分发实测均匀），不许被顺手删/改
+        self.assertEqual(len(m.TRADE_CTA_STYLE_POOL), 8, "R592 八角度轮换池不得缩减")
+
+    def test_ending_question_not_defaulting_to_nijuede(self):
+        """R613：结尾问句实测近 30 篇 27% 用「你觉得」打头（全史 6%），是结尾段第一大开场。
+        与 R612 的「现在」同型：收敛发生在问句开头这个位置，此前无任何雷达覆盖结尾段
+        （新加的 ending_fingerprint 才第一次抓到，见 test_metrics_report 侧）。
+        修法同 R612：点名 + 给实测占比 + 给替代切入菜单 + 要求每帖轮换；给方向而非范例句。
+        """
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        self.assertIn("问句别惯用「你觉得」打头", sp, "必须点名这个具体tic")
+        self.assertIn("每帖换一种", sp, "必须要求轮换")
+        self.assertIn("反问", sp, "要给替代切入方式（反问）")
+        self.assertIn("先给一个观察事实再提问", sp, "要给替代切入方式（先事实后提问）")
+
 
 
     def test_freshness_line_itself_free_of_banned_prefix(self):

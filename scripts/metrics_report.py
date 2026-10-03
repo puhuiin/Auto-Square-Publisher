@@ -343,6 +343,39 @@ def body_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_MIN
     return {"scanned": len(bodies), "alerts": _cluster_openers(bodies, min_hits)}
 
 
+def _extract_ending(preview):
+    """R613：取最后一个正文段的首句（跳过 #标签行 与长文分节头）。
+
+    结尾段此前**完全不在指纹雷达覆盖范围内**（开场雷达扫第一段、body_fingerprint
+    扫第二段），而这里是 R598 点出的「ENDING 是最后一个发整句的池」——模型在结尾
+    最放松、也最容易把模板整句抄出来。实证：全史「庄家这步」×17 做结尾段开头
+    （09-13~09-23，全是 R598 之前的旧帖，已修复），这个指纹从诞生到消失全程没有
+    任何雷达报过，靠人工翻 ending_style 才看见。第三块盲区，同 R600 补齐。
+    """
+    pv = (preview or "").strip()
+    if not pv:
+        return ""
+    paras = [p.strip() for p in pv.split("\n") if p.strip()]
+    # 从后往前找第一个非标签段（#Write2Earn #BinanceSquare #XXX 这类整行标签）
+    for para in reversed(paras):
+        if para.lstrip().startswith("#"):
+            continue
+        if _ARTICLE_HEADER_RE.match(para):
+            continue
+        for seg in (s.strip() for s in re.split(r"[。\n]", para)):
+            if seg and not _ARTICLE_HEADER_RE.match(seg):
+                return seg
+        return ""
+    return ""
+
+
+def ending_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_MIN_HITS):
+    """R613：结尾段开场的共享前缀预警——与 opener/body_fingerprint 同口径同阈值，
+    只是扫 _extract_ending。补上「结尾段无雷达」这块盲区。"""
+    endings = _collect_segments(rows, _extract_ending, window)
+    return {"scanned": len(endings), "alerts": _cluster_openers(endings, min_hits)}
+
+
 
 def _num(v):
     """宽容数字：int/float/数字字符串 -> float，否则 None。
@@ -2069,6 +2102,15 @@ def render_text(s, rows=None):
         if bfp["alerts"]:
             bdetail = "、".join(f"“{p}…”×{c}" for p, c in bfp["alerts"].items())
             lines.append(f"  🔭 分析段指纹预警（近 {bfp['scanned']} 帖第二段共享前缀）: {bdetail}")
+        # R613：结尾段指纹雷达——第三块盲区。开场雷达扫第一段、分析段雷达扫第二段，
+        # 结尾段一直无覆盖，而 R598 已点明「ENDING 是最后一个发整句的池」（模型在
+        # 结尾最放松、最易整句抄模板）。实证：全史「庄家这步」×17 做结尾段开头
+        # （09-13~09-23，R598 之前的旧帖，已修复），该指纹从诞生到消失全程无任何
+        # 雷达报过，靠人工翻 ending_style 才看见。同口径补齐。
+        efp = ending_fingerprint(rows)
+        if efp["alerts"]:
+            edetail = "、".join(f"“{p}…”×{c}" for p, c in efp["alerts"].items())
+            lines.append(f"  🔭 结尾段指纹预警（近 {efp['scanned']} 帖结尾共享前缀）: {edetail}")
     n_pub = sum(s["by_provider"].values())
     if n_pub:
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")
