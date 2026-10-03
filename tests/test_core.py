@@ -15800,6 +15800,78 @@ class TestR635PublishParkExpiryResetsFailCount(unittest.TestCase):
         self.p._publish_record(self.nid, ok=False)
         self.assertEqual(m.intel_state_get("_publish_park", {})[self.nid]["fails"], 1)
 
+class TestR636PermanentClearedAfterCooldownExpiry(unittest.TestCase):
+    """R636：冷却到期后 `permanent` 标记必须清除，否则显示与实际矛盾。
+
+    `_breaker_record_permanent` 写 `permanent=True` + `cooldown=now+24h`。
+    24h 后 `_is_cooled` 变False（**通道已可尝试**），但 `permanent` 永不清除
+    ⇒ healthcheck 仍显示 💀permanent，而 L8205 注释说「💀 是"等也没用"
+    （除非 24h 到期自动复活）」——它**确实已到期可复活**了，显示还在说"等
+    也没用" ⇒ **运营会白等/白换模型**。
+
+    生产佐证（R616 的教训正是这个）：b.ai 09-08 下架判永久失败，
+    **同通道换默认名后 09-29 仍健康出稿**——通道早就能用了。
+
+    判据：`permanent` 的语义是「**未验证可恢复**」；一旦冷却到期且能被尝试，
+    这个前提就不成立。**保守起见只在读侧清**（不动写侧）——写侧要保留
+    "曾永久失败"这个事实（R614：安全面告警不消失）。
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.mkdtemp()
+        self._old = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = os.path.join(self._tmp, "ci.json")
+        self.eng = m.MultiLLMEngine()
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._old
+        import shutil
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+    def _set_cooldown(self, name, delta_hours):
+        st = dict(m.intel_state_get("_llm_breaker", {}))
+        info = dict(st[name])
+        info["cooldown_until"] = (datetime.now(timezone.utc)
+                                  + timedelta(hours=delta_hours)).isoformat()
+        st[name] = info
+        m.intel_state_set("_llm_breaker", st)
+
+    def test_permanent_cleared_after_expiry(self):
+        self.eng._breaker_record_permanent("Preset-x", "404")
+        self._set_cooldown("Preset-x", -1)      # 已到期 1h
+        self.assertFalse(self.eng._breaker_cooled_down("Preset-x"),
+                         "前置：冷却应已到期（通道可尝试）")
+        info = (self.eng._breaker_state() or {}).get("Preset-x") or {}
+        self.assertFalse(info.get("permanent"),
+                         "冷却已到期但 permanent 未清 ⇒ 显示 💀 而实际可用")
+        self.assertFalse(info.get("permanent") and True, "重复确认")
+
+    def test_permanent_kept_during_cooldown(self):
+        """回归：仍在冷却期内不得清（那时确实该显示 💀）"""
+        self.eng._breaker_record_permanent("Preset-y", "404")
+        info = (self.eng._breaker_state() or {}).get("Preset-y") or {}
+        self.assertTrue(info.get("permanent"), "冷却期内应保留 permanent")
+        self.assertTrue(self.eng._breaker_cooled_down("Preset-y"))
+
+    def test_heal_log_does_not_mislabel_expiry_as_malformed(self):
+        """措辞纪律：`healed` 含两类动作，**不得**都报成"畸形冷却"（R614）"""
+        self.eng._breaker_record_permanent("Preset-z", "404")
+        self._set_cooldown("Preset-z", -1)
+        with self.assertLogs(m.logger.name, level="WARNING") as cm:
+            self.eng._breaker_state()
+        joined = "\n".join(cm.output)
+        if "断路器状态自愈" in joined:
+            self.assertNotIn("重置畸形冷却 1 条", joined,
+                             "把 permanent 到期解除报成了畸形冷却——并不存在的畸形数")
+
+    def test_non_permanent_entry_unaffected(self):
+        """回归：普通瞬时冷却到期不该被动到"""
+        self.eng._breaker_record_failure("Preset-w")
+        self._set_cooldown("Preset-w", -1)
+        info = (self.eng._breaker_state() or {}).get("Preset-w") or {}
+        self.assertFalse(info.get("permanent"), "普通失败不该被标 permanent")
+        self.assertFalse(self.eng._breaker_cooled_down("Preset-w"))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

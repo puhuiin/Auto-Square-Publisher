@@ -3527,10 +3527,42 @@ class MultiLLMEngine:
                 info["cooldown_until"] = (datetime.now(timezone.utc)
                                           + timedelta(minutes=cls._BREAKER_BASE_MIN)).isoformat()
                 healed += 1
+            else:
+                # R636：**冷却已到期时清掉 `permanent` 标记**。
+                #
+                # 实测复现：`_breaker_record_permanent` 写 permanent=True +
+                # cooldown=now+24h。24h 后 `_is_cooled` 变 False（**通道已可
+                # 尝试**），但 permanent **永不清除** ⇒ healthcheck 仍显示
+                # 💀permanent，而 L8205 注释说「💀 是"等也没用"（除非 24h 到期
+                # 自动复活）」——它**确实已到期可复活**了，显示却还在说"等也没用"
+                # ⇒ **运营会白等/白换模型**。
+                #
+                # 生产佐证（R616 的教训正是这个）：b.ai 09-08 下架判永久失败，
+                # **同通道换默认名后 09-29 仍健康出稿**——通道早就能用了，
+                # 但 `permanent` 会让它永久显示 💀。
+                #
+                # 判据：`permanent` 的语义是「**未验证可恢复**」；
+                # 一旦冷却到期且能被尝试，这个前提就不成立了。
+                # 保守起见**只在这里清**（读到状态即判定），不动写侧——
+                # 写侧要记录"曾经永久失败过"这个事实（R614：安全面告警不消失）。
+                _until = cls._parse_cooldown(info.get("cooldown_until"))
+                if info.get("permanent") and _until is not None \
+                        and datetime.now(timezone.utc) >= _until:
+                    info = dict(info)
+                    info["permanent"] = False
+                    healed += 1
             repaired[name] = info
         if dropped or healed:
-            logger.warning(f"断路器状态自愈：丢弃不可用条目 {dropped} 条，"
-                           f"重置畸形冷却 {healed} 条为 {cls._BREAKER_BASE_MIN} 分钟有界冷却。")
+            # R636：措辞按**实际动作**分项——`healed` 现在含两类（畸形重置 +
+            # permanent 到期解除），混在一句里会让"重置畸形冷却 N 条"报个
+            # 并不存在的畸形数（R614：告警措辞不得夸大也不得混淆）。
+            _parts = []
+            if dropped:
+                _parts.append(f"丢弃不可用条目 {dropped} 条")
+            if healed:
+                _parts.append(f"自愈 {healed} 条（畸形冷却重置为 "
+                              f"{cls._BREAKER_BASE_MIN} 分钟有界 / permanent 到期解除）")
+            logger.warning("断路器状态自愈：" + "，".join(_parts) + "。")
             try:
                 intel_state_set(cls._BREAKER_STATE_KEY, repaired)
             except Exception as e:
