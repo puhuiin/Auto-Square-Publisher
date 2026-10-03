@@ -6356,11 +6356,37 @@ class ImageManager:
 
     @classmethod
     def _read_fallback_cache(cls) -> Optional[str]:
-        """当日已上传过的兜底图直接复用，跳过重复下载与 S3 上传流程"""
+        """当日已上传过的兜底图直接复用，跳过重复下载与 S3 上传流程。
+
+        R639：**过期即清理**（原实现只判过期就return None，却把过期记录留在
+        状态文件里）。生产实锤：`_fallback_image.date` 停在 2026-09-09，
+        24 天未被清理——它**永远不会被读到**（date 校验）⇒ 纯死数据，
+        却每次 git 回写都带着它。
+        真正的风险不是体积：有人手工改 `date` 想"复活"旧图时，会拿到一张
+        24 天前的 CDN 图（可能已失效/被 CDN 清理）。
+        判据同`_tg_delivered` 的 200 条上限（那个有自愈）：**状态要自愈**，
+        不能"读的时候当它不存在，却让它一直占着位置"。
+        """
         cached = intel_state_get(cls._FALLBACK_CACHE_KEY, {})
-        if isinstance(cached, dict) and cached.get("date") == datetime.now(timezone.utc).strftime("%Y-%m-%d") and cached.get("url"):
+        if not isinstance(cached, dict) or not cached:
+            # 畸形值（手改/旧版本遗留）：**同样清掉**——第一版只清"过期 dict"，
+            # 非 dict 会在这里直接 return，死数据留着。实测抓到。
+            if cached:
+                try:
+                    intel_state_set(cls._FALLBACK_CACHE_KEY, {})
+                except Exception as e:
+                    logger.debug(f"清理畸形兜底图缓存失败（不影响配图）: {e}")
+            return None
+        _today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        if cached.get("date") == _today and cached.get("url"):
             logger.info(f"兜底图当日已托管，直接复用: {cached['url']}")
             return cached["url"]
+        # 过期（或畸形）：清掉再返回 None，避免死数据长期占位
+        try:
+            intel_state_set(cls._FALLBACK_CACHE_KEY, {})
+        except Exception as e:
+            # 清理失败不阻塞配图主流程（旁路原则），但要留痕
+            logger.debug(f"清理过期兜底图缓存失败（不影响配图）: {e}")
         return None
 
     @classmethod

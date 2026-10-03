@@ -15969,6 +15969,67 @@ class TestR638ReadmeConfigDrift(unittest.TestCase):
         self.assertEqual(missing, [],
                          f"代码读但 README 未记录：{missing}——新加配置要补文档")
 
+class TestR639FallbackImageCacheSelfHeals(unittest.TestCase):
+    """R639：兜底图缓存**过期/畸形即清理**，不能"读时当它不存在、却一直占位"。
+
+    生产实锤：`_fallback_image.date` 停在 2026-09-09，**24 天未被清理**——
+    它永远不会被读到（date 校验）⇒ 纯死数据，却每次 git 回写都带着它。
+    真正的风险不是体积：有人手工改 `date` 想"复活"旧图时，会拿到一张
+    24 天前的 CDN 图（可能已被 CDN 清理）。
+
+    判据同 `_tg_delivered` 的 200 条上限（那个有自愈）：**状态要自愈**。
+    同类状态，一个有上限一个没有 ⇒ 逐个状态键问「它会自己清理吗」。
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.mkdtemp()
+        self._old = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = os.path.join(self._tmp, "ci.json")
+        self.today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._old
+        import shutil
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+    def test_expired_record_is_cleared(self):
+        m.intel_state_set("_fallback_image",
+                          {"url": "https://x/old.jpg", "date": "2026-09-09"})
+        self.assertIsNone(m.ImageManager._read_fallback_cache())
+        self.assertEqual(m.intel_state_get("_fallback_image", {}), {},
+                         "过期记录未被清理——死数据长期占位")
+
+    def test_today_record_still_reused(self):
+        """防过度清理：当日记录必须仍能复用"""
+        m.intel_state_set("_fallback_image",
+                          {"url": "https://x/t.jpg", "date": self.today})
+        self.assertEqual(m.ImageManager._read_fallback_cache(),
+                         "https://x/t.jpg")
+        self.assertTrue(m.intel_state_get("_fallback_image", {}),
+                        "当日记录被误清了")
+
+    def test_malformed_value_is_cleared(self):
+        """畸形值（非 dict）也要清——第一版只清"过期 dict"，这里漏了。
+
+        实测抓到：非 dict 会走 `if not isinstance(...)` 直接 return，
+        死数据留着。**修一处要验三态**（过期 dict / 当日 dict / 非 dict）。
+        """
+        m.intel_state_set("_fallback_image", "坏值")
+        self.assertIsNone(m.ImageManager._read_fallback_cache())
+        self.assertEqual(m.intel_state_get("_fallback_image", {}), {},
+                         "畸形状态未被清理")
+
+    def test_empty_is_noop(self):
+        m.intel_state_set("_fallback_image", {})
+        self.assertIsNone(m.ImageManager._read_fallback_cache())
+        self.assertEqual(m.intel_state_get("_fallback_image", {}), {})
+
+    def test_missing_url_but_today_date_cleared(self):
+        """date 是今天但 url 空 ⇒ 不可用，也应清掉"""
+        m.intel_state_set("_fallback_image", {"date": self.today})
+        self.assertIsNone(m.ImageManager._read_fallback_cache())
+        self.assertEqual(m.intel_state_get("_fallback_image", {}), {})
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
