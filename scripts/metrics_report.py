@@ -112,6 +112,18 @@ _FLAT_DESC_RE = re.compile(
     r"|盘面.{0,3}(?:不买账|没动|不跟涨|不领情|没反应)"
     r"|淡得(?:抠脚|离谱)")
 
+# R614：实操段套话复读——R592 明令「不要每帖都写回踩、拿稳、插针或降杠杆」、
+# R613 修掉「别急着」67%，但**这两处修复此前都没有度量面**：拿稳全史 22%/回踩32%/
+# 插针27%（R592 修后近30降到0~3%）、别急着近30 67%，全靠人工 grep 才发现与验证。
+# 同 R607 的判据：句中短语（不在段首）前缀雷达看不见，须单建按帖占比指标。
+# 与 flat_desc 一样只追踪不设门——这些短语本身可用，问题是收敛成唯一说法。
+# 近/远半窗对照（同 R610）：区分「风格回归」与「这批新闻恰好多是该场景」。
+_STOCK_ADVICE_RE = re.compile(
+    r"别急着"
+    r"|现货拿稳|拿稳别|别被插针|插针洗"
+    r"|等回踩|回踩确认"
+    r"|杠杆.{0,4}降到最低|把杠杆压到最低")
+
 # R605：句长 burstiness（节奏方差）——整合自全网最新研究（textpulse 2026 对 6 万+
 # 文本的实证）：AI 文本最稳的「机器味」信号之一是**句长过于均匀**（标准差小），人类
 # 写作句长起伏大。该研究量化：人类句长变异系数 CV≈0.449、AI≈0.376，79% 的 AI 改写
@@ -156,6 +168,9 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
            "ai_flavor": 0, "offenders": collections.Counter(),
            "fng_ban_armed": 0, "fng_violation": 0, "fng_avoided": 0,
            "manip_frame": 0, "burstiness_cvs": [], "flat_desc": 0,
+           # R614：实操段套话（别急着/拿稳/插针/回踩/降杠杆）——R592 与 R613 两处
+           # 修复的度量面。此前都靠人工 grep 验证，无按帖占比指标。
+           "stock_advice": 0,
            # R610：追踪指标的「修复生效」判据。固定窗口有个致命的观测时滞：
            # 一次 prompt 加固（R604）刚上线时，窗口里 15/20 篇仍是加固前的旧稿，
            # 于是面板继续报 50% 命中——看起来像修复无效，实则新帖 0 命中
@@ -166,6 +181,8 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
            # 近半显著低于远半 = 修复生效，两者都高 = 修复无效，判据无歧义。
            "manip_frame_recent": 0, "manip_frame_older": 0,
            "flat_desc_recent": 0, "flat_desc_older": 0,
+           # R614：实操段套话的近/远对照（同 manip_frame/flat_desc 口径）。
+           "stock_advice_recent": 0, "stock_advice_older": 0,
            # R610：近半的时间跨度（最早/最晚 ts）——判读近半的前提。R629 更正：
            # 原注释写"发布速率约 4~6 篇/天，一次加固上线 1 天后近半仍可能含 4 篇
            # 加固前旧稿"，**该数字是错的**。生产实测自 09-10 起稳定 **12 篇/天**
@@ -221,6 +238,11 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
         if _FLAT_DESC_RE.search(pv):
             out["flat_desc"] += 1
             out["flat_desc_recent" if _is_recent else "flat_desc_older"] += 1
+        # R614：实操段套话复读（别急着/拿稳/插针/回踩/降杠杆）——同 flat_desc 口径，
+        # 每帖最多计一次。这是 R592 与 R613 两处 prompt 修复唯一的度量面。
+        if _STOCK_ADVICE_RE.search(pv):
+            out["stock_advice"] += 1
+            out["stock_advice_recent" if _is_recent else "stock_advice_older"] += 1
     out["offenders"] = dict(out["offenders"])
     return out
 
@@ -374,6 +396,69 @@ def ending_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_M
     只是扫 _extract_ending。补上「结尾段无雷达」这块盲区。"""
     endings = _collect_segments(rows, _extract_ending, window)
     return {"scanned": len(endings), "alerts": _cluster_openers(endings, min_hits)}
+
+
+def _all_segment_openers(preview):
+    """R614：取全部正文段的首句（跳过 #标签行 与长文分节头），按出现顺序返回。
+    与 _extract_opener/_extract_body_opener/_extract_ending 各取一个固定位置不同，
+    这里要全段——用来按「段落位置」分别聚簇，把固定位置之间的盲区一次补全。"""
+    pv = (preview or "").strip()
+    if not pv:
+        return []
+    out = []
+    for para in (p.strip() for p in pv.split("\n")):
+        if not para or para.lstrip().startswith("#"):
+            continue
+        if _ARTICLE_HEADER_RE.match(para):
+            continue
+        for seg in (s.strip() for s in re.split(r"[。\n]", para)):
+            if seg and not _ARTICLE_HEADER_RE.match(seg):
+                out.append(seg)
+                break
+    return out
+
+
+def mid_segment_fingerprint(rows, window=_FINGERPRINT_WINDOW, min_hits=_FINGERPRINT_MIN_HITS):
+    """R614：**中间段落位置**的指纹预警——按 (段落位置, 首句前缀) 聚簇。
+
+    为什么需要它：opener_fingerprint 扫第 1 段、body_fingerprint 扫第 2 段、
+    ending_fingerprint 扫最后一段，三个都是**硬编码固定位置**。生产帖正文 2~7 段
+    （实测 4 段占 168/291 为绝对主体），于是第 3 段（实操段）及更靠后的中间段
+    一直在覆盖范围外。而这里恰是内容收敛的重灾区：
+      - R592 点名的「现货拿稳/插针/回踩」全史 22%/27%/32%，全在第 3 段
+        （靠人工读样本才发现，雷达全程沉默；该批已被 R592 修掉，近 30 篇降到 0~3%）
+      - R613 的「别急着」67% 也在第 3 段（同样是人工搜出来的，不是雷达报的）
+    即：三个固定位置雷达各自补过一次盲区，但「固定位置之间」这个结构性缺口没人补。
+    本函数按位置聚簇，任何中间位置成形即报，不依赖运营者想到「还有第 3 段没扫」。
+
+    只报中间位置（索引 ≥2 且非该帖末段）——首两段与末段各有专属雷达与专属标签，
+    重复报会让同一指纹在 dashboard 出现两行。返回 {位置: {前缀: 次数}}。
+    """
+    from collections import Counter
+    # 先按窗口取足 delivery 行（与 _collect_segments 同口径：窗口数的是帖，不是段），
+    # 再聚簇——否则「段数不足就 continue」会把窗口检查一起跳过，扫描数虚高。
+    recent = []
+    for r in reversed(rows if isinstance(rows, list) else []):
+        if not isinstance(r, dict) or r.get("dry_run") is True:
+            continue
+        if not _is_delivery_outcome(r.get("outcome")):
+            continue
+        recent.append(r)
+        if len(recent) >= window:
+            break
+    by_pos = {}
+    for r in recent:
+        segs = _all_segment_openers(r.get("final_preview"))
+        if len(segs) < 4:
+            continue  # 2~3 段的帖：第 3 段就是末段，已被 ending_fingerprint 覆盖
+        for pos in range(2, len(segs) - 1):
+            by_pos.setdefault(pos, []).append(segs[pos])
+    out = {}
+    for pos, openers in sorted(by_pos.items()):
+        alerts = _cluster_openers(openers, min_hits)
+        if alerts:
+            out[pos] = alerts
+    return {"scanned": len(recent), "alerts": out}
 
 
 
@@ -2078,6 +2163,31 @@ def render_text(s, rows=None):
                     _fw = (" ⚠️（描述收敛，读样本辨别是风格退化还是近期多利好不涨）"
                            if _fp >= 40 else "")
                     lines.append(f"  📉 利好不涨描述复读: {_fd}/{q['scanned']} 篇（{_fp:.0f}%）{_fw}")
+            # R614：实操段套话复读（别急着/拿稳/插针/回踩/降杠杆）——R592 与 R613
+            # 两处 prompt 修复的度量面（此前纯人工 grep 验证）。同 flat_desc 口径：
+            # 只追踪不设门 + 近/远半窗对照区分「风格回归」与「本批新闻恰是该场景」。
+            if q.get("stock_advice"):
+                _sa = q["stock_advice"]
+                _sp = 100 * _sa / q["scanned"]
+                _sr = q.get("stock_advice_recent", 0)
+                _so = q.get("stock_advice_older", 0)
+                _rn2 = (q["scanned"] + 1) // 2
+                _on2 = q["scanned"] - _rn2
+                if _rn2 >= 3 and _on2 >= 3:
+                    _srpct = 100 * _sr / _rn2
+                    _sopct = 100 * _so / _on2
+                    if _srpct >= 40 and _srpct >= _sopct:
+                        _sw = " ⚠️（近半未低于远半，修复可能未生效，读样本确认）"
+                    elif _srpct < _sopct:
+                        _sw = "（近半 < 远半，修复生效中↓）"
+                    else:
+                        _sw = "（近/远持平，需更多样本）"
+                    lines.append(f"  🧰 实操段套话复读: 近半 {_sr}/{_rn2}（{_srpct:.0f}%）· "
+                                 f"远半对照 {_so}/{_on2}（{_sopct:.0f}%）· "
+                                 f"整窗 {_sa}/{q['scanned']}（{_sp:.0f}%）{_sw}")
+                else:
+                    _sw = " ⚠️（套话收敛）" if _sp >= 40 else ""
+                    lines.append(f"  🧰 实操段套话复读: {_sa}/{q['scanned']} 篇（{_sp:.0f}%）{_sw}")
         # R289：FNG 三件套收口——滞回驱动量直方图 + 武装未剥离一致性告警。
         # hook_count 是近窗引入次数（武装条件 ≥2，故 1 = 距武装一步之遥的压力面）；
         # armed 但 market_stripped=False = R101 互补剥离疑似失效（禁令与盘面行
@@ -2111,6 +2221,15 @@ def render_text(s, rows=None):
         if efp["alerts"]:
             edetail = "、".join(f"“{p}…”×{c}" for p, c in efp["alerts"].items())
             lines.append(f"  🔭 结尾段指纹预警（近 {efp['scanned']} 帖结尾共享前缀）: {edetail}")
+        # R614：中间段落位置指纹——三个固定位置雷达（首段/第二段/末段）之间的盲区。
+        # 生产帖正文 2~7 段（4 段占 168/291 为绝对主体），第 3 段实操段此前无任何覆盖，
+        # 而 R592 的「拿稳/插针/回踩」与 R613 的「别急着」都发生在那里（均人工发现）。
+        # 按 (段落位置, 前缀) 聚簇，任何中间位置成形即报。只报中间位置——首两段与末段
+        # 各有专属雷达与专属标签，重复报会让同一指纹在 dashboard 出现两行。
+        mfp = mid_segment_fingerprint(rows)
+        for _pos, _al in sorted(mfp["alerts"].items()):
+            _md = "、".join(f"“{p}…”×{c}" for p, c in _al.items())
+            lines.append(f"  🔭 第{_pos + 1}段指纹预警（近 {mfp['scanned']} 帖该段共享前缀）: {_md}")
     n_pub = sum(s["by_provider"].values())
     if n_pub:
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")

@@ -1465,6 +1465,49 @@ class TestMetricsReport(unittest.TestCase):
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("利好不涨描述复读: 3/4 篇", text)
 
+    def test_r614_stock_advice_repetition_tracked(self):
+        """R614：实操段套话复读——R592 明令「不要每帖都写回踩、拿稳、插针或降杠杆」、
+        R613 修掉「别急着」67%，但**两处修复此前都没有度量面**：拿稳全史22%/回踩32%/
+        插针27%（R592修后近30降到0~3%）、别急着近30 67%，全靠人工 grep 才发现与验证。
+        同 flat_desc 口径：句中短语（不在段首，前缀雷达看不见）、每帖最多计一次、
+        独立 🧰 行、只追踪不设门（这些短语本身可用，问题是收敛成唯一说法）。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "$BTC 现在别急着抄底,等放量突破近期前高再评估强度。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "$ETH 现货拿稳别被插针洗出去,合约杠杆压到最低。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "等日线放量回踩确认支撑再考虑进场,别追高。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "$SOL 偏强信号是放量站稳前高,轻仓跟进没问题。"},  # 干净
+        ])
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["stock_advice"], 3, "三篇含实操段套话")
+        # 与 flat_desc 是两套独立短语，互不串味
+        self.assertEqual(q["flat_desc"], 0, "本篇无利好不涨描述，不得误计")
+        # 不污染硬合规口径（同 R607 纪律）
+        self.assertEqual(q["fng_anchor"] + q["banned_device"] + q["ai_flavor"], 0)
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("实操段套话复读: 3/4 篇", text)
+
+    def test_r614_stock_advice_no_false_positive_on_clean_posts(self):
+        """R614：套话正则不得误伤干净帖——「别急着」的近亲（急/着）单独出现不算，
+        「拿稳」单独作持仓描述（如"仓位拿稳一点"这类正常建议）也要看是否落入
+        「现货拿稳/拿稳别」这类固定搭配。生产实测近20帖只有 别急着×15 与
+        现货拿稳×1 命中，无误报；若把正则放宽到单词级会立刻开始误伤。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "这事很急,得赶紧盯着盘面,别睡着。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "拿着不动也是一种操作,仓位按自己能承受的来。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": "杠杆是双刃剑,用之前想清楚止损放哪。"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["stock_advice"], 0, "干净帖不得被套话正则误伤")
+
     def test_r610_tracking_window_split_recent_vs_older(self):
         """R610：追踪指标按「近半/远半」对照，修复生效才不会被旧稿拖成假警报。
 
@@ -1983,6 +2026,97 @@ class TestEndingFingerprint(unittest.TestCase):
         ])
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("结尾段指纹预警", text)
+
+
+class TestMidSegmentFingerprint(unittest.TestCase):
+    """R614：中间段落位置指纹——三个固定位置雷达（opener=第1段、body=第2段、
+    ending=末段）之间的结构性盲区。生产帖正文 2~7 段（实测 4 段占 168/291 为绝对
+    主体），第 3 段实操段此前无任何覆盖，而 R592 的「拿稳/插针/回踩」与 R613 的
+    「别急着」都发生在那里——两处都是人工读样本/人工 grep 才发现，雷达全程沉默。
+
+    本雷达按 (段落位置, 首句前缀) 聚簇，任何中间位置成形即报，不依赖运营者想到
+    「还有第 3 段没扫」。只报中间位置：首两段与末段各有专属雷达与专属标签，
+    重复报会让同一指纹在 dashboard 出现两行。"""
+
+    @staticmethod
+    def _rows(previews):
+        return [{"outcome": "binance_published", "final_preview": t} for t in previews]
+
+    def test_middle_position_cluster_detected(self):
+        """第 3 段（位置键 2）共享前缀必须报。注意 _cluster_openers 的口径：4 字簇优先，
+        只有 4 字簇凑不齐 min_hits 时才退到 2 字簇——所以三篇共 4 字前缀时报 4 字簇，
+        第三篇换了词（说句得罪人）时报 2 字簇「说句」。两种都算检出，别写死长度。"""
+        rows = self._rows([
+            "开场甲。\n\n分析甲。\n\n说句实在话,别慌。\n\n结尾甲。\n\n#Write2Earn",
+            "开场乙。\n\n分析乙。\n\n说句实在的,沉住气。\n\n结尾乙。\n\n#Write2Earn",
+            "开场丙。\n\n分析丙。\n\n说句得罪人的,别追。\n\n结尾丙。\n\n#Write2Earn",
+        ])
+        fp = mr.mid_segment_fingerprint(rows)
+        self.assertIn(2, fp["alerts"], "第3段（位置键 2）必须有告警")
+        # 第三篇换了词 → 4 字簇凑不齐 → 退 2 字簇「说句」×3
+        self.assertEqual(fp["alerts"][2].get("说句"), 3)
+
+    def test_middle_position_four_char_cluster(self):
+        """三篇共 4 字前缀时报 4 字簇（同 opener/body 口径：4 字簇优先）。"""
+        rows = self._rows([
+            "开场甲。\n\n分析甲。\n\n说句实在话,别慌。\n\n结尾甲。\n\n#Write2Earn",
+            "开场乙。\n\n分析乙。\n\n说句实在的,沉住气。\n\n结尾乙。\n\n#Write2Earn",
+            "开场丙。\n\n分析丙。\n\n说句实在点,别追。\n\n结尾丙。\n\n#Write2Earn",
+        ])
+        fp = mr.mid_segment_fingerprint(rows)
+        self.assertEqual(fp["alerts"].get(2, {}).get("说句实在"), 3, "4 字簇必须报")
+
+    def test_first_second_and_last_positions_not_reported(self):
+        """首两段与末段各有专属雷达，本雷达不得重复报（否则同一指纹两行）。
+        中间段必须真的各不相同，否则「中间」自己就成了共享前缀。"""
+        rows = self._rows([
+            "现在开盘。\n\n现在我猜这波。\n\n分批挂单更稳。\n\n现在结尾。\n\n#Write2Earn",
+            "现在盘中。\n\n现在我猜那波。\n\n等确认再动。\n\n现在收尾。\n\n#Write2Earn",
+            "现在尾盘。\n\n现在我猜第三波。\n\n先观望不丢人。\n\n现在收官。\n\n#Write2Earn",
+        ])
+        fp = mr.mid_segment_fingerprint(rows)
+        self.assertEqual(fp["alerts"], {},
+                        "首段/第二段/末段的「现在」由专属雷达负责，本雷达应安静")
+        # 证明专属雷达确实会报（本雷达不是漏报，是故意不重复报）
+        self.assertEqual(mr.body_fingerprint(rows)["alerts"].get("现在我猜"), 3)
+        self.assertEqual(mr.ending_fingerprint(rows)["alerts"].get("现在"), 3)
+
+    def test_short_posts_skipped(self):
+        """2~3 段的帖：第 3 段就是末段，已被 ending_fingerprint 覆盖，不重复扫。"""
+        rows = self._rows([
+            "开场甲。\n\n分析甲。\n\n说句实在话,结尾即此段。\n\n#Write2Earn",
+            "开场乙。\n\n分析乙。\n\n说句实在的,结尾即此段。\n\n#Write2Earn",
+            "开场丙。\n\n分析丙。\n\n说句实在点,结尾即此段。\n\n#Write2Earn",
+        ])
+        self.assertEqual(mr.mid_segment_fingerprint(rows)["alerts"], {})
+        # 但 ending_fingerprint 该报——证明不是整体失灵
+        self.assertEqual(mr.ending_fingerprint(rows)["alerts"].get("说句实在"), 3)
+
+    def test_long_form_deeper_middle_positions(self):
+        """长文 5+ 段：第 4、5 段等更深的中间位置也要覆盖（opener/body 只到第2段）。
+        生产实测有 17 篇 5 段 + 1 篇 7 段，这些位置此前完全无雷达。
+        注意：长文分节头（一、/四、）会被 _all_segment_openers 跳过，不计段序。
+        中间各段必须真的互不相同，否则它们自己就成了共享前缀。"""
+        rows = self._rows([
+            "开场甲。\n\n分析甲。\n\n资金流向在变。\n\n分批挂单更稳。\n\n我的打法甲。\n\n跟踪变量甲。\n\n#Write2Earn",
+            "开场乙。\n\n分析乙。\n\n链上数据回暖。\n\n等确认再动。\n\n我的打法乙。\n\n跟踪变量乙。\n\n#Write2Earn",
+            "开场丙。\n\n分析丙。\n\n消息面在发酵。\n\n先观望不丢人。\n\n我的打法丙。\n\n跟踪变量丙。\n\n#Write2Earn",
+        ])
+        fp = mr.mid_segment_fingerprint(rows)
+        self.assertIn(4, fp["alerts"], "第5段（位置键 4）的「我的打法」×3 必须报")
+        self.assertEqual(fp["alerts"][4].get("我的打法"), 3)
+        # 位置 2/3 各不相同，不应报
+        self.assertNotIn(2, fp["alerts"])
+        self.assertNotIn(3, fp["alerts"])
+
+    def test_render_line_present(self):
+        rows = self._rows([
+            "开场甲。\n\n分析甲。\n\n说句实在话,别慌。\n\n结尾甲。\n\n#Write2Earn",
+            "开场乙。\n\n分析乙。\n\n说句实在的,沉住气。\n\n结尾乙。\n\n#Write2Earn",
+            "开场丙。\n\n分析丙。\n\n说句实在点,别追。\n\n结尾丙。\n\n#Write2Earn",
+        ])
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("第3段指纹预警", text)
 
 
 class TestQualityPatternSync(unittest.TestCase):
