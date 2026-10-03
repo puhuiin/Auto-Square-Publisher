@@ -181,7 +181,7 @@
   + Bearer 认证，与本项目 OpenAI SDK 完全对齐，无需适配层。
   额度池确实是独立的（这点成立），但 **"OpenRouter 额度曾打满"这个理由经全史
   数据证伪**——Preset-openrouter 的 23 次 transport 拒稿全是 404 僵尸名与 token
-  预算截断，**零次是50 次/天用尽**；真正的余额耗尽信号只来自 b.ai 的付费余额。
+  预算截断，**零次是50 次/天用尽**；（R638 更正：本段原写"真正的余额耗尽信号只来自 b.ai 的付费余额"——**b.ai 已于 R626 弃用、不在池内**，拿它当论据会让读者去找一个不存在的对照。余额耗尽信号请看 b.ai 弃用前的 `llm_failed` 记录，或直接看当轮「通道质量产出」行的通过率。）
   真实痛点是**产出质量**：openrouter 通过率 42%（44 成/ 56 拒 / 4 败），而
   stepfun-flash 87%、stepfun 93%。它的拒稿主因是格式类（内容过短、长文缺TITLE、
   token 截断），且 56 次拒稿里 **41% 导致题目彻底丢失**。所以这条通道的作用是
@@ -324,7 +324,8 @@ python scripts/metrics_report.py --days 1
   | `FETCH_DEADLINE_SEC` | `300` | 单轮 RSS 抓取的全局 deadline（秒）：到点放弃迟到源、用已完成候选继续，避免卡住的源拖满 workflow 并挤掉后续 cron |
   | `LOG_LEVEL` | `INFO` | 日志级别（排障时可设 `DEBUG`） |
   | `MAX_POSTS_PER_RUN` | `2` | 单次运行最大发帖数（workflow 运行参数；配额剩余不足时自动收敛） |
-- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `BAI_MODEL` / `ZAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL` / `STEPFUN_MODEL` / `STEPFUN_FLASH_MODEL` / `BLUESMINDS_MODEL` / `GOOGLE_MODEL`——想把某平台固定到指定模型时设置。
+- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `ZAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL` / `STEPFUN_MODEL` / `STEPFUN_FLASH_MODEL` / `BLUESMINDS_MODEL` / `GOOGLE_MODEL`——想把某平台固定到指定模型时设置。
+  ⚠️ `BAI_MODEL` / `BAI_API_KEY` 已随 b.ai 于 R626 弃用而失效，配置它们不会有任何效果（R638：此前本行仍列着 `BAI_MODEL`，会让读者以为改它能换模型）。
 - **报警通知渠道**（全部可选，多渠道并发）：`SERVERCHAN_KEY`（Server酱微信）/ `PUSHPLUS_TOKEN`（PushPlus 微信）/ `BARK_KEY`（iOS Bark）/ `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`（Telegram）/ `WEBHOOK_URL`（钉钉/飞书/企微/Discord 通用）。同一错误报警 12 小时同题节流，投递成功才计额度。
 - **CI 回归防线**：`tests/test_core.py` 内置百余个离线回归测试（含断路器/源停放/报错分类/通知编码/跨语言去重/行情缓存/同步契约），`.github/workflows/ci.yml` 在每次 push/PR 时自动编译、校验 workflow 语法并跑测试，防止守护逻辑被后续改动悄悄破坏。
   - **workflow 内嵌脚本校验的环境降级**：`scripts/validate_workflows.py` 只在确认本机 bash **真能执行** `bash -n -c true` 时才校验内嵌 shell；PATH 上只有 WSL 启动器、或 bash 被安全策略拒绝时，一律跳过并说明原因，**绝不把环境故障伪装成 workflow 语法错误**。需强制指定时用环境变量 `BASH_PATH=/path/to/bash`。

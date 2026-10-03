@@ -15872,6 +15872,103 @@ class TestR636PermanentClearedAfterCooldownExpiry(unittest.TestCase):
         self.assertFalse(info.get("permanent"), "普通失败不该被标 permanent")
         self.assertFalse(self.eng._breaker_cooled_down("Preset-w"))
 
+class TestR638ReadmeConfigDrift(unittest.TestCase):
+    """R638：README 提到的配置项必须在 main.py 里真的被读（或明确标注弃用）。
+
+    R637 扫「代码读 vs workflow 声明」时顺带扫了「README 提到 vs 代码读」，
+    查出**两处死文档**：b.ai 已于 R626 弃用，README 却仍
+      ① 把 `BAI_MODEL` 列为「模型覆盖变量」（读者会以为改它能换模型）；
+      ② 拿 b.ai 的付费余额当"真正的余额耗尽信号"——**那个通道已不在池内**，
+         读者会去找一个不存在的对照。
+
+    **文档漂移的危害与代码缺陷同型**：它让人按不存在的机制去排查。
+    而且它**不会自己暴露**——代码测试全绿、CI 绿，只有照着文档操作的人会卡住。
+
+    守卫取双向：死文档（README 有 / 代码无）必须带弃用标记；文档缺口
+    （代码读 / README 无）必须为空。后者防"新加了配置忘了写文档"。
+    """
+
+    def _readme(self):
+        # main.py 在**仓库根目录**（不在 scripts/）⇒ README 与它同目录。
+        # 我第一版多加了 ".."（照抄了 R637 里读 scripts/ 的路径）。
+        import os
+        return open(os.path.join(os.path.dirname(m.__file__), "README.md"),
+                    encoding="utf-8").read()
+
+    def _main_src(self):
+        return open(m.__file__, encoding="utf-8").read()
+
+    def test_no_dead_config_docs(self):
+        """README 用 `KEY` 格式提到的配置，**os.getenv 必须真的读它**。
+
+        判据要排除**注释里的提及**：`main.py` 的恢复说明注释里写了
+        "还原本条目并配 BAI_API_KEY"——那是**给人看的操作指引**，
+        不是代码在读该env。第一版用 `f'"{k}"' in src` 判定太粗，
+        会把这类注释误算成"代码在读"⇒ 死文档守卫**被自己的注释骗过**。
+        正确判据：用 `re.findall` 匹配 `os.getenv` 的**调用**（非子串）。
+        注：本docstring 里刻意不写带反斜杠的正则源码——docstring 同样会被
+        编译期扫描，转义序列会触发 SyntaxWarning（本轮踩到）。
+        """
+        import re
+        readme, src = self._readme(), self._main_src()
+        keys = set(re.findall(r"`([A-Z][A-Z0-9_]*(?:API_KEY|MODEL|TOKEN|KEY))`", readme))
+        # 代码**实际执行**读取的键（排除注释里的提及）
+        read_keys = set(re.findall(r'os\.getenv\(\s*["\'](\w+)["\']', src))
+        read_keys |= set(re.findall(r'os\.environ\.get\(\s*["\'](\w+)["\']', src))
+        dead = sorted(k for k in keys if k not in read_keys)
+        # 弃用但保留提及的（README 已明确标注失效）——不算漂移
+        still_dead = [k for k in dead
+                      if not self._marked_deprecated(readme, k)]
+        self.assertEqual(still_dead, [],
+                         f"README 提到但代码从不读且未标弃用：{still_dead}——"
+                         f"要么删掉，要么明确标注「已弃用/不生效」")
+
+    def _marked_deprecated(self, text, key):
+        """该 key 的**每一处**提及所在行（或紧邻行）是否带弃用/失效标记。
+
+        窗口版（前后 250 字）**会被邻居满足而漏抓**：README 里BAI_API_KEY
+        与 BAI_MODEL 相邻，改掉前者的标记后，后者的标记仍落在同一窗口里
+        ⇒ 守卫照样绿（实测踩到：移除「不再使用」后测试仍全过）。
+        根因同R630：*用邻近的证据证明自己*。
+        改成**逐行**判定，必要时向下看一行（README 常把说明折到下一行）。
+        """
+        lines = text.splitlines()
+        if key not in text:
+            return True   # 没提就无所谓
+        marks = ("弃用", "不再使用", "已失效", "不生效", "已停用")
+        ok = False
+        for i, line in enumerate(lines):
+            if key not in line:
+                continue
+            ok = True
+            seg = line
+            if i + 1 < len(lines):
+                seg += lines[i + 1]
+            if not any(mk in seg for mk in marks):
+                return False
+        return ok
+
+    def test_dead_config_must_be_marked_deprecated(self):
+        """即使保留提及，弃用配置**必须**带明确的失效标记"""
+        readme = self._readme()
+        for key in ("BAI_API_KEY", "BAI_MODEL"):
+            self.assertTrue(self._marked_deprecated(readme, key),
+                            f"{key} 已弃用，README 提及它时必须带弃用标记")
+
+    def test_no_undocumented_config(self):
+        """反方向：main.py 读的业务配置必须在 README 里有记录"""
+        import re
+        readme, src = self._readme(), self._main_src()
+        # 用字符类而非转义序列：heredoc/多次编辑会把反斜杠吃掉，
+        # 而点号/括号这些转义序列会触发 SyntaxWarning（本轮踩到）。
+        reads = set(re.findall('os.getenv[(][ \t]*"([A-Z_][A-Z0-9_]*)"', src))
+        prefixes = ("MAX_", "MIN_", "FEED_", "PUBLISH_", "INTEL_", "TOKEN_",
+                    "FETCH_", "DUP_", "CAMPAIGN_")
+        missing = sorted(k for k in reads
+                         if k.startswith(prefixes) and k not in readme)
+        self.assertEqual(missing, [],
+                         f"代码读但 README 未记录：{missing}——新加配置要补文档")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
