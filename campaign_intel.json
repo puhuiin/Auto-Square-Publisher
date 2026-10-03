@@ -3,21 +3,21 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Megadrop",
-    "#Futures"
+    "#bStocks",
+    "#BinanceEarn"
   ],
   "incentivized_tokens": [
-    "$CT",
     "$PUMP",
     "$ALGO",
-    "$USD1",
-    "$CTUSDT",
+    "$CT",
+    "$USDC",
+    "$BTC",
+    "$ADBEB",
     "$PDDB",
-    "$NVDAB",
-    "$USDC"
+    "$USDT"
   ],
-  "strategy_guidance": "当前PUMP交易锦标赛与ALGO算法交易锦标赛为限时高热度活动，需优先追贴输出冲刺攻略，结合新上线的CTUSDT期货合约、新增7支bStocks交易对的交易玩法，引导用户参与交易获取返佣；同时可蹭USD1延期空投、拉美/巴西新用户USDC高息理财的热点，输出「新手福利抄作业」类内容，带对应活动标签获取Write2Earn奖励。",
-  "last_updated": "2026-10-03T08:44:01.645571Z",
+  "strategy_guidance": "重点结合10月刚开启的 $PUMP 与 $ALGO 交易赛，以及全新的 bStocks 证券代币化交易，引导用户通过参与交易竞赛和理财排行榜来锁定收益。利用“十月限时”与“新赛道 bStocks”作为切入点，发布交易策略或理财教程，最大化 Write to Earn 收益与返佣。",
+  "last_updated": "2026-10-03T20:47:22.725464Z",
   "_feed_health": {},
   "_fallback_image": {
     "date": "2026-09-09",
