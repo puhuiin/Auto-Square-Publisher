@@ -1140,6 +1140,30 @@ class TestRecentOpeners(unittest.TestCase):
             self.assertIn("没源文证据别点名某方在出货/撒烟雾弹，那是编内幕", prompt,
                           f"{name} prompt 的 R604 归因禁令丢失")
 
+    def test_second_paragraph_opener_not_defaulting_to_xianzai(self):
+        """R612：🔭 分析段指纹雷达实测「现在…」×3/10（全史 25/290=9% 是第一段之外的
+        最大共享前缀，近 30 篇升到 9/30=30%），第二段开场正收敛到「现在」这一个词上。
+        读样本确认是真复读而非自然用法：9 篇横跨 AI+支付/隐私币/ETH 质押/牛势组合/XRP
+        等完全无关的话题与币种，全部以「现在」开第二段——与 R592（实操角度 ×9/×11 复读）、
+        R596（「我猜」47%）同型的内容收敛，只是发生在段首这个前缀雷达原本看不见的位置
+        （R600 才补上第二段扫描）。
+
+        锁住 prompt 侧已给软引导（不是硬禁——「现在」本身是正常中文，禁死会让文字僵硬，
+        同 R606 句长节奏「最忌清一色」的力度）：点名这个具体tic + 说明它是复读指纹 +
+        给一串替代切入方向并要求每帖轮换。给方向菜单而非范例句，承 R592/R597/R598
+        「池给范例=给模板，范例句会被逐字复用」的教训。
+        """
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        self.assertIn("段首别惯用「现在」起头", sp, "必须点名这个具体段首tic")
+        self.assertIn("复读指纹", sp, "要说明为什么（否则模型不当回事）")
+        self.assertIn("每帖换一种", sp, "必须要求轮换，只禁不给替代会退化成随机")
+        # 给的是切入方向菜单，不是可照抄的范例句
+        self.assertIn("盘面数字", sp)
+        self.assertIn("资金动向", sp)
+        self.assertIn("反差点切入", sp)
+        # 软引导而非硬禁：「现在」本身不该被列为禁用词
+        self.assertNotIn("严禁使用「现在」", sp, "硬禁会让文字僵硬，超出必要力度")
+
 
 
     def test_freshness_line_itself_free_of_banned_prefix(self):
