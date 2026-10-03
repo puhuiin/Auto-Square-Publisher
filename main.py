@@ -6191,6 +6191,8 @@ class ImageManager:
                     and current_url != cls.DEFAULT_FALLBACK_IMAGE
                 if needs_ssrf_check and not cls._is_safe_image_url(current_url):
                     logger.warning(f"配图 URL 未通过 SSRF 校验，拒绝拉取: {current_url[:80]}")
+                    # R640：置位标记，让配图失败原因能区分"安全拒绝"与"下载失败"
+                    cls._last_download_ssrf_rejected = True
                     return None
                 r = http_get(current_url, headers=headers, timeout=6, retries=1,
                              allow_redirects=False, stream=True)
@@ -6398,7 +6400,16 @@ class ImageManager:
 
     # 图片管线失败原因细分（遥测：image_fail_reason 字段），用于定位
     # 下载失败/SSRF 拒绝/S3 上传失败/渲染失败各占多少——配图是账号观感核心
+    # R640：把 `ssrf_blocked` 从"声明但不产生"变成真能出现的标签。
+    # 实测：SSRF 拒绝走 `download_image` 的 `return None`（6194），与**真正的
+    # 下载失败**（网络超时/404/非图片）**完全不可区分** ⇒ `ssrf_blocked`
+    # 恒为 0，枚举与实际取值不一致（比R631 的混桶更隐蔽：连桶都没有）。
+    # 危害：SSRF 拒绝是**安全面事件**（不可信 RSS 投喂内网地址），却混进
+    # "下载失败"里看不见 ⇒ 安全事件静默。
     IMAGE_FAIL_REASONS = ("download_failed", "ssrf_blocked", "upload_failed", "render_failed")
+    # 本进程最近一次 download_image 是否因 SSRF 被拒（类级，故main 线程可读）。
+    # 刻意用"标记 + None 返回"而不是改返回类型——返回类型被 6+ 处调用方依赖。
+    _last_download_ssrf_rejected = False
 
     @classmethod
     def prepare_and_upload(cls, api_key: str, raw_image_url: Optional[str],
@@ -6418,6 +6429,8 @@ class ImageManager:
         self.last_image_tier（chart/raw/card/fng/none）供遥测回答"配图是否单一"。
         """
         cls.last_image_fail_reason = None
+        # R640：重置 SSRF 标记（它反映"最近一次 download_image"，跨调用会串味）
+        cls._last_download_ssrf_rejected = False
         cls.last_image_tier = None
         if token_lines is None:
             token_lines = []
@@ -6493,6 +6506,12 @@ class ImageManager:
                 return url
             fail_stage = "upload_failed"
 
+        # R640：`fail_stage` 为空（= 各主图源都返回 "unavailable"）时，
+        # 若本轮有SSRF 拒绝，则失败原因是**安全拒绝**而非"下载失败"。
+        # 两者处置不同：SSRF 拒绝意味着**有恶意源在投喂内网地址**（安全事件），
+        # 混进 download_failed 就看不见了。
+        if not fail_stage and cls._last_download_ssrf_rejected:
+            fail_stage = "ssrf_blocked"
         cls.last_image_fail_reason = fail_stage or "download_failed"
         cls.last_image_tier = "none"
         logger.warning("配图全链路失败（走势卡/原图/情绪卡/FNG 外链），将以纯文本格式继续发布。")

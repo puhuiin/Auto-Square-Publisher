@@ -16030,6 +16030,53 @@ class TestR639FallbackImageCacheSelfHeals(unittest.TestCase):
         self.assertIsNone(m.ImageManager._read_fallback_cache())
         self.assertEqual(m.intel_state_get("_fallback_image", {}), {})
 
+class TestR640SsrfBlockedIsReachable(unittest.TestCase):
+    """R640：`ssrf_blocked` 从「声明但不产生」变成真能出现的标签。
+
+    `IMAGE_FAIL_REASONS` 声明了 4 个分类，但 **`ssrf_blocked` 恒为 0**：
+    SSRF 拒绝走 `download_image` 的 `return None`（L6194），与**真正的下载
+    失败**（网络超时/404/非图片）**完全不可区分**。
+
+    危害比 R631 的混桶更隐蔽（连桶都没有）：SSRF 拒绝是**安全面事件**
+    （不可信 RSS 投喂内网地址），却混进 `download_failed` 里看不见
+    ⇒ **安全事件静默**。呼应 R614「安全面告警消失即'看不到就以为没发生'」。
+
+    修法：类级标记 `_last_download_ssrf_rejected`（**不改返回类型**——
+    那个被 6+ 处调用方依赖），在 `prepare_and_upload` 入口重置
+    （否则跨调用串味），且**只在 `fail_stage` 为空时**才用它
+    （不覆盖 upload_failed/render_failed 等更具体的标签）。
+    """
+
+    def test_enum_declares_ssrf_blocked(self):
+        self.assertIn("ssrf_blocked", m.ImageManager.IMAGE_FAIL_REASONS)
+
+    def test_flag_exists_and_defaults_false(self):
+        self.assertFalse(m.ImageManager._last_download_ssrf_rejected,
+                         "标记默认应为 False")
+
+    def test_ssrf_rejection_sets_flag(self):
+        """源码级守卫：SSRF 拒绝分支必须置位，否则标签仍不可达"""
+        src = open(m.__file__, encoding="utf-8").read()
+        i = src.index("未通过 SSRF 校验")
+        seg = src[i:i + 400]
+        self.assertIn("_last_download_ssrf_rejected = True", seg,
+                      "SSRF 拒绝分支未置位⇒ ssrf_blocked 仍恒为 0")
+
+    def test_flag_consumed_only_when_fail_stage_empty(self):
+        """消费点：只在 fail_stage 为空时用 ssrf_blocked，不覆盖更具体标签"""
+        src = open(m.__file__, encoding="utf-8").read()
+        i = src.index("if not fail_stage and cls._last_download_ssrf_rejected")
+        self.assertGreater(i, 0, "未找到 ssrf_blocked 的消费点")
+        seg = src[i:i + 120]
+        self.assertIn("ssrf_blocked", seg)
+
+    def test_entry_resets_flag(self):
+        """入口重置：否则上一轮的 True 会串到下一轮（跨调用串味）"""
+        src = open(m.__file__, encoding="utf-8").read()
+        self.assertGreaterEqual(
+            src.count("_last_download_ssrf_rejected = False"), 2,
+            "标记需在类定义处初始化 + prepare_and_upload 入口重置")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
