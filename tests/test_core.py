@@ -1602,6 +1602,35 @@ class TestPastDateRefs(unittest.TestCase):
         self.assertIn("官方活动风向参考", prompt)
         self.assertNotIn("已过期活动的日期", prompt)
 
+    def test_fresh_intel_return_promise_annotated(self):
+        """R619：guidance 含收益承诺措辞时必须加警示。
+
+        prompt 红线只约束**新生成**的 guidance，而 campaign_intel.json 里可能还
+        躺着上线前那次刷新写下的脏稿——现役实录就写着「引导用户通过参与交易竞赛
+        和理财排行榜来**锁定收益**」。若不在这里兜，那句违规指令会被原样注入下游
+        prompt，只靠 R604 的下游禁令单点拦。警示让下游看到"这句话有问题"而不是裸的
+        违禁指令；guidance 本身不改写（改写有误伤风险，警示足以让下游不照做）。"""
+        intel = {"strategy_guidance": "重点结合 $PUMP 交易赛，引导用户通过参与交易竞赛"
+                                      "和理财排行榜来锁定收益。",
+                 "last_updated": self._ts(2)}
+        prompt, _ = self._eng()._build_user_prompt(
+            {"title": "t", "summary": "s"}, intel, "", ["BTC"])
+        self.assertIn("收益承诺措辞", prompt, "检出违禁措辞必须加警示")
+        self.assertIn("锁定收益", prompt, "警示要点名具体命中的词")
+        self.assertIn("Write to Earn 是评论与互动奖励、不是交易收益", prompt,
+                      "警示要讲清 Write to Earn 的真实含义")
+        # guidance 原文仍注入（警示是追加，不是替换掉参考本身）
+        self.assertIn("官方活动风向参考", prompt)
+
+    def test_clean_intel_gets_no_return_promise_annotation(self):
+        """R619：干净 guidance 不得被加收益承诺警示（避免噪音污染 prompt，
+        与 test_fresh_intel_clean_guidance_untouched 同目的的互补锁）。"""
+        intel = {"strategy_guidance": "追十月 PUMP 与 ALGO 交易赛热度，引导读者参与评论互动",
+                 "last_updated": self._ts(2)}
+        prompt, _ = self._eng()._build_user_prompt(
+            {"title": "t", "summary": "s"}, intel, "", ["BTC"])
+        self.assertNotIn("收益承诺措辞", prompt)
+
 
 class TestOrphanStateKeyCleanup(unittest.TestCase):
     """R83：孤儿状态键一次性清理（R61 看门狗 v1 遗体 _last_run_heartbeat）"""

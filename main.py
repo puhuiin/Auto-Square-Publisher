@@ -3271,6 +3271,14 @@ _GENERIC_LEADINS = ("刚刚", "突发", "重磅", "快讯", "注意", "刚出", 
 # 时候都不得以它们开头（$ 前缀引用与句中出现不受影响，只拦开头）。
 _GENERIC_LEADINS = _GENERIC_LEADINS + ("最新", "刚爆")
 
+# R619：活动情报 guidance 的收益承诺措辞——与情报 prompt 的「措辞红线」同源。
+# prompt 红线只约束**新生成**的 guidance，而 campaign_intel.json 里可能还躺着
+# 上线前那次刷新写下的脏 guidance（现役实录就写着「引导用户...锁定收益」）。
+# 故在注入侧再过一道：检出即在注入文本后追加警示，让下游 prompt 看到"这句话
+# 有问题"而不是裸的违禁指令。与 _past_date_refs 的 stale 警示同形态。
+# 只加警示不改写 guidance——改写要担误伤风险，而警示足以让下游不照做。
+_INTEL_RETURN_PROMISE_WORDS = ("锁定收益", "稳赚", "保本", "包赚", "躺赚", "稳拿收益")
+
 # R101/R105：情绪指数锚定检测模式（覆盖生产六种真实措辞——一半不含"指数"字样，
 # 如"贪婪区"/"情绪还挂在 69"）。metrics_report.quality_scan 有同款副本，
 # TestQualityPatternSync 锁死两份一致——改这里必须同步改报表侧。
@@ -4629,6 +4637,16 @@ class MultiLLMEngine:
                 if stale_refs:
                     intel_section += (f"⚠️ 上述参考中引用的 {'、'.join(stale_refs)} 均为已过期活动的日期，"
                                       "严禁在正文中提及这些活动及其截止时间。\n")
+                # R619：guidance 里的收益承诺措辞——prompt 红线只管新生成，缓存里
+                # 躺着的旧脏稿要在这里兜。检出即加警示（同 stale_refs 形态）。
+                _promise_hits = [w for w in _INTEL_RETURN_PROMISE_WORDS
+                                 if w in str(campaign_intel.get("strategy_guidance") or "")]
+                if _promise_hits:
+                    intel_section += (
+                        f"⚠️ 上述参考中含有 {'、'.join(_promise_hits)} 等收益承诺措辞，"
+                        "属于违规表述：Write to Earn 是评论与互动奖励、不是交易收益，"
+                        "严禁在正文暗示参加活动会带来交易收益或保证收益。"
+                        "改用「参与评论拿奖励」「追当期活动热度」这类说法。\n")
             else:
                 intel_section = ("【官方活动情报状态】：缓存已过期或写作日期引用已失效，"
                                  "本条不注入历史 campaign guidance；不得引用其中活动、奖池、"
