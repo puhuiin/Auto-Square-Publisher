@@ -1054,6 +1054,11 @@ def summarize(rows):
         "boost_hits": {"campaign": 0, "trend": 0, "hot": 0,
                        "eng_up": 0, "eng_down": 0},  # R608：浏览加权命中(+/-)
         "boost_runs": 0,
+        # R650：时段偏置的三个出口（分母/分子/窗内轮数），缺一个都无法判读
+        "hour_pref_shifted": 0,
+        "hour_pref_runs": 0,
+        "hour_in_window_runs": 0,
+        "hour_in_window_yes": 0,
         # R611：**每路信号各自**有数据的轮数。boost_runs 是"任一路有命中"的轮数，
         # 四路信号上线时间不同（R608 浏览加权 10-02 才上线），拿它当浏览加权的
         # 分母会得出"208 轮里只命中 6 次"的假结论——实测那 +2-4 全部来自**唯一
@@ -1558,6 +1563,19 @@ def summarize(rows):
                 _v = _num(r.get(_f))
                 if _v is not None and _v > 0:
                     _bh[_k] = int(_v)
+            # R650：时段偏置**单独一路**，不并入 boost_hits。
+            # 理由（R611「并列信号不能共用分母」）：这一路回答的是
+            # "有多少轮落在高浏览窗 / 偏置搬动了多少候选"，与"命中了哪些加权"
+            # 是不同问题；混进同一计数器会让"时段是否生效"永远看不见。
+            _hp = _num(r.get("hour_pref_shifted"))
+            if _hp is not None:
+                runs_tmp["hour_pref_shifted"] += int(_hp)
+                runs_tmp["hour_pref_runs"] += 1
+            _hw = r.get("hour_pref_in_window")
+            if _hw is not None:
+                runs_tmp["hour_in_window_runs"] += 1
+                if _hw:
+                    runs_tmp["hour_in_window_yes"] += 1
             if _bh:
                 runs_tmp["boost_runs"] += 1
                 for _k, _v in _bh.items():
@@ -2119,6 +2137,28 @@ def render_text(s, rows=None):
         if runs.get("symbols_degraded"):
             lines.append(f"  ⚠️ 有效标的表最近一次降级: {runs['symbols_degraded']}"
                          f"（该轮新币新闻可能被误判为 no_token）")
+        # R650：时段偏置生效情况。**判读纪律**：`hour_in_window_yes/runs`
+        # 是"多少轮落在高浏览窗"，偏置**只能改排序、改不了 cron**——
+        # 若该比例长期停在 18% 附近，说明配额被别的东西（心跳/候选）卡住，
+        # 排序偏置无能为力，该去查调度与候选供给，不是继续调幅度。
+        if runs.get("hour_pref_runs"):
+            _hpr = runs["hour_pref_runs"]
+            _hps = runs["hour_pref_shifted"]
+            _hiw = runs.get("hour_in_window_yes", 0)
+            _hiwr = runs.get("hour_in_window_runs", 0) or 1
+            _hpct = _hiw / _hiwr * 100
+            lines.append(
+                f"  🕐 时段偏置（R650）: {_hpr} 轮有遥测 · 搬动 {_hps} 候选 · "
+                f"落在高浏览窗 {_hiw}/{_hiwr}（{_hpct:.0f}%）"
+                f"（北京06-12；该窗速率 88/天 vs 其他 43/天，p=0.0097）")
+            lines.append(
+                f"     ↳ **天花板提示**：目标窗仅 6h/24h，12 篇/天最多约 3 篇落窗内；"
+                f"即便配额全投进去，总日均浏览贡献也只 +6%（按现有 18% 占比测算）。"
+                f"**别把它当成 2 倍收益的开关**——它是不错的边际改善，不是主杠杆")
+            if _hpct < 30:
+                lines.append(
+                    f"     ↳ 当前 {_hpct:.0f}%：排序偏置改不了 cron，"
+                    f"若长期偏低该查调度/候选供给，而非调大幅度")
         if runs.get("market_missing"):
             lines.append(f"  ⚠️ 盘面行情最近一次缺失标的: {runs['market_missing']}")
         # R113：配额释放估算直读——运营者不再需要查原始遥测

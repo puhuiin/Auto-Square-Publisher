@@ -438,6 +438,13 @@ HOT_TOPIC_BOOST = 4                                                # 命中全�
 # 可发、仍织挂件，只是边际靠后）。数据不足（无 token_engagement.json）时零行为变化。
 ENGAGEMENT_VIEW_BOOST = 5
 FRESHNESS_BOOST_RULES = ((3, 10), (12, 6), (24, 3))                # (新闻不超过 N 小时, 加分)
+# R650：时段偏置的**减分**幅度。量纲对齐（纪律 R622「权重须量纲对齐」）：
+# engagement ±5 / freshness ≤10 / campaign 8 / impact_score 中位 22。
+# 取 **2**（最小可辨量级）：足以在配额吃紧时把低浏览窗的稿排后，
+# 又**不足以盖过真突发**（freshness 3h 内 +10）或活动加权（+8）——
+# 本机制是"边际排序"，不是"翻盘机制"。宁可少赚 2× 的部分收益，
+# 也不让一条真突发因为"时机不对"被压到配额之外。
+TIME_PREF_PENALTY = 2
 
 
 def within_active_hours(spec: str = None) -> bool:
@@ -2771,6 +2778,72 @@ class NewsFetcher:
             if isinstance(val, (int, float)) and val >= 0:
                 out[str(t).upper().replace("$", "")] = float(val)
         return out
+
+    @staticmethod
+    def apply_hour_preference_boost(candidates: List[Dict[str, Any]],
+                                    now_utc: Optional[datetime] = None
+                                    ) -> Tuple[int, int, bool]:
+        """R650：按**发帖时段**给候选排序加权——把配额优先投给高浏览时段。
+
+        依据（生产实测，59 条可归因样本，单侧置换检验 20000 次）：
+            北京时间 06-12 窗浏览速率中位 **88/天**（n=12）
+            其他时段**43/天**（n=47）
+            差值 +45/天，**p = 0.0097（显著）**
+        分层复核：短讯单独看仍是 79 vs 42（1.9×）⇒ **不是长文混淆**，
+        时段效应真实存在（R642 只报"上午显著"，未做体裁分层）。
+
+        现状错配：目标窗只拿到 **18%** 的发帖量（57/312），
+        其余 82% 堆在低浏览时段。
+
+        ⚠️ **口径澄清（字段名≠字段含义，纪律 5）**：本加权看的是
+        **候选被发布的那一刻**（`now_utc`），**不是新闻的 `published`**。
+        后者已由 `freshness_bonus` 按 `age_hours` 计入 `impact_score`，
+        两个机制管不同的事：新鲜度管"值不值得发"，本加权管"什么时候发"。
+
+        **为什么不改 cron**：`auto_post.yml` 的 `7,27,47 * * * *` 每小时都在跑，
+        能否发只取决于配额状态——其注释原话"cron 只是心跳上限，
+        业务不依赖具体分钟"。而目标窗是 **UTC 22-04**：R133 记录过 GitHub
+        调度器在该区间静默吞投递（无日志无报警）。⇒ 改 cron 去"集中发"是拿
+        已知不可靠的窗口去赌 2× 收益；改**排序**则是"有稿时优先发"，
+        心跳照旧、不新增对调度器的依赖。
+
+        **只重排，不筛除**（与 R608 同纪律）：低浏览时段的候选照常可发，
+        配额饱和时它们自然排后。绝不因时段把稿子丢掉。
+
+        错配代价已量化：目标窗新闻年龄中位 **2.4h** vs 其他 **1.7h**，
+        差 0.7 小时——相对 2.05× 浏览速率，这个代价很小。
+
+        ⚠️ 样本仅 59 条（内容库覆盖 20%），p=0.0097 但**置信区间宽**。
+        加权幅度刻意保守（见 TIME_PREF_BOOST），宁可少赚不可把配额全押注。
+        """
+        if not candidates:
+            return 0, 0, False
+        if now_utc is None:
+            now_utc = datetime.now(timezone.utc)
+        # ⚠️ 口径纪律 5：本文件是 `from datetime import datetime`（类别名），
+        # **不是** `import datetime`（模块）——写成后者会在 isinstance 里
+        # 报 "type object 'datetime.datetime' has no attribute 'datetime'"。
+        if not isinstance(now_utc, datetime):
+            return 0, 0, False
+        # UTC 22-04 == 北京 06-12（跨零点的两段）
+        in_pref = now_utc.hour >= 22 or now_utc.hour < 4
+        if in_pref:
+            # 已在高浏览窗内：无需偏置
+            return 0, 0, True
+        # 在低浏览窗：给所有候选同一个常量偏置，让它们**相对**排后，
+        # 配额吃紧时先发别的。幅度小 ⇒ 不与活动加权/热度分争主导权
+        # （R622「权重须量纲对齐」：W_FAIL 量级 0.34、延迟项量级 60）。
+        boosted = 0
+        for item in candidates:
+            cur = item.get("impact_score")
+            if not isinstance(cur, (int, float)):
+                continue
+            try:
+                item["impact_score"] = cur - TIME_PREF_PENALTY
+                boosted += 1
+            except (TypeError, ValueError):
+                continue
+        return boosted, 0, False
 
     @staticmethod
     def apply_engagement_boost(candidates: List[Dict[str, Any]],
@@ -9253,6 +9326,32 @@ def _run_main():
     else:
         eng_up = eng_down = 0
 
+    # 5.8 时段偏置（R650）：把稀缺配额往高浏览时段倾斜。
+    # 生产实测：北京 06-12 窗浏览速率中位 88/天 vs 其他 43/天（p=0.0097，
+    # 单侧置换检验 20000 次）；而目标窗只拿到 18% 的发帖量。
+    # 幅度仅 -{TIME_PREF_PENALTY}，小于真突发(+10)与活动加权(+8) ⇒ 只做边际排序。
+    # 只重排不筛除：低浏览时段的稿照常可发。
+    # ⚠️ 接线防御：测试与降级路径可能用 Mock 替换整个 NewsFetcher，
+    # 此时静态方法返回 MagicMock——**它不是 tuple，`a, b, c = mock` 会按
+    # 迭代协议取元素，长度 0 时抛 "not enough values to unpack"**。
+    # 这个坑真实炸过一次（TestRunMainSemantics 37 例连带失败）。
+    # ⇒ 解包后校验类型，异常则按"未生效"处理：**偏置是边际优化，
+    # 不该成为主流程的失败点**（纪律 30：旁路不得阻塞主流程）。
+    try:
+        _hp = NewsFetcher.apply_hour_preference_boost(candidates)
+        hour_shifted, _, in_pref_window = _hp
+        if not isinstance(hour_shifted, int):
+            raise TypeError(f"hour_pref 返回非 int: {type(hour_shifted)}")
+        in_pref_window = bool(in_pref_window)
+    except (TypeError, ValueError) as _hp_err:
+        logger.debug(f"时段偏置跳过（{type(_hp_err).__name__}）: {_hp_err}")
+        hour_shifted, in_pref_window = 0, False
+    if hour_shifted:
+        candidates.sort(key=lambda x: (-x["impact_score"],
+                                       x["age_hours"] if x.get("age_hours") is not None else float("inf")))
+    logger.info(f"🕐 时段偏置: -{TIME_PREF_PENALTY}×{hour_shifted} "
+                f"（北京06-12 窗为高浏览窗，p=0.0097；仅排序，不筛除）")
+
     # 6. 执行发帖循环
     posted_count = 0
     posted_records: List[Dict[str, Any]] = []  # 供运行报告输出
@@ -10088,6 +10187,11 @@ def _run_main():
         # R608：浏览加权命中数（+/- 各记）——验证「按真实流量调」是否真在打中候选
         "engagement_boost_up": int(eng_up or 0),
         "engagement_boost_down": int(eng_down or 0),
+        # R650：时段偏置**是否生效 + 当前是否在高浏览窗**。
+        # 两者都要落：只有计数看不出"当时是不是已经在好时段"，
+        # 而后者才是判断"配额是否真的被投过去了"的关键（R617：有出口）。
+        "hour_pref_shifted": int(hour_shifted or 0),
+        "hour_pref_in_window": int(in_pref_window),
         # R201：off-pool 活动币——Alpha 上新等未入 SPOT 池的竞赛标的
         "campaign_off_pool": " ".join(fetcher.stats.get("campaign_off_pool") or []) or None,
         # R126：单轮总耗时（秒）——20 分钟外部回调节奏下的堆积预警指标

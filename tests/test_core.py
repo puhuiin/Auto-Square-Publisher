@@ -16700,6 +16700,132 @@ class TestR644ReadableLayout(unittest.TestCase):
                       "净化层必须调用排版规范化")
 
 
+class TestR650HourPreferenceBoost(unittest.TestCase):
+    """R650：把稀缺配额往**高浏览时段**倾斜（本项目最硬的一条浏览量证据）。
+
+    依据（生产 59 条可归因样本，单侧置换检验 20000 次）：
+        北京 06-12 窗浏览速率中位 **88/天**（n=12）
+        其他时段                **43/天**（n=47）
+        差值 +45/天，**p = 0.0097**
+    分层复核：短讯单独看仍 79 vs 42（1.9×）⇒ 不是长文混淆。
+    现状错配：目标窗只拿 18% 的发帖量（57/312）。
+
+    设计取舍（三条，都写进注释）：
+    1. **不改 cron，只改排序**——目标窗是 UTC 22-04，R133 记录过 GitHub
+       调度器在该区间静默吞投递；改 cron 是拿不可靠窗口赌 2× 收益。
+    2. **只减分不加分**（-2）——加分会把低质稿顶上来，减分只让它们排后。
+    3. **幅度 2** 小于真突发(+10)/活动(+8) ⇒ 绝不盖过真突发。
+    """
+
+    @staticmethod
+    def _cands(*scores):
+        return [{"impact_score": s, "age_hours": 1.0} for s in scores]
+
+    def _utc(self, h):
+        import datetime as _dt
+        return _dt.datetime(2026, 10, 5, h, tzinfo=_dt.timezone.utc)
+
+    def test_in_pref_window_untouched(self):
+        """UTC 22-04 == 北京 06-12，窗内**不得有任何改动**"""
+        c = self._cands(20, 15)
+        n, _, in_win = m.NewsFetcher.apply_hour_preference_boost(
+            c, now_utc=self._utc(23))
+        self.assertTrue(in_win)
+        self.assertEqual(n, 0)
+        self.assertEqual([x["impact_score"] for x in c], [20, 15])
+
+    def test_out_window_penalized(self):
+        """窗外每个候选 -TIME_PREF_PENALTY（只排序，不筛除）"""
+        c = self._cands(20, 15)
+        n, _, in_win = m.NewsFetcher.apply_hour_preference_boost(
+            c, now_utc=self._utc(12))
+        self.assertFalse(in_win)
+        self.assertEqual(n, 2)
+        self.assertEqual([x["impact_score"] for x in c],
+                         [20 - m.TIME_PREF_PENALTY, 15 - m.TIME_PREF_PENALTY])
+
+    def test_never_screens_out(self):
+        """**绝不筛除候选**（R608 同纪律）——低浏览时段照常可发"""
+        c = self._cands(6, 7)
+        m.NewsFetcher.apply_hour_preference_boost(c, now_utc=self._utc(12))
+        self.assertEqual(len(c), 2, "候选数量不得减少")
+        self.assertTrue(all(isinstance(x["impact_score"], (int, float)) for x in c))
+
+    def test_does_not_outrank_real_burst(self):
+        """**不能盖过真突发**（freshness 3h 内 +10）——本机制是边际排序不是翻盘机制"""
+        c = self._cands(31, 20)   # 31 = 20 + 10(fresh) + 1
+        m.NewsFetcher.apply_hour_preference_boost(c, now_utc=self._utc(12))
+        self.assertGreater(c[0]["impact_score"], c[1]["impact_score"],
+                           "突发稿必须仍然排在普通稿之前")
+
+    def test_penalty_below_burst_and_campaign(self):
+        """幅度量纲对齐（R622）：< freshness(10) 且 < campaign(8)"""
+        self.assertLess(m.TIME_PREF_PENALTY, 10)
+        self.assertLess(m.TIME_PREF_PENALTY, 8)
+
+    def test_window_boundaries(self):
+        """边界：UTC22 含（=京06:00 起）、UTC04 不含（=京12:00 止）"""
+        _, _, in22 = m.NewsFetcher.apply_hour_preference_boost(
+            self._cands(20), now_utc=self._utc(22))
+        _, _, in04 = m.NewsFetcher.apply_hour_preference_boost(
+            self._cands(20), now_utc=self._utc(4))
+        self.assertTrue(in22, "UTC22 == 北京06:00，应算窗内")
+        self.assertFalse(in04, "UTC04 == 北京12:00，应算窗外")
+
+    def test_empty_candidates_safe(self):
+        self.assertEqual(m.NewsFetcher.apply_hour_preference_boost([], now_utc=self._utc(12)),
+                         (0, 0, False))
+
+    def test_non_numeric_score_skipped(self):
+        """脏数据不得抛异常（None/字符串分数应跳过而非崩）"""
+        c = [{"impact_score": None}, {"impact_score": "x"}, {"impact_score": 20}]
+        n, _, _ = m.NewsFetcher.apply_hour_preference_boost(c, now_utc=self._utc(12))
+        self.assertEqual(n, 1, "只应处理分数合法的那个")
+        self.assertEqual(c[2]["impact_score"], 20 - m.TIME_PREF_PENALTY)
+
+    def test_wired_into_run(self):
+        """**接线守卫**：偏置必须真的在发帖流程里被调用。
+
+        防"定义了函数但忘了接"——那会让整条修复静默失效，
+        而报表只看到"0轮有遥测"却无人知道原因（R617）。
+        """
+        src = open(m.__file__, encoding="utf-8").read()
+        self.assertIn("apply_hour_preference_boost(candidates)", src,
+                      "必须接线到发帖流程（否则是死代码）")
+        self.assertIn('"hour_pref_shifted"', src, "遥测必须落字段，否则无出口")
+        self.assertIn('"hour_pref_in_window"', src,
+                      "必须区分「偏置搬动了多少」与「当时是否已在好时段」")
+
+    def test_call_site_survives_mock_replacement(self):
+        """**Mock 替身防御守卫**——这个坑真实炸过 37 例。
+
+        测试用 `patch.object(m, "NewsFetcher")` 替换整个类时，静态方法返回
+        `MagicMock()`。而 `a, b, c = MagicMock()` 会走**迭代协议**，
+        长度 0 时抛 `ValueError: not enough values to unpack`。
+        ⇒ 调用点必须 try/except + 类型校验，按"未生效"降级。
+        **偏置是边际优化，不该成为主流程的失败点**（纪律 30）。
+        """
+        src = open(m.__file__, encoding="utf-8").read()
+        # 找调用点：必须在 except TypeError/ValueError 的保护内解包
+        call = src.index("apply_hour_preference_boost(candidates)")
+        seg = src[call:call + 900]
+        self.assertIn("except (TypeError, ValueError)", seg,
+                      "调用点必须防御 Mock 替身/异常返回值（曾致 37 例失败）")
+        self.assertIn("isinstance(hour_shifted, int)", seg,
+                      "必须校验返回类型——MagicMock 不是 int")
+        self.assertIn("hour_shifted, in_pref_window = 0, False", seg,
+                      "失败时按『未生效』降级，不得阻塞主流程")
+
+    def test_booster_handles_non_list_candidates(self):
+        """候选为空/异常结构时不得抛异常"""
+        self.assertEqual(
+            m.NewsFetcher.apply_hour_preference_boost([], now_utc=self._utc(12)),
+            (0, 0, False))
+        self.assertEqual(
+            m.NewsFetcher.apply_hour_preference_boost(None, now_utc=self._utc(12)),
+            (0, 0, False))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 

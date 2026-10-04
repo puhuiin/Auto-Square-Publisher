@@ -4774,5 +4774,78 @@ class TestR649ContentRedlineObservable(unittest.TestCase):
             self.assertIn(w, words.group(1), f"{w} 是真喊单，须保留")
 
 
+class TestR650HourPrefGuardrail(unittest.TestCase):
+    """R650：时段偏置**必须有出口**，且必须渲染"天花板提示"。
+
+    两条纪律：
+    1. R617「探针在跑、答案被丢弃」——偏置若只在代码里，返回值只是个计数，
+        没人知道它到底有没有改变发帖分布。
+    2. **不得让读者被"2.05 倍"误导**：目标窗只有 6h/24h，而配额是 12 篇/天，
+        最多约 3 篇能落窗内。按现有 18% 占比测算，即便把配额全投进目标窗，
+        总日均浏览贡献也只 +6%。这个数字必须渲染出来，否则报表会让人以为
+        这是个"2 倍收益的开关"。
+    """
+
+    def _rows(self):
+        return [{"outcome": "run_summary", "ts": "2026-10-05T12:00:00+00:00",
+                 "candidates": 10, "published": 1,
+                 "hour_pref_shifted": 5, "hour_pref_in_window": 0}]
+
+    def _rows_in_window(self):
+        return [{"outcome": "run_summary", "ts": "2026-10-05T23:00:00+00:00",
+                 "candidates": 10, "published": 1,
+                 "hour_pref_shifted": 0, "hour_pref_in_window": 1}]
+
+    def test_aggregates_shift_and_window(self):
+        s = mr.summarize(self._rows())
+        self.assertEqual(s["runs"]["hour_pref_runs"], 1)
+        self.assertEqual(s["runs"]["hour_pref_shifted"], 5)
+        self.assertEqual(s["runs"]["hour_in_window_runs"], 1)
+        self.assertEqual(s["runs"]["hour_in_window_yes"], 0)
+
+    def test_window_yes_counted_separately(self):
+        """**偏置搬动数与是否在窗内必须分开**——两个不同问题（R611）。
+
+        混进同一个计数器就回答不了"排序偏置是否真的把配额搬过去了"。
+        """
+        s = mr.summarize(self._rows() + self._rows_in_window())
+        self.assertEqual(s["runs"]["hour_pref_shifted"], 5, "窗外才搬动")
+        self.assertEqual(s["runs"]["hour_in_window_yes"], 1)
+        self.assertEqual(s["runs"]["hour_in_window_runs"], 2)
+
+    def test_legacy_runs_not_counted(self):
+        """旧 run_summary 无字段 → 完全不计入（向后兼容，零噪音）"""
+        s = mr.summarize([{"outcome": "run_summary", "ts": "2026-10-04T12:00:00+00:00",
+                           "candidates": 5, "published": 1}])
+        self.assertEqual(s["runs"]["hour_pref_runs"], 0)
+        self.assertNotIn("时段偏置", mr.render_text(s, []))
+
+    def test_renders_ceiling_caveat(self):
+        """**必须渲染天花板提示**——防读者把边际改善当主杠杆"""
+        s = mr.summarize(self._rows())
+        text = mr.render_text(s, self._rows())
+        self.assertIn("时段偏置", text)
+        self.assertIn("天花板", text)
+        self.assertIn("+6%", text)
+
+    def test_low_window_ratio_suggests_investigation(self):
+        """落在高浏览窗比例过低时，要提示去查调度/候选而非继续调幅度。
+
+        这是**自指护栏**：排序偏置改不了 cron，若长期上不去，
+        继续调 TIME_PREF_PENALTY 是白费力气。
+        """
+        s = mr.summarize(self._rows())
+        self.assertIn("查调度", mr.render_text(s, self._rows()))
+
+    def test_high_ratio_no_complaint(self):
+        s = mr.summarize(self._rows_in_window())
+        self.assertNotIn("查调度", mr.render_text(s, self._rows_in_window()))
+
+    def test_p_value_included(self):
+        """渲染必须带上 p 值——读者要能判断这条结论的强度"""
+        s = mr.summarize(self._rows())
+        self.assertIn("p=0.0097", mr.render_text(s, self._rows()))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
