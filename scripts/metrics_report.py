@@ -856,6 +856,10 @@ def summarize(rows):
         # 分子=有提问，分母=字段存在的回执（None=Mock/异常态不进分母）。
         "ending_q_yes": 0,
         "ending_q_marked": 0,
+        # R649：prompt 三条内容红线的合规分子/分母（同 bool口径，见 ending_q）
+        "dash_ok_n": 0, "dash_ok_d": 0,
+        "hype_ok_n": 0, "hype_ok_d": 0,
+        "consp_ok_n": 0, "consp_ok_d": 0,
         "title_pure_ticker": 0,    # 标题含币种纯名却没 $（R645 的靶子）
         "layout_paragraphs": [],
         "stats_views": [],
@@ -1306,6 +1310,14 @@ def summarize(rows):
                 s["ending_q_marked"] += 1
                 if r["ending_question"]:
                     s["ending_q_yes"] += 1
+            # R649：内容红线合规（分侧分子，False 也计入分母——纪律 17）
+            for _f, _sn, _sd in (("dash_ok", "dash_ok_n", "dash_ok_d"),
+                                 ("hype_ok", "hype_ok_n", "hype_ok_d"),
+                                 ("conspiracy_ok", "consp_ok_n", "consp_ok_d")):
+                if isinstance(r.get(_f), bool):
+                    s[_sd] += 1
+                    if r[_f]:
+                        s[_sn] += 1
             # R592：实操建议角度分布——与开场钩子/结尾套路同为 prompt 轮换槽，监测跨帖建议
             # 是否又收敛到「回踩/现货拿稳/杠杆降到最低」固定套话；legacy 行无字段跳过。
             if r.get("trade_cta_style"):
@@ -2823,6 +2835,22 @@ def render_text(s, rows=None):
                 f"  {_eflag}结尾站队提问 {_eq}/{_em}（{_ep:.0f}%）："
                 f"prompt 要求结尾给一句与本文事件直接相关的问题"
                 f"（旧回执无此字段，不计入分母）")
+        # R649：内容红线合规度。**这三项此前既无代码防线、又无发布后观测**
+        # （quality 门只管长度/TITLE/中文量）⇒ 违反与否在任何字段里都看不到。
+        # 定位为**度量**不是门：词表启发式必有反例，而长文单通道拒稿= 大概率丢稿
+        # （R331）。已知残余误报 1/312（"反面教材引用"模式，词表无解）。
+        for _lab, _n, _d in (("破折号≤1", "dash_ok_n", "dash_ok_d"),
+                             ("禁喊单", "hype_ok_n", "hype_ok_d"),
+                             ("禁操纵归因断言", "consp_ok_n", "consp_ok_d")):
+            _dn = s.get(_d) or 0
+            if not _dn:
+                continue
+            _nn = s.get(_n) or 0
+            _pp = _nn / _dn * 100
+            _fl = ("✅ " if _pp >= 99 else ("⚠️ " if _pp >= 95 else "❌ "))
+            lines.append(
+                f"  {_fl}{_lab} 合规 {_nn}/{_dn}（{_pp:.1f}%）"
+                f"（prompt 红线，词表度量非门；残余误报已知）")
         if s["by_trade_cta_style"]:
             cta_str = " · ".join(f"{k} ×{v}" for k, v in s["by_trade_cta_style"].most_common(5))
             lines.append(f"  实操角度分布: {cta_str}")

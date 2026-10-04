@@ -4661,5 +4661,118 @@ class TestR648PureTickerCoverage(unittest.TestCase):
         self.assertIn("检测池", text)
 
 
+class TestR649ContentRedlineObservable(unittest.TestCase):
+    """R649：三条**内容红线**此前既无代码防线、又无发布后观测。
+
+    审计方法（不是拍脑袋）：用生产 148 次拒稿的 `stage` 分布做判据——
+    `quality` 门 21 次拒稿**全部**是长度/TITLE/中文量，没有任何一条是
+    内容红线；而 prompt 里明写「禁止喊单」「禁止操纵归因（万能阴谋论）」
+    「破折号最多1 次」。⇒ 这三条**全靠模型自觉**，
+    违反与否**在任何字段里都看不到**。
+
+    定位为**度量**而非拒稿门：内容红线误杀代价高（长文单通道，
+    一次拒稿 = 大概率丢稿，R331），且"喊单"无确定性边界
+    （"抄底"在"想抄底等回踩"里是合规提醒、在"现在抄底"里是喊单——
+    R649 实测抽样 12/12 全为劝阻语境）。⇒ 先让人看见，再决定是否收紧。
+    """
+
+    def _rows(self, **kw):
+        base = {"platforms": ["binance"], "outcome": "binance_published",
+                "ts": "2026-10-05T00:00:00+00:00", "content_id": "n1",
+                "hour_bj": 21, "article": False, "source": "U.Today",
+                "final_preview": "正文"}
+        base.update(kw)
+        return [base]
+
+    def test_all_three_counted(self):
+        summ = mr.summarize(self._rows(
+            dash_ok=True, hype_ok=True, conspiracy_ok=True))
+        self.assertEqual(summ["dash_ok_n"], 1)
+        self.assertEqual(summ["hype_ok_n"], 1)
+        self.assertEqual(summ["consp_ok_n"], 1)
+        self.assertEqual(summ["dash_ok_d"], 1)
+
+    def test_false_counts_in_denominator(self):
+        """**False 计入分母**——否则合规率恒 100%，指标彻底失效（纪律 17）"""
+        summ = mr.summarize(self._rows(
+            dash_ok=False, hype_ok=False, conspiracy_ok=False))
+        self.assertEqual(summ["dash_ok_d"], 1)
+        self.assertEqual(summ["dash_ok_n"], 0)
+
+    def test_none_excluded(self):
+        summ = mr.summarize(self._rows())   # 无字段 =旧回执
+        self.assertEqual(summ["dash_ok_d"], 0)
+        self.assertEqual(summ["hype_ok_d"], 0)
+
+    def test_legacy_rows_render_nothing(self):
+        """旧回执无字段 → 三行都不渲染（零噪音，向后兼容）"""
+        summ = mr.summarize(self._rows())
+        text = mr.render_text(summ, self._rows())
+        self.assertNotIn("禁喊单", text)
+        self.assertNotIn("破折号", text)
+
+    def test_renders_three_separate_lines(self):
+        """三项必须**分行**——它们是三个独立根因，合并分母会掩盖一侧（R611）"""
+        summ = mr.summarize(self._rows(
+            dash_ok=True, hype_ok=False, conspiracy_ok=True))
+        text = mr.render_text(summ, self._rows(
+            dash_ok=True, hype_ok=False, conspiracy_ok=True))
+        self.assertIn("破折号≤1 合规", text)
+        self.assertIn("禁喊单 合规", text)
+        self.assertIn("禁操纵归因断言 合规", text)
+        self.assertIn("0/1", text, "喊单不合规必须显示出来")
+
+    def test_declares_it_is_not_a_gate(self):
+        """渲染必须声明"度量非门"——读者不该以为这会拒稿"""
+        summ = mr.summarize(self._rows(
+            dash_ok=True, hype_ok=True, conspiracy_ok=True))
+        text = mr.render_text(summ, self._rows(
+            dash_ok=True, hype_ok=True, conspiracy_ok=True))
+        self.assertIn("非门", text)
+
+    def test_main_emits_all_three_flags(self):
+        """接线守卫：三个字段都要落回执（漏一个就少一条红线观测）"""
+        src = open(m.__file__, encoding="utf-8").read()
+        for f in ('"dash_ok": _dash_ok', '"hype_ok": _hype_ok',
+                  '"conspiracy_ok": _consp_ok'):
+            self.assertIn(f, src, f"回执必须落 {f}")
+
+    def test_hype_wordlist_excludes_data_description(self):
+        """**"暴涨"不得在喊单词表里**——R649 实测它在生产里10/10 是数据描述
+        （"销毁率暴涨 84%"），把它当喊单会产生系统性误报。"""
+        src = open(m.__file__, encoding="utf-8").read()
+        seg_start = src.index("_HYPE_EXEMPT")
+        seg = src[seg_start:seg_start + 1200]
+        wordlist_line = [ln for ln in seg.split("\n") if "for _w in" in ln]
+        self.assertTrue(wordlist_line, "须能定位喊单词表")
+        self.assertNotIn("暴涨", seg,
+                         '"暴涨"是数据描述不是喊单，误报率 10/10')
+        self.assertIn("梭哈", seg, "梭哈是真喊单，须保留")
+
+    def test_hype_detection_per_word_with_exemption(self):
+        """判定逻辑守卫：逐词search + 紧前 12 字豁免。
+
+        两个已被生产实测否掉的做法（别再走回头路）：
+        ① 整体前瞻否定 `(?<![别勿])…` → 裸用"必涨/满仓干"**全被放过**；
+        ② 把"暴涨"当喊单 → 10/10 误报。
+        """
+        import re
+        src = open(m.__file__, encoding="utf-8").read()
+        seg_start = src.index("_HYPE_EXEMPT")
+        seg = src[seg_start:src.index("_consp_ok", seg_start)]
+        # 复原判定逻辑
+        exempt = re.search(r'_HYPE_EXEMPT = \((.*?)\n\s{24}\)', seg, re.DOTALL)
+        self.assertIsNotNone(exempt, "须能解析豁免正则块")
+        words = re.search(r'for _w in \((.*?)\):', seg, re.DOTALL)
+        self.assertIsNotNone(words, "须能解析词表")
+        win = re.search(r'_mm\.start\(\) - (\d+)', seg)
+        self.assertIsNotNone(win)
+        # 校验关键判据
+        self.assertIn("12", win.group(1) or "12", "窗口应为 12 字（实测 8 字会漏跨词劝阻）")
+        self.assertNotIn("暴涨", words.group(1))
+        for w in ("必涨", "满仓干", "梭哈"):
+            self.assertIn(w, words.group(1), f"{w} 是真喊单，须保留")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
