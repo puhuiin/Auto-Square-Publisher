@@ -2932,6 +2932,35 @@ def render_text(s, rows=None):
             lines.append(f"  🪝 首段钩子（{_n} 篇）: {_hk}")
         if s["image_tiers"]:
             lines.append(f"  配图层级 {dict(s['image_tiers'])}")
+            # R651：**配图层级与新闻源完全混淆，不可当因果读**。
+            # 生产实测 312篇：U.Today 贡献 123 篇（39%）但**原图率 0%**，
+            #其余源都在 83~96%。于是 `raw=62/天 vs chart=42/天`（p=0.0090）
+            # **看起来像配图效应，其实是源效应**——没有任何一个源内部同时有
+            # raw 与 chart 的可比样本（交叉表：U.Today 只有 chart=42，
+            # CryptoSlate/Decrypt/BlockTempo 的 chart 样本各只有 1 条）。
+            # 且 `raw` 已是 `_prefer` 最高优先级（`["raw", ...]`），
+            # **不可配置**——它由"该新闻有没有原图"决定。
+            # ⇒ 想提浏览量该动的是**源选择**（U.Today 占比），不是配图参数。
+            # ⚠️ 分母口径（R611）：必须只在**已发布帖**里数，不能扫全部 rows。
+            # rows 含 llm_rejected / run_summary / provider_probe 等非发布记录，
+            # 混进来会让分母虚高（实测 180 vs 真实 123）。
+            _ut_raw = 0
+            _ut_tot = 0
+            for _r in rows:
+                if not _is_delivered(_r):
+                    continue
+                if "U.Today" not in str(_r.get("source") or ""):
+                    continue
+                _ut_tot += 1
+                if _r.get("image_tier") == "raw":
+                    _ut_raw += 1
+            if _ut_tot:
+                lines.append(
+                    f"     ↳ ⚠️ **不可当因果读**：U.Today {_ut_tot} 篇原图率 "
+                    f"{_ut_raw}/{_ut_tot}（{_ut_raw/_ut_tot*100:.0f}%），"
+                    f"其余源 83~96% ⇒ raw/chart 差异与源完全混淆；"
+                    f"且 raw 已是最高优先级、**不可配置**。"
+                    f"要提浏览量应调**源选择**而非配图参数")
         # R173：过期情报注入可见化（有字段的帖才进分母，历史行不混入）
         n_intel_marked = s["intel_degraded_posts"] + s["intel_fresh_posts"]
         if n_intel_marked:

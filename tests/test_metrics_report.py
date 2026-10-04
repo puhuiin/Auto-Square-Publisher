@@ -4847,5 +4847,93 @@ class TestR650HourPrefGuardrail(unittest.TestCase):
         self.assertIn("p=0.0097", mr.render_text(s, self._rows()))
 
 
+class TestR651ConfoundedSignalsNotCausal(unittest.TestCase):
+    """R651：**统计显著 ≠ 可行动**。本例是最典型的可复现陷阱。
+
+    发现过程：挖选题层时找到一个看起来很硬的信号——
+        `raw`（新闻原图）62/天 vs `chart`（走势卡）42/天，**p=0.0090**，
+        控制体裁后 p=0.0089 仍显著，且在 5 个组里的 3 个方向一致。
+    但交叉表显示它是**完全混淆**的：
+
+        | 源 | raw 中位 | chart 中位 |
+        |---|---|---|
+        | U.Today（39% 总量） | **原图率 0%** | 42×18 |
+        | CryptoSlate | 45×9 | 4×1 |
+        | Decrypt | 70×3 | 32×1 |
+
+    ⇒ **没有任何一个源内部同时有 raw 与 chart 的可比样本**。
+    `raw` 的差异 100% 来自"哪个源带原图"，不是"配图类型的影响"。
+
+    而且 `raw` 已是 `_prefer` 最高优先级（`["raw", "chart", "card"]`），
+    **根本不可配置**——它由"该新闻有没有原图"决定。
+
+    ⇒ 真正可行动的是**源选择**（U.Today 占 39% 且原图率为 0），
+    不是配图参数。本用例锁死这条警示，防止后人拿 p=0.0090 去调配图。
+    """
+
+    def _rows(self):
+        out = []
+        # U.Today：39% 产量、原图率 0%
+        for i in range(12):
+            out.append({"platforms": ["binance"], "outcome": "binance_published",
+                        "ts": f"2026-10-01T{i:02d}:00:00+00:00",
+                        "content_id": f"ut{i}", "hour_bj": 12, "article": False,
+                        "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+                        "image_tier": "chart", "final_preview": "正文"})
+        # 其他源：原图率约 90%
+        for i in range(9):
+            out.append({"platforms": ["binance"], "outcome": "binance_published",
+                        "ts": f"2026-10-02T{i:02d}:00:00+00:00",
+                        "content_id": f"cs{i}", "hour_bj": 8, "article": False,
+                        "source": "CryptoSlate (新赛道与代币经济)",
+                        "image_tier": "raw", "final_preview": "正文"})
+        return out
+
+    def test_renders_confound_warning(self):
+        s = mr.summarize(self._rows())
+        text = mr.render_text(s, self._rows())
+        self.assertIn("不可当因果读", text,
+                      "配图层级行必须带混淆警示——否则 p=0.0090 会被当成可行动结论")
+
+    def test_warning_states_not_configurable(self):
+        """警示必须说明 raw **不可配置**，否则后人会去找参数调"""
+        s = mr.summarize(self._rows())
+        text = mr.render_text(s, self._rows())
+        self.assertIn("不可配置", text)
+
+    def test_warning_points_to_source_selection(self):
+        """警示必须指出可行动的方向是**源选择**"""
+        s = mr.summarize(self._rows())
+        text = mr.render_text(s, self._rows())
+        self.assertIn("源选择", text)
+
+    def test_denominator_only_delivered_posts(self):
+        """⚠️ 分母口径（R611）：只在**已发布帖**里数，不能扫全部 rows。
+
+        首版扫了全部 rows（含 llm_rejected / run_summary），
+        实测 U.Today 分母变成 180（真实 123）⇒ 比率失真。
+        """
+        rows = self._rows()
+        # 掺入非发布记录：源名相同但不该进分母
+        rows.append({"outcome": "llm_rejected", "ts": "2026-10-01T00:00:00+00:00",
+                     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+                     "image_tier": "raw"})
+        rows.append({"outcome": "run_summary", "ts": "2026-10-01T01:00:00+00:00",
+                     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)"})
+        s = mr.summarize(rows)
+        text = mr.render_text(s, rows)
+        self.assertIn("U.Today 12 篇", text,
+                      "分母只算已发布帖（9+3=12），拒稿与 run_summary 不得混入")
+
+    def test_not_rendered_without_image_tiers(self):
+        """无配图数据时不渲染该警示（向后兼容，零噪音）"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-01T00:00:00+00:00", "content_id": "x",
+                 "hour_bj": 12, "article": False, "source": "U.Today (X)",
+                 "final_preview": "正文"}]
+        s = mr.summarize(rows)
+        self.assertNotIn("不可当因果读", mr.render_text(s, rows))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
