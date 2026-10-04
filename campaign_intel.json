@@ -3,21 +3,21 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Futures",
-    "#Megadrop"
+    "#Megadrop",
+    "#Futures"
   ],
   "incentivized_tokens": [
     "$CT",
     "$PUMP",
     "$USD1",
-    "$BTC",
-    "$USDC",
+    "$ALGO",
+    "$ADBEB",
     "$PDDB",
     "$NVDAB",
-    "$MUB"
+    "$USDC"
   ],
-  "strategy_guidance": "当前最紧迫的为刚于10月2日延期的USD1 Airdrop活动，建议优先围绕其规则解读、参与攻略角度追贴；同时结合10月1日上线的CTUSDT永续合约、PUMP/ALGO交易锦标赛、新增bStocks交易对等官方动态发帖，引导读者参与评论区互动获取Write2Earn奖励，关联活动热度提升曝光。",
-  "last_updated": "2026-10-04T09:04:08.767634Z",
+  "strategy_guidance": "当前10月限时类活动剩余周期有限，优先追更PUMP交易锦标赛、ALGO交易锦标赛、USD1延期空投、新上线CTUSDT合约相关的交易技巧、活动参与攻略类内容，引导读者参与评论互动获取Write to Earn奖励，同时结合bStocks新增交易对、10月理财排行榜等活动热点提升内容曝光。",
+  "last_updated": "2026-10-04T11:03:58.079505Z",
   "_feed_health": {},
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
