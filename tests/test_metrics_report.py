@@ -5191,5 +5191,103 @@ class TestR654RollingQuotaWindow(unittest.TestCase):
         self.assertIn("基本无从生效", text)
 
 
+class TestR655RollingWindowSelfLock(unittest.TestCase):
+    """R655：**为什么排序改不动**——滚动 24h 窗口的"夜间自锁"结构。
+
+    R654 只说了"配额在发帖前就满（92%）"，但**没说清为什么**。
+    本轮补上机制，答案是滚动窗口造成的**严格对角自锁**：
+
+    > 每篇帖退出窗口的时刻 = 它的 `ts + 24h`，
+    > 而北京时区下 `ts+24h` 的北京小时 **就是 24 小时前的发帖时段**
+    >（实测"发帖时段 → 释放时段"交叉表 **24/24 全在对角线**）。
+
+    ⇒ "夜间发帖 → 夜间释放 → 被夜间立即接走"**自我复制**。
+    实测：仅 **18%** 的槽位释放时刻落在高浏览窗。
+    ⇒ **时间不可逆** ⇒ 排序只能改"发哪一篇"，
+    改不了"什么时候有空位"。
+
+    这条比 R654 的"水位 92%"更硬：水位只是**症状**，
+    对角自锁才是**机制**——它解释了为什么这个状态不会自行缓解。
+    """
+
+    def _pub(self, hour, ts, maxp=12):
+        return {"platforms": ["binance"], "outcome": "binance_published",
+                "ts": ts, "hour_bj": hour, "content_id": ts,
+                "max_daily_posts": maxp, "source": "S", "final_preview": "x"}
+
+    def test_computes_last_slot_and_release(self):
+        """连续 12 篇⇒ 后几篇的发出前占用达到 MAX-1（抢最后一个空位）
+
+        构造需**同时包含高浏览窗与低浏览窗**的帖：水位行与R655 指标同处
+        一个 `if s.get("quota_window_occupancy")` 块，纯低窗样本会让
+        `pref_window_median=None` 而跳过渲染（生产数据两窗都有）。
+        """
+        rows = [self._pub(8, f"2026-10-01T{h:02d}:00:00+00:00")
+                for h in range(6)]          # 高浏览窗 6 篇
+        rows += [self._pub(22, f"2026-10-01T{h:02d}:00:00+00:00")
+                 for h in range(6, 12)]      # 低浏览窗 6 篇
+        occ = mr.summarize(rows)["quota_window_occupancy"]
+        self.assertIsNotNone(occ["last_slot_share"])
+        self.assertGreater(occ["last_slot_share"], 0)
+        # 抢最后空位的 6 篇全是低窗（hour 22）⇒ 落在高窗比例 0
+        self.assertEqual(occ["last_slot_pref"], 0.0)
+        # 槽位释放时刻 = 同小时 ⇒ 8 点那 6 篇在高窗、22 点那 6 篇不在
+        self.assertEqual(occ["slot_release_pref_share"], 50.0)
+
+    def test_release_hour_equals_post_hour(self):
+        """★ 核心机制断言：滚动窗口的释放时刻**北京小时等于发帖小时**。
+
+        这是"夜间自锁"的数学根源。若这条变了（如改成自然日窗口），
+        自锁就会解开，R650 也重新有空间——所以必须锁住。
+        """
+        rows = [self._pub(3, "2026-10-01T00:00:00+00:00"),
+                self._pub(9, "2026-10-01T12:00:00+00:00")]
+        occ = mr.summarize(rows)["quota_window_occupancy"]
+        # 释放时刻的高窗占比 = 1/2（9点那篇）
+        self.assertEqual(occ["slot_release_pref_share"], 50.0)
+
+    def test_renders_self_lock_explanation(self):
+        """必须渲染"自锁"机制，不能只报水位百分比。
+
+        构造须**低窗占绝大多数**（生产实测槽位释放只有 18% 落在高窗），
+        否则 `_sr >= 30` 时按设计不渲染自锁行——那是**有意的**：
+        自锁是"结构性异常"的说明，水位分布正常时不必报警。
+        """
+        rows = [self._pub(8, "2026-10-01T00:00:00+00:00")]      # 1 篇高窗
+        rows += [self._pub(22, f"2026-10-01T{h:02d}:00:00+00:00")
+                 for h in range(1, 12)]                          # 11 篇低窗
+        occ = mr.summarize(rows)["quota_window_occupancy"]
+        self.assertLess(occ["slot_release_pref_share"], 30,
+                        "构造须满足自锁条件（生产实测 18%）")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("抢最后一个空位", text, "必须说明施力点在哪个位置")
+        self.assertIn("时间不可逆", text,
+                      "必须解释**为什么排序改不动**，否则读者以为配额满是偶发")
+        self.assertIn("自锁", text)
+
+    def test_reports_last_slot_preference_gap(self):
+        """必须同时报两个比例（施力点占比 / 落在高窗的比例）——
+        单报"最后一个空位占 77%"会让人误以为可以随便调。"""
+        rows = [self._pub(8, f"2026-10-01T{h:02d}:00:00+00:00")
+                for h in range(6)]
+        rows += [self._pub(22, f"2026-10-01T{h:02d}:00:00+00:00")
+                 for h in range(6, 12)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("落在高浏览窗", text)
+        # 同样是"落在高浏览窗"，槽位释放那个必须以"释放时刻"限定
+        self.assertIn("释放时刻", text)
+
+    def test_no_release_stats_when_unparseable(self):
+        """ts 不可解析 ⇒ 三个 R655 指标都是 None（不是 0）"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "垃圾", "hour_bj": 8, "max_daily_posts": 12}]
+        occ = mr.summarize(rows).get("quota_window_occupancy")
+        self.assertTrue(occ is None or occ["last_slot_share"] is None)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

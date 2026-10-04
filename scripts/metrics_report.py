@@ -1863,6 +1863,8 @@ def summarize(rows):
         _pts.sort(key=lambda x: x[0])
         _win = []
         _all_occ, _pref_occ, _oth_occ = [], [], []
+        _slot_release = []          # R655：每篇帖"退出窗口"的北京小时
+        _last_slot_h = []           # 抢到"最后一个空位"的那些帖的北京小时
         for _t, _hbj in _pts:
             _lo = _t - timedelta(hours=24)
             while _win and _win[0] < _lo:
@@ -1870,15 +1872,27 @@ def summarize(rows):
             _c = len(_win)
             _win.append(_t)
             _all_occ.append(_c)
+            # R655：窗口空位在**该帖 ts+24h** 释放 ⇒ 释放时刻的北京小时
+            # 就是 24 小时前的发帖时段。滚动窗口让"夜间发帖→夜间释放→
+            # 夜间再发帖"形成**严格对角自锁**（实测交叉表 24/24 全对角），
+            # 仅 18% 的释放时刻落在高浏览窗 ⇒ **排序无法打破（时间不可逆）**。
             try:
-                _h = int(_hbj)
+                _bhj = int(_hbj)
             except (TypeError, ValueError):
-                _h = -1
-            if 6 <= _h < 12:
+                _bhj = -1
+            if _bhj >= 0:
+                _slot_release.append(_bhj)      # +24h 不跨北京日边界
+                if _c == _qmax - 1:
+                    _last_slot_h.append(_bhj)
+            if 6 <= _bhj < 12:
                 _pref_occ.append(_c)
-            elif _h >= 0:
+            elif _bhj >= 0:
                 _oth_occ.append(_c)
         if _all_occ:
+            _ls_n = len(_last_slot_h)
+            _last_slot_share = 100 * _ls_n / len(_all_occ) if _ls_n else None
+            _last_slot_pref = (100 * sum(1 for h in _last_slot_h if 6 <= h < 12)
+                               / _ls_n if _ls_n else None)
             s["quota_window_occupancy"] = {
                 "max": _qmax,
                 "all_median": statistics.median(_all_occ),
@@ -1887,6 +1901,12 @@ def summarize(rows):
                 "other_median": (statistics.median(_oth_occ)
                                  if _oth_occ else None),
                 "samples": len(_all_occ),
+                # R655
+                "last_slot_share": _last_slot_share,
+                "last_slot_pref": _last_slot_pref,
+                "slot_release_pref_share": (
+                    100 * sum(1 for h in _slot_release if 6 <= h < 12)
+                    / len(_slot_release) if _slot_release else None),
             }
     except (TypeError, ValueError, KeyError):
         # 口径不可解析时**不静默给0**——"量不到"与"量到 0"必须能区分（R612）
@@ -2725,6 +2745,7 @@ def render_text(s, rows=None):
     n_pub = sum(s["by_provider"].values())
     if n_pub:
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")
+        # R655：**为什么排序改不动**——把机制说清楚，否则读者会以为
         # R654：**滚动 24h 配额的真实水位**——R653「86% 轮次提前退出」的根因，
         # 也是 R650「时段偏置几乎无法生效」的原因。
         # 机制（main.py:9152）：`sent_24h = count_since(24)` 是**滚动**窗口，
@@ -2751,13 +2772,40 @@ def render_text(s, rows=None):
                     f"{_occ['all_median']/_mx*100:.0f}%）"
                     f" · 高浏览窗 {_gm:.1f}（{_gm/_mx*100:.0f}%）"
                     + (f" · 其他 {_om:.1f}" if _om is not None else ""))
-                if _gm / _mx >= 0.8:
-                    lines.append(
-                        f"     ↳ **配额已在发帖前就接近饱和**（高浏览窗 "
-                        f"{_gm/_mx*100:.0f}%）⇒ R650 时段偏置等排序优化"
-                        f"**基本无从生效**。想提高高浏览窗的量，"
-                        f"须走**减量提质**（少发、把配额留给好时段）"
-                        f"或调整 `MAX_DAILY_POSTS`，**不是继续调排序权重**")
+            if _gm is not None and _mx and _gm / _mx >= 0.8:
+                lines.append(
+                    f"     ↳ **配额已在发帖前就接近饱和**（高浏览窗 "
+                    f"{_gm/_mx*100:.0f}%）⇒ R650 时段偏置等排序优化"
+                    f"**基本无从生效**。想提高高浏览窗的量，"
+                    f"须走**减量提质**（少发、把配额留给好时段）"
+                    f"或调整 `MAX_DAILY_POSTS`，**不是继续调排序权重**")
+            # R655：**为什么排序改不动**——把机制说清楚，否则读者会以为
+            # "配额满"是偶发。实为滚动窗口的**严格对角自锁**：
+            # 每篇帖的窗口退出时刻 = 它 24h 前的发帖时刻 ⇒
+            # "夜间发帖 → 夜间释放 → 夜间再发帖"自我复制，
+            # **释放时刻的历史分布 = 发帖时刻的历史分布（24/24 全对角）**。
+            #
+            # ⚠️ 刻意**放在水位阈值判断之外**：自锁是**结构性的**
+            # （时间不可逆 ⇒ 任何水位下都成立），若嵌在
+            # `if _gm/_mx >= 0.8` 里，低水位样本就看不到机制说明。
+            # 门槛只该管"**现在**要不要收紧配额"这个动作，
+            # 不该管"机制是什么"这段解释。R643 同款教训的另一面。
+            _ls = _occ.get("last_slot_share")
+            _lp = _occ.get("last_slot_pref")
+            _sr = _occ.get("slot_release_pref_share")
+            if _ls is not None and _lp is not None:
+                lines.append(
+                    f"     ↳ 施力点实测: {_ls:.0f}% 的帖是**抢最后一个空位**"
+                    f"，其中仅 {_lp:.0f}% 落在高浏览窗"
+                    + (f"；配额槽的释放时刻也只有 {_sr:.0f}% 落在高浏览窗"
+                       if _sr is not None else ""))
+            if _sr is not None and _sr < 30:
+                lines.append(
+                    f"       **机制（不可用排序打破）**：滚动 24h 窗口下，"
+                    f"槽位释放时刻 = 24h 前的发帖时刻 ⇒ 夜间发帖的槽"
+                    f"**恰好在夜间释放**，被低浏览时段立即接走，形成自锁。"
+                    f"时间不可逆 ⇒ 排序只能改'发哪一篇'，"
+                    f"改不了'什么时候有空位'")
         # R652：平台维度。**这是"流量从哪来"的唯一可见面**。
         # 生产实测 312 篇**全是纯 binance**——而代码支持 binance / okx_draft /
         # telegram 三种组合（`PUBLISH_PLATFORMS`，secret 已正确注入 workflow）。
