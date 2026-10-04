@@ -5090,5 +5090,106 @@ class TestR653RealFunnelVisible(unittest.TestCase):
         self.assertNotIn("真实漏斗", mr.render_text(s, []))
 
 
+class TestR654RollingQuotaWindow(unittest.TestCase):
+    """R654：**滚动 24h 配额的真实水位**——R653 与 R650 的共同根因。
+
+    机制（`main.py:9152`）：`sent_24h = count_since(24)` 是**滚动**窗口
+    （非自然日），且 `>= MAX_DAILY_POSTS` 即**提前 return**。
+
+    由此推出两件此前无人明说的事：
+    1. **R653 的"86% 轮次提前退出"不是偶发**——配额本来就长期接近满。
+    2. **R650 的时段偏置在当前结构下几乎无法生效**——不是权重不够，
+       而是**窗口里根本没有空位**。生产实测：高浏览窗（北京 06-12）
+       发布时，其前 24h 窗口内中位已发 **11.0/12（92%）**。
+
+    ⇒ 真杠杆是**减量提质**或**调整 MAX_DAILY_POSTS**，
+    **不是继续调排序权重**。本护栏就是把这个结论常驻在报表里。
+    """
+
+    def _pub(self, hour, ts, maxp=12):
+        return {"platforms": ["binance"], "outcome": "binance_published",
+                "ts": ts, "hour_bj": hour, "content_id": ts,
+                "max_daily_posts": maxp, "source": "S", "final_preview": "x"}
+
+    def test_computes_window_occupancy(self):
+        """连续 12 篇发布 ⇒ 每篇的前24h计数应递增到 11"""
+        rows = [self._pub(20, f"2026-10-01T{h:02d}:00:00+00:00")
+                for h in range(12)]
+        s = mr.summarize(rows)
+        occ = s.get("quota_window_occupancy")
+        self.assertIsNotNone(occ, "必须算出滚动窗口占用")
+        self.assertEqual(occ["samples"], 12)
+        # 12 篇跨度仅 12h< 24h ⇒ 滚动窗口不清空 ⇒ 计数为 0..11。
+        # 偶数个取**真中位**（两中值平均，R610/R609 纪律）= (5+6)/2 = 5.5。
+        # 写成6.0 会漏掉这条纪律。
+        self.assertEqual(occ["all_median"], 5.5)
+
+    def test_high_window_occupancy_blocks_sorting(self):
+        """高浏览窗占用 ≥80% 时，必须提示"排序优化无从下手" """
+        # 24h内先发 11 篇夜间，再发 1 篇上午 ⇒ 上午那篇窗口内已 11/12
+        rows = [self._pub(22, f"2026-10-01T{h:02d}:00:00+00:00")
+                for h in range(0, 11)]
+        rows.append(self._pub(8, "2026-10-01T23:00:00+00:00"))  # hour_bj=8 高窗
+        s = mr.summarize(rows)
+        text = mr.render_text(s, rows)
+        self.assertIn("滚动24h 配额水位", text)
+        self.assertIn("基本无从生效", text)
+        self.assertIn("MAX_DAILY_POSTS", text,
+                      "必须给出可行动方向，而不只是说这条优化没用")
+
+    def test_suggests_right_levers(self):
+        """警示必须指向**减量提质 / 调整配额**，而非"调排序权重" """
+        rows = [self._pub(22, f"2026-10-01T{h:02d}:00:00+00:00")
+                for h in range(0, 11)]
+        rows.append(self._pub(8, "2026-10-01T23:00:00+00:00"))
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("减量提质", text)
+        self.assertIn("不是继续调排序权重", text)
+
+    def test_silent_when_occupancy_low(self):
+        """占用低时**不发**警示（避免噪音，R619 的反向要求）"""
+        # 只发 1 篇 ⇒ 窗口占用 0
+        rows = [self._pub(8, "2026-10-01T00:00:00+00:00")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertNotIn("基本无从生效", text)
+
+    def test_uses_rolling_not_calendar_day(self):
+        """**必须是滚动窗口**——跨日不重置。31 号23:00 与 1 号 01:00 的两篇，
+        后者窗口内应含前者（日历日口径会算成 0）。"""
+        rows = [self._pub(23, "2026-10-01T23:00:00+00:00"),
+                self._pub(1, "2026-10-02T01:00:00+00:00")]
+        s = mr.summarize(rows)
+        occ = s["quota_window_occupancy"]
+        self.assertEqual(occ["samples"], 2)
+        # 第二篇的窗口内应有 1 篇 ⇒ 全体中位落在 0/1 之间
+        self.assertLessEqual(occ["all_median"], 1.0)
+
+    def test_unparseable_ts_not_counted(self):
+        """ts 不可解析的行不进样本（不是当 0 处理，R612）"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "垃圾", "hour_bj": 8, "max_daily_posts": 12}]
+        s = mr.summarize(rows)
+        occ = s.get("quota_window_occupancy")
+        self.assertTrue(occ is None or occ["samples"] == 0,
+                        "不可解析时不得产出样本（量不到 ≠ 量到 0）")
+
+    def test_not_gated_by_run_summary(self):
+        """⚠️ **不得被 run_summary 门控**（R643 同款错的回归守卫）。
+
+        首版把这段嵌在 `if runs.get("n"):` 内 ⇒ **纯发布行（无 run_summary）
+        时整块消失**。而配额水位是**按帖**属性，按轮次存在与否门控它毫无道理。
+        这条测试用"只有发布行、没有 run_summary"的输入把它钉住。
+        """
+        rows = [self._pub(22, f"2026-10-01T{h:02d}:00:00+00:00")
+                for h in range(0, 11)]
+        rows.append(self._pub(8, "2026-10-01T23:00:00+00:00"))
+        self.assertFalse(any(r.get("outcome") == "run_summary" for r in rows),
+                         "本用例前提：数据里没有 run_summary")
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("滚动24h 配额水位", text,
+                      "无 run_summary 时配额水位仍须渲染（不可被轮次数据门控）")
+        self.assertIn("基本无从生效", text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

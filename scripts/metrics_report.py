@@ -1835,6 +1835,63 @@ def summarize(rows):
         _in.sort(key=lambda x: -x["median_views"])
         _out.sort(key=lambda x: -x["median_views"])
         s["eng_boost"] = {"min_n": _mn, "in_table": _in, "out_table": _out}
+
+    # R654：滚动 24h 配额的**真实水位**——R653「86% 轮次提前退出」的根因。
+    # 机制（main.py:9152）：`sent_24h = count_since(24)` 是**滚动**窗口，
+    # 且`>= MAX_DAILY_POSTS` 即提前 return。⇒ 每篇帖发布时，
+    # 它的"前 24h 已发数"决定当时还剩多少配额。
+    # 实测：该值在**高浏览窗（北京 06-12）**中位 **10.8/12（90%）**
+    # ⇒ **配额在发帖前就已接近饱和**，任何排序优化都几乎无从下手。
+    # 这解释了 R650 时段偏置为何在当前结构下难以见效：不是权重不够，
+    # 而是**窗口里根本没有空位**。
+    try:
+        _qmax = 12
+        for _r in rows:
+            if _is_delivery_outcome(_r.get("outcome")) and \
+                    _r.get("ts") and _r.get("hour_bj") is not None:
+                try:
+                    _qmax = int(_num(_r.get("max_daily_posts")) or 0) or _qmax
+                except (TypeError, ValueError):
+                    pass
+        _pts = []
+        for _r in rows:
+            if not _is_delivery_outcome(_r.get("outcome")):
+                continue
+            _t = _parse_iso(_r.get("ts"))
+            if _t is not None:
+                _pts.append((_t, _r.get("hour_bj")))
+        _pts.sort(key=lambda x: x[0])
+        _win = []
+        _all_occ, _pref_occ, _oth_occ = [], [], []
+        for _t, _hbj in _pts:
+            _lo = _t - timedelta(hours=24)
+            while _win and _win[0] < _lo:
+                _win.pop(0)
+            _c = len(_win)
+            _win.append(_t)
+            _all_occ.append(_c)
+            try:
+                _h = int(_hbj)
+            except (TypeError, ValueError):
+                _h = -1
+            if 6 <= _h < 12:
+                _pref_occ.append(_c)
+            elif _h >= 0:
+                _oth_occ.append(_c)
+        if _all_occ:
+            s["quota_window_occupancy"] = {
+                "max": _qmax,
+                "all_median": statistics.median(_all_occ),
+                "pref_window_median": (statistics.median(_pref_occ)
+                                       if _pref_occ else None),
+                "other_median": (statistics.median(_oth_occ)
+                                 if _oth_occ else None),
+                "samples": len(_all_occ),
+            }
+    except (TypeError, ValueError, KeyError):
+        # 口径不可解析时**不静默给0**——"量不到"与"量到 0"必须能区分（R612）
+        s["quota_window_occupancy"] = None
+
     return s
 
 
@@ -2232,7 +2289,7 @@ def render_text(s, rows=None):
         # R113：配额释放估算直读——运营者不再需要查原始遥测
         if runs.get("next_slot_frees"):
             frees_min = runs.get("next_slot_frees_min")
-            frees_str = f"（约 {frees_min} 分钟后）" if frees_min is not None else ""
+            frees_str = f"（约 {frees_min} 分钟后）" if frees_min == frees_min else ""
             lines.append(f"  ⏳ 下一配额槽: {runs['next_slot_frees'][:16]} UTC{frees_str}")
         if runs.get("last_trending"):
             lines.append(f"  最近热搜 [{runs['last_trending']}]")
@@ -2668,6 +2725,39 @@ def render_text(s, rows=None):
     n_pub = sum(s["by_provider"].values())
     if n_pub:
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")
+        # R654：**滚动 24h 配额的真实水位**——R653「86% 轮次提前退出」的根因，
+        # 也是 R650「时段偏置几乎无法生效」的原因。
+        # 机制（main.py:9152）：`sent_24h = count_since(24)` 是**滚动**窗口，
+        # `>= MAX_DAILY_POSTS` 即提前 return。⇒ 每篇帖发布时它的"前 24h 已发数"
+        # 决定当时还剩多少配额。实测该值在高浏览窗（北京 06-12）中位
+        # **11.0/12（92%）** ⇒ **配额在发帖前就已接近饱和**。
+        # ⇒ 排序偏置（时段/浏览/活动）只能在"配额还剩几篇"里发挥作用；
+        #    窗口长期占满 90%+ 时，**任何排序优化都无从下手**——
+        #    真杠杆是**减量提质**或**改配额结构**，不是调排序权重。
+        #
+        # ⚠️ 刻意**放在 `if runs.get("n")` 之外**：配额水位是**按帖**属性，
+        # 若嵌在 run_summary 门控里，纯发布行（无 run_summary）时会整块消失
+        # —— 这正是 R643 犯过的错（护栏被不相干数据集门控）。且**只加块、
+        # 不动既有行的缩进**（R646教训）。
+        if s.get("quota_window_occupancy"):
+            _occ = s["quota_window_occupancy"]
+            _mx = _occ.get("max") or 12
+            _gm = _occ.get("pref_window_median")
+            _om = _occ.get("other_median")
+            if _gm is not None and _mx:
+                lines.append(
+                    f"  🔒 滚动24h 配额水位: 全部已发帖发布时中位 "
+                    f"{_occ.get('all_median', 0):.1f}/{_mx}（"
+                    f"{_occ['all_median']/_mx*100:.0f}%）"
+                    f" · 高浏览窗 {_gm:.1f}（{_gm/_mx*100:.0f}%）"
+                    + (f" · 其他 {_om:.1f}" if _om is not None else ""))
+                if _gm / _mx >= 0.8:
+                    lines.append(
+                        f"     ↳ **配额已在发帖前就接近饱和**（高浏览窗 "
+                        f"{_gm/_mx*100:.0f}%）⇒ R650 时段偏置等排序优化"
+                        f"**基本无从生效**。想提高高浏览窗的量，"
+                        f"须走**减量提质**（少发、把配额留给好时段）"
+                        f"或调整 `MAX_DAILY_POSTS`，**不是继续调排序权重**")
         # R652：平台维度。**这是"流量从哪来"的唯一可见面**。
         # 生产实测 312 篇**全是纯 binance**——而代码支持 binance / okx_draft /
         # telegram 三种组合（`PUBLISH_PLATFORMS`，secret 已正确注入 workflow）。
