@@ -8,6 +8,7 @@ import importlib.util
 import io
 import json
 import os
+import random
 import sys
 import tempfile
 import unittest
@@ -2691,6 +2692,51 @@ class TestContentStatsImport(unittest.TestCase):
         self.assertEqual(by_id["222"]["views"], 10)
         self.assertEqual(changed, 2)
 
+    def test_r641_merge_preserves_per_record_snapshot_ts(self):
+        """R641 连带修复：merge **不得用本次导入时刻统一覆盖全部记录的 ts**。
+
+        ts 是归因输入（消费侧据此算曝光天数，把累积浏览量换算成速率）。
+        首版写死一个全局 ts，等于宣称"所有帖曝光时长相同"——刚发的帖与5 天前
+        的帖就会按绝对值直接比较，而那正是 R641 要修的偏差。
+        场景：旧库里111(ts=10-01) / 222(ts=10-01)，本次只导入 333。
+        期望：111/222 保留旧 ts（未被本次观测更新），333 用新 ts。
+        """
+        with open(self.out, "w", encoding="utf-8") as f:
+            f.write(json.dumps({"content_id": "111", "views": 5000,
+                                "ts": "2026-10-01T04:00:00Z"}) + "\n")
+            f.write(json.dumps({"content_id": "222", "views": 50,
+                                "ts": "2026-10-01T04:00:00Z"}) + "\n")
+        mod = self._import()
+        mod.OUT_PATH = self.out
+        mod.merge_into_jsonl({"333": {"views": 7}})
+        by_id = {}
+        for line in open(self.out, encoding="utf-8"):
+            r = json.loads(line)
+            by_id[r["content_id"]] = r
+        self.assertEqual(by_id["111"]["ts"], "2026-10-01T04:00:00Z",
+                         "未参与本次导入的记录必须保留原快照时刻")
+        self.assertEqual(by_id["222"]["ts"], "2026-10-01T04:00:00Z")
+        self.assertNotEqual(by_id["333"]["ts"], "2026-10-01T04:00:00Z",
+                            "本次新导入的记录应用新快照时刻")
+        self.assertIn("T", str(by_id["333"]["ts"]), "新记录必须有 ts")
+
+    def test_r641_merge_updates_ts_for_reimported_ids(self):
+        """同一 id 被再次导出（快照推进）时，ts 必须更新为更新的时刻。
+
+        否则"取了max 浏览量但ts 停在最旧那次"，曝光天数被低估 → 速率虚高，
+        又变成另一种偏差。快照只会向前推进，所以取较新者。
+        """
+        with open(self.out, "w", encoding="utf-8") as f:
+            f.write(json.dumps({"content_id": "111", "views": 500,
+                                "ts": "2026-10-01T04:00:00Z"}) + "\n")
+        mod = self._import()
+        mod.OUT_PATH = self.out
+        mod.merge_into_jsonl({"111": {"views": 900}})
+        r = json.loads(open(self.out, encoding="utf-8").read().strip())
+        self.assertEqual(r["views"], 900, "取 max 观测")
+        self.assertNotEqual(r["ts"], "2026-10-01T04:00:00Z",
+                            "重新导出的记录 ts 须推进，否则曝光天数被低估")
+
     def test_chinese_wan_yi_notation_parsed(self):
         """R311：币安创作者后台大数展示/导出用中文单位（"1.2万"=12000、"2亿"）。
         旧 _to_int 对这类值抛 ValueError 返 None → 高浏览帖浏览量被静默丢弃 →
@@ -2733,29 +2779,33 @@ class TestContentStatsReportJoin(unittest.TestCase):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def _rows(self):
+        # R641：归因改用日均浏览速率（views / 曝光天数），必须有 ts + 快照 ts
+        # 才能算出曝光时长。发布 2026-10-01T00:00Z、快照 2026-10-02T04:00Z
+        # ⇒ 曝光 28/24=1.16667 天，速率 = views * 24/28 = views * 6/7。
+        _t = "2026-10-01T00:00:00+00:00"
         return [
-            {"platforms": ["binance"], "outcome": "binance_published",
+            {"platforms": ["binance"], "outcome": "binance_published", "ts": _t,
              "content_id": "c1", "hour_bj": 21, "article": False, "source": "U.Today"},
-            {"platforms": ["binance"], "outcome": "binance_published",
+            {"platforms": ["binance"], "outcome": "binance_published", "ts": _t,
              "content_id": "c2", "hour_bj": 22, "article": False, "source": "U.Today"},
-            {"platforms": ["binance"], "outcome": "binance_published",
+            {"platforms": ["binance"], "outcome": "binance_published", "ts": _t,
              "content_id": "c3", "hour_bj": 2, "article": True, "source": "CryptoSlate"},
-            {"platforms": ["binance"], "outcome": "binance_published",
+            {"platforms": ["binance"], "outcome": "binance_published", "ts": _t,
              "content_id": "c4", "hour_bj": 9, "article": False, "source": "CryptoSlate"},
             # 18 点边界两侧各钉一样本：上游分桶阈值若被改动，下面断言立刻红
-            {"platforms": ["binance"], "outcome": "binance_published",
+            {"platforms": ["binance"], "outcome": "binance_published", "ts": _t,
              "content_id": "c5", "hour_bj": 15, "article": False, "source": "Decrypt"},
-            {"platforms": ["binance"], "outcome": "binance_published",
+            {"platforms": ["binance"], "outcome": "binance_published", "ts": _t,
              "content_id": "c6", "hour_bj": 19, "article": True, "source": "Decrypt"},
-            {"platforms": ["binance"], "outcome": "binance_published",
+            {"platforms": ["binance"], "outcome": "binance_published", "ts": _t,
              "content_id": None, "hour_bj": 21, "article": False, "source": "U.Today"},
         ]
 
-    def _stats_file(self, stats):
+    def _stats_file(self, stats, snap_ts="2026-10-02T04:00:00Z"):
         p = os.path.join(self.tmpdir, "content_stats.jsonl")
         with open(p, "w", encoding="utf-8") as f:
             for cid, rec in stats.items():
-                f.write(json.dumps({"content_id": cid, **rec},
+                f.write(json.dumps({"content_id": cid, "ts": snap_ts, **rec},
                                    ensure_ascii=False) + "\n")
         return p
 
@@ -2778,20 +2828,36 @@ class TestContentStatsReportJoin(unittest.TestCase):
             mr._STATS_CACHE.update(orig)
         self.assertEqual(rows["stats_posts"], 6, "content_id 为 None 的行不进分母")
         self.assertEqual(rows["stats_views_total"], 2150)
-        self.assertEqual(rows["stats_by_hourbucket"]["晚间18-24"], [300, 500, 150])
-        self.assertEqual(rows["stats_by_hourbucket"]["凌晨0-6"], [900])
-        self.assertEqual(rows["stats_by_hourbucket"]["下午12-18"], [200])
-        self.assertEqual(rows["stats_by_hourbucket"]["上午6-12"], [100])
-        self.assertEqual(rows["stats_by_genre"]["长文"], [900, 150])
-        self.assertEqual(sorted(rows["stats_by_source"]["U.Today"]), [300, 500])
+        # R641：归因桶装的是**日均速率**（views / 曝光天数）。本fixture 发布
+        # 2026-10-01T00:00Z、快照 2026-10-02T04:00Z ⇒ 曝光 28/24 天，
+        # 速率 = views * 6/7。若哪天有人把归因改回绝对浏览量，下面这些
+        # 断言会立刻红——这是 R641 的核心守卫。
+        _k = 6 / 7
+
+        def _eq(got, exp, msg):
+            self.assertEqual(len(got), len(exp), msg)
+            for _i, (_g, _e) in enumerate(zip(sorted(got), sorted(exp))):
+                self.assertAlmostEqual(_g, _e, places=6,
+                                       msg=f"{msg}[{_i}]: {_g} != {_e}")
+
+        _eq(rows["stats_by_hourbucket"]["晚间18-24"],
+            [300 * _k, 500 * _k, 150 * _k], "晚间")
+        _eq(rows["stats_by_hourbucket"]["凌晨0-6"], [900 * _k], "凌晨")
+        _eq(rows["stats_by_hourbucket"]["下午12-18"], [200 * _k], "下午")
+        _eq(rows["stats_by_hourbucket"]["上午6-12"], [100 * _k], "上午")
+        _eq(rows["stats_by_genre"]["长文"], [900 * _k, 150 * _k], "长文")
+        _eq(rows["stats_by_source"]["U.Today"], [300 * _k, 500 * _k], "来源")
+        self.assertEqual(rows["stats_rate_skipped"], 0)
         text = mr.render_text(rows, self._rows())
         # R628：文案带分母与覆盖率——「N 篇有记录」会被读成"共 N 篇"
         self.assertIn("内容数据（6/6 篇已发布帖有浏览数据（100%））", text)
         self.assertIn("均浏览 358", text)
         # R610：归因桶改报中位数（抗单篇爆款把排名带偏），标签随之改口径
-        self.assertIn("时段浏览中位", text)
-        self.assertIn("体裁浏览中位", text)
-        self.assertIn("来源浏览中位", text)
+        # R641：标签再随口径改为「速率中位」——展示值与口径必须一致
+        self.assertIn("时段速率中位", text)
+        self.assertIn("体裁速率中位", text)
+        self.assertIn("来源速率中位", text)
+        self.assertIn("日均浏览速率", text)
 
     def test_no_stats_file_renders_nothing(self):
         """没有 content_stats.jsonl 时整块面板不渲染（零噪音）"""
@@ -2808,16 +2874,22 @@ class TestContentStatsReportJoin(unittest.TestCase):
         """R602：文风维度 × 浏览——R521/R288/R130/R592 轮换的开场钩子/人设/结尾/
         实操角度各自的真实浏览量要能分桶，否则这些文风旋钮即便拿到互动数据也无从
         判断「哪种套路带流量」。按已落盘的轮换标签分桶、空标签不进分母。"""
+        # R641：行须带 ts——归因改用日均速率，缺 ts 即曝光时长未知、
+        # 不进归因分母（这是刻意设计，见 _exposure_days注释）。
+        _t = "2026-10-01T00:00:00+00:00"
         style_rows = [
-            {"platforms": ["binance"], "outcome": "binance_published", "content_id": "s1",
+            {"platforms": ["binance"], "outcome": "binance_published", "ts": _t,
+             "content_id": "s1",
              "hour_bj": 21, "article": False, "source": "U.Today",
              "opening_hook": "反差冲击", "persona": "毒舌老韭菜",
              "ending_style": "灵魂拷问", "trade_cta_style": "失效位优先"},
-            {"platforms": ["binance"], "outcome": "binance_published", "content_id": "s2",
+            {"platforms": ["binance"], "outcome": "binance_published", "ts": _t,
+             "content_id": "s2",
              "hour_bj": 22, "article": False, "source": "U.Today",
              "opening_hook": "反差冲击", "persona": "数据拆解派",
              "ending_style": "灵魂拷问", "trade_cta_style": "风险先说"},
-            {"platforms": ["binance"], "outcome": "binance_published", "content_id": "s3",
+            {"platforms": ["binance"], "outcome": "binance_published", "ts": _t,
+             "content_id": "s3",
              "hour_bj": 20, "article": False, "source": "Decrypt",
              "opening_hook": "悬念设问", "persona": "毒舌老韭菜",
              "ending_style": "对比站队"},  # trade_cta_style 缺失 → 不进 CTA 分母
@@ -2832,18 +2904,29 @@ class TestContentStatsReportJoin(unittest.TestCase):
             summ = mr.summarize(rows)
         finally:
             mr._STATS_CACHE.update(orig)
-        self.assertEqual(sorted(summ["stats_by_hook"]["反差冲击"]), [100, 300])
-        self.assertEqual(summ["stats_by_hook"]["悬念设问"], [800])
-        self.assertEqual(sorted(summ["stats_by_persona"]["毒舌老韭菜"]), [100, 800])
-        self.assertEqual(summ["stats_by_ending"]["灵魂拷问"], [100, 300])
-        self.assertEqual(summ["stats_by_cta"]["失效位优先"], [100])
+        # 曝光 28/24 天 ⇒ 速率 = views * 6/7。浮点除法顺序不同会有 1e-13 级
+        # 尾差，故逐值 assertAlmostEqual 而非 assertEqual 列表比较。
+        _k = 6 / 7
+
+        def _eq(got, exp, msg):
+            self.assertEqual(len(got), len(exp), msg)
+            for _i, (_g, _e) in enumerate(zip(sorted(got), sorted(exp))):
+                self.assertAlmostEqual(_g, _e, places=6,
+                                       msg=f"{msg}[{_i}]: {_g} != {_e}")
+
+        _eq(summ["stats_by_hook"]["反差冲击"], [100 * _k, 300 * _k], "开场钩子")
+        _eq(summ["stats_by_hook"]["悬念设问"], [800 * _k], "悬念设问")
+        _eq(summ["stats_by_persona"]["毒舌老韭菜"], [100 * _k, 800 * _k], "人设")
+        _eq(summ["stats_by_ending"]["灵魂拷问"], [100 * _k, 300 * _k], "结尾")
+        _eq(summ["stats_by_cta"]["失效位优先"], [100 * _k], "CTA")
         self.assertNotIn("", summ["stats_by_cta"], "缺失标签不得建空桶")
         self.assertEqual(len(summ["stats_by_cta"]), 2, "s3 无 trade_cta_style 不进 CTA 分母")
         text = mr.render_text(summ, style_rows)
-        self.assertIn("开场钩子浏览中位", text)
-        self.assertIn("人设浏览中位", text)
-        self.assertIn("结尾套路浏览中位", text)
-        self.assertIn("实操角度浏览中位", text)
+        # R641：标签随口径改为「速率中位」
+        self.assertIn("开场钩子速率中位", text)
+        self.assertIn("人设速率中位", text)
+        self.assertIn("结尾套路速率中位", text)
+        self.assertIn("实操角度速率中位", text)
 
     def test_r610_bucket_line_ranks_by_median_not_mean(self):
         """R610：归因桶按中位数排序——单篇爆款不得改写排名。
@@ -2874,6 +2957,206 @@ class TestContentStatsReportJoin(unittest.TestCase):
         self.assertIn("某桶 200×2", mr._bucket_line({"某桶": [100, 300]}))
         # 三个样本时中位即中间值，行为不变
         self.assertIn("某桶 100×3", mr._bucket_line({"某桶": [50, 100, 400]}))
+
+    # ------------------------------------------------------------------
+    # R641：浏览量归因的**累积时长偏差**
+    #
+    # 缺陷：`content_stats.jsonl` 是每日一次性快照累积覆盖。同一份快照里，
+    # 5 天前的帖已累积 5 天浏览、1 天前的帖只有 1 天——浏览量是**累积量**，
+    # 绝对值里"活了多久"与"写得多好"是叠加的。原面板直接按绝对浏览量分桶，
+    # 于是系统性地把老帖排到前面。生产实测（n=59，唯一快照 2026-10-02T04:00Z）：
+    # 修正前后 4 个维度里**3 个的第一名翻转**——
+    #   时段   晚间18-24(132) → 上午6-12(88)
+    #   开场钩子 悬念设问(105) → 内幕爆料腔(80)
+    #   结尾套路 情绪表态(174) → 灵魂拷问(83)
+    # 换算口径=日均浏览速率（views / 曝光天数），让两个因素分开。
+    # ------------------------------------------------------------------
+
+    def test_r641_exposure_days_basic(self):
+        """曝光天数 = 快照时刻 - 发布时刻，最小 0"""
+        from datetime import datetime, timezone
+        snap = datetime(2026, 10, 2, 4, 0, tzinfo=timezone.utc)
+        self.assertAlmostEqual(
+            mr._exposure_days("2026-09-27T12:00:00+00:00", snap), 4.6666667, places=3)
+        self.assertAlmostEqual(
+            mr._exposure_days("2026-10-01T04:00:00+00:00", snap), 1.0, places=6)
+
+    def test_r641_exposure_unknown_is_none_not_zero(self):
+        """曝光时长未知必须返回 None，**不能返回 0**。
+
+        0 会被当成"刚发布、浏览量低"参与排序——把"没数据"伪装成一个真实
+        观测（R612：沉默不是通过；R617：未知≠通过）。缺 ts、坏ts、
+        快照早于发布（时钟漂移/导出错误）三种情况都要覆盖。
+        """
+        from datetime import datetime, timezone
+        snap = datetime(2026, 10, 2, 4, 0, tzinfo=timezone.utc)
+        self.assertIsNone(mr._exposure_days(None, snap), "缺 ts → None")
+        self.assertIsNone(mr._exposure_days("不是时间", snap), "坏 ts → None")
+        self.assertIsNone(mr._exposure_days("2026-10-01T00:00:00+00:00", None),
+                          "缺快照时刻 → None")
+        self.assertEqual(mr._exposure_days("2026-10-05T00:00:00+00:00", snap), 0.0,
+                         "快照早于发布 → 夹到 0（此时是时钟问题，不是缺数据）")
+
+    def test_r641_naive_timestamp_gets_utc_not_dropped(self):
+        """naive 时间按 UTC 补 tzinfo，不静默丢样本。
+
+        丢样本会让归因分母无声变小，读者看不出"少算了"。宁可算错一个
+        可加 tz 的时刻，也不要丢掉整条观测。
+        """
+        snap = mr._parse_iso("2026-10-02T04:00:00Z")
+        got = mr._exposure_days("2026-10-01T04:00:00", snap)
+        self.assertIsNotNone(got, "naive ts 必须补 UTC 而不是当坏数据丢弃")
+        self.assertAlmostEqual(got, 1.0, places=6)
+
+    def test_r641_buckets_use_rate_not_absolute_views(self):
+        """归因桶必须装**速率**。核心守卫：老帖绝对浏览更高但速率更低时，
+        桶里应是速率更低的那个。
+
+        构造：两帖同桶，c1 发了 5 天攒 1000浏览（200/天），
+        c2 昨天才发、攒 150 浏览（150/天）——绝对值 c1 完胜，速率 c2 更高。
+        桶里若装绝对值 → [150, 1000]；装速率 → [150, 200]。
+        """
+        rows = [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "ts": "2026-09-27T04:00:00+00:00", "content_id": "old",
+             "hour_bj": 21, "article": False, "source": "U.Today"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "ts": "2026-10-01T04:00:00+00:00", "content_id": "new",
+             "hour_bj": 21, "article": False, "source": "U.Today"},
+        ]
+        sp = os.path.join(self.tmpdir, "cs.jsonl")
+        with open(sp, "w", encoding="utf-8") as f:
+            f.write(json.dumps({"content_id": "old", "views": 1000,
+                                "ts": "2026-10-02T04:00:00Z"}) + "\n")
+            f.write(json.dumps({"content_id": "new", "views": 150,
+                                "ts": "2026-10-02T04:00:00Z"}) + "\n")
+        orig = mr._STATS_CACHE.copy()
+        try:
+            mr._STATS_CACHE.update({"loaded": True, "data": mr.load_content_stats(sp)})
+            summ = mr.summarize(rows)
+        finally:
+            mr._STATS_CACHE.update(orig)
+        got = sorted(summ["stats_by_source"]["U.Today"])
+        self.assertEqual(got, [150, 200], "桶里必须是日均速率（老帖 5 天 1000→200/天）")
+        self.assertNotIn(1000, got, "绝对浏览量 1000 不得出现在归因桶里")
+        # 但总量统计仍按绝对值——它对"总浏览"是有效观测
+        self.assertEqual(summ["stats_views_total"], 1150)
+
+    def test_r641_unknown_exposure_excluded_from_buckets_counted_in_total(self):
+        """曝光时长未知的样本：**不进归因分母，但计入总量**。
+
+        两件事都不做是错的：全丢 → 归因分母无声变小；全留 → 缺数据的帖
+        当成真实观测参与排序。
+        """
+        rows = [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "ts": "2026-10-01T04:00:00+00:00", "content_id": "ok",
+             "hour_bj": 21, "article": False, "source": "U.Today"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "content_id": "no_ts",  # 缺 ts → 曝光未知
+             "hour_bj": 21, "article": False, "source": "U.Today"},
+        ]
+        sp = os.path.join(self.tmpdir, "cs2.jsonl")
+        with open(sp, "w", encoding="utf-8") as f:
+            f.write(json.dumps({"content_id": "ok", "views": 300,
+                                "ts": "2026-10-02T04:00:00Z"}) + "\n")
+            f.write(json.dumps({"content_id": "no_ts", "views": 9999,
+                                "ts": "2026-10-02T04:00:00Z"}) + "\n")
+        orig = mr._STATS_CACHE.copy()
+        try:
+            mr._STATS_CACHE.update({"loaded": True, "data": mr.load_content_stats(sp)})
+            summ = mr.summarize(rows)
+        finally:
+            mr._STATS_CACHE.update(orig)
+        self.assertEqual(summ["stats_rate_skipped"], 1, "曝光未知要计入跳过计数")
+        self.assertEqual(summ["stats_by_source"]["U.Today"], [300],
+                         "曝光未知的样本不得进归因桶")
+        self.assertEqual(summ["stats_posts"], 2, "总量统计仍计入两条")
+        self.assertEqual(summ["stats_views_total"], 10299)
+        text = mr.render_text(summ, rows)
+        self.assertIn("曝光时长未知", text, "被排除的样本数必须显式告知读者")
+
+    # ------------------------------------------------------------------
+    # R642：归因差异的**显著性判据**
+    #
+    # 缺陷：面板把各归因桶并排列出浏览中位，逐行标注，读起来就是
+    # "内幕爆料腔比痛点直击高 62%"，仿佛是调 prompt 的依据。
+    # 但生产实测 n=59 做置换检验后，时段/体裁/来源/开场/人设/结尾/实操角度
+    # **七个维度全部不可与随机区分**（单侧 p 最小 0.040）。
+    # 不写这一行＝把噪声陈列成结论（R622 同类事故：拿当前样本里不成立的
+    # 差异去改已在生效的东西）。
+    # ------------------------------------------------------------------
+
+    def test_r642_significance_flags_real_difference(self):
+        """真差异必须被抓出来（否则显著性判据就成了永远说"不显著"的摆设）"""
+        rng = random.Random(1)
+        pool = [rng.gauss(50, 15) for _ in range(60)]
+        buckets = {"普通": [v + rng.gauss(0, 5) for v in pool[:30]],
+                   "显著高": [v + 60 for v in pool[30:]]}
+        sig, _note = mr._bucket_significance(buckets)
+        self.assertIn("显著高", sig, "均值高 60 的桶必须被判显著")
+        self.assertNotIn("普通", sig, "与全体同分布的桶不该被判显著")
+
+    def test_r642_significance_rejects_pure_noise(self):
+        """纯噪声不得被判显著——这是本条守卫的核心。
+
+        用生产实测的量级构造：两个桶样本来自同一分布，样本量同为真实值
+        （开场钩子 ~5、结尾套路 ~6），若判据会误报，则说明检验太松。
+        """
+        rng = random.Random(42)
+        sig, note = mr._bucket_significance({
+            "A": [rng.gauss(50, 20) for _ in range(5)],
+            "B": [rng.gauss(52, 20) for _ in range(6)],
+            "C": [rng.gauss(48, 20) for _ in range(7)],
+        })
+        self.assertEqual(sig, set(), "同分布的桶不得被判显著")
+        self.assertIn("置换检验", note)
+
+    def test_r642_small_buckets_not_tested(self):
+        """样本不足的桶不进检验——n=1 的"桶"比中位必然=自己，判它显著毫无意义"""
+        sig, _ = mr._bucket_significance({
+            "孤样本": [999],
+            "普通": [50, 52, 48, 51, 49, 50, 53, 47],
+        })
+        self.assertNotIn("孤样本", sig, "n=1 不得参与判读")
+
+    def test_r642_pool_too_small_declares_no_test(self):
+        """全体样本太少时**显式说明未做检验**，而不是静默返回空集合
+
+        静默空集合会被渲染成"全部不可区分"——那是把"没能力判断"说成
+        "判断结果是负"（R612：沉默不是通过）。
+        """
+        sig, note = mr._bucket_significance({"甲": [10], "乙": [20]})
+        self.assertEqual(sig, set())
+        self.assertIn("不做显著性检验", note)
+
+    def test_r642_render_states_when_nothing_is_significant(self):
+        """全部维度不显著时，面板必须显式说"不可据此调 prompt"。
+
+        这是 R642 的交付面：不是把检验结果藏着，而是写成人能执行的判读。
+        """
+        rows, _s = [], []
+        for i in range(12):
+            rows.append({"platforms": ["binance"], "outcome": "binance_published",
+                         "ts": "2026-10-01T04:00:00+00:00", "content_id": f"n{i}",
+                         "hour_bj": 21, "article": False, "source": "U.Today",
+                         "opening_hook": "反差冲击" if i % 2 else "悬念设问",
+                         "persona": "毒舌老韭菜", "ending_style": "灵魂拷问"})
+            _s.append({"content_id": f"n{i}", "views": 100 + (i % 3),
+                       "ts": "2026-10-02T04:00:00Z"})
+        sp = os.path.join(self.tmpdir, "cs3.jsonl")
+        with open(sp, "w", encoding="utf-8") as f:
+            for r in _s:
+                f.write(json.dumps(r, ensure_ascii=False) + "\n")
+        orig = mr._STATS_CACHE.copy()
+        try:
+            mr._STATS_CACHE.update({"loaded": True, "data": mr.load_content_stats(sp)})
+            summ = mr.summarize(rows)
+        finally:
+            mr._STATS_CACHE.update(orig)
+        text = mr.render_text(summ, rows)
+        self.assertIn("不可与随机区分", text)
+        self.assertIn("不可据此调 prompt", text)
 
     def test_provider_dispatch_order_folds_and_ranks_by_latency(self):
         """R337：通道位次行——发/拒计数折叠到短通道名（同一 preset 名下多模型合并），

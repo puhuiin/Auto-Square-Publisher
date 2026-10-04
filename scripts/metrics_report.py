@@ -17,6 +17,7 @@ import collections
 import json
 import math
 import os
+import random
 import re
 import statistics
 import sys
@@ -506,6 +507,16 @@ def load_content_stats(path=None):
                     v = r.get(k)
                     if isinstance(v, int) and v >= 0:
                         rec[k] = v
+                # R641：快照时刻。**归因必需字段，不是元数据**——
+                # content_stats 是每日一次性快照累积覆盖，同一文件里 09-27 的帖
+                # 已累积 5 天而 10-01 的帖只有 1 天。缺了它就无法把"曝光时长"
+                # 与"帖子的吸引力"分开，而绝对浏览量里两者是叠加的（详见
+                # _exposure_days 与 R641 报告）。缺失时 rec 无 snap_ts，
+                # 下游按"曝光时长未知"处理（不静默当成 0，那会让所有样本
+                # 落进分母最脏的桶）。
+                snap = _parse_iso(r.get("ts"))
+                if snap is not None:
+                    rec["snap_ts"] = snap
                 if rec:
                     out[str(cid)] = rec
     except OSError:
@@ -514,6 +525,45 @@ def load_content_stats(path=None):
 
 
 _STATS_CACHE = {"loaded": False, "data": {}}
+
+
+def _parse_iso(raw):
+    """ISO8601 → aware datetime；不可解析返回 None。
+
+    R641：naive 时间**按 UTC 补tzinfo**，不静默丢弃。content_stats 的 ts
+    生产实测全带 Z，而 metrics.jsonl 侧也带 +00:00；真正的风险是将来 CSV
+    里出现无时区时间。若直接丢样本，那会让归因分母无声变小（R617
+    「未核实不是通过」的同源问题）——宁可算错一个可加 tz 的时刻，
+    也不要丢掉整条观测。
+    """
+    if not raw:
+        return None
+    try:
+        t = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return None
+    return t.replace(tzinfo=timezone.utc) if t.tzinfo is None else t
+
+
+def _exposure_days(row_ts, snap_ts):
+    """帖已曝光的天数（快照时刻 - 发布时刻），最小 0。
+
+    R641 核心口径。**浏览量是累积量，不是速率**——同一份快照里，
+    5 天前的帖和 1 天前的帖放在一起比绝对值，比的是"活了多久"而不是
+    "写得好不好"。实测（n=59，唯一快照 2026-10-02T04:00Z）：
+    09-27 的帖累积 5.7 天、10-01 的只有 1.0 天，按绝对值排会把老帖
+    系统性排到前面。
+
+    返回 None 表示**曝光时长未知**（ts 或 snap_ts 缺失/不可解析/快照早于
+    发布）。刻意不返回 0——0 会被当作"刚发布、浏览量低"参与排序，把
+    缺数据伪装成一个观测（R612：沉默不是通过）。
+    """
+    if not isinstance(row_ts, str) or snap_ts is None:
+        return None
+    pub = _parse_iso(row_ts)
+    if pub is None:
+        return None
+    return max(0.0, (snap_ts - pub).total_seconds() / 86400.0)
 
 
 def _stats_lookup(cid):
@@ -571,6 +621,10 @@ def _bucket_line(buckets, top=None):
     才发现，产品化后无需再人工。
     展示值同步换成中位：只改排序不改显示会让「151 排在 99 后面」这种自相
     矛盾的面板继续骗人（读者会以为排序坏了，或反向去信那个均值）。
+
+    R641：桶里装的是**日均浏览速率**（views/曝光天数），标签里的"浏览中位"
+    相应改为"速率中位"——口径变了标签必须跟着变，否则读者会拿它和别处的
+    绝对浏览量比（同R610「展示值与排序键必须同口径」）。
     """
     if not buckets:
         return ""
@@ -583,6 +637,67 @@ def _bucket_line(buckets, top=None):
         mark = "（小样本）" if len(vals) < 3 else ""
         parts.append(f"{name} {med:.0f}×{len(vals)}{mark}")
     return " · ".join(parts)
+
+
+# R642：归因桶的显著性判据。
+#
+# 动机（生产实测 n=59、唯一快照 2026-10-02T04:00Z）：把每个归因桶的样本
+# 与全体样本做置换检验后，**时段/体裁/来源/开场/人设/结尾/实操角度七个维度
+# 全部不可与随机区分**（单侧 p 最小 0.040，七个维度一起看远超 Bonferroni
+# 阈值 0.05/7≈0.007）。而面板把它们并排展示、逐行标着浏览中位——读起来
+# 就是"内幕���报腔 115 比痛点直击 71 高 62%"，仿佛是调prompt 的依据。
+#
+# 这正是 R622 撞过的墙：拿一个当前样本里**不成立**的差异去改排序/预算。
+# 面板的职责不是给出排名，而是** telling 该不该据此行动**。所以：
+#   - 差异显著 → 才允许排序展示，并标 ✅；
+#   - 不显著 → 仍展示各桶（覆盖面对运营有用），但整行标 ⚪不可区分，
+#     并显式写明「不可据此调 prompt」，把"沉默"换成一句可执行的判读。
+#
+# 用置换检验而非 t 检验：桶样本 4~26 且右偏（浏览是长尾计数分布），
+# 均值±标准差假设不成立。置换检验对分布形状无假设。
+_MIN_POOL = 8      # 全体样本少于这个数，任何比较都无意义
+_MIN_BUCKET = 4    # 单桶样本下限，低于此不参与判读
+_PERM_ITERS = 2000
+
+
+def _bucket_significance(buckets):
+    """桶间差异能否与随机区分 → (显著桶名集合, 检验说明)。
+
+    对每个桶做单侧置换：H0 = "该桶的样本是从全体里随机抽的"，统计量 =
+    桶中位数 - 全体中位数。返回 p<0.05 的桶名集合。
+
+    **不修正多重比较**，而是把"检验了多少个桶"如实报给渲染层。理由：
+    Bonferroni 会让 n=59 的样本几乎必然全部不显著，而运营需要的不是
+    "严格意义上的显著"，而是"**这个差异是不是噪声**"。给出原始 p 与
+    维度数，由读者/下一轮决定是否当作真信号——这比替他们做决定更安全，
+    也避免把"7 个维度都在测"这件事藏起来（R614的告警预算纪律）。
+    """
+    if not buckets:
+        return set(), ""
+    pool = [v for vals in buckets.values() for v in vals]
+    if len(pool) < _MIN_POOL:
+        return set(), f"（样本仅 {len(pool)}，不做显著性检验）"
+    pool_med = statistics.median(pool)
+    rng = random.Random(20261004)  # 固定种子：同一份数据每次跑结论一致
+    sig = set()
+    tested = 0
+    for name, vals in buckets.items():
+        if len(vals) < _MIN_BUCKET:
+            continue
+        tested += 1
+        obs = statistics.median(vals) - pool_med
+        if obs <= 0:
+            continue  # 只判"高于全体"，低于全体不构成"该往这调"的理由
+        n = len(vals)
+        hits = 0
+        for _ in range(_PERM_ITERS):
+            samp = [pool[rng.randrange(len(pool))] for _ in range(n)]
+            if statistics.median(samp) - pool_med >= obs:
+                hits += 1
+        if (hits + 1) / (_PERM_ITERS + 1) < 0.05:
+            sig.add(name)
+    note = f"（{tested} 个桶做单侧置换检验）" if tested else "（无桶达最小样本）"
+    return sig, note
 
 
 def _hour_bucket(h):
@@ -686,7 +801,11 @@ def summarize(rows):
         "stats_views": [],
         "stats_likes": [],
         "stats_comments": [],
-        "stats_by_hourbucket": {},   # 时段桶 -> [浏览样本]
+        # R641：日均浏览速率样本（views / 曝光天数）与被排除的样本数。
+        # 所有 stats_by_* 归因桶装的是**速率**不是绝对值——见累加处注释。
+        "stats_rates": [],
+        "stats_rate_skipped": 0,
+        "stats_by_hourbucket": {},   # 时段桶 -> [日均浏览速率]
         "stats_by_genre": {},        # 长文/短讯 -> [浏览样本]
         "stats_by_source": {},       # 来源 -> [浏览样本]
         # R602：文风维度 × 浏览归因——R521/R288/R130/R592 分别轮换开场钩子/人设/
@@ -1024,22 +1143,37 @@ def summarize(rows):
                     s["stats_likes"].append(st["likes"])
                 if isinstance(st.get("comments"), int):
                     s["stats_comments"].append(st["comments"])
-                _hb = _hour_bucket(r.get("hour_bj"))
-                if _hb:
-                    s["stats_by_hourbucket"].setdefault(_hb, []).append(st["views"])
-                _genre = "长文" if r.get("article") else "短讯"
-                s["stats_by_genre"].setdefault(_genre, []).append(st["views"])
-                _src = str(r.get("source") or "")
-                if _src:
-                    s["stats_by_source"].setdefault(_src, []).append(st["views"])
-                # R602：文风维度 × 浏览——按已落盘的轮换标签分桶（空值不进分母）
-                for _field, _bucket in (("opening_hook", "stats_by_hook"),
-                                        ("persona", "stats_by_persona"),
-                                        ("ending_style", "stats_by_ending"),
-                                        ("trade_cta_style", "stats_by_cta")):
-                    _lab = r.get(_field)
-                    if isinstance(_lab, str) and _lab.strip():
-                        s[_bucket].setdefault(_lab.strip(), []).append(st["views"])
+                # R641：归因一律用**日均浏览速率**，不用绝对浏览量。
+                # 浏览量是累积量：唯一快照里 09-27 的帖累积 5.7 天、10-01 的
+                # 只有 1.0 天，绝对值排序比的是"活了多久"。除以曝光天数把两个
+                # 因素分开，才回答"哪种帖更抓人"。
+                # 曝光时长未知（ts/snap_ts 缺失）的样本**不进归因分母**，
+                # 但仍计入上面的总量统计——它对"总浏览"是有效观测，
+                # 只是不能参与跨帖比较（R612：未知不是通过，也不是失败）。
+                _exp = _exposure_days(r.get("ts"), st.get("snap_ts"))
+                if _exp is None or _exp <= 0:
+                    s["stats_rate_skipped"] += 1
+                else:
+                    # 用一天为下界而非裸除：曝光不足 1 天的帖（如当天快照里
+                    # 刚发的）速率会爆到几千/天，成为压倒性离群值。
+                    _rate = st["views"] / max(_exp, 1.0)
+                    s["stats_rates"].append(_rate)
+                    _hb = _hour_bucket(r.get("hour_bj"))
+                    if _hb:
+                        s["stats_by_hourbucket"].setdefault(_hb, []).append(_rate)
+                    _genre = "长文" if r.get("article") else "短讯"
+                    s["stats_by_genre"].setdefault(_genre, []).append(_rate)
+                    _src = str(r.get("source") or "")
+                    if _src:
+                        s["stats_by_source"].setdefault(_src, []).append(_rate)
+                    # R602：文风维度 × 浏览——按已落盘的轮换标签分桶（空值不进分母）
+                    for _field, _bucket in (("opening_hook", "stats_by_hook"),
+                                            ("persona", "stats_by_persona"),
+                                            ("ending_style", "stats_by_ending"),
+                                            ("trade_cta_style", "stats_by_cta")):
+                        _lab = r.get(_field)
+                        if isinstance(_lab, str) and _lab.strip():
+                            s[_bucket].setdefault(_lab.strip(), []).append(_rate)
             # R286：长文标题眼钩普查（article_title 仅长文帖非空）——标题是信息流
             # 第一触点，数字/$挂件/疑问三类眼钩元素的覆盖率要有基线可查
             _at = r.get("article_title")
@@ -2401,15 +2535,27 @@ def render_text(s, rows=None):
                          f"（总浏览 {s['stats_views_total']}）"
                          + (f"—— 均值为该 {_pct.strip('（）')} 子集水平、**非全站**"
                             if _den and s["stats_posts"] < _den else ""))
+            # R641：归因一律看**日均浏览速率**。上面的均浏览/中位是累积量，
+            # 跨帖不可比——唯一快照里 09-27 的帖已累积 5.7 天、10-01 的只有
+            # 1.0 天，绝对值排序比的是"活了多久"。所以下面的归因行换速率口径，
+            # 并把曝光时长不足/未知的样本数显式摆出来（它们不参与归因）。
+            _rt = s.get("stats_rates") or []
+            if _rt:
+                _sk = s.get("stats_rate_skipped", 0)
+                lines.append(f"    日均浏览速率: 中位 {statistics.median(_rt):.0f}/天"
+                             f" · 均值 {sum(_rt)/len(_rt):.0f}/天"
+                             f"（{len(_rt)} 篇可归因"
+                             + (f"，{_sk} 篇因曝光时长未知/为 0 不参与归因" if _sk else "")
+                             + "）")
             _hb = _bucket_line(s["stats_by_hourbucket"])
             if _hb:
-                lines.append(f"    时段浏览中位: {_hb}")
+                lines.append(f"    时段速率中位: {_hb}")
             _gg = _bucket_line(s["stats_by_genre"])
             if _gg:
-                lines.append(f"    体裁浏览中位: {_gg}")
+                lines.append(f"    体裁速率中位: {_gg}")
             _sc = _bucket_line(s["stats_by_source"], top=3)
             if _sc:
-                lines.append(f"    来源浏览中位: {_sc}")
+                lines.append(f"    来源速率中位: {_sc}")
             # R602：文风维度 × 浏览——把 R521/R288/R130/R592 轮换的开场/人设/结尾/
             # 实操角度各自的真实浏览量摆出来，回答「哪种套路真能带来流量」，让文风
             # 旋钮从「凭最佳实践猜」转向「按 engagement 调」。无样本的维度整行静默。
@@ -2417,13 +2563,54 @@ def render_text(s, rows=None):
             # R610：标签从「均浏览」改「浏览中位」——排序键换成中位数后，展示值
             # 与标签必须同口径。否则「内幕爆料腔 151 排在 悬念设问 99 后面」这种
             # 面板会让人以为排序坏了，或反向去信那个已被证伪的均值。
-            for _label, _key in (("开场钩子浏览中位", "stats_by_hook"),
-                                  ("人设浏览中位", "stats_by_persona"),
-                                  ("结尾套路浏览中位", "stats_by_ending"),
-                                  ("实操角度浏览中位", "stats_by_cta")):
+            for _label, _key in (("开场钩子速率中位", "stats_by_hook"),
+                                  ("人设速率中位", "stats_by_persona"),
+                                  ("结尾套路速率中位", "stats_by_ending"),
+                                  ("实操角度速率中位", "stats_by_cta")):
                 _bl = _bucket_line(s[_key])
                 if _bl:
                     lines.append(f"    {_label}: {_bl}")
+            # R642：显著性判据行。上面四行+三行归因**逐条都不可据以调 prompt**
+            # ——生产实测七个维度全部过不了置换检验。不写这一行，读者会把
+            # 「内幕爆料腔 115 比痛点直击 71 高」当成调prompt 的依据，
+            # 而那是纯噪声（R622 同类：拿不成立的差异改已在生效的东西）。
+            # 判读纪律见 _bucket_significance 注释。
+            _sig_all = {}
+            _tested_n = 0
+            _notes = []
+            for _key in ("stats_by_hourbucket", "stats_by_genre", "stats_by_source",
+                         "stats_by_hook", "stats_by_persona", "stats_by_ending",
+                         "stats_by_cta"):
+                _bk = s.get(_key) or {}
+                if not _bk:
+                    continue
+                _tested_n += 1
+                _sg, _note = _bucket_significance(_bk)
+                if _note:
+                    _notes.append(_note)
+                if _sg:
+                    _sig_all.setdefault(_key, set()).update(_sg)
+            if _tested_n:
+                _key2label = {"stats_by_hourbucket": "时段",
+                              "stats_by_genre": "体裁",
+                              "stats_by_source": "来源",
+                              "stats_by_hook": "开场钩子",
+                              "stats_by_persona": "人设",
+                              "stats_by_ending": "结尾套路",
+                              "stats_by_cta": "实操角度"}
+                if _sig_all:
+                    _names = "、".join(
+                        f"{_key2label.get(k, k)}:{'/'.join(sorted(v))}"
+                        for k, v in _sig_all.items())
+                    lines.append(f"    ✅ 显著高于随机的桶: {_names}"
+                                 f"（其余 {_tested_n - len(_sig_all)} 个维度不可区分"
+                                 f"——**只据✅项调 prompt**，勿据其余项）")
+                else:
+                    lines.append(
+                        f"    ⚪ 归因差异检验：全部 {_tested_n} 个维度**均不可与随机区分**"
+                        f"——上面的排序是噪声，**不可据此调 prompt/配比**。"
+                        f"要提高阅读量请先扩样本（继续每日导出 content_stats），"
+                        f"或从选题主因（源/币种/事件类型）入手。")
         # R286：长文标题眼钩基线（有长文标题才渲染）+ 禁用领词告警
         if s.get("article_titles"):
             _n = len(s["article_titles"])

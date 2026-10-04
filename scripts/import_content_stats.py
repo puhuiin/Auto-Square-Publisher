@@ -114,8 +114,17 @@ def read_csv(path: str) -> Dict[str, Dict[str, int]]:
 
 def merge_into_jsonl(records: Dict[str, Dict[str, int]]) -> int:
     """把新记录并入 content_stats.jsonl（同 id 各指标取 max，保留已有观测）。
-    返回写入的记录条数。"""
+    返回写入的记录条数。
+
+    R641：**逐条保留各自的快照时刻 ts**，不得用本次导入时刻统一覆盖。
+    ts 不是元数据而是归因输入——消费侧（metrics_report._exposure_days）用它
+    算"该帖已曝光几天"，把浏览量（累积量）换算成速率。首版在此写死一个
+    全局 ts，等于宣称"所有帖的曝光时长相同"，会让刚发布的帖与 5 天前的帖
+    按绝对值直接比较——而那正是 R641 要修的偏差。
+    同一id 的多次导入取**较新**的 ts（快照只会向前推进）。
+    """
     existing: Dict[str, Dict[str, int]] = {}
+    old_ts: Dict[str, str] = {}
     if os.path.exists(OUT_PATH):
         with open(OUT_PATH, "r", encoding="utf-8") as f:
             for line in f:
@@ -129,11 +138,15 @@ def merge_into_jsonl(records: Dict[str, Dict[str, int]]) -> int:
                 cid = r.get("content_id")
                 if not cid:
                     continue
-                rec = existing.setdefault(str(cid), {})
+                cid = str(cid)
+                rec = existing.setdefault(cid, {})
                 for k in ("views", "likes", "comments"):
                     v = r.get(k)
                     if isinstance(v, int) and v >= 0:
                         rec[k] = max(rec.get(k, 0), v)
+                _t = r.get("ts")
+                if isinstance(_t, str) and _t.strip():
+                    old_ts[cid] = _t.strip()
     changed = 0
     for cid, rec in records.items():
         cur = existing.setdefault(cid, {})
@@ -146,7 +159,11 @@ def merge_into_jsonl(records: Dict[str, Dict[str, int]]) -> int:
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         for cid in sorted(existing):
             rec = existing[cid]
-            f.write(json.dumps({"content_id": cid, "ts": ts, **rec},
+            # 本次导入涉及的 id 用新ts；未涉及的保留旧 ts。
+            # （未涉及的 id 若是首次出现在库里则不存在这种情况——existing
+            #   里的 id 都来自旧文件，都带ts。）
+            _line_ts = ts if cid in records else (old_ts.get(cid) or ts)
+            f.write(json.dumps({"content_id": cid, "ts": _line_ts, **rec},
                                ensure_ascii=False) + "\n")
     return changed
 
