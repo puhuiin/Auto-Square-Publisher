@@ -1644,14 +1644,76 @@ def _provider_pool_from_main(main_path=None):
     return []
 
 
-def _provider_dispatch_order(by_provider, reject_by_provider, latency_by_provider):
-    """R337：把「发/拒」计数按 failover 实际调用顺序（延迟↑=先试）汇总成每通道一
-    行，回答反复出现的「某源份额低=没在用？」误读——慢而稳的兜底源（如 stepfun）
-    天然排在链尾、只在前序全挂时才够得到，份额小不等于闲置。键统一折叠到短通道名
-    （who.split('/',1)[0]，与 latency_by_provider 同粒度=failover 单元；openrouter
-    名下多模型合并计入一个通道）；剔除 '-'/'unknown'/空通道（非真实通道无法归位）。
-    无延迟样本的通道排在有延迟者之后（视为链尾未知位）。返回
-    [(prov, 发, 拒, 延迟或None), ...] 已按 failover 顺序排好；无可归位数据返回 []。"""
+def _priority_pinned_from_main(main_path=None):
+    """R621：AST 解析 main.py 的 priority 置顶通道清单。
+
+    main._ordered_providers 的真实调用顺序是三层：运行内失败数 → -priority →
+    延迟/成本分。**priority 在延迟之前**——用户显式置顶的通道（如 stepfun 系，
+    2026-09-23「多用 step5」）无视延迟插队先试。而通道位次行此前按纯延迟排序
+    并宣称「靠前先试」，会让人把 15.5s 的 google 误当首选（实测它是链尾兜底，
+    只发 1 篇；真正的首选 stepfun-flash 发了 28 篇）。
+
+    匹配 main.py 的实际写法：
+        if p.name == "Preset-xxx":
+            p.priority = <expr>
+    解析失败/找不到返回空集——空集 = 无置顶通道，显示回退到纯延迟序（不撒谎，
+    只是缺一层信息；与 _provider_pool_from_main 的「响亮失败」判据同源）。
+    """
+    path = main_path or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "main.py")
+    pinned = []
+    try:
+        import ast
+        with open(path, "r", encoding="utf-8") as f:
+            tree = ast.parse(f.read())
+    except Exception:
+        return []
+
+    def _name_in_test(test):
+        """从 `p.name == "Preset-xxx"` 里取 "Preset-xxx"；取不到返回 None。"""
+        if isinstance(test, ast.Compare) and len(test.ops) == 1 \
+                and isinstance(test.ops[0], ast.Eq) and len(test.comparators) == 1:
+            cmp = test.comparators[0]
+            if isinstance(cmp, ast.Constant) and isinstance(cmp.value, str):
+                return cmp.value
+        return None
+
+    # 扁平遍历：任何 `if <x>.name == "Preset-xxx"` 且 if/elif 体内出现
+    # `.priority =` 赋值的，都视为置顶通道。
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.If):
+            continue
+        name = _name_in_test(node.test)
+        if name is None:
+            continue
+        for sub in ast.walk(ast.Module(body=node.body + (node.orelse or []),
+                                       type_ignores=[])):
+            if isinstance(sub, ast.Assign):
+                for tgt in sub.targets:
+                    if isinstance(tgt, ast.Attribute) and tgt.attr == "priority":
+                        if name not in pinned:
+                            pinned.append(name)
+                        break
+    return pinned
+
+
+def _provider_dispatch_order(by_provider, reject_by_provider, latency_by_provider,
+                            pinned=None):
+    """R337：把「发/拒」计数按 failover 实际调用顺序汇总成每通道一行，回答反复出现的
+    「某源份额低=没在用？」误读——链尾的兜底源天然只在前序全挂时才够得到，份额小
+    不等于闲置。键统一折叠到短通道名（who.split('/',1)[0]，与 latency_by_provider
+    同粒度=failover 单元；openrouter 名下多模型合并计入一个通道）；剔除 '-'/'unknown'/
+    空通道（非真实通道无法归位）。无延迟样本的通道排在有延迟者之后（视为链尾未知位）。
+    返回 [(prov, 发, 拒, 延迟或None), ...]；无可归位数据返回 []。
+
+    R621：**置顶通道先行**。main._ordered_providers 的真实顺序是
+    失败数 → -priority → 延迟分——priority 在延迟**之前**。此前本函数按纯延迟排序
+    并宣称「靠前先试」，把 15.5s 的 google 排到链首，而真实首选是用户置顶的
+    stepfun-flash（生产实录：stepfun-flash 发 28 篇、google 只发 1 篇）。
+    pinned（来自 _priority_pinned_from_main）按 main.py 实际写法解析，置顶通道
+    固定排在非置顶之前；置顶组内部仍按延迟序（AST 拿不到 priority 数值，组内序是
+    近似——对现状恰好正确：flash(25.6s) 先于 step-5(82.9s)）。解析失败返回空集，
+    显示回退纯延迟序（缺一层信息但不撒谎，与 _provider_pool_from_main 同判据）。"""
     pub = collections.Counter()
     rej = collections.Counter()
     for who, cnt in (by_provider or {}).items():
@@ -1662,8 +1724,15 @@ def _provider_dispatch_order(by_provider, reject_by_provider, latency_by_provide
     lat = latency_by_provider or {}
     inf = float("inf")
     rows = [(p, pub.get(p, 0), rej.get(p, 0), lat.get(p)) for p in provs]
-    # 延迟升序=failover 调用顺序；无延迟样本视为链尾；同位次按尝试量降序稳定收敛
-    rows.sort(key=lambda t: (t[3] if t[3] is not None else inf, -(t[1] + t[2]), t[0]))
+    pinned = set(pinned or [])
+
+    def _sort_key(t):
+        # 置顶通道在前（0），其余在后（1）；组内按延迟升序，无延迟样本视为链尾
+        return (0 if t[0] in pinned else 1,
+                t[3] if t[3] is not None else inf,
+                -(t[1] + t[2]), t[0])
+
+    rows.sort(key=_sort_key)
     return rows
 
 
@@ -2500,14 +2569,19 @@ def render_text(s, rows=None):
     if s["latency_by_provider"]:
         lines.append(f"- 平均延迟(s) {dict(sorted(s['latency_by_provider'].items()))}")
         _disp = _provider_dispatch_order(
-            s.get("by_provider"), s.get("reject_by_provider"), s["latency_by_provider"])
+            s.get("by_provider"), s.get("reject_by_provider"), s["latency_by_provider"],
+            pinned=_priority_pinned_from_main())
         if _disp:
             _segs = [
                 f"{p} 发{pub}/拒{rej}" + (f"·{lat}s" if lat is not None else "·延迟?")
                 for p, pub, rej, lat in _disp
             ]
-            lines.append("- 通道位次（延迟↑=failover 调用顺序，靠前先试；慢而稳的源"
-                         "天然靠后·份额小≠闲置）: " + " › ".join(_segs))
+            _pinned_now = [p for p, _, _, _ in _disp
+                           if p in set(_priority_pinned_from_main())]
+            _prio_note = ("置顶优先——用户配置 priority 的通道无视延迟先试，其后按延迟序"
+                          if _pinned_now else "按延迟序")
+            lines.append(f"- 通道位次（failover 调用顺序，靠前先试；{_prio_note}；"
+                         "链尾源只在前序全挂才上场·份额小≠闲置）: " + " › ".join(_segs))
     # R623：池内通道的实际覆盖——**「有key」不等于「会上场」**。
     #
     # 这条补的是 R617 探针的 L4 缺口：探针验的是"默认模型名还活着吗"（端点/

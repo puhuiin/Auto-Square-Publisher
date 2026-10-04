@@ -2940,6 +2940,51 @@ class TestContentStatsReportJoin(unittest.TestCase):
             mr._provider_dispatch_order(
                 {"-": 3}, {"unknown": 2}, {"unknown": 10.0}), [])
 
+    def test_dispatch_order_pinned_channels_go_first(self):
+        """R621：置顶通道无视延迟排在链首。
+
+        生产实证：main._ordered_providers 的真实顺序是 失败数 → -priority →
+        延迟分——priority 在延迟**之前**。而旧显示按纯延迟排并宣称「靠前先试」，
+        把 15.5s 的 google 排到链首（实际它只发 1 篇、是链尾兜底），真正的首选
+        stepfun-flash（发 28 篇）反而排第二——读表的人会得出与事实相反的结论。
+
+        锁住三点：① pinned 通道在非 pinned 之前（即便延迟更高）；
+        ② pinned 组内部仍按延迟序（AST 拿不到 priority 数值，组内是近似）；
+        ③ pinned=None 时回退纯延迟序（解析失败不撒谎、只是缺一层信息）。"""
+        by_pub = {"Preset-fast": 28, "Preset-slowprio": 5, "Preset-zippy": 1}
+        by_rej = {"Preset-fast": 3, "Preset-zippy": 0}
+        lat = {"Preset-fast": 25.0, "Preset-slowprio": 80.0, "Preset-zippy": 15.0}
+        # slowprio 被置顶：真实首选（80s 仍排第一）。zippy 最快（15s）但只是
+        # 非置顶组的第一位——关键断言是置顶的 80s 压过未置顶的 15s。
+        disp = mr._provider_dispatch_order(by_pub, by_rej, lat,
+                                           pinned=["Preset-slowprio"])
+        self.assertEqual(
+            [d[0] for d in disp],
+            ["Preset-slowprio", "Preset-zippy", "Preset-fast"],
+            "置顶通道无视延迟先排，其余按延迟序（zippy 15s 在 fast 25s 前）")
+        # 无 pinned → 回退纯延迟序（zippy 15s 最先）
+        disp2 = mr._provider_dispatch_order(by_pub, by_rej, lat, pinned=None)
+        self.assertEqual([d[0] for d in disp2],
+                         ["Preset-zippy", "Preset-fast", "Preset-slowprio"])
+        # 空 pinned 集合同样回退
+        disp3 = mr._provider_dispatch_order(by_pub, by_rej, lat, pinned=[])
+        self.assertEqual([d[0] for d in disp3],
+                         ["Preset-zippy", "Preset-fast", "Preset-slowprio"])
+
+    def test_priority_pinned_parser_reads_main_py(self):
+        """R621：AST 解析器必须从 main.py 实际代码里读出置顶通道清单。
+
+        main.py 的实际写法是 `if p.name == "Preset-stepfun-flash": p.priority =
+        _sf_prio + 1`（elif 链）——解析器要能跟上这个写法；main.py 重构置顶
+        配置后本测试同步暴露，避免清单与池定义漂移（同 _provider_pool_from_main
+        的判据）。"""
+        pinned = mr._priority_pinned_from_main()
+        self.assertIn("Preset-stepfun-flash", pinned,
+                      "stepfun-flash 在 main.py 里被显式置顶（用户 2026-09-23 指定）")
+        self.assertIn("Preset-stepfun", pinned, "stepfun 同在 elif 链里被置顶")
+        # 解析失败路径：指向不存在的文件 → 空集（响亮失败、不撒谎）
+        self.assertEqual(mr._priority_pinned_from_main("/nonexistent/main.py"), [])
+
 
 class TestR617ProviderProbe(unittest.TestCase):
     """R617：provider 默认模型名探针的结论消费面。
