@@ -805,6 +805,12 @@ def summarize(rows):
         # 分母 cashtag_total = 全部 $ 挂件数，与分子同源。
         "cashtag_tight": 0,
         "cashtag_total": 0,
+        # R646：标题侧独立计数 + 两个不同失败原因各自的出口（R611）。
+        # 实测修复前标题紧贴率 75%（9/12）远高于正文 31%；纯名 6/25（24%）。
+        "title_cashtag_tight": 0,
+        "title_cashtag_total": 0,
+        "title_with_cashtag": 0,   # 标题带 $ 挂件
+        "title_pure_ticker": 0,    # 标题含币种纯名却没 $（R645 的靶子）
         "layout_paragraphs": [],
         "stats_views": [],
         "stats_likes": [],
@@ -1209,6 +1215,32 @@ def summarize(rows):
             if isinstance(_at, str) and _at.strip():
                 _at = _at.strip()
                 s["article_titles"].append(_at)
+                # R646：标题侧挂件的两个**不同**失败原因各有出口（R611 分侧计数）。
+                # 实测标题侧紧贴率 75%（9/12）远高于正文 31%——标题是信息流
+                # 第一触点，混进正文分母会同时掩盖两侧的修复效果。
+                # ⚠️ 缩进纪律（R628）：本块只**追加**行，缩进与相邻行严格一致。
+                # 首版曾整块重写（含 def 定义）导致后续语句降4 级被并入本if，
+                # `首段钩子` 分母静默 296→25。改动此块前先跑
+                # TestR646TitleSideGuardrail.test_opener_denominator_unchanged。
+                _at_t = re.findall(r"\$[A-Za-z0-9]{2,10}(?![A-Za-z0-9])", _at)
+                for _tm in re.finditer(
+                        r"\$([A-Za-z0-9]{2,10})(?![A-Za-z0-9])", _at):
+                    _e2 = _tm.end()
+                    _nx = _at[_e2] if _e2 < len(_at) else ""
+                    _i2 = _tm.start()
+                    _pv2 = _at[_i2 - 1] if _i2 > 0 else ""
+                    if ((_nx and "\u4e00" <= _nx <= "\u9fff")
+                            or ("\u4e00" <= _pv2 <= "\u9fff")):
+                        s["title_cashtag_tight"] += 1
+                s["title_cashtag_total"] += len(_at_t)
+                # R645/R646："纯名"（含币种代码却没 $）与"紧贴"是两个不同根因，
+                # 必须分别可见——只报紧贴的话，修好一个会掩盖另一个。
+                if "$" in _at:
+                    s["title_with_cashtag"] += 1
+                elif any(re.search(rf"(?<![A-Za-z0-9]){re.escape(_tk)}(?![A-Za-z0-9])",
+                                   _at) for _tk in ("BTC", "ETH", "XRP", "SOL",
+                                                   "DOGE", "BNB")):
+                    s["title_pure_ticker"] += 1
                 if any(c.isdigit() for c in _at):
                     s["title_hooks"]["数字钩子"] += 1
                 if "$" in _at:
@@ -2657,13 +2689,41 @@ def render_text(s, rows=None):
             _pct = _tight / _tot * 100
             if _tight:
                 lines.append(
-                    f"  ⚠️ $挂件紧贴中文 {_tight}/{_tot}（{_pct:.0f}%）："
+                    f"  ⚠️ 正文$挂件紧贴中文 {_tight}/{_tot}（{_pct:.0f}%）："
                     f"这些位置币安**不会**渲染成可点击行情标签"
                     f"（R643 修复后应为 0，非 0 说明有出海口绕过净化层）")
             else:
                 lines.append(
-                    f"  ✅ $挂件间距正常（{_tot} 个全部为独立 token，"
+                    f"  ✅ 正文$挂件间距正常（{_tot} 个全部为独立 token，"
                     f"可渲染为可点击行情标签）")
+        # R646：标题侧两行——紧贴（R643 靶子）与纯名（R645 靶子）分列。
+        # **必须分侧且必须分原因**：标题走独立出海口，混进正文分母会同时
+        # 掩盖两侧效果；只报紧贴则会让"修好补空格"掩盖"织入没跑"。
+        if s.get("title_cashtag_total"):
+            _tt = s["title_cashtag_tight"]
+            _tn = s["title_cashtag_total"]
+            _tpct = _tt / _tn * 100
+            if _tt:
+                lines.append(
+                    f"  ⚠️ 标题$挂件紧贴中文 {_tt}/{_tn}（{_tpct:.0f}%）："
+                    f"标题是信息流第一触点，此处失效损失最大"
+                    f"（R643 修复后应为 0）")
+            else:
+                lines.append(
+                    f"  ✅ 标题$挂件间距正常（{_tn} 个全部为独立 token）")
+        if s.get("article_titles"):
+            _na = len(s["article_titles"])
+            _pure = s.get("title_pure_ticker", 0)
+            if _pure:
+                lines.append(
+                    f"  ⚠️ 长文标题含币种纯名 {_pure}/{_na}"
+                    f"（{_pure/_na*100:.0f}%）：该织入 $ 挂件却写成纯名"
+                    f"（如「BTC 86110 稳着」）—— 信息流第一触点失去返佣入口"
+                    f"（R645 修复后应为 0）")
+            elif s.get("title_with_cashtag"):
+                lines.append(
+                    f"  ✅ 长文标题$挂件覆盖 {s['title_with_cashtag']}/{_na}"
+                    f"（{s['title_with_cashtag']/_na*100:.0f}%，无币种纯名遗漏）")
         _lp = s.get("layout_paragraphs") or []
         if _lp:
             _zero = sum(1 for x in _lp if x == 0)

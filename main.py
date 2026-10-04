@@ -7494,7 +7494,21 @@ class SquarePublisher(BasePublisher):
             # R355：标题与正文同源过滤敏感词——净化在截断之前（保本→控制回撤 等
             # 替换会变长，先过滤再 [:80] 才不会把安全词半途截断）。正文早在 6263 走
             # _sanitize_content 过滤，标题此前只截 80 字裸发，是对称防御的漏口。
-            payload["title"] = self._sanitize_title(title)[:80]
+            #
+            # R645：**标题织入 $ 挂件**。生产实测 25 篇长文标题仅 12 篇（48%）
+            # 带 $，而 R296 的 prompt 早已明令"标题里提到的核心代币一律带 $大写"
+            # ——**指令存在但没人执行**。抽出的 11 篇逐条看全是**币种写成纯名**：
+            #   "BTC 86110 稳着…" / "ZEC 单日拉升 11.56%…" / "BCH冲350、ZEC跌7%…"
+            # 根因：_weave_cashtags 只在上面的 content 链路上调用，标题走
+            # payload["title"] 这条**独立出海口**，从未被织入。
+            # 标题是信息流**第一触点**（信息流只展示前两行），挂件缺失 =
+            # 读者点不到交易页 = Write to Earn 返佣入口在最显眼的位置失效。
+            # ⚠️ 顺序：先织入、再 _sanitize_title（内含 R643 补空格 + 敏感词 +
+            # 归一），否则 "$BTC冲8.5万" 织出来仍是紧贴中文的不可点击形态。
+            # ⚠️ 不做 _ensure_token_widget / _cap_cashtag_widgets：标题是单行、
+            # 空间宝贵，硬塞保底挂件会挤掉标题文案；且正文侧的 cap 已把关总数。
+            _t = self._weave_cashtags(title, ensure_tokens)
+            payload["title"] = self._sanitize_title(_t)[:80]
             if image_url:
                 payload["cover"] = image_url
                 logger.info(f"本次长文发布带封面: {image_url}")

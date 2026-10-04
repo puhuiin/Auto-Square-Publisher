@@ -4401,5 +4401,131 @@ class TestR643ReadabilityMetrics(unittest.TestCase):
         self.assertIn("正文分段", text)
 
 
+class TestR646TitleSideGuardrail(unittest.TestCase):
+    """R646：挂件护栏必须**分侧计数**——实测标题侧紧贴率 75%，远高于正文 31%。
+
+    标题是信息流第一触点，且走独立出海口（R355 敏感词 / R643 补空格 /
+    R645 织入各自补过一遍）。若把它混进正文分母：
+    - 修复前会被正文的低紧贴率"稀释"，看不出标题侧更严重；
+    - 修复后也无法分别判断两侧是否真的修好了。
+    **一个分母掩盖两个信号 = 两个信号都看不见**（R611「并列信号不能共用分母」）。
+    """
+
+    def _rows(self, preview, title):
+        return [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-01T04:00:00+00:00", "content_id": "c1",
+                 "hour_bj": 21, "article": True, "source": "U.Today",
+                 "final_preview": preview, "article_title": title}]
+
+    def test_title_tight_counted_separately(self):
+        """标题侧紧贴必须独立计数"""
+        summ = mr.summarize(self._rows(
+            "正文 $BTC 正常有空格", "$LINK冲高回落,5.62%回撤"))
+        self.assertEqual(summ["title_cashtag_total"], 1)
+        self.assertEqual(summ["title_cashtag_tight"], 1, "标题侧紧贴须被计入")
+        self.assertEqual(summ["cashtag_tight"], 0, "正文侧不得被标题污染")
+
+    def test_title_and_body_counted_independently(self):
+        """两侧都要紧贴时各自计入，分子分母都不混"""
+        summ = mr.summarize(self._rows(
+            "2770亿$SHIB刚砸进池子", "$SHIB刚砸进池子"))
+        self.assertEqual((summ["cashtag_total"], summ["cashtag_tight"]), (1, 1))
+        self.assertEqual(
+            (summ["title_cashtag_total"], summ["title_cashtag_tight"]), (1, 1),
+            "标题与正文必须各算各的，不能合并成一个分母")
+
+    def test_title_spaced_not_flagged(self):
+        """标题侧已有空格 → 不误报（否则告警永远亮着）"""
+        summ = mr.summarize(self._rows("正文 $BTC 正常", "$BTC 冲高回落"))
+        self.assertEqual(summ["title_cashtag_tight"], 0)
+
+    def test_renders_title_line_separately(self):
+        """标题侧必须独立成行，且点明"第一触点"（读者要明白损失在哪）
+
+        断言方式：正文侧干净→ 渲染 ✅；标题侧有紧贴 → 渲染 ⚠️。
+        **两条行必须同时存在**——若标题侧取代了正文侧，就是分母混用
+        （R611）的复发。
+        """
+        clean_body, tight_title = "正文 $BTC 正常", "$LINK冲高回落"
+        summ = mr.summarize(self._rows(clean_body, tight_title))
+        text = mr.render_text(summ, self._rows(clean_body, tight_title))
+        self.assertIn("标题$挂件紧贴中文", text)
+        self.assertIn("第一触点", text)
+        self.assertIn("正文$挂件", text, "正文侧护栏行不得被标题侧取代")
+        # 两侧同时告警时也都要出现（互不吞掉）
+        both = mr.summarize(self._rows("2770亿$SHIB刚砸进池子", "$SHIB刚砸进池子"))
+        btext = mr.render_text(both, self._rows("2770亿$SHIB刚砸进池子",
+                                                "$SHIB刚砸进池子"))
+        self.assertIn("正文$挂件紧贴中文", btext)
+        self.assertIn("标题$挂件紧贴中文", btext)
+
+    def test_renders_ok_when_both_sides_clean(self):
+        """两侧都干净 → 两行 ✅（修复生效的正面证据）"""
+        rows = self._rows("现在 $BTC 稳住", "$BTC 冲高回落")
+        summ = mr.summarize(rows)
+        text = mr.render_text(summ, rows)
+        self.assertIn("正文$挂件间距正常", text)
+        self.assertIn("标题$挂件间距正常", text)
+
+    def test_missing_title_not_counted(self):
+        """短讯无 article_title → 标题侧分母为 0（未知不是 0）"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-01T04:00:00+00:00", "content_id": "c1",
+                 "hour_bj": 21, "article": False, "source": "U.Today",
+                 "final_preview": "现在 $BTC 稳住"}]
+        summ = mr.summarize(rows)
+        self.assertEqual(summ["title_cashtag_total"], 0)
+        self.assertNotIn("标题$挂件", mr.render_text(summ, rows))
+
+    def test_opener_denominator_unchanged(self):
+        """**缩进回归守卫**：`首段钩子` 分母不得因改标题块而变化。
+
+        实测事故：R646 首版整块重写标题度量（含内嵌 def），缩进降了 4 级，
+        后续 `opener_evaluated` 等语句被并入 `if article_title:` 块
+        ⇒ **分母从296 静默掉到 25**。字段照常渲染，只是分母变了——
+        "缺字段"与"块被外移"在测试里长得一样（R628 的同款陷阱）。
+
+        这条用例把"短讯（无标题）也必须进首段钩子分母"钉死：
+        短讯永远没有 article_title，若它的 final_preview 有钩子却被排除，
+        就说明标题块的缩进把下游代码吞进去了。
+        """
+        rows = [
+            # 短讯：无 article_title，但有 final_preview
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "ts": "2026-10-01T04:00:00+00:00", "content_id": "s1",
+             "hour_bj": 21, "article": False, "source": "U.Today",
+             "final_preview": "1.88亿爆仓 $BTC 冲8.5万"},
+            # 长文：有标题
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "ts": "2026-10-01T05:00:00+00:00", "content_id": "a1",
+             "hour_bj": 22, "article": True, "source": "U.Today",
+             "final_preview": "全网1.88亿爆仓 $BTC 拉盘",
+             "article_title": "$BTC 冲8.5万是诱多还是真启动"},
+        ]
+        summ = mr.summarize(rows)
+        self.assertEqual(len(summ["article_titles"]), 1, "只有长文进标题分母")
+        self.assertEqual(
+            summ["opener_evaluated"], 2,
+            "短讯也必须进首段钩子分母——若为 1，说明标题块缩进吞了下游代码")
+        # 标题侧计数只算长文那一条
+        self.assertEqual(summ["title_cashtag_total"], 1)
+        # 正文侧两篇都算
+        self.assertEqual(summ["cashtag_total"], 2)
+
+    def test_layout_paragraphs_covers_shortform_too(self):
+        """`layout_paragraphs` 同样不得被标题块吞掉（短讯也要分段度量）。"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-01T04:00:00+00:00", "content_id": "s1",
+                 "hour_bj": 21, "article": False, "source": "U.Today",
+                 "final_preview": "第一段。\n\n第二段。"},
+                {"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-01T05:00:00+00:00", "content_id": "a1",
+                 "hour_bj": 22, "article": True, "source": "U.Today",
+                 "final_preview": "一、背景\n\n正文。", "article_title": "标题标题标题标题"}]
+        summ = mr.summarize(rows)
+        self.assertEqual(len(summ["layout_paragraphs"]), 2,
+                         "短讯也必须进分段度量分母")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

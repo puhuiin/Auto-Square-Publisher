@@ -8838,7 +8838,12 @@ class TestArticlePipeline(unittest.TestCase):
         self.assertTrue(ok2, f"CJK≥420 的正文应放行: {reason2}")
 
     def test_publish_article_payload_content_type_2(self):
-        """长文发布：contentType=2 + title + cover（image_url 转 cover，绝无 imageList）"""
+        """长文发布：contentType=2 + title + cover（image_url 转 cover，绝无 imageList）
+
+        R645 变更：title 断言从"原样透传"改为"**必须含 $ 挂件**"——
+        生产实测 25 篇长文标题仅 12 篇（48%）带 $，缺的11 篇全是币种写成纯名
+        （"BTC 86110 稳着…"），而标题是信息流第一触点。本用例锁死标题织入接线。
+        """
         pub = m.SquarePublisher(api_key="k")
         fake_resp = MagicMock(status_code=200, text='{"code":"000000"}')
         fake_resp.json.return_value = {"code": "000000", "data": {"contentId": "c1"}}
@@ -8850,7 +8855,9 @@ class TestArticlePipeline(unittest.TestCase):
                                         ensure_tokens=["BTC"], title="BTC 行情深度复盘标题"))
             payload = mock_sess.post.call_args.kwargs["json"]
             self.assertEqual(payload["contentType"], 2)
-            self.assertEqual(payload["title"], "BTC 行情深度复盘标题")
+            # R645：纯名 BTC 必须被织成 $ 挂件
+            self.assertIn("$BTC", payload["title"],
+                          "标题必须织入 $ 挂件（信息流第一触点 + 返佣入口）")
             self.assertEqual(payload["cover"], "https://cdn.example/cover.jpg")
             self.assertNotIn("imageList", payload)
 
@@ -16383,6 +16390,91 @@ class TestR640SsrfBlockedIsReachable(unittest.TestCase):
         self.assertGreaterEqual(
             src.count("_last_download_ssrf_rejected = False"), 2,
             "标记需在类定义处初始化 + prepare_and_upload 入口重置")
+
+
+class TestR645TitleCashtagWeaving(unittest.TestCase):
+    """R645：**长文标题从未织入 $ 挂件**（生产覆盖率仅 48%）。
+
+    生产实测 25 篇长文标题仅 12 篇带 $，R296 的 prompt 早已明令
+    "标题里提到的核心代币一律带 $大写"——**指令存在但没人执行**。
+    缺的 11 篇逐条看全是**币种写成纯名**：
+        "BTC 86110 稳着…" / "ZEC 单日拉升 11.56%…" / "BCH冲350、ZEC跌7%…"
+
+    根因：`_weave_cashtags` 只在 publish() 的 **content** 链路上调用，
+    而标题走 `payload["title"]` 这条**独立出海口**（R355 已为敏感词铺过，
+    但挂件织入从未对称覆盖）。标题是信息流**第一触点**（只展示前两行），
+    挂件缺失 = 读者点不到交易页 = 返佣入口在最显眼的位置失效。
+    """
+
+    def _publish_title(self, title, tokens, symbols=None):
+        pub = m.SquarePublisher(api_key="k")
+        fake_resp = MagicMock(status_code=200, text='{"code":"000000"}')
+        fake_resp.json.return_value = {"code": "000000", "data": {"contentId": "c1"}}
+        content = "一、背景\n" + "这是一段足够长的长文正文内容，用于验证标题织入。" * 12
+        with patch.object(m, "_HTTP_SESSION") as mock_sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols",
+                          return_value=symbols or set(tokens)):
+            mock_sess.post.return_value = fake_resp
+            self.assertTrue(pub.publish(content, ensure_tokens=tokens, title=title))
+            return mock_sess.post.call_args.kwargs["json"]["title"]
+
+    def test_pure_name_ticker_gets_woven(self):
+        """纯名 BTC → $BTC（生产实录形态）"""
+        self.assertIn("$BTC", self._publish_title(
+            "BTC 86110 稳着，山寨季指标却先反水了", ["BTC"]))
+
+    def test_multiple_pure_names_all_woven(self):
+        """多个纯名都要织：BCH冲350、ZEC跌7% → $BCH/$ZEC"""
+        out = self._publish_title("BCH冲350、ZEC跌7%，三个山寨多空博弈白热化",
+                                  ["BCH", "ZEC"])
+        self.assertIn("$BCH", out)
+        self.assertIn("$ZEC", out)
+
+    def test_woven_tag_is_standalone_token(self):
+        """织入后必须**同时经R643 补空格**，否则 "$BTC冲8.5万" 不可点击。
+
+        接线守卫：若有人把 _sanitize_title 从标题链路上摘掉，本例即红。
+        """
+        out = self._publish_title("1.88亿爆仓，BTC冲8.5万是诱多还是真启动？", ["BTC"])
+        self.assertIn("$BTC ", out, "织入的挂件必须独立成token（$BTC 冲…）")
+        self.assertNotIn("$BTC冲", out, "紧贴中文的挂件不会渲染成可点击标签")
+
+    def test_already_tagged_title_unchanged(self):
+        """已带 $ 的标题不得被重复织入（幂等）"""
+        pub = m.SquarePublisher(api_key="k")
+        a = pub._weave_cashtags("$BTC 冲高回落，5.62%回撤背后谁在离场？", ["BTC"])
+        b = pub._weave_cashtags(a, ["BTC"])
+        self.assertEqual(a, b)
+        self.assertEqual(a.count("$"), 1, "已有挂件不得被再加 $")
+
+    def test_non_ticker_words_not_woven(self):
+        """非交易对词不得被织入（防误伤）"""
+        pub = m.SquarePublisher(api_key="k")
+        out = pub._weave_cashtags("Compound DAO挪用储备金回购治理代币，投票权过半？",
+                                  ["BTC"])
+        self.assertNotIn("$", out)
+
+    def test_amount_in_title_not_confused(self):
+        """标题里的金额不得被当成挂件或被拆开"""
+        out = self._publish_title("1.88亿爆仓，BTC冲8.5万是诱多还是真启动？", ["BTC"])
+        self.assertIn("1.88亿", out)
+        self.assertIn("8.5万", out, "金额不得被插空格拆开")
+
+    def test_wiring_present_in_publish(self):
+        """源码级接线守卫：publish 的 title 分支必须调 _weave_cashtags。
+
+        防止后人"简化"成 _sanitize_title(title)[:80] 而静默丢失挂件。
+        """
+        src = open(m.__file__, encoding="utf-8").read()
+        seg_start = src.index('payload = {\n            "bodyTextOnly"')
+        seg = src[seg_start:seg_start + 2000]
+        self.assertIn("_weave_cashtags", seg,
+                      "标题 payload 分支必须织入 $ 挂件（R645）")
+        self.assertIn("_sanitize_title", seg,
+                      "织入后仍须过 _sanitize_title（补空格 + 敏感词）")
+        # 顺序：先织入再净化
+        self.assertLess(seg.index("_weave_cashtags"), seg.index("_sanitize_title"),
+                        "必须先织入再净化，否则织出的挂件仍是紧贴形态")
 
 
 class TestR643CashtagSpacing(unittest.TestCase):
