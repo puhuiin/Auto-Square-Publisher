@@ -5449,6 +5449,31 @@ class TestIntelSchema(unittest.TestCase):
         self.assertEqual(intel["incentivized_tokens"], ["$BTC"])
         self.assertIn("last_updated", intel)
 
+    def test_intel_prompt_forbids_return_promises(self):
+        """R619：情报 prompt 必须禁止收益承诺措辞。
+
+        现役 guidance 实录写着「引导用户通过参与交易竞赛和理财排行榜来**锁定收益**」
+        ——那是上游（intel prompt）在教收益承诺，而发帖侧 R604 明令「活动导流不得
+        暗示参加活动会带来交易收益」。当前靠发帖侧的禁令兜住（全史 296 篇零真实收益
+        承诺），但两层 prompt 方向相反本身就是 R611 型的隐患：上游指令更具体、更靠前，
+        一旦下游禁令松一点就会渗进来。
+
+        本测试只锁 prompt 侧（guidance 的消费面已在 R604 门里），不改 guidance 本身
+        ——它是模型产物，prompt 写上红线后由下一次刷新自然收敛。
+        """
+        eng = self._stub_engine('{"active_tags": ["#A"], "incentivized_tokens": ["$BTC"], '
+                                '"strategy_guidance": "guide"}')
+        m.CampaignScanner.analyze_with_ai(eng, ["t1"])
+        # 从 stub client 的调用参数里取回 system prompt
+        create_kwargs = eng._get_client.return_value.chat.completions.create.call_args
+        msgs = create_kwargs.kwargs.get("messages") or create_kwargs[1].get("messages")
+        prompt = "\n".join(str(m.get("content", "")) for m in msgs)
+        self.assertIn("措辞红线", prompt, "情报 prompt 必须带措辞红线")
+        self.assertIn("锁定收益", prompt, "要点名这个已被实证的违禁措辞")
+        self.assertIn("不是交易收益", prompt, "要讲清 Write to Earn 的真实含义")
+        self.assertIn("参与评论/互动拿奖励", prompt,
+                      "要给合规替代说法，只禁不给替代会推回空话")
+
     def test_credit_exhausted_in_intel_marks_permanent(self):
         """R332：情报路径的余额耗尽必须回填 permanent——此前只记遥测，
         直到 summarize 撞上才冷却（生产 09-21 13:53 起 campaign_intel 连续
