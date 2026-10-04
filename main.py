@@ -9220,17 +9220,27 @@ def _run_main():
                 # 对齐真实事件档（加息 34/被盗 32/ETF 32），常规帖回到限流。
                 if capped:
                     base_impact = item.get("base_impact_score", item.get("impact_score", 0)) or 0
+                    # R217：优先种子不参与门槛校准计数。种子的 base_impact 是写死的
+                    # PRIORITY_SEED_SCORE(999)，它是人工置顶的强制放行、不是"通过了
+                    # 影响力量刑的真实事件"——混进校准指标会让「放行顶分」永远显示 999，
+                    # R216「顶分贴门槛即复评」的判据彻底失效（生产实录：8 次放行里
+                    # 1 次是种子，放行顶分因此从真实的 31~33 被抬到 999）。
+                    # 种子照常放行（置顶本就是它的职责），只是不进校准口径；
+                    # 每一次放行都有 logger.info 留痕，可追溯性不受影响。
+                    _is_seed = str(item.get("source") or "").startswith("priority_seed:")
                     if base_impact >= TOKEN_LIMIT_BYPASS_IMPACT:
-                        token_limit_bypassed += 1
-                        if token_limit_bypass_top is None or base_impact > token_limit_bypass_top:
-                            token_limit_bypass_top = base_impact
+                        if not _is_seed:
+                            token_limit_bypassed += 1
+                            if token_limit_bypass_top is None or base_impact > token_limit_bypass_top:
+                                token_limit_bypass_top = base_impact
                         logger.info(
                             f"代币 {capped} 已达 24h 限流，但本条热度 {base_impact} "
                             f">= {TOKEN_LIMIT_BYPASS_IMPACT}（高影响放行）: {title[:50]}")
                     else:
                         # R216：拦截侧顶分留痕——多日后顶分仍只贴着 20~26 常规档
                         # 说明门槛健康；顶分频繁逼近门槛值即需复评（真事件被吞）。
-                        if token_limit_capped_top is None or base_impact > token_limit_capped_top:
+                        if not _is_seed and (token_limit_capped_top is None
+                                             or base_impact > token_limit_capped_top):
                             token_limit_capped_top = base_impact
                         logger.info(f"代币 {capped} 24h 内已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)，"
                                     f"本条热度 {base_impact} 未达放行门槛，为避免刷屏跳过: {title}")

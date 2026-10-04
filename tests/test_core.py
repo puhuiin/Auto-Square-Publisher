@@ -9897,6 +9897,46 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_token_limit_seed_bypass_excluded_from_calibration(self):
+        """R217：优先种子不得污染门槛校准指标。
+
+        种子的 base_impact 是写死的 PRIORITY_SEED_SCORE(999)，它是人工置顶的强制
+        放行、不是"通过了影响力量刑的真实事件"。混进校准口径会让「放行顶分」永远
+        显示 999——生产实录 8 次放行里 1 次是种子（10-02T17:51 的 bitget-hack），
+        于是 R216「顶分贴门槛即复评」的判据彻底失效：真实的放行区间本该是 31~33，
+        却被一个手工注入的 999 抬到看不出任何信息。
+
+        种子本身照常放行（置顶就是它的职责），只是不进 bypassed 计数与 bypass_top。
+        每一次放行都有 logger.info 留痕，可追溯性不受影响。
+        """
+        tmpdir, paths = self._iso_files()
+        seed = dict(self._candidate(), impact_score=999, base_impact_score=999,
+                    title="Bitget hacked, protection fund covers user assets",
+                    source="priority_seed:bitget-hack")
+        real = dict(self._candidate(), impact_score=33, base_impact_score=33,
+                    title="Fed hikes rates, BTC reacts sharply")
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[seed, real])
+        try:
+            import json
+            with open(paths["cache"], "w", encoding="utf-8") as f:
+                json.dump([{"id": "old", "title": "t", "source": "s",
+                            "sent_at": datetime.now(timezone.utc).isoformat(),
+                            "tokens": ["BTC"]}], f)
+            with patch.object(m, "TOKEN_DAILY_LIMIT", 1):
+                m._run_main()
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            # 两条都放行（种子 999 与真实 33 均 >= 门槛），帖照发
+            self.assertEqual(run_row.get("skipped_token_limit"), 0)
+            # 但校准口径只认真实那条：计数 1、顶分 33（不是 999）
+            self.assertEqual(run_row.get("token_limit_bypassed"), 1,
+                            "种子的 999 放行不得计入校准计数")
+            self.assertEqual(run_row.get("token_limit_bypass_top"), 33,
+                            "放行顶分必须反映真实事件档，不得被种子的 999 抬走")
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_token_limit_bypass_threshold_env_tunable(self):
         """R215：TOKEN_LIMIT_BYPASS_IMPACT 可调——降到 20 恢复 R208 行为
         （常规 21 分放行），运维可按账号垂直度策略校准。"""
