@@ -9937,6 +9937,38 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_published_row_carries_base_impact_score(self):
+        """R617：发布回执必须落 base_impact_score（准入分）。
+
+        遥测此前只落 impact_score（加权后的最终分），于是 priority_seed 帖在外部
+        读起来是「impact=1007 / base 字段不存在」——像数据不一致，实际
+        1007=种子分999+活动加权8。有了 base 就能一眼看出「这条是人工置顶、不是
+        自然事件分」，也能把种子帖从任何按分数做的统计里择出来。
+        历史行没有该字段，报表侧读时必须容忍缺失（ schema 演进兼容）。"""
+        tmpdir, paths = self._iso_files()
+        seed = dict(self._candidate(), impact_score=999, base_impact_score=999,
+                    title="Bitget hacked, protection fund covers user assets",
+                    source="priority_seed:bitget-hack")
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[seed])
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            import json
+            m._run_main()
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            pub_row = next(r for r in rows
+                           if r.get("outcome") == "binance_published")
+            self.assertEqual(pub_row.get("base_impact_score"), 999,
+                            "发布回执必须带准入分，否则种子帖的 1007 无从解释")
+            self.assertEqual(pub_row.get("source"), "priority_seed:bitget-hack")
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_token_limit_bypass_threshold_env_tunable(self):
         """R215：TOKEN_LIMIT_BYPASS_IMPACT 可调——降到 20 恢复 R208 行为
         （常规 21 分放行），运维可按账号垂直度策略校准。"""

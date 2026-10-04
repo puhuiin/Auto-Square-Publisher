@@ -9530,6 +9530,12 @@ def _run_main():
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
+                        # R617：准入分单列。遥测此前只落 impact_score（加权后的最终分），
+                        # 于是 priority_seed 帖在外部读起来是「impact=1007 / base 字段不存在」
+                        # ——像数据不一致，实际 1007=种子分999+活动加权8。有了 base 就能
+                        # 一眼看出「这条是人工置顶、不是自然事件分」，也能把种子帖从任何
+                        # 按分数做的统计里择出来（否则它们会把顶分/均值一并抬走）。
+                        "base_impact_score": item.get("base_impact_score"),
                         "model": llm_result.get("model"),
                         "persona": llm_result.get("persona"),
                         "tokens_used": llm_result.get("tokens_used"),
