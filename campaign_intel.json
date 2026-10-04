@@ -4,20 +4,20 @@
     "#BinanceSquare",
     "#TradingTournament",
     "#Megadrop",
-    "#Futures"
+    "#NewListing"
   ],
   "incentivized_tokens": [
-    "$CT",
     "$PUMP",
     "$USD1",
-    "$ALGO",
-    "$ADBEB",
+    "$BNB",
+    "$BTC",
+    "$USDC",
     "$PDDB",
-    "$NVDAB",
-    "$USDC"
+    "$ADBEB",
+    "$HPEB"
   ],
-  "strategy_guidance": "当前10月限时类活动剩余周期有限，优先追更PUMP交易锦标赛、ALGO交易锦标赛、USD1延期空投、新上线CTUSDT合约相关的交易技巧、活动参与攻略类内容，引导读者参与评论互动获取Write to Earn奖励，同时结合bStocks新增交易对、10月理财排行榜等活动热点提升内容曝光。",
-  "last_updated": "2026-10-04T11:03:58.079505Z",
+  "strategy_guidance": "优先追PUMP交易锦标赛、十月邀请赛等当期交易类活动热度，结合新上线的CTUSDT永续合约、多只bStocks交易对及USD1空投延期等资讯做内容整合，引导读者参与官方活动互动拿Write to Earn奖励；同步覆盖LATAM/巴西新用户理财、P2P新手商家等定向活动内容，精准匹配不同受众需求提升曝光。",
+  "last_updated": "2026-10-04T23:24:12.753129Z",
   "_feed_health": {},
   "_fallback_image": {
     "date": "2026-09-09",
