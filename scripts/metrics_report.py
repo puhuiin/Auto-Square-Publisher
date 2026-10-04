@@ -798,6 +798,14 @@ def summarize(rows):
         "article_titles": [],
         "title_hooks": collections.Counter(),
         "title_leadin_hits": [],
+        # R643/R644：可读性度量。**必须有出口**（R617：print 到日志 = 无出口，
+        # 而 R614 已确认通知渠道 0 个 ⇒ 探针在跑、答案被丢弃，比没探针更危险）。
+        # cashtag_tight = 紧贴中文的 $ 挂件数（修复前 27% 命中，修复后应归零）；
+        # layout_paragraphs = 每帖正文空行数的分布（长文排版质量的下界信号）。
+        # 分母 cashtag_total = 全部 $ 挂件数，与分子同源。
+        "cashtag_tight": 0,
+        "cashtag_total": 0,
+        "layout_paragraphs": [],
         "stats_views": [],
         "stats_likes": [],
         "stats_comments": [],
@@ -1174,6 +1182,27 @@ def summarize(rows):
                         _lab = r.get(_field)
                         if isinstance(_lab, str) and _lab.strip():
                             s[_bucket].setdefault(_lab.strip(), []).append(_rate)
+            # R643/R644：可读性度量——**统计 final_preview（实际发布文本）**，
+            # 不是原稿。修复在净化层，只有发布文本能证明修复是否真的生效
+            #（R612「程序在用」≠「人在看」，这里反过来：修复在跑 ≠ 修好了）。
+            # ⚠️ final_preview 被 R292 截断到 200 字符，故 cashtag_tight 是
+            # **下界估计**；报绝对值会让读者以为全量如此，故同时给分母。
+            _pv = r.get("final_preview")
+            if isinstance(_pv, str) and _pv:
+                _tags = re.findall(r"\$[A-Za-z0-9]{2,10}(?![A-Za-z0-9])", _pv)
+                if _tags:
+                    s["cashtag_total"] += len(_tags)
+                    for _m in re.finditer(
+                            r"\$[A-Za-z0-9]{2,10}(?![A-Za-z0-9])", _pv):
+                        _e = _m.end()
+                        _nxt = _pv[_e] if _e < len(_pv) else ""
+                        _i = _m.start()
+                        _prev = _pv[_i - 1] if _i > 0 else ""
+                        if ((_nxt and "\u4e00" <= _nxt <= "\u9fff")
+                                or ("\u4e00" <= _prev <= "\u9fff")):
+                            s["cashtag_tight"] += 1
+                s["layout_paragraphs"].append(
+                    len(re.findall(r"\n\s*\n", _pv)))
             # R286：长文标题眼钩普查（article_title 仅长文帖非空）——标题是信息流
             # 第一触点，数字/$挂件/疑问三类眼钩元素的覆盖率要有基线可查
             _at = r.get("article_title")
@@ -2611,6 +2640,39 @@ def render_text(s, rows=None):
                         f"——上面的排序是噪声，**不可据此调 prompt/配比**。"
                         f"要提高阅读量请先扩样本（继续每日导出 content_stats），"
                         f"或从选题主因（源/币种/事件类型）入手。")
+        # R643/R644：可读性护栏。**这是"修复有没有生效"的唯一证据面**
+        # ——修复在净化层跑，但若不看发布文本（final_preview），就无人知道
+        # 它是否真的消除了病态形态（R612 同源：程序在跑 ≠ 修好了）。
+        # cashtag_tight 应随 R643 上线**归零**；不归零说明修复被绕过
+        # （例如某条出海口直发 payload 未经 _sanitize_content）。
+        #
+        # ⚠️ **必须独立于 `stats_posts`（浏览数据）渲染**——首版把它放在
+        # `if s.get("stats_posts")` 块内，实测无浏览数据时整块不渲染。
+        # 那是错的耦合：可读性与"有没有 CSV 导出"毫无关系，而内容库覆盖率
+        # 只有 20%（R628）⇒ 八成情况下这条护栏会静默消失。**指标不该被
+        # 另一个不相干数据集的存在与否门控**（R612「沉默不是通过」）。
+        if s.get("cashtag_total"):
+            _tight = s["cashtag_tight"]
+            _tot = s["cashtag_total"]
+            _pct = _tight / _tot * 100
+            if _tight:
+                lines.append(
+                    f"  ⚠️ $挂件紧贴中文 {_tight}/{_tot}（{_pct:.0f}%）："
+                    f"这些位置币安**不会**渲染成可点击行情标签"
+                    f"（R643 修复后应为 0，非 0 说明有出海口绕过净化层）")
+            else:
+                lines.append(
+                    f"  ✅ $挂件间距正常（{_tot} 个全部为独立 token，"
+                    f"可渲染为可点击行情标签）")
+        _lp = s.get("layout_paragraphs") or []
+        if _lp:
+            _zero = sum(1 for x in _lp if x == 0)
+            _zero_pct = _zero / len(_lp) * 100
+            _flag = ("⚠️ " if _zero else "")
+            lines.append(
+                f"  {_flag}正文分段: 中位 {statistics.median(_lp):.0f} 个空行"
+                f"· 无分段 {_zero}/{len(_lp)} 篇（{_zero_pct:.0f}%）"
+                f"（final_preview 截断至 200 字，为下界估计）")
         # R286：长文标题眼钩基线（有长文标题才渲染）+ 禁用领词告警
         if s.get("article_titles"):
             _n = len(s["article_titles"])

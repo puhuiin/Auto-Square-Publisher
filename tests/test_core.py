@@ -16385,5 +16385,211 @@ class TestR640SsrfBlockedIsReachable(unittest.TestCase):
             "标记需在类定义处初始化 + prepare_and_upload 入口重置")
 
 
+class TestR643CashtagSpacing(unittest.TestCase):
+    """R643：紧贴中文的 $挂件补空格——否则币安不渲染成可点击行情标签。
+
+    生产实测（312 篇已发布帖逐条扫 final_preview）：679 个 $ 挂件里
+    **181 个（27%）双向紧贴中文**，形态如 "2770亿$SHIB刚砸进池子"。
+    用户实锤：这些位置的 $SHIB 在页面上就是普通文字、不可点击。
+    对照组：后跟空格的 416 个（61%）形态如 "$DOGE 在"。
+
+    官方口径（币安广场《什么是行情标签》）："在符号前直接加上标签，
+    不要加括号" —— $ 必须是裸露的独立 token。
+
+    ⚠️ 用例一律用 **TEST_SYMBOL_UNIVERSE 池内币种**（BTC/ETH/XRP/PEPE/SOL/
+    DOGE/BNB）：池外的 SHIB 会被 1b 步"剥离无效 cashtag"合法地降级成纯名，
+    那样测的就不是补空格逻辑了。生产实录的 SHIB 仅作注释里的形态说明。
+    """
+
+    SP = staticmethod(m.SquarePublisher._sanitize_content)
+
+    def _clean(self, s):
+        """跑净化并剥掉保底标签行，只看正文变换本身。"""
+        return self.SP(s).replace(" #Write2Earn #BinanceSquare", "")
+
+    def test_trailing_cjk_gets_space(self):
+        """后紧贴中文 → 补尾空格：'交易所$ETH储备' → '交易所 $ETH 储备'"""
+        self.assertEqual(self._clean("交易所$ETH储备刚飙回"),
+                         "交易所 $ETH 储备刚飙回")
+
+    def test_leading_cjk_gets_space(self):
+        """前紧贴中文 → 补头空格：'这波$XRP是利好' → '这波 $XRP 是利好'"""
+        self.assertEqual(self._clean("这波$XRP是利好出尽"),
+                         "这波 $XRP 是利好出尽")
+
+    def test_both_sides_tight(self):
+        """双向紧贴（用户实锤形态）两侧都要补。
+        生产实录形态为 '2770亿$SHIB刚砸进池子'，此处用池内等效币种。"""
+        self.assertEqual(self._clean("2770亿$DOGE刚砸进池子"),
+                         "2770亿 $DOGE 刚砸进池子")
+
+    def test_already_spaced_unchanged(self):
+        """已有空格 → 幂等，不得重复插入（否则 ' $BTC  ' 越跑越长）
+
+        注意只断言**后侧**已有空格的情形：`$DOGE 在` 两侧都合法空格。
+        至于"前侧紧贴中文"（如 `现在$BTC 刚过完`），按R643 目标**就该补**
+        头空格——那是待修的病态形态，不是"已合规"。
+        """
+        for src in ("$DOGE 还在 0.093", "$BTC 刚过完山车才稳住"):
+            self.assertEqual(self._clean(src), src, f"不该改动: {src}")
+        # 前紧贴但后已有空格：只补头、不得动尾
+        self.assertEqual(self._clean("现在$BTC 刚过完"),
+                         "现在 $BTC 刚过完")
+
+    def test_amount_tokens_not_padded(self):
+        """**金额不是挂件**——$1000/$2000/$120K/$5B 不得被插空格。
+
+        插了会改用户原意（"$1000 和"）并可能干扰金额保护正则。
+        """
+        for src in ("成本$1000和$2000都没动", "市值$120K和$5B都是钱"):
+            self.assertEqual(self._clean(src), src, f"金额不该被拆: {src}")
+
+    def test_hashtags_untouched(self):
+        """标签不得被拆——'#Write2Earn \n\n#BinanceSquare' 会让标签失效"""
+        src = "#Write2Earn #BinanceSquare #DOGE MemeCoin"
+        self.assertEqual(self._clean(src), src)
+
+    def test_fullwidth_normalized_then_padded(self):
+        """全角 ＄ＥＴＨ 必须先归一（NFKC）再补空格——顺序反了会漏"""
+        self.assertEqual(self._clean("2770亿＄ＥＴＨ刚砸进池子"),
+                         "2770亿 $ETH 刚砸进池子")
+
+    def test_lowercase_normalized_and_padded(self):
+        """$btc → $BTC 且补空格（归一在补空格之前）"""
+        self.assertEqual(self._clean("$btc现在报84584"),
+                         "$BTC 现在报84584")
+
+    def test_idempotent(self):
+        """幂等：净化两次结果必须一致（净化的幂等性是既有契约）"""
+        a = "2770亿$DOGE刚砸进池子"
+        once = self._clean(a)
+        self.assertEqual(self._clean(once), once, "补空格必须幂等")
+
+    # ---- 标题侧对称覆盖（R355 同型：只修一侧 = 漏口还在）----
+
+    def test_title_tight_cashtag_padded(self):
+        """**标题必须对称覆盖**——标题是信息流第一触点，走独立出海口
+        （payload["title"] = _sanitize_title(title)[:80]）。
+
+        首版只修正文，实测标题同样有病态形态：`$LINK冲高回落,5.62%回撤…`
+        紧贴中文 ⇒ 标题里的 $LINK 同样不渲染成可点击标签。
+        生产实录 25篇长文标题里仅 12 篇带 $，且形态多为紧贴。
+        """
+        self.assertEqual(
+            m.SquarePublisher._sanitize_title("$DOGE还有戏吗现在说清楚"),
+            "$DOGE 还有戏吗现在说清楚")
+
+    def test_title_leading_tight_padded(self):
+        """标题的前紧贴侧同样要补"""
+        self.assertEqual(
+            m.SquarePublisher._sanitize_title("这波$ETH是利好出尽"),
+            "这波 $ETH 是利好出尽")
+
+    def test_title_amount_not_padded(self):
+        """标题里的金额不得被拆（与正文同款约束）"""
+        self.assertEqual(m.SquarePublisher._sanitize_title("成本$1000没动"),
+                         "成本$1000没动")
+
+    def test_title_without_cashtag_untouched(self):
+        """无挂件的标题不受影响（不得引入任何多余空白）"""
+        src = "1.88亿爆仓,BTC冲8.5万是诱多还是真启动？"
+        self.assertEqual(m.SquarePublisher._sanitize_title(src), src)
+
+    def test_title_and_content_share_same_padding_rule(self):
+        """标题与正文必须共用同一套补空格规则（防两处实现漂移）。
+
+        接线守卫：若有人把逻辑复制成两份、改了一处忘了另一处，本例即红。
+        """
+        src = "这波$ETH是利好出尽"
+        self.assertEqual(
+            m.SquarePublisher._sanitize_title(src).split("$ETH")[1][:2],
+            " 是",
+            "标题侧与正文侧规则必须一致")
+
+
+class TestR644ReadableLayout(unittest.TestCase):
+    """R644：排版确定性兜底 + **两道被否决的修法各有守卫**。
+
+    用户实锤：长文渲染成 "一、盘面这点涨幅够谁塞牙缝的 0.92% 的日内涨幅..."
+    —— 小标题与正文粘连，手机端一堵字墙。
+
+    ⚠️ 本类最重要的两组断言是**反向外守卫**：钉住"我们不再做什么"。
+    首版曾试图正则切分小标题，两次都把小标题腰斩成 "一、\n盘面这点涨幅…"，
+    比原问题更糟；也曾误拆标签行。这类"看起来能修"的错误修法必须有测试
+    挡住，否则后人会重新踩（R637同源：修法必须证明不伤内容）。
+    """
+
+    NORM = staticmethod(m.SquarePublisher._normalize_readable_layout)
+
+    def test_single_newline_becomes_blank_line(self):
+        """单换行升级为空行——这是真正的段落边界"""
+        self.assertEqual(
+            self.NORM("第一段。\n第二段。"),
+            "第一段。\n\n第二段。")
+
+    def test_existing_blank_lines_preserved(self):
+        """已有空行不动——作者有意的分段不能被吃掉（R331向漏判倾斜）"""
+        src = "第一段。\n\n第二段。"
+        self.assertEqual(self.NORM(src), src)
+
+    def test_excess_newlines_collapsed(self):
+        """3+ 连空行压成恰好一个（避免撑出大片留白）"""
+        self.assertEqual(self.NORM("A。\n\n\n\n\nB。"), "A。\n\nB。")
+
+    def test_ideographic_space_normalized(self):
+        """全角空格 U+3000 → 普通空格（NFKC 不管它，窄屏上占双倍宽）"""
+        self.assertEqual(self.NORM("正文　中间　空格"), "正文 中间 空格")
+
+    # ---- 反向外守卫：钉住"刻意不做"的修法 ----
+
+    def test_does_not_split_subheading(self):
+        """**不得切分小标题**（首版腰斩的复现守卫）。
+
+        根因：「小标题到哪里结束」在纯文本里没有可判定边界，任何正则切分
+        都是猜测。规则一旦改了，这里必须红。
+        """
+        src = "一、盘面这点涨幅够谁塞牙缝的 0.92% 的日内涨幅,这就是结论。"
+        out = self.NORM(src)
+        self.assertIn("一、盘面这点涨幅够谁塞牙缝的", out,
+                      "小标题被腰斩成 '一、\\n盘面这点涨幅…' —— 比原问题更糟")
+        self.assertEqual(out, src, "小标题行原样保留")
+
+    def test_does_not_split_hashtags(self):
+        """**不得拆标签行**（首版误拆的复现守卫）"""
+        src = "正文最后一句。#Write2Earn #BinanceSquare"
+        self.assertEqual(self.NORM(src), src,
+                         "标签被拆开会让 # 标签失效")
+
+    def test_mid_sentence_number_not_touched(self):
+        """句中的'第一，'不得被当小标题"""
+        src = "这件事第一,要看量能;第二,看资金。"
+        self.assertEqual(self.NORM(src), src)
+
+    def test_parse_article_has_no_layout_gate(self):
+        """**R644 排版门不得放进 _parse_article**（语义门与形态门要分层）。
+
+        实测：放在 _parse_article 里会误杀 10 例既有测试（那些测试用无分段的
+        合成文本测标题容错/拒答透出，与排版无关）。排版是形态偏好不是红线，
+        长文单通道拒稿= 大概率丢稿，代价不成比例（R331）。
+        这条是**接线守卫**：防止后有人"顺手加个排版门"再次引爆回归。
+        """
+        src = open(m.__file__, encoding="utf-8").read()
+        fn_start = src.index("def _parse_article")
+        fn_end = src.index("def _cjk_amount_scale")
+        body = src[fn_start:fn_end]
+        self.assertNotIn("排版未分段", body,
+                         "_parse_article 是语义门，不得混入形态判据")
+        # 但 prompt 侧必须有排版要求（预防侧不能跟着一起删）
+        self.assertIn("排版硬要求", src,
+                      "prompt 的排版硬要求是预防侧，不许丢")
+
+    def test_sanitize_applies_layout_normalization(self):
+        """_sanitize_content 必须调用排版规范化（接线守卫）"""
+        src = open(m.__file__, encoding="utf-8").read()
+        self.assertIn("_normalize_readable_layout(content)", src,
+                      "净化层必须调用排版规范化")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+

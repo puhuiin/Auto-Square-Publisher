@@ -4316,5 +4316,90 @@ class TestR637UnregisteredAuthModeSurfaced(unittest.TestCase):
         self.assertIn("AUTH_MODE", src)
 
 
+class TestR643ReadabilityMetrics(unittest.TestCase):
+    """R643/R644：可读性护栏必须有**持久出口**（R617）。
+
+    动机：R643 修的是"$ 挂件紧贴中文导致币安不渲染可点击标签"。修复在净化层，
+    但若没有度量面，无人能证明它是否真的生效——R612「程序在用」≠「人在看」
+    的反向版本：**修复在跑 ≠ 修好了**。生产实测基线：212/679（31%）紧贴。
+
+    判读纪律：`cashtag_tight` 随R643 上线**应归零**；持续非 0 说明有出海口
+    绕过净化层直发 payload（R355 曾踩过"标题绕过敏感词过滤"同型漏洞）。
+    """
+
+    def _rows_with_preview(self, preview):
+        return [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-01T04:00:00+00:00", "content_id": "c1",
+                 "hour_bj": 21, "article": False, "source": "U.Today",
+                 "final_preview": preview}]
+
+    def test_tight_cashtag_detected(self):
+        """紧贴中文的 $ 挂件必须被计入（两侧任一即可）"""
+        summ = mr.summarize(self._rows_with_preview(
+            "2770亿$SHIB刚砸进池子,还有一波$SOL在涨"))
+        self.assertEqual(summ["cashtag_total"], 2)
+        self.assertEqual(summ["cashtag_tight"], 2,
+                         "双向紧贴的两个挂件都要计入")
+
+    def test_spaced_cashtag_not_flagged(self):
+        """已有空格的挂件不得误报（否则告警永远亮着，等于没告警）"""
+        summ = mr.summarize(self._rows_with_preview(
+            "现在 $BTC 刚过完山车,隔壁 $AVAX 也涨了"))
+        self.assertEqual(summ["cashtag_total"], 2)
+        self.assertEqual(summ["cashtag_tight"], 0)
+
+    def test_renders_warning_when_tight_present(self):
+        """存在紧贴 → 渲染 ⚠️ 并点明后果（读者要知道这意味着什么）"""
+        summ = mr.summarize(self._rows_with_preview("2770亿$SHIB刚砸进池子"))
+        text = mr.render_text(summ, self._rows_with_preview("2770亿$SHIB刚砸进池子"))
+        self.assertIn("挂件紧贴中文", text)
+        self.assertIn("不会", text)
+
+    def test_renders_ok_when_all_spaced(self):
+        """全部合规 → 渲染 ✅（修复生效的正面证据，不能只有告警没有确认）"""
+        pv = "现在 $BTC 刚过完山车"
+        summ = mr.summarize(self._rows_with_preview(pv))
+        text = mr.render_text(summ, self._rows_with_preview(pv))
+        self.assertIn("挂件间距正常", text)
+        self.assertNotIn("挂件紧贴中文", text)
+
+    def test_paragraph_count_measured(self):
+        """段落数（空行）必须被度量，且零分段要能被识别出来"""
+        summ = mr.summarize(self._rows_with_preview("A段落。\n\nB段落。\n\nC段落。"))
+        self.assertEqual(summ["layout_paragraphs"], [2])
+
+    def test_zero_paragraph_flagged(self):
+        """零分段（字墙）必须显性报出——这是 R644 的核心指征"""
+        pv = "一、盘面真相" + "全网热度都不在。" * 10
+        summ = mr.summarize(self._rows_with_preview(pv))
+        text = mr.render_text(summ, self._rows_with_preview(pv))
+        self.assertIn("无分段", text)
+
+    def test_missing_preview_is_not_counted(self):
+        """缺 final_preview 的行不参与统计（未知不是 0，否则分母被污染）"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-01T04:00:00+00:00", "content_id": "c1",
+                 "hour_bj": 21, "article": False, "source": "U.Today"}]
+        summ = mr.summarize(rows)
+        self.assertEqual(summ["cashtag_total"], 0)
+        self.assertEqual(summ["cashtag_tight"], 0)
+        self.assertEqual(summ["layout_paragraphs"], [])
+
+    def test_renders_without_content_stats(self):
+        """**无浏览数据时也必须渲染**（防"被不相干数据集门控"的回归守卫）。
+
+        首版把可读性块放在 `if s.get("stats_posts")` 内，实测无 CSV 时整块消失。
+        那是错的耦合：内容库覆盖率仅 20%（R628）⇒ 八成情况下护栏静默。
+        这条把"耦合"钉成事故：渲染不得依赖 stats_posts。
+        """
+        rows = self._rows_with_preview("2770亿$SHIB刚砸进池子")
+        summ = mr.summarize(rows)          # 未注入 _STATS_CACHE ⇒ stats_posts=0
+        self.assertEqual(summ["stats_posts"], 0, "本用例前提：无浏览数据")
+        text = mr.render_text(summ, rows)
+        self.assertIn("挂件紧贴中文", text,
+                      "无浏览数据时可读性护栏必须仍然渲染")
+        self.assertIn("正文分段", text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
