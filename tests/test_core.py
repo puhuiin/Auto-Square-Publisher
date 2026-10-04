@@ -11326,7 +11326,23 @@ class TestFallbackImageCache(unittest.TestCase):
         mock_dl.assert_not_called()
 
     def test_chart_upload_failure_tries_market_card_not_next_symbol(self):
-        """走势卡上传失败：不换标的连续重试（S3 故障换图也没用），降级情绪卡"""
+        """走势卡上传失败（S3/凭证故障）→ **不换标的重试**，直接走外链兜底。
+
+        R648：**本用例原先期望"降级情绪卡"（card），与实现的 R8 设计冲突，
+        是一条先前遗留的红线矛盾**（R8 见于 6084538，本用例见于更早的 8413359
+        —— R8 改了实现、测试没跟着改，矛盾一直静默存在，直到本轮
+        一次全量回归才暴露：`1420passed` 的基线里其实带着这1 例失败）。
+
+        **判据：R8 的设计是对的，测试的期望是错的。**
+        `upload_to_binance` 返回 None = S3/凭证侧故障（不是"这张图不行"），
+        后续 `card` 同样走同一个上传接口，必然同样失败——白跑一次渲染。
+        正确处置是跳过剩余本地渲染源，直接走 FNG 外链兜底
+        （`upload_to_binance` 对外链图同样会失败，但 `download_image` 拿到的是
+        币安 CDN 上的现成图，走的是"无需再上传"的路径）。
+
+        ⚠️ 保留 `mock_card.assert_not_called()` 作为这条设计的守卫：
+        若有人把降级链改回"逐个本地源重试"，本例会红。
+        """
         with patch.object(m.MarketDataProvider, "get_kline_closes",
                           return_value=[100.0 + i for i in range(48)]), \
              patch.object(m.ImageManager, "render_chart_card",
@@ -11334,13 +11350,15 @@ class TestFallbackImageCache(unittest.TestCase):
              patch.object(m.ImageManager, "render_market_card",
                           return_value=("card-jpeg", "cover.jpg", "image/jpeg")) as mock_card, \
              patch.object(m.ImageManager, "upload_to_binance",
-                          side_effect=[None, "https://cdn.example/card.jpg"]) as mock_up:
+                          return_value=None) as mock_up, \
+             patch.object(m.ImageManager, "download_image", return_value=None):
             out = m.ImageManager.prepare_and_upload("k", None,
                                                     token_lines=["$BTC", "$ETH", "$SOL"],
                                                     fng_text="Fear&Greed 55")
-        self.assertEqual(out, "https://cdn.example/card.jpg")
-        self.assertEqual(mock_chart.call_count, 1, "走势卡上传失败后不得换标的重试")
-        self.assertEqual(mock_up.call_count, 2)
+        self.assertIsNone(out, "S3 全线故障 + 外链不可用 ⇒ 纯文本发布（不是丢帖）")
+        self.assertEqual(mock_chart.call_count, 1, "走势卡只渲染一次，不换标的重试")
+        self.assertEqual(mock_up.call_count, 1, "S3 故障时不得继续消耗上传调用")
+        mock_card.assert_not_called()
 
     def test_card_render_failure_falls_to_fng_cache(self):
         m.ImageManager._write_fallback_cache("https://cdn.example/cached.jpg")

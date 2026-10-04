@@ -481,6 +481,47 @@ def _num(v):
     return f
 
 
+_PURE_TICKER_CACHE: Dict[str, tuple] = {}
+
+
+def _pure_ticker_pool():
+    """R648：标题"纯名"检测用的币种集合（进程内缓存）。
+
+    ⚠️ **覆盖面小于织入覆盖面，缺口的数字必须如实呈现**：
+    - 织入侧 `_weave_cashtags` 用的是**币安全交易对池**（生产 505 个）；
+    - 检测侧只认**已落过盘**的币——`token_engagement.json`（R608 浏览加权表）
+      的键 ∪ 一组高频兜底。
+    ⇒ 标题里出现冷门币（不在表内）的纯名**检测不到**，
+    `title_pure_ticker` 因此是**下界估计**。
+
+    为什么不用交易对池：报表层是离线工具，`SymbolValidator` 在main.py
+    里会发起网络请求（/exchangeInfo），报表不该为此依赖网络
+    （R285 已记录"本机无法访问 binance.com 域名"——那会让整份报表直接失效）。
+    宁可覆盖面小而诚实，也不覆盖面大而脆。
+
+    实测影响：硬编码 6 币时 13 篇纯名只检出 6 篇（漏 7）；改用本池后
+    覆盖面扩到 13 币（生产实测 token_engagement 有 13 个键）。
+    """
+    if "pool" in _PURE_TICKER_CACHE:
+        return _PURE_TICKER_CACHE["pool"]
+    pool = {"BTC", "ETH", "XRP", "SOL", "DOGE", "BNB"}
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "..", "token_engagement.json"),
+                  encoding="utf-8-sig") as f:
+            data = json.load(f)
+        toks = data.get("tokens") if isinstance(data, dict) else None
+        if isinstance(toks, dict):
+            pool |= {str(t).upper().replace("$", "") for t in toks if t}
+    except (OSError, ValueError):
+        pass
+    # 去掉误入的非代币键（USDC 是稳定币，R316 契约不做挂件）
+    pool -= {"USDC", "USDT", "BUSD", "FDUSD", "TUSD"}
+    res = tuple(sorted(pool))
+    _PURE_TICKER_CACHE["pool"] = res
+    return res
+
+
 def load_content_stats(path=None):
     """R285：读 content_stats.jsonl（import_content_stats.py 的产物）→
     {content_id: {"views":int,"likes":int,"comments":int}}。文件缺失/损坏返回
@@ -810,6 +851,11 @@ def summarize(rows):
         "title_cashtag_tight": 0,
         "title_cashtag_total": 0,
         "title_with_cashtag": 0,   # 标题带 $ 挂件
+        # R647：结尾站队提问的分子/分母。prompt 明令"结尾放一句和本文事件直接
+        # 相关的问题"，而 final_preview 只存前 200 字 ⇒ 这条红线此前**零观测**。
+        # 分子=有提问，分母=字段存在的回执（None=Mock/异常态不进分母）。
+        "ending_q_yes": 0,
+        "ending_q_marked": 0,
         "title_pure_ticker": 0,    # 标题含币种纯名却没 $（R645 的靶子）
         "layout_paragraphs": [],
         "stats_views": [],
@@ -1238,8 +1284,7 @@ def summarize(rows):
                 if "$" in _at:
                     s["title_with_cashtag"] += 1
                 elif any(re.search(rf"(?<![A-Za-z0-9]){re.escape(_tk)}(?![A-Za-z0-9])",
-                                   _at) for _tk in ("BTC", "ETH", "XRP", "SOL",
-                                                   "DOGE", "BNB")):
+                                   _at) for _tk in _pure_ticker_pool()):
                     s["title_pure_ticker"] += 1
                 if any(c.isdigit() for c in _at):
                     s["title_hooks"]["数字钩子"] += 1
@@ -1255,6 +1300,12 @@ def summarize(rows):
             # R130：结尾套路分布——验证 ShuffleBag 生产轮换均匀性
             if r.get("ending_style"):
                 s["by_ending"][str(r["ending_style"])] += 1
+            # R647：结尾站队提问覆盖率。**字段存在即计入分母**（值为 False
+            # 也是有效观测——"确实没写提问"与"没测到"必须能区分，纪律12/17）。
+            if isinstance(r.get("ending_question"), bool):
+                s["ending_q_marked"] += 1
+                if r["ending_question"]:
+                    s["ending_q_yes"] += 1
             # R592：实操建议角度分布——与开场钩子/结尾套路同为 prompt 轮换槽，监测跨帖建议
             # 是否又收敛到「回踩/现货拿稳/杠杆降到最低」固定套话；legacy 行无字段跳过。
             if r.get("trade_cta_style"):
@@ -2720,6 +2771,10 @@ def render_text(s, rows=None):
                     f"（{_pure/_na*100:.0f}%）：该织入 $ 挂件却写成纯名"
                     f"（如「BTC 86110 稳着」）—— 信息流第一触点失去返佣入口"
                     f"（R645 修复后应为 0）")
+                lines.append(
+                    f"     ↳ 检测池 {len(_pure_ticker_pool())} 币"
+                    f"（token_engagement 键 ∪ 高频兜底），"
+                    f"**小于织入侧的全交易对池** ⇒ 冷门币纯名为**下界估计**")
             elif s.get("title_with_cashtag"):
                 lines.append(
                     f"  ✅ 长文标题$挂件覆盖 {s['title_with_cashtag']}/{_na}"
@@ -2757,6 +2812,17 @@ def render_text(s, rows=None):
         if s["by_ending"]:
             ending_str = " · ".join(f"{k} ×{v}" for k, v in s["by_ending"].most_common(5))
             lines.append(f"  结尾套路分布: {ending_str}")
+        # R647：结尾站队提问覆盖率——prompt 明令的红线，此前零观测。
+        # 只在有标记的回执上渲染（分母=字段存在的条数），历史行不混入。
+        if s["ending_q_marked"]:
+            _eq = s["ending_q_yes"]
+            _em = s["ending_q_marked"]
+            _ep = _eq / _em * 100
+            _eflag = "✅ " if _ep >= 80 else ("⚠️ " if _ep >= 50 else "❌ ")
+            lines.append(
+                f"  {_eflag}结尾站队提问 {_eq}/{_em}（{_ep:.0f}%）："
+                f"prompt 要求结尾给一句与本文事件直接相关的问题"
+                f"（旧回执无此字段，不计入分母）")
         if s["by_trade_cta_style"]:
             cta_str = " · ".join(f"{k} ×{v}" for k, v in s["by_trade_cta_style"].most_common(5))
             lines.append(f"  实操角度分布: {cta_str}")

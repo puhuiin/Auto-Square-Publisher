@@ -4527,5 +4527,139 @@ class TestR646TitleSideGuardrail(unittest.TestCase):
                          "短讯也必须进分段度量分母")
 
 
+class TestR647EndingQuestionObservable(unittest.TestCase):
+    """R647：结尾站队提问是**明确红线却零观测**。
+
+    prompt 短讯第 5 条 / 长文第 3 条都明令"结尾放一句和本文事件直接相关的
+    问题或观察点"，但 `final_preview` 只存**前 200 字**（R106 为FNG 锚点扩过
+    一次，R292 为篇幅又记了全文字数）⇒ **结尾整段不可见**。
+
+    实测：全库 312 条回执里，`final_preview` 末尾抓不到任何提问——与"截断"
+    完全一致。**不是没人写，是看不见。** 这是 R617「探针在跑、答案被丢弃」
+    的又一例：度量只覆盖了半条链路。
+
+    修法：记**派生布尔** `ending_question`（结尾末两行有没有问句/站队词），
+    而不是加长预览——判据只有"有没有问"，存全文会撑爆 metrics.jsonl。
+    """
+
+    def _rows(self, flags):
+        return [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": f"2026-10-05T00:{i:02d}:00+00:00", "content_id": f"n{i}",
+                 "hour_bj": 21, "article": False, "source": "U.Today",
+                 "ending_question": f} for i, f in enumerate(flags)]
+
+    def test_true_counts_as_yes(self):
+        summ = mr.summarize(self._rows([True, True]))
+        self.assertEqual((summ["ending_q_yes"], summ["ending_q_marked"]), (2, 2))
+
+    def test_false_counts_in_denominator(self):
+        """**False 必须计入分母**——"确实没写提问"是有效观测，不是缺数据。
+
+        若把 False 排除，分母只剩"写了的那些"，比率恒等于 100%，
+        指标彻底失去意义（纪律 17：`isinstance(x,int)` 制造恒假分母的同型坑）。
+        """
+        summ = mr.summarize(self._rows([True, False, False]))
+        self.assertEqual(summ["ending_q_marked"], 3, "False 也必须进分母")
+        self.assertEqual(summ["ending_q_yes"], 1)
+
+    def test_none_excluded_from_denominator(self):
+        """None（Mock/异常态）**不进分母**——未知不是 False（纪律 12）"""
+        summ = mr.summarize(self._rows([True, None, False]))
+        self.assertEqual(summ["ending_q_marked"], 2, "None 不进分母")
+        self.assertEqual(summ["ending_q_yes"], 1)
+
+    def test_missing_field_legacy_rows_not_counted(self):
+        """旧回执无 ending_question 字段 → 完全不计入（旧 schema 不污染）"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-04T00:00:00+00:00", "content_id": "old",
+                 "hour_bj": 21, "article": False, "source": "U.Today",
+                 "final_preview": "$BTC 稳住"}]
+        summ = mr.summarize(rows)
+        self.assertEqual(summ["ending_q_marked"], 0)
+        self.assertNotIn("结尾站队提问", mr.render_text(summ, rows),
+                         "无标记时整行不渲染——向后兼容，零噪音")
+
+    def test_renders_with_ratio_and_thresholds(self):
+        """渲染必须给比率，且分档可读（✅≥80% / ⚠️≥50% / ❌<50%）"""
+        summ = mr.summarize(self._rows([True, True, True, False]))
+        text = mr.render_text(summ, self._rows([True, True, True, False]))
+        self.assertIn("结尾站队提问 3/4（75%）", text)
+        self.assertIn("⚠️", text, "75% 应落在 ⚠️ 档")
+
+    def test_renders_ok_when_high(self):
+        summ = mr.summarize(self._rows([True, True, True, True]))
+        text = mr.render_text(summ, self._rows([True, True, True, True]))
+        self.assertIn("✅", text)
+
+    def test_main_emits_derived_flag_not_full_text(self):
+        """**接线守卫**：必须记派生布尔，且不得把全文塞进遥测。
+
+        两条约束同源：既要能观测结尾，又不能让 metrics.jsonl 膨胀
+        （312 篇 × 全文 200 字已 6 万字符）。
+        """
+        src = open(m.__file__, encoding="utf-8").read()
+        self.assertIn('"ending_question": _tail_q', src,
+                      "发布回执必须落 ending_question 派生布尔")
+        # 不得出现"把结尾全文写进遥测"的形态
+        self.assertNotIn("final_tail", src,
+                         "不要新增全文/尾段存储字段——判据只有有没有问")
+
+
+class TestR648PureTickerCoverage(unittest.TestCase):
+    """R648：纯名检测池**必须大于最小可用集**，否则护栏低估一半缺口。
+
+    R647 首版硬编码 6 个币（BTC/ETH/XRP/SOL/DOGE/BNB），而标题里实际出现
+    的纯名包含 SHIB/ZEC/SUI/BCH/COMP ⇒ **13 篇纯名只检出 6 篇，漏 7**。
+    护栏报"6/25（24%）"会让读者以为缺口只有那么大。
+
+    改用 `token_engagement.json`（R608 浏览加权表）的键 ∪ 高频兜底，
+    生产实测 12 个币 ⇒ 检出 10/25（40%）。
+    """
+
+    def test_pool_includes_engagement_tokens(self):
+        """检测池必须含 token_engagement 里出现过的币（SHIB/ZEC/COMP…）"""
+        pool = mr._pure_ticker_pool()
+        for tok in ("BTC", "ETH", "SHIB", "ZEC", "COMP", "LINK"):
+            self.assertIn(tok, pool,
+                          f"{tok} 在生产标题里出现过纯名，检测池必须覆盖")
+
+    def test_pool_excludes_stablecoins(self):
+        """稳定币必须排除——R316 契约「稳定币不做挂件」，
+        把 USDC 算成"该织入未织入"是误报。"""
+        pool = mr._pure_ticker_pool()
+        for st in ("USDC", "USDT", "BUSD", "FDUSD", "TUSD"):
+            self.assertNotIn(st, pool, f"{st} 不该进纯名检测池")
+
+    def test_pool_is_cached(self):
+        """池必须缓存——每篇标题都读一次磁盘会让报表慢一个数量级"""
+        mr._PURE_TICKER_CACHE.clear()
+        a = mr._pure_ticker_pool()
+        b = mr._pure_ticker_pool()
+        self.assertIs(a, b, "池应缓存复用")
+
+    def test_detects_shib_pure_name(self):
+        """真实漏检样本：SHIB 纯名标题必须被检出（R647 首版漏掉这类）"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-05T00:00:00+00:00", "content_id": "n1",
+                 "hour_bj": 21, "article": True, "source": "U.Today",
+                 "final_preview": "正文", "article_title":
+                     "SHIB单日拉6%，ZEC狂飙9%，这盘面真见底了？"}]
+        summ = mr.summarize(rows)
+        self.assertEqual(summ["title_pure_ticker"], 1,
+                         "SHIB/ZEC 纯名必须被检出——这是 R647 首版的真实漏检")
+
+    def test_render_states_underestimate(self):
+        """渲染必须声明这是**下界估计**——覆盖面小于织入侧是事实，
+        读者必须知道这个数不是全量（否则会去追一个不存在的精确值）。"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-05T00:00:00+00:00", "content_id": "n1",
+                 "hour_bj": 21, "article": True, "source": "U.Today",
+                 "final_preview": "正文", "article_title": "SHIB单日拉6%"}]
+        summ = mr.summarize(rows)
+        text = mr.render_text(summ, rows)
+        self.assertIn("下界估计", text)
+        self.assertIn("检测池", text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

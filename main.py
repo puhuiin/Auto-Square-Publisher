@@ -9642,6 +9642,25 @@ def _run_main():
                     content_chars = len(final_content) if isinstance(final_content, str) else None
                     content_cjk = (len(re.findall(r"[一-鿿]", final_content))
                                    if isinstance(final_content, str) else None)
+                    # R647：**结尾站队提问的观测面**。prompt 第 5 条明令"结尾放一句
+                    # 和本文事件直接相关的问题或观察点"（短讯）/ 第 3 条同理（长文），
+                    # 但 final_preview 只存**前 200 字**（R106 为 FNG锚点扩过一次），
+                    # **结尾整段不可见** ⇒ 一条明确红线零观测。
+                    # 实测：全库 312 条回执里`reject_preview`/`final_preview` 末尾
+                    # 抓不到任何提问，与"截断"完全一致——不是没人写，是看不见。
+                    # ⇒ R617「探针在跑、答案被丢弃」的又一例：**度量只覆盖了半条链路**。
+                    #
+                    # 记**派生布尔**而非加长预览：结尾判据只有"有没有问句"，
+                    # 存全文会撑爆 metrics.jsonl（312篇×200字已6万字符）。
+                    # None = Mock/异常态（未知不是 False，纪律12）。
+                    _tail_q = None
+                    if isinstance(final_content, str) and final_content.strip():
+                        _tail = "\n".join(
+                            [ln for ln in final_content.split("\n") if ln.strip()][-2:])
+                        _tail_q = bool(
+                            "？" in _tail or "?" in _tail
+                            or re.search(r"扣\s*[12]|你信|你觉得|怎么看|agree|看多|看空",
+                                         _tail))
                     # R125：标签回执——标签链路（#Write2Earn/#BinanceSquare 保底 +
                     # 活动标签第 3 席）全部注入正文尾部，200 字预览永远看不到；
                     # 返佣归因标签的覆盖率从此可度量（零标签帖 = 归因丢失）
@@ -9715,6 +9734,8 @@ def _run_main():
                         # 唯一度量面；None=Mock/异常态防御性降级
                         "content_chars": content_chars,
                         "content_cjk": content_cjk,
+                        # R647：结尾站队提问（None=Mock/异常态，未知不是 False）
+                        "ending_question": _tail_q,
                         "widget_count": widget_count,
                         "tag_count": tag_count,
                         "campaign_tag_count": campaign_tag_count,
