@@ -996,6 +996,9 @@ def summarize(rows):
     lat_tmp, tok_tmp = collections.defaultdict(list), collections.defaultdict(list)
     runs_tmp = {
         "n": 0, "quota_blocked": 0, "active_hours_blocked": 0, "zero_candidates": 0,
+        # R653：进入选稿的轮次 vs 在配额处提前退出的轮次（真实漏斗的分界）
+        "selection_runs": 0, "quota_earlyexit_runs": 0,
+        "sel_candidates": 0, "sel_published": 0, "sel_unprocessed": 0,
         "candidates": 0, "published": 0, "unprocessed": 0,
         "skips": collections.Counter(), "last_trending": "",
         "token_limit_bypass": 0,  # R215：限流高影响放行计数（拦截的另一半）
@@ -1546,6 +1549,17 @@ def summarize(rows):
             cand = int(_num(r.get("candidates")) or 0)
             pub = int(_num(r.get("published")) or 0)
             unproc = int(_num(r.get("unprocessed")) or 0)
+            # R653：**配额饱和轮在配额检查处提前 return，根本不进入选稿**。
+            # 实证：1777/2078 轮（85.5%）的 candidates/published/unprocessed
+            # **全是 0** ⇒ 它们从未走过选稿与排序。
+            # 判据用「有候选或已发布或未处理」而非「非饱和」——
+            # 后者会把"非饱和但真没稿"错算进选稿轮。
+            _entered = bool(cand or pub or unproc)
+            runs_tmp["selection_runs" if _entered else "quota_earlyexit_runs"] += 1
+            if _entered:
+                runs_tmp["sel_candidates"] += cand
+                runs_tmp["sel_published"] += pub
+                runs_tmp["sel_unprocessed"] += unproc
             runs_tmp["candidates"] += cand
             runs_tmp["published"] += pub
             runs_tmp["unprocessed"] += unproc
@@ -2150,6 +2164,43 @@ def render_text(s, rows=None):
         lines.append(f"- 运行摘要（{runs['n']} 轮）: {' / '.join(parts)}"
                      f"，累计候选 {runs['candidates']} → 发布 {runs['published']}"
                      + (f"（未处理 {runs['unprocessed']}）" if runs.get("unprocessed") else ""))
+        # R653：**真实漏斗**。上一行把"配额饱和 1777 轮"与"候选 12833"并列，
+        # 看起来像"排了 12833 条只发出 286 条（效率 2.2%）"——**这是误读**：
+        # 那 1777 轮在配额检查处**提前 return**，候选/发布/未处理全是 0，
+        # **从未进入选稿与排序**。真正选稿的只有 301 轮。
+        # ⇒ 判定"排序效率低"是错的：那 2.2% 的分母里绝大部分根本没被排过。
+        if runs.get("selection_runs") is not None and runs.get("n"):
+            _sr = runs["selection_runs"]
+            _ee = runs.get("quota_earlyexit_runs", 0)
+            # ⚠️ 两个比例必须**各自独立算**：用 `1 - 选稿占比` 会在四舍五入
+            # 下产生负数（实测选稿 14.5% → 1-14 = -13%）。
+            # 且"选稿轮占比"与"提前退出轮占比"是两个不同分母，混算必错。
+            _share = _sr / runs["n"] * 100
+            _ee_share = _ee / runs["n"] * 100
+            if _ee:
+                lines.append(
+                    f"  🔍 真实漏斗: 进入选稿 **{_sr}/{runs['n']}** 轮"
+                    f"（{_share:.0f}%），配额已满直接退出 **{_ee}** 轮"
+                    f"（{_ee_share:.0f}%，这些轮次**不产生候选**，"
+                    f"上面的累计候选只来自选稿轮）")
+            if _sr:
+                _sc = runs.get("sel_candidates", 0)
+                _sp = runs.get("sel_published", 0)
+                _rate = 100 * _sp / _sc if _sc else 0
+                lines.append(
+                    f"     ↳ 选稿轮内漏斗: 候选 {_sc} → 发布 {_sp}"
+                    f"（处理率 {_rate:.1f}%）"
+                    + (f"，未处理 {runs.get('sel_unprocessed', 0)}"
+                       if runs.get("sel_unprocessed") else ""))
+                # ⚠️ **低处理率本身不是缺陷**：配额只有 12 篇/天，而选稿轮
+                # 会把当天所有候选都拉进排序。实测 2.2% 是**配额/候选比**的
+                # 必然结果，不是"排序没把好稿排前面"——后者需要另一个判据
+                # （见 `通道质量产出` 与浏览量归因），**别用这个数字下结论**。
+                if 0 < _rate < 5:
+                    lines.append(
+                        f"     ↳ 处理率低**大概率是配额所致**（{_sp} 篇 ÷ "
+                        f"{_sc} 候选 = 配额 12/天 的自然结果），"
+                        f"**不是排序效率问题**——要判排序质量请看浏览量归因维度")
         # R10：降级可见——否则"标的表只剩兜底池"会伪装成"这些新闻没有标的"
         if runs.get("symbols_degraded"):
             lines.append(f"  ⚠️ 有效标的表最近一次降级: {runs['symbols_degraded']}"

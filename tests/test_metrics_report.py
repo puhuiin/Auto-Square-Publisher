@@ -5009,5 +5009,86 @@ class TestR652PlatformDimensionVisible(unittest.TestCase):
         self.assertNotIn("平台分布", mr.render_text(s, rows))
 
 
+class TestR653RealFunnelVisible(unittest.TestCase):
+    """R653：**配额饱和轮在配额检查处提前 return，从不进入选稿**。
+
+    原报表那行把"配额饱和 1777 轮"与"候选 12833 → 发布 286"并列，
+    看起来像"排了 12833 条只发出 286 条（效率 2.2%）"
+    ⇒ 极易得出错误结论"排序效率低、要把好稿排前面"。
+
+    实测真相：1777/2078 轮（85.5%）的 `candidates` / `published` /
+    `unprocessed` **全是 0** ⇒ 它们**从未走过选稿与排序**。
+    真正进入选稿的只有 **301 轮（14.5%）**。
+    ⇒ 那 2.2% 的分母里绝大部分根本没被排过，**判"排序效率"是错的**。
+    """
+
+    @staticmethod
+    def _run(cand, pub, unproc, blocked):
+        return {"outcome": "run_summary", "ts": "2026-10-04T00:00:00+00:00",
+                "candidates": cand, "published": pub, "unprocessed": unproc,
+                "quota_blocked": blocked}
+
+    def test_splits_selection_vs_early_exit(self):
+        rows = [self._run(0, 0, 0, True) for _ in range(10)]
+        rows += [self._run(100, 3, 90, False) for _ in range(2)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["quota_earlyexit_runs"], 10,
+                         "饱和且三计数全 0 ⇒ 判为提前退出")
+        self.assertEqual(s["runs"]["selection_runs"], 2)
+        self.assertEqual(s["runs"]["sel_candidates"], 200)
+        self.assertEqual(s["runs"]["sel_published"], 6)
+        self.assertEqual(s["runs"]["sel_unprocessed"], 180)
+
+    def test_enters_selection_when_unprocessed_only(self):
+        """**不能只看"非饱和"判选稿轮**——未饱和但真没稿的轮次
+        （三计数全 0）并未进入选稿，混进去会虚高分母。"""
+        rows = [self._run(0, 0, 0, False)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["selection_runs"], 0)
+        self.assertEqual(s["runs"]["quota_earlyexit_runs"], 1)
+
+    def test_unprocessed_counts_as_entered(self):
+        """有未处理 ⇒ 确实进了选稿（哪怕一篇未发）"""
+        s = mr.summarize([self._run(50, 0, 50, False)])
+        self.assertEqual(s["runs"]["selection_runs"], 1)
+        self.assertEqual(s["runs"]["sel_unprocessed"], 50)
+
+    def test_renders_real_funnel(self):
+        rows = [self._run(0, 0, 0, True) for _ in range(10)]
+        rows += [self._run(100, 3, 90, False)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("真实漏斗", text)
+        self.assertIn("进入选稿", text)
+        self.assertIn("配额已满直接退出", text)
+
+    def test_percentages_independent(self):
+        """⚠️ 两个比例必须**各自独立算**——用 `1 - 选稿占比` 会出负数。
+
+        首版 `(1-_share)` 在选稿14.5% 时渲染出 **-13%**（四舍五入所致）。
+        守卫锁住"退出占比必须为正且与选稿占比相加约 100"。
+        """
+        rows = [self._run(0, 0, 0, True) for _ in range(86)]
+        rows += [self._run(10, 1, 5, False) for _ in range(14)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertNotIn("-13%", text)
+        self.assertNotIn("（-", text)
+        self.assertIn("86%", text)   # 退出轮占比
+        self.assertIn("14%", text)   # 选稿轮占比
+
+    def test_low_rate_blamed_on_quota_not_sorting(self):
+        """**低处理率不得被渲染成"排序效率问题"**——2.2% 是配额 12/天的
+        自然结果。要判排序质量得看浏览量归因维度。"""
+        rows = [self._run(12833, 286, 10514, False)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("配额", text)
+        self.assertNotIn("排序没把好稿排到前面", text,
+                         "禁止把配额导致的低处理率误诊为排序问题")
+
+    def test_not_rendered_without_runs(self):
+        s = mr.summarize([{"outcome": "binance_published", "ts": "x",
+                           "platforms": ["binance"]}])
+        self.assertNotIn("真实漏斗", mr.render_text(s, []))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
