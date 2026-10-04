@@ -4935,5 +4935,79 @@ class TestR651ConfoundedSignalsNotCausal(unittest.TestCase):
         self.assertNotIn("不可当因果读", mr.render_text(s, rows))
 
 
+class TestR652PlatformDimensionVisible(unittest.TestCase):
+    """R652：平台维度在报表里**完全不可见**（R612「程序在用」≠「人在看」的又一例）。
+
+    生产实测 312 篇**全是纯 binance**。而代码完整支持三种组合：
+    `PUBLISH_PLATFORMS = binance / okx_draft / telegram`（main.py:216），
+    `TELEGRAM_BOT_TOKEN` 等 secret 也已正确注入 workflow。
+    但 `platforms` 字段此前**只用于 `_is_delivered()` 算投递成功率**，
+    报表从不显示它 ⇒ **无法回答"副平台开着还是关着"**，
+    而这直接决定流量来源判断。
+
+    关键性质：`platforms` 只记**真实送达**（main.py 明确"不记未送达的副平台"）
+    ⇒ 副平台在分布里缺席 = **真没发出去**，不是"发了没记账"。
+    这让它成为可信的配置状态面，而不只是装饰。
+    """
+
+    def _rows(self, plats_list):
+        return [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-01T00:00:00+00:00", "content_id": f"c{i}",
+                 "hour_bj": 12, "source": "U.Today (X)", "final_preview": "正文",
+                 "platforms": p}
+                for i, p in enumerate(plats_list)]
+
+    def test_counts_platforms(self):
+        rows = self._rows([["binance"], ["binance", "telegram"], ["okx_draft"]])
+        s = mr.summarize(rows)
+        self.assertEqual(dict(s["by_platform"]),
+                         {"binance": 2, "telegram": 1, "okx_draft": 1})
+        self.assertEqual(s["multi_platform_posts"], 1, "一帖两平台须单独计数")
+
+    def test_renders_distribution(self):
+        rows = self._rows([["binance"], ["binance", "telegram"]])
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("平台分布", text)
+        self.assertIn("binance", text)
+        self.assertIn("telegram", text)
+
+    def test_single_platform_warns_with_switch_name(self):
+        """仅 binance 时必须提示**开关在哪**——否则读者只知道"没有副平台"，
+        不知道该改哪个变量。"""
+        rows = self._rows([["binance"], ["binance"]])
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("PUBLISH_PLATFORMS", text, "必须点明开关变量名")
+        self.assertIn("当前无产出", text)
+
+    def test_no_warning_when_multi_platform(self):
+        """有多平台时不发"仅binance"警示（避免噪音训练读者）"""
+        rows = self._rows([["binance"], ["binance", "telegram"]])
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertNotIn("仅 binance 单平台", text)
+
+    def test_undelivered_not_counted(self):
+        """**未送达的平台不得计数**——`platforms: []` 的行（拒稿/发布失败）
+        不能给任何平台加一。"""
+        rows = self._rows([["binance"], []])
+        s = mr.summarize(rows)
+        self.assertEqual(s["by_platform"]["binance"], 1)
+        self.assertEqual(s["multi_platform_posts"], 0)
+
+    def test_malformed_platforms_ignored(self):
+        """脏数据（None / 非字符串 / 空串）不得抛异常"""
+        rows = self._rows([["binance", None, 123, "  "], ["binance"]])
+        s = mr.summarize(rows)
+        self.assertEqual(s["by_platform"]["binance"], 2,
+                         "只计有效平台名，脏项静默跳过")
+        self.assertEqual(s["multi_platform_posts"], 0)
+
+    def test_not_rendered_without_platforms(self):
+        """无已发布帖时不渲染该行（向后兼容）"""
+        rows = [{"outcome": "llm_rejected", "ts": "2026-10-01T00:00:00+00:00",
+                 "platforms": []}]
+        s = mr.summarize(rows)
+        self.assertNotIn("平台分布", mr.render_text(s, rows))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

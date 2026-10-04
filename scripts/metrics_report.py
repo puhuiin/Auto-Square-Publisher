@@ -838,6 +838,12 @@ def summarize(rows):
         # "事后做标题质量/眼钩分析"），129 条回执零消费面。标题是信息流第一触点。
         "article_titles": [],
         "title_hooks": collections.Counter(),
+        # R652：平台维度。此前 `platforms` 只喂 `_is_delivered`，
+        # **报表从不显示它** ⇒ 无法回答"副平台开着还是关着"，
+        # 而这直接决定流量来源（R612「程序在用」≠「人在看」的又一例）。
+        # ⚠️ 放在主s 而非 runs_tmp：这是**按帖**维度，不是按轮次维度。
+        "by_platform": collections.Counter(),  # {平台: 真实送达篇数}
+        "multi_platform_posts": 0,   # 一帖多平台（镜像生效）的篇数
         "title_leadin_hits": [],
         # R643/R644：可读性度量。**必须有出口**（R617：print 到日志 = 无出口，
         # 而 R614 已确认通知渠道 0 个 ⇒ 探针在跑、答案被丢弃，比没探针更危险）。
@@ -1132,6 +1138,17 @@ def summarize(rows):
                 s["by_weekday"][_wd] += 1
             if r.get("source"):
                 s["by_source"][str(r["source"])] += 1
+            # R652：平台维度。此前 platforms 只喂 `_is_delivered`，
+            # 报表从不显示 ⇒ **看不出副平台开着还是关着**。
+            # `platforms` 只记真实送达（main.py 明确"不记未送达的副平台"），
+            # 所以这里的计数就是各平台的**真实产出**。
+            _pls = r.get("platforms")
+            if isinstance(_pls, list):
+                for _p in _pls:
+                    if isinstance(_p, str) and _p.strip():
+                        s["by_platform"][_p.strip()] += 1
+                if len([p for p in _pls if isinstance(p, str) and p.strip()]) > 1:
+                    s["multi_platform_posts"] += 1
             toks = r.get("tokens")
             if isinstance(toks, list) and toks:
                 s["by_token"][str(toks[0])] += 1
@@ -2600,6 +2617,24 @@ def render_text(s, rows=None):
     n_pub = sum(s["by_provider"].values())
     if n_pub:
         lines.append(f"- 投递 {n_pub} 篇：分时 {_top(s['by_hour'])} / 来源 {_top(s['by_source'])}")
+        # R652：平台维度。**这是"流量从哪来"的唯一可见面**。
+        # 生产实测 312 篇**全是纯 binance**——而代码支持 binance / okx_draft /
+        # telegram 三种组合（`PUBLISH_PLATFORMS`，secret 已正确注入 workflow）。
+        # 报表此前完全不显示这个维度 ⇒ 无法回答"副平台开着还是关着"。
+        # 注意 `platforms` 只记**真实送达**，所以副平台缺席 = 真没发出去，
+        # 不是"发了没记账"。
+        if s["by_platform"]:
+            _plats = " · ".join(f"{k} ×{v}" for k, v in
+                                sorted(s["by_platform"].items(), key=lambda x: -x[1]))
+            _extra = (f"（{s['multi_platform_posts']} 篇多平台镜像）"
+                      if s["multi_platform_posts"] else "")
+            lines.append(f"  📡 平台分布: {_plats}{_extra}")
+            if set(s["by_platform"]) == {"binance"}:
+                lines.append(
+                    f"     ↳ 仅 binance 单平台：副平台（okx_draft / telegram）"
+                    f"**当前无产出**。开关在仓库变量 `PUBLISH_PLATFORMS`"
+                    f"（未设时默认 binance）—— 启用前先确认 secret 与合规要求"
+                    f"（OKX 官方无发帖 API，草稿模式需人工粘贴）")
         # R343：分周节奏（自然周序，缺勤日不渲染）——周末/工作日发布分布，配合
         # 时段均浏览回答「哪天发」；无投递周维数据时整行静默（零噪音）
         if s.get("by_weekday"):
