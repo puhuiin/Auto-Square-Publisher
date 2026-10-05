@@ -20,8 +20,8 @@
   "last_updated": "2026-10-05T11:44:02.111175Z",
   "_feed_health": {},
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-05",
@@ -30,12 +30,12 @@
       "last_fail": "2026-10-05T18:41:32.878416+00:00",
       "fails": 1
     },
-    "b9c23c875219eecc": {
-      "last_fail": "2026-10-05T18:42:21.024630+00:00",
-      "fails": 1
-    },
     "8aabebd8bb658ff3": {
       "last_fail": "2026-10-05T18:36:29.919742+00:00",
+      "fails": 1
+    },
+    "b9c23c875219eecc": {
+      "last_fail": "2026-10-05T18:42:21.024630+00:00",
       "fails": 1
     }
   },
