@@ -904,6 +904,9 @@ def summarize(rows):
         # 分子=有提问，分母=字段存在的回执（None=Mock/异常态不进分母）。
         "ending_q_yes": 0,
         "ending_q_marked": 0,
+        # R668：序号式AI 腔（`ordinal_heading`）。**字段存在即计入分母**
+        # （False 也是有效观测——纪律 12/17）。
+        "ordinal_n": 0, "ordinal_yes": 0, "ordinal_first_lines": [],
         # R663：`ending_question` 的**异常样本**（main.py 仅在判据与末 120 字
         # 不一致时落`tail_conflict`，避免 metrics.jsonl 膨胀 +60%）
         "tail_conflict_n": 0,
@@ -1441,6 +1444,19 @@ def summarize(rows):
                     s["boost_mag_neg"] += 1
             if isinstance(r.get("ending_question"), bool):
                 s["ending_q_marked"] += 1
+                # R668：序号式 AI 腔。生产实测长文 23/27（**85%**）以「一、」开头，
+                # 其中 14 篇是**完全相同的一句「一、发生了什么」**⇒ 模板化。
+                # ⚠️ **只做度量不做门**：长文单通道，一次拒稿= 大概率丢稿（R331）。
+                #   根因在 prompt 本身（长文第 3 条原文就要求「如『一、发生了什么』」）⇒ 已改。
+                if isinstance(r.get("ordinal_heading"), bool):
+                    s["ordinal_n"] += 1
+                    if r["ordinal_heading"]:
+                        s["ordinal_yes"] += 1
+                    for _ln in (r.get("final_preview") or "").split("\n"):
+                        _ls = _ln.strip()
+                        if _ls:
+                            s["ordinal_first_lines"].append(_ls[:20])
+                            break
                 if r["ending_question"]:
                     s["ending_q_yes"] += 1
                 # R663：★ **异常优先留存**的自一致性检查。
@@ -3812,6 +3828,33 @@ def render_text(s, rows=None):
                     f"判据与结尾原文不一致时才留原文，当前 {s['ending_q_marked']} "
                     f"条均一致）—— 注：`final_preview` 只有前 200 字，"
                     f"**看不到结尾**，故此项是「未发现异常」而非「已全面验证」")
+        # R668：序号式 AI 腔护栏（★ 与 R649 同级，缩进 8）。
+        # ★ 生产基线：长文 23/27（**85%**）以「一、」开头，
+        #   **14 篇是完全相同的一句「一、发生了什么」**⇒ 模板化。
+        #   根因在 prompt 本身：长文第 3 条原文就要求"小标题分 3~4 段
+        #   （**如「一、发生了什么」「二、资金在赌什么」**）"⇒ 模型是照做的。
+        # ⚠️ **只报形态、不报因果**：浏览量样本 59 篇且「长文」与「重大事件」**混淆**
+        #   （R651：显著≠可行动）⇒ 本行**不声称**影响流量。
+        _ordn = s.get("ordinal_n") or 0
+        if _ordn:
+            _ordy = s.get("ordinal_yes") or 0
+            _ordp = _ordy / _ordn * 100
+            _oflag = "✅ " if _ordp <= 20 else ("⚠️ " if _ordp <= 50 else "❌ ")
+            lines.append(
+                f"  {_oflag}长文序号式小标题 {_ordy}/{_ordn}（{_ordp:.0f}%）："
+                f"以「一、」序号起手的比例"
+                f"（prompt 已禁序号起手与空转标题，改用**自带信息**的实义小标题）")
+            # ★ 收敛度比占比更能说明问题：同一句话重复出现 = 模板化
+            _ocnt = collections.Counter(s.get("ordinal_first_lines") or [])
+            _otop = _ocnt.most_common(1)[0] if _ocnt else (None, 0)
+            if _otop[0] and _otop[1] >= 3:
+                lines.append(
+                    f"     ↳ ⚠️ **同一句开头重复 {_otop[1]} 次**：「{_otop[0]}」"
+                    f"（基线：「一、发生了什么」×14）"
+                    f"⇒ 换成任何一篇新闻都成立，等于没写")
+            lines.append(
+                f"     （⚠️ 不可据此断言对浏览量的影响：n=59 且**长文与重大事件混淆**"
+                f"，R651「显著≠可行动」。本行只度量**形态**，不度量**效果**）")
         # R649：内容红线合规度。**这三项此前既无代码防线、又无发布后观测**
         # （quality 门只管长度/TITLE/中文量）⇒ 违反与否在任何字段里都看不到。
         # 定位为**度量**不是门：词表启发式必有反例，而长文单通道拒稿= 大概率丢稿

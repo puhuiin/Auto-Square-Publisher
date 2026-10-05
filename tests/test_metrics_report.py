@@ -6208,5 +6208,81 @@ class TestR666ObserveScanGuardrail(unittest.TestCase):
                       "须说明 R665 的分差此时只能是下界")
 
 
+class TestR668OrdinalHeadingGuardrail(unittest.TestCase):
+    """R668：序号式 AI 腔护栏。
+
+    ★ 根因**在 prompt 自己**：长文提示词第 3 条原文就要求
+    "小标题分 3~4 段（**如「一、发生了什么」「二、资金在赌什么」**）"
+    ⇒ 模型是**照做的**，不是模型的问题。
+    生产实测 323篇：**长文 23/27（85%）以「一、」开头，14 篇是同一句**
+    「一、发生了什么」⇒ 典型模板化。
+
+    ⚠️ **只度量形态、不做门**：长文单通道，一次拒稿= 大概率丢稿（R331）。
+    ⚠️ **不声称影响浏览量**：n=59 且「长文」与「重大事件」**混淆**，
+       p=0.0015 也不可行动（R651）。
+    """
+
+    @staticmethod
+    def _post(ts, ordinal, first_line, article=True):
+        return {"platforms": ["binance"], "outcome": "binance_published",
+                "ts": ts, "hour_bj": 8, "content_id": ts, "source": "S",
+                "article": article, "ending_question": True,
+                "ordinal_heading": ordinal,
+                "final_preview": first_line + "\n\n正文…"}
+
+    def test_counts_ordinal(self):
+        rows = [self._post("2026-10-06T02:%02d:00+00:00" % i,
+                           i < 3, "一、发生了什么" if i < 3 else "1.88亿爆仓后BTC拉回84750")
+                for i in range(5)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["ordinal_n"], 5)
+        self.assertEqual(s["ordinal_yes"], 3)
+
+    def test_renders_and_flags_repeat(self):
+        rows = [self._post("2026-10-06T02:%02d:00+00:00" % i, True, "一、发生了什么")
+                for i in range(5)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("序号式小标题", text)
+        self.assertIn("同一句开头重复 5 次", text,
+                      "必须报**收敛度**——同一句重复才是模板化的核心证据")
+        self.assertIn("不可据此断言对浏览量的影响", text,
+                      "必须写明混淆与R651（R649 同款：护栏不得过度声称）")
+
+    def test_no_ordinal_field_is_silent_not_false(self):
+        """★ 字段缺失 = 未观测，**不得**计成 False（纪律 12/17）"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-06T02:00:00+00:00", "hour_bj": 8,
+                 "content_id": "x", "source": "S", "ending_question": True,
+                 "final_preview": "正文"}]
+        s = mr.summarize(rows)
+        self.assertEqual(s["ordinal_n"], 0, "无字段不得进分母")
+
+    def test_does_not_break_r663(self):
+        """★ 回归守卫（R646 同款）：R668 的插入**不得挤掉 R663 块**。
+
+        实测事故：首版把 R668 插在 R663 的注释行位置（12 缩进区），
+        ⇒ R663 的 `if` 变成 R668 的 `if _ordn:` 内部 ⇒
+        **R663 三例守卫全挂**，而 `py_compile` 仍通过。
+        ⇒ 本例锁住"两者必须共存"。
+        """
+        rows = [self._post("2026-10-06T02:%02d:00+00:00" % i, True, "一、发生了什么")
+                for i in range(5)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("序号式小标题", text, "R668 应渲染")
+        self.assertIn("结尾站队提问", text, "R647 应渲染")
+        self.assertIn("无自一致性异常", text, "R663 必须仍渲染（不得被挤掉）")
+
+    def test_prompt_forbids_ordinal(self):
+        """★ 接线守卫：prompt 必须真的禁了序号起手（否则遥测白加）"""
+        src = open(m.__file__, encoding="utf-8").read()
+        i = src.index("R668 小标题硬要求")
+        blk = src[i:i + 900]
+        self.assertIn("禁止", blk)
+        self.assertIn("一、二、三", blk)
+        # 旧的示例句必须**删掉**（它在 prompt 里等于教模型用序号）
+        self.assertNotIn("如「一、发生了什么」「二、资金在赌什么」", blk,
+                         "旧的序号示例必须移除，否则模型会继续照做")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
