@@ -5505,5 +5505,99 @@ class TestR657MainAstCache(unittest.TestCase):
         self.assertEqual(a, b, "缓存前后渲染输出必须完全一致")
 
 
+class TestR659PostFixStratification(unittest.TestCase):
+    """R659：**修复效果必须按"上线前后"分层判读**，否则旧稿冒充修复效果。
+
+    发现路径：代码上线（2026-10-05 00:07 UTC）后立刻核对新字段，
+    全部为 0。诊断发现**不是没上线**——上线后两轮都是
+    `quota_blocked=True, sent_24h=12/12` ⇒ **配额满 → 提前return → 不发帖**
+    ⇒ 不写回执 ⇒ 新字段自然是 0。
+
+    而这暴露一个真实的观测误读：报表里
+    `⚠️ 标题$挂件紧贴中文 9/13（69%）…（R643 修复后应为 0）`
+    **读起来像"修复无效"**，实际那 13 篇全是**修复前发布的旧稿**。
+
+    ⇒ R659 规则：**无新样本时必须显式说"无法判定"**，
+    并把旧稿数字标为"历史残留"；**不得让旧稿违规率冒充修复效果**
+    （R612沉默不是通过 / R610判读前先分层的直接应用）。
+    """
+
+    @staticmethod
+    def _art(ts, title):
+        return {"platforms": ["binance"], "outcome": "binance_published",
+                "ts": ts, "hour_bj": 8, "content_id": ts,
+                "article_title": title, "final_preview": "x",
+                "source": "S", "max_daily_posts": 12}
+
+    def test_no_postfix_sample_keeps_warning(self):
+        """只有旧稿 ⇒ **告警必须保留**，只追加"历史残留/无法判定"限定语。
+
+        ⚠️ 首版实现把旧稿告警**整个替换**成"⏸️ 暂无新样本"，
+        被R646 的两个既有测试抓出来（它们断言"标题$挂件间距正常"这类文案）。
+        那次失败是**有价值的**：它暴露了"为了让分层生效而静音了旧稿问题"，
+        违反 **R619（告警消失必须可归因）**——
+        "分母是新稿"不等于"旧稿没问题"。
+        ⇒ 正确做法：保留 ⚠️ + 追加"全部来自修复上线前的旧稿 / 无法判定修复效果"。
+
+        ⚠️ 数据要造**紧贴**（`$` 紧贴汉字），不是**纯名**（无 `$`）——
+        两者是**不同根因**（R643 vs R645）各有护栏，用错数据会测到另一条线。
+        """
+        rows = [self._art("2026-09-20T08:00:00+00:00", "$BTC刚砸进池子")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("标题$挂件紧贴", text, "旧稿告警必须保留（R619）")
+        self.assertIn("⚠️", text)
+        self.assertIn("无法判定修复效果", text)
+        self.assertIn("旧稿", text)
+        self.assertNotIn("⏸️ 标题$挂件紧贴", text,
+                         "不得用'暂无新样本'取代原告警")
+
+    def test_no_postfix_sample_keeps_pure_ticker_warning(self):
+        """纯名侧同样必须保留告警（R619）"""
+        rows = [self._art("2026-09-20T08:00:00+00:00", "BTC 86110稳着")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("长文标题含币种纯名", text, "旧稿纯名告警必须保留")
+        self.assertIn("无法判定修复效果", text)
+
+    def test_postfix_clean_reports_ok(self):
+        """有新稿且零紧贴 ⇒ 报✅ 且**只用新稿分母**"""
+        rows = [self._art("2026-10-06T08:00:00+00:00", "BTC 稳住了 $BTC 冲高")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("新稿", text)
+        self.assertIn("零紧贴", text)
+        self.assertNotIn("历史残留", text)
+
+    def test_postfix_dirty_reports_still_broken(self):
+        """有新稿且仍紧贴 ⇒ 必须报"修复后仍有紧贴"（不是历史残留）"""
+        rows = [self._art("2026-10-06T08:00:00+00:00", "$BTC刚砸进池子")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("新稿", text)
+        self.assertIn("仍有紧贴", text)
+        self.assertIn("绕过", text)
+
+    def test_old_and_new_both_listed_separately(self):
+        """新旧都有 ⇒ 两组分别报，且旧稿被标注不计入判定"""
+        rows = [self._art("2026-09-20T08:00:00+00:00", "$ETH起飞了"),
+                self._art("2026-10-06T08:00:00+00:00", "$BTC 稳住了")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("旧稿", text)
+        self.assertIn("不计入修复效果判定", text)
+
+    def test_is_post_fix_tri_state(self):
+        """★ `_is_post_fix` 必须**三态**：True/False/None（不可判定）。
+
+        `None` 不是 False——把"ts 不可解析"当成"旧稿"会静默归错类（R612）。
+        """
+        old = {"ts": "2026-09-20T08:00:00+00:00"}
+        new = {"ts": "2026-10-06T08:00:00+00:00"}
+        bad = {"ts": "垃圾"}
+        fz = mr._fix_live_ts()
+        self.assertIsNotNone(fz, "上线时刻必须可解析（生产写死UTC ISO）")
+        self.assertIs(mr._is_post_fix(new, fz), True)
+        self.assertIs(mr._is_post_fix(old, fz), False)
+        self.assertIsNone(mr._is_post_fix(bad, fz))
+        # 时刻未知 ⇒ 不可判定
+        self.assertIsNone(mr._is_post_fix(new, None))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -617,6 +617,41 @@ def _stats_lookup(cid):
     return _STATS_CACHE["data"].get(str(cid))
 
 
+# R659：**修复上线时刻**（UTC ISO）。该时刻之前发布的稿是**旧稿**——
+# 它们的违规数不代表修复效果，只是历史残留。此前护栏写"R643 修复后应为 0"
+# 却在旧稿上算出 69% ⇒ 读起来像"修复无效"，**这是误读**：
+# 修复只对**上线后新发的稿**生效，上线后若恰逢配额满（不发帖），
+# 分母为 0，护栏**必须说"暂无新样本"而不是"违规率仍高"**。
+#
+# ⚠️ 时刻来源是 git 提交时间（本地可取，不引网络依赖——R285/R646 同款理由）。
+# 取不到时**返回 None**，下游必须显式渲染"无法分层"，
+# **不得静默沿用旧稿口径**（那正是本条要修的问题）。
+_FIX_LIVE_ISO = "2026-10-05T00:07:00+00:00"
+_FIX_LIVE_TS = None
+
+
+def _fix_live_ts():
+    """R659：解析修复上线时刻。失败返回 None（调用方须显式处理）。"""
+    global _FIX_LIVE_TS
+    if _FIX_LIVE_TS is None:
+        _FIX_LIVE_TS = _parse_iso(_FIX_LIVE_ISO) or False
+    return _FIX_LIVE_TS or None
+
+
+def _is_post_fix(row, fix_ts):
+    """该行是否发布于修复上线之后。
+
+    `fix_ts` 为 None（无法分层）时**返回 None** 表示"不可判定"——
+    调用方须把它与"旧稿""新稿"**三者分开**渲染（R612：沉默不是通过）。
+    """
+    if fix_ts is None:
+        return None
+    t = _parse_iso(row.get("ts"))
+    if t is None:
+        return None
+    return t >= fix_ts
+
+
 def load_token_engagement(path=None):
     """R612：读 token_engagement.json（R608 浏览加权表）→ {"min_n":int, "tokens":
     {TOK: {"n":int,"median_views":int}}}。缺失/损坏返回空 dict——报表整块不渲染。
@@ -800,6 +835,8 @@ ATTEMPT_OUTCOMES = ("llm_rejected", "llm_failed", "llm_success", "publish_failed
 
 def summarize(rows):
     """聚合成嵌套计数，调用方只读不写"""
+    # R659：修复上线时刻（解析失败为 None ⇒ 护栏显式报"无法分层"）
+    _ftz = _fix_live_ts()
     s = {
         "total": len(rows),
         "by_outcome": collections.Counter(),
@@ -856,6 +893,11 @@ def summarize(rows):
         # 实测修复前标题紧贴率 75%（9/12）远高于正文 31%；纯名 6/25（24%）。
         "title_cashtag_tight": 0,
         "title_cashtag_total": 0,
+        # R659：按修复上线时刻分层（旧稿违规不代表修复效果）
+        "title_cashtag_total_postfix": 0, "title_cashtag_tight_postfix": 0,
+        "title_cashtag_tight_prefix": 0, "title_cashtag_prefix_marked": 0,
+        # R659：纯名侧同样分层
+        "article_titles_postfix": 0, "title_pure_ticker_postfix": 0,
         "title_with_cashtag": 0,   # 标题带 $ 挂件
         # R647：结尾站队提问的分子/分母。prompt 明令"结尾放一句和本文事件直接
         # 相关的问题"，而 final_preview 只存前 200 字 ⇒ 这条红线此前**零观测**。
@@ -1292,6 +1334,8 @@ def summarize(rows):
             if isinstance(_at, str) and _at.strip():
                 _at = _at.strip()
                 s["article_titles"].append(_at)
+                if _is_post_fix(r, _ftz) is True:
+                    s["article_titles_postfix"] += 1
                 # R646：标题侧挂件的两个**不同**失败原因各有出口（R611 分侧计数）。
                 # 实测标题侧紧贴率 75%（9/12）远高于正文 31%——标题是信息流
                 # 第一触点，混进正文分母会同时掩盖两侧的修复效果。
@@ -1300,6 +1344,7 @@ def summarize(rows):
                 # `首段钩子` 分母静默 296→25。改动此块前先跑
                 # TestR646TitleSideGuardrail.test_opener_denominator_unchanged。
                 _at_t = re.findall(r"\$[A-Za-z0-9]{2,10}(?![A-Za-z0-9])", _at)
+                _tight_here = 0
                 for _tm in re.finditer(
                         r"\$([A-Za-z0-9]{2,10})(?![A-Za-z0-9])", _at):
                     _e2 = _tm.end()
@@ -1308,8 +1353,19 @@ def summarize(rows):
                     _pv2 = _at[_i2 - 1] if _i2 > 0 else ""
                     if ((_nx and "\u4e00" <= _nx <= "\u9fff")
                             or ("\u4e00" <= _pv2 <= "\u9fff")):
+                        _tight_here += 1
                         s["title_cashtag_tight"] += 1
                 s["title_cashtag_total"] += len(_at_t)
+                # R659：**按修复上线时刻分层**——旧稿的违规不代表修复效果。
+                # 上线后若恰逢配额满（不发帖），新稿分母为 0，
+                # 护栏必须说"暂无新样本"而不是报"违规率仍高"（R612）。
+                _fx = _is_post_fix(r, _ftz)
+                if _fx is True:
+                    s["title_cashtag_total_postfix"] += len(_at_t)
+                    s["title_cashtag_tight_postfix"] += _tight_here
+                elif _fx is False:
+                    s["title_cashtag_tight_prefix"] += _tight_here
+                    s["title_cashtag_prefix_marked"] += 1
                 # R645/R646："纯名"（含币种代码却没 $）与"紧贴"是两个不同根因，
                 # 必须分别可见——只报紧贴的话，修好一个会掩盖另一个。
                 if "$" in _at:
@@ -1317,6 +1373,8 @@ def summarize(rows):
                 elif any(re.search(rf"(?<![A-Za-z0-9]){re.escape(_tk)}(?![A-Za-z0-9])",
                                    _at) for _tk in _pure_ticker_pool()):
                     s["title_pure_ticker"] += 1
+                    if _is_post_fix(r, _ftz) is True:
+                        s["title_pure_ticker_postfix"] += 1
                 if any(c.isdigit() for c in _at):
                     s["title_hooks"]["数字钩子"] += 1
                 if "$" in _at:
@@ -3137,27 +3195,83 @@ def render_text(s, rows=None):
         # R646：标题侧两行——紧贴（R643 靶子）与纯名（R645 靶子）分列。
         # **必须分侧且必须分原因**：标题走独立出海口，混进正文分母会同时
         # 掩盖两侧效果；只报紧贴则会让"修好补空格"掩盖"织入没跑"。
+        #
+        # R659：★ **按修复上线时刻分层**。此前这里在**旧稿**上算出 69%
+        # 并注明"修复后应为 0"⇒ 读起来像"修复无效"，**这是误读**：
+        # 修复只对上线后新发的稿生效；而上线后若恰逢**配额满（不发帖）**，
+        # 新稿分母为 0 ⇒ 必须说"**暂无新样本**"，而非沿用旧稿违规率
+        # （R612：沉默不是通过；R610：判读前先分层）。
         if s.get("title_cashtag_total"):
             _tt = s["title_cashtag_tight"]
             _tn = s["title_cashtag_total"]
             _tpct = _tt / _tn * 100
-            if _tt:
-                lines.append(
-                    f"  ⚠️ 标题$挂件紧贴中文 {_tt}/{_tn}（{_tpct:.0f}%）："
-                    f"标题是信息流第一触点，此处失效损失最大"
-                    f"（R643 修复后应为 0）")
+            _pn = s.get("title_cashtag_total_postfix", 0)
+            _pt = s.get("title_cashtag_tight_postfix", 0)
+            if _pn:
+                # 有新样本 ⇒ 只按新样本判修复效果（旧稿单列，不混入）
+                if _pt:
+                    lines.append(
+                        f"  ⚠️ 标题$挂件紧贴中文（新稿）{_pt}/{_pn}"
+                        f"（{_pt/_pn*100:.0f}%）：修复上线后**仍有紧贴**"
+                        f"⇒ 净化层可能被绕过")
+                else:
+                    lines.append(
+                        f"  ✅ 标题$挂件间距正常（新稿 {_pn} 个全部独立 token，"
+                        f"修复上线后零紧贴）")
+                if _tt:
+                    lines.append(
+                        f"     ↳ 另有**旧稿**紧贴 {_tt}/{_tn}（{_tpct:.0f}%，"
+                        f"修复前发布）—— **不计入修复效果判定**")
             else:
-                lines.append(
-                    f"  ✅ 标题$挂件间距正常（{_tn} 个全部为独立 token）")
+                # ★ 无新样本：**保留告警**（R619：告警消失必须可归因，
+                # 不能因为"分母是新稿"就把旧稿的问题静音——那正是本条要修的
+                # 误读），只**追加**"旧稿/历史残留"的限定语。
+                if _tt:
+                    lines.append(
+                        f"  ⚠️ 标题$挂件紧贴中文 {_tt}/{_tn}（{_tpct:.0f}%）："
+                        f"标题是信息流第一触点，此处失效损失最大")
+                    lines.append(
+                        f"     ↳ **全部来自修复上线前的旧稿**"
+                        f"（新稿 0 个，**无法判定修复效果**）"
+                        f"—— 告警对旧稿仍成立，修复效果须等配额释放产生新稿再看"
+                        f"（配额满时本就不发帖，R654）")
+                else:
+                    lines.append(
+                        f"  ✅ 标题$挂件间距正常（{_tn} 个全部为独立 token）")
         if s.get("article_titles"):
             _na = len(s["article_titles"])
             _pure = s.get("title_pure_ticker", 0)
-            if _pure:
+            # R659：同样按修复上线时刻分层（旧稿纯名不代表修复无效）
+            _pn2 = s.get("article_titles_postfix", 0)
+            _pp2 = s.get("title_pure_ticker_postfix", 0)
+            if _pn2:
+                _pure = _pp2
+                _na_disp = _pn2
+                if _pp2:
+                    lines.append(
+                        f"  ⚠️ 长文标题含币种纯名（新稿）{_pp2}/{_pn2}"
+                        f"（{_pp2/_pn2*100:.0f}%）：修复上线后**仍有纯名**"
+                        f"⇒ 织入未跑（R645）")
+                else:
+                    lines.append(
+                        f"  ✅ 长文标题无币种纯名（新稿 {_pn2} 篇，R645 修复后）")
+                if s.get("title_pure_ticker", 0) and _pp2 != s.get("title_pure_ticker", 0):
+                    lines.append(
+                        f"     ↳ 旧稿另有纯名 {s.get('title_pure_ticker', 0)}/{_na}"
+                        f"（修复前发布）—— **不计入修复效果判定**")
+                _na = _pn2
+            elif _pure:
+                # ★ 无新样本：**保留告警**（R619 告警消失必须可归因），
+                # 只追加"旧稿/历史残留"限定语
                 lines.append(
                     f"  ⚠️ 长文标题含币种纯名 {_pure}/{_na}"
                     f"（{_pure/_na*100:.0f}%）：该织入 $ 挂件却写成纯名"
-                    f"（如「BTC 86110 稳着」）—— 信息流第一触点失去返佣入口"
-                    f"（R645 修复后应为 0）")
+                    f"（如「BTC 86110稳着」）—— 信息流第一触点失去返佣入口")
+                lines.append(
+                    f"     ↳ **全部来自修复上线前的旧稿**（新稿 0 篇，"
+                    f"**无法判定修复效果**）—— 告警对旧稿仍成立，"
+                    f"修复效果须等配额释放产生新稿再看（R654）")
+                _pure = 0
                 lines.append(
                     f"     ↳ 检测池 {len(_pure_ticker_pool())} 币"
                     f"（token_engagement 键 ∪ 高频兜底），"
