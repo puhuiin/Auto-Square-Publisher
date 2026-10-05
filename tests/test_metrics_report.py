@@ -5285,8 +5285,178 @@ class TestR655RollingWindowSelfLock(unittest.TestCase):
         self.assertTrue(occ is None or occ["last_slot_share"] is None)
 
 
-if __name__ == "__main__":
-    unittest.main(verbosity=2)
+class TestR656SupplyVsOutput(unittest.TestCase):
+    """R656：★ 关键分界——"发不出"有两种完全不同的原因，必须按时段拆开。
+
+    | 原因 | 特征 | 处置 |
+    |---|---|---|
+    | (a) **候选不足** | 该时段候选本来就少 | 加源 / 加频次 |
+    | (b) **配额被占** | 候选充足但发不出 | 动配额结构 |
+
+    实测生产：高浏览窗内**62 轮进入选稿、2673 个候选（充足）**，
+    却只发出 **51 篇**（52×）⇒ 属 (b)。
+
+    ⚠️ **本轮更正了两个自己之前的错误结论**：
+    1. R655 结尾建议"改自然日窗口可解开自锁"——**反事实模拟证明无效**
+       （+0%）：自然日窗口下高窗候选同样只有 2.3 个/天，**瓶颈不在窗口定义**。
+    2. 我一度判"候选池本身就是瓶颈"（每天只有 2.3 个高窗候选）——
+       **也错了**：那 2.3 个是"夜间发的帖恰好落在高窗"的结果，
+       高窗内实际有 2673 个候选，只是**被配额挡住发不出**。
+    ⇒ **正确结论：杠杆（时段偏置）方向是对的，被配额位置挡住；
+    真处置是动配额结构（减量 / 自然日窗口 / 提高额度）。**
+    """
+
+    @staticmethod
+    def _run(hour, cand, pub, ts="2026-10-04T00:00:00+00:00"):
+        return {"outcome": "run_summary", "ts": ts, "hour_bj": hour,
+                "candidates": cand, "published": pub,
+                "unprocessed": cand - pub, "quota_blocked": False}
+
+    def test_splits_supply_and_output_by_hour(self):
+        rows = [self._run(8, 2000, 40) for _ in range(3)] + \
+               [self._run(22, 3000, 200) for _ in range(3)]
+        s = mr.summarize(rows)
+        b = s["runs"]["by_hour_sel"]
+        self.assertEqual(b["pref_cand"], 6000)
+        self.assertEqual(b["pref_pub"], 120)
+        self.assertEqual(b["pref_runs"], 3)
+        self.assertEqual(b["oth_cand"], 9000)
+
+    def test_renders_supply_output_line(self):
+        rows = [self._run(8, 2000, 40), self._run(22, 3000, 200)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("时段内供给/产出", text)
+        self.assertIn("候选 2000 → 发布 40", text)
+
+    def test_flags_quota_occupied_not_supply_short(self):
+        """候选 ≫ 产出时必须明确判为**配额被占**，并指向动配额结构"""
+        rows = [self._run(8, 2000, 40), self._run(22, 3000, 200)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("配额被占", text)
+        self.assertIn("动配额结构", text,
+                      "必须给出可行动方向，而不只是陈述现象")
+
+    def test_threshold_is_reachable(self):
+        """⚠️ 阈值必须是**真实数据能达到**的（回归守卫）。
+
+        我第一版把阈值设成 100×，而生产实测是 52×⇒ **护栏存在却从不触发**，
+        等于没有（与 R612「有数据无出口」同型的另一种形式）。
+        """
+        rows = [self._run(8, 2000, 40), self._run(22, 3000, 200)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("配额被占", text)   # 50× 必须触发
+
+    def test_no_warning_when_balanced(self):
+        """候选与产出接近时**不发**警示（避免噪音）"""
+        rows = [self._run(8, 12, 10), self._run(22, 12, 10)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertNotIn("配额被占", text)
+
+    def test_missing_hour_bj_not_counted_either_side(self):
+        """hour_bj 缺失/非法 ⇒ 两侧都不计入（不是算进"其他"）"""
+        rows = [{"outcome": "run_summary", "ts": "2026-10-04T00:00:00+00:00",
+                 "candidates": 100, "published": 50, "unprocessed": 50,
+                 "quota_blocked": False}]
+        b = mr.summarize(rows)["runs"]["by_hour_sel"]
+        self.assertEqual(b["pref_cand"], 0)
+        self.assertEqual(b["oth_cand"], 0)
+
+    def test_early_exit_rounds_not_counted(self):
+        """配额饱和提前退出的轮次（三计数全0）不计入供给"""
+        rows = [self._run(8, 0, 0), self._run(8, 100, 20)]
+        b = mr.summarize(rows)["runs"]["by_hour_sel"]
+        self.assertEqual(b["pref_runs"], 1, "只有真正选稿的那轮计入")
+        self.assertEqual(b["pref_cand"], 100)
+
+
+class TestR657MainAstCache(unittest.TestCase):
+    """R657：**AST 解析缓存**——报表渲染提速 5.4×（4.65s → 0.86s）。
+
+    R617 立判据：报表必须用 AST 而非 import/正则/硬编码读`main.py` 的
+    通道池与置顶清单（import 有副作用、正则改缩进就静默漏站、硬编码必漂移）。
+    但那两个探针**每次调用都重新 `ast.parse` 整个 main.py（9884 行）**
+    —— 实测 `render_text` 里被调 6 次、累计 **3.6 秒**，占整体 **86%**。
+
+    ⚠️ 缓存键必须含 **mtime + size**：只按路径缓存会让"改了 main.py 之后
+    报表仍报旧结论"——那比慢更坏（R612「沉默不是通过」的变体：
+    **探针在跑，但报的是过期答案**）。
+    """
+
+    def test_caches_tree(self):
+        mr._MAIN_AST_CACHE.update({"key": None, "tree": None})
+        a = mr._parse_main_ast()
+        b = mr._parse_main_ast()
+        self.assertIsNotNone(a, "main.py 必须能解析（生产有该文件）")
+        self.assertIs(a, b, "同键必须返回**同一个** tree 对象（不重新解析）")
+
+    def test_key_includes_mtime_and_size(self):
+        """缓存键必须能识别"文件变了"——否则改了 main.py 报表报旧结论"""
+        mr._parse_main_ast()
+        key = mr._MAIN_AST_CACHE["key"]
+        self.assertIsInstance(key, tuple)
+        self.assertEqual(len(key), 3, "键须含 (path, mtime, size)")
+        self.assertIsInstance(key[1], int)
+        self.assertIsInstance(key[2], int)
+
+    def test_cache_invalidated_on_change(self):
+        """★ 改了 main.py 之后必须重新解析（这是缓存最危险的失败模式）"""
+        import os
+        import tempfile
+        mr._MAIN_AST_CACHE.update({"key": None, "tree": None})
+        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False,
+                                         encoding="utf-8") as f:
+            f.write("x = 1\n")
+            p1 = f.name
+        with open(p1, "a", encoding="utf-8") as f:
+            f.write("y = 2\n")
+        try:
+            t1 = mr._parse_main_ast(p1)
+            t2 = mr._parse_main_ast(p1)
+            self.assertIs(t1, t2, "文件未变时应命中缓存")
+            # 改size + mtime ⇒ 必须失效
+            os.utime(p1, (os.path.getatime(p1), os.path.getmtime(p1) + 10))
+            with open(p1, "a", encoding="utf-8") as f:
+                f.write("z = 3\n")
+            t3 = mr._parse_main_ast(p1)
+            self.assertIsNot(t1, t3, "文件变化后必须重新解析，不得返回旧 tree")
+        finally:
+            os.unlink(p1)
+            mr._MAIN_AST_CACHE.update({"key": None, "tree": None})
+
+    def test_unparseable_returns_none_and_is_cached(self):
+        """解析失败返回 None，且**失败也要缓存**（否则每次都重试失败路径）"""
+        import os
+        import tempfile
+        mr._MAIN_AST_CACHE.update({"key": None, "tree": None})
+        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False,
+                                         encoding="utf-8") as f:
+            f.write("def (  # 语法错误\n")
+            p1 = f.name
+        try:
+            self.assertIsNone(mr._parse_main_ast(p1))
+            self.assertIsNone(mr._parse_main_ast(p1))
+        finally:
+            os.unlink(p1)
+            mr._MAIN_AST_CACHE.update({"key": None, "tree": None})
+
+    def test_missing_file_returns_none(self):
+        mr._MAIN_AST_CACHE.update({"key": None, "tree": None})
+        self.assertIsNone(mr._parse_main_ast("不存在的路径.py"))
+
+    def test_probes_still_work_with_cache(self):
+        """缓存不得改变两个探针的结论（它们仍须各返回各自的集合）"""
+        self.assertIsInstance(mr._priority_pinned_from_main(), list)
+        self.assertIsInstance(mr._provider_pool_from_main(), list)
+
+    def test_render_output_identical_with_cache(self):
+        """★ 缓存**只提速、不改结论**——同一批数据两次渲染必须逐字相同"""
+        rows = [TestR656SupplyVsOutput._run(8, 2000, 40),
+                TestR656SupplyVsOutput._run(22, 3000, 200)]
+        mr._MAIN_AST_CACHE.update({"key": None, "tree": None})
+        s = mr.summarize(rows)
+        a = mr.render_text(s, rows)
+        b = mr.render_text(s, rows)          # 命中缓存的第二次
+        self.assertEqual(a, b, "缓存前后渲染输出必须完全一致")
 
 
 if __name__ == "__main__":

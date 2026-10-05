@@ -999,6 +999,8 @@ def summarize(rows):
         # R653：进入选稿的轮次 vs 在配额处提前退出的轮次（真实漏斗的分界）
         "selection_runs": 0, "quota_earlyexit_runs": 0,
         "sel_candidates": 0, "sel_published": 0, "sel_unprocessed": 0,
+        # R656：高浏览窗 vs 其他时段的「选稿供给 vs 实际发出」（见累加处注释）
+        "by_hour_sel": None,
         "candidates": 0, "published": 0, "unprocessed": 0,
         "skips": collections.Counter(), "last_trending": "",
         "token_limit_bypass": 0,  # R215：限流高影响放行计数（拦截的另一半）
@@ -1560,6 +1562,33 @@ def summarize(rows):
                 runs_tmp["sel_candidates"] += cand
                 runs_tmp["sel_published"] += pub
                 runs_tmp["sel_unprocessed"] += unproc
+                # R656：**按北京时段拆解选稿供给 vs 实际发出**。
+                # 这是 R654/R655 结论的关键修正——必须能区分两种"发不出"：
+                #  (a) **候选不足**（该时段没有稿可排）
+                #  (b) **配额被占**（候选充足但发不出）
+                # 实测生产：高浏览窗内有 62 轮进入选稿、**2673 个候选（充足）**，
+                # 却只发出 51 篇 ⇒ 属 (b)。**候选不是瓶颈**，
+                # R650 的时段偏置方向正确，只是被"配额位置"限制。
+                # 判据用 hour_bj；缺失时归入 unknown（不混入任何时段）。
+                try:
+                    _bh = int(r.get("hour_bj"))
+                except (TypeError, ValueError):
+                    _bh = -1
+                _b = runs_tmp.get("by_hour_sel")
+                if not isinstance(_b, dict):
+                    # ⚠️ 不能用 setdefault：键已存在但值为 None 时它返回 None
+                    # （预声明了"by_hour_sel": None），比缺键更隐蔽。
+                    _b = {"pref_cand": 0, "pref_pub": 0, "pref_runs": 0,
+                          "oth_cand": 0, "oth_pub": 0, "oth_runs": 0}
+                    runs_tmp["by_hour_sel"] = _b
+                if 6 <= _bh < 12:
+                    _b["pref_cand"] += cand
+                    _b["pref_pub"] += pub
+                    _b["pref_runs"] += 1
+                elif _bh >= 0:
+                    _b["oth_cand"] += cand
+                    _b["oth_pub"] += pub
+                    _b["oth_runs"] += 1
             runs_tmp["candidates"] += cand
             runs_tmp["published"] += pub
             runs_tmp["unprocessed"] += unproc
@@ -2010,13 +2039,12 @@ def _provider_pool_from_main(main_path=None):
     绝不能静默退化成"全部通道都已被尝试"——那是把未知显示成通过（R617 纪律：
     沉默不是通过）。
     """
-    path = main_path or os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "main.py")
     try:
         import ast
-        with open(path, "r", encoding="utf-8") as f:
-            tree = ast.parse(f.read())
     except Exception:
+        return []
+    tree = _parse_main_ast(main_path)
+    if tree is None:
         return []
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
@@ -2026,6 +2054,43 @@ def _provider_pool_from_main(main_path=None):
                         return [k.value for k in node.value.keys
                                 if isinstance(k, ast.Constant) and isinstance(k.value, str)]
     return []
+
+
+_MAIN_AST_CACHE = {"key": None, "tree": None}
+
+
+def _parse_main_ast(main_path=None):
+    """R657：**AST 解析结果按 (路径, mtime, size) 缓存**。
+
+    R617 立判据：报表必须用 AST 而非 import/正则/硬编码来读 `main.py` 的
+    通道池与置顶清单。但那两个探针**每次调用都重新 `ast.parse` 整个
+    main.py（9884 行）**——实测 `render_text` 里被调 6 次、累计 **3.6 秒**，
+    占整体 4.2s 的 **86%**（`ast.parse` 单次 0.51s）。
+
+    ⇒ 缓存键必须含 **mtime + size**：只按路径缓存会让"改了 main.py 之后
+    报表仍报旧结论"——那是比慢更坏的结果（R612「沉默不是通过」的变体：
+    探针在跑，但报的是过期答案）。
+    解析失败**缓存 None**（失败也要缓存，否则每次都重试失败路径）。
+    """
+    path = main_path or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "main.py")
+    try:
+        stt = os.stat(path)
+        key = (os.path.abspath(path), int(stt.st_mtime), int(stt.st_size))
+    except OSError:
+        return None
+    if _MAIN_AST_CACHE["key"] == key:
+        return _MAIN_AST_CACHE["tree"]
+    tree = None
+    try:
+        import ast
+        with open(path, "r", encoding="utf-8") as f:
+            tree = ast.parse(f.read())
+    except Exception:
+        tree = None          # 响亮失败语义由调用方的"空集"承担
+    _MAIN_AST_CACHE["key"] = key
+    _MAIN_AST_CACHE["tree"] = tree
+    return tree
 
 
 def _priority_pinned_from_main(main_path=None):
@@ -2043,13 +2108,12 @@ def _priority_pinned_from_main(main_path=None):
     解析失败/找不到返回空集——空集 = 无置顶通道，显示回退到纯延迟序（不撒谎，
     只是缺一层信息；与 _provider_pool_from_main 的「响亮失败」判据同源）。
     """
-    path = main_path or os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "main.py")
     pinned = []
+    tree = _parse_main_ast(main_path)
+    if tree is None:
+        return []
     try:
         import ast
-        with open(path, "r", encoding="utf-8") as f:
-            tree = ast.parse(f.read())
     except Exception:
         return []
 
@@ -2278,6 +2342,36 @@ def render_text(s, rows=None):
                         f"     ↳ 处理率低**大概率是配额所致**（{_sp} 篇 ÷ "
                         f"{_sc} 候选 = 配额 12/天 的自然结果），"
                         f"**不是排序效率问题**——要判排序质量请看浏览量归因维度")
+        # R656：★ 关键分界——**"发不出"有两种完全不同的原因**，
+        # 必须用"选稿供给 vs 实际发出"按时段拆开才能区分：
+        #   (a) 候选不足（该时段没稿可排）⇒ 该加源/ 加频次
+        #   (b) 配额被占（候选充足但发不出）⇒ 该动配额结构
+        # 实测生产：高浏览窗内**62 轮进入选稿、2673 个候选（充足）**，
+        # 却只发出 **51 篇** ⇒ 属 (b)。
+        # ⇒ **候选不是瓶颈**；R650 时段偏置的方向是对的，
+        #   只是被"夜间发帖占住了次日的槽"限制（R655 自锁）。
+        # ⚠️ 这一行是对 R654/R655"排序无施力点"的重要**修正**：
+        #   不是"没有杠杆"，而是"**杠杆被配额位置挡住**"——
+        #   这两者的处置完全不同（前者无解，后者可动配额）。
+        _bh = runs.get("by_hour_sel")
+        if _bh and (_bh["pref_cand"] or _bh["oth_cand"]):
+            _pc, _pp, _pr = _bh["pref_cand"], _bh["pref_pub"], _bh["pref_runs"]
+            _oc, _op, _or_ = _bh["oth_cand"], _bh["oth_pub"], _bh["oth_runs"]
+            _pt = f"  📐 时段内供给/产出: 高浏览窗 候选 {_pc} → 发布 {_pp}"
+            _pt += (f"（{_pr} 轮）" if _pr else "（无轮次）")
+            if _oc:
+                _pt += f" · 其他时段 候选 {_oc} → 发布 {_op}（{_or_} 轮）"
+            lines.append(_pt)
+            if _pc and _pp and _pc / _pp >= 5:
+                # 阈值 5×：生产实测 2673/51 ≈ 52×。**不设成 100×**——
+                # 那会让这条线在真实数据上永不触发（我第一版就设了 100×，
+                # 结果护栏存在却从不响，等于没有）。
+                # 判据的语义是"候选量远大于产出量 ⇒ 不可能是候选不足"。
+                lines.append(
+                    f"     ↳ **高浏览窗候选充足却发不出**（候选 {_pc} ≈ "
+                    f"{_pc/_pp:.0f}× 发布量）⇒ 属**配额被占**而非候选不足。"
+                    f"杠杆（时段偏置）方向正确但被配额位置挡住；"
+                    f"**真处置是动配额结构**（减量 / 自然日窗口 / 提高额度）")
         # R10：降级可见——否则"标的表只剩兜底池"会伪装成"这些新闻没有标的"
         if runs.get("symbols_degraded"):
             lines.append(f"  ⚠️ 有效标的表最近一次降级: {runs['symbols_degraded']}"
