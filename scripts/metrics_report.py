@@ -1060,6 +1060,11 @@ def summarize(rows):
         # R662：低浏览窗子配额阻断（`LOW_HOUR_CAP`）——必须与"配额饱和"分开记，
         # 否则两者在遥测上都是"没发帖"，**无法回答"额度到底被谁吃了"**
         "low_hour_blocked": 0, "low_hour_cap": None,
+        # R666：配额饱和轮的**观测扫描**——打破"配额饱和 ⇒ 观测面零增长"。
+        # `observe_gap_median` 是**全候选池**的真实分差 ⇒ R665 的"下界估计"
+        # 可升级为真值。
+        "observe_runs": 0, "observe_candidates": None, "observe_gaps": [],
+        "observe_elapsed": [], "observe_tag_hits": collections.Counter(),
         "low_hour_sent_last": None, "low_hour_bj_hours": collections.Counter(),
         "candidates": 0, "published": 0, "unprocessed": 0,
         "skips": collections.Counter(), "last_trending": "",
@@ -1688,6 +1693,31 @@ def summarize(rows):
                     runs_tmp["low_hour_bj_hours"][int(r.get("low_hour_bj_hour"))] += 1
                 except (TypeError, ValueError):
                     pass
+            # R666：观测扫描（饱和轮也构建候选，只观测不发布）。
+            # ★ `observe_gap_median` 是**全候选池**的真实分差
+            #   ⇒ 可把 R665 的"下界估计"升级为**真值**。
+            if r.get("observe_scan") is True:
+                runs_tmp["observe_runs"] += 1
+                _oc = _num(r.get("observe_candidates"))
+                if _oc is not None:
+                    runs_tmp["observe_candidates"] = (
+                        int(_oc) if runs_tmp["observe_candidates"] is None
+                        else max(runs_tmp["observe_candidates"], int(_oc)))
+                _og = _num(r.get("observe_gap_median"))
+                if _og is not None:
+                    runs_tmp["observe_gaps"].append(_og)
+                _oe = _num(r.get("observe_elapsed_sec"))
+                if _oe is not None:
+                    runs_tmp["observe_elapsed"].append(_oe)
+                _ot = r.get("observe_boost_tags")
+                if isinstance(_ot, str) and _ot.strip():
+                    for _pair in _ot.split():
+                        if ":" in _pair:
+                            _k, _v = _pair.rsplit(":", 1)
+                            try:
+                                runs_tmp["observe_tag_hits"][_k] += int(_v)
+                            except ValueError:
+                                pass
             if _entered:
                 runs_tmp["sel_candidates"] += cand
                 runs_tmp["sel_published"] += pub
@@ -2626,6 +2656,36 @@ def render_text(s, rows=None):
                     f"  ℹ️ 低窗子配额上限 = {_cap0}，但本窗口**零阻断**"
                     f"（若上限偏高或高窗轮次没跑到，都会是零"
                     f"——**不可据此判机制无效**）")
+        # R666：观测扫描（`OBSERVE_ON_SATURATED`）——它的产出**必须可见**，
+        # 否则又是"探针在跑、答案被丢弃"（R617）。
+        # ★ 关键价值：`observe_gap_median` 是**全候选池**的真实分差，
+        #   可把 R665 的"下界估计"升级为**真值**。
+        _obsr = runs.get("observe_runs") or 0
+        if _obsr:
+            _og = sorted(runs.get("observe_gaps") or [])
+            _oe = sorted(runs.get("observe_elapsed") or [])
+            lines.append(
+                f"  🔬 **观测扫描** {_obsr} 轮（饱和轮也构建候选，**不发布**）: "
+                f"候选中位 {runs.get('observe_candidates')}"
+                + (f"，分差中位 **{_og[len(_og)//2]:g}**（**全候选池真值**）"
+                   if _og else "")
+                + (f"，耗时中位 {_oe[len(_oe)//2]:.0f}s" if _oe else ""))
+            _otg = runs.get("observe_tag_hits") or {}
+            if _otg:
+                lines.append(
+                    "     ↳ 全候选池里的加权标记: "
+                    + " · ".join(f"{k} {v}" for k, v in
+                                sorted(_otg.items(), key=lambda x: -x[1])))
+            if _og:
+                lines.append(
+                    f"     ↳ ★ 这个分差是**全候选池**的，**不再是 R665 的"
+                    f"「下界估计」** ⇒ 用它重算「加权能跨几个名次」得**真值**")
+        elif runs.get("n"):
+            lines.append(
+                f"  ℹ️ 观测扫描**未启用**（`OBSERVE_ON_SATURATED = 0`）⇒"
+                f"配额饱和轮**不构建候选** ⇒ **回执侧字段零样本**"
+                f"（实测 85% 轮次饱和），R665 的分差只能用已发布回执"
+                f"（**下界估计**）")
         # R653：**真实漏斗**。上一行把"配额饱和 1777 轮"与"候选 12833"并列，
         # 看起来像"排了 12833 条只发出 286 条（效率 2.2%）"——**这是误读**：
         # 那 1777 轮在配额检查处**提前 return**，候选/发布/未处理全是 0，

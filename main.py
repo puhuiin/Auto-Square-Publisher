@@ -475,6 +475,18 @@ TIME_PREF_PENALTY = 2
 #   （R653 已证候选不因配额消失）⇒ 不是丢稿，只是延后。
 LOW_HOUR_CAP = _env_int("LOW_HOUR_CAP", 0)
 
+# R666：配额饱和轮是否也跑**观测扫描**（构建候选 + 加权，**不生成不发布**）。
+# ★ 为什么要它（打破观测死锁）：
+#   配额检查在候选构建**之前**（main.py:9216 vs 9354）⇒ 饱和时 `sys.exit(0)`。
+#   而**所有回执侧字段**都**只在发帖时落盘** ⇒ **配额一饱和，观测面零增长**。
+#   实测 **85% 的轮次是饱和轮**（1835/2147）、耗时中位 **0 秒**
+#   ⇒ 大量算力闲置，而 R663/R664/R665 一堆新字段**全都等不到样本**。
+# ★ 成本：**零 LLM 调用**（RSS 抓取 + 打分 + 加权）⇒ 不烧 token。
+#   时间成本约 1~3 分钟/饱和轮（job 超时 30 分钟，余量充足）。
+# ⚠️ **默认 0（关闭）**：这是行为变更（增加 RSS 抓取压力）⇒ 需显式开启。
+#   用 _env_int（无 _env_bool）：0/1 语义与既有 env 风格一致。
+OBSERVE_ON_SATURATED = bool(_env_int("OBSERVE_ON_SATURATED", 0))
+
 # R664：**加权来源标记**——让"加权命中"与"加权生效"可区分。
 #
 # ★ 为什么必须加（R612「无消费面」的典型形态）：
@@ -9337,6 +9349,83 @@ def _run_main():
             # 现在用真实的 fetcher + 独立的 skipped_reason 字段。
             write_github_step_summary(fetcher, "—", campaign_intel, [], dry_run,
                                       skipped_reason=quota_msg)
+            # ============================================================
+            # R666：配额饱和轮的**观测扫描**（默认关闭，★ 打破观测死锁）
+            # ============================================================
+            # ★ 问题：配额检查在候选构建**之前**（main.py:9216 vs 9354），
+            #   饱和时 `sys.exit(0)` ⇒ **候选池根本不构建**。
+            #   而**所有回执侧字段**（`boosted_by` / `base→impact` 差值 /
+            #   `ending_question` / 三条红线…）都**只在发帖时落盘**
+            #   ⇒ 配额一饱和，**观测面零增长**。
+            #   实测：**85% 的轮次都是饱和轮**（1835/2147），
+            #   耗时中位 **0 秒** ⇒ 大量算力闲置却什么都观测不到。
+            # ⇒ 本段在**饱和时也构建候选 + 跑加权**，只观测、**不生成不发布**。
+            #   成本：RSS 抓取 + 打分 + 加权，**零 LLM 调用**
+            #   （实测 `fetch_candidates` 与四个 `apply_*` 内均无 LLM）⇒ 不烧 token。
+            #
+            # ★ 为什么这很重要（**R665 的直接补丁**）：
+            #   R665 的"同批候选相邻分差"只能取自**已发布回执**，
+            #   被我标注为"**下界估计**"（真实候选池更密）。
+            #   ⇒ 有了全候选池，"加权能跨几个名次"能从**下界**变成**真值**。
+            #
+            # ⚠️ **默认 0（关闭）**：这是**行为变更**（饱和轮会多花 ~1-3 分钟），
+            #   且会略微增加 RSS 抓取压力 ⇒ 需显式开启。
+            # ⚠️ 全程 try/except：**旁路不得阻塞主流程**（纪律 30）——
+            #   观测扫描失败时配额饱和轮仍须正常退出。
+            if OBSERVE_ON_SATURATED:
+                try:
+                    _obs_t = time.time()
+                    _obs_fetcher = NewsFetcher(cache_mgr)
+                    _obs_cands = _obs_fetcher.fetch_candidates(
+                        cache_mgr, priority_tokens=priority_tokens)
+                    try:
+                        _tv = []
+                        _ob = []
+                        if isinstance(campaign_intel, dict):
+                            _tv = campaign_intel.get("trending_tokens") or []
+                            _ob = campaign_intel.get("hot_topics") or []
+                        NewsFetcher.apply_trend_boost(_obs_cands, _tv)
+                        NewsFetcher.apply_hot_topic_boost(_obs_cands, _ob)
+                        # ⚠️ 浏览加权**必须传 token_views + valid_symbols**
+                        # （R608 签名）——不传会被 TypeError 静默吞掉，
+                        # 导致观测扫描**永远缺这一路的标记**。
+                        # ⚠️ 加载函数名我**第一次猜错了**（写成
+                        # `_load_token_engagement_scores`，真名无 `_scores`）
+                        # ⇒ 已改为grep 到主流程的实际调用：**纪律 5**
+                        #   「名字 ≠ 含义，调用前先找到真实定义」。
+                        NewsFetcher.apply_engagement_boost(
+                            _obs_cands,
+                            NewsFetcher._load_token_engagement(),
+                            SymbolValidator.get_valid_symbols())
+                        NewsFetcher.apply_hour_preference_boost(_obs_cands)
+                    except Exception as _obs_boost_err:
+                        logger.info(f"观测扫描：加权环节异常（不影响本段落盘）: {_obs_boost_err}")
+                    _scores = sorted({c.get("impact_score") for c in _obs_cands
+                                      if isinstance(c.get("impact_score"), (int, float))})
+                    _gaps = sorted(_scores[i + 1] - _scores[i]
+                                   for i in range(len(_scores) - 1))
+                    _tagc = {}
+                    for _c in _obs_cands:
+                        for _t in (_c.get("_boosted_by") or []):
+                            _tagc[_t] = _tagc.get(_t, 0) + 1
+                    append_run_summary(
+                        observe_scan=True,
+                        observe_candidates=len(_obs_cands),
+                        observe_unique_scores=len(_scores),
+                        observe_gap_median=(_gaps[len(_gaps) // 2] if _gaps else None),
+                        observe_score_median=(_scores[len(_scores) // 2]
+                                              if _scores else None),
+                        observe_boost_tags=" ".join(
+                            f"{k}:{v}" for k, v in sorted(_tagc.items())) or None,
+                        observe_elapsed_sec=round(time.time() - _obs_t, 1),
+                    )
+                    logger.info(
+                        f"🔬 观测扫描（R666）：候选 {len(_obs_cands)} 条 / "
+                        f"唯一分 {len(_scores)} 个 / 分差中位 "
+                        f"{_gaps[len(_gaps)//2] if _gaps else 'n/a'} / "
+                        f"加权标记 {_tagc or '无'}（**不发布**）")
+                except Exception as _obs_err:
+                    logger.info(f"观测扫描异常（不影响配额饱和退出）: {_obs_err}")
             sys.exit(0)
         remaining_quota = MAX_DAILY_POSTS - sent_24h
         if remaining_quota < max_posts:

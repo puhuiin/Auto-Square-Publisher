@@ -6147,5 +6147,66 @@ class TestR665BoostMagnitudeEnough(unittest.TestCase):
                       "必须区分'分母不存在'与'字段未落盘'")
 
 
+class TestR666ObserveScanGuardrail(unittest.TestCase):
+    """R666：观测扫描的护栏——它的产出**必须可见**（R617「探针答案不能被丢弃」）。
+
+    ★ R666 的根因：配额检查在候选构建**之前**（main.py:9216 vs 9354），
+      饱和时 `sys.exit(0)` ⇒ **候选池根本不构建**
+      ⇒ 所有回执侧字段**只在发帖时落盘** ⇒ **85% 的轮次零样本**。
+    ⇒ `OBSERVE_ON_SATURATED`（默认 0）让饱和轮也构建候选、只观测不发布。
+    ★ 它的 `observe_gap_median` 是**全候选池**的真实分差
+      ⇒ 可把 R665 的"下界估计"升级为**真值**。
+    """
+
+    @staticmethod
+    def _obs(ts, **kw):
+        d = {"outcome": "run_summary", "ts": ts, "hour_bj": 22,
+             "candidates": 0, "published": 0, "observe_scan": True}
+        d.update(kw)
+        return d
+
+    def test_counts_runs_and_gaps(self):
+        rows = [self._obs("2026-10-06T02:%02d:00+00:00" % i,
+                          observe_candidates=100 + i, observe_gap_median=1,
+                          observe_elapsed_sec=90.0 + i)
+                for i in range(4)]
+        # ⚠️ 观测扫描的统计落在 **`runs` 子字典**里（run_summary 的领域），
+        #   不是 s 顶层——**我第一版测试查错了层**（与 R665 同一个错）。
+        runs = mr.summarize(rows)["runs"]
+        self.assertEqual(runs["observe_runs"], 4)
+        self.assertEqual(len(runs["observe_gaps"]), 4)
+        self.assertEqual(runs["observe_candidates"], 103, "取最大值")
+
+    def test_parses_boost_tags(self):
+        rows = [self._obs("2026-10-06T02:00:00+00:00",
+                          observe_boost_tags="campaign:3 hot:1")]
+        runs = mr.summarize(rows)["runs"]
+        self.assertEqual(runs["observe_tag_hits"]["campaign"], 3)
+        self.assertEqual(runs["observe_tag_hits"]["hot"], 1)
+
+    def test_renders_scan_line(self):
+        rows = [self._obs("2026-10-06T02:00:00+00:00", observe_candidates=120,
+                          observe_gap_median=1, observe_elapsed_sec=95.0,
+                          observe_boost_tags="campaign:3")]
+        rows.append({"outcome": "run_summary", "ts": "2026-10-06T03:00:00+00:00",
+                     "hour_bj": 22, "candidates": 0, "published": 0})
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("观测扫描", text)
+        self.assertIn("全候选池真值", text,
+                      "必须标明这是真值而非 R665 的下界估计")
+        self.assertIn("campaign 3", text)
+
+    def test_disabled_says_zero_sample(self):
+        """未启用 ⇒ 必须说清"回执侧字段零样本"这个后果（R612）"""
+        rows = [{"outcome": "run_summary", "ts": "2026-10-06T02:00:00+00:00",
+                 "hour_bj": 22, "candidates": 0, "published": 0,
+                 "quota_blocked": True}]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("未启用", text)
+        self.assertIn("零样本", text)
+        self.assertIn("下界估计", text,
+                      "须说明 R665 的分差此时只能是下界")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

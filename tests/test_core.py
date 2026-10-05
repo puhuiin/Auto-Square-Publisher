@@ -16935,6 +16935,80 @@ class TestLowHourCapQuota(unittest.TestCase):
                                  "子配额不应超过总配额，否则无意义")
 
 
+class TestObserveOnSaturated(unittest.TestCase):
+    """R666：★ 打破「观测死锁」——饱和轮也构建候选（只观测不发布）。
+
+    ★ 问题（R666 的根因）：配额检查在候选构建**之前**
+      （main.py:9216 配额检查 vs 9354 `fetch_candidates`），
+      饱和时 `sys.exit(0)` ⇒ **候选池根本不构建**。
+      而**所有回执侧字段**（`boosted_by` / `base→impact` 差值 /
+      `ending_question` / 三条红线…）**只在发帖时落盘**
+      ⇒ **配额一饱和，观测面零增长**。
+      实测**85% 的轮次是饱和轮**（1835/2147）、耗时中位 **0 秒**
+      ⇒ 大量算力闲置而新字段全都等不到样本。
+    ⇒ 观测扫描：饱和时也 `fetch_candidates` + 跑四路加权，
+      落"全候选池"统计，**不生成不发布**。
+    ★ 这是**R665 的直接补丁**：R665 的"同批相邻分差"只能取自已发布回执
+      （标为"下界估计"）⇒ 有了全候选池就能变成**真值**。
+    """
+
+    def test_defaults_to_disabled(self):
+        """★ 默认必须**关闭**——这是行为变更（增加 RSS 抓取压力）。"""
+        self.assertFalse(m.OBSERVE_ON_SATURATED,
+                         "OBSERVE_ON_SATURATED 默认须为 False（关闭）")
+
+    def test_observation_scan_never_publishes(self):
+        """★ 观测扫描**绝不能发帖**——它只落 run_summary 统计。"""
+        src = open(m.__file__, encoding="utf-8").read()
+        i = src.index("observe_scan=True")
+        blk = src[i - 400:i + 800]
+        for danger in ("publish", "record_sent", "append_metrics", "deliver"):
+            self.assertNotIn(danger, blk,
+                             "观测扫描块内出现 %r⇒ 可能发帖，违反设计" % danger)
+
+    def test_scan_block_is_exception_guarded(self):
+        """★ 全程 try/except：旁路不得阻塞主流程（纪律 30）"""
+        src = open(m.__file__, encoding="utf-8").read()
+        i = src.index("R666：配额饱和轮的**观测扫描**（默认关闭，★ 打破观测死锁）")
+        blk = src[i:i + 6000]   # 实测代码块约 4100 字符
+        self.assertIn("except Exception as _obs_err", blk,
+                      "观测扫描必须被 try 包住（失败时饱和轮仍须正常退出）")
+        self.assertIn("不影响配额饱和退出", blk)
+    def test_scan_uses_real_engagement_loader(self):
+        """⚠️ 浏览加权必须传**真实**的 token_views 加载函数。
+
+        我第一版猜成 `_load_token_engagement_scores`（真名**无** `_scores`）
+        ⇒ AttributeError 会被外层 try **静默吞掉**，
+        观测扫描**永远缺这一路的标记**却看不出来。
+        ⇒ 纪律 5「名字≠含义，调用前先找到真实定义」。
+        ⚠️ 只查**代码**（注释里会提到这个错名字作说明，见 `ast.dump` 判据）。
+        """
+        import ast
+        src = open(m.__file__, encoding="utf-8").read()
+        tree = ast.parse(src)
+        # 只看真正的**调用**（Attribute），不看注释与字符串
+        calls = {n.attr for n in ast.walk(tree)
+                 if isinstance(n, ast.Attribute)}
+        self.assertIn("_load_token_engagement", calls,
+                      "必须调用真实的加载函数（真实定义在 main.py:2850）")
+        self.assertNotIn("_load_token_engagement_scores", calls,
+                         "该函数**不存在**（真名无 _scores 后缀）")
+        i = src.index("R666：配额饱和轮的**观测扫描**（默认关闭，★ 打破观测死锁）")
+        blk = src[i:i + 6000]   # 实测代码块约 4100 字符
+        self.assertIn("apply_engagement_boost", blk)
+        self.assertIn("get_valid_symbols", blk,
+                      "第二个参数（valid_symbols）也要传")
+
+    def test_scan_lands_gap_median(self):
+        """★ 必须落 `observe_gap_median`（R665 的真分母来源）"""
+        src = open(m.__file__, encoding="utf-8").read()
+        i = src.index("R666：配额饱和轮的**观测扫描**（默认关闭，★ 打破观测死锁）")
+        blk = src[i:i + 6000]   # 实测代码块约 4100 字符
+        for f in ("observe_scan", "observe_candidates", "observe_gap_median",
+                  "observe_unique_scores", "observe_boost_tags"):
+            self.assertIn("%s=" % f, blk, "缺少落盘字段 %s" % f)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
