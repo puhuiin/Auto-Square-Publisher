@@ -4773,7 +4773,9 @@ class MultiLLMEngine:
                     tokens_used: Optional[int] = None, latency_sec: Optional[float] = None,
                     model: Optional[str] = None, persona: Optional[str] = None,
                     content_preview: Optional[str] = None,
-                    finish_reason: Optional[str] = None) -> None:
+                    finish_reason: Optional[str] = None,
+                    article: Optional[bool] = None,
+                    content_cjk: Optional[int] = None) -> None:
         """拒单遥测：每次 LLM 尝试被丢弃都记一行（stage=quality/numbers/transport）。
         投递遥测只记录成功，失败全黑盒会导致未来调优只看得到"活下来的稿子"
         （幸存者偏差：高热新闻是否系统性被质量门误杀，无数据回答不了）。
@@ -4794,6 +4796,12 @@ class MultiLLMEngine:
             "reason": (reason or "")[:80],
             "content_preview": content_preview,
             "finish_reason": finish_reason,
+            # ★★ R691：**拒稿行也必须落 `article` / `content_cjk`**
+            #   （此前 155 条拒稿**全都没有** `article` ⇒ 实测算
+            #   "长文成功率 100%"——**统计假象**，拒稿行无法归属）
+            #   ⇒ 有了它才能回答"长文 vs 短讯 哪个更常被拒、为什么"
+            "article": article,
+            "content_cjk": content_cjk,
             "outcome": "llm_rejected",
         })
 
@@ -5324,7 +5332,11 @@ class MultiLLMEngine:
                                          tokens_used, latency_sec, provider.model,
                                          persona=persona["name"],
                                          content_preview=preview,
-                                         finish_reason=finish_for_telemetry)
+                                         finish_reason=finish_for_telemetry,
+                                         # ★ R691：拒稿行也落article/content_cjk
+                                         article=bool(article),
+                                         content_cjk=len(re.findall(
+                                             r"[\u4e00-\u9fff]", content)))
                         logger.warning(f"提供商 [{provider.name}] 长文门拦截，"
                                        f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                         raise _QualityGateRejection(art_reason)
@@ -5355,7 +5367,12 @@ class MultiLLMEngine:
                                          tokens_used, latency_sec, provider.model,
                                          persona=persona["name"],
                                          content_preview=preview,
-                                         finish_reason=finish_for_telemetry)
+                                         finish_reason=finish_for_telemetry,
+                                         # ★ R691：拒稿行也落 article/content_cjk
+                                         #   （否则报表算不出长短讯各自拒稿率）
+                                         article=bool(article),
+                                         content_cjk=len(re.findall(
+                                             r"[\u4e00-\u9fff]", content)))
                         logger.warning(f"提供商 [{provider.name}] 质量门拦截，"
                                        f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                         raise _QualityGateRejection(fail_reason)
@@ -5404,7 +5421,11 @@ class MultiLLMEngine:
                                      tokens_used, latency_sec, provider.model,
                                      persona=persona["name"],
                                      content_preview=self._reject_preview(content),
-                                     finish_reason=finish_for_telemetry)
+                                     finish_reason=finish_for_telemetry,
+                                     # ★ R691：同上
+                                     article=bool(article),
+                                     content_cjk=len(re.findall(
+                                         r"[\u4e00-\u9fff]", content)))
                     raise _QualityGateRejection(flavor_reason)
 
                 # 0.3★★ 段落长度门（R672 的**硬门**，此前只记不卡）
@@ -5441,7 +5462,11 @@ class MultiLLMEngine:
                         tokens_used, latency_sec, provider.model,
                         persona=persona["name"],
                         content_preview=self._reject_preview(content),
-                        finish_reason=finish_for_telemetry)
+                        finish_reason=finish_for_telemetry,
+                        # ★ R691：同上
+                        article=bool(article),
+                        content_cjk=len(re.findall(
+                            r"[\u4e00-\u9fff]", content)))
                     raise _QualityGateRejection(
                         "para_too_long: 最长段 %d 汉字" % _para_here)
 

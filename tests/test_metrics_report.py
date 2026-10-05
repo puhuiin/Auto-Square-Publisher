@@ -6841,3 +6841,46 @@ class TestRepeatFingerprintTelemetry(unittest.TestCase):
         src = io.open("main.py", encoding="utf-8").read()
         self.assertIn("别急着", src, "缺『别急着』的预防提示")
         self.assertIn("你觉得", src, "缺『你觉得』的预防提示")
+
+
+class TestRejectTelemetryFields(unittest.TestCase):
+    """★★★ **拒稿行也必须落 `article` / `content_cjk`**（R691 实测发现）。
+
+    ★ 缺口现场：生产 155 条 `llm_rejected` **全部没有** `article` 字段
+      ⇒ 我据此算"长文 28 篇（发 28/拒 0）⇒ 成功率 **100%**"
+      ⇒ **统计假象**（拒稿行无法归属，被算进"没被拒"那一边）
+      ⇒ 差点据此下"长文没问题"的结论。
+    ⇒ R643「不可判定就别下结论」的又一次实践。
+
+    ★ 为什么要补：
+      报表要能回答「**长文 vs 短讯哪个更常被拒、为什么**」，
+      就必须能按 `article` 拆分拒稿行。
+    """
+
+    def test_log_reject_signature_accepts_article(self):
+        """★ `_log_reject` 是**方法**（在类里），要用源码判参数"""
+        import io
+        import re
+        src = io.open("main.py", encoding="utf-8").read()
+        m = re.search(r"def _log_reject\(.*?\) -> None:", src, re.S)
+        self.assertIsNotNone(m, "找不到 _log_reject 定义")
+        sig = m.group(0)
+        self.assertIn("article", sig, "★ _log_reject 须接受 article")
+        self.assertIn("content_cjk", sig, "★ _log_reject 须接受 content_cjk")
+
+    def test_reject_rows_carry_article(self):
+        """★ 三个主要质量门都必须传 article（否则报表仍算不出）"""
+        import io
+        src = io.open("main.py", encoding="utf-8").read()
+        # 长文门/通用门/AI 腔门/段落门 四处都要有
+        n = src.count("article=bool(article)")
+        self.assertGreaterEqual(
+            n, 4,
+            "★ 只有 %d 处传了 article，长短讯的拒稿率仍算不出" % n)
+
+    def test_reject_row_writes_article_key(self):
+        import io
+        src = io.open("main.py", encoding="utf-8").read()
+        self.assertIn('"article": article,', src,
+                      "★ 回执未落 article 键")
+        self.assertIn('"content_cjk": content_cjk,', src)
