@@ -10382,6 +10382,23 @@ def _run_main():
                                for _pp in final_content.split("\n\n")
                                if _pp.strip()]
                         _para_max = max(_pl) if _pl else None
+                    # R672b：**复读指纹**遥测（prompt 里已预防，但**无度量**
+                    # ⇒ R619「须有消费面」；且无法验证 prompt 预防是否奏效）。
+                    # ★ 只记**是否出现**，不记原文（避免 metrics 膨胀：
+                    #   R663 已为此吃过教训）。
+                    # None = 未观测（非 False，纪律 12）。
+                    _fp_p3, _fp_p4 = None, None
+                    if isinstance(final_content, str) and final_content.strip():
+                        _paras = [_pp.strip() for _pp
+                                  in final_content.split("\n\n")
+                                  if _pp.strip()]
+                        # 第 3 段（实操角度）：实测曾 67% 以"别急着"起手
+                        _fp_p3 = (len(_paras) >= 3
+                                  and _paras[2].startswith("别急着"))
+                        # 第 4 段（站队互动）：实测曾 27% 以"你觉得"起手
+                        _fp_p4 = (len(_paras) >= 4
+                                  and _paras[3].lstrip("0123456789 ").startswith(
+                                      "你觉得"))
                     _ord_head = None
                     if isinstance(final_content, str) and final_content.strip():
                         _first = next((ln.strip() for ln
@@ -10579,6 +10596,8 @@ def _run_main():
                         # R672：最长段落的汉字数（None=未观测/非长文）
                         # ★ 与 `content_cjk`（总字数）**不同口径**，别混用。
                         "para_max_cjk": _para_max,
+                        # R672b：复读指纹（prompt 已预防，此处**验证**）
+                        "fp_p3": _fp_p3, "fp_p4": _fp_p4,
                         # R668：**序号式 AI 腔**遥测。
                         # ★ 生产实测：长文 23/27（**85%**）以「一、」序号开头，
                         #   其中 **14 篇用的是完全相同的一句「一、发生了什么」**——

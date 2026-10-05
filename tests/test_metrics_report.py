@@ -6788,3 +6788,47 @@ class TestParaLengthGateR672b(unittest.TestCase):
                          "★ 旧口径已失效（R672），别写回去")
         self.assertIn("R672 硬要求：每段 ≤35 汉字", src,
                       "★ 短讯模板应含新口径")
+
+
+class TestRepeatFingerprintTelemetry(unittest.TestCase):
+    """★★ **复读指纹遥测**（prompt 早就预防，**但无度量** ⇒ R619）。
+
+    ★ 缺口现场（2026-10-06）：
+      prompt 里明写"别拿「别急着」当头句（实测近 30 篇 **67%**）"
+      与"问句别惯用「你觉得」打头（实测 **27%**）"
+      ⇒ **预防在、度量不在** ⇒ **无法验证预防是否奏效**
+      ⇒ 违反 R619「新增遥测须有消费面」的镜像：
+         这里连遥测本身都没有。
+
+    ★ 判据设计（只记**是否出现**，不记原文）：
+      原文入库会让 metrics.jsonl 膨胀（R663 已吃过这个教训）。
+    """
+
+    def test_fp_fields_emitted(self):
+        """★ 回执须落`fp_p3` / `fp_p4`（None = 未观测，非 False）"""
+        import io
+        src = io.open("main.py", encoding="utf-8").read()
+        self.assertIn('"fp_p3": _fp_p3', src)
+        self.assertIn('"fp_p4": _fp_p4', src)
+
+    def test_fp_detection_logic(self):
+        """★ 判据：第3段以"别急着"起手 / 第 4 段以"你觉得"起手"""
+        def fp(text):
+            ps = [p.strip() for p in text.split("\n\n") if p.strip()]
+            p3 = (len(ps) >= 3 and ps[2].startswith("别急着"))
+            p4 = (len(ps) >= 4
+                  and ps[3].lstrip("0123456789 ").startswith("你觉得"))
+            return p3, p4
+        self.assertEqual(
+            fp("一。\n\n二。\n\n别急着追高。\n\n你觉得能突破吗？"),
+            (True, True))
+        self.assertEqual(
+            fp("一。\n\n二。\n\n实操上等确认。\n\n1. 扣1  2. 扣2"),
+            (False, False))
+
+    def test_prompt_still_warns_about_fingerprints(self):
+        """★ prompt 的预防**不得被删**（那是第一道防线）"""
+        import io
+        src = io.open("main.py", encoding="utf-8").read()
+        self.assertIn("别急着", src, "缺『别急着』的预防提示")
+        self.assertIn("你觉得", src, "缺『你觉得』的预防提示")

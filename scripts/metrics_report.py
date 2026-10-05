@@ -934,6 +934,8 @@ def summarize(rows):
         # ⚠️ **不能只靠 `final_preview`**（R647盲区）：它只存前 200 字，
         #   尾部段落不可见 ⇒ 永远只能看见"前几段够长" ⇒ 假达标。
         "para_max_n": 0, "para_max_sum": 0, "para_max_over60": 0,
+        # R672b：**复读指纹**（prompt 已预防，此处验证是否奏效）
+        "fp_n": 0, "fp_p3_yes": 0, "fp_n4": 0, "fp_p4_yes": 0,
         "para_max_over80": 0,        # R670：**只统计 R367 降格上线之后**的分布。降格前的老稿
         # `widget_count` 可达 12（当时逻辑还不存在）⇒ 混进分布会让
         # 护栏显示"4/8/12 个"⇒ **读者误以为降格没生效**（R659 陷阱）。
@@ -1560,6 +1562,17 @@ def summarize(rows):
                     s["para_max_over60"] += 1
                 if _pmc > 80:
                     s["para_max_over80"] += 1
+            # R672b：**复读指纹**（prompt 已预防，此处**验证是否奏效**）。
+            # ★ 只统计**短讯**（长文结构不同，第3/4 段语义也不同）。
+            if not r.get("article"):
+                if isinstance(r.get("fp_p3"), bool):
+                    s["fp_n"] += 1
+                    if r["fp_p3"]:
+                        s["fp_p3_yes"] += 1
+                if isinstance(r.get("fp_p4"), bool):
+                    s["fp_n4"] += 1
+                    if r["fp_p4"]:
+                        s["fp_p4_yes"] += 1
             if isinstance(r.get("ending_question"), bool):
                 s["ending_q_marked"] += 1
                 # R668：序号式 AI 腔。生产实测长文 23/27（**85%**）以「一、」开头，
@@ -3943,6 +3956,25 @@ def render_text(s, rows=None):
                 f"· >80 字 {_p80}（{_p80/_pmn*100:.0f}%）"
                 f"　（prompt 卡「每段 ≤35 汉字」；**读全文**统计，"
                 f"非 final_preview 下界）")
+        # R672b：**复读指纹**（prompt 早就有预防，但**一直没度量**
+        #   ⇒ 无法验证预防是否奏效）。这里补上消费面。
+        # ⚠️ 判读口径（纪律 9）：**持续状态不降级**——若比例仍高，
+        #   说明 prompt 预防**无效**，得改机制而不是只改文案。
+        _fp_n = s.get("fp_n") or 0
+        _fp_n4 = s.get("fp_n4") or 0
+        if _fp_n and _fp_n4:
+            _r3 = s["fp_p3_yes"] / _fp_n
+            _r4 = s["fp_p4_yes"] / _fp_n4
+            def _fpf(r):
+                return ("✅ " if r <= 0.15
+                        else ("⚠️ " if r <= 0.30 else "❌ "))
+            lines.append(
+                f"  第3段以「别急着」起手：{_fpf(_r3)}"
+                f"{s['fp_p3_yes']}/{_fp_n}（{_r3*100:.0f}%）；"
+                f"第4段以「你觉得」起手：{_fpf(_r4)}"
+                f"{s['fp_p4_yes']}/{_fp_n4}（{_r4*100:.0f}%）"
+                f"　（prompt 已预防；**若仍高说明预防无效**，"
+                f"需改机制）")
         # R286：长文标题眼钩基线（有长文标题才渲染）+ 禁用领词告警
         if s.get("article_titles"):
             _n = len(s["article_titles"])
