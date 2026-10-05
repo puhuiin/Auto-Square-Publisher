@@ -5352,6 +5352,52 @@ class TestR656SupplyVsOutput(unittest.TestCase):
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertNotIn("配额被占", text)
 
+    def test_r658_quota_tuning_guidance(self):
+        """R658：配额护栏必须说清**去哪改** + **会带来多少** + **代价**。
+
+        `MAX_DAILY_POSTS` 是**仓库变量 `vars.MAX_DAILY_POSTS`**（不是 secret）
+        ⇒ 只报变量名等于没说。只报"调参位置"而不报"效果与代价"，
+        又会变成无信息的许愿。三者缺一不可。
+
+        ⚠️ 构造须同时含**发布行**（水位只统计投递行，R654）**且高窗水位 ≥80%**
+        （否则阈值不触发）。要让水位达 80%，必须**模拟生产**：连续 3 天、
+        每天 12 篇全部标 `hour_bj=8`。我试过"12 篇挤在 12 小时内"与
+        "6 篇/天连做 4 天"两种构造——水位分别只有 5.5/12=46% 与 6/12=50%，
+        **阈值不触发、护栏整块不渲染**，测试会误判成"功能没做"。
+        """
+        import datetime as _dt
+        rows = [self._run(8, 2000, 20), self._run(22, 3000, 200)]
+        _base = _dt.datetime(2026, 9, 20, 8, 0, tzinfo=_dt.timezone.utc)
+        for _d in range(3):
+            for _h in range(12):
+                rows.append({
+                    "platforms": ["binance"], "outcome": "binance_published",
+                    "ts": (_base + _dt.timedelta(days=_d, hours=_h)).isoformat(),
+                    "hour_bj": 8, "content_id": f"c{_d}{_h}",
+                    "max_daily_posts": 12, "source": "S", "final_preview": "x"})
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("配额已在发帖前就接近饱和", text, "前提未达成：水位未达阈值")
+        self.assertIn("Variables → `MAX_DAILY_POSTS`", text)
+        self.assertIn("+33%", text)          # 16 篇的预估
+        self.assertIn("+67%", text)          # 20 篇的预估
+        self.assertIn("权重", text)   # 代价必须说
+
+    def test_r658_states_supply_is_not_constraint(self):
+        """必须明说候选供给远不是约束（否则读者会以为要先加源）"""
+        import datetime as _dt
+        rows = [self._run(8, 2000, 20), self._run(22, 3000, 200)]
+        _base = _dt.datetime(2026, 9, 20, 8, 0, tzinfo=_dt.timezone.utc)
+        for _d in range(3):
+            for _h in range(12):
+                rows.append({
+                    "platforms": ["binance"], "outcome": "binance_published",
+                    "ts": (_base + _dt.timedelta(days=_d, hours=_h)).isoformat(),
+                    "hour_bj": 8, "content_id": f"c{_d}{_h}",
+                    "max_daily_posts": 12, "source": "S", "final_preview": "x"})
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("候选供给", text)
+        self.assertIn("线性增产", text)
+
     def test_missing_hour_bj_not_counted_either_side(self):
         """hour_bj 缺失/非法 ⇒ 两侧都不计入（不是算进"其他"）"""
         rows = [{"outcome": "run_summary", "ts": "2026-10-04T00:00:00+00:00",
