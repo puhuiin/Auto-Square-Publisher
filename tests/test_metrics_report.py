@@ -6734,7 +6734,7 @@ class TestParaLengthGateR672b(unittest.TestCase):
       ⇒ 门一卡太紧会**逼出更差的稿**（R643：形态偏好不该做红线门）
     """
 
-    THRESHOLD = 60
+    THRESHOLD = 120
 
     @staticmethod
     def _para_max(text):
@@ -6744,8 +6744,8 @@ class TestParaLengthGateR672b(unittest.TestCase):
         return max(pl) if pl else 0
 
     def test_gate_catches_wall_of_text(self):
-        """★ 短讯出现「字墙」段落（>60）⇒ 应拦下"""
-        bad = "\n\n".join(["这是一段很长的市场分析文字" * 5] * 4)
+        """★ 短讯出现**真字墙**（>120）⇒ 应拦下"""
+        bad = "\n\n".join(["这是一段很长的市场分析文字" * 12] * 4)
         self.assertGreater(self._para_max(bad), self.THRESHOLD)
 
     def test_gate_passes_normal_short_note(self):
@@ -6769,12 +6769,21 @@ class TestParaLengthGateR672b(unittest.TestCase):
         # 门只在 cjk<400 时生效 ⇒ 长文必然放行
         self.assertFalse(cjk < 400 and self._para_max(art) > self.THRESHOLD)
 
-    def test_threshold_configurable(self):
-        """★ 阈值**可配**（0 = 关闭，运营逃生口）"""
+    def test_threshold_is_loose_by_design(self):
+        """★★★ 阈值**必须宽松**（2026-10-06 用户明确：长度随意、长短都接受）。
+
+        ★ 为什么锁 ≥100：
+          卡 60 时实测会逼出**"为过门而拆碎"**的稿
+          —— 为凑段数把完整句子拆成电报体，**反而更难看**。
+          60~120 区间对应的是「两三句话连成一段」，
+          而这**本来就是正常中文表达**（尤其带因果/转折的长句）。
+        ⇒ 门只兜**真正的字墙**（120+ 汉字 = 手机端一屏读不完）。
+        ⚠️ 这是**用户明确要求的口径**，不是我的偏好。
+        """
         import main
-        self.assertGreater(main._SHORT_NOTE_MAX_PARA_CJK, 0)
-        self.assertLessEqual(main._SHORT_NOTE_MAX_PARA_CJK, 80,
-                             "★ 门卡太紧会逼出更差的稿（R643）")
+        self.assertGreaterEqual(
+            main._SHORT_NOTE_MAX_PARA_CJK, 100,
+            "★ 门又收紧到 100以下了？用户明确说长度随意（见注释）")
 
     def test_prompt_no_longer_says_old_wording(self):
         """★★ prompt **不得**再写"每段只有 1~2 句话"（R672 已推翻）。
