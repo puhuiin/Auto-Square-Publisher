@@ -402,6 +402,55 @@ class TestImportHealth(unittest.TestCase):
     def test_main_imports_clean(self):
         self._check_import("main.py")
 
+    def test_no_unimported_typing_aliases(self):
+        """★★★ **模块级注解不得依赖未导入的 `typing` 别名**（2026-10-06实测）。
+
+        ★ 事故现场：`_PURE_TICKER_CACHE: Dict[str, tuple] = {}`
+          而本模块**没有 import typing**
+          ⇒ Python **3.14 静默通过**（本地全绿）
+          ⇒ Python **3.11（CI 版本）直接炸 import**：
+             NameError: name 'Dict' is not defined
+          ⇒ **定时任务连跪到 CI 才发现**（R670 同款，但更隐蔽：
+             它躲过了"本地 py_compile"和"本地全量测试"）
+
+        ⇒ 判据：扫所有 `.py` 的**模块级**注解行，
+          出现 `Dict[`/`List[`/`Tuple[` 等 `typing` 别名
+          而该文件**没有** `import typing` / `from typing import…` ⇒ 失败。
+        ⚠️ 必须**扫全仓**（不止改过的文件）——
+           那个 `Dict` 是**早前提交**带进来的，一直没被发现。
+        """
+        import os
+        import re
+        aliases = ("Dict", "List", "Tuple", "Set", "FrozenSet", "Optional",
+                   "Union", "Any", "Callable", "Iterable", "Sequence")
+        offenders = []
+        for root, dirs, files in os.walk(REPO_ROOT):
+            dirs[:] = [d for d in dirs
+                       if d not in (".git", "__pycache__", "drafts", ".workbuddy")]
+            for fn in files:
+                if not fn.endswith(".py"):
+                    continue
+                fp = os.path.join(root, fn)
+                with open(fp, encoding="utf-8") as f:
+                    src = f.read()
+                if re.search(r"^\s*(from typing import|import typing)",
+                             src, re.M):
+                    continue
+                for i, ln in enumerate(src.split("\n"), 1):
+                    st = ln.strip()
+                    # 只看**模块级**（无缩进）且带**变量注解**的行
+                    if st.startswith(("#", '"', "'")) or ln[:1] in (" ", "\t"):
+                        continue
+                    for al in aliases:
+                        if re.search(r":\s*%s\[" % al, st):
+                            offenders.append("%s:%d%s" % (
+                                os.path.relpath(fp, REPO_ROOT), i, st[:40]))
+                            break
+        self.assertFalse(offenders,
+                         "★ 模块级注解用了未导入的 typing 别名"
+                         "（3.11 CI 会炸 import）:\n  "
+                         + "\n   ".join(offenders[:8]))
+
     def test_scripts_import_clean(self):
         for rel in ("scripts/validate_workflows.py", "scripts/git_state_merge.py",
                     "scripts/notify_fallback.py", "scripts/metrics_report.py"):

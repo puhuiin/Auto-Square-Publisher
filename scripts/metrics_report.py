@@ -541,7 +541,14 @@ def _num(v):
     return f
 
 
-_PURE_TICKER_CACHE: Dict[str, tuple] = {}
+# ⚠️ ★★★ **注解必须用内置泛型，不要用 `typing.Dict`**（2026-10-06 实测）：
+#   这行原本写 `Dict[str, tuple]` 而本模块**没有 import typing**
+#   ⇒ Python 3.14 静默通过、**3.11（CI 版本）直接炸 import**
+#     NameError: name 'Dict' is not defined
+#   ⇒ 由 `test_scripts_import_clean` 的**子进程导入**抓出
+#     （该守卫正是为此存在，我之前只在 3.14 上跑，从未在 3.11 验证）
+# ⇒ 正确写法：`dict[str, tuple]`（3.9+ 内置，无需导入）
+_PURE_TICKER_CACHE: dict[str, tuple] = {}
 
 
 def _pure_ticker_pool():
