@@ -114,6 +114,16 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+
+          # R667：X（Twitter）通道 —— OAuth 1.0a 四件套全齐才能发。
+          # ⚠️ 只配 ACCESS_TOKEN 不够：签名还需要 APP 的 KEY/SECRET。
+          # ⚠️ 未配置时通道**自动跳过**（不报错、不影响其他通道）。
+          # 拿取路径：console.x.com → 你的 App → Keys and tokens →
+          #   OAuth 2.0 → Access Token and Secret（**不是** App Key 那个 Tab）
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
         # R6：看门狗只报警、绝不能阻塞发帖。旧配置没有 continue-on-error，
         # 脚本一旦抛错（报警通道不可用等）这一步就失败，而下一步发帖默认
         # 只在 success() 下执行 → 整轮直接漏发。脚本内也已全程 try 兜底。
@@ -174,6 +184,16 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+
+          # R667：X（Twitter）通道 —— OAuth 1.0a 四件套全齐才能发。
+          # ⚠️ 只配 ACCESS_TOKEN 不够：签名还需要 APP 的 KEY/SECRET。
+          # ⚠️ 未配置时通道**自动跳过**（不报错、不影响其他通道）。
+          # 拿取路径：console.x.com → 你的 App → Keys and tokens →
+          #   OAuth 2.0 → Access Token and Secret（**不是** App Key 那个 Tab）
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
           
           # 创作者活动与话题标签 (可选自定义)
           CAMPAIGN_TAGS: ${{ secrets.CAMPAIGN_TAGS }}
@@ -315,6 +335,16 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+
+          # R667：X（Twitter）通道 —— OAuth 1.0a 四件套全齐才能发。
+          # ⚠️ 只配 ACCESS_TOKEN 不够：签名还需要 APP 的 KEY/SECRET。
+          # ⚠️ 未配置时通道**自动跳过**（不报错、不影响其他通道）。
+          # 拿取路径：console.x.com → 你的 App → Keys and tokens →
+          #   OAuth 2.0 → Access Token and Secret（**不是** App Key 那个 Tab）
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
           EVENT_NAME: ${{ github.event_name }}
           INSTALL_RESULT: ${{ steps.install.conclusion }}
           POSTER_RESULT: ${{ steps.poster.conclusion }}

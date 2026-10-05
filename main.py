@@ -1065,6 +1065,50 @@ RSS_FEEDS = [
     },
 ]
 
+# R667：X 通道专用的 **AI 主题源**（用户要求"加密、AI 相关都要有"）。
+#
+# ★ 为什么单独一组而不是混进 RSS_FEEDS：
+#   **选题源与投放平台必须解耦**（R660 的核心教训"同批排序只改选哪 2 篇，
+#   改不了占不占配额"在此同样成立）——AI 稿只喂 X 通道，
+#   不进币安广场的配额竞争 ⇒ **两平台可以各自最优**。
+#   若混进 RSS_FEEDS，AI 源会挤占币安配额，而它对广场受众价值不确定。
+#
+# ⚠️ 这些源产的是 **AI/科技新闻**，若进币安广场会有"跑题"风险
+#   （广场受众是加密交易者）⇒ **必须隔离，不能只靠"看起来无关"**。
+X_AI_FEEDS = [
+    {
+        "name": "TechCrunch AI",
+        "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
+        "lang": "en",
+    },
+    {
+        "name": "The Verge AI",
+        "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+        "lang": "en",
+    },
+    {
+        "name": "MIT Tech Review AI",
+        "url": "https://www.technologyreview.com/feed/",
+        "lang": "en",
+    },
+]
+
+# R667：X 通道的独立提示词。与币安 SYSTEM_PROMPT 刻意分开——
+# ★ **平台语感不同**：广场是"深度长文+交易建议"，X 是"锐评短帖+一句站队"。
+#   复用广场提示词会产出 140~200 字长文，**必然超 X 的 280 加权上限**。
+#   ⇒ 两套提示词必须各自为政（R643「护栏覆盖面要与修复覆盖面对齐」同源）。
+X_SYSTEM_PROMPT = """你在 X（Twitter）上写加密与 AI 主题的短帖，要求：
+
+1. **长度硬约束：正文 ≤ 100 个汉字**。X 的280 是**加权长度**，CJK 每字算 2
+   （100 汉字 = 200 权重，留 80 权重给 hashtag 与 emoji）。超长必被拒。
+2. 结构：**一句钩子 → 两句实质信息 → 一句站队提问**。可含 1 个话题标签。
+3. 语气：像真人发推——短句、直接、有观点。**禁止**书面语与营销腔。
+4. **禁止喊单**（必涨/满仓/梭哈等），**禁止把数据描述写成操纵性断言**。
+5. 涉及价格与行情时必须给**具体数字**，不得含糊（"涨了不少"不合格）。
+6. 结尾必须是一句**与本文直接相关的提问**（站队式，不是反问废话）。
+7. **只输出正文本身**，不要标题、不要 markdown、不要解释。"""
+
+
 # 重磅热点与高流量山寨打分关键词加权字典
 IMPACT_KEYWORDS = {
     # 突发热点专用（用户要求"追最新热点"）：这些词几乎只出现在快讯标题里，命中即顶格追
@@ -8041,6 +8085,222 @@ class OKXDraftExporter(BasePublisher):
 # 唯一免费且官方 API 全自动的第二分发平台：Bot 拉进频道做管理员即可。
 # 带图走 sendPhoto（caption 上限 1024，正文≤900 安全），失败自动降级 sendMessage 纯文本。
 # ---------------------------------------------------------------------------
+class XChannelPublisher(BasePublisher):
+    """R667：X（Twitter）发帖通道。
+
+    ★ 为什么要独立通道而非镜像币安内容（用户明确选择"独立生成"）：
+      **X 的 280 是「加权长度」而非字符数**——CJK 每字算 2、URL 固定 23、
+      Emoji 算 2 ⇒ **纯中文实际只有 140 字**。
+      而币安广场发的是 140~200 字中文长文 ⇒ **直接镜像必超限**。
+      ⇒ 独立生成 X 专属短帖（目标 ≤120 字，留 20 字余量给 hashtag/emoji）。
+
+    ★ 成本（X API 2026-02-06 起改为**按量付费**，免费层已对新开发者关闭）：
+      | 操作 | 单价 |
+      |---|---|
+      | 纯文本帖 | **$0.015** |
+      | **含链接的帖** | **$0.200**（贵 13 倍）|
+      | Post read | $0.005 |
+    ⇒ 本通道**刻意不插链接**（图片走 media upload，不占字符、不按 URL 计费）
+      ⇒低频（3~5 条/天）月成本约 **$2-3**。
+    ⚠️ 同一资源 24h UTC 窗口内重复请求**只计一次**（X 的去重计费规则）
+      ⇒ 轮询互动数据几乎免费。
+
+    ⚠️ 媒体上传计价：X 定价表只列 "Media Metadata $0.005"，
+      **未公布 upload 本身的价格** ⇒ 本通道默认**不带图**（`X_MEDIA=1` 可开）。
+    """
+    name = "x"
+    _X_STATE_KEY = "_x_delivered"
+
+    # ── 加权长度（X 官方 twitter-text v3 口径）─────────────────────────
+    #单权重区间（计 1）：U+0000–U+10FF、U+2000–U+200D、U+2010–U+201F、
+    #   U+2032–U+2037；**其余全部计 2**（含全部 CJK 与绝大多数 Emoji）。
+    _W1_RANGES = ((0x0000, 0x10FF), (0x2000, 0x200D),
+                  (0x2010, 0x201F), (0x2032, 0x2037))
+    URL_WEIGHT = 23          # 任何 URL 经 t.co 后固定 23
+
+    @classmethod
+    def weighted_len(cls, text: str) -> int:
+        """X 官方口径的加权长度（CJK/Emoji=2，URL=23）。
+
+        ⚠️ **不能用 `len(text)`**（R665同款：口径不对⇒ 判据全错）。
+        ⚠️ 这是**自实现**而非依赖 twitter-text 库——该库无 Python 版，
+        引入 npm 依赖会让 GitHub Actions 变复杂⇒ 宁可自己写+ 加守卫测试。
+        """
+        if not text:
+            return 0
+        # URL 抽取（与 X 一致：t.co 包装后恒 23，**与原长无关**）
+        urls = re.findall(r"https?://[^\s<>\"']+", text)
+        # ★ 删掉 URL 本身、**保留其两侧空格**（各计1，符合 v3 口径）：
+        #   "看 https://a.co" = 看(2) + 空格(1) + URL(23) = **26**（与 X 一致）。
+        # ⚠️ 曾写成 `re.sub(..., " ", ...)`（URL 换成一个空格）⇒ 得 27，**多算 1**；
+        #   改成空串后得 26 才是对的。⇒ **口径须逐例验证，不能凭直觉**
+        #   （R666「先量一次真实值」，此处正是它的又一个实例）。
+        stripped = re.sub(r"https?://[^\s<>\"']+", "", text)
+        n = 0
+        for ch in stripped:
+            cp = ord(ch)
+            n += 1 if any(lo <= cp <= hi for lo, hi in cls._W1_RANGES) else 2
+        return n + cls.URL_WEIGHT * len(urls)
+
+    @classmethod
+    def clip_to_limit(cls, text: str, limit: int = 280) -> str:
+        """按**加权**长度裁剪到 limit（从尾部截，尽量保句号边界）。"""
+        if cls.weighted_len(text) <= limit:
+            return text
+        out = []
+        acc = 0
+        for ch in text:
+            w = 1 if any(lo <= ord(ch) <= hi for lo, hi in cls._W1_RANGES) else 2
+            if acc + w > limit:
+                break
+            out.append(ch)
+            acc += w
+        s = "".join(out)
+        # 回退到最近的句读收尾，避免半句截断
+        for sep in ("。", "！", "？", "；", "，", " ", "\n"):
+            i = s.rfind(sep)
+            if i >= len(s) * 0.6:          # 至少保留六成，别砍太多
+                return s[:i + 1]
+        return s
+
+    def _x_already_sent(self, news_id: str) -> bool:
+        if not news_id:
+            return False
+        state = intel_state_get(self._X_STATE_KEY, {})
+        return isinstance(state, dict) and bool(state.get(news_id))
+
+    def _x_mark_sent(self, news_id: str):
+        if not news_id:
+            return
+
+        def _add(state):
+            state = dict(state or {})
+            state[news_id] = datetime.now(timezone.utc).isoformat()
+            return dict(sorted(state.items(), key=lambda kv: kv[1])[-200:])
+
+        intel_state_update(self._X_STATE_KEY, _add, default={})
+
+    def _credentials(self):
+        """取 OAuth 2.0 凭据。发X 帖需要 **Access Token + Secret**
+        （App Key 只有读权限，发帖必须用用户上下文的三件套）。"""
+        return (os.getenv("X_ACCESS_TOKEN", "").strip(),
+                os.getenv("X_ACCESS_TOKEN_SECRET", "").strip())
+
+    def publish(self, content: str, image_url: Optional[str] = None,
+                ensure_tokens: Optional[List[str]] = None,
+                meta: Optional[Dict[str, Any]] = None) -> bool:
+        self.skipped_reason = None
+        token, secret = self._credentials()
+        if not token or not secret:
+            self.last_error = "缺少 X_ACCESS_TOKEN / X_ACCESS_TOKEN_SECRET"
+            logger.warning("X 通道未配置凭据，跳过。")
+            return False
+
+        meta = meta or {}
+        nid = meta.get("news_id", "")
+        if self._x_already_sent(nid):
+            shown = str(nid)[:40] or meta.get("title", "")
+            logger.info(f"𝕏 该新闻此前已发到 X，跳过重复发布: news_id={shown}")
+            self.skipped_reason = IDEMPOTENT_SKIP
+            return False
+
+        # ★ 长度门：超限直接**裁剪**而不是拒稿（X 帖丢了不可恢复，
+        #   裁剪只损失尾部信息；且长文单通道拒稿= 大概率丢稿，R331）。
+        text = self.clip_to_limit((content or "").strip(), 280)
+        if not text:
+            self.last_error = "内容为空"
+            return False
+        wl = self.weighted_len(text)
+        if wl > 280:                # clip_to_limit 之后不该再超，留作兜底断言
+            self.last_error = f"加权长度仍超限: {wl}/280"
+            logger.warning(f"𝕏 裁剪后仍超限: {wl}/280，放弃发布")
+            return False
+
+        try:
+            headers = self._oauth1_header(token, secret)
+        except Exception as e:
+            self.last_error = str(e)
+            logger.warning(f"𝕏 OAuth 头构造失败，跳过: {e}")
+            return False
+
+        try:
+            import requests as _rq
+            resp = _rq.post(
+                "https://api.x.com/2/tweets",
+                headers=headers,
+                json={"text": text},
+                timeout=20)
+        except Exception as e:
+            self.last_error = f"请求异常: {e}"
+            logger.warning(f"𝕏 发布异常: {e}")
+            return False
+
+        if resp.status_code in (200, 201):
+            try:
+                pid = (resp.json().get("data") or {}).get("id", "")
+            except Exception:
+                pid = ""
+            self._x_mark_sent(nid)
+            logger.info(f"𝕏 发布成功（加权 {wl}/280，id={pid}）: {text[:40]}...")
+            self.last_post_id = pid
+            self.last_weighted_len = wl
+            return True
+
+        # 402 = credits 用尽（X pay-per-use 的标志性状态码）
+        if resp.status_code == 402:
+            self.last_error = "X API credits 不足（HTTP 402）——请到 Developer Console 充值"
+            logger.error("🛑 X API credits 不足（402）。本轮起停发 X，待充值恢复。")
+            Notifier.send_notification(
+                "X API credits 不足", "X 返回 402，发帖已停止。请到 Developer Console 充值。",
+                is_error=True)
+            return False
+        # 401 = token 失效/凭据错；403 = 权限或被限流
+        if resp.status_code in (401, 403):
+            self.last_error = f"X 鉴权/权限失败({resp.status_code}): {resp.text[:120]}"
+            logger.warning(f"𝕏 鉴权或权限失败（{resp.status_code}）: {resp.text[:120]}")
+            return False
+
+        self.last_error = f"HTTP {resp.status_code}: {resp.text[:160]}"
+        logger.warning(f"𝕏 发布失败: {self.last_error}")
+        return False
+
+    @staticmethod
+    def _oauth1_header(token: str, secret: str) -> Dict[str, str]:
+        """构造 OAuth 1.0a Authorization 头（X 发帖端点用 OAuth1 而非 Bearer）。
+
+        ⚠️ 缺 `X_API_KEY`/`X_API_SECRET` 时**抛异常而非静默降级**——
+        否则会变成"配好了但永远发不出去"（R612：静默不是通过）。
+        """
+        import hmac
+        import base64
+        import time as _t
+        import urllib.parse as _up
+        from secrets import token_hex as _th
+
+        ck = os.getenv("X_API_KEY", "").strip()
+        cs = os.getenv("X_API_SECRET", "").strip()
+        if not ck or not cs:
+            raise RuntimeError("缺少 X_API_KEY / X_API_SECRET（OAuth1 四件套不全）")
+        oauth = {
+            "oauth_consumer_key": ck,
+            "oauth_nonce": _th(16),
+            "oauth_signature_method": "HMAC-SHA1",
+            "oauth_timestamp": str(int(_t.time())),
+            "oauth_token": token,
+            "oauth_version": "1.0",
+        }
+
+        enc = lambda s: _up.quote(str(s), safe="~")
+        param_str = "&".join(f"{enc(k)}={enc(v)}" for k, v in sorted(oauth.items()))
+        base = "&".join(["POST", enc("https://api.x.com/2/tweets"), param_str])
+        key = f"{enc(cs)}&{enc(secret)}".encode()
+        sig = base64.b64encode(
+            hmac.new(key, base.encode(), "sha1").digest()).decode()
+        oauth["oauth_signature"] = sig
+        return {"Authorization": "OAuth " + ", ".join(
+            f'{enc(k)}="{enc(v)}"' for k, v in oauth.items())}
+
+
 class TelegramChannelPublisher(BasePublisher):
     name = "telegram"
     _TG_STATE_KEY = "_tg_delivered"

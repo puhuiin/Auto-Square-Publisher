@@ -109,6 +109,7 @@
   - `binance` — 币安广场官方 OpenAPI 全自动发帖
   - `telegram` — **Telegram 频道镜像**（全自动）：Bot 拉进频道做管理员，设 `TELEGRAM_MIRROR_CHANNEL_ID`（如 `@mychannel`）即可；带图走 sendPhoto，图拉取失败自动降级纯文本。加密社区原生分发渠道，引流利器
   - `okx_draft` — **OKX 广场草稿直出**：OKX 官方暂无发帖 API（V5 仅交易/行情），逆向 cookie 属违反 ToS 有封号风险故不做。折中方案：每篇 AI 生成内容自动落一份"即贴即用"草稿（正文+配图直链+发布清单）到 `drafts/` 目录随 Git 同步并推送提醒，手机打开复制粘贴到 OKX App 广场约 10 秒，可配合 [OKX 星球创作者激励](https://www.okx.com/zh-hans/campaigns/orbit-creator-monetization)（发文赚 USDT）。保留最近 30 份自动清理
+  - `x` — **X（Twitter）自动化发帖**（R667新增）：加密 + **AI 双主题**。需配 OAuth 1.0a **四件套**（`X_API_KEY` / `X_API_SECRET` / `X_ACCESS_TOKEN` / `X_ACCESS_TOKEN_SECRET`），从 [console.x.com](https://console.x.com) 你的 App → Keys and tokens → **OAuth 2.0 → Access Token and Secret** 取（**不是** App Key 那个 Tab）。⚠️ **X API 已于 2026-02-06 改为按量付费，免费层对新开发者关闭**：纯文本帖 **$0.015**/条、**含链接 $0.200**/条（贵 13 倍）⇒ 本通道**刻意不插链接**，低频 3~5 条/天约 **$2-3/月**。credits 耗尽返回 **HTTP 402** ⇒ 自动停发并报警。详见下方「X 通道」小节。
   - 仅副平台模式（如只开 `okx_draft` 或 `telegram`）**无需币安 Key**，任一平台完成投递即入缓存；所有平台实现统一 `BasePublisher` 接口，新平台接入只需一个类
   - **报警 12h 节流**：同一标题的错误报警 12 小时内只推送一次，状态随 Git 同步持久化，LLM 池长期失效也不再被消息轰炸；节流在**确认至少一个渠道投递成功后**才登记，全渠道发送失败不会白白吃掉这条报警的额度。
   - **错误精细化诊断**：发布失败自动翻译成可操作的排障指引（401/403 → 请重新生成 Key、20002/20022 → 内容被风控拦截、220094 → Hashtag 超限），无需翻日志。
@@ -322,7 +323,7 @@ python scripts/metrics_report.py --days 1
   | `ARTICLE_MIN_IMPACT` | `20` | 长文选稿门槛：榜首热度分低于此值则当天不发长文（全发短讯）。与限流放行门槛 `TOKEN_LIMIT_BYPASS_IMPACT` 相互独立 |
   | `VIDEO_PER_DAY` | `0`（关闭） | 每日视频定投开关：非空非零时，每天从预生产视频库挑一条未发的加密主题竖版视频发布（contentType=3）。默认 `0` 关闭，开闸前须确认视频库就绪 |
   | `VIDEO_LIBRARY_DIR` | 空（未启用） | 预生产视频库目录（如「讲解」项目产出目录）：每个子目录需备齐 `<slug>-vertical.mp4` + `<slug>-cover-v.jpg` + `content.yaml`，且仅加密/区块链主题选题会被纳入定投；留空则视频定投不启用 |
-  | `PUBLISH_PLATFORMS` | `binance` | 发布平台组合（逗号分隔）：`binance` 官方 API / `okx_draft` OKX 草稿直出 / `telegram` 频道镜像 |
+  | `PUBLISH_PLATFORMS` | `binance` | 发布平台组合（逗号分隔）：`binance` 官方 API / `okx_draft` OKX 草稿直出 / `telegram` 频道镜像 / `x` X（Twitter，见「X 通道」） |
   | `FETCH_DEADLINE_SEC` | `300` | 单轮 RSS 抓取的全局 deadline（秒）：到点放弃迟到源、用已完成候选继续，避免卡住的源拖满 workflow 并挤掉后续 cron |
   | `LOG_LEVEL` | `INFO` | 日志级别（排障时可设 `DEBUG`） |
   | `MAX_POSTS_PER_RUN` | `2` | 单次运行最大发帖数（workflow 运行参数；配额剩余不足时自动收敛） |

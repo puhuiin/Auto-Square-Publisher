@@ -17009,6 +17009,118 @@ class TestObserveOnSaturated(unittest.TestCase):
             self.assertIn("%s=" % f, blk, "缺少落盘字段 %s" % f)
 
 
+class TestXChannelPublisher(unittest.TestCase):
+    """R667：X（Twitter）通道。
+
+    ★ 为什么必须**独立生成**而非镜像币安内容：
+      **X 的 280 是「加权长度」不是字符数**——CJK 每字算 2、URL 恒 23、
+      Emoji 算 2⇒ **纯中文只有 140 字**。
+      而币安广场发的是 140~200 字中文长文 ⇒ **直接镜像必超限**。
+    ★ 成本（X API 2026-02-06 起按量付费，免费层已对新开发者关闭）：
+      纯文本 **$0.015**/条、**含链接 $0.200**/条（贵 13 倍）
+      ⇒ 通道**刻意不插链接** ⇒ 低频 3~5 条/天约 **$2-3/月**。
+    """
+
+    def test_weighted_len_ascii(self):
+        self.assertEqual(m.XChannelPublisher.weighted_len("abc"), 3)
+        self.assertEqual(m.XChannelPublisher.weighted_len(""), 0)
+        self.assertEqual(m.XChannelPublisher.weighted_len(None), 0)
+
+    def test_weighted_len_cjk_double(self):
+        """★ CJK 每字算 2 ⇒ 140 汉字正好 280（这是硬上限）"""
+        self.assertEqual(m.XChannelPublisher.weighted_len("中"), 2)
+        self.assertEqual(m.XChannelPublisher.weighted_len("中文"), 4)
+        self.assertEqual(m.XChannelPublisher.weighted_len("中" * 140), 280)
+        self.assertGreater(m.XChannelPublisher.weighted_len("中" * 141), 280)
+
+    def test_weighted_len_url_fixed_23(self):
+        """★ URL 经 t.co 后**恒 23**，与原始长度无关。
+
+        ⚠️ 踩过一次口径错：URL 替换成**一个空格**会多算 1
+        ⇒ "看 https://a.co" 得 27 而 X 实际 **26**
+        （正确做法：删掉 URL 本身，两侧空格各计 1）。
+        ⚠️ 空格属U+0000–U+10FF ⇒ **权重 1**（官方 v3 口径）。
+        """
+        short = m.XChannelPublisher.weighted_len("看 https://a.co")
+        long_ = m.XChannelPublisher.weighted_len(
+            "看 https://example.com/a/very/long/path/that/keeps/going?x=1")
+        # 看(2) + 空格(1) + URL(23) = 26
+        self.assertEqual(short, 26)
+        self.assertEqual(long_, 26, "URL 长度不影响加权（t.co 定长）")
+
+    def test_weighted_len_emoji_double(self):
+        self.assertEqual(m.XChannelPublisher.weighted_len("🚀"), 2)
+
+    def test_not_using_raw_len(self):
+        """★ 不能用 `len()`——这正是"口径不对⇒ 判据全错"（R665同款）"""
+        txt = "中" * 100
+        self.assertEqual(len(txt), 100)
+        self.assertEqual(m.XChannelPublisher.weighted_len(txt), 200)
+
+    def test_clip_never_exceeds(self):
+        """裁剪后**必须** ≤ 280（超限会被X 拒，帖丢了不可恢复）"""
+        for n in (140, 200, 500, 1000):
+            out = m.XChannelPublisher.clip_to_limit("中" * n, 280)
+            self.assertLessEqual(m.XChannelPublisher.weighted_len(out), 280,
+                                 "裁剪 %d 字后仍超限" % n)
+
+    def test_clip_keeps_short_text_intact(self):
+        txt = "短帖不该被改"
+        self.assertEqual(m.XChannelPublisher.clip_to_limit(txt, 280), txt)
+
+    def test_missing_credentials_skips_quietly(self):
+        """★ 未配凭据 ⇒ **安静跳过**（不抛异常、不影响其他通道）"""
+        import os
+        old = {k: os.environ.pop(k, None) for k in
+               ("X_ACCESS_TOKEN", "X_ACCESS_TOKEN_SECRET")}
+        try:
+            p = m.XChannelPublisher()
+            ok = p.publish("测试内容", meta={"news_id": "x1"})
+            self.assertFalse(ok, "无凭据必须返回 False")
+            self.assertIn("X_ACCESS_TOKEN", str(p.last_error))
+        finally:
+            for k, v in old.items():
+                if v is not None:
+                    os.environ[k] = v
+
+    def test_ai_feeds_isolated_from_main_feeds(self):
+        """★ AI 源**必须与币安源隔离**——否则会挤占广场配额且跑题。
+
+        R660 教训："同批排序改不了占不占配额" ⇒ 选题源要与投放平台解耦。
+        """
+        names = {f["name"] for f in m.X_AI_FEEDS}
+        self.assertTrue(names, "X_AI_FEEDS 不能为空")
+        main_names = {f["name"] for f in m.RSS_FEEDS}
+        self.assertFalse(names & main_names, "AI 源不得混进主 RSS_FEEDS")
+        # 主源里应含加密源、AI 源里应含科技源
+        self.assertTrue(any("Crypto" in n or "Coin" in n for n in main_names))
+        self.assertTrue(any(("Tech" in n or "Verge" in n) for n in names))
+
+    def test_x_prompt_is_separate_from_binance(self):
+        """★ X 提示词必须与币安 SYSTEM_PROMPT 分开（平台语感不同）。
+
+        复用广场提示词会产出 140~200 字长文 ⇒ **必然超 X 的 280 加权上限**。
+        """
+        # ⚠️ 类名是 `MultiLLMEngine`（我第一版写成 `LLMEngine`——
+        #   **又一次猜名字**。R666 纪律：查真实定义，别凭印象）
+        self.assertNotEqual(m.X_SYSTEM_PROMPT, m.MultiLLMEngine.SYSTEM_PROMPT)
+        self.assertIn("加权", m.X_SYSTEM_PROMPT,
+                      "X 提示词必须说明「加权长度」这个硬约束")
+
+    def test_credentials_need_all_four(self):
+        """★ OAuth1 四件套缺一不可（只配 ACCESS_TOKEN 发不出去）"""
+        import os
+        old = {k: os.environ.pop(k, None) for k in
+               ("X_API_KEY", "X_API_SECRET")}
+        try:
+            with self.assertRaises(RuntimeError):
+                m.XChannelPublisher._oauth1_header("tok", "sec")
+        finally:
+            for k, v in old.items():
+                if v is not None:
+                    os.environ[k] = v
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
