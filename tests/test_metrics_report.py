@@ -5875,5 +5875,77 @@ class TestR662LowHourCapGuardrail(unittest.TestCase):
         self.assertNotIn("低浏览窗子配额阻断", text)
 
 
+class TestR663TailConflictGuardrail(unittest.TestCase):
+    """R663：`ending_question` 这个**自报字段**的自一致性异常留存。
+
+    ★ 背景（R647 那个坑的第二层）：
+      `final_preview` 只存**前 200 字**而站队提问在**结尾**
+      ⇒ `ending_question=True/False` 这个自报布尔**此前无任何数据能验证**。
+      我判读生产数据时因此误判"标 True 但结尾没问号 = 字段造假"
+      —— 实际上我只是把 `final_preview` 的第 200 字当成了结尾。
+
+    ★ 为什么是「异常优先留存」而不是全量存尾段：
+      我首版加 `final_tail`（末 120 字全量落盘）⇒ **R647 守卫立刻失败**，
+      理由明写"判据只有有没有问"（323 篇 × 120 字 = **+60%** 膨胀）。
+      **守卫是对的** ⇒ 改方案：**只在不一致时**存 `tail_conflict`。
+    """
+
+    @staticmethod
+    def _post(ts, flag, conflict=None):
+        d = {"platforms": ["binance"], "outcome": "binance_published",
+             "ts": ts, "hour_bj": 8, "content_id": ts, "source": "S",
+             "ending_question": flag, "final_preview": "x"}
+        if conflict is not None:
+            d["tail_conflict"] = conflict
+        return d
+
+    def test_no_conflict_renders_clean(self):
+        rows = [self._post("2026-10-06T02:06:00+00:00", True),
+                self._post("2026-10-06T02:28:00+00:00", True)]
+        s = mr.summarize(rows)
+        self.assertEqual(s.get("tail_conflict_n"), 0)
+        text = mr.render_text(s, rows)
+        self.assertIn("无自一致性异常", text)
+
+    def test_conflict_is_counted_and_shown(self):
+        """有冲突 ⇒ 必须报数并展示原文（这才是需要人看的）"""
+        rows = [self._post("2026-10-06T02:06:00+00:00", True,
+                           conflict="最后一行没有问号但字段说 True"),
+                self._post("2026-10-06T02:28:00+00:00", True)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["tail_conflict_n"], 1)
+        text = mr.render_text(s, rows)
+        self.assertIn("判据与结尾原文不一致", text)
+        self.assertIn("没有问号", text, "必须展示冲突原文供人工核对")
+
+    def test_clean_is_not_claimed_as_verified(self):
+        """★ 「无异常」≠「已验证」——文案必须写明这个区分"""
+        rows = [self._post("2026-10-06T02:06:00+00:00", True)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("未发现异常", text)
+        self.assertIn("已全面验证", text,
+                      "必须显式声明这不等于已验证（R612 精神）")
+
+    def test_missing_field_is_not_treated_as_conflict(self):
+        """⚠️ 字段缺失（None）= "一致、无异常"，**不得**计成冲突或失明。
+
+        这是异常优先留存的**关键语义**：绝大多数回执不会有 `tail_conflict`
+        （因为它们一致）⇒ 若把缺失当异常，会天天误报。
+        """
+        rows = [self._post("2026-10-06T02:06:00+00:00", True),   # 无该字段
+                self._post("2026-10-06T02:28:00+00:00", False)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["tail_conflict_n"], 0,
+                         "无冲突字段 ≠ 有冲突")
+
+    def test_no_full_tail_field_in_main(self):
+        """★ 回归守卫：**不得**引入全量尾段字段（R647 的体积约束）。"""
+        src = open(m.__file__, encoding="utf-8").read()
+        self.assertNotIn('"final_tail"', src,
+                         "禁止全量存尾段（R647：323篇×120字=+60% 膨胀）")
+        self.assertIn('"tail_conflict"', src,
+                      "应使用异常优先留存的字段名")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

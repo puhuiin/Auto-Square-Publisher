@@ -9268,6 +9268,14 @@ def _run_main():
                 quota_blocked=True,
                 sent_24h=sent_24h,
                 max_daily_posts=MAX_DAILY_POSTS,
+                # R663：低窗子配额字段**在饱和轮也必须落**。
+                # 生产实测缺口：02:08/02:19/02:43 三轮饱和时这三个字段全是
+                # `None`（只有正常发帖路径落）⇒ **饱和轮无法区分
+                # "被总配额挡"与"被低窗子配额让渡"**，
+                # 而 R662 的核心判据恰恰依赖这个区分。
+                # ⚠️ 这就是 R612「沉默不是通过」：字段缺失不是"没有发生"。
+                low_hour_blocked=bool(low_hour_blocked),
+                low_hour_cap=LOW_HOUR_CAP,
                 next_slot_frees=next_frees_iso or None,
                 next_slot_frees_min=next_frees_min,
                 # R183：情报刷新在配额检查前（R182），饱和轮也付了 intel 时间——
@@ -9847,13 +9855,37 @@ def _run_main():
                     # 存全文会撑爆 metrics.jsonl（312篇×200字已6万字符）。
                     # None = Mock/异常态（未知不是 False，纪律12）。
                     _tail_q = None
+                    # R663：**异常优先留存**的结尾原文。
+                    # ★ 为什么只留"不一致"的那种（R647 守卫明确禁止全量存尾段，
+                    # 理由是 metrics.jsonl 膨胀：323 篇 × 120 字 = **+60%**）：
+                    #   `final_preview` 只存**前 200 字**而提问在**结尾**
+                    #   ⇒ `ending_question` 这个**自报布尔**此前**无任何数据可验证**
+                    #   （R647 那个坑的第二层）。我判读生产数据时因此一度误判
+                    #   "标 True 但结尾没问号 = 字段造假"。
+                    # ⇒ 折中：**只在本条的判据与 tail 原文不一致时**存末 120 字
+                    #   （那才是需要人工看的），一致时不存（零膨胀）。
+                    # ⚠️ 两处判据**必须同口径**（同一关键词表），
+                    #   否则会产生大量假冲突、把文件撑爆。
+                    _tail_text = None
                     if isinstance(final_content, str) and final_content.strip():
                         _tail = "\n".join(
                             [ln for ln in final_content.split("\n") if ln.strip()][-2:])
-                        _tail_q = bool(
-                            "？" in _tail or "?" in _tail
-                            or re.search(r"扣\s*[12]|你信|你觉得|怎么看|agree|看多|看空",
-                                         _tail))
+                        _hit = ("？" in _tail or "?" in _tail
+                                or re.search(r"扣\s*[12]|你信|你觉得|怎么看|agree|看多|看空",
+                                             _tail))
+                        _tail_q = bool(_hit)
+                        # 末 120 字够覆盖"最后 1-2 行"（本判据的取样范围）
+                        _sample = final_content[-120:]
+                        # 自一致性检查：把取样尾部再判一次，若与全量判定不同
+                        # ⇒ 多半是提问在倒数第 3-4 行（分段帖常见），
+                        #    **不是造假**，但值得留原文供人工核对。
+                        _s_tail = "\n".join(
+                            [ln for ln in _sample.split("\n") if ln.strip()][-2:])
+                        _s_hit = ("？" in _s_tail or "?" in _s_tail
+                                  or re.search(r"扣\s*[12]|你信|你觉得|怎么看|agree|看多|看空",
+                                               _s_tail))
+                        if bool(_s_hit) != _tail_q:
+                            _tail_text = _sample
                     # R649：**prompt 硬性条款的发布后合规遥测**（全量扫，非只看末尾）。
                     #
                     # 审计发现（生产 148 次拒稿的 stage 分布为证）：`quality` 门
@@ -10002,6 +10034,10 @@ def _run_main():
                         "content_cjk": content_cjk,
                         # R647：结尾站队提问（None=Mock/异常态，未知不是 False）
                         "ending_question": _tail_q,
+                        # R663：**只在判据与末 120 字不一致时**才有值的结尾原文。
+                        # 不是"全库结尾"——R647 守卫明确禁止全量存尾段
+                        # （metrics.jsonl 会 +60%）。**None = 一致，无异常可看**。
+                        "tail_conflict": _tail_text,
                         # R649：prompt 三条内容红线的发布后合规度（None=Mock/异常态）
                         "dash_ok": _dash_ok,
                         "hype_ok": _hype_ok,

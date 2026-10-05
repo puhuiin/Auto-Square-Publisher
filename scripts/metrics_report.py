@@ -904,6 +904,9 @@ def summarize(rows):
         # 分子=有提问，分母=字段存在的回执（None=Mock/异常态不进分母）。
         "ending_q_yes": 0,
         "ending_q_marked": 0,
+        # R663：`ending_question` 的**异常样本**（main.py 仅在判据与末 120 字
+        # 不一致时落`tail_conflict`，避免 metrics.jsonl 膨胀 +60%）
+        "tail_conflict_n": 0,
         # R649：prompt 三条内容红线的合规分子/分母（同 bool口径，见 ending_q）
         "dash_ok_n": 0, "dash_ok_d": 0,
         "hype_ok_n": 0, "hype_ok_d": 0,
@@ -1399,6 +1402,16 @@ def summarize(rows):
                 s["ending_q_marked"] += 1
                 if r["ending_question"]:
                     s["ending_q_yes"] += 1
+                # R663：★ **异常优先留存**的自一致性检查。
+                # main.py 只在"判据与末 120 字不一致"时落 `tail_conflict`
+                # （R647 守卫禁止全量存尾段：323 篇 × 120 字 = +60% 膨胀）。
+                # ⇒ 这里统计的是**异常样本数**，不是全库复核率——
+                #    字段缺失（None）恰恰意味着"一致、无异常"，**不是失明**。
+                _tc = r.get("tail_conflict")
+                if isinstance(_tc, str) and _tc.strip():
+                    s["tail_conflict_n"] += 1
+                    s.setdefault("tail_conflict_samples", []).append(
+                        (str(r.get("ts") or "")[:16], r["ending_question"], _tc))
             # R649：内容红线合规（分侧分子，False 也计入分母——纪律 17）
             for _f, _sn, _sd in (("dash_ok", "dash_ok_n", "dash_ok_d"),
                                  ("hype_ok", "hype_ok_n", "hype_ok_d"),
@@ -2536,10 +2549,20 @@ def render_text(s, rows=None):
                 "实测回放 2134 轮心跳，=2 时高浏览窗 2.3 → 9.0 篇/天（3.9×）"
                   "且总发布仅 −7%")
         elif runs.get("low_hour_cap") is not None:
-            lines.append(
-                f"  ℹ️ 低窗子配额上限 = {runs['low_hour_cap']}，"
-                f"但本窗口**零阻断**（若上限偏高或高窗轮次没跑到，"
-                f"都会是零——**不可据此判机制无效**）")
+            _cap0 = runs["low_hour_cap"]
+            if not _cap0:
+                # ⚠️ **0 = 未启用**，与"启用了但没触发阻断"是两件事（R612）。
+                # 混在一起会让"机制没效果"与"没启用"看起来一样。
+                lines.append(
+                    f"  ℹ️ 低窗子配额：**未启用**（`LOW_HOUR_CAP = 0`，默认值）"
+                    f"⇒ R662 机制处于关闭态，**高浏览窗配额占比仍由夜间轮次先占**"
+                    f"（实测 2.3/12 篇）。启用：仓库Variables 设 `LOW_HOUR_CAP=2`"
+                    f"（回放 2134 轮心跳实测：高窗 3.9×、总发布仅 −7%）")
+            else:
+                lines.append(
+                    f"  ℹ️ 低窗子配额上限 = {_cap0}，但本窗口**零阻断**"
+                    f"（若上限偏高或高窗轮次没跑到，都会是零"
+                    f"——**不可据此判机制无效**）")
         # R653：**真实漏斗**。上一行把"配额饱和 1777 轮"与"候选 12833"并列，
         # 看起来像"排了 12833 条只发出 286 条（效率 2.2%）"——**这是误读**：
         # 那 1777 轮在配额检查处**提前 return**，候选/发布/未处理全是 0，
@@ -3567,6 +3590,34 @@ def render_text(s, rows=None):
                 f"  {_eflag}结尾站队提问 {_eq}/{_em}（{_ep:.0f}%）："
                 f"prompt 要求结尾给一句与本文事件直接相关的问题"
                 f"（旧回执无此字段，不计入分母）")
+            # R663：★ **自报合规必须有旁证**——用 `final_tail` 独立重算一遍。
+            # ★ 为什么必须：`final_preview` 只存**前 200 字**而提问在结尾
+            # ⇒ `ending_question=True` 这个布尔值**此前无任何数据能验证**
+            # （R647 立的坑的第二层：加了字段，但仍不可见）。
+            # R663 落地：**异常优先留存**——main.py 只在"判据与末 120 字
+            # 不一致"时落 `tail_conflict`（R647 守卫禁止全量存尾段：
+            # 323 篇 × 120 字 = **+60%** 膨胀 ⇒ 守卫是对的，我改了方案）。
+            # ⇒ 因此这里的语义是**异常数**，**不是**复核率：
+            #    字段缺失（None）= "判据一致、无异常"，**不是失明**。
+            _tcn = s.get("tail_conflict_n") or 0
+            if _tcn:
+                lines.append(
+                    f"     ↳ ⚠️ **{_tcn} 条判据与结尾原文不一致**"
+                    f"（`tail_conflict` 已留末 120 字原文供核对）")
+                for _ts, _flg, _txt in (s.get("tail_conflict_samples") or [])[:3]:
+                    lines.append(
+                        f"       ↳ {_ts} 字段={_flg}｜原文尾: "
+                        f"{_txt[-60:].replace(chr(10), ' ')}")
+                lines.append(
+                    f"       ↳ 冲突**多半不是字段造假**——而是提问落在"
+                    f"倒数第 3-4 行（分段帖常见），末 120 字没覆盖到"
+                    f"⇒ 判读以**原文为准**（自报字段不可独信，R612）")
+            else:
+                lines.append(
+                    f"     ↳ ✅ **无自一致性异常**（R663 异常优先留存："
+                    f"判据与结尾原文不一致时才留原文，当前 {s['ending_q_marked']} "
+                    f"条均一致）—— 注：`final_preview` 只有前 200 字，"
+                    f"**看不到结尾**，故此项是「未发现异常」而非「已全面验证」")
         # R649：内容红线合规度。**这三项此前既无代码防线、又无发布后观测**
         # （quality 门只管长度/TITLE/中文量）⇒ 违反与否在任何字段里都看不到。
         # 定位为**度量**不是门：词表启发式必有反例，而长文单通道拒稿= 大概率丢稿
