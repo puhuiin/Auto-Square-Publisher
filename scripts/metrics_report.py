@@ -914,6 +914,10 @@ def summarize(rows):
         "by_token": collections.Counter(),
         "images": 0,
         "image_tiers": collections.Counter(),
+        # R673：**源文有无原图**（区分"没图"与"有图但拉取失败"）
+        # ★ 两者处置完全相反：前者只能自绘（**不是缺陷**），
+        #   后者是**缺陷要修** ⇒ 混在一个 `tier` 里就是**无法处置**。
+        "hri_n": 0, "hri_yes": 0,
         "zero_widget_posts": 0,
         # R670：**挂件额度使用率**分布（正文侧）。
         # ★ 为什么要有这一面：零挂件告警（R123）只答"有没有失守"，
@@ -1324,6 +1328,11 @@ def summarize(rows):
             tier = r.get("image_tier")
             if tier:
                 s["image_tiers"][str(tier)] += 1
+            # R673：字段存在即计入分母（False 也是有效观测——纪律 12/17）
+            if isinstance(r.get("has_raw_image"), bool):
+                s["hri_n"] += 1
+                if r["has_raw_image"]:
+                    s["hri_yes"] += 1
             # R123：Write2Earn 生命线度量——全文零有效挂件的帖子数（保底机制
             # 失守的直接信号；预览区无 $ 只可能是截断伪影，不看全文计数会误报）
             # R610：稳定币-only 的零挂件是**契约合规**不是失守——R316 明确
@@ -4111,6 +4120,19 @@ def render_text(s, rows=None):
                     f"且 raw 已是最高优先级、**不可配置**。"
                     f"要提浏览量应调**源选择**而非配图参数")
         # R173：过期情报注入可见化（有字段的帖才进分母，历史行不混入）
+        # R673：原图获得率 —— 回答「自绘占比高是**源文没图**还是**拉取失败**」
+        #   （两者处置完全相反，单看 `image_tiers` 无法回答）。
+        # ⚠️⚠️ **不主张"原图浏览更高"**—— R673 我曾据p=0.0009 改过优先级，
+        #   那是**未控制源**的边际分布：U.Today 原图率**0%**（122 篇全自绘），
+        #   其余 8 源 **83~100%** ⇒ **完全混淆**（R651 已判定，见上一段）。
+        # ⇒ 本行只报**获得率**这个事实，**不给因果建议**。
+        _hrin = s.get("hri_n") or 0
+        if _hrin:
+            _hriy = s.get("hri_yes") or 0
+            lines.append(
+                f"  📷 源文自带图 {_hriy}/{_hrin} = {_hriy/_hrin*100:.0f}%"
+                f"　⇒ 未自带图的 {_hrin-_hriy} 篇**只能自绘**（**不是缺陷**，无图可拉）"
+                f"　·⚠️ **不可据此断言原图更抓眼**（源混淆，见上）")
         n_intel_marked = s["intel_degraded_posts"] + s["intel_fresh_posts"]
         if n_intel_marked:
             flag = " ⚠️" if s["intel_degraded_posts"] else ""

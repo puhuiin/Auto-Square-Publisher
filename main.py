@@ -9928,6 +9928,15 @@ def _run_main():
         if posted_count >= max_posts:
             logger.info(f"已达到本次最大发帖数 ({max_posts})，退出循环。")
             break
+        # R673：**每轮重置** `has_raw_image` 兜底。
+        # ★ 为什么必须每轮重置：它在币安分支里才被赋值，而回执有**三条落盘
+        #   路径**（含副平台-only 路径）⇒ 缺变量会 `NameError`
+        # ⇒ **整行 JSON 序列化失败、该行被静默丢弃**
+        #   （实测：副平台-only 回执变成 `outcome=['run_summary']`，
+        #     发帖回执整条消失，**不是"没发帖"而是"回执丢了"**）。
+        # ⚠️ 不设默认就会**沿用上一轮的值**（跨轮残留，R670纪律 26 的变体）。
+        # ⇒ None = 未观测（**不是 False**，R659 三分法）。
+        has_raw_image = None
         # R237：24h 配额逐条复查——入口检查只保证循环开始时有空槽，max_posts>1
         # 时第 1 篇发布即把滚动窗口填满；workflow 的 max_posts fallback 为 2
         # （schedule/push/裸 dispatch 触发都拿不到 input），无复查的第 2 篇将以
@@ -10170,6 +10179,11 @@ def _run_main():
                 stage_timings["image"] += time.time() - t_img_start
                 image_fail_reason = getattr(ImageManager, "last_image_fail_reason", None)
                 image_tier = getattr(ImageManager, "last_image_tier", None) or "none"
+                # R673：**源文到底自带图没有**（回答"自绘占比高是没图还是拉取失败"）
+                # ⚠️ 判"有图"必须排除 DEFAULT_FALLBACK：prepare_and_upload 内部
+                #   会把不合格 URL 替换成兜底常量 ⇒ 传入非空**不等于**真图。
+                has_raw_image = bool(raw_img) and (
+                    raw_img.strip() != ImageManager.DEFAULT_FALLBACK_IMAGE)
                 # 只有落到走势卡/情绪卡（无新闻图那部分）才推进轮换，让二者交替；
                 # 新闻图命中不占轮换位（新闻图本就各异、无需轮换）。
                 if image_tier in ("chart", "card"):
@@ -10553,6 +10567,7 @@ def _run_main():
                         "platforms": _delivered_platforms(True, draft_exported, telegram_exported),
                         "image": published_with_image, "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,
+                        "has_raw_image": has_raw_image,
                         "outcome": "binance_published" if persisted else "binance_published_cache_failed",
                     })
                     posted_records.append({
@@ -10602,6 +10617,7 @@ def _run_main():
                         "platforms": delivered,
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,
+                        "has_raw_image": has_raw_image,
                         "outcome": f"{delivered_by}_delivered" if persisted else f"{delivered_by}_delivered_cache_failed",
                     })
                     posted_records.append({
@@ -10659,6 +10675,7 @@ def _run_main():
                             getattr(publisher, "last_widget_count", None)),
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,
+                        "has_raw_image": has_raw_image,
                         "outcome": "publish_failed", "error": detail[:200],
                         # 必须转成 str：非字符串类型会让 json.dumps 整条遥测失败被吞掉
                         "error_code": str(code_hint) if code_hint else None,

@@ -6377,6 +6377,70 @@ class TestR670WidgetCapGuardrail(unittest.TestCase):
                          "不可把 main 的常量插进 f-string")
 
 
+class TestR673ImageTierGuardrail(unittest.TestCase):
+    """R673：**原图获得率**遥测（回答"自绘占比高是**没图**还是**拉取失败**"）。
+
+    ★ 为什么要有这个字段：生产 `tier=raw 177 / chart 92`，看着像
+    "原图只拿到 66%"，但**无法区分**两种成因：
+      (a) 源文本来就没图 ⇒ 只能自绘（**不是缺陷**）
+      (b) 有图但拉取失败/被 SSRF 拒 ⇒ **是缺陷，要修**
+    两者处置完全相反，而 `image_fail_reason` 成功路径不写值（全库为 None）
+    ⇒ 只能靠这个字段分辨。
+
+    ⚠️⚠️ **本类不主张"原图浏览更高"**（R673 我犯过的错，见下）：
+      实测 raw 46.6/天 vs chart 25.1/天、p=0.0009看着很硬，
+      但**没控制源**——U.Today 原图率 **0%**（122 篇全自绘），
+      其余 8 源 **83~100%** ⇒ **完全混淆**（R651 当年已判定）。
+      ⇒ 本类只测**遥测与护栏本身**，不测"哪个 tier 更好"。
+    """
+
+    @staticmethod
+    def _p(ts, tier, hri):
+        return {"platforms": ["binance"], "outcome": "binance_published",
+                "ts": ts, "hour_bj": 8, "content_id": ts, "source": "S",
+                "ending_question": True, "image": True,
+                "image_tier": tier, "has_raw_image": hri,
+                "final_preview": "正文"}
+
+    def test_counts_hri(self):
+        rows = [self._p("2026-10-06T02:0%d:00+00:00" % i,
+                        "raw" if i < 3 else "chart", i < 3)
+                for i in range(6)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["hri_n"], 6)
+        self.assertEqual(s["hri_yes"], 3)
+
+    def test_missing_hri_not_counted(self):
+        """★ 字段缺失 = 未观测，**不得**当「没有图」（R659）"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-06T02:00:00+00:00", "hour_bj": 8,
+                 "content_id": "x", "source": "S", "ending_question": True,
+                 "image": True, "image_tier": "chart",
+                 "final_preview": "正文"}]
+        s = mr.summarize(rows)
+        self.assertEqual(s["hri_n"], 0, "无字段不得进分母")
+
+    def test_renders_with_confound_warning(self):
+        """★ 护栏必须**同时**给出原图率与"源混淆"警示（不得只报好看的数）"""
+        rows = [self._p("2026-10-06T02:0%d:00+00:00" % i,
+                        "raw" if i < 3 else "chart", i < 3)
+                for i in range(6)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("源文自带图", text)
+        self.assertIn("不是缺陷", text,
+                      "必须说明「无图可拉」不是缺陷，否则会被当成要去修")
+
+    def test_default_tier_order_unchanged(self):
+        """★锁定 `chart` 优先的**默认值**（勿因误读信号而改它）。
+
+        ⚠️ 生产**实际**由调用方传`prefer=["raw","chart","card"]`（10165 行）
+        ⇒ 这个默认值只兜底无参调用，但它曾被我按"假 p"误改。
+        """
+        import inspect
+        src = inspect.getsource(m.ImageManager.prepare_and_upload)
+        self.assertIn('else ["chart", "raw", "card"]', src)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
@@ -6513,3 +6577,142 @@ class TestGuardrailInsertionSafety(unittest.TestCase):
         text = mr.render_text(mr.summarize(rows), rows)
         for mark in ("最长段落", "挂件额度使用"):
             self.assertIn(mark, text, "缺护栏: %s" % mark)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
+
+
+class TestR672ParagraphLengthGuardrail(unittest.TestCase):
+    """R672：**最长段落汉字数**（短讯）。
+
+    ★ R671 实测得出的结论（这是本护栏存在的理由）：
+      · 段数**已达标**：中位 3~4 段、89% 有换行 ⇒ "分段"这个维度没病
+      · **真正的差距在每段太长**：段均 36、**p90 61** 汉字，
+        >60 占 10%、>80 占 3%
+      · 人工范文（Kamino/SOL）段均**26 汉字**
+      ⇒ 手机端一屏读不完 60 字 ⇒ 这是**真实的划走原因**（R644 同源）
+    ⚠️ **不能只靠 final_preview**（R647）：它只存前 200 字 ⇒ 尾部段落不可见
+      ⇒ 永远只能看见"前几段够长" ⇒ **假达标**。
+    """
+
+    @staticmethod
+    def _p(ts, pm, article=False):
+        return {"platforms": ["binance"], "outcome": "binance_published",
+                "ts": ts, "hour_bj": 8, "content_id": ts, "source": "S",
+                "article": article, "ending_question": True,
+                "para_max_cjk": pm, "final_preview": "正文"}
+
+    def test_counts_short_posts_only(self):
+        """★ **只统计短讯**——长文按 500~800 字设计会整体拉高分布"""
+        rows = [self._p("2026-10-06T02:0%d:00+00:00" % i, 30)
+                for i in range(3)]
+        rows.append(self._p("2026-10-06T02:09:00+00:00", 400, article=True))
+        s = mr.summarize(rows)
+        self.assertEqual(s["para_max_n"], 3, "长文不得计入")
+
+    def test_over60_and_over80(self):
+        rows = [self._p("2026-10-06T02:%02d:00+00:00" % i, v)
+                for i, v in enumerate([26, 35, 61, 81])]
+        s = mr.summarize(rows)
+        self.assertEqual(s["para_max_over60"], 2, "61 与 81 应计入")
+        self.assertEqual(s["para_max_over80"], 1)
+
+    def test_missing_field_not_counted(self):
+        """★ 字段缺失 = 未观测，**不得**当 0（R659）"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-06T02:00:00+00:00", "hour_bj": 8,
+                 "content_id": "x", "source": "S", "ending_question": True,
+                 "final_preview": "正文"}]
+        s = mr.summarize(rows)
+        self.assertEqual(s["para_max_n"], 0)
+
+    def test_renders_with_flag(self):
+        rows = [self._p("2026-10-06T02:%02d:00+00:00" % i, v)
+                for i, v in enumerate([26, 31, 65, 88])]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("最长段落", text)
+        self.assertIn("读全文", text)
+        # >60 占 50% ⇒ 应报 ❌
+        self.assertIn("❌", text)
+
+    def test_prompt_forbids_long_paragraph(self):
+        """★ 接线守卫：prompt 必须真的卡了段落长度（否则遥测白加）"""
+        src = open(m.__file__, encoding="utf-8").read()
+        i = src.index("R672 段落长度硬要求")
+        blk = src[i:i + 500]
+        self.assertIn("35", blk, "必须给出具体阈值")
+        self.assertIn("4~5", blk, "段数须同步上调")
+
+
+class TestGuardrailInsertionSafety(unittest.TestCase):
+    """★★ **通用回归守卫**：新增报表块不得挤掉既有护栏。
+
+    ★ 为什么要有这道（当天被咬**三次**：R668 / R670 / R672）：
+      插入累加块时若落在「守卫 `if` 与其第一条语句之间」，
+      ⇒既有累加被**挤进守卫体内** ⇒ 该护栏**静默失效**
+      ⇒ 而 `py_compile` **仍然通过**（语法没错、行为变了）。
+      R672 那次直接挂掉 R663 + R668 **共 8 例**。
+
+    ⇒ 本守卫把「既有护栏仍能聚合」变成**显式契约**，
+      新增任何累加块都必须让它继续通过。
+    """
+
+    def test_existing_ordinal_still_aggregates(self):
+        """R668 序号式小标题：与 R672 共存"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-06T02:%02d:00+00:00" % i, "hour_bj": 8,
+                 "content_id": "o%d" % i, "source": "S", "article": True,
+                 "ending_question": True, "ordinal_heading": True,
+                 "para_max_cjk": 30,
+                 "final_preview": "一、发生了什么\n\n正文"} for i in range(4)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["ordinal_n"], 4, "R668 被挤掉了")
+        self.assertEqual(s["ordinal_yes"], 4)
+        self.assertEqual(s["para_max_n"], 0, "R672 只统计短讯（article=True）")
+
+    def test_all_three_coexist(self):
+        """★ R663 + R668 + R670 + R672 四套护栏同时可用"""
+        rows = []
+        for i in range(6):
+            rows.append({"platforms": ["binance"],
+                         "outcome": "binance_published",
+                         "ts": "2026-10-06T02:%02d:00+00:00" % i,
+                         "hour_bj": 8, "content_id": "c%d" % i,
+                         "source": "S", "article": False,
+                         "ending_question": True,
+                         "ordinal_heading": bool(i % 2),
+                         "para_max_cjk": 30 + i * 5,
+                         "widget_count": 1 + (i % 2),
+                         "tokens": ["BTC"],
+                         "final_preview": "正文\n\n第二段"})
+        s = mr.summarize(rows)
+        self.assertEqual(s["para_max_n"], 6, "R672")
+        self.assertEqual(s["ordinal_n"], 6, "R668")
+        self.assertEqual(s["ending_q_marked"], 6, "R647")
+        self.assertEqual(s["widget_hist"][1], 3, "R670")
+        self.assertEqual(s["widget_hist"][2], 3)
+
+    def test_render_contains_all_guardrails(self):
+        """★ 四套护栏**都必须在渲染文本里出现**（静默失效的最后一道）"""
+        rows = []
+        for i in range(6):
+            rows.append({"platforms": ["binance"],
+                         "outcome": "binance_published",
+                         "ts": "2026-10-06T02:%02d:00+00:00" % i,
+                         "hour_bj": 8, "content_id": "r%d" % i,
+                         "source": "S", "article": False,
+                         "ending_question": True,
+                         "ordinal_heading": True,
+                         "para_max_cjk": 70,
+                         # ⚠️ **必须含超限**（前 2 条给 widget_count=9）：
+                         #   R670 的分层线由「最后一个超限 ts」推导，
+                         #   全未超限 ⇒ 走"无法分层"分支 ⇒ **不渲染**使用率行
+                         #   （实测踩过：以为护栏坏了，实为数据不满足分层条件）
+                         "widget_count": 9 if i < 2 else 1,
+                         "tokens": ["BTC"],
+                         "final_preview": "正文\n\n第二段"})
+        text = mr.render_text(mr.summarize(rows), rows)
+        for mark in ("最长段落", "挂件额度使用"):
+            self.assertIn(mark, text, "缺护栏: %s" % mark)
+
