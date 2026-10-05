@@ -86,6 +86,66 @@ _FORCE_STRIP_CASHTAGS = frozenset({
 })
 
 
+# R670：正文挂件上限（main.py `MAX_TOKENS_PER_POST` 的默认值）。
+# ⚠️ **不 import main**：那会连带触发模块级副作用；
+#   引用 main 的常量在本模块直接写也会 NameError，而 `py_compile` 仍通过
+#   （R668 教训：编译过 ≠ 能跑）。⇒ 口径写死并在此处**指向真源**。
+_WIDGET_CAP = 3
+
+# R670：挂件降格（R367）上线时刻。
+# ★ **从数据推导**而不是写死日期（纪律7/ R659）：
+#   取"最后一个 widget_count > 上限"的 ts —— 那就是降格失效的最后一刻。
+#   ⚠️ 写死日期会在**上限可配**（MAX_TOKENS_PER_POST 是 env）时立刻失真。
+_WIDGET_CAP_SINCE = "9999"   # 哨兵；summarize 里会按数据重算
+
+
+def _derive_widget_cap_since(rows):
+    """R670：从遥测里**推导**挂件降格（R367）的上线时刻。
+
+    ★ 为什么不用写死日期：`MAX_TOKENS_PER_POST` 是**可配的**
+      （`_env_int(..., 3)`）⇒ 改配置后写死日期会立刻失真，
+      而护栏会继续报"降格未生效"的**假告警**。
+
+    ⚠️ ★ **首版设计缺陷（守卫抓到）**：原实现取"最后一个超限帖的 ts"
+      当分层线。但**若降格一直失效**，那个 ts 就是**最新那篇**
+      ⇒ 分层把所有超限都排除 ⇒ **永远不报失效**（盲区）。
+
+    ⚠️ ★ **第二版也错（我拍了个阈值）**：改成"超限占比 > 5% 就不分层"，
+      而**生产实测占比 6.4%**（18/283）⇒ 护栏把**已生效**的降格
+      报成 ❌ 失效。⇒ **占比不是判据**（它只反映"历史遗留占比"，
+      遗留多久都会占那个比例）。
+
+    ⚠️ ★ **第三版（正确）**：判据是「末次超限之后**还有没有超限**」。
+      降格已生效 ⇒ 末次超限 ts 之后**一条超限都没有**（只剩合规帖）。
+      降格未生效 ⇒ 末次超限 ts 就是最新那篇，**之后仍有超限**。
+    ⚠️ ⚠️ **两版判据都踩了同一个坑：分母口径不一致**
+      （R611纪律 11「并列信号不能共用分母」）：
+      `tot` 数的是**全部**行，而比较项只数**之后**的行 ⇒ 比值天然偏大。
+      ⇒ 现在**只比"超限 vs 超限"**（同口径），不再拿总数做分母。
+    """
+    last_over_ts = ""
+    over_after = 0
+    for r in rows or []:
+        wc = _num(r.get("widget_count"))
+        if wc is None or _is_stablecoin_only(r.get("tokens")):
+            continue
+        if wc > _WIDGET_CAP:
+            ts = str(r.get("ts") or "")
+            if not last_over_ts or ts > last_over_ts:
+                last_over_ts = ts
+    if not last_over_ts:
+        return ""
+    # ★ 同口径：末次超限之后**还有几条超限**
+    for r in rows or []:
+        wc = _num(r.get("widget_count"))
+        if wc is None or _is_stablecoin_only(r.get("tokens")):
+            continue
+        if wc > _WIDGET_CAP and str(r.get("ts") or "") > last_over_ts:
+            over_after += 1
+    # ★ 还有超限 ⇒ 降格从未生效（不可分层，否则会掩盖真故障）
+    return "" if over_after else last_over_ts
+
+
 def _is_stablecoin_only(tokens):
     """该帖识别到的标的是否**全部**属于 FORCE_STRIP（稳定币/非交易词）。
 
@@ -837,7 +897,11 @@ def summarize(rows):
     """聚合成嵌套计数，调用方只读不写"""
     # R659：修复上线时刻（解析失败为 None ⇒ 护栏显式报"无法分层"）
     _ftz = _fix_live_ts()
+    # R670：挂件降格上线时刻**从数据推导**（上限可配，写死会失真）
+    # ⚠️ 存进 `s` 而不是全局变量——全局会被下一次调用污染（R621 变体）
+    _cap_since = _derive_widget_cap_since(rows)
     s = {
+        "widget_cap_since": _cap_since,
         "total": len(rows),
         "by_outcome": collections.Counter(),
         "by_hour": collections.Counter(),
@@ -851,6 +915,21 @@ def summarize(rows):
         "images": 0,
         "image_tiers": collections.Counter(),
         "zero_widget_posts": 0,
+        # R670：**挂件额度使用率**分布（正文侧）。
+        # ★ 为什么要有这一面：零挂件告警（R123）只答"有没有失守"，
+        #   **不答"额度用满了吗"**——生产实测**92% 的帖只用 1~2 个**
+        #   （上限 3），单看零挂件=0 一切正常，读者无法判断这是
+        #   "源文只提一个币"（正常）还是"漏织了"（缺陷）。
+        # ⇒ 本行给分布 + 三条已核实结论，避免下轮重复排查（R670）。
+        "widget_hist": collections.Counter(),
+        # R670：**只统计 R367 降格上线之后**的分布。降格前的老稿
+        # `widget_count` 可达 12（当时逻辑还不存在）⇒ 混进分布会让
+        # 护栏显示"4/8/12 个"⇒ **读者误以为降格没生效**（R659 陷阱）。
+        # ⚠️ 上线时刻**存在 s 里**而非全局变量：全局会被**下一次 summarize
+        #   调用污染**（R621纪律 18 的变体——那次是"改了不还原"，
+        #   这次是"跨调用残留"）⇒ 测试间与多次调用会互相串味。
+        "widget_cap_since": "",
+        "widget_hist_new": collections.Counter(),
         # R610：稳定币-only 零挂件（合规，不告警）——与上面失守桶分开计数，
         # 报表显性列出，避免"告警消失"被误读成观测被关掉。
         "zero_widget_stablecoin_only": 0,
@@ -1246,6 +1325,17 @@ def summarize(rows):
             # 真正的失守反而被淹没（R123 告警的第一次失效就是"狼来了"式失效）。
             # 故按tokens 判定：全为 FORCE_STRIP 词 → 归入合规桶，不进告警分母。
             wc = r.get("widget_count")
+            # R670：额度使用率分布（字段存在即计入，0 也是有效观测）
+            if isinstance(wc, int) and not _is_stablecoin_only(r.get("tokens")):
+                s["widget_hist"][wc] += 1
+                # R670：降格上线时刻 = 该字段最后一次出现 >3 的 ts。
+                # ★ 不写死日期常量——**从数据里取**（R659纪律）：
+                #   上限可配，改代码不会改常量；写死会在调参后立刻失真。
+                # ⚠️ **严格大于**分层线：分层线本身是"最后一个超限 ts"，
+                # 用 `>=` 会把那个超限篇收进"降格后"桶 ⇒ 护栏误报失效
+                _wts = r.get("ts") or ""
+                if _cap_since and _wts > _cap_since:
+                    s["widget_hist_new"][wc] += 1
             if wc == 0:
                 if _is_stablecoin_only(r.get("tokens")):
                     s["zero_widget_stablecoin_only"] += 1
@@ -3455,6 +3545,46 @@ def render_text(s, rows=None):
         if s.get("zero_widget_stablecoin_only"):
             lines.append(f"  ℹ️ 稳定币-only 零挂件 {s['zero_widget_stablecoin_only']} 篇"
                          f"（R316「稳定币不做挂件」契约 + R586 选稿跳过，不计失守）")
+        # R670：**挂件额度使用率**分布——零挂件告警的**互补面**。
+        # ★ 为什么要这一行：R123 只答"有没有失守"，**不答"额度用满了吗"**。
+        #   生产实测 92% 的帖只用 1~2 个（上限 3）——单看零挂件=0 一切正常，
+        #   读者**无法判断**这是"源文只提一个币"（正常）还是"漏织"（缺陷）。
+        # ⚠️ 已核实的三条结论（R670，避免下轮重复排查）：
+        #   ① 超限降格 R367 **已生效**（09-21 后 157 篇 max=3，无超限）
+        #   ② 未用满**不是缺陷**——抽样 6 篇零漏挂，源文只提 1~2 个币
+        #   ③ 唯一零挂件是 R316 契约（USDC 稳定币不做挂件）⇒ 已单列
+        # R670：**挂件额度使用率**——零挂件告警的**互补面**。
+        # ★ 为什么要这一行：R123 只答"有没有失守"，**不答"额度用满了吗"**。
+        #   绝大多数帖只用 1~2 个（上限 3）——单看零挂件=0 一切正常，
+        #   读者**无法判断**这是"源文只提一个币"（正常）还是"漏织"（缺陷）。
+        # ⚠️ **分母按「降格上线时刻」分层**（R659/R665 纪律）：
+        #   降格前的老稿 `widget_count` 可达 12（**当时逻辑还不存在**），
+        #   混进分布 ⇒ 护栏显示"4/8/12 个"⇒ **读者误以为降格没生效**。
+        _whn = s.get("widget_hist_new") or {}
+        if _whn:
+            _nn = sum(_whn.values())
+            _nle2 = sum(v for k, v in _whn.items() if k <= _WIDGET_CAP)
+            _nmax = max(_whn)
+            _nflag = "✅" if _nmax <= _WIDGET_CAP else "❌"
+            lines.append(
+                f"  📊 挂件额度使用（降格后 {_nn} 篇，**上限 {_WIDGET_CAP}**"
+                f"← main.py `MAX_TOKENS_PER_POST`）: "
+                + " · ".join(f"{k}个 {v}" for k, v in sorted(_whn.items()))
+                + f"　⇒ ≤2 个占 **{_nle2/_nn*100:.0f}%**")
+            lines.append(
+                f"     ↳ {_nflag} 近窗最大 **{_nmax}** 个"
+                + ("" if _nmax <= _WIDGET_CAP else "（**超限 ⇒ 降格失效**）")
+                + "　·未用满是常态（源文常只提 1~2 个币），抽样验证**零漏挂**"
+                f"⇒ **本行是使用率现状，不是缺陷告警**")
+        elif s.get("widget_hist"):
+            _whall = s.get("widget_hist") or {}
+            _wtot = sum(_whall.values())
+            _wover = sum(v for k, v in _whall.items() if k > _WIDGET_CAP)
+            lines.append(
+                f"  ❌ 挂件降格**未生效**：超上限（>{_WIDGET_CAP} 个）"
+                f"{_wover}/{_wtot} 篇**持续出现在末次超限之后**"
+                f"（时间聚集判据）⇒ 须查 `_cap_cashtag_widgets` 接线: "
+                + " · ".join(f"{k}个 {v}" for k, v in sorted(_whall.items())))
         # R125：零标签帖 = #Write2Earn 返佣归因丢失
         if s.get("zero_tag_posts"):
             lines.append(f"  ⚠️ 全文零标签 {s['zero_tag_posts']}/{n_pub} 篇——返佣归因丢失，需排查")

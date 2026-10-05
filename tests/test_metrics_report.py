@@ -6284,5 +6284,98 @@ class TestR668OrdinalHeadingGuardrail(unittest.TestCase):
                          "旧的序号示例必须移除，否则模型会继续照做")
 
 
+class TestR670WidgetCapGuardrail(unittest.TestCase):
+    """R670：挂件**额度使用率**护栏（零挂件告警的互补面）。
+
+    ★ 为什么要有这一行：R123 零挂件告警只答"有没有失守"，
+      **不答"额度用满了吗"**——绝大多数帖只用 1~2 个（上限 3），
+      单看零挂件=0 一切正常，读者**无法判断**是"源文只提一个币"（正常）
+      还是"漏织"（缺陷）。
+    ⚠️ **分母必须按「降格上线时刻」分层**（R659/R665 纪律）：
+      降格前的老稿 `widget_count` 可达 12（**当时逻辑还不存在**），
+      混进分布 ⇒ 护栏显示"4/8/12 个"⇒ **读者误以为降格没生效**。
+    ⭐ 上线时刻**从数据推导**而非写死日期（`MAX_TOKENS_PER_POST` 是 env 可配）。
+    """
+
+    @staticmethod
+    def _p(ts, wc, tokens=("BTC",)):
+        return {"platforms": ["binance"], "outcome": "binance_published",
+                "ts": ts, "hour_bj": 8, "content_id": ts, "source": "S",
+                "widget_count": wc, "tokens": list(tokens)}
+
+    def test_derives_cap_since_from_data(self):
+        rows = [self._p("2026-10-06T02:00:00+00:00", 8),
+                self._p("2026-10-06T03:00:00+00:00", 5),
+                self._p("2026-10-06T04:00:00+00:00", 2)]
+        got = mr._derive_widget_cap_since(rows)
+        self.assertEqual(got, "2026-10-06T03:00:00+00:00",
+                         "应取最后一个超限的 ts（降格失效的最后一刻）")
+
+    def test_no_oversize_returns_empty(self):
+        rows = [self._p("2026-10-06T02:00:00+00:00", 1),
+                self._p("2026-10-06T03:00:00+00:00", 3)]
+        self.assertEqual(mr._derive_widget_cap_since(rows), "",
+                         "全部未超限⇒ 返回空串⇒ 调用方**不做分层**")
+
+    def test_layers_by_cap_since(self):
+        rows = [self._p("2026-10-06T02:00:00+00:00", 9),     # 降格前
+                self._p("2026-10-06T03:00:00+00:00", 4),     # 降格前
+                self._p("2026-10-06T04:00:00+00:00", 1),     # 降格后
+                self._p("2026-10-06T05:00:00+00:00", 3)]     # 降格后
+        s = mr.summarize(rows)
+        self.assertEqual(s["widget_hist"][9], 1, "全史应含超限")
+        self.assertEqual(s["widget_hist_new"][9], 0,
+                         "★ 分层后**不得**含超限（否则误报降格失效）")
+        self.assertEqual(s["widget_hist_new"][3], 1)
+
+    def test_renders_ok_flag_when_within_cap(self):
+        rows = [self._p("2026-10-06T02:00:00+00:00", 9),
+                self._p("2026-10-06T04:00:00+00:00", 2),
+                self._p("2026-10-06T05:00:00+00:00", 3)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("挂件额度使用", text)
+        self.assertIn("降格后", text, "必须标明分层")
+        self.assertIn("✅", text, "近窗 max=3 ⇒ 应为 ✅")
+        self.assertNotIn("❌", text, "降格后无超限⇒ 不得报失效")
+
+    def test_reports_failure_when_still_over_cap(self):
+        """★ 真有**持续**超限（末次超限之后还有）⇒ 必须报失效。
+
+        ⚠️ 判据的演进（实测三次才做对）：
+          ① 只取"最后一个超限 ts" ⇒ 若一直失效，那个 ts 就是最新
+             ⇒ 分层把超限全排除 ⇒ **永不报警**（盲区）
+          ② 加"超限占比 > 5% 就不分层" ⇒ **生产实测占比 6.4%**
+             ⇒ 把**已生效**的降格报成失效（假告警）
+          ③ ★ **正解：同口径比「超限 vs 超限」**——
+             末次超限 ts 之后**还有超限** ⇒ 降格未生效。
+          ⚠️ ② 踩了纪律 11「并列信号不能共用分母」：
+             分子数"之后的全部行"、分母数"全部行" ⇒ 比值天然偏大。
+        """
+        rows = [self._p("2026-10-06T02:00:00+00:00", 2),   # 合规
+                self._p("2026-10-06T03:00:00+00:00", 9),   # 超限
+                self._p("2026-10-06T04:00:00+00:00", 7)]   # ★ 末次之后仍超限
+        s = mr.summarize(rows)
+        self.assertEqual(s["widget_cap_since"], "",
+                         "末次超限之后仍有超限 ⇒ 不可分层")
+        text = mr.render_text(s, rows)
+        self.assertIn("❌", text)
+        self.assertIn("降格**未生效**", text)
+
+    def test_stablecoin_excluded_from_hist(self):
+        """★ 稳定币-only 的零挂件是**合规**（R316）⇒ 不进使用率分母"""
+        rows = [self._p("2026-10-06T02:00:00+00:00", 0, tokens=("USDC",))]
+        s = mr.summarize(rows)
+        self.assertEqual(s["widget_hist"][0], 0,
+                         "稳定币-only 不应计入使用率分布")
+
+    def test_does_not_reference_main_constant(self):
+        """★ 不得引用 main 的常量（不import main⇒ NameError 而编译仍过）"""
+        src = open(mr.__file__, encoding="utf-8").read()
+        i = src.index("挂件额度使用")
+        blk = src[i - 600:i + 400]
+        self.assertNotIn("MAX_TOKENS_PER_POST)", blk,
+                         "不可把 main 的常量插进 f-string")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
