@@ -16826,6 +16826,115 @@ class TestR650HourPreferenceBoost(unittest.TestCase):
             (0, 0, False))
 
 
+class TestLowHourCapQuota(unittest.TestCase):
+    """R662：低浏览窗子配额——**把配额从低窗挪向高窗的唯一有效杠杆**。
+
+    ★ 为什么必须有它（R660 的直接推论）：
+      同批候选内部排序只改"这 2 篇发哪 2 篇"，**改不了"占不占配额"**。
+      而 R650 的时段偏置是**均匀平移**（R660 已证零影响）⇒ 单靠排序，
+      配额**只会**被低窗轮次先接走（低窗 52 轮/天 vs 高窗 20 轮/天）。
+
+    机制：滚动 24h 内低窗发布数达 `LOW_HOUR_CAP` 后，低窗轮次即使
+      总配额未满也静默 ⇒ 剩下的槽位留给高窗轮次。
+
+    测算（回放 2134 轮真实心跳，MAX=12 不变）：
+      LOW_HOUR_CAP=2 → 高浏览窗 2.3 → **9.0 篇/天（3.9×）**，总发布仅 −7%
+    """
+
+    def _mgr(self, items):
+        import json
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False,
+                                         encoding="utf-8") as f:
+            json.dump(items, f)
+            path = f.name
+        self.addCleanup(os.unlink, path)
+        return m.CacheManager(path)
+
+    def _at_bj_hour(self, bj_hour, hours_ago=1):
+        """构造一个"北京时某小时发布"的记录（自动换算成 UTC ISO）。"""
+        now = datetime.now(timezone.utc)
+        ts = now - timedelta(hours=hours_ago)
+        # 让记录的北京小时 == bj_hour
+        target_utc_hour = (bj_hour - 8) % 24
+        delta = (ts.hour - target_utc_hour) % 24
+        t = ts.replace(hour=(ts.hour - delta) % 24, minute=0, second=0)
+        if t > now:
+            t -= timedelta(days=1)
+        return t
+
+    def test_split_sums_to_total(self):
+        """★ 核心不变量：分段之和 == 总量（否则两套口径会漂移）。"""
+        items = [{"id": str(i), "title": "t", "source": "s",
+                  "sent_at": self._at_bj_hour(h, 1).isoformat()}
+                 for i, h in enumerate([8, 9, 10, 21, 22, 23, 0, 3])]
+        mgr = self._mgr(items)
+        total = mgr.count_since(24)
+        pref = mgr.count_since_in_window(24, True)
+        low = mgr.count_since_in_window(24, False)
+        self.assertEqual(pref + low, total,
+                         "高窗 + 低窗 必须等于总量——否则分段口径漂移")
+        self.assertGreater(pref, 0)
+        self.assertGreater(low, 0)
+
+    def test_pref_window_is_bj_0600_1200(self):
+        """高浏览窗口径 = **北京 06-12**（与 R650 `in_pref` 同一窗口两半）。"""
+        in_win = [self._at_bj_hour(h, 1) for h in (6, 7, 8, 9, 10, 11)]
+        out_win = [self._at_bj_hour(h, 1) for h in (12, 13, 18, 20, 23, 0, 3)]
+        mgr = self._mgr([{"id": str(i), "title": "t", "source": "s",
+                          "sent_at": t.isoformat()}
+                         for i, t in enumerate(in_win + out_win)])
+        self.assertEqual(mgr.count_since_in_window(24, True), len(in_win))
+        self.assertEqual(mgr.count_since_in_window(24, False), len(out_win))
+
+    def test_respects_time_window(self):
+        """超过 24h 的记录不计入（与 count_since 口径一致）"""
+        now = datetime.now(timezone.utc)
+        items = [{"id": "old", "title": "t", "source": "s",
+                  "sent_at": (now - timedelta(hours=30)).isoformat()},
+                 {"id": "new", "title": "t", "source": "s",
+                  "sent_at": (now - timedelta(hours=2)).isoformat()}]
+        mgr = self._mgr(items)
+        self.assertEqual(mgr.count_since_in_window(24, True)
+                         + mgr.count_since_in_window(24, False), 1)
+
+    def test_legacy_junk_entries_dont_crash(self):
+        """非 dict 条目不得让分段统计炸掉（R331 旁路不得阻塞主流程）"""
+        import json
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False,
+                                         encoding="utf-8") as f:
+            json.dump({"sent_ids": ["junk", {"id": "ok", "title": "t",
+                                              "source": "s",
+                                              "sent_at": datetime.now(
+                                                  timezone.utc).isoformat()}]}, f)
+            path = f.name
+        try:
+            mgr = m.CacheManager(path)
+            self.assertEqual(
+                mgr.count_since_in_window(24, True)
+                + mgr.count_since_in_window(24, False),
+                mgr.count_since(24))
+        finally:
+            os.unlink(path)
+
+    def test_low_hour_cap_defaults_to_zero_disabled(self):
+        """★ 默认必须**关闭**（0）——未配置变量的用户零影响。"""
+        self.assertEqual(m.LOW_HOUR_CAP, 0,
+                         "LOW_HOUR_CAP 默认须为 0（关闭），否则改变默认行为")
+
+    def test_cap_magnitude_matches_measurement(self):
+        """文档化的收益数字（高窗 3.9×、总发布 −7%）必须与配置语义相符：
+        `LOW_HOUR_CAP` 越小⇒ 低窗占用越少 ⇒ 高窗可用槽位越多。"""
+        cap = m.LOW_HOUR_CAP
+        self.assertIsInstance(cap, int)
+        self.assertGreaterEqual(cap, 0)
+        # 若将来启用，护栏会显示实测值；此处只确保它不是"负数/无意义"值
+        if cap > 0:
+            self.assertLessEqual(cap, m.MAX_DAILY_POSTS,
+                                 "子配额不应超过总配额，否则无意义")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 

@@ -1043,6 +1043,10 @@ def summarize(rows):
         "sel_candidates": 0, "sel_published": 0, "sel_unprocessed": 0,
         # R656：高浏览窗 vs 其他时段的「选稿供给 vs 实际发出」（见累加处注释）
         "by_hour_sel": None,
+        # R662：低浏览窗子配额阻断（`LOW_HOUR_CAP`）——必须与"配额饱和"分开记，
+        # 否则两者在遥测上都是"没发帖"，**无法回答"额度到底被谁吃了"**
+        "low_hour_blocked": 0, "low_hour_cap": None,
+        "low_hour_sent_last": None, "low_hour_bj_hours": collections.Counter(),
         "candidates": 0, "published": 0, "unprocessed": 0,
         "skips": collections.Counter(), "last_trending": "",
         "token_limit_bypass": 0,  # R215：限流高影响放行计数（拦截的另一半）
@@ -1616,6 +1620,25 @@ def summarize(rows):
             # 后者会把"非饱和但真没稿"错算进选稿轮。
             _entered = bool(cand or pub or unproc)
             runs_tmp["selection_runs" if _entered else "quota_earlyexit_runs"] += 1
+            # R662：低窗子配额阻断**独立计数**——它与"配额饱和"都是"没发帖"，
+            # 若不分开，护栏会把"额度被低窗吃掉"显示成"额度用完了"，
+            # 而这两者的处置完全相反（前者调 LOW_HOUR_CAP，后者调 MAX）。
+            # ⚠️ `low_hour_cap` 必须**每轮都落**（不只阻断轮）——
+            # 否则"已启用但零阻断"这一状态**没有任何证据**，
+            # 护栏会误判为"未启用"（R612：沉默不是通过）。
+            if r.get("low_hour_cap") is not None:
+                _lc = r.get("low_hour_cap")
+                if isinstance(_lc, (int, float)):
+                    runs_tmp["low_hour_cap"] = _lc
+            if r.get("low_hour_blocked") is True:
+                runs_tmp["low_hour_blocked"] += 1
+                _lsn = r.get("low_hour_sent")
+                if isinstance(_lsn, (int, float)):
+                    runs_tmp["low_hour_sent_last"] = _lsn
+                try:
+                    runs_tmp["low_hour_bj_hours"][int(r.get("low_hour_bj_hour"))] += 1
+                except (TypeError, ValueError):
+                    pass
             if _entered:
                 runs_tmp["sel_candidates"] += cand
                 runs_tmp["sel_published"] += pub
@@ -2487,6 +2510,36 @@ def render_text(s, rows=None):
         lines.append(f"- 运行摘要（{runs['n']} 轮）: {' / '.join(parts)}"
                      f"，累计候选 {runs['candidates']} → 发布 {runs['published']}"
                      + (f"（未处理 {runs['unprocessed']}）" if runs.get("unprocessed") else ""))
+        # R662：低窗子配额阻断**必须单列**——它和"配额饱和"都是"没发帖"，
+        # 混在一个数字里就无法回答"额度到底被谁吃了"，
+        # 而两者处置完全相反（调 LOW_HOUR_CAP vs 调 MAX_DAILY_POSTS）。
+        _lhb = runs.get("low_hour_blocked", 0)
+        if _lhb:
+            _lc2 = runs.get("low_hour_cap")
+            _lsl = runs.get("low_hour_sent_last")
+            _bjh = runs.get("low_hour_bj_hours") or {}
+            _top_bj = _bjh.most_common(3)
+            lines.append(
+                f"  ⏸️ **低浏览窗子配额阻断 {_lhb}/{runs['n']} 轮**"
+                + (f"（上限 {_lc2}，末次低窗已发 {_lsl}）" if _lc2 is not None else "")
+                + "：这些轮次**总配额未满**却主动静默，"
+                "把额度让给高浏览窗（北京 06-12）")
+            if _top_bj:
+                lines.append(
+                    f"     ↳ 阻断发生的北京小时: "
+                    + "、".join(f"{h}时×{c}" for h, c in _top_bj)
+                    + "　—— 用于核对「让渡是否发生在该让的时段」")
+            lines.append(
+                f"     ↳ 判读：`LOW_HOUR_CAP` 当前"
+                + (f" = {_lc2}" if _lc2 is not None else "= **未启用**")
+                + "。设为 0 则本机制关闭；"
+                "实测回放 2134 轮心跳，=2 时高浏览窗 2.3 → 9.0 篇/天（3.9×）"
+                  "且总发布仅 −7%")
+        elif runs.get("low_hour_cap") is not None:
+            lines.append(
+                f"  ℹ️ 低窗子配额上限 = {runs['low_hour_cap']}，"
+                f"但本窗口**零阻断**（若上限偏高或高窗轮次没跑到，"
+                f"都会是零——**不可据此判机制无效**）")
         # R653：**真实漏斗**。上一行把"配额饱和 1777 轮"与"候选 12833"并列，
         # 看起来像"排了 12833 条只发出 286 条（效率 2.2%）"——**这是误读**：
         # 那 1777 轮在配额检查处**提前 return**，候选/发布/未处理全是 0，

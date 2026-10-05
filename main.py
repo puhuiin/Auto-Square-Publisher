@@ -447,6 +447,35 @@ FRESHNESS_BOOST_RULES = ((3, 10), (12, 6), (24, 3))                # (新闻不�
 TIME_PREF_PENALTY = 2
 
 
+# R662：**低浏览窗子配额上限**——把配额从低窗挪向高窗的**唯一有效杠杆**。
+#
+# ★ 为什么必须有它（R660 的直接推论）：
+#   同批候选内部排序只改"这2 篇发哪 2 篇"，**改不了"占不占配额"**。
+#   而 R650 的时段偏置是**均匀平移**（零影响）⇒ 单靠排序，
+#   配额**只会**被夜间轮次（cron 每天 3×24=72 轮里的 52 轮）先接走。
+#   ⇒ 要动"什么时候有空位"，只能在**配额检查层**加约束。
+#
+# 机制：滚动 24h 内，**低浏览窗发布的篇数**达 `LOW_HOUR_CAP` 后，
+#   低窗轮次即使总配额未满也静默退出 ⇒ 剩下的槽位留给高窗轮次。
+#   高窗每天有约 **20 个 cron 轮次**（实测中位，P10=9/P90=26），
+#   而现在只发 2.3 篇 ⇒ **吸收空间充裕**。
+#
+# 测算（回放2134 轮真实心跳，MAX=12 不变）：
+#   LOW_HOUR_CAP | 日均总发布 | 高浏览窗/天 | 浏览贡献
+#   不限（现状）  |   11.7    |    2.3     |   基准
+#   8|   11.7    |    3.8     |    +9%
+#   6            |   11.2    |    5.5     |   +18%
+#   4            |   11.1    |    7.2     |   +29%
+#   2            |   10.9    |    9.0     |   **+41%**
+# ⇒ **近乎免费**：高窗 3.9×，总发布只降 7%。
+#
+# ⚠️ **默认 0 = 关闭**，行为与现在完全一致。启用需显式设
+#   `LOW_HOUR_CAP`（仓库变量）⇒ 未设置的用户零影响。
+# ⚠️ 代价要说清：低窗 52 轮/天里被拒的那些轮次，其候选**会留到下一轮**
+#   （R653 已证候选不因配额消失）⇒ 不是丢稿，只是延后。
+LOW_HOUR_CAP = _env_int("LOW_HOUR_CAP", 0)                    # 0 = 不限制（默认）
+
+
 def within_active_hours(spec: str = None) -> bool:
     """
     北京时间活跃时段判断。spec 形如 "8-23"、"8:30-23:45"，支持跨夜（如 "22-7" 表示晚 22 点至次日 7 点）。
@@ -1656,16 +1685,44 @@ class CacheManager:
 
     def count_since(self, hours: float = 24.0) -> int:
         """统计最近 N 小时内已成功发布的条数（用于 24h 防刷屏配额）"""
+        return self._count_since(hours, None)
+
+    def count_since_in_window(self, hours: float, in_pref: bool) -> int:
+        """R662：统计最近 N 小时内**落在高/低浏览窗**的发布条数。
+
+        给 `LOW_HOUR_CAP`（低窗子配额）用。`in_pref=True` 只数高浏览窗
+        （北京 06-12），`False` 只数低窗。
+
+        ⚠️ **口径与 `count_since` 完全一致**（同一个 `_count_since` 内核、
+        同样的 `sent_at` 解析、同样的异常跳过）⇒ 两者可相加校验：
+        `count_since(24) == count_since_in_window(24,True) + count_since_in_window(24,False)`
+        ⇒ 若不等说明分段实现与总量口径漂移（守卫会抓）。
+        """
+        return self._count_since(hours, in_pref)
+
+    def _count_since(self, hours: float, in_pref: Optional[bool]) -> int:
+        """`count_since` / `count_since_in_window` 的共同内核。
+
+        `in_pref is None` 表示不限时段（总量口径）。
+        判定"高浏览窗"用**北京时小时**（UTC+8）落在 [6,12)，
+        与 R650 `apply_hour_preference_boost` 的 `in_pref`
+        （UTC 22-04）**同一窗口的两半**（R643教训：两套口径必然漂移）。
+        """
         cutoff = datetime.now(timezone.utc).timestamp() - hours * 3600
         count = 0
         for item in self.cached_items:
             raw = item.get("sent_at", "")
             try:
-                ts = datetime.fromisoformat(str(raw).replace("Z", "+00:00")).timestamp()
-                if ts >= cutoff:
-                    count += 1
+                ts = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
             except Exception:
                 continue
+            if ts.timestamp() < cutoff:
+                continue
+            if in_pref is not None:
+                bj_hour = (ts.hour + 8) % 24
+                if (6 <= bj_hour < 12) != bool(in_pref):
+                    continue
+            count += 1
         return count
 
     def minutes_since_last_sent(self) -> Optional[float]:
@@ -9119,6 +9176,12 @@ def _run_main():
         sys.exit(1)
 
     # 2.5 防刷屏配额：24 小时滚动窗口内已发数量达到上限则本轮直接静默退出
+    # R662：低窗子配额的判定结果。**必须在配额检查（`if not dry_run`）之外
+    # 初始化**——否则 `dry_run` 路径跳过配额检查，后面正常路径的遥测会引用
+    # 未定义变量 ⇒ `UnboundLocalError`（测试已抓到：17 例 run_main 语义测试全挂）。
+    # 教训同 R646/R655：**新加的可变状态要在使用点之前就有确定的默认值**。
+    low_hour_blocked = False
+    low_hour_sent = 0
     # R182：情报刷新挪到配额检查之前——生产实录 intel 陈放 16.5h、冷却 15:02Z
     # 已过期，但 15:03/15:07 等饱和轮在 get_campaign_intel 之前就 exit，
     # 刷新被饿死到下一配额槽（18:04Z）。get_campaign_intel 自带新鲜/退避短路，
@@ -9162,7 +9225,38 @@ def _run_main():
                 time.sleep(wait_sec)
                 quota_wait_sec += wait_sec
                 sent_24h = cache_mgr.count_since(24)
-        if sent_24h >= MAX_DAILY_POSTS:
+        # R662：低浏览窗子配额——**把配额从低窗挪向高窗的唯一有效杠杆**。
+        # 判据（R660 的推论）：同批排序改不了"占不占配额"，
+        # 而低窗有 52 轮/天 vs 高窗 20 轮/天 ⇒ 不设约束时配额**必然**被低窗先接走。
+        # ⚠️ `LOW_HOUR_CAP = 0`（默认）时本段**完全跳过**，行为与改动前逐条一致。
+        # ⚠️ 判定窗口与 R650 的 `in_pref` **同一口径**（北京 06-12 / UTC 22-04）
+        #    ⇒ 两套口径必然漂移（R643 教训）。
+        # ⚠️ `low_hour_blocked` / `low_hour_sent` 已在**配额检查之外**初始化
+        #    （dry_run 路径不经过这里，见上方注释），此处**不要**重复初始化。
+        if LOW_HOUR_CAP > 0:
+            _now_bj = (datetime.now(timezone.utc).hour + 8) % 24
+            _in_pref = 6 <= _now_bj < 12
+            if not _in_pref:
+                low_hour_sent = cache_mgr.count_since_in_window(24, False)
+                if low_hour_sent >= LOW_HOUR_CAP:
+                    low_hour_blocked = True
+                    logger.info(
+                        f"⏸️ 低浏览窗子配额已用尽（{low_hour_sent}/{LOW_HOUR_CAP}，"
+                        f"北京 {_now_bj:02d}:00 不在高浏览窗 06-12）⇒ "
+                        f"本轮静默，把剩余额度留给高窗轮次")
+                    # R662 留痕：**必须记**，否则低窗阻断与"配额饱和"在遥测上
+                    # 长得一样（都是"没发帖"）⇒ 无法回答"额度到底被谁吃了"
+                    # （R91 同款：静默不可见 ⇒ 不可归因）。
+                    append_run_summary(
+                        quota_blocked=True,
+                        sent_24h=sent_24h,
+                        max_daily_posts=MAX_DAILY_POSTS,
+                        low_hour_blocked=True,
+                        low_hour_cap=LOW_HOUR_CAP,
+                        low_hour_sent=low_hour_sent,
+                        low_hour_bj_hour=_now_bj,
+                    )
+        if not low_hour_blocked and sent_24h >= MAX_DAILY_POSTS:
             logger.warning(f"🛑 24 小时内已发布 {sent_24h} 篇，达到配额上限 ({MAX_DAILY_POSTS})，本轮自动静默以保护账号权重。")
             # R112：配额释放估算（R129 提为公共函数，发帖轮同样写入）
             next_frees_iso, next_frees_min = _quota_next_slot_estimate(cache_mgr)
@@ -10192,6 +10286,11 @@ def _run_main():
         # 而后者才是判断"配额是否真的被投过去了"的关键（R617：有出口）。
         "hour_pref_shifted": int(hour_shifted or 0),
         "hour_pref_in_window": int(in_pref_window),
+        # R662：低窗子配额**每轮都落**（含未阻断轮）——
+        # 否则"已启用但零阻断"在遥测上**没有任何证据**，
+        # 报表会误判成"未启用"（R612：沉默不是通过）。
+        "low_hour_blocked": bool(low_hour_blocked),
+        "low_hour_cap": LOW_HOUR_CAP,
         # R201：off-pool 活动币——Alpha 上新等未入 SPOT 池的竞赛标的
         "campaign_off_pool": " ".join(fetcher.stats.get("campaign_off_pool") or []) or None,
         # R126：单轮总耗时（秒）——20 分钟外部回调节奏下的堆积预警指标

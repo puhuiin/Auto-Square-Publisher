@@ -5795,5 +5795,85 @@ class TestR661BoostEffectivenessAudit(unittest.TestCase):
         self.assertEqual(mr._boost_effectiveness_from_main("不存在.py"), {})
 
 
+class TestR662LowHourCapGuardrail(unittest.TestCase):
+    """R662：低窗子配额阻断的护栏。
+
+    ★ 为什么必须**独立**计数（R662 的核心）：
+      "低窗子配额阻断"与"配额饱和"在遥测上都是"没发帖"。
+      若混在一个数字里，护栏会把"额度被低窗吃掉"显示成"额度用完了"，
+      而这两者的处置**完全相反**：
+        低窗阻断 ⇒ 调 `LOW_HOUR_CAP`（挪配额结构）
+        配额饱和 ⇒ 调 `MAX_DAILY_POSTS`（总量）
+    ⇒ 判据同 R611「并列信号不能共用分母」。
+
+    实测收益（回放 2134 轮真实心跳，MAX=12 不变）：
+      `LOW_HOUR_CAP=2` → 高浏览窗 2.3 → **9.0 篇/天（3.9×）**、总发布仅 −7%
+    依据：**高窗每天约 20 个 cron 轮次**（实测中位，P10=9/P90=26），
+    而现在只发 2.3 篇 ⇒ 吸收空间充裕。
+    """
+
+    @staticmethod
+    def _blocked(ts, bj):
+        return {"outcome": "run_summary", "ts": ts, "quota_blocked": True,
+                "sent_24h": 5, "max_daily_posts": 12,
+                "low_hour_blocked": True, "low_hour_cap": 2,
+                "low_hour_sent": 2, "low_hour_bj_hour": bj}
+
+    @staticmethod
+    def _ok(ts, bj=11):
+        return {"outcome": "run_summary", "ts": ts, "quota_blocked": False,
+                "sent_24h": 5, "max_daily_posts": 12, "candidates": 300,
+                "published": 2, "unprocessed": 298, "hour_bj": bj}
+
+    def test_counts_low_hour_blocked_separately(self):
+        rows = [self._blocked("2026-10-06T01:00:00+00:00", 22),
+                self._blocked("2026-10-06T02:00:00+00:00", 23),
+                self._ok("2026-10-06T03:00:00+00:00")]
+        runs = mr.summarize(rows)["runs"]
+        self.assertEqual(runs["low_hour_blocked"], 2)
+        # ★ 关键：不得把它算进"配额饱和"以外的语义里，也不该与quota_blocked 混算
+        self.assertEqual(runs["low_hour_cap"], 2)
+        self.assertEqual(runs["low_hour_sent_last"], 2)
+
+    def test_blocked_rounds_not_counted_as_selection(self):
+        """低窗阻断轮**没有进入选稿**⇒ 不该进selection_runs"""
+        rows = [self._blocked("2026-10-06T01:00:00+00:00", 22),
+                self._ok("2026-10-06T03:00:00+00:00")]
+        runs = mr.summarize(rows)["runs"]
+        self.assertEqual(runs["selection_runs"], 1, "只有真正选稿的那轮计入")
+        self.assertEqual(runs["low_hour_blocked"], 1)
+
+    def test_renders_blocked_line(self):
+        rows = [self._blocked("2026-10-06T01:00:00+00:00", 22),
+                self._ok("2026-10-06T03:00:00+00:00")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("低浏览窗子配额阻断", text)
+        self.assertIn("总配额未满", text,
+                      "必须说清这是**主动让渡**而非额度用完")
+
+    def test_renders_blocked_hour_histogram(self):
+        """必须显示"让渡发生在哪些小时"——用于核对是否让在该让的时段"""
+        rows = [self._blocked("2026-10-06T01:00:00+00:00", 22),
+                self._blocked("2026-10-06T02:00:00+00:00", 22),
+                self._ok("2026-10-06T03:00:00+00:00")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("阻断发生的北京小时", text)
+        self.assertIn("22时×2", text)
+
+    def test_zero_blocked_says_cannot_judge(self):
+        """启用但零阻断 ⇒ 必须说"不可据此判机制无效"（R612）"""
+        rows = [dict(self._ok("2026-10-06T03:00:00+00:00"),
+                     low_hour_cap=2, low_hour_blocked=False)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("零阻断", text)
+        self.assertIn("不可据此判机制无效", text)
+
+    def test_disabled_when_no_field(self):
+        """未启用（无low_hour_cap 字段）⇒ 不渲染阻断行，零噪音"""
+        rows = [self._ok("2026-10-06T03:00:00+00:00")]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertNotIn("低浏览窗子配额阻断", text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
