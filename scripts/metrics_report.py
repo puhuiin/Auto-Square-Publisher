@@ -909,6 +909,15 @@ def summarize(rows):
         "tail_conflict_n": 0,
         # R664：已发布回执的加权标记构成（⚠️ 构成比，**不是命中率**）
         "boosted_by_tags": collections.Counter(), "boosted_by_total": 0,
+        # R665：加权「量级」是否够改变排序——R661 的**结构**判据之外的第二道。
+        # ★ 判据：加权幅度必须**大于**同批候选的**相邻分差**，
+        #   否则即便"只给部分候选加分"（结构判据通过），
+        #   也**跨不过一个名次** ⇒ 结构有效 ≠ 有效果（R660 同型）。
+        # ⚠️ 分母必须**按上线时刻分层**（R659/R641）：
+        #   `base_impact_score` 是 R617 才加的字段，上线前的旧稿全部没有它，
+        #   若混入分母会算出"97% 覆盖失败"的**假缺口**（我差点这么判）。
+        "boost_mag_n": 0, "boost_mag_nonzero": 0,
+        "boost_mag_values": [], "boost_mag_neg": 0,
         # R649：prompt 三条内容红线的合规分子/分母（同 bool口径，见 ending_q）
         "dash_ok_n": 0, "dash_ok_d": 0,
         "hype_ok_n": 0, "hype_ok_d": 0,
@@ -1411,6 +1420,20 @@ def summarize(rows):
                 for _tg in [x.strip() for x in _bbt.split(",") if x.strip()]:
                     s["boosted_by_tags"][_tg] += 1
                 s["boosted_by_total"] += 1
+            # R665：加权**量级**——`base→impact` 差值 = 各路加权实际加的总分。
+            # ⚠️ `base_impact_score` 是 R617 才加的字段 ⇒ 分母**只算有它的新稿**，
+            #    混入上线前的旧稿会算出"97% 覆盖失败"的**假缺口**
+            #    （我差点这么判，R641/R659 同款）。
+            _bse = _num(r.get("base_impact_score"))
+            _isc = _num(r.get("impact_score"))
+            if _bse is not None and _isc is not None:
+                s["boost_mag_n"] += 1
+                _d = _isc - _bse
+                s["boost_mag_values"].append(_d)
+                if abs(_d) > 1e-9:
+                    s["boost_mag_nonzero"] += 1
+                if _d < -1e-9:
+                    s["boost_mag_neg"] += 1
             if isinstance(r.get("ending_question"), bool):
                 s["ending_q_marked"] += 1
                 if r["ending_question"]:
@@ -2200,6 +2223,33 @@ def _parse_main_ast(main_path=None):
     return tree
 
 
+def _natural_score_gaps(rows):
+    """R665：自然候选 `impact_score` 的**相邻唯一值间距**（排序分差的中位）。
+
+    ★ 这是"加权要跨过多少个名次"的基准线：
+    若候选分只有 …20、21、22…，相邻间距 1 分 ⇒ 加 4 分能跨 4 个名次；
+    若分很稀（…20、28…，间距 8）⇒ 加 4 分**连一个名次都跨不过**。
+
+    ⚠️ **必须排除人工置顶种子**（`PRIORITY_SEED_SCORE=999`，R661）：
+    否则稀疏度被它撑大，会把"幅度够不够"**判反**。
+    ⚠️ 只用**已发布回执**的分（这是我们能观测到的分布），
+    **不是当轮全部候选**（那没有落盘）⇒ 属**下界估计**，须在渲染里说明。
+    """
+    vals = []
+    for r in rows or []:
+        if r.get("outcome") != "binance_published":
+            continue
+        if str(r.get("source") or "").startswith("priority_seed"):
+            continue
+        v = _num(r.get("impact_score"))
+        if v is not None:
+            vals.append(v)
+    if len(vals) < 3:
+        return []
+    u = sorted(set(vals))
+    return sorted(u[i + 1] - u[i] for i in range(len(u) - 1))
+
+
 def _boost_effectiveness_from_main(main_path=None):
     """R661：AST 判定**每个改`impact_score` 的加权是否真的区分候选**。
 
@@ -2730,6 +2780,49 @@ def render_text(s, rows=None):
                     f"     ↳ ℹ️ `boosted_by` **零观测**（R664 刚上线，老回执无此字段）"
                     f"⇒ **加权是否真影响选中，当前无法判定**"
                     f"——别把上面的「命中数」当生效证明（R660 同型风险）")
+        # R665：加权**量级**够不够跨名次。
+        # ★ 挂在**回执域**（不依赖 `runs`）——它的数据源是已发布回执，
+        #   若挂在上面的 `if runs.get("boost_runs")` 内，纯发文场景
+        #   **整段不渲染**（我首版就这么挂在 `if _ffp:` 内，被测试抓到）
+        #   ⇒ **判读面板不能被不相干条件门控**（R643 同款）。
+        _bmn = s.get("boost_mag_n") or 0
+        if _bmn:
+            _nz = s.get("boost_mag_nonzero") or 0
+            _vv = [abs(v) for v in (s.get("boost_mag_values") or [])
+                   if abs(v) > 1e-9]
+            _ng = s.get("boost_mag_neg") or 0
+            _med_b = sorted(_vv)[len(_vv) // 2] if _vv else 0
+            lines.append(
+                f"  📐 加权**量级**（R617 后新稿 {_bmn} 篇）: "
+                f"命中加权 {_nz} 篇（{_nz/_bmn*100:.0f}%），"
+                f"实际加分数中位 **{_med_b:g}**"
+                + (f"，其中 **{_ng} 篇被减分**（浏览加权降权，方向相反，R611）"
+                   if _ng else ""))
+            _gg = _natural_score_gaps(rows)
+            if _gg:
+                _med_g = _gg[len(_gg) // 2]
+                _rat = (_med_b / _med_g) if _med_g else 0
+                if _med_b >= _med_g:
+                    lines.append(
+                        f"     ↳ 同批候选相邻分差中位 **{_med_g:g}** ⇒ "
+                        f"加权能跨过约 **{_rat:.1f} 个名次**"
+                        f"　⇒ **量级足够**（与 R650 的 -2 分均匀平移完全不同）")
+                else:
+                    lines.append(
+                        f"     ↳ ⚠️ 同批候选相邻分差中位 **{_med_g:g}** > "
+                        f"加权幅度 **{_med_b:g}** ⇒ **跨不过一个名次**"
+                        f"⇒ 即便 R661 的结构判据通过，**实际也改不了排序**"
+                        f"（R660 同型：结构有效≠有效果）")
+                lines.append(
+                    f"     ↳ ⚠️ **下界估计**：分差取自**已发布回执**的分"
+                    f"（不是当轮全部候选，那没落盘）⇒ "
+                    f"真实候选池更密 ⇒ 实际能跨的名次**可能更少**")
+        elif s.get("boost_mag_values") is not None and s.get("total"):
+            lines.append(
+                f"  ℹ️ 加权**量级**：**无法判定**——"
+                f"`base_impact_score` 零覆盖（R617 才加的字段，老回执没有）"
+                f"⇒ 这**不是缺口**而是**分母不存在**，"
+                f"**不可与「字段未落盘」混为一谈**（R612）")
         if runs.get("last_campaign_off_pool"):
             lines.append(f"  🪙 活动币 off-pool: {runs['last_campaign_off_pool']}")
         # R196：饱和轮情报陈旧度——配额期实际在用多旧的情报

@@ -6059,5 +6059,93 @@ class TestR664BoostedByAttribution(unittest.TestCase):
         self.assertEqual(sorted(item["_boosted_by"]), ["campaign", "hot"])
 
 
+class TestR665BoostMagnitudeEnough(unittest.TestCase):
+    """R665：★ 加权「量级」够不够跨名次——结构判据之外的第二道。
+
+    ★ 为什么需要第二道（R661 只判了结构）：
+      R661 用 AST 确认 4 个加权**只给部分候选加分**（结构有效），
+      但**结构有效不蕴含**真的改变了排序——
+      若加权幅度**小于同批候选的相邻分差**，
+      加了分也**跨不过一个名次** ⇒ 结构通过、行为没变（R660 同型）。
+
+    ★ 实测结论（正面）：
+      加权幅度 **4~5 分** vs 同批分差中位 **1 分** ⇒ **能跨约 5 个名次**
+      ⇒ 4 个加权**真有效**。与 R650 的 -2 分（均匀平移 + 4.2% 效力）形成
+      鲜明对比：那个是**双重无效**。
+
+    ⚠️ 口径：分母**只算有 `base_impact_score` 的新稿**（R617 上线后）——
+    混入上线前的旧稿会算出"97% 覆盖失败"的**假缺口**
+    （**我差点这么判**，R641/R659 同款）。
+    """
+
+    @staticmethod
+    def _post(ts, base, impact, src="S"):
+        return {"platforms": ["binance"], "outcome": "binance_published",
+                "ts": ts, "hour_bj": 8, "content_id": ts, "source": src,
+                "base_impact_score": base, "impact_score": impact,
+                "final_preview": "x"}
+
+    def test_gaps_exclude_priority_seed(self):
+        """★ 必须排除人工置顶种子（999）——否则稀疏度被撑大、判据会判反"""
+        rows = [self._post("2026-10-06T02:%02d:00+00:00" % i, 20 + i, 20 + i)
+                for i in range(5)]
+        rows.append(self._post("2026-10-06T03:00:00+00:00", 999, 1007,
+                               src="priority_seed:bitget-hack"))
+        gaps = mr._natural_score_gaps(rows)
+        self.assertTrue(gaps)
+        self.assertLessEqual(max(gaps), 2,
+                             "种子 999 不得把相邻间距撑大（会让判据判反）")
+
+    def test_gaps_need_enough_samples(self):
+        self.assertEqual(mr._natural_score_gaps([]), [])
+        self.assertEqual(mr._natural_score_gaps(
+            [self._post("2026-10-06T02:00:00+00:00", 20, 20)]), [])
+
+    def test_magnitude_measured_from_base_to_impact(self):
+        rows = [self._post("2026-10-06T02:00:00+00:00", 20, 25),   # +5
+                self._post("2026-10-06T02:01:00+00:00", 20, 20),   # 0
+                self._post("2026-10-06T02:02:00+00:00", 20, 15)]   # -5
+        s = mr.summarize(rows)
+        self.assertEqual(s["boost_mag_n"], 3)
+        self.assertEqual(s["boost_mag_nonzero"], 2)
+        self.assertEqual(s["boost_mag_neg"], 1, "减分必须单独计（R611）")
+
+    def test_rows_without_base_excluded(self):
+        """★ 无 base 的行**不进分母**（否则假缺口）"""
+        rows = [self._post("2026-10-06T02:00:00+00:00", 20, 25),
+                {"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-06T02:01:00+00:00", "hour_bj": 8,
+                 "content_id": "x", "source": "S", "impact_score": 30,
+                 "final_preview": "x"}]
+        s = mr.summarize(rows)
+        self.assertEqual(s["boost_mag_n"], 1, "无 base 的行必须被排除")
+
+    def test_renders_magnitude_line(self):
+        """R665 护栏与轮次面板同区（`if runs.get("n")` 内）⇒ 测试须给 run_summary"""
+        rows = [self._post("2026-10-06T02:%02d:00+00:00" % i,
+                           20, 20 + (5 if i == 0 else 0)) for i in range(6)]
+        rows.append({"outcome": "run_summary", "ts": "2026-10-06T03:00:00+00:00",
+                     "hour_bj": 22, "candidates": 300, "published": 6,
+                     "unprocessed": 294})
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("加权**量级**", text)
+        self.assertIn("下界估计", text,
+                      "须声明分差取自已发布回执，不是当轮全部候选")
+
+    def test_zero_base_says_cannot_judge(self):
+        """零覆盖 ⇒ 必须说"无法判定"，且**不可与'字段未落盘'混淆**（R612）"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-06T02:00:00+00:00", "hour_bj": 8,
+                 "content_id": "x", "source": "S", "impact_score": 20,
+                 "final_preview": "x"}]
+        rows.append({"outcome": "run_summary", "ts": "2026-10-06T03:00:00+00:00",
+                     "hour_bj": 22, "candidates": 300, "published": 1,
+                     "unprocessed": 299})
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("无法判定", text)
+        self.assertIn("分母不存在", text,
+                      "必须区分'分母不存在'与'字段未落盘'")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
