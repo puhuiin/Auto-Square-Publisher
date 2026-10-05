@@ -5599,5 +5599,89 @@ class TestR659PostFixStratification(unittest.TestCase):
         self.assertIsNone(mr._is_post_fix(new, None))
 
 
+class TestR660TimePrefIsIneffective(unittest.TestCase):
+    """R660：★ R650 的 `apply_hour_preference_boost` 是**零影响的无效实现**。
+
+    实现（`main.py:2812-2845`）在低浏览窗给**所有**候选
+    `impact_score -= TIME_PREF_PENALTY`（同一个常数），调用处
+    （`main.py:9349`）随即 `sort(key=(-impact_score, age_hours))`。
+
+    **数学事实**：`(s_i - a) - (s_j - a) = s_i - s_j`
+    ⇒ 相对顺序**完全不变** ⇒ `sort()` 是空操作
+    ⇒ 选出的前 `max_posts` 篇与不加分时**逐条相同**。
+
+    且即使改成"只扣一部分"，`TIME_PREF_PENALTY=2` 相对生产
+    `impact_score` 跨度 **6~1007**（实测 485 样本）只有千分之一效力
+    ⇒ **双重无效**（R622「权重须量纲对齐」在 R650 被我自己违反）。
+
+    ★它有完整注释、遥测字段与测试，**看起来已实现**——
+    这比 bug 更隐蔽：代码在跑、字段在落、测试在过，行为却零变化。
+    """
+
+    CAND = [
+        {"id": "A", "impact_score": 12.0, "age_hours": 1.0},
+        {"id": "B", "impact_score": 10.5, "age_hours": 2.0},
+        {"id": "C", "impact_score": 10.5, "age_hours": 0.5},
+        {"id": "D", "impact_score": 8.0, "age_hours": 3.0},
+        {"id": "E", "impact_score": 3.0, "age_hours": 0.2},
+    ]
+
+    @staticmethod
+    def _sort_key(x):
+        return (-x["impact_score"],
+                x["age_hours"] if x.get("age_hours") is not None
+                else float("inf"))
+
+    def test_uniform_penalty_preserves_order(self):
+        """★ 数学断言：给所有候选减同一常数，选出的前 N 篇逐条不变"""
+        import copy
+        max_posts = 2     # workflow fallback（main.py:9400 注释）
+        before = [c["id"] for c in sorted(copy.deepcopy(self.CAND),
+                                          key=self._sort_key)][:max_posts]
+        cand = copy.deepcopy(self.CAND)
+        for c in cand:
+            c["impact_score"] -= 2      # 与 main.py 完全等价的操作
+        after = [c["id"] for c in sorted(cand, key=self._sort_key)][:max_posts]
+        self.assertEqual(before, after,
+                         "均匀减分**必然**不改变排序结果——这正是实现无效的原因")
+
+    def test_penalty_magnitude_against_production_span(self):
+        """量级断言：-2 相对生产跨度 6~1007 可忽略（R622）"""
+        pen = mr._time_pref_penalty_from_main()
+        self.assertIsNotNone(pen, "必须能从 main.py AST 读到幅度")
+        self.assertIsInstance(pen, (int, float))
+        # 生产实测跨度（485 个 impact_score 样本，6.0 ~ 1007.0）
+        span = 1007.0 - 6.0
+        self.assertLess(pen / span, 0.01,
+                        "偏置幅度相对生产跨度应<1%，否则根本不可能改变排序")
+
+    def test_probe_returns_none_when_unavailable(self):
+        """探针读不到时返回 None，**不得**静默返 0（R612）"""
+        self.assertIsNone(mr._time_pref_penalty_from_main("不存在的文件.py"))
+
+    def test_renders_ineffective_warning(self):
+        """报表必须显式告警"R650 偏置是无效实现"，
+        否则后人看到"已实现"就以为时段问题已解决"""
+        rows = [TestR659PostFixStratification._art(
+            f"2026-10-06T{h:02d}:00:00+00:00", "$BTC 稳住了")
+            for h in range(8, 20)]
+        rows.append({"outcome": "run_summary", "ts": "2026-10-06T20:00:00+00:00",
+                     "hour_bj": 22, "candidates": 3000, "published": 40,
+                     "unprocessed": 2960, "quota_blocked": False})
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("时段偏置是无效实现", text)
+        self.assertIn("空操作", text)
+        self.assertIn("跨轮次", text,
+                      "必须指出正确方向：跨轮次配额分配，不是同批排序")
+
+    def test_probe_does_not_hardcode(self):
+        """幅度必须来自 AST 而非硬编码（否则两者会各自漂移）"""
+        import inspect
+        src = inspect.getsource(mr._time_pref_penalty_from_main)
+        self.assertNotIn("return 2", src,
+                         "禁止硬编码幅度（main.py 改了报表会静默过期）")
+        self.assertIn("_parse_main_ast", src, "必须走 AST 缓存探针")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

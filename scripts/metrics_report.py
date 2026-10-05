@@ -2151,6 +2151,34 @@ def _parse_main_ast(main_path=None):
     return tree
 
 
+def _time_pref_penalty_from_main(main_path=None):
+    """R660：AST 读 `TIME_PREF_PENALTY` 的真实值（main.py:447）。
+
+    **为什么必须探而不是硬编码**：R650 的偏置幅度写在 `main.py`，
+    报表若硬编码 2，两者会各自漂移——而**这个数字的大小直接决定
+    偏置是否可能有效**（相对 impact_score 跨度可以忽略不计）。
+    判据同 R617：import 有副作用、正则会误匹配、硬编码必然漂移。
+
+    读不到返回 None，调用方**显式渲染"幅度未知"**，
+    绝不静默用 0 代替（R612：沉默不是通过）。
+    """
+    try:
+        import ast
+    except Exception:
+        return None
+    tree = _parse_main_ast(main_path)
+    if tree is None:
+        return None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name) and t.id == "TIME_PREF_PENALTY":
+                    if isinstance(node.value, ast.Constant) and \
+                            isinstance(node.value.value, (int, float)):
+                        return node.value.value
+    return None
+
+
 def _priority_pinned_from_main(main_path=None):
     """R621：AST 解析 main.py 的 priority 置顶通道清单。
 
@@ -2975,6 +3003,28 @@ def render_text(s, rows=None):
                     f"**恰好在夜间释放**，被低浏览时段立即接走，形成自锁。"
                     f"时间不可逆 ⇒ 排序只能改'发哪一篇'，"
                     f"改不了'什么时候有空位'")
+            # R660：★ `apply_hour_preference_boost` 是**零影响的无效实现**。
+            # 它给**所有**候选减同一个常数（`impact_score -= 2`），
+            # 而排序键是 `(-impact_score, age_hours)`
+            # ⇒ (s_i - 2) - (s_j - 2) = s_i - s_j ⇒ **相对顺序完全不变**
+            # ⇒ `sort()` 是空操作，选出的前 N 篇与不加分时**逐条相同**。
+            #
+            # 且即使改成"只扣一部分"，-2 分相对生产 `impact_score`
+            # 跨度 **6~1007**（实测 485 个样本）也只有 0.2% 效力
+            # ⇒ **双重无效**（R622「权重须量纲对齐」在 R650 被我自己违反）。
+            #
+            # 它有完整注释、遥测字段与测试，**看起来已实现**——
+            # 这比 bug 更隐蔽：代码在跑、字段在落、测试在过，行为却零变化。
+            # ⇒ 必须常驻告警，否则后人看到"R650 已实现"就以为问题解决了。
+            _tp2 = _time_pref_penalty_from_main()
+            _tp2s = f"{_tp2:g}" if isinstance(_tp2, (int, float)) else "**未知**"
+            lines.append(
+                f"       ⚠️ **R650 的时段偏置是无效实现**（R660 实测）："
+                f"它给所有候选减**同一个常数**（-{_tp2s}），"
+                f"而排序键 `(-impact_score, age)` ⇒ 相对顺序不变 ⇒ **sort 是空操作**。"
+                f"生产 impact_score 跨度 6~1007，-{_tp2s} 分只有**千分之一量级**效力"
+                f"（R622 量纲对齐）。**'时段偏置已实现'是假的**——"
+                f"要真把配额推向高窗，须改**跨轮次的配额分配**，不是同批排序")
         # R652：平台维度。**这是"流量从哪来"的唯一可见面**。
         # 生产实测 312 篇**全是纯 binance**——而代码支持 binance / okx_draft /
         # telegram 三种组合（`PUBLISH_PLATFORMS`，secret 已正确注入 workflow）。
