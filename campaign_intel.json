@@ -3,25 +3,25 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Megadrop",
-    "#NewListing"
+    "#NewListing",
+    "#SimpleEarn"
   ],
   "incentivized_tokens": [
     "$PUMP",
-    "$USD1",
-    "$BNB",
+    "$ALGO",
     "$BTC",
-    "$USDC",
+    "$NVDAB",
+    "$MUB",
+    "$QQQB",
     "$PDDB",
-    "$ADBEB",
-    "$HPEB"
+    "$CT"
   ],
-  "strategy_guidance": "优先追PUMP交易锦标赛、十月邀请赛等当期交易类活动热度，结合新上线的CTUSDT永续合约、多只bStocks交易对及USD1空投延期等资讯做内容整合，引导读者参与官方活动互动拿Write to Earn奖励；同步覆盖LATAM/巴西新用户理财、P2P新手商家等定向活动内容，精准匹配不同受众需求提升曝光。",
-  "last_updated": "2026-10-04T23:24:12.753129Z",
+  "strategy_guidance": "当前优先围绕10月仍在进行的PUMP交易锦标赛、ALGO交易锦标赛、affiliate邀请赛、新增bStocks交易对及CTUSDT永续合约等当期热点产出内容，结合#Write2Earn话题发布活动规则解读、新资产交易指引类帖子，引导读者参与官方活动互动、关注新上线产品，通过优质内容获取曝光与互动奖励。10月限时活动剩余周期较短，可侧重活动参与步骤梳理类内容切入，引导用户跟进活动节奏。",
+  "last_updated": "2026-10-05T11:44:02.111175Z",
   "_feed_health": {},
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-04",
