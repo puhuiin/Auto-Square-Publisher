@@ -6716,3 +6716,75 @@ class TestGuardrailInsertionSafety(unittest.TestCase):
         for mark in ("最长段落", "挂件额度使用"):
             self.assertIn(mark, text, "缺护栏: %s" % mark)
 
+
+
+class TestParaLengthGateR672b(unittest.TestCase):
+    """★★★ R672 的段落长度**硬门**（此前只有遥测、**无消费面**）。
+
+    ★ 为什么必须补这道门（2026-10-06 实测）：
+      - `para_max_cjk` 遥测**只记不卡** ⇒ 违反 R619「遥测须有消费面」
+      - 实测 **328 篇里只有 4 条**有 `para_max_cjk` ⇒ 样本不足
+        也印证「没有真在用」
+      - 短讯模板里还写着**旧口径**"每段只有 1~2 句话"，
+        而 R672 已证明它必然导致段落变长（140÷3 段 = 47 字/段）
+
+    ★ 为什么门卡 **60** 而 prompt 写 **35**（理想 vs 底线分开）：
+      实测人工范文**段均 26 字**；模型在 35 这个紧约束下容易顾此失彼
+      —— 拆得太碎、口语断裂、读起来像电报
+      ⇒ 门一卡太紧会**逼出更差的稿**（R643：形态偏好不该做红线门）
+    """
+
+    THRESHOLD = 60
+
+    @staticmethod
+    def _para_max(text):
+        import re
+        pl = [len(re.findall(r"[\u4e00-\u9fff]", p))
+              for p in text.split("\n\n") if p.strip()]
+        return max(pl) if pl else 0
+
+    def test_gate_catches_wall_of_text(self):
+        """★ 短讯出现「字墙」段落（>60）⇒ 应拦下"""
+        bad = "\n\n".join(["这是一段很长的市场分析文字" * 5] * 4)
+        self.assertGreater(self._para_max(bad), self.THRESHOLD)
+
+    def test_gate_passes_normal_short_note(self):
+        """★ 正常短讯（每段 ~35 字）⇒ 放行"""
+        good = "\n\n".join(["短讯第一段内容" * 5] * 4)
+        self.assertLessEqual(self._para_max(good), self.THRESHOLD)
+
+    def test_long_article_must_not_be_gated(self):
+        """★★ **长文不得被这个门拦下**（否则配额被烧光）。
+
+        ⚠️ 代码里**没有** `is_article` 标志 ⇒ 靠**总字数**判别
+          （短讯 140~200 · 长文 500~800 ⇒ 用 400 分界，两边不重叠）
+        ⇒ 长文 500÷4 段 = **125 字/段** ⇒ 超 60 ⇒ 不判定会**全判废**
+        """
+        import re
+        art = "\n\n".join(["长文第一段内容" * 20] * 4)
+        cjk = len(re.findall(r"[\u4e00-\u9fff]", art))
+        self.assertGreater(self._para_max(art), self.THRESHOLD,
+                           "本用例前提失效：长文段落应超阈值")
+        self.assertGreater(cjk, 400, "本用例前提失效：长文应 >400 字")
+        # 门只在 cjk<400 时生效 ⇒ 长文必然放行
+        self.assertFalse(cjk < 400 and self._para_max(art) > self.THRESHOLD)
+
+    def test_threshold_configurable(self):
+        """★ 阈值**可配**（0 = 关闭，运营逃生口）"""
+        import main
+        self.assertGreater(main._SHORT_NOTE_MAX_PARA_CJK, 0)
+        self.assertLessEqual(main._SHORT_NOTE_MAX_PARA_CJK, 80,
+                             "★ 门卡太紧会逼出更差的稿（R643）")
+
+    def test_prompt_no_longer_says_old_wording(self):
+        """★★ prompt **不得**再写"每段只有 1~2 句话"（R672 已推翻）。
+
+        ⚠️ 旧口径必然导致段落变长：140~200 字 ÷ 3~4 段 = 35~50 字/段，
+          而"1~2 句话"写不满 ⇒ 模型把两句塞一句。
+        """
+        import io
+        src = io.open("main.py", encoding="utf-8").read()
+        self.assertNotIn("每段只有 1~2 句话", src,
+                         "★ 旧口径已失效（R672），别写回去")
+        self.assertIn("R672 硬要求：每段 ≤35 汉字", src,
+                      "★ 短讯模板应含新口径")

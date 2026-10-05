@@ -195,6 +195,19 @@ TOKEN_DAILY_LIMIT = _env_int("TOKEN_DAILY_LIMIT", 3)               # 同一代�
 # 常规帖还给限流（垂直度保护），事件帖仍放行。独立于长文门槛，可单独调。
 TOKEN_LIMIT_BYPASS_IMPACT = _env_int("TOKEN_LIMIT_BYPASS_IMPACT", 30)  # 限流绕过门槛：触顶代币的热度低于此值仍被限流
 MAX_TOKENS_PER_POST = _env_int("MAX_TOKENS_PER_POST", 3)           # 单帖挂件标的上限（清单式行情日评可提取 9+ 币）
+
+# ══════════════════════════════════════════════════════════════
+# R672 的**段落长度硬门**（此前只有遥测、**无消费面** ⇒ 等于没修）
+# ══════════════════════════════════════════════════════════════
+# ★ 为什么阈值取 60 而不是 prompt 里写的 35：
+#   实测人工范文**段均 26 字**（R672），而模型在 35 这个紧约束下
+#   容易顾此失彼——拆得太碎、口语断裂、读起来像电报
+#   ⇒ 60 是「明显是字墙」与「读得下去」的分界
+#   ⇒ **prompt 写 35（理想）/ 门卡 60（底线）**：理想与底线分开，
+#     门一卡太紧会**逼出更差的稿**（R643：形态偏好不该做红线门）。
+# ⚠️ **只对短讯生效**：长文 500~800 字天然段落长，套同一阈值会全判废。
+#   0 = 关闭（运营逃生口）。
+_SHORT_NOTE_MAX_PARA_CJK = _env_int("SHORT_NOTE_MAX_PARA_CJK", 60)
 # R578：发帖最小间隔（分钟）——生产实录 253 篇里 99 个间隔<30min（最快 2min 连发）
 # 与 60 个>180min 空窗并存，节奏像刷屏不像人。0=关闭；默认 20 对齐 cron 心跳。
 MIN_POST_GAP_MIN = _env_int("MIN_POST_GAP_MIN", 20)
@@ -3629,7 +3642,15 @@ class MultiLLMEngine:
 
 2. 📏 【字数与排版规范（移动端极简短句流）】：
    - 全文严格控制在 140 ~ 200 字以内！手机屏幕一屏就能快速读完，绝不长篇大论。
-   - 分成 3 到 4 个短段落，段与段之间空一行。每段只有 1~2 句话，短小精炼，节奏明快。
+   - 分成 4 到 5 个短段落，段与段之间**空一行**。
+   - ★★ **【R672 硬要求：每段 ≤35 汉字】**——
+     ⚠️ **卡段落长度，而不是只卡段数**（实测推算，勿改）：
+       140~200 字 ÷ 3~4 段 = 每段 35~50 字，
+       而"每段 1~2 句话"必然写不满 ⇒ 模型把两句话塞一句 ⇒ **段落变长**。
+     ⇒ 正确口径：**每段 ≤35 汉字 + 段数 4~5**。
+     ⇒ **别再强调"每段 1~2 句话"**（那是上一版口径，已被实测推翻）。
+     - 排版：段间**空一行**（`\n\n`）——用真实换行分段，
+       不要用空格或全角空格硬凑（手机端会渲染成一堵字墙）。
 
 3. 💬 【真人口吻与结构】：
    - **第 1 段（开门见山）**：一句话爆出今天最刺激的行情或消息，带出核心标的（如 $XRP 或 $DOGE）。
@@ -5376,6 +5397,43 @@ class MultiLLMEngine:
                                      content_preview=self._reject_preview(content),
                                      finish_reason=finish_for_telemetry)
                     raise _QualityGateRejection(flavor_reason)
+
+                # 0.3★★ 段落长度门（R672 的**硬门**，此前只记不卡）
+                # ★ 为什么必须卡（不是"只改 prompt"）：
+                #   R668 实测"别惯用'现在'"这类 prompt 预防**有效但会复读**；
+                #   而"每段 ≤35 字"若**不卡**，模型会在重试几轮后逐渐放弃
+                #   ⇒遥测（`para_max_cjk`）**只记不卡** = 无消费面（R619）
+                #   ⇒ 实测样本仅 4 条有值（328篇里）⇒ **样本不足也说明没在用**
+                # ⇒ 阈值取 **60 汉字**（不是 35）：
+                #   实测人工范文段均 26 字，而模型在 35 这个紧约束下
+                #   容易**顾此失彼**（拆得太碎、口语断裂）
+                #   ⇒ 60 是"明显是字墙"与"读得下去"的分界。
+                # ⚠️ **只对短讯生效**（长文 500~800 字天然段落长，
+                #   套同一阈值会把长文全判废——R643形态偏好不该做红线门）。
+                _para_lengths = [len(re.findall(r"[\u4e00-\u9fff]", _pp))
+                                for _pp in content.split("\n\n") if _pp.strip()]
+                _para_here = max(_para_lengths) if _para_lengths else 0
+                # ⚠️★ **只对「短讯」生效**（用**字数**判别，不靠显式标志）：
+                #   代码里**没有** `is_article` 之类的标志（R666：名字≠含义，
+                #   grep 确认过）⇒ 唯一可靠判别是**总字数**：
+                #     短讯 140~200 字 · 长文 500~800 字
+                #   ⇒ 用 400 字做分界，两边都不重叠
+                # ⇒ 不加这个判定，**长文会被全判废**（500字÷4段=125字/段
+                #   ⇒ 超 60 ⇒ 每篇都重写 ⇒ 配额被烧光）
+                _total_cjk_here = len(re.findall(r"[\u4e00-\u9fff]", content))
+                _is_short_note = _total_cjk_here < 400
+                if (_SHORT_NOTE_MAX_PARA_CJK > 0 and _is_short_note
+                        and _para_here > _SHORT_NOTE_MAX_PARA_CJK):
+                    self._log_reject(
+                        news_item, provider.name, "para_too_long",
+                        "段落最长 %d 汉字（>%d，判为字墙）"
+                        % (_para_here, _SHORT_NOTE_MAX_PARA_CJK),
+                        tokens_used, latency_sec, provider.model,
+                        persona=persona["name"],
+                        content_preview=self._reject_preview(content),
+                        finish_reason=finish_for_telemetry)
+                    raise _QualityGateRejection(
+                        "para_too_long: 最长段 %d 汉字" % _para_here)
 
                 # 1. 提取代币：交易所校验过的 token_hints 拥有最高权重，模型自报的 $ 标的仅作补充
                 raw_tokens = re.findall(r"\$([A-Za-z0-9]{2,10})", content)
