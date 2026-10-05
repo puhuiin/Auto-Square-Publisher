@@ -5947,5 +5947,117 @@ class TestR663TailConflictGuardrail(unittest.TestCase):
                       "应使用异常优先留存的字段名")
 
 
+class TestR664BoostedByAttribution(unittest.TestCase):
+    """R664：★「命中」≠「生效」——加权命中数答不出"是否真影响选中"。
+
+    ★ 缺口（R612 变体：**施力面有观测，受力面没有**）：
+      四个加权都只落"打了多少个候选"的聚合数
+      （`campaign_boost_hits` / `trend_boost_hits` / `hot_boost_hits` /
+      `engagement_boost_up` / `_down`），
+      而**没有任何字段标注「最终发出的这篇被哪路加权命中过」**
+      ⇒ **答不出"被加分的候选最后有没有被选中"**
+      ⇒ 加权属于"看起来已实现"（R660 同型风险）。
+
+    ★ ★ 最容易搞错的点：**这是「构成比」不是「命中率」**。
+      `boosted_by` 只在**发布时**落盘 ⇒ **未被选中的候选根本没有回执**
+      ⇒ 护栏若不显式声明，"选中率 100%"会被读成"加权 100% 有效"。
+    """
+
+    @staticmethod
+    def _post(ts, boosted=None):
+        d = {"platforms": ["binance"], "outcome": "binance_published",
+             "ts": ts, "hour_bj": 8, "content_id": ts, "source": "S",
+             "impact_score": 20.0, "final_preview": "x"}
+        if boosted is not None:
+            d["boosted_by"] = boosted
+        return d
+
+    @staticmethod
+    def _run(ts, **kw):
+        d = {"outcome": "run_summary", "ts": ts, "candidates": 300,
+             "published": 2, "unprocessed": 298, "hour_bj": 22}
+        d.update(kw)
+        return d
+
+    def test_counts_tags_in_published(self):
+        rows = [self._post("2026-10-06T02:06:00+00:00", "campaign,hot"),
+                self._post("2026-10-06T02:28:00+00:00", "campaign"),
+                self._post("2026-10-06T03:06:00+00:00", "eng")]
+        s = mr.summarize(rows)
+        self.assertEqual(s["boosted_by_total"], 3)
+        self.assertEqual(s["boosted_by_tags"]["campaign"], 2)
+        self.assertEqual(s["boosted_by_tags"]["hot"], 1)
+        self.assertEqual(s["boosted_by_tags"]["eng"], 1)
+
+    def test_eng_down_counted_separately(self):
+        """⚠️ 减分与加分**方向不同**，必须分开（R611 分侧）。
+
+        共用标记会让"命中加权"读起来像"被优待"，而它其实是**降权**。
+        """
+        rows = [self._post("2026-10-06T02:06:00+00:00", "eng"),
+                self._post("2026-10-06T02:28:00+00:00", "eng_down")]
+        s = mr.summarize(rows)
+        self.assertEqual(s["boosted_by_tags"]["eng"], 1)
+        self.assertEqual(s["boosted_by_tags"]["eng_down"], 1)
+
+    def test_composition_not_hit_rate(self):
+        """★ 护栏必须显式声明这是「构成比」，否则会被读成命中率 100%"""
+        rows = [self._post("2026-10-06T02:06:00+00:00", "campaign"),
+                self._run("2026-10-06T02:10:00+00:00",
+                          campaign_boost_hits=50, trend_boost_hits=10,
+                          hot_boost_hits=20, engagement_boost_up=3)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("构成比", text)
+        self.assertIn("命中率", text, "必须点出读者最容易误读的那个词")
+
+    def test_zero_observation_says_cannot_judge(self):
+        """零观测 ⇒ 必须说"加权是否真影响选中无法判定"（R612）"""
+        rows = [self._post("2026-10-06T02:06:00+00:00"),   # 无 boosted_by
+                self._run("2026-10-06T02:10:00+00:00",
+                          campaign_boost_hits=50)]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("零观测", text)
+        self.assertIn("无法判定", text)
+        self.assertIn("别把", text, "必须明确警告别把命中数当生效证明")
+
+    def test_main_marks_all_boost_sites(self):
+        """★ 接线守卫：**每一处**加分都必须打标记，否则漏一处就失去意义。
+
+        `apply_hour_preference_boost` 刻意**不打**（R660 已证均匀平移，
+        打标记会让"被时段偏置命中"读起来像被优待，而它零影响）。
+        """
+        src = open(m.__file__, encoding="utf-8").read()
+        # 加分语句总数 vs 标记调用总数必须相等（漏标一处就失去意义）
+        import re
+        # ⚠️ 写法必须与 `main.py` 的实际格式一致：`item["impact_score"] += CONST`
+        #    （`]` 之后有空格）。正则失配时**必须显式报错**而不是静默通过——
+        #    否则常量改名后守卫会悄悄失效（R659「正则守卫会静默失效」教训）。
+        boosts = re.findall(r'item\["impact_score"\] [+-]= '
+                            r'(?:CAMPAIGN_TOKEN_BOOST|TREND_TOKEN_BOOST'
+                            r'|HOT_TOPIC_BOOST|ENGAGEMENT_VIEW_BOOST)', src)
+        marks = re.findall(r'_mark_boost\(item,\s*"(\w+)"\s*\)', src)
+        self.assertTrue(boosts, "正则失配：需与 main.py 的加分写法同步"
+                        "（常量名改动时守卫会静默失效，R659教训）")
+        self.assertEqual(len(boosts), len(marks),
+                         "加分点 %d 处 vs 标记 %d 处⇒ 有漏标（漏一处就失去意义）"
+                         % (len(boosts), len(marks)))
+
+    def test_eng_down_marked_distinctly(self):
+        src = open(m.__file__, encoding="utf-8").read()
+        self.assertIn('_mark_boost(item, "eng_down")', src,
+                      "减分必须标 eng_down，不能与加分共用 eng")
+        self.assertIn('_mark_boost(item, "eng")', src)
+
+    def test_mark_is_idempotent(self):
+        """标记必须幂等去重（同一路加权可能多次触发）"""
+        item = {"impact_score": 10.0}
+        for _ in range(3):
+            m._mark_boost(item, "campaign")
+        self.assertEqual(item["_boosted_by"], ["campaign"],
+                         "重复标记同一路必须去重")
+        m._mark_boost(item, "hot")
+        self.assertEqual(sorted(item["_boosted_by"]), ["campaign", "hot"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -473,7 +473,34 @@ TIME_PREF_PENALTY = 2
 #   `LOW_HOUR_CAP`（仓库变量）⇒ 未设置的用户零影响。
 # ⚠️ 代价要说清：低窗 52 轮/天里被拒的那些轮次，其候选**会留到下一轮**
 #   （R653 已证候选不因配额消失）⇒ 不是丢稿，只是延后。
-LOW_HOUR_CAP = _env_int("LOW_HOUR_CAP", 0)                    # 0 = 不限制（默认）
+LOW_HOUR_CAP = _env_int("LOW_HOUR_CAP", 0)
+
+# R664：**加权来源标记**——让"加权命中"与"加权生效"可区分。
+#
+# ★ 为什么必须加（R612「无消费面」的典型形态）：
+#   四个加权函数（campaign/trend/hot_topic/engagement）都落"命中了几个候选"
+#   的**聚合数**（`campaign_boost_hits` 等），但**没有任何字段记录
+#   「最终发出的这篇被哪路加权命中过」**。
+#   ⇒ 报表只能回答"加权打了多少个候选"，**无法回答"被加分的候选
+#   最后有没有被选中"** ⇒ 加权是"看起来已实现"（R660 同型风险）。
+# ⇒ 在每处加分时给候选打 `_boosted_by` 标记，回执落盘 ⇒ 闭环可判读。
+#
+# ⚠️ 刻意**不打分值**（不记"加了多少分"）：那会让 4 路加权的信息
+#   与 `base_impact_score`→`impact_score` 的差值重复（R617 已有那个面）。
+#   本标记只答"**命中了哪几路**"，是那个差值**答不了**的问题。
+def _mark_boost(item, tag):
+    """给候选记下被哪几路加权命中（幂等、去重）。"""
+    if not isinstance(item, dict):
+        return
+    cur = item.get("_boosted_by")
+    if not isinstance(cur, list):
+        cur = []
+    if tag not in cur:
+        cur.append(tag)
+    item["_boosted_by"] = cur
+
+
+                    # 0 = 不限制（默认）
 
 
 def within_active_hours(spec: str = None) -> bool:
@@ -2706,6 +2733,7 @@ class NewsFetcher:
         for item in candidates:
             if in_pool and NewsFetcher._candidate_hits_tokens(item, in_pool):
                 item["impact_score"] += CAMPAIGN_TOKEN_BOOST
+                _mark_boost(item, "campaign")
                 hits += 1
                 continue
             if off_set:
@@ -2729,11 +2757,13 @@ class NewsFetcher:
                         # 风险词只认原文里的大写独立出现（$前缀或全大写词形）
                         if re.search(r"(?<![A-Za-z0-9])" + re.escape(tok) + r"(?![A-Za-z0-9])", orig_text):
                             item["impact_score"] += CAMPAIGN_TOKEN_BOOST
+                            _mark_boost(item, "campaign")
                             hits += 1
                             break
                         continue
                     if re.search(r"(?<![A-Za-z0-9])" + re.escape(tok) + r"(?![A-Za-z0-9])", text):
                         item["impact_score"] += CAMPAIGN_TOKEN_BOOST
+                        _mark_boost(item, "campaign")
                         hits += 1
                         break
         return hits, off_pool
@@ -2770,6 +2800,7 @@ class NewsFetcher:
         for item in candidates:
             if NewsFetcher._candidate_hits_tokens(item, trend_set):
                 item["impact_score"] += TREND_TOKEN_BOOST
+                _mark_boost(item, "trend")
                 hits += 1
         return hits
 
@@ -2793,10 +2824,12 @@ class NewsFetcher:
                 if kw.startswith("$"):
                     if kw in text or re.search(r"\b" + re.escape(kw[1:]) + r"\b", text):
                         item["impact_score"] += HOT_TOPIC_BOOST
+                        _mark_boost(item, "hot")
                         hits += 1
                         break
                 elif re.search(r"\b" + re.escape(kw) + r"\b", text):
                     item["impact_score"] += HOT_TOPIC_BOOST
+                    _mark_boost(item, "hot")
                     hits += 1
                     break
         return hits
@@ -2938,10 +2971,15 @@ class NewsFetcher:
                 continue
             if av >= hi_cut:
                 item["impact_score"] += ENGAGEMENT_VIEW_BOOST
+                _mark_boost(item, "eng")
                 up += 1
                 up_toks.append(primary)
             elif av <= lo_cut:
                 item["impact_score"] -= ENGAGEMENT_VIEW_BOOST
+                # ⚠️ 减分**单独标记**为 `eng_down`：与加分方向相反，
+                # 混进 `eng` 会让"命中加权"读起来像"被优待"，而它其实是降权
+                # （R611 分侧：方向不同的信号不能共用同一个标记）。
+                _mark_boost(item, "eng_down")
                 down += 1
                 down_toks.append(primary)
         if up or down:
@@ -10011,6 +10049,14 @@ def _run_main():
                         # 一眼看出「这条是人工置顶、不是自然事件分」，也能把种子帖从任何
                         # 按分数做的统计里择出来（否则它们会把顶分/均值一并抬走）。
                         "base_impact_score": item.get("base_impact_score"),
+                        # R664：**被哪几路加权命中过**（逗号分隔；无则None）。
+                        # ★ 补的是那个**聚合数答不了**的问题：
+                        # `campaign_boost_hits` 等只说"加权打了多少个候选"，
+                        # **说不清"被加分的最后有没有被选中"**。
+                        # ⇒ 加权是"看起来已实现"的典型形态（R660 同型风险）。
+                        "boosted_by": (",".join(item["_boosted_by"])
+                                       if isinstance(item.get("_boosted_by"), list)
+                                       and item["_boosted_by"] else None),
                         "model": llm_result.get("model"),
                         "persona": llm_result.get("persona"),
                         "tokens_used": llm_result.get("tokens_used"),

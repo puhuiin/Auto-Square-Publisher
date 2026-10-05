@@ -907,6 +907,8 @@ def summarize(rows):
         # R663：`ending_question` 的**异常样本**（main.py 仅在判据与末 120 字
         # 不一致时落`tail_conflict`，避免 metrics.jsonl 膨胀 +60%）
         "tail_conflict_n": 0,
+        # R664：已发布回执的加权标记构成（⚠️ 构成比，**不是命中率**）
+        "boosted_by_tags": collections.Counter(), "boosted_by_total": 0,
         # R649：prompt 三条内容红线的合规分子/分母（同 bool口径，见 ending_q）
         "dash_ok_n": 0, "dash_ok_d": 0,
         "hype_ok_n": 0, "hype_ok_d": 0,
@@ -1398,6 +1400,17 @@ def summarize(rows):
                 s["by_ending"][str(r["ending_style"])] += 1
             # R647：结尾站队提问覆盖率。**字段存在即计入分母**（值为 False
             # 也是有效观测——"确实没写提问"与"没测到"必须能区分，纪律12/17）。
+            # R664：**被哪几路加权命中**（回执字段 `boosted_by`，逗号分隔）。
+            # ★ 补的是 `*_boost_hits` 聚合数**答不了**的问题：
+            #   "加权打了多少个候选" ≠ "被加分的最后有没有被选中"。
+            # ⚠️ 分母只能是**已发布回执** ⇒ 本项是**构成比**而非"命中率"，
+            #   渲染层必须显式声明（否则会被读成命中率，R612）。
+            #   `eng` 与 `eng_down` **分开计**（方向不同，R611 分侧）。
+            _bbt = r.get("boosted_by")
+            if isinstance(_bbt, str) and _bbt.strip():
+                for _tg in [x.strip() for x in _bbt.split(",") if x.strip()]:
+                    s["boosted_by_tags"][_tg] += 1
+                s["boosted_by_total"] += 1
             if isinstance(r.get("ending_question"), bool):
                 s["ending_q_marked"] += 1
                 if r["ending_question"]:
@@ -2689,6 +2702,34 @@ def render_text(s, rows=None):
             lines.append(
                 f"  📈 加权命中（活动/热搜/热点 {runs.get('boost_runs', 0)} 轮）: "
                 f"活动 {bh.get('campaign', 0)} / 热搜 {bh.get('trend', 0)} / 热点 {bh.get('hot', 0)}{_eng}")
+            # R664：★ **"命中"不等于"生效"**——上面的数字只是"加权打了多少个候选"，
+            # 答不出「被加分的候选**最后有没有被选中**」。
+            # `boosted_by`（回执字段）才答这个问题⇒ 两个面必须并列。
+            # 判据（R611）：**分子分母各自独立**——
+            #   分子 = 被选中且带该标记的篇数；分母 = 带该标记的回执总数。
+            # ⚠️ 当前两者都来自**已发布回执**，所以"选中率"恒为 100%——
+            #   **这不是缺陷，是口径**：`boosted_by` 只在**发布时**落盘，
+            #   未被选中的候选**根本没有回执**⇒ **本行只能回答
+            #   "被选中的稿里有多少带该标记"，不能回答"加权命中率"**。
+            #   要答后者需要"全部候选的标记分布"（另一张表，未做）。
+            # ⇒ 因此本行**只报构成比，不报"命中率"**，避免读成后者。
+            _bb = s.get("boosted_by_tags") or {}
+            _bb_n = s.get("boosted_by_total") or 0
+            if _bb_n:
+                _parts = " · ".join(
+                    f"{k} {v}" for k, v in sorted(_bb.items(), key=lambda x: -x[1]))
+                lines.append(
+                    f"     ↳ **已发出**的 { _bb_n } 篇里，带加权标记的构成: {_parts}")
+                lines.append(
+                    f"       （⚠️ 这是**构成比不是命中率**——`boosted_by` 只在"
+                    f"**发布时**落盘，**未被选中的候选没有回执**⇒ "
+                    f"本行答的是「被选中的稿里哪些带标记」，"
+                    f"**答不出「加权打中的候选有多少最终被选中」**）")
+            else:
+                lines.append(
+                    f"     ↳ ℹ️ `boosted_by` **零观测**（R664 刚上线，老回执无此字段）"
+                    f"⇒ **加权是否真影响选中，当前无法判定**"
+                    f"——别把上面的「命中数」当生效证明（R660 同型风险）")
         if runs.get("last_campaign_off_pool"):
             lines.append(f"  🪙 活动币 off-pool: {runs['last_campaign_off_pool']}")
         # R196：饱和轮情报陈旧度——配额期实际在用多旧的情报
