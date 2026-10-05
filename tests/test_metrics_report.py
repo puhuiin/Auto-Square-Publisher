@@ -5646,14 +5646,26 @@ class TestR660TimePrefIsIneffective(unittest.TestCase):
                          "均匀减分**必然**不改变排序结果——这正是实现无效的原因")
 
     def test_penalty_magnitude_against_production_span(self):
-        """量级断言：-2 相对生产跨度 6~1007 可忽略（R622）"""
+        """量级断言（R661 更正）：-2 相对**自然**跨度 6~54 只有 ~4% 效力。
+
+        ⚠️ **R661 修正**：首版这里写"跨度 6~1007 ⇒ 0.2% 效力"，
+        那是把`PRIORITY_SEED_SCORE=999`（人工置顶种子 + freshness）
+        **算进了自然分布**，把无效程度**夸大了 21 倍**。
+        排除种子后：自然跨度 = 54 − 6 = **48** ⇒ 2/48 ≈ **4.2%**。
+
+        ⇒ **结论不变**（主因是数学恒等式，量级只是次要理由），
+        但**理由的数字必须对**——不能因为结论对就放过错的数（R641）。
+        """
         pen = mr._time_pref_penalty_from_main()
         self.assertIsNotNone(pen, "必须能从 main.py AST 读到幅度")
         self.assertIsInstance(pen, (int, float))
-        # 生产实测跨度（485 个 impact_score 样本，6.0 ~ 1007.0）
-        span = 1007.0 - 6.0
-        self.assertLess(pen / span, 0.01,
-                        "偏置幅度相对生产跨度应<1%，否则根本不可能改变排序")
+        # 生产自然分布实测（482 个非 priority_seed 样本，6.0 ~ 54.0）
+        natural_span = 54.0 - 6.0
+        self.assertLess(pen / natural_span, 0.10,
+                        "偏置幅度相对**自然**跨度应<10%")
+        # 护栏文案里那个 1007 来自人工种子——若有人再用它算跨度会再次夸大
+        self.assertGreater(999.0, natural_span,
+                           "PRIORITY_SEED_SCORE=999 远在自然分布之外")
 
     def test_probe_returns_none_when_unavailable(self):
         """探针读不到时返回 None，**不得**静默返 0（R612）"""
@@ -5681,6 +5693,106 @@ class TestR660TimePrefIsIneffective(unittest.TestCase):
         self.assertNotIn("return 2", src,
                          "禁止硬编码幅度（main.py 改了报表会静默过期）")
         self.assertIn("_parse_main_ast", src, "必须走 AST 缓存探针")
+
+
+class TestR661BoostEffectivenessAudit(unittest.TestCase):
+    """R661：把 R660 的血泪变成**机械判定**——每个改 `impact_score` 的加权
+    是否真的区分候选，靠 AST 判定，而不是靠人眼扫代码。
+
+    R660 教训：`apply_hour_preference_boost` 给**所有**候选减同一常数 ⇒
+    **零影响**，却有完整注释 + 遥测字段 + 单测 + 护栏 ⇒ 看起来已实现。
+    ⇒ 这类"看起来实现了"必须能被**自动识别**，否则会反复有人踩。
+
+    ★ 本轮自己也踩了一次同类坑（R612 变体）：**判据覆盖不全 ⇒ 虚假安心**。
+    首版审计只认 `AugAssign`（`x["k"] += v`），而那个无效实现写的是
+    `Assign`（`x["k"] = cur - P`）⇒ **恰好漏掉了它**，
+    报表还显示"4 个加权全部有条件区分"。
+    而 `ast.Assign` 的目标是**复数 `.targets`**，`.target` 只有 `AugAssign` 才有。
+    """
+
+    def test_finds_all_five_boosters(self):
+        r = mr._boost_effectiveness_from_main()
+        self.assertIsInstance(r, dict)
+        self.assertGreaterEqual(len(r), 5,
+                                "应至少发现 5 个改 impact_score 的方法")
+
+    def test_detects_hour_pref_as_uniform(self):
+        """★ 时段偏置必须被判为"均匀平移"（R660 已证零影响）"""
+        r = mr._boost_effectiveness_from_main()
+        self.assertIn("apply_hour_preference_boost", r,
+                      "必须抓到它——写的是 Assign(=) 不是 AugAssign(+=)")
+        v = r["apply_hour_preference_boost"]
+        self.assertGreater(v["unguarded"], 0,
+                           "它的加减分是**无条件**的（对全部候选）")
+        self.assertEqual(v["guarded"], 0,
+                         "它没有条件包裹 ⇒ 应判为均匀平移")
+
+    def test_other_boosters_are_conditional(self):
+        """其余 4 个是"有条件区分"（只改部分候选）"""
+        r = mr._boost_effectiveness_from_main()
+        for name in ("_apply_campaign_boost", "apply_trend_boost",
+                     "apply_hot_topic_boost", "apply_engagement_boost"):
+            if name in r:
+                v = r[name]
+                self.assertGreater(v["guarded"], 0,
+                                   f"{name} 应有条件包裹")
+                self.assertEqual(v["unguarded"], 0,
+                                 f"{name} 不应有无条件平移")
+
+    def test_catches_direct_assignment_form(self):
+        """★ 判据必须覆盖 `x[k] = v` 与 `x[k] += v` **两种语法**（回归守卫）。
+
+        这是本轮真实踩的坑：只认 AugAssign ⇒ 漏掉 Assign 形式
+        ⇒ **护栏给出虚假安心**。测试用最小样本锁住两种写法都能被抓。
+        """
+        import ast
+        import os
+        import tempfile
+        src = (
+            "class NewsFetcher:\n"
+            "    def aug(self, items):\n"
+            "        for item in items:\n"
+            "            if item.get('x'):\n"
+            "                item['impact_score'] += 3\n"
+            "    def direct(self, items):\n"
+            "        for item in items:\n"
+            "            item['impact_score'] = 1 - 2\n"
+        )
+        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False,
+                                         encoding="utf-8") as f:
+            f.write(src)
+            path = f.name
+        try:
+            mr._MAIN_AST_CACHE.update({"key": None, "tree": None})
+            r = mr._boost_effectiveness_from_main(path)
+            self.assertIn("aug", r, "`+=` 形式必须被抓")
+            self.assertIn("direct", r,
+                          "★ `= v - P` 形式必须被抓（首版就是漏了它）")
+            self.assertEqual(r["direct"]["unguarded"], 1,
+                             "无条件赋值应判为均匀平移")
+        finally:
+            os.unlink(path)
+            mr._MAIN_AST_CACHE.update({"key": None, "tree": None})
+
+    def test_renders_audit_line(self):
+        """报表必须显示审计结果（否则"有实现"仍是不可见）"""
+        rows = [TestR659PostFixStratification._art(
+            f"2026-10-06T{h:02d}:00:00+00:00", "$BTC 稳住了")
+            for h in range(8, 20)]
+        rows.append({"outcome": "run_summary", "ts": "2026-10-06T20:00:00+00:00",
+                     "hour_bj": 22, "candidates": 3000, "published": 40,
+                     "unprocessed": 2960, "quota_blocked": False})
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("加权有效性审计", text)
+        self.assertIn("均匀平移", text)
+        self.assertIn("apply_hour_preference_boost", text,
+                      "必须点名那个无效的")
+        self.assertIn("结构有效≠实际有效", text,
+                      "有条件 ≠ 一定有效（R651 显著≠可行动）")
+
+    def test_probe_returns_empty_dict_on_failure(self):
+        """解析失败返回 {}，渲染层须显式报"无法判定"（不得静默当正常）"""
+        self.assertEqual(mr._boost_effectiveness_from_main("不存在.py"), {})
 
 
 if __name__ == "__main__":

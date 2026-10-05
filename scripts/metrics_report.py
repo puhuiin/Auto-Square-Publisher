@@ -2151,6 +2151,102 @@ def _parse_main_ast(main_path=None):
     return tree
 
 
+def _boost_effectiveness_from_main(main_path=None):
+    """R661：AST 判定**每个改`impact_score` 的加权是否真的区分候选**。
+
+    ★ R660 血泪：给**所有**候选减同一个常数 ⇒
+      `(s_i − a) − (s_j − a) = s_i − s_j` ⇒ 相对顺序不变 ⇒ **零影响**。
+      而它有完整注释、遥测字段、单元测试、护栏输出——**看起来已实现**。
+    ⇒ 这个"看起来实现了"必须能被**机械判定**，否则会反复有人踩。
+
+    **判据（只看代码结构，不跑生产）**：
+      ·加减分被包在 `if` 内 ⇒ 只有**部分**候选被改分 ⇒ **真区分**
+      · 加减分在循环体内**无条件**执行 ⇒ **全部候选同量平移** ⇒ **零影响**
+
+    ⚠️ "有条件"不保证真区分——条件恒真（如 `if True`）同样是平移。
+    故本函数**只报告结构事实**（无条件平移 / 全部有条件），
+    由渲染层如实标注，不替读者下"一定有效"的结论（R651：显著≠可行动）。
+
+    返回 `{方法名: {"guarded": n, "unguarded": m, "amps": [...]}}`；
+    解析失败返回 `{}`（调用方须显式报"无法判定"，不得静默当"全部正常"）。
+    """
+    try:
+        import ast
+    except Exception:
+        return {}
+    tree = _parse_main_ast(main_path)
+    if tree is None:
+        return {}
+    out = {}
+    try:
+        cls = next(n for n in tree.body
+                   if isinstance(n, ast.ClassDef) and n.name == "NewsFetcher")
+    except StopIteration:
+        return {}
+    for fn in cls.body:
+        if not isinstance(fn, ast.FunctionDef):
+            continue
+        def _is_score_target(t):
+            return (isinstance(t, ast.Subscript)
+                    and isinstance(t.value, ast.Name)
+                    and t.value.id == "item"
+                    and isinstance(t.slice, ast.Constant)
+                    and t.slice.value == "impact_score")
+
+        # ⚠️ **必须同时抓 AugAssign 与直接赋值**（R661 修复）：
+        # `apply_hour_preference_boost`（R660 已证无效的那个）写的是
+        #   `item["impact_score"] = cur - PENALTY`
+        # **不是** `item["impact_score"] -= PENALTY`
+        # 首版审计只认 AugAssign ⇒ **漏掉了它**，报表因此显示
+        # "4 个加权全部有条件区分"，而最无效的那个恰好不在其中。
+        # ⇒ **判据覆盖不全时，护栏会给出虚假安心**（R612 变体）。
+        subs = []
+        for _n in ast.walk(fn):
+            # ⚠️ `ast.Assign` 的目标是**复数** `.targets`，`.target` 是
+            # `ast.AugAssign` 才有的单数属性。写成 `getattr(_n, "target")`
+            # 会让所有直接赋值**静默漏掉**——R661 首版就是这么漏掉
+            # `apply_hour_preference_boost` 的。
+            if isinstance(_n, ast.AugAssign):
+                if _is_score_target(_n.target):
+                    subs.append(_n)
+            elif isinstance(_n, ast.Assign):
+                for _t in _n.targets:
+                    if _is_score_target(_t) and isinstance(_n.value, ast.BinOp) \
+                            and isinstance(_n.value.op, (ast.Sub, ast.Add)):
+                        subs.append(_n)
+                        break
+        if not subs:
+            continue
+        guarded = unguarded = 0
+        for a in subs:
+            # 沿父链判断该赋值是否位于某个 `if` 的 body 内
+            inside_if = False
+            for parent in ast.walk(fn):
+                for child in ast.iter_child_nodes(parent):
+                    if child is a and isinstance(parent, ast.If):
+                        inside_if = True
+                        break
+                if inside_if:
+                    break
+            if inside_if:
+                guarded += 1
+            else:
+                unguarded += 1
+        amps = []
+        for a in subs:
+            if isinstance(a, ast.AugAssign):
+                sign = "+" if isinstance(a.op, ast.Add) else "-"
+                amps.append(sign + ast.unparse(a.value))
+            else:      # Assign: value 形如 `cur - PENALTY`
+                v = a.value
+                if isinstance(v, ast.BinOp):
+                    sign = "+" if isinstance(v.op, ast.Add) else "-"
+                    amps.append(sign + ast.unparse(v.right))
+        out[fn.name] = {"guarded": guarded, "unguarded": unguarded,
+                        "amps": list(dict.fromkeys(amps))}
+    return out
+
+
 def _time_pref_penalty_from_main(main_path=None):
     """R660：AST 读 `TIME_PREF_PENALTY` 的真实值（main.py:447）。
 
@@ -3009,9 +3105,14 @@ def render_text(s, rows=None):
             # ⇒ (s_i - 2) - (s_j - 2) = s_i - s_j ⇒ **相对顺序完全不变**
             # ⇒ `sort()` 是空操作，选出的前 N 篇与不加分时**逐条相同**。
             #
-            # 且即使改成"只扣一部分"，-2 分相对生产 `impact_score`
-            # 跨度 **6~1007**（实测 485 个样本）也只有 0.2% 效力
-            # ⇒ **双重无效**（R622「权重须量纲对齐」在 R650 被我自己违反）。
+            # ⚠️ **口径纠正（R661）**：我首版在这里写"跨度 6~1007 ⇒ 0.2% 效力"，
+            # **那是错的**——1007 来自 `PRIORITY_SEED_SCORE=999`（人工置顶种子
+            # `priority_seed:bitget-hack` + freshness），**不是自然分布**。
+            # 排除种子后自然跨度是 **6~54（跨度 48，n=482）** ⇒ -2 分相对效力
+            # **4.2%**，是0.2% 的 **21 倍**。⇒ 我的护栏把无效程度夸大了 21 倍
+            # （R641「用对口径」的同类错误，我自己犯的）。
+            # ⇒ **结论不变**：主因是上面的数学恒等式（均匀减分不改变排序），
+            #    量级只是次要理由。**理由要准，不能因为结论对就放过错的数。**
             #
             # 它有完整注释、遥测字段与测试，**看起来已实现**——
             # 这比 bug 更隐蔽：代码在跑、字段在落、测试在过，行为却零变化。
@@ -3022,7 +3123,8 @@ def render_text(s, rows=None):
                 f"       ⚠️ **R650 的时段偏置是无效实现**（R660 实测）："
                 f"它给所有候选减**同一个常数**（-{_tp2s}），"
                 f"而排序键 `(-impact_score, age)` ⇒ 相对顺序不变 ⇒ **sort 是空操作**。"
-                f"生产 impact_score 跨度 6~1007，-{_tp2s} 分只有**千分之一量级**效力"
+                f"生产 impact_score 自然跨度 6~54（已排除人工置顶种子 999），"
+                    f"-{_tp2s} 分仅**4.2%**效力（量级是次要理由，主因是上面的数学恒等式）"
                 f"（R622 量纲对齐）。**'时段偏置已实现'是假的**——"
                 f"要真把配额推向高窗，须改**跨轮次的配额分配**，不是同批排序")
         # R652：平台维度。**这是"流量从哪来"的唯一可见面**。
@@ -3110,6 +3212,44 @@ def render_text(s, rows=None):
                                  f"→ 被持续重排到后置 → 继续发得少；"
                                  f"高浏览币发得少→n 小→被挡表外 → 永远得不到加分。"
                                  f"需人工决定是否放宽 min_n 或改用其他样本来源")
+        # R661：★ **加权有效性审计**（机械判定，不靠人眼扫代码）。
+        # R660 血泪：给所有候选减同一常数 = 相对顺序不变 = **零影响**，
+        # 而它有完整注释 + 遥测字段 + 单测 + 护栏 ⇒ 看起来已实现。
+        # ⇒ 每个改 `impact_score` 的方法都该被判定：
+        #   **无条件的加减分 = 全部候选同量平移 = 对排序零影响**。
+        # ⚠️ "有条件"只说明**结构上**在区分，不代表条件恒真时仍有效——
+        #   故此处只报结构事实，不替读者下"一定有效"的结论（R651）。
+        _bx = _boost_effectiveness_from_main()
+        if _bx is None:
+            lines.append("  ⚠️ 加权有效性审计: **无法判定**"
+                         "（AST 解析失败，不等于'全部正常'）")
+        elif not _bx:
+            lines.append("  ℹ️ 加权有效性审计: 未找到改写 `impact_score` 的方法"
+                         "（可能实现已改名或删除——**请核对**）")
+        else:
+            _flat = [f"{k}{v['amps'][0]}"
+                     for k, v in _bx.items()
+                     if v["unguarded"] and not v["guarded"]]
+            _cond = [k for k, v in _bx.items()
+                     if v["guarded"] and not v["unguarded"]]
+            _mix = [k for k, v in _bx.items()
+                    if v["guarded"] and v["unguarded"]]
+            lines.append(
+                f"  🔬 加权有效性审计（AST）: {len(_bx)} 个方法改写 "
+                f"`impact_score` — 有条件区分 **{len(_cond)}** 个"
+                + (f"，**均匀平移（对排序零影响）{len(_flat)}** 个" if _flat else "")
+                + (f"，混合 **{len(_mix)}** 个" if _mix else ""))
+            if _flat:
+                lines.append(
+                    f"     ↳ ⚠️ **均匀平移 = 无效**（R660 判据）："
+                    f"给全部候选同量加减 ⇒ 相对顺序不变 ⇒ sort 是空操作。"
+                    f"涉及：{', '.join(_flat[:4])}"
+                    + ("…"if len(_flat) > 4 else ""))
+            if _cond:
+                lines.append(
+                    f"     ↳ 有条件区分（结构上只改部分候选）："
+                    f"{', '.join(_cond[:4])}" + ("…"if len(_cond) > 4 else "")
+                    + "　—— ⚠️ 结构有效≠实际有效，仍需命中数据佐证")
         # R285：浏览/互动面板——有 join 上的样本才渲染（无 stats 时整块不出现）。
         # 三维均浏览是"哪类帖有流量"的第一手答案：时段/体裁/来源各自的样本量
         # 一并给出，样本 <3 的桶只展示不解读（避免小样本误判）。
