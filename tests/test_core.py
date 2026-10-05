@@ -17121,6 +17121,87 @@ class TestXChannelPublisher(unittest.TestCase):
                     os.environ[k] = v
 
 
+class TestR669TitleWidgetRootCause(unittest.TestCase):
+    """R669：长文标题 `$` 挂件 —— ★ R645 上线后仍复发的**真根因**。
+
+    ★ R645 已实现标题织入，但生产**24 篇长文标题仍无 `$`**（10-03起才转好）。
+    **根因不是织入逻辑，是候选池的来源**：
+      `_weave_cashtags(title, ensure_tokens)` 的 `ensure_tokens` 来自
+      `extract_tokens(正文/源文)`，而
+      ① 源新闻常把币名写成**纯名**（"ZEC 单日拉升"）
+      ② `detected_tokens` 被 `MAX_TOKENS_PER_POST=3` **截断保留前 3 个**
+      ⇒ 标题里**第 4 个及以后**的币根本没进织入候选
+      ⇒ 例「BCH冲350、ZEC跌7%」两个币都不在候选里。
+    ⇒ 解法：**从标题自身再抽一次**并与原候选池**并集**。
+    ⚠️ 机制性价值：`$` 是币安的**价格挂件 + Write2Earn 返佣入口**，
+      而标题是信息流**第一触点**（只展示前两行）⇒ 缺失= 入口在最显眼处失效。
+      ★ 这**不是**形态偏好而是**收益机制**，与 R668 的AI 腔性质不同。
+    """
+
+    SYMS = {"BTC", "ETH", "BCH", "ZEC", "SOL", "DOGE", "SHIB",
+            "LINK", "AAVE", "COMP", "SUI", "IO"}
+
+    def test_extract_tokens_gets_bare_names(self):
+        """★ 前提：`extract_tokens` 能从**纯名**抽出（否则整个方案无效）"""
+        with patch.object(m.SymbolValidator, "_valid_symbols_cache", self.SYMS), \
+             patch.object(m.SymbolValidator, "get_valid_symbols",
+                          staticmethod(lambda: self.SYMS)):
+            for title, want in (
+                ("BCH冲350、ZEC跌7%，三个山寨多空博弈白热化", ["BCH", "ZEC"]),
+                ("ZEC 单日拉升 11.56%，Memecoin 只够喝口汤", ["ZEC"]),
+                ("SHIB单日拉6%，ZEC狂飙9%，这盘面真见底了？", ["SHIB", "ZEC"]),
+            ):
+                got = m.NewsFetcher.extract_tokens(title, self.SYMS)
+                self.assertEqual(got, want, "抽不出纯名 ⇒ R669 方案失效")
+
+    def test_merge_pool_includes_title_only_tokens(self):
+        """★ 核心：并集后**标题独有的币**必须在候选池里。
+
+        复现 R645 的漏：正文候选池为空（源文是纯名）时，
+        只靠 `ensure_tokens` ⇒ 标题织不出任何 `$`。
+        """
+        with patch.object(m.SymbolValidator, "_valid_symbols_cache", self.SYMS), \
+             patch.object(m.SymbolValidator, "get_valid_symbols",
+                          staticmethod(lambda: self.SYMS)):
+            title = "BCH冲350、ZEC跌7%"
+            ensure_tokens = []          # ★ 模拟源文没抽到（纯名 + 截断）
+            merged = list(ensure_tokens)
+            for t in m.NewsFetcher.extract_tokens(title, self.SYMS):
+                if t not in merged:
+                    merged.append(t)
+            self.assertIn("BCH", merged)
+            self.assertIn("ZEC", merged)
+            woven = m.SquarePublisher._weave_cashtags(title, merged)
+            self.assertIn("$BCH", woven)
+            self.assertIn("$ZEC", woven)
+
+    def test_weave_still_respects_strip_list(self):
+        """★ 并集**不得绕过**既有约束：FORCE_STRIP 的币仍被剥掉"""
+        with patch.object(m.SymbolValidator, "_valid_symbols_cache", self.SYMS), \
+             patch.object(m.SymbolValidator, "get_valid_symbols",
+                          staticmethod(lambda: self.SYMS)):
+            title = "IO 相关新闻"
+            merged = list(m.NewsFetcher.extract_tokens(title, self.SYMS))
+            woven = m.SquarePublisher._weave_cashtags(title, merged)
+            self.assertNotIn("$IO", woven,
+                             "FORCE_STRIP_CASHTAGS 的币不得被织入（R70 防线）")
+
+    def test_title_widget_telemetry_is_separate(self):
+        """★ 标题侧与正文侧挂件必须**分列**（R646）"""
+        import inspect
+        src = inspect.getsource(m.SquarePublisher.publish)
+        self.assertIn("last_title_widget_before", src)
+        self.assertIn("last_title_widget_after", src)
+
+    def test_none_means_unobserved_not_zero(self):
+        """★ 声明为 None 时**必须仍是 None**（Mock/异常态不是 0，R649）"""
+        p = m.SquarePublisher.__new__(m.SquarePublisher)
+        p.last_title_widget_before = None
+        p.last_title_widget_after = None
+        self.assertIsNone(p.last_title_widget_before)
+        self.assertIsNone(p.last_title_widget_after)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 

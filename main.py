@@ -7659,6 +7659,11 @@ class SquarePublisher(BasePublisher):
         self.last_content_id: Optional[str] = None
         self.last_final_content: Optional[str] = None
         self.last_widget_count: Optional[int] = None
+        # R669：长文标题织入 $ 挂件**前后**的有效挂件数（None=未观测，非 0）。
+        # ⚠️ 与 `widget_count`（正文侧）**分列**：标题是独立出海口（R645），
+        #   混进同一分母会把"标题有、正文没有"读成"整体达标"（R646 分侧）。
+        self.last_title_widget_before: Optional[int] = None
+        self.last_title_widget_after: Optional[int] = None
         # R291：本轮注入的活动标签原文（None=无活动标签可注入/未走注入路径）
         self.last_campaign_tag: Optional[str] = None
         # R364：本次「实际带图发布」标志——降级重发（配图失败→纯文本重试，image_url=None）
@@ -7735,8 +7740,29 @@ class SquarePublisher(BasePublisher):
             # 归一），否则 "$BTC冲8.5万" 织出来仍是紧贴中文的不可点击形态。
             # ⚠️ 不做 _ensure_token_widget / _cap_cashtag_widgets：标题是单行、
             # 空间宝贵，硬塞保底挂件会挤掉标题文案；且正文侧的 cap 已把关总数。
-            _t = self._weave_cashtags(title, ensure_tokens)
+            # ============ R669：标题织入的候选池必须**含标题自身的币名** ============
+            # ★ R645 上线后仍复发（生产 24 篇长文标题无 $，10-03 起才转好）。
+            # **根因不是织入逻辑，是候选池的来源**：
+            #   `_weave_cashtags(title, ensure_tokens)` 的 `ensure_tokens` 来自
+            #   `extract_tokens(正文/源文)`，而 ①源新闻常把币名写成纯名
+            #   ②`detected_tokens` 被 `MAX_TOKENS_PER_POST=3` **截断保留前 3 个**
+            #   ⇒ 标题里**第 4 个及以后**的币根本没进织入候选
+            #   ⇒ 例「BCH冲350、ZEC跌7%」两个币都不在候选里。
+            # ⇒ 解法：**从标题自身再抽一次**并与原候选池**并集**。
+            #   ⚠️ 仍走同一`_weave_cashtags`（受 FORCE_STRIP/STRICT_TICKERS 约束）
+            #   ⇒ 不引入新挂件口径；标题侧天然有界（只并入标题里真出现的币）。
+            _title_tokens = NewsFetcher.extract_tokens(
+                title, SymbolValidator.get_valid_symbols())
+            _merge_tokens = list(ensure_tokens or [])
+            for _tt in _title_tokens:
+                if _tt not in _merge_tokens:
+                    _merge_tokens.append(_tt)
+            # R669 遥测：织入前后各有多少有效挂件（None=未观测，非 0）
+            self.last_title_widget_before = self._count_valid_widgets(title or "")
+            _t = self._weave_cashtags(title, _merge_tokens)
             payload["title"] = self._sanitize_title(_t)[:80]
+            self.last_title_widget_after = self._count_valid_widgets(
+                payload["title"] or "")
             if image_url:
                 payload["cover"] = image_url
                 logger.info(f"本次长文发布带封面: {image_url}")
@@ -7838,6 +7864,11 @@ class SquarePublisher(BasePublisher):
         self.last_content_id: Optional[str] = None
         self.last_final_content: Optional[str] = None
         self.last_widget_count: Optional[int] = None
+        # R669：长文标题织入 $ 挂件**前后**的有效挂件数（None=未观测，非 0）。
+        # ⚠️ 与 `widget_count`（正文侧）**分列**：标题是独立出海口（R645），
+        #   混进同一分母会把"标题有、正文没有"读成"整体达标"（R646 分侧）。
+        self.last_title_widget_before: Optional[int] = None
+        self.last_title_widget_after: Optional[int] = None
         self.last_campaign_tag: Optional[str] = None
         # 视频帖始终带多媒体（fileTicket + 封面），回执如实置 True
         self.last_published_with_image: Optional[bool] = True
@@ -10216,6 +10247,11 @@ def _run_main():
                     # 整条遥测失败被吞（与 error_code 的 str() 同款模式）
                     _wc = getattr(publisher, "last_widget_count", None)
                     widget_count = _wc if isinstance(_wc, int) else None
+                    # R669：标题侧挂件（Mock/异常态⇒ None，**不是 0**）
+                    _twb_v = getattr(publisher, "last_title_widget_before", None)
+                    _twa_v = getattr(publisher, "last_title_widget_after", None)
+                    _twb = _twb_v if isinstance(_twb_v, int) else None
+                    _twa = _twa_v if isinstance(_twa_v, int) else None
                     # R364：实际带图发布回执——降级重发（配图失败→纯文本重试）后帖子已无
                     # 封面/配图，而 bool(uploaded_image_url) 只看"是否处理过配图"，会把降级
                     # 帖误记为带图，污染"带图 vs 无图"互动对照。改读发布器实发标志；
@@ -10463,6 +10499,13 @@ def _run_main():
                         "hype_ok": _hype_ok,
                         "conspiracy_ok": _consp_ok,
                         "widget_count": widget_count,
+                        # R669：**标题侧**挂件（织入前→织入后）。
+                        # ★ 标题是信息流**第一触点**，挂件缺失= 读者点不到交易页
+                        #   = Write to Earn 返佣入口在最显眼处失效（R645）。
+                        # ⚠️ 与 `widget_count` **分列**（R646）：两者是不同出海口。
+                        # None=非长文/Mock/异常态（**不是 0**）。
+                        "title_widget_before": _twb,
+                        "title_widget_after": _twa,
                         "tag_count": tag_count,
                         "campaign_tag_count": campaign_tag_count,
                         # R291：注入的活动标签原文（None=本轮无活动标签可注入）
