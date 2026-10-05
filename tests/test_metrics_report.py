@@ -6379,3 +6379,137 @@ class TestR670WidgetCapGuardrail(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TestR672ParagraphLengthGuardrail(unittest.TestCase):
+    """R672：**最长段落汉字数**（短讯）。
+
+    ★ R671 实测得出的结论（这是本护栏存在的理由）：
+      · 段数**已达标**：中位 3~4 段、89% 有换行 ⇒ "分段"这个维度没病
+      · **真正的差距在每段太长**：段均 36、**p90 61** 汉字，
+        >60 占 10%、>80 占 3%
+      · 人工范文（Kamino/SOL）段均**26 汉字**
+      ⇒ 手机端一屏读不完 60 字 ⇒ 这是**真实的划走原因**（R644 同源）
+    ⚠️ **不能只靠 final_preview**（R647）：它只存前 200 字 ⇒ 尾部段落不可见
+      ⇒ 永远只能看见"前几段够长" ⇒ **假达标**。
+    """
+
+    @staticmethod
+    def _p(ts, pm, article=False):
+        return {"platforms": ["binance"], "outcome": "binance_published",
+                "ts": ts, "hour_bj": 8, "content_id": ts, "source": "S",
+                "article": article, "ending_question": True,
+                "para_max_cjk": pm, "final_preview": "正文"}
+
+    def test_counts_short_posts_only(self):
+        """★ **只统计短讯**——长文按 500~800 字设计会整体拉高分布"""
+        rows = [self._p("2026-10-06T02:0%d:00+00:00" % i, 30)
+                for i in range(3)]
+        rows.append(self._p("2026-10-06T02:09:00+00:00", 400, article=True))
+        s = mr.summarize(rows)
+        self.assertEqual(s["para_max_n"], 3, "长文不得计入")
+
+    def test_over60_and_over80(self):
+        rows = [self._p("2026-10-06T02:%02d:00+00:00" % i, v)
+                for i, v in enumerate([26, 35, 61, 81])]
+        s = mr.summarize(rows)
+        self.assertEqual(s["para_max_over60"], 2, "61 与 81 应计入")
+        self.assertEqual(s["para_max_over80"], 1)
+
+    def test_missing_field_not_counted(self):
+        """★ 字段缺失 = 未观测，**不得**当 0（R659）"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-06T02:00:00+00:00", "hour_bj": 8,
+                 "content_id": "x", "source": "S", "ending_question": True,
+                 "final_preview": "正文"}]
+        s = mr.summarize(rows)
+        self.assertEqual(s["para_max_n"], 0)
+
+    def test_renders_with_flag(self):
+        rows = [self._p("2026-10-06T02:%02d:00+00:00" % i, v)
+                for i, v in enumerate([26, 31, 65, 88])]
+        text = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("最长段落", text)
+        self.assertIn("读全文", text)
+        # >60 占 50% ⇒ 应报 ❌
+        self.assertIn("❌", text)
+
+    def test_prompt_forbids_long_paragraph(self):
+        """★ 接线守卫：prompt 必须真的卡了段落长度（否则遥测白加）"""
+        src = open(m.__file__, encoding="utf-8").read()
+        i = src.index("R672 段落长度硬要求")
+        blk = src[i:i + 500]
+        self.assertIn("35", blk, "必须给出具体阈值")
+        self.assertIn("4~5", blk, "段数须同步上调")
+
+
+class TestGuardrailInsertionSafety(unittest.TestCase):
+    """★★ **通用回归守卫**：新增报表块不得挤掉既有护栏。
+
+    ★ 为什么要有这道（当天被咬**三次**：R668 / R670 / R672）：
+      插入累加块时若落在「守卫 `if` 与其第一条语句之间」，
+      ⇒既有累加被**挤进守卫体内** ⇒ 该护栏**静默失效**
+      ⇒ 而 `py_compile` **仍然通过**（语法没错、行为变了）。
+      R672 那次直接挂掉 R663 + R668 **共 8 例**。
+
+    ⇒ 本守卫把「既有护栏仍能聚合」变成**显式契约**，
+      新增任何累加块都必须让它继续通过。
+    """
+
+    def test_existing_ordinal_still_aggregates(self):
+        """R668 序号式小标题：与 R672 共存"""
+        rows = [{"platforms": ["binance"], "outcome": "binance_published",
+                 "ts": "2026-10-06T02:%02d:00+00:00" % i, "hour_bj": 8,
+                 "content_id": "o%d" % i, "source": "S", "article": True,
+                 "ending_question": True, "ordinal_heading": True,
+                 "para_max_cjk": 30,
+                 "final_preview": "一、发生了什么\n\n正文"} for i in range(4)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["ordinal_n"], 4, "R668 被挤掉了")
+        self.assertEqual(s["ordinal_yes"], 4)
+        self.assertEqual(s["para_max_n"], 0, "R672 只统计短讯（article=True）")
+
+    def test_all_three_coexist(self):
+        """★ R663 + R668 + R670 + R672 四套护栏同时可用"""
+        rows = []
+        for i in range(6):
+            rows.append({"platforms": ["binance"],
+                         "outcome": "binance_published",
+                         "ts": "2026-10-06T02:%02d:00+00:00" % i,
+                         "hour_bj": 8, "content_id": "c%d" % i,
+                         "source": "S", "article": False,
+                         "ending_question": True,
+                         "ordinal_heading": bool(i % 2),
+                         "para_max_cjk": 30 + i * 5,
+                         "widget_count": 1 + (i % 2),
+                         "tokens": ["BTC"],
+                         "final_preview": "正文\n\n第二段"})
+        s = mr.summarize(rows)
+        self.assertEqual(s["para_max_n"], 6, "R672")
+        self.assertEqual(s["ordinal_n"], 6, "R668")
+        self.assertEqual(s["ending_q_marked"], 6, "R647")
+        self.assertEqual(s["widget_hist"][1], 3, "R670")
+        self.assertEqual(s["widget_hist"][2], 3)
+
+    def test_render_contains_all_guardrails(self):
+        """★ 四套护栏**都必须在渲染文本里出现**（静默失效的最后一道）"""
+        rows = []
+        for i in range(6):
+            rows.append({"platforms": ["binance"],
+                         "outcome": "binance_published",
+                         "ts": "2026-10-06T02:%02d:00+00:00" % i,
+                         "hour_bj": 8, "content_id": "r%d" % i,
+                         "source": "S", "article": False,
+                         "ending_question": True,
+                         "ordinal_heading": True,
+                         "para_max_cjk": 70,
+                         # ⚠️ **必须含超限**（前 2 条给 widget_count=9）：
+                         #   R670 的分层线由「最后一个超限 ts」推导，
+                         #   全未超限 ⇒ 走"无法分层"分支 ⇒ **不渲染**使用率行
+                         #   （实测踩过：以为护栏坏了，实为数据不满足分层条件）
+                         "widget_count": 9 if i < 2 else 1,
+                         "tokens": ["BTC"],
+                         "final_preview": "正文\n\n第二段"})
+        text = mr.render_text(mr.summarize(rows), rows)
+        for mark in ("最长段落", "挂件额度使用"):
+            self.assertIn(mark, text, "缺护栏: %s" % mark)

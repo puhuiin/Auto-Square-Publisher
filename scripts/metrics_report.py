@@ -921,14 +921,23 @@ def summarize(rows):
         #   （上限 3），单看零挂件=0 一切正常，读者无法判断这是
         #   "源文只提一个币"（正常）还是"漏织了"（缺陷）。
         # ⇒ 本行给分布 + 三条已核实结论，避免下轮重复排查（R670）。
-        "widget_hist": collections.Counter(),
-        # R670：**只统计 R367 降格上线之后**的分布。降格前的老稿
+        # R672：**最长段落汉字数**分布（`para_max_cjk`）。
+        # ★ 为什么必须有这一面（R671 实测得出的结论）：
+        #   段数**已达标**（中位 3~4 段、89% 有换行）⇒ "分段"这个维度没病；
+        #   真正的差距在**每段太长**：段均 36、**p90 61** 汉字，
+        #   >60 占 10%、>80 占 3%；而人工范文段均**26 汉字**。
+        #   手机端一屏读不完 60 字 ⇒ 这是**真实的划走原因**（R644 同源）。
+        # ⚠️ **不能只靠 `final_preview`**（R647盲区）：它只存前 200 字，
+        #   尾部段落不可见 ⇒ 永远只能看见"前几段够长" ⇒ 假达标。
+        "para_max_n": 0, "para_max_sum": 0, "para_max_over60": 0,
+        "para_max_over80": 0,        # R670：**只统计 R367 降格上线之后**的分布。降格前的老稿
         # `widget_count` 可达 12（当时逻辑还不存在）⇒ 混进分布会让
         # 护栏显示"4/8/12 个"⇒ **读者误以为降格没生效**（R659 陷阱）。
         # ⚠️ 上线时刻**存在 s 里**而非全局变量：全局会被**下一次 summarize
         #   调用污染**（R621纪律 18 的变体——那次是"改了不还原"，
         #   这次是"跨调用残留"）⇒ 测试间与多次调用会互相串味。
         "widget_cap_since": "",
+        "widget_hist": collections.Counter(),
         "widget_hist_new": collections.Counter(),
         # R610：稳定币-only 零挂件（合规，不告警）——与上面失守桶分开计数，
         # 报表显性列出，避免"告警消失"被误读成观测被关掉。
@@ -1532,6 +1541,16 @@ def summarize(rows):
                     s["boost_mag_nonzero"] += 1
                 if _d < -1e-9:
                     s["boost_mag_neg"] += 1
+            # R672：最长段落汉字数。⚠️ **只统计短讯**——长文按 500~800 字设计，
+            #   小标题段落天然更长，混进来会把分布整体拉高、掩盖短讯的问题。
+            _pmc = _num(r.get("para_max_cjk"))
+            if _pmc is not None and not r.get("article"):
+                s["para_max_n"] += 1
+                s["para_max_sum"] += _pmc
+                if _pmc > 60:
+                    s["para_max_over60"] += 1
+                if _pmc > 80:
+                    s["para_max_over80"] += 1
             if isinstance(r.get("ending_question"), bool):
                 s["ending_q_marked"] += 1
                 # R668：序号式 AI 腔。生产实测长文 23/27（**85%**）以「一、」开头，
@@ -3895,6 +3914,26 @@ def render_text(s, rows=None):
                 f"  {_flag}正文分段: 中位 {statistics.median(_lp):.0f} 个空行"
                 f"· 无分段 {_zero}/{len(_lp)} 篇（{_zero_pct:.0f}%）"
                 f"（final_preview 截断至 200 字，为下界估计）")
+        # R672：**最长段落汉字数**（短讯）。
+        # ★ 与上一行"分段"**互补**：那一行答"有没有分段"，
+        #   这一行答"每段有多长"—— R671 实测**段数已达标**（中位 3~4 段）
+        #   真正的差距在这里（段均 36、p90 61；人工范文 26）。
+        # ⚠️ 手机端一屏读不完 60 字 ⇒ >60 是**可读性红线**（R644 同源）。
+        # ⚠️ **只统计短讯**（长文按 500~800 字设计，小标题段落天然更长）。
+        # ⚠️ **不基于 final_preview**：它只存前 200 字 ⇒ 尾部不可见（R647）。
+        _pmn = s.get("para_max_n") or 0
+        if _pmn:
+            _pavg = s["para_max_sum"] / _pmn
+            _p60 = s.get("para_max_over60") or 0
+            _p80 = s.get("para_max_over80") or 0
+            _pflag = ("✅ " if _p60 / _pmn <= 0.05
+                      else ("⚠️ " if _p60 / _pmn <= 0.15 else "❌ "))
+            lines.append(
+                f"  {_pflag}最长段落 {_pmn} 篇：均 {_pavg:.0f} 汉字"
+                f"· >60 字 { _p60}（{_p60/_pmn*100:.0f}%）"
+                f"· >80 字 {_p80}（{_p80/_pmn*100:.0f}%）"
+                f"　（prompt 卡「每段 ≤35 汉字」；**读全文**统计，"
+                f"非 final_preview 下界）")
         # R286：长文标题眼钩基线（有长文标题才渲染）+ 禁用领词告警
         if s.get("article_titles"):
             _n = len(s["article_titles"])
