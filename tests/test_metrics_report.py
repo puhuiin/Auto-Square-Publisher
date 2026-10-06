@@ -4316,6 +4316,79 @@ class TestR637UnregisteredAuthModeSurfaced(unittest.TestCase):
         self.assertIn("AUTH_MODE", src)
 
 
+class TestR695AuthGapRenderedSeparately(unittest.TestCase):
+    """R695：读侧必须把「配置缺口」与「用户还没配」**分开渲染**。
+
+    生产实锤：原 `no_auth_count=5` 已**恒定 3 天 242 次不变**。
+    **恒定不变的告警等于噪声**——没人动、没人查，因为看不出该做什么。
+
+    而这 5 站里只有 **openrouter 有 secret 且主流程真实在用**，其余 4 站连key
+    都没有 ⇒ 混报会让排障先怀疑 4 个不相关的站，方向被稀释。
+
+    两条线的**处置动作完全相反**：
+      auth_gap → **代码该补 AUTH_MODE 条目**（openrouter 走这条）
+      nokey    → **用户该配 secret**（登记认证方式对它无意义）
+    """
+
+    def _probe(self, **kw):
+        row = {"ts": "2026-10-06T07:41:00+00:00", "outcome": "provider_probe",
+               "probe_ok": True, "sites_total": 11, "sites_ok": 7,
+               "sites_unknown": 4,
+               "unknown_sites": "bluesminds,siliconflow,tokenrouter,zai"}
+        row.update(kw)
+        return [row]
+
+    def _text(self, **kw):
+        rows = self._probe(**kw)
+        return mr.render_text(mr.summarize(rows), rows)
+
+    def test_auth_gap_flagged_as_code_problem(self):
+        """auth_gap 必须显式说「代码问题」——它是探针配置缺条目，不是 key 坏了。"""
+        text = self._text(auth_gap_count=1, auth_gap_sites="openrouter",
+                          nokey_count=4,
+                          nokey_sites="aihubmix,bluesminds,inferera,xkiro")
+        self.assertIn("openrouter", text)
+        self.assertIn("代码问题", text)
+
+    def test_nokey_says_configure_secret(self):
+        text = self._text(auth_gap_count=1, auth_gap_sites="openrouter",
+                          nokey_count=4,
+                          nokey_sites="aihubmix,bluesminds,inferera,xkiro")
+        self.assertIn("未配 key", text)
+        # 关键：必须说清"登记认证方式对它们无意义"，否则读者会去补 AUTH_MODE
+        self.assertIn("无意义", text)
+
+    def test_auth_probe_verdict_shown_for_openrouter(self):
+        """实测结论要显示出来——否则看到"没登记"仍不知该填什么。"""
+        text = self._text(auth_gap_count=1, auth_gap_sites="openrouter",
+                          auth_probe_results="openrouter=both_ok_public")
+        self.assertIn("both_ok_public", text)
+        self.assertIn("AUTH_MODE", text)
+
+    def test_legacy_field_used_when_split_absent(self):
+        """老数据没有拆分字段时，必须回落旧字段（否则历史行渲染成"没问题"）。"""
+        text = self._text(no_auth_count=5,
+                          no_auth_sites="aihubmix,bluesminds,inferera,openrouter,xkiro")
+        self.assertIn("未登记认证方式", text)
+        self.assertIn("openrouter", text)
+
+    def test_new_fields_absent_renders_nothing(self):
+        """新字段全缺 + 旧字段也没有 ⇒ 不产生噪声行。"""
+        text = self._text()
+        self.assertNotIn("代码问题", text)
+        self.assertNotIn("未配 key", text)
+
+    def test_probe_source_writes_new_fields(self):
+        """守卫写侧：新字段必须真被写，否则读侧永远空（R617：结论必须有出口）。"""
+        import os
+        probe = os.path.join(os.path.dirname(mr.__file__),
+                             "probe_provider_models.py")
+        src = open(probe, encoding="utf-8").read()
+        for field in ("auth_gap_sites", "nokey_sites", "auth_probe_results",
+                      "SITE_KEY_ENV", "_probe_auth_mode"):
+            self.assertIn(field, src, f"探针缺少 {field}")
+
+
 class TestR643ReadabilityMetrics(unittest.TestCase):
     """R643/R644：可读性护栏必须有**持久出口**（R617）。
 

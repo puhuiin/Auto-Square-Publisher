@@ -129,13 +129,35 @@ def extract_pool(main_path=MAIN_PY):
             site = str(k.value)
             url_node, model_node = v.elts[1], v.elts[2]
             base = url_node.value if isinstance(url_node, ast.Constant) else None
+            # R695：取第0 个元素（key）里的 env **名**，供"有 key 却没登记认证
+            # 方式"的判定用。⚠️ 必须从 AST 取而非手抄表——手抄会随 main.py
+            # 改 env 名而静默过期（R693workflow env 名错配同族）。
+            key_env = None
+            key_node = v.elts[0]
+            # 真实形状是 `os.getenv("X_API_KEY", "").strip()` ⇒ 外层是
+            # **零参数** `.strip()` 调用（`args=[]`），内层才是带 env 名的 getenv。
+            # ⚠️ 判据不能写 `and key_node.args`——`.strip()` 的 args 恒为空，
+            #   该条件恒False ⇒ 剥壳被跳过 ⇒ 11 站全 None（我第一版的错）。
+            if (isinstance(key_node, ast.Call) and isinstance(key_node.func, ast.Attribute)
+                    and key_node.func.attr == "strip"):
+                key_node = key_node.func.value   # 剥壳：取 .strip 的被调对象
+            if (isinstance(key_node, ast.Call) and isinstance(key_node.func, ast.Attribute)
+                    and key_node.func.attr == "getenv" and key_node.args
+                    and isinstance(key_node.args[0], ast.Constant)):
+                key_env = str(key_node.args[0].value)
             default = None
             if isinstance(model_node, ast.BoolOp):  # `a or b`
                 default = model_node.values[-1].value \
                     if isinstance(model_node.values[-1], ast.Constant) else None
             out.append({"site": site, "base": str(base) if base else None,
-                        "default": default})
+                        "default": default, "key_env": key_env})
     return sorted(out, key=lambda x: x["site"])
+
+
+# R695：站名 → key env 名（由 main.py 的 extra_keys 动态提取，不手抄）。
+# 用途：区分「未登记 AUTH_MODE」里两种处置完全不同的情形——
+#有 key（探针配置缺条目）vs 无 key（用户还没配）。
+SITE_KEY_ENV = {e["site"]: e.get("key_env") for e in extract_pool()}
 
 
 def _model_ids(payload):
@@ -163,6 +185,49 @@ def _try_auth(url, key, mode):
     return _get_json(url, bearer=key)
 
 
+def _probe_auth_mode(url, key):
+    """R695：**实测**某站 `/models` 认哪种认证方式，返回可照抄的结论串。
+
+    为什么必须实测（R619 的同型，但更隐蔽）：`AUTH_MODE` 靠人肉逐站填写，
+    填错时探针会走错误方式→ 401 → 报"未核实"，而排障会去看 key 失效、
+    看网络，**真正的问题（方式填错）留在原地**。填对之前没人会发现填错。
+
+    ⚠️ **判据不能用"哪种方式成功"**——目录可能公开，两种方式都成功，
+    此时无法区分（结论 `both_ok_public`，需人工/换判据）。
+    ⚠️ 也不能因为"未登记"就替站点填一个方式进 AUTH_MODE：
+    那是把**猜测**写进配置，比留空更危险（错误的配置会持续给出错误结论）。
+    ⇒ 本函数只**回报事实**，不写 AUTH_MODE。
+
+    返回串格式（供人照抄进 AUTH_MODE）：
+      bearer_ok / query_ok      —— 唯一被接受的方式（另一种被拒）
+      both_ok_public            —— 两种都成功 = 目录公开，**无法判定**
+      both_rejected:<a>,<b>     —— 两种都被拒 = key 可能失效或方式超出这两种
+      error:<异常类名>          —— 网络/解析异常，本轮测不出
+    """
+    verdicts = {}
+    for mode in ("bearer", "query"):
+        try:
+            _try_auth(url, key, mode)
+            verdicts[mode] = True
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 403):
+                verdicts[mode] = False      # 明确被拒 = 该方式不被接受
+            else:
+                verdicts[mode] = None# 其它错误与认证无关，不算判据
+        except Exception:
+            verdicts[mode] = None
+    b, q = verdicts.get("bearer"), verdicts.get("query")
+    if b is True and q is False:
+        return "bearer_ok"
+    if q is True and b is False:
+        return "query_ok"
+    if b is True and q is True:
+        return "both_ok_public"
+    if b is False and q is False:
+        return "both_rejected:bearer,query"
+    return "error:inconclusive"
+
+
 def check_site(entry):
     """核对单站默认名。返回 dict，必含 site / default / ok 三键。
 
@@ -182,8 +247,20 @@ def check_site(entry):
     url = MODELS_URL_OVERRIDE.get(site) or (base.rstrip("/") + MODELS_PATH)
     auth = AUTH_MODE.get(site)
     if not auth:
+        # R695：**不猜认证方式**（R619：stepfun/tokenrouter都曾因猜错而把
+        # "方式错了"报成"key 坏了"）。对"有 key 却未登记"的站，实测两种方式
+        # 并把结论写进 note——让下一个人**照抄即可**，不必重测。
+        key_env = SITE_KEY_ENV.get(site) or ""
+        key = os.getenv(key_env, "").strip() if key_env else ""
         payload = _get_json(url)
-        return _judge(site, default, payload)
+        out = _judge(site, default, payload)
+        if not key:
+            # 连凭据都没有 ⇒ 实测不了，note 说清"为什么没实测"
+            out["auth_probe"] = (f"no_key:{key_env}" if key_env
+                                 else "no_key_env_name")
+            return out
+        out["auth_probe"] = _probe_auth_mode(url, key)
+        return out
 
     key_env, mode = auth
     key = os.getenv(key_env, "").strip()
@@ -291,8 +368,51 @@ def write_telemetry(results, metrics_file=METRICS_FILE, elapsed_sec=None):
     # 查网络，**真正的问题（探针配置缺条目）留在原地**。R619 的同型：
     # "方式错了"被报成"key 坏了"。这里更隐蔽——**连note 都不会有**。
     #
-    # 处置：把名单写进遥测（新增 `no_auth_sites`），让读侧能说清
-    # 「这批站的核实结果依赖目录公开」，并可加守卫防"该登记却没登记"。
+    # ── R695（2026-10-06）：把「未登记」拆成两类，因为处置动作完全不同 ──
+    # 生产实锤：`no_auth_count=5` 已**恒定 3 天 242 次不变**，而其中
+    # **openrouter 是唯一「有 secret + 主流程真实在用」的站**
+    # （`gh secret list` 有 OPENROUTER_API_KEY，且 `extra_keys` 里是主力条目）。
+    # ⇒ 它和另外 4 站（xkiro/aihubmix/inferera/bluesminds，**连 key 都没有**）
+    # 被混在同一个 `no_auth_sites` 里报出来。
+    #
+    # ⚠️ **恒定不变的告警等于噪声**：3 天没人动、没人查，因为看不出该做什么。
+    # 而 openrouter 真出问题时，运维看到"5 站未登记"会先怀疑另外 4 个不相关的站，
+    # 排障方向被稀释（R620 的"排序键恒等"同型：字段在，但答不了问题）。
+    #
+    # 拆分口径（**按「有没有拿到 key」分，不按「在不在池里」分**）：
+    #   auth_gap_sites：池内 + **本机有 key** + 未登记 ⇒ 探针配置缺条目。
+    #       排障方向＝补 AUTH_MODE；**这是代码问题，不是用户该做的事**。
+    #   nokey_sites：池内 + **本机无 key** ⇒ 用户还没配。
+    #       排障方向＝配 secret；登记 AUTH_MODE 对它**无意义**（拿不到凭据）。
+    #
+    # ⚠️ 为什么不直接给 openrouter 填上bearer：R619 的教训是
+    # **"认证方式不能猜"**（stepfun/tokenrouter 都曾因猜错而误报 key 坏了）。
+    # 本地无 OPENROUTER_API_KEY ⇒ **实测不了** ⇒ 猜一个值填进去正是
+    # 重犯 R619。故改为**实测并回报**（见 probe_site 的 auth_probe），
+    # 由真实响应决定，而非我拍。
+    _auth_gap, _nokey = [], []
+    for r in results:
+        _site = str(r.get("site"))
+        if _site in AUTH_MODE:
+            continue
+        # 从 main.py 池条目取该站的 key env 名（R695：判定要基于真实配置）
+        _key_env = SITE_KEY_ENV.get(_site, "")
+        ( _auth_gap if (os.getenv(_key_env, "").strip() if _key_env else "")
+          else _nokey ).append(_site)
+    if _auth_gap:
+        rec["auth_gap_count"] = len(_auth_gap)
+        rec["auth_gap_sites"] = ",".join(_auth_gap)
+    if _nokey:
+        rec["nokey_count"] = len(_nokey)
+        rec["nokey_sites"] = ",".join(_nokey)
+    # R695：认证方式实测结论落盘。⚠️ **不落等于没做**——实测只存在内存里
+    # 的话，下一个人还得重测一遍（R612：程序在用 ≠ 人在看，同款理由）。
+    # 格式 `site=结论` 逗号分隔，空结论（无 key / 非未登记站）不占位。
+    _probes = ["%s=%s" % (r.get("site"), r["auth_probe"])
+               for r in results if r.get("auth_probe")]
+    if _probes:
+        rec["auth_probe_results"] = ",".join(_probes)
+    # 保留旧字段（读侧/报表仍在用，删了会破历史序列）
     _noauth = [str(r.get("site")) for r in results
                if str(r.get("site")) not in AUTH_MODE]
     if _noauth:

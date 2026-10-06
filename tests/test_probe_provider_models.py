@@ -510,5 +510,151 @@ class TestR626ModelsUrlOverride(unittest.TestCase):
         self.assertEqual(ppm.AUTH_MODE["google"][1], "query")
 
 
+class TestR695AuthGapVsNoKey(unittest.TestCase):
+    """R695：把「未登记 AUTH_MODE」拆成**处置完全相反**的两类。
+
+    生产实锤：`no_auth_count=5` 已**恒定 3 天 242 次不变**。恒定不变的告警
+    等于噪声——3 天没人动、没人查，因为看不出该做什么。
+
+    而这 5 站里只有 **openrouter 是「有 secret + 主流程真实在用」**的
+    （`gh secret list` 有 OPENROUTER_API_KEY，且 extra_keys 里是主力条目），
+    其余 4 站（xkiro/aihubmix/inferera/bluesminds）**连 key 都没有**。
+    混在一个字段里报出来 ⇒ openrouter 真出问题时，排障会先怀疑那4 个
+    不相关的站 ⇒ 排障方向被稀释（R620"排序键恒等"同型：字段在，答不了问题）。
+
+    拆分口径按「**本机有没有拿到 key**」而不是「在不在池里」：
+      auth_gap_*：有 key + 未登记 ⇒ 探针配置缺条目（**代码问题**）
+      nokey_*   ：无 key + 未登记 ⇒ 用户还没配（**用户侧待办**）
+    """
+
+    def _rec(self, results, env=None):
+        tmp = tempfile.mkdtemp()
+        old_env = {k: os.environ.get(k) for k in (env or {})}
+        for k, v in (env or {}).items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        old_file = ppm.METRICS_FILE
+        ppm.METRICS_FILE = os.path.join(tmp, "m.jsonl")
+        try:
+            # ⚠️ 第二个位置参数是 metrics_file（路径），不是 elapsed
+            # （我第一版把 1.0 传成了路径 ⇒ TypeError 被"落盘失败"吞掉 ⇒
+            #   断言拿到的是"文件不存在"，报的是错误的原因）。
+            ppm.write_telemetry(results, metrics_file=ppm.METRICS_FILE, elapsed_sec=1.0)
+            with open(ppm.METRICS_FILE, encoding="utf-8") as f:
+                return json.loads(f.read().strip())
+        finally:
+            ppm.METRICS_FILE = old_file
+            for k, v in old_env.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_auth_gap_and_nokey_are_separated(self):
+        """有 key 的未登记站必须进 auth_gap，无 key 的进 nokey，两者不可混。"""
+        results = [
+            {"site": "openrouter", "ok": True},    # 未登记，CI 里有 key
+            {"site": "xkiro", "ok": True},         # 未登记，且无 key
+        ]
+        rec = self._rec(results, env={"OPENROUTER_API_KEY": "sk-x", "XKIRO_API_KEY": None})
+        self.assertIn("openrouter", str(rec.get("auth_gap_sites", "")))
+        self.assertNotIn("openrouter", str(rec.get("nokey_sites", "")))
+        self.assertIn("xkiro", str(rec.get("nokey_sites", "")))
+        self.assertNotIn("xkiro", str(rec.get("auth_gap_sites", "")))
+
+    def test_legacy_no_auth_field_kept(self):
+        """旧字段必须保留——报表/历史序列还在读它，删了会破已有数据。"""
+        results = [{"site": "openrouter", "ok": True}]
+        rec = self._rec(results, env={"OPENROUTER_API_KEY": None})
+        self.assertIn("openrouter", str(rec.get("no_auth_sites", "")))
+        self.assertEqual(rec.get("no_auth_count"), 1)
+
+    def test_auth_probe_reason_recorded_when_no_key(self):
+        """★ 无 key 时必须写清"为什么没实测"。
+
+        否则 auth_probe_results 整条缺失 ⇒ 排障看到 openrouter 没结论，
+        只能靠猜（R612：程序在用 ≠ 人在看；没原因的原因等于没原因）。
+        """
+        results = [{"site": "openrouter", "ok": True,
+                    "auth_probe": "no_key:OPENROUTER_API_KEY"}]
+        rec = self._rec(results)
+        self.assertIn("openrouter=no_key:OPENROUTER_API_KEY",
+                      str(rec.get("auth_probe_results", "")))
+
+    def test_key_env_extracted_from_real_main_py(self):
+        """★ SITE_KEY_ENV 必须从**真实 main.py** 的 AST 提取，不是手抄表。
+
+        生产实锤（R693 同族）：手抄表会随 main.py 改 env 名而静默过期，
+        而过期的名字让 `os.getenv` 恒返空 ⇒ **永远判成 nokey**，
+        auth_gap 永远是 0——缺口被掩盖，正是本次要修的东西。
+        """
+        self.assertTrue(ppm.SITE_KEY_ENV, "SITE_KEY_ENV 为空")
+        missing = [s for s, e in ppm.SITE_KEY_ENV.items() if not e]
+        self.assertEqual(missing, [], f"这些站没取到 key env 名：{missing}")
+        self.assertEqual(ppm.SITE_KEY_ENV.get("openrouter"), "OPENROUTER_API_KEY")
+
+    def test_strip_call_is_unwrapped_correctly(self):
+        """★ 锁定 `.strip()` 剥壳（我第一版写错过：判据多写了 `and key_node.args`）。
+
+        真实形状 `os.getenv("X", "").strip()` 的**外层 .strip() 是零参数调用**，
+        `args=[]`。若判据要求外层有 args，剥壳会被跳过 ⇒ key_env 恒 None ⇒
+        11 站全被判成"取不到 env 名"。本测试用真实 main.py 兜住。
+        """
+        real = ppm.extract_pool(os.path.join(_ROOT, "main.py"))
+        bad = [e["site"] for e in real if not e.get("key_env")]
+        self.assertEqual(bad, [], f"真实 main.py 里这些站没提到 env 名：{bad}")
+
+
+class TestR695ProbeAuthMode(unittest.TestCase):
+    """R695：`_probe_auth_mode` 只能**回报事实**，不得替站点猜认证方式。"""
+
+    def _run(self, behavior):
+        def fake(url, key, mode):
+            r = behavior.get(mode)
+            if r == "ok":
+                return {"data": [{"id": "m"}]}
+            if r == "401":
+                raise urllib.error.HTTPError(url, 401, "denied", {}, None)
+            if r == "500":
+                raise urllib.error.HTTPError(url, 500, "boom", {}, None)
+            raise RuntimeError("network")
+        old = ppm._try_auth
+        ppm._try_auth = fake
+        try:
+            return ppm._probe_auth_mode("http://x", "k")
+        finally:
+            ppm._try_auth = old
+
+    def test_four_verdicts(self):
+        self.assertEqual(self._run({"bearer": "ok", "query": "401"}), "bearer_ok")
+        self.assertEqual(self._run({"bearer": "401", "query": "ok"}), "query_ok")
+        self.assertEqual(self._run({"bearer": "ok", "query": "ok"}), "both_ok_public")
+        self.assertEqual(self._run({"bearer": "401", "query": "401"}),
+                         "both_rejected:bearer,query")
+        self.assertEqual(self._run({"bearer": "500", "query": "401"}),
+                         "error:inconclusive")
+
+    def test_public_directory_never_reported_as_a_mode(self):
+        """★ 目录公开时**必须**说"无法判定"，不能报成某一种方式。
+
+        这是 R619（认证方式不能猜）的核心守卫：若把 `both_ok_public`
+        简化成 "bearer_ok"，下一个人就会把猜测填进 AUTH_MODE，
+        而**错误的配置比留空更危险**（它会持续产出错误结论）。
+        """
+        out = self._run({"bearer": "ok", "query": "ok"})
+        self.assertIn("public", out)
+        self.assertNotIn("bearer_ok", out)
+        self.assertNotIn("query_ok", out)
+
+    def test_non_auth_http_error_is_not_a_verdict(self):
+        """500 与 401 语义不同：前者不是"该方式不被接受"，不能计入判据。"""
+        out = self._run({"bearer": "500", "query": "500"})
+        self.assertEqual(out, "error:inconclusive")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
