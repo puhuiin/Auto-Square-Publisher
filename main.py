@@ -217,6 +217,23 @@ MAX_TOKENS_PER_POST = _env_int("MAX_TOKENS_PER_POST", 3)           # 单帖挂�
 #   用同一个阈值会把长文全判废、配额烧光 ⇒ 按总字数 400 分界。
 #   0 = 关闭（运营逃生口）。
 _SHORT_NOTE_MAX_PARA_CJK = _env_int("SHORT_NOTE_MAX_PARA_CJK", 120)
+# ★★ R694：短讯 LLM 预算扩容封顶（R80 当年是 4000，2026-10-06 抬到 6000）。
+#   性质要说准：这是**对齐长文的保守统一**（短讯正文短但思考链不短，
+#   两者预算域同构），不是"数据强烈证明 4000 不够"。
+#   撞顶实证（判据 = `finish_reason=length` 且 reason 含"封顶"）全历史 9 条：
+#   封顶 4000 占 7 条、封顶 6000 占 2 条；其中 10-05 18:28~18:41 是同一条
+#   故事在 5 个通道上依次撞 4000 被整条打死 ⇒ 抬封顶的直接理由。
+#   ⚠️ 不可用 `tokens_used > 4000` 当撞顶证据：`tokens_used` = prompt +
+#   completion，而封顶只管 completion，prompt(RSS 全文+素材) 本身就能到几千。
+#   详见 `budget_cap =` 处的完整注释。
+#   延迟代价：每 1000 token 仅 +9s，短讯延迟 p90 本就 82s ⇒ 可忽略。
+#   ⚠️ 这是**封顶**不是起点：起点仍由 `_summarize_max_tokens` 决定（推理通道 1500、
+#   非推理 stub 600），扩容链 `min(cur + 1500, 封顶)` 逐级试，**不预付**——
+#   绝大多数稿在 4000 以内就写完了，抬封顶不改变它们的成本。
+#   实测两条链：推理 1500→3000→4500→6000；stub 600→2100→3600→5100→6000。
+#   设 0 = 回退到 R80 的 4000（运营逃生口，不建议：会重新开始丢稿）。
+_SHORT_NOTE_BUDGET_CAP = _env_int("SHORT_NOTE_BUDGET_CAP", 6000) or 4000
+
 # R578：发帖最小间隔（分钟）——生产实录 253 篇里 99 个间隔<30min（最快 2min 连发）
 # 与 60 个>180min 空窗并存，节奏像刷屏不像人。0=关闭；默认 20 对齐 cron 心跳。
 MIN_POST_GAP_MIN = _env_int("MIN_POST_GAP_MIN", 20)
@@ -3588,6 +3605,33 @@ def _extract_usage_tokens(response: Any) -> Optional[int]:
         return None
 
 
+def _extract_completion_tokens(response: Any) -> Optional[int]:
+    """从 OpenAI 兼容响应里取 **completion**（模型实际吐出的 token），取不到返回 None。
+
+    ★★ R694b（2026-10-06）：为什么必须与 `_extract_usage_tokens` 分开记。
+    `tokens_used` 是 `total_tokens` = **prompt + completion**，而预算封顶
+    （`max_tokens`）**只约束 completion**。⇒ 拿 `tokens_used > 4000` 去论证
+    "短讯撞了 4000 封顶"是**错的**：prompt（RSS 正文 + 素材）本身就能到几千，
+    与封顶无关。R694 初版就踩了这个坑，把 293 条里204 条（70%）当撞顶证据，
+    事后复核发现全部是prompt 撑的。
+    ⇒ 判"是否撞顶"的唯一可靠遥测是 **`finish_reason=length`**（撞顶必然 length），
+    精确判据见`_log_reject` 的 reason 文本（含 "封顶 {budget_cap}"）。
+    本函数补齐**另一半**观测：撞顶之外的正常稿，completion 到底吃掉多少——
+    没有它，"封顶该定多少"永远只能靠推断。
+    """
+    try:
+        usage = getattr(response, "usage", None)
+        if usage is None:
+            return None
+        completion = getattr(usage, "completion_tokens", None)
+        if completion is None:
+            return None
+        completion_int = int(completion)
+        return completion_int if completion_int > 0 else None
+    except Exception:
+        return None
+
+
 def _is_reasoning_channel(provider_name: str, model: str = "") -> bool:
     """推理模型通道判定（Reasonix 网关全系）：思考链吃掉前几百 token，必须给大预算。
     三处预算逻辑共用此谓词——此前各处手写 startswith/==，曾漏掉备份通道酿成实祸，
@@ -4775,7 +4819,9 @@ class MultiLLMEngine:
                     content_preview: Optional[str] = None,
                     finish_reason: Optional[str] = None,
                     article: Optional[bool] = None,
-                    content_cjk: Optional[int] = None) -> None:
+                    content_cjk: Optional[int] = None,
+                    completion_tokens: Optional[int] = None,
+                    budget_cap: Optional[int] = None) -> None:
         """拒单遥测：每次 LLM 尝试被丢弃都记一行（stage=quality/numbers/transport）。
         投递遥测只记录成功，失败全黑盒会导致未来调优只看得到"活下来的稿子"
         （幸存者偏差：高热新闻是否系统性被质量门误杀，无数据回答不了）。
@@ -4802,6 +4848,11 @@ class MultiLLMEngine:
             #   ⇒ 有了它才能回答"长文 vs 短讯 哪个更常被拒、为什么"
             "article": article,
             "content_cjk": content_cjk,
+            # ★★ R694b：`tokens_used` = prompt + completion，而预算封顶只管
+            #   completion ⇒ 不拆开就永远无法用数据回答"封顶该定多少"。
+            #   `budget_cap` 一并落，让每条拒稿自带"是在哪个封顶下失败的"。
+            "completion_tokens": completion_tokens,
+            "budget_cap": budget_cap,
             "outcome": "llm_rejected",
         })
 
@@ -5187,7 +5238,10 @@ class MultiLLMEngine:
             # 空链也留痕：否则"连续 3 次失败熔断"在遥测里看不到任何前因，
             # 事后只能猜是没配 Key 还是模型全挂
             self._log_reject(news_item, "-", "no_provider", "无可用 LLM 提供商（Key 未配或网关离线）",
-                             article=article)
+                             article=article,
+                             # R694b：无 provider ⇒ 从未发起 LLM 调用 ⇒ 预算域数据
+                             # 必须显式为 None（"未观测"），不能借用上一轮的残值。
+                             completion_tokens=None, budget_cap=None)
             return None
 
         user_prompt, persona = self._build_user_prompt(news_item, campaign_intel, market_context, token_hints,
@@ -5231,14 +5285,61 @@ class MultiLLMEngine:
                     effective_max_tokens = 3500 if effective_max_tokens >= 1500 else 1800
                 # 扩容封顶按模式区分（R80 生产实录 00:25Z：长文起点 3500，一次扩容本应
                 # 到 5000 却被全局 4000 卡死，残句 362 字符拒稿——思考链 1000~2300 +
-                # 800 字正文，4000 对推理模型的长文系统性不够）。短讯维持 4000 不变。
-                budget_cap = 6000 if article else 4000
+                # 800 字正文，4000 对推理模型的长文系统性不够）。
+                #
+                # ★★ R694（2026-10-06）：**短讯封顶也从 4000 抬到 6000**。
+                # R80 当年只抬长文、把短讯留在 4000，理由是「思考链 1000~2300
+                # token + 短讯正文只有 140~200 字 ⇒ 够用」。这个前提在 2026-10
+                # 已不成立（推理模型思考链成本翻倍）。
+                #
+                # ── 判据（**只有撞顶才算数**，判法见下）──────────────────
+                # 撞顶的唯一可靠判据是 `finish_reason=length` 且 reason 文本含
+                # "封顶"（`_log_reject` 写的就是"预算 N（封顶 C）到顶仍
+                # finish=length"）。全历史 3200 行遥测里，符合的**只有 9 条**：
+                #   封顶 4000 撞顶 7 条：09-21、09-23、10-05 ×5
+                #   封顶 6000 撞顶 2 条：09-23、10-06
+                # 其中 10-05 18:28~18:41 那 5 条是**同一条故事在 5 个通道上
+                # 依次撞 4000**（"Strategy buys just 334 BTC"）⇒ 单条故事
+                # 因封顶不足被整条打死，这是本次抬封顶**唯一直接**的证据。
+                #
+                # ⚠️⚠️ **不要用 `tokens_used > 4000` 当撞顶证据**（R694 初版
+                # 就是这么错的，记在这里防止下轮重犯）：
+                # `tokens_used` = `usage.total_tokens` = **prompt + completion**，
+                # 而 `max_tokens` 封顶**只约束 completion**。短讯的 prompt 里
+                # 塞着 RSS 全文+ 素材（可达数千 token）⇒ 「293 条短讯里 204 条
+                # (70%) tokens_used > 4000」**全部是 prompt 撑的，与封顶无关**；
+                # 同理"6194 token 成功"那条 `finish_reason` 是 stop（正常结束），
+                # 也不是撞顶后扩容的结果。**教训：字段名≠含义，用字段论证前
+                # 必须回定义看它到底量的是什么**（纪律 12 的加强版）。
+                #
+                # 因此 R694 的**真实性质**是：「短讯封顶只有 9 例实证 vs 长文
+                # 已有 R80+09-23/10-06 三次实证」，抬封顶是**对齐长文的保守统一**
+                # （短讯正文短但思考链不短，两者预算域本就同构），不是"数据强烈
+                # 证明 4000 不够"。这个区别很重要：别把它当成已验证的收益。
+                #
+                # 代价（已量，可忽略）：每 1000 token 约 +9s（上游抖动远大于此，
+                # 短讯延迟 p90 本就 82s）；workflow `timeout-minutes: 30`，
+                # 历史最坏的真发稿轮 6m45s ⇒ failover 走满也远不会超时。
+                #
+                # ⚠️ 观测补强（R694b，本次一并做）：此前**遥测没有单独的
+                #   completion / max_tokens 字段** ⇒ "短讯成功稿到底吃掉多少
+                #   completion"历史上**无法回答**，只能靠上面这种撞顶计数间接推。
+                #   现在 `_extract_completion_tokens` + `budget_cap` 已随
+                #   成功稿与拒稿一起落盘 ⇒ **下轮可以直接用成功稿的 completion
+                #   分布回答"6000 够不够、要不要再抬"**，不再靠推断。
+                #
+                # ⚠️ 为什么此前一直没人发现：撞顶被记成 `stage=transport`，
+                #   混在"超时/503/连接错误"里，而那些是真故障 ⇒ 掩盖了这条
+                #   **纯参数问题**（R673 同族：口径混在一处时，参数漂移不可见）。
+                budget_cap = 6000 if article else _SHORT_NOTE_BUDGET_CAP
                 # 空回政策 v2（生产 01:15 窗口实证：b.ai 系统性吐空，重试零救回还翻倍延迟）：
                 # 同运行内该提供商已有失败记录 = 连挂窗口，直接认失败走 failover；
                 # 否则（首挂，偶发可能性大）即时重试一次。
                 max_attempts = 1 if self._fail_counts.get(provider.name, 0) else 2
                 content, tokens_used, latency_sec = "", None, None
                 final_finish = ""  # 最后一次响应的 finish_reason（扩容判定 + 残句拒稿都要用）
+                # R694b：completion 与本次实际生效的预算封顶（每轮重置，防跨轮残留）
+                completion_tokens = None
                 attempt = 0
                 expansions = 0  # 预算扩容次数：不消耗 max_attempts 配额（扩容是纠正，不是重试）
                 system_prompt = (self.SYSTEM_PROMPT +
@@ -5255,6 +5356,7 @@ class MultiLLMEngine:
                     )
                     latency_sec = round(time.perf_counter() - t_call, 3)
                     tokens_used = _extract_usage_tokens(response)
+                    completion_tokens = _extract_completion_tokens(response)
                     if response.choices and response.choices[0].message:
                         content = (response.choices[0].message.content or "").strip()
                         # 思考链吃满预算的特征：finish_reason=length 且 content 为空。
@@ -5337,7 +5439,10 @@ class MultiLLMEngine:
                                          # ★ R691：拒稿行也落article/content_cjk
                                          article=bool(article),
                                          content_cjk=len(re.findall(
-                                             r"[\u4e00-\u9fff]", content)))
+                                             r"[\u4e00-\u9fff]", content)),
+                                         # R694b：拆出 completion + 本次封顶
+                                         completion_tokens=completion_tokens,
+                                         budget_cap=budget_cap)
                         logger.warning(f"提供商 [{provider.name}] 长文门拦截，"
                                        f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                         raise _QualityGateRejection(art_reason)
@@ -5362,7 +5467,9 @@ class MultiLLMEngine:
                                              # None 不触发），但仍显式落值——
                                              # 「事实上只走长文」不等于「可以省略」，
                                              # 省略即在遥测里留一个不可解释的 None 缺口。
-                                             article=bool(article))
+                                             article=bool(article),
+                                             completion_tokens=completion_tokens,
+                                             budget_cap=budget_cap)
                             logger.warning(f"提供商 [{provider.name}] 长文拒答/身份门拦截，"
                                            f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                             raise _QualityGateRejection(id_reason)
@@ -5378,7 +5485,10 @@ class MultiLLMEngine:
                                          #   （否则报表算不出长短讯各自拒稿率）
                                          article=bool(article),
                                          content_cjk=len(re.findall(
-                                             r"[\u4e00-\u9fff]", content)))
+                                             r"[\u4e00-\u9fff]", content)),
+                                         # R694b：拆出 completion + 本次封顶
+                                         completion_tokens=completion_tokens,
+                                         budget_cap=budget_cap)
                         logger.warning(f"提供商 [{provider.name}] 质量门拦截，"
                                        f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                         raise _QualityGateRejection(fail_reason)
@@ -5407,7 +5517,9 @@ class MultiLLMEngine:
                                      persona=persona["name"],
                                      content_preview=self._reject_preview(content),
                                      finish_reason=finish_for_telemetry,
-                                     article=bool(article))
+                                     article=bool(article),
+                                     completion_tokens=completion_tokens,
+                                     budget_cap=budget_cap)
                     raise _QualityGateRejection(nums_reason)
 
                 # 0.2 AI 腔门：标志性机器人文风直接判废换模型重写（发布出去等于自曝身份）
@@ -5432,7 +5544,9 @@ class MultiLLMEngine:
                                      # ★ R691：同上
                                      article=bool(article),
                                      content_cjk=len(re.findall(
-                                         r"[\u4e00-\u9fff]", content)))
+                                         r"[\u4e00-\u9fff]", content)),
+                                     completion_tokens=completion_tokens,
+                                     budget_cap=budget_cap)
                     raise _QualityGateRejection(flavor_reason)
 
                 # 0.3★★ 段落长度门（R672 的**硬门**，此前只记不卡）
@@ -5473,7 +5587,9 @@ class MultiLLMEngine:
                         # ★ R691：同上
                         article=bool(article),
                         content_cjk=len(re.findall(
-                            r"[\u4e00-\u9fff]", content)))
+                            r"[\u4e00-\u9fff]", content)),
+                        completion_tokens=completion_tokens,
+                        budget_cap=budget_cap)
                     raise _QualityGateRejection(
                         "para_too_long: 最长段 %d 汉字" % _para_here)
 
@@ -5525,7 +5641,9 @@ class MultiLLMEngine:
                         self._log_reject(news_item, provider.name, "no_valid_token",
                                          "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光",
                                          tokens_used, latency_sec, provider.model,
-                                         persona=persona["name"], article=article)
+                                         persona=persona["name"], article=article,
+                                         completion_tokens=completion_tokens,
+                                         budget_cap=budget_cap)
                         self.last_fail_reason = "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光"
                         return None
 
@@ -5552,6 +5670,9 @@ class MultiLLMEngine:
                             + (f" | 长文《{article_title[:20]}》" if article_title else ""))
                 return {"content": content, "tokens": valid_tokens, "provider": provider.name,
                         "model": provider.model, "tokens_used": tokens_used, "latency_sec": latency_sec,
+                        # R694b：成功稿是判断"封顶该定多少"的**主数据源**（拒稿只告诉你
+                        # 撞顶了，成功才告诉你"这么多够用"）⇒ 必须一起带出去落盘。
+                        "completion_tokens": completion_tokens, "budget_cap": budget_cap,
                         "persona": persona["name"], "title": article_title}
 
             except _QualityGateRejection as e:
@@ -5585,11 +5706,16 @@ class MultiLLMEngine:
                 # 而这正是判断短讯封顶该不该抬的唯一依据。
                 # ⚠️ `article` 是 summarize 形参，整个 for 循环体内恒可见
                 # （不是循环内新赋值的局部量）⇒ 无需重置、不存在跨轮残留。
+                # R694b：`completion_tokens` 在**循环体开头**就 `= None` 兜底且每轮重置，
+                # 本except 在 try 之后 ⇒ 必然已绑定（跨边界时默认"它没绑定"，
+                # 未定义变量会让整行 JSON 序列化失败、该行被静默丢弃 = R673 同款事故）。
                 self._log_reject(news_item, provider.name, "transport", str(e),
                                  tokens_used, latency_sec, provider.model,
                                  persona=persona["name"],
                                  finish_reason=_ff_empty or None,
-                                 article=article)
+                                 article=article,
+                                 completion_tokens=completion_tokens,
+                                 budget_cap=budget_cap)
                 fail_reason = str(e)
                 enter_breaker = is_budget_exhausted or fails >= 2
                 if enter_breaker:
@@ -5628,7 +5754,12 @@ class MultiLLMEngine:
                 # R692：同上一处——article 必须落盘，否则 transport 拒稿无法归属。
                 self._log_reject(news_item, provider.name, "transport", fail_reason, persona=persona["name"],
                                  latency_sec=round(time.perf_counter() - t_call, 3),
-                                 model=provider.model, article=article)
+                                 model=provider.model, article=article,
+                                 # R694b：本except 在 provider 循环的 try 之外，异常可能
+                                 # 在首次 `create()` 之前就抛出 ⇒ 这两个变量此刻是循环体
+                                 # 开头兜底的 None（"没跑成功"），不是缺失变量。
+                                 completion_tokens=completion_tokens,
+                                 budget_cap=budget_cap)
                 enter_breaker = True
                 logger.warning(f"提供商 [{provider.name}] 请求失败: {fail_reason} (本次运行连续失败 {self._fail_counts[provider.name]} 次)")
 
@@ -10623,6 +10754,10 @@ def _run_main():
                         "model": llm_result.get("model"),
                         "persona": llm_result.get("persona"),
                         "tokens_used": llm_result.get("tokens_used"),
+                        # R694b：completion 与本次封顶随成功稿一起落盘——
+                        # 「封顶该定多少」只能靠**成功稿**的 completion 分布回答。
+                        "completion_tokens": llm_result.get("completion_tokens"),
+                        "budget_cap": llm_result.get("budget_cap"),
                         "llm_latency_sec": llm_result.get("latency_sec"),
                         # R165：调度分 _provider_cost_latency_scores 只认
                         # stage∈(summarize,campaign_intel)。发帖回执此前无 stage，
@@ -10739,6 +10874,10 @@ def _run_main():
                         "model": llm_result.get("model"),
                         "persona": llm_result.get("persona"),
                         "tokens_used": llm_result.get("tokens_used"),
+                        # R694b：completion 与本次封顶随成功稿一起落盘——
+                        # 「封顶该定多少」只能靠**成功稿**的 completion 分布回答。
+                        "completion_tokens": llm_result.get("completion_tokens"),
+                        "budget_cap": llm_result.get("budget_cap"),
                         "llm_latency_sec": llm_result.get("latency_sec"),
                         "stage": "summarize",
                         "platforms": delivered,
@@ -10794,6 +10933,10 @@ def _run_main():
                         "model": llm_result.get("model"),
                         "persona": llm_result.get("persona"),
                         "tokens_used": llm_result.get("tokens_used"),
+                        # R694b：completion 与本次封顶随成功稿一起落盘——
+                        # 「封顶该定多少」只能靠**成功稿**的 completion 分布回答。
+                        "completion_tokens": llm_result.get("completion_tokens"),
+                        "budget_cap": llm_result.get("budget_cap"),
                         "llm_latency_sec": llm_result.get("latency_sec"),
                         "stage": "summarize",
                         "platforms": _delivered_platforms(False, draft_exported, telegram_exported),

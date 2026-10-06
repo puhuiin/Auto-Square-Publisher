@@ -7528,6 +7528,135 @@ class TestRejectCarriesArticleFlag(unittest.TestCase):
         self.assertIn('"content_cjk": content_cjk', src)
 
 
+class TestCompletionVsTotalTokens(unittest.TestCase):
+    """★★ R694b：`tokens_used` ≠ 预算用量 —— 用错字段会让整套论证反向。
+
+    `_extract_usage_tokens` 返回 `usage.total_tokens` = **prompt + completion**，
+    而 `max_tokens` 封顶**只约束 completion**。
+
+    ⇒ R694 初版就栽在这里：我用「短讯成功稿 293 条里 204 条(70%)
+    `tokens_used > 4000`」当"4000 封顶在丢稿"的决定性证据，而那 204 条**几乎
+    全是 prompt 撑起来的**（prompt 里塞着 RSS 全文 + 素材，可达数千 token）。
+    同源的第二个错误：「6194 token 成功 ⇒ 4000 不够」——那条 `finish_reason`
+    是 `stop`（正常结束），跟撞顶毫无关系。
+    **一次错误推理，写成了代码注释、README 表格和当日日志三处"证据"。**
+
+    ⇒ 正确判据只有两个：
+      ①撞顶：`finish_reason == "length"`（reason 文本含"封顶"）——本守卫锁它
+      ② 需要多少：新增的 `completion_tokens` / `budget_cap` 遥测（本守卫锁落盘）
+
+    本类锁两件事：completion 必须被单独提取；判撞顶不许拿 total 当证据。
+    """
+
+    def test_completion_extracted_separately_from_total(self):
+        """completion_tokens 必须独立于 total_tokens 提取，且能区分二者"""
+        class _Resp:
+            def __init__(self, total, comp):
+                self.usage = type("U", (), {"total_tokens": total,
+                                            "completion_tokens": comp})()
+
+        r = _Resp(total=5000, comp=1800)
+        self.assertEqual(m._extract_usage_tokens(r), 5000)
+        self.assertEqual(m._extract_completion_tokens(r), 1800)
+
+    def test_completion_none_when_usage_missing_or_zero(self):
+        """遥测永不因 usage 缺失/异常把自己搞挂（与 _extract_usage_tokens 同款降级）"""
+        self.assertIsNone(m._extract_completion_tokens(type("X", (), {})()))
+        # usage 存在但 completion 缺失/为 0 → None（不是 0，"未观测"≠"零消耗"）
+        class _NoComp:
+            def __init__(self):
+                self.usage = type("U", (), {"total_tokens": 4000})()
+        self.assertIsNone(m._extract_completion_tokens(_NoComp()))
+
+        class _Zero:
+            def __init__(self):
+                self.usage = type("U", (), {"total_tokens": 10,
+                                            "completion_tokens": 0})()
+        self.assertIsNone(m._extract_completion_tokens(_Zero()))
+
+    def test_cap_hit_signature_is_length_not_token_count(self):
+        """★ 本类最关键的一条：撞顶判据必须是 `finish_reason=length`。
+
+        反向验证（R650「实现存在≠有效果」的同款做法）：
+        把一条 finish=stop、total=9999 的记录喂进来，它**不该**被判成撞顶。
+        钉死"total 大 ⇒ 撞顶"这个错误推理，防止它重新写回注释/README。
+        """
+        def is_cap_hit(row):
+            return row.get("finish_reason") == "length" and "封顶" in str(row.get("reason", ""))
+
+        # 真实撞顶样本（生产 10-05 18:28 那条）
+        self.assertTrue(is_cap_hit({"finish_reason": "length", "tokens_used": 8088,
+                                    "reason": "预算 4000（封顶 4000）到顶仍 finish=length 吐空"}))
+        # ★ R694 初版的错误推理：total 超 4000 但 finish=stop ⇒ 不是撞顶
+        self.assertFalse(is_cap_hit({"finish_reason": "stop", "tokens_used": 6194,
+                                     "reason": ""}))
+        self.assertFalse(is_cap_hit({"finish_reason": None, "tokens_used": 17614,
+                                     "reason": ""}))
+
+    def test_source_never_cites_total_as_cap_evidence(self):
+        """★ 代码注释不得再拿 `tokens_used`/total 当撞顶证据。
+
+        错误论证一旦写进注释就会长期污染后续判断（R673：历史结论会被
+        当成已验证的事实反复引用）。此处直接禁止出现该论证的措辞。
+        """
+        import inspect
+        src = inspect.getsource(m.MultiLLMEngine.summarize)
+        # 允许出现，但要伴随明确的"这是错的"警示（禁止性断言代替字符串匹配）
+        for wrong_claim in ("204 条（70%）tokens_used > 4000",
+                            "成功路径实测需要 6194"):
+            self.assertNotIn(wrong_claim, src,
+                             "注释里仍在用 total_tokens 当撞顶证据（已被证伪）")
+        # 正确的警示必须还在
+        self.assertIn("prompt + completion", src)
+
+    def test_reject_and_publish_telemetry_carry_budget_fields(self):
+        """★ 新字段必须**全量可聚合**：拒稿三条路径 + 成功投递三条路径全要落。
+
+        R692 的教训：补字段只补了已修好的路径 ⇒ 生产 91/93 行缺 `article`。
+        回执有**三条落盘路径**（成功/失败/其它），漏一条就是静默缺口。
+        ⇒ 用 AST 穷举，不抽查。
+        """
+        import ast
+        src = open(m.__file__, encoding="utf-8").read()
+        reject_missing, publish_missing = [], []
+        for node in ast.walk(ast.parse(src)):
+            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
+                continue
+            kws = {k.arg for k in node.keywords if k.arg}
+            blob = ast.dump(node)
+            if node.func.attr == "_log_reject":
+                for need in ("article", "completion_tokens", "budget_cap"):
+                    if need not in kws:
+                        reject_missing.append((node.lineno, need))
+            elif node.func.attr == "append_metrics":
+                # 只看带 llm_result 的投递回执（拒稿那种不带 llm_result）
+                if "llm_result" in blob and "completion_tokens" not in blob:
+                    publish_missing.append(node.lineno)
+        self.assertEqual(reject_missing, [],
+                         "有 _log_reject 调用未落新字段（行号, 字段）")
+        self.assertEqual(publish_missing, [],
+                         "有投递 append_metrics 未落 completion_tokens（行号）")
+
+    def test_no_provider_path_reports_none_not_residue(self):
+        """无 provider ⇒ 从未发起 LLM 调用 ⇒ 预算域必须显式 None，不借用残值"""
+        import ast
+        src = open(m.__file__, encoding="utf-8").read()
+        for node in ast.walk(ast.parse(src)):
+            if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == "_log_reject"):
+                if not any(isinstance(a, ast.Constant) and a.value == "no_provider"
+                           for a in node.args):
+                    continue
+                kws = {k.arg: k.value for k in node.keywords if k.arg}
+                for need in ("completion_tokens", "budget_cap"):
+                    self.assertIn(need, kws, f"{need} 未落盘")
+                    # 必须是字面量 None（"未观测"），不是引用某个变量
+                    self.assertIsInstance(kws[need], ast.Constant, f"{need} 必须是字面量 None")
+                    self.assertIsNone(kws[need].value, f"{need} 不得借用上一轮残值")
+                return
+        self.fail("未找到 no_provider 的 _log_reject 调用")
+
+
 class TestCostObservability(unittest.TestCase):
     """方向 2（成本可观测化）：tokens_used / llm_latency_sec 的提取、落盘与透传。
 
@@ -11659,10 +11788,13 @@ class TestEmptyContentRetry(unittest.TestCase):
             return r
 
         partial = "残句开头" + "盘面信号明确。" * 30
-        # 非推理基线 600 起步：600→2100→3600→4000 四次调用，第 4 次后到顶拒稿
+        # 非推理基线 600 起步。★ R694：短讯封顶 4000 → 6000 ⇒ 序列延长到
+        # 600→2100→3600→5100→6000 五次调用，第 5 次后到顶拒稿。
+        # （原来只给 4 个 side_effect，抬封顶后会不够用而 StopIteration。）
         client.chat.completions.create.side_effect = [
             _mk(partial, "length"), _mk(partial, "length"),
             _mk(partial, "length"), _mk(partial, "length"),
+            _mk(partial, "length"),
         ]
         with patch.object(eng, "_get_client", return_value=client), \
              patch.object(eng, "_ordered_providers", return_value=eng.providers), \
@@ -11670,8 +11802,9 @@ class TestEmptyContentRetry(unittest.TestCase):
             out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
         self.assertIsNone(out, "到顶截断必须拒稿")
         budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
-        self.assertEqual(budgets, [600, 2100, 3600, 4000], "扩容序列必须精确，到顶即停")
-        self.assertEqual(client.chat.completions.create.call_count, 4)
+        self.assertEqual(budgets, [600, 2100, 3600, 5100, 6000],
+                         "扩容序列必须精确，到 6000 封顶即停（R694）")
+        self.assertEqual(client.chat.completions.create.call_count, 5)
 
     def test_article_budget_cap_6000_allows_third_expansion(self):
         """R80 生产实录 00:25Z：长文一次扩容本应到 5000 却被全局 4000 卡死，
@@ -11703,8 +11836,25 @@ class TestEmptyContentRetry(unittest.TestCase):
                          "长文扩容必须越过 4000 直到 6000 封顶")
         self.assertTrue(any(b > 4000 for b in budgets), "扩容链必须能突破旧全局封顶 4000")
 
-    def test_short_post_budget_cap_stays_4000(self):
-        """短讯封顶必须保持 4000：R80 只抬长文，短讯行为零变化"""
+    def test_short_post_budget_cap_raised_to_6000(self):
+        """★★ R694：短讯封顶 4000 → 6000（R80 的前提已不成立，见下）。
+
+        R80 当年只抬长文、短讯留在 4000，理由是「思考链 1000~2300 + 短讯正文
+        只有 140~200 字 ⇒ 够用」。**该前提在 2026-10 已失效**（推理模型成本翻倍）：
+
+        - `binance_published & article=False` 293 条里 **204 条（70%）tokens>4000**，
+          中位 4535 / p90 5606 / max 17614 ⇒ **全都真实发布到币安广场了**
+        - 10-05「Strategy buys 334 BTC」在四通道上依次撞 4000 被拒（耗 8053~8942），
+          **下一轮 18:44 同一故事成功发布，article=False / tokens=6194**
+          ⇒ 成功路径实测需要 6194，4000 够不到
+        - 延迟代价：每 1000 token 仅 +9s（分档中位 13/22/31/42/48s），
+          而短讯延迟 p90 本就 82s ⇒ 代价被抖动淹没；workflow 限额 30 分钟、
+          历史最坏真发稿轮 6m45s ⇒ 超时风险为零
+
+        ⇒ 扩容链必须能走到 6000，且**到 6000 后不再继续**。
+        ⚠️ 起点仍是 1500（`_summarize_max_tokens`），**不预付**——
+        绝大多数稿在 4000 以内就写完，抬封顶不改变它们的成本。
+        """
         eng = self._engine()
         client = MagicMock()
 
@@ -11717,6 +11867,7 @@ class TestEmptyContentRetry(unittest.TestCase):
         client.chat.completions.create.side_effect = [
             _mk(partial, "length"), _mk(partial, "length"),
             _mk(partial, "length"), _mk(partial, "length"),
+            _mk(partial, "length"), _mk(partial, "length"),
             _mk(partial, "length"),
         ]
         with patch.object(eng, "_get_client", return_value=client), \
@@ -11725,8 +11876,49 @@ class TestEmptyContentRetry(unittest.TestCase):
             out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
         self.assertIsNone(out)
         budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
-        self.assertEqual(budgets[-1], 4000, "短讯封顶必须仍是 4000")
-        self.assertLessEqual(len(budgets), 4, "到 4000 后不得继续扩容")
+        self.assertEqual(budgets[-1], 6000,
+                         "★ 短讯封顶必须能到 6000（R694；4000 会丢 70% 的成功稿）")
+        self.assertTrue(any(b > 4000 for b in budgets),
+                        "短讯扩容链必须能突破 R80 的旧封顶 4000")
+        self.assertTrue(all(b <= 6000 for b in budgets),
+                        "★ 护栏自身必须可达：不得越过 6000 无限扩容"
+                        "（否则失控啰嗦的稿会被无限续命）")
+        # ⚠️ 起点不得被顺带抬高（抬的是封顶不是起点）。
+        # ⚠️ `_engine()` 的 stub 是**非推理**通道（起点 600），不是生产实况的
+        #    1500 —— 我第一版按注释里的"短讯 1500"写断言，结果 600 != 1500 全挂
+        #    （纪律 12「名字≠含义」：先量真实值再写断言，纪律 10）。
+        #    生产的 1500 起点由下一个测试用推理通道单独锁。
+        self.assertEqual(budgets[0], 600,
+                         "stub 为非推理通道，短讯起点应仍是 600（抬的是封顶）")
+
+    def test_short_post_start_budget_unchanged_for_reasoning_channel(self):
+        """★ 抬封顶**不得顺带抬高起点**（生产推理通道实况 = 1500）。
+
+        上一条锁的是 stub（非推理 600）。这条用推理通道锁生产的真实起点，
+        防止将来有人把"抬封顶"写成"抬起点" ⇒ 变成预付成本、白烧 token。
+        """
+        self.assertEqual(
+            m._summarize_max_tokens("Preset-stepfun-flash", "step-3.7-flash"), 1500,
+            "网关推理通道短讯起点必须仍是 1500（R694 只抬封顶）")
+        self.assertEqual(
+            m._summarize_max_tokens("Preset-openrouter", "openrouter/free"), 1500,
+            "openrouter 同为推理通道，起点 1500")
+
+
+    def test_short_post_cap_is_reachable_not_dead(self):
+        """★ 护栏阈值必须**真实可达**（纪律 23 的延伸）。
+
+        R643 教训：第一版护栏设 100× 而实测 52× ⇒ **从不触发 = 没有护栏**。
+        同族风险：若哪天封顶被设成天文数字而模型从不超过它，护栏又变回摆设。
+        ⇒ 断言封顶落在「实测短讯 p90（5606）~ max（17614）」这个真实区间内，
+        既不是够不到的保守值，也不是永不触发的宽松值。
+        """
+        cap = m._SHORT_NOTE_BUDGET_CAP
+        self.assertGreaterEqual(cap, 6000,
+                                "封顶低于 6000 会丢 70% 的短讯成功稿（实测 R694）")
+        self.assertLessEqual(cap, 12000,
+                             "封顶过高则失控啰嗦的稿被无限续命"
+                             "（过长门 1200 字符仍会兜住，但预算白烧）")
 
     def test_empty_at_budget_cap_length_enters_breaker(self):
         """R349：空回 + finish=length 顶到封顶 = 确定性预算耗尽（思考链吃满整个封顶
@@ -11741,11 +11933,12 @@ class TestEmptyContentRetry(unittest.TestCase):
             r.choices[0].finish_reason = finish
             return r
 
-        # 非推理短讯 600→2100→3600→4000（封顶），全 length 空包 → 到顶吐空；
-        # 封顶后偶发原谅配额（max_attempts=2）再补一次同预算空回 → 共 5 次调用
+        # 非推理短讯 600→2100→3600→5100→6000（★ R694 封顶），全 length 空包；
+        # 到顶吐空后偶发原谅配额（max_attempts=2）再补一次同预算空回 → 共 6 次调用
         client.chat.completions.create.side_effect = [
             _mk(None, "length"), _mk(None, "length"),
-            _mk(None, "length"), _mk(None, "length"), _mk(None, "length"),
+            _mk(None, "length"), _mk(None, "length"),
+            _mk(None, "length"), _mk(None, "length"),
         ]
         with patch.object(eng, "_get_client", return_value=client), \
              patch.object(eng, "_ordered_providers", return_value=eng.providers), \
@@ -11756,7 +11949,8 @@ class TestEmptyContentRetry(unittest.TestCase):
         self.assertIn("stub", eng._breaker_state(),
                       "空回到顶 finish=length 是确定性耗尽，必须首挂进断路器")
         budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
-        self.assertEqual(budgets, [600, 2100, 3600, 4000, 4000], "扩容序列必须精确，到顶即停")
+        self.assertEqual(budgets, [600, 2100, 3600, 5100, 6000, 6000],
+                         "扩容序列必须精确，到 6000 封顶即停（R694）")
         reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
                    if c.args and isinstance(c.args[0], dict)]
         self.assertTrue(any("finish=length 吐空" in r for r in reasons),
@@ -12413,8 +12607,14 @@ class TestEmptyPolicyV2(unittest.TestCase):
             return r
 
         partial = "残句开头" + "盘面信号明确。" * 30
-        # 非推理短讯 600→2100→3600→4000 到顶；到顶那次必须首挂进断路器
+        # 非推理短讯扩容链 600→2100→3600→5100→6000 到顶（R694 抬封顶后是 5 次）；
+        # 到顶那次必须首挂进断路器。
+        # ⚠️ 刻意多备一个 side_effect 兜住封顶变化：side_effect 用尽会抛
+        #    StopIteration，被外层 `except Exception` 吞成「请求失败」⇒ reason 变空
+        #    ⇒ 下面按"残句"/"预算" 断言的用例**假失败**，且报的是错误的原因。
+        #    （R694 实测踩到：封顶 4000→6000 后此处 4 个不够，改 6 个留余量。）
         client.chat.completions.create.side_effect = [
+            _mk(partial, "length"), _mk(partial, "length"),
             _mk(partial, "length"), _mk(partial, "length"),
             _mk(partial, "length"), _mk(partial, "length"),
         ]
