@@ -25,20 +25,7 @@
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-05",
-  "_publish_park": {
-    "4f4f891c1e837079": {
-      "fails": 1,
-      "last_fail": "2026-10-05T18:41:32.878416+00:00"
-    },
-    "8aabebd8bb658ff3": {
-      "fails": 1,
-      "last_fail": "2026-10-05T18:36:29.919742+00:00"
-    },
-    "b9c23c875219eecc": {
-      "fails": 1,
-      "last_fail": "2026-10-05T18:42:21.024630+00:00"
-    }
-  },
+  "_publish_park": {},
   "_intel_refresh_fail": {},
   "_img_rot": 2
 }
