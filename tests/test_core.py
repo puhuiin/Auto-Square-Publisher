@@ -7416,6 +7416,118 @@ class TestRejectTelemetry(unittest.TestCase):
         self.assertIn("作为AI", rows[0]["reason"])
 
 
+class TestRejectCarriesArticleFlag(unittest.TestCase):
+    """★★ R691/R692：**每一处** `_log_reject` 都必须落 `article` 归属字段。
+
+    R691 补了 quality/numbers/ai_flavor/para_too_long 四条路径，但
+    **transport（2 处）、no_provider、no_valid_token 三条漏了** ⇒
+    实测生产 **91/93 条拒稿行没有 `article`**。
+
+    为什么这是**阻断级**缺口（不是"少个字段"）：
+    拒稿第一大类是 transport 的「预算封顶仍 finish=length 吐空」
+    （短讯封顶 4000 / 长文 6000）⇒ **没有 `article` 就无法回答
+    "4000 撞顶的是短讯还是长文"** ⇒ 也就无法判断短讯封顶该不该抬。
+    这正是"字段缺失 ⇒ 结论不可得"的第三种形态（R659）。
+
+    ⇒ 守卫用 **AST 穷举**调用点，而不是抽查某一条路径：
+    上一轮就是"抽查了已修好的路径"才漏的（纪律：新增字段必须**全量**可聚合）。
+    """
+
+    def _log_reject_calls(self):
+        """返回 _log_reject 的全部调用点：(lineno, 关键字实参名集合)"""
+        import ast
+        src = open(m.__file__, encoding="utf-8").read()
+        out = []
+        for node in ast.walk(ast.parse(src)):
+            if (isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == "_log_reject"):
+                kws = {k.arg for k in node.keywords if k.arg}
+                # 位置实参里第 4 个是 reason，前 3 个是 news_item/provider/stage
+                out.append((node.lineno, kws, len(node.args)))
+        return out
+
+    def test_every_log_reject_call_passes_article(self):
+        """★ 全部调用点都必须显式传 `article=`（不留 None 缺口）"""
+        calls = self._log_reject_calls()
+        self.assertGreaterEqual(len(calls), 10,
+                                "调用点数量异常少，AST 判据可能失效（源码结构变了？）")
+        missing = [ln for ln, kws, _ in calls if "article" not in kws]
+        self.assertEqual(
+            missing, [],
+            "这些 _log_reject 调用没传 article= ⇒ 拒稿行无法归属长短文：main.py 行号 %s"
+            % missing)
+
+    def test_no_provider_path_carries_article(self):
+        """no_provider 是最早早退路径，最容易被漏（它没有 provider 可 failover）"""
+        calls = self._log_reject_calls()
+        # 定位 stage="no_provider" 的调用：它用位置实参传 stage
+        import ast
+        src = open(m.__file__, encoding="utf-8").read()
+        found = False
+        for node in ast.walk(ast.parse(src)):
+            if (isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == "_log_reject"
+                    and len(node.args) >= 3):
+                # 第 3 个位置实参是 stage 字符串常量
+                if isinstance(node.args[2], ast.Constant) and \
+                        node.args[2].value == "no_provider":
+                    found = True
+                    kws = {k.arg for k in node.keywords if k.arg}
+                    self.assertIn("article", kws,
+                                  "no_provider 路径必须落 article（它同样按短讯/长文发起）")
+        self.assertTrue(found, "没找到 no_provider 的 _log_reject 调用，AST 判据失效")
+
+    def test_transport_path_carries_article(self):
+        """★ transport 两处（R692 的正主）：R691 只补了质量门，漏了这里"""
+        import ast
+        src = open(m.__file__, encoding="utf-8").read()
+        transport_calls = []
+        for node in ast.walk(ast.parse(src)):
+            if (isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == "_log_reject"
+                    and len(node.args) >= 3
+                    and isinstance(node.args[2], ast.Constant)
+                    and node.args[2].value == "transport"):
+                transport_calls.append(node)
+        # 另有 1 处用 stage="transport" 的第一分支也是同一 stage 常量
+        self.assertGreaterEqual(
+            len(transport_calls), 2,
+            "transport 至少应有 2 处调用（_EmptyContentError 分支 + 通用 Exception 分支）")
+        for node in transport_calls:
+            kws = {k.arg for k in node.keywords if k.arg}
+            self.assertIn("article", kws,
+                          "transport 拒稿必须落 article（main.py:%d）" % node.lineno)
+
+    def test_article_flag_is_summarize_param_not_loop_local(self):
+        """⚠️ 语义守卫：`article` 是 `summarize` 的**形参**，循环内恒可见。
+
+        若哪天有人在循环体内 `article = ...` 重新赋值，transport 落的值
+        就变成了循环局部量（可能是 provider 级的中间态）而非本次的形态。
+        ⇒ 断言 summarize 体内**不存在**对 article 的赋值语句。
+        """
+        import ast
+        tree = ast.parse(open(m.__file__, encoding="utf-8").read())
+        fn = next(n for n in ast.walk(tree)
+                  if isinstance(n, ast.FunctionDef) and n.name == "summarize")
+        assigns = [n for n in ast.walk(fn)
+                   if isinstance(n, ast.Assign)
+                   for t in n.targets
+                   if isinstance(t, ast.Name) and t.id == "article"]
+        self.assertEqual(
+            assigns, [],
+            "summarize 体内不得给 article 重新赋值（它是形参，循环内恒为本次形态）")
+
+    def test_reject_schema_declares_article(self):
+        """schema 层：字段必须在 _log_reject 的落盘字典里"""
+        import inspect
+        src = inspect.getsource(m.MultiLLMEngine._log_reject)
+        self.assertIn('"article": article', src)
+        self.assertIn('"content_cjk": content_cjk', src)
+
+
 class TestCostObservability(unittest.TestCase):
     """方向 2（成本可观测化）：tokens_used / llm_latency_sec 的提取、落盘与透传。
 

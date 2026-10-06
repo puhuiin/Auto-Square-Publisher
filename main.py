@@ -5186,7 +5186,8 @@ class MultiLLMEngine:
             logger.error("没有任何可用的 LLM 提供商配置！")
             # 空链也留痕：否则"连续 3 次失败熔断"在遥测里看不到任何前因，
             # 事后只能猜是没配 Key 还是模型全挂
-            self._log_reject(news_item, "-", "no_provider", "无可用 LLM 提供商（Key 未配或网关离线）")
+            self._log_reject(news_item, "-", "no_provider", "无可用 LLM 提供商（Key 未配或网关离线）",
+                             article=article)
             return None
 
         user_prompt, persona = self._build_user_prompt(news_item, campaign_intel, market_context, token_hints,
@@ -5356,7 +5357,12 @@ class MultiLLMEngine:
                                              tokens_used, latency_sec, provider.model,
                                              persona=persona["name"],
                                              content_preview=preview,
-                                             finish_reason=finish_for_telemetry)
+                                             finish_reason=finish_for_telemetry,
+                                             # R692：本分支只由长文进入（短讯 article_title 为
+                                             # None 不触发），但仍显式落值——
+                                             # 「事实上只走长文」不等于「可以省略」，
+                                             # 省略即在遥测里留一个不可解释的 None 缺口。
+                                             article=bool(article))
                             logger.warning(f"提供商 [{provider.name}] 长文拒答/身份门拦截，"
                                            f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                             raise _QualityGateRejection(id_reason)
@@ -5400,7 +5406,8 @@ class MultiLLMEngine:
                                      tokens_used, latency_sec, provider.model,
                                      persona=persona["name"],
                                      content_preview=self._reject_preview(content),
-                                     finish_reason=finish_for_telemetry)
+                                     finish_reason=finish_for_telemetry,
+                                     article=bool(article))
                     raise _QualityGateRejection(nums_reason)
 
                 # 0.2 AI 腔门：标志性机器人文风直接判废换模型重写（发布出去等于自曝身份）
@@ -5518,7 +5525,7 @@ class MultiLLMEngine:
                         self._log_reject(news_item, provider.name, "no_valid_token",
                                          "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光",
                                          tokens_used, latency_sec, provider.model,
-                                         persona=persona["name"])
+                                         persona=persona["name"], article=article)
                         self.last_fail_reason = "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光"
                         return None
 
@@ -5572,10 +5579,17 @@ class MultiLLMEngine:
                 # 与「上游真·空包」(stop)，与 R163 quality 快照对齐；
                 # Mock/异常态强转防 json.dumps 吞行（widget_count 同款坑）
                 _ff_empty = final_finish if isinstance(final_finish, str) else None
+                # R692：transport 拒稿**同样必须落 `article`**（R691 只补了
+                # quality/numbers/ai_flavor 三条路径）。实测生产 91/93 条拒稿行
+                # 仍无 `article` ⇒ 无法回答"4000 封顶撞顶的是短讯还是长文"，
+                # 而这正是判断短讯封顶该不该抬的唯一依据。
+                # ⚠️ `article` 是 summarize 形参，整个 for 循环体内恒可见
+                # （不是循环内新赋值的局部量）⇒ 无需重置、不存在跨轮残留。
                 self._log_reject(news_item, provider.name, "transport", str(e),
                                  tokens_used, latency_sec, provider.model,
                                  persona=persona["name"],
-                                 finish_reason=_ff_empty or None)
+                                 finish_reason=_ff_empty or None,
+                                 article=article)
                 fail_reason = str(e)
                 enter_breaker = is_budget_exhausted or fails >= 2
                 if enter_breaker:
@@ -5611,9 +5625,10 @@ class MultiLLMEngine:
                     self._breaker_record_failure(provider.name)
                     fail_reason = err_msg
                 # 传输层失败同样要记耗时：超时型故障靠 latency 才能定位
+                # R692：同上一处——article 必须落盘，否则 transport 拒稿无法归属。
                 self._log_reject(news_item, provider.name, "transport", fail_reason, persona=persona["name"],
                                  latency_sec=round(time.perf_counter() - t_call, 3),
-                                 model=provider.model)
+                                 model=provider.model, article=article)
                 enter_breaker = True
                 logger.warning(f"提供商 [{provider.name}] 请求失败: {fail_reason} (本次运行连续失败 {self._fail_counts[provider.name]} 次)")
 
