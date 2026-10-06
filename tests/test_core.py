@@ -11,6 +11,7 @@ import random
 import re
 import sys
 import ast
+import textwrap
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -17690,6 +17691,252 @@ class TestR696FailoverWasteSignal(unittest.TestCase):
                        for v in g.values() if len(v) > 1)
         # 16000 / 21000 ≈ 76%，与生产 74.5% 同量级 ⇒ 判据形状可用
         self.assertGreater(multitok / alltok, 0.5)
+
+
+class TestR697CircuitBreakInChain(unittest.TestCase):
+    """★★ R697：**链内止损**（同素材级 stage 跨通道重复 ⇒ 跳过剩余通道）。
+
+    生产依据（近 5 天）：被拒 ≥2 次的 7 个素材烧掉 123466 token
+    = 全部拒稿 token 的 74.5%，产出为零；按"同 stage 在 ≥2 个不同 provider
+    上重复"分层，**5/7 是素材级**（换通道救不回来）：
+      Dogecoin/Cardano/Aave 三个通道**全部** `quality`（长文正文过短）
+    而链内 failover 一路跑到底，无任何止损 ⇒ 第 4、5 个通道烧的是注定同样的钱。
+
+    ⚠️ 本机制的全部价值在**边界**，放宽即误伤好稿：
+    transport（超时/503）是通道个体故障，换通道正是解法 ⇒ 一律不止损。
+
+    ★ 收益实测（全历史 3224 行遥测，同 title+同日为轮）：
+      阈值 2 → 省 5 次调用 / 22425 token，且**误杀成功故事 0**；
+      阈值 1 → 省 69 次调用，但会直接废掉R264 链尾重抽 ⇒ 不可用。
+      所以阈值锁2（不是"看起来更狠"的 1）。
+
+    ★★ **夹具直接引用 `TestRouterRerollOnQualityReject` 的方法对象**，
+    不复制粘贴（复制出去漂移就得两份一起改）。也不整体继承它——继承会
+    让 R264 的 10 条用例在 R697 类里再跑一遍，纯噪声。
+    R697 与 R264 是同一条链上的两个机制，夹具不同源就会各写各的。
+    """
+
+    setUp = TestRouterRerollOnQualityReject.setUp
+    tearDown = TestRouterRerollOnQualityReject.tearDown
+    _engine = TestRouterRerollOnQualityReject._engine
+    _resp = TestRouterRerollOnQualityReject._resp
+    _good_body = TestRouterRerollOnQualityReject._good_body
+    _stub_body = TestRouterRerollOnQualityReject._stub_body
+    _item = TestRouterRerollOnQualityReject._item
+
+    H = staticmethod(m.MultiLLMEngine._hit_material_stage)
+
+    # ---------- 判据层（纯函数，穷举边界） ----------
+    def test_no_reject_yet_never_breaks(self):
+        self.assertIsNone(self.H({}))
+
+    def test_single_provider_never_breaks(self):
+        """★ 单通道拒稿**不得**止损：路由通道(R264)抽中弱后端是独立随机样本"""
+        self.assertIsNone(self.H({"quality": {"A"}}))
+        self.assertIsNone(self.H({"numbers": {"A"}}))
+
+    def test_two_providers_same_stage_breaks(self):
+        """★★ 核心判据：同 stage 跨 ≥2 通道 ⇒ 止损"""
+        self.assertEqual(self.H({"quality": {"A", "B"}}), "quality")
+        self.assertEqual(self.H({"numbers": {"A", "B"}}), "numbers")
+
+    def test_same_provider_counted_once(self):
+        """★★ 「不同 provider 个数」是硬判据，不是拒稿次数"""
+        s = {"quality": set()}
+        for _ in range(5):
+            s["quality"].add("A")      # 同一通道连拒 5 次
+        self.assertIsNone(self.H(s), "同通道重复不得触发止损")
+
+    def test_transport_never_breaks(self):
+        """★★★ 最关键的边界：transport = 通道个体故障，换通道才是解法"""
+        self.assertIsNone(self.H({"transport": {"A", "B", "C", "D"}}))
+
+    def test_non_material_stages_never_break(self):
+        for st in ("transport", "no_provider", "campaign_intel", None, "", "unknown"):
+            self.assertIsNone(self.H({st: {"A", "B", "C"}}), f"{st} 不得触发止损")
+
+    def test_material_stage_set_is_exactly_content_gates(self):
+        """★ 白名单必须精确：多一个 stage 就多一类误杀"""
+        self.assertEqual(
+            set(m.MultiLLMEngine._MATERIAL_STAGE_FOR_CIRCUIT),
+            {"quality", "numbers"})
+
+    def test_result_is_deterministic(self):
+        """⚠️ frozenset 无序 ⇒ 多 stage 同时命中时必须可复现（否则遥测不可解释）"""
+        seen = {"numbers": {"A", "B"}, "quality": {"C", "D"}}
+        hits = {self.H(seen) for _ in range(20)}
+        self.assertEqual(len(hits), 1, f"多 stage 同时命中结果不稳定: {hits}")
+
+    # ---------- 数据源层 ----------
+    def test_log_reject_accumulates_material_stage_only(self):
+        """★★ 累积挂在 `_log_reject`（唯一出口）⇒ 7 处质量门抛点无一遗漏"""
+        m._ACTIVE_STAGE_SEEN = {}
+        E = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        with patch.object(m, "append_metrics", lambda *a, **k: None):
+            E._log_reject({"title": "t", "source": "s"}, "P1", "quality", "过短")
+            E._log_reject({"title": "t", "source": "s"}, "P2", "transport", "超时")
+            E._log_reject({"title": "t", "source": "s"}, "P3", "quality", "过短")
+        self.assertEqual(m._ACTIVE_STAGE_SEEN.get("quality"), {"P1", "P3"})
+        self.assertNotIn("transport", m._ACTIVE_STAGE_SEEN,
+                         "transport 入表会把超时误判成素材级 ⇒ 一次超时就打死整条故事")
+
+    def test_stage_seen_is_reset_per_story(self):
+        """★★★ 漏重置 = 上一条素材的累积让下一条**一进循环就止损**。
+
+        用真实源码定位而不是复制实现：判据必须落在 `summarize` 体内。
+        """
+        import inspect
+        src = inspect.getsource(m.MultiLLMEngine.summarize)
+        self.assertIn("_ACTIVE_STAGE_SEEN = {}", src,
+                      "每条素材必须重置 stage 累积表（纪律 5）")
+        self.assertIn("_CIRCUIT_HIT = None", src,
+                      "止损命中标记也必须逐素材重置")
+        self.assertIn("global _ACTIVE_STAGE_SEEN, _CIRCUIT_HIT", src,
+                      "global 必须提到函数首部（带注解赋值会污染整个作用域）")
+
+    def test_global_declared_before_annotated_assignment(self):
+        """★★ 反向守卫：`global` 位置错了会 `SyntaxError`。
+
+        实测踩过：把 `global _CIRCUIT_HIT` 写在循环里，而函数下方有
+        `circuit_break_stage: Optional[str] = None` ⇒ 报
+        `SyntaxError: annotated name '_CIRCUIT_HIT' can't be global`。
+        """
+        import inspect
+        import ast
+        src = textwrap.dedent(inspect.getsource(m.MultiLLMEngine.summarize))
+        # ★ 判据的真实语义是"**能不能编译**"，不是"global 排在第几行"——
+        # 写成位置比较需要坐标系换算，换算本身就是新的出错点。
+        # 这里两层都查：① AST 层声明必须存在 ② 真实编译必须通过。
+        tree = ast.parse(src)
+        fn = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef))
+        globals_declared = set()
+        for n in ast.walk(fn):
+            if isinstance(n, ast.Global):
+                globals_declared.update(n.names)
+        self.assertTrue({"_ACTIVE_STAGE_SEEN", "_CIRCUIT_HIT"} <= globals_declared,
+                        f"两个模块级容器都必须 global 声明，实得 {globals_declared}")
+        # 真实编译：把 global 挪到带注解赋值之后就会在这里炸
+        compile(src, "<r697-guard>", "exec")
+
+    # ---------- 可观测性层 ----------
+    def test_circuit_break_is_recorded_in_telemetry(self):
+        """★ 止损是**行为变更**（少发稿）⇒ 必须留痕，否则是"静默优化"
+
+        R612「沉默不是通过」：产出变化若无行内证据，下轮无法回答
+        "到底省了多少调用、值不值"。
+        """
+        import inspect
+        src = inspect.getsource(m)
+        self.assertIn('"circuit_break_stage": circuit_break_stage', src,
+                      "成功返回必须带止损字段")
+        self.assertIn('"circuit_break_skipped"', src,
+                      "必须记录省下了多少个通道调用")
+        self.assertIn('"circuit_break_stage": _CIRCUIT_HIT', src,
+                      "故事级汇总行必须带止损标记（失败路径的唯一出口）")
+
+    def test_circuit_breaks_before_entering_chain(self):
+        """★ 检查点必须在循环体首行：越晚检查就多烧一个通道"""
+        import inspect
+        src = inspect.getsource(m.MultiLLMEngine.summarize)
+        i_loop = src.find("for index, provider in enumerate(ordered):")
+        i_check = src.find("_hit_material_stage(_ACTIVE_STAGE_SEEN)")
+        i_call = src.find("client.chat.completions.create")
+        self.assertLess(i_loop, i_check, "判据必须在 for 之内")
+        self.assertLess(i_check, i_call, "判据必须在实际调用之前")
+
+    def test_circuit_break_skips_real_channels_but_keeps_reroll(self):
+        """★★ 止损只砍**剩余真实通道**，链尾重抽位（R264）必须保留。
+
+        ⚠️ 这条守卫的第一版写的是「止损也跳过重抽位」，**方向就是错的**，
+        被全量测试 `TestRouterRerollOnQualityReject::
+        test_reroll_runs_after_all_real_channels_exhausted` 抓出来（真实
+        语义冲突，不是假失败）：
+          止损的结论 = **换一个通道**（不同模型）也过不了这堵墙；
+          R264 重抽的语义 = **同一个通道**（路由）再抽一次随机后端样本。
+        二者根本不冲突。把它们对立起来 ⇒ 等于用 R697 悄悄废掉 R264。
+
+        判据落到真实源码位置：止损的 `continue` 必须在 `index < base_len`
+        守卫**之内**（否则会连带跳掉重抽段），而 `index >= base_len`
+        （重抽段入口）必须在该守卫之外仍可到达。
+        """
+        import inspect
+        src = inspect.getsource(m.MultiLLMEngine.summarize)
+        i_guard = src.find("if index < base_len:")
+        self.assertGreater(i_guard, 0, "未找到止损的「仅真实通道段」边界守卫")
+        i_trip = src.find("_circuit_tripped = True", i_guard)
+        self.assertGreater(i_trip, 0, "未找到止损触发点")
+        i_cont = src.find("continue", i_trip)
+        self.assertGreater(i_cont, 0, "止损跳过必须用 continue（而非 break）")
+        i_reroll_guard = src.find("if index >= base_len:", i_guard)
+        self.assertGreater(i_reroll_guard, 0, "未找到链尾重抽段入口")
+        self.assertLess(i_guard, i_reroll_guard,
+                        "真实通道段守卫必须排在重抽段入口之前")
+        self.assertNotIn("break\n", src[i_trip:i_reroll_guard],
+                         "止损处不得用 break（会连带吃掉重抽位 = 废掉 R264）")
+
+    def test_circuit_break_skipped_count_excludes_reroll_slots(self):
+        """★ 省下的调用数不得把重抽位算进去（重抽位仍会真跑）
+
+        用 `base_len - index` 而不是 `len(ordered) - index`：
+        后者把链尾重抽位算成"省下的调用"，而它实际还会再跑一次
+        ⇒ 遥测里的 `circuit_break_skipped` 会虚报省钱量。
+        """
+        import inspect
+        src = inspect.getsource(m.MultiLLMEngine.summarize)
+        self.assertIn("circuit_break_skipped = base_len - index", src,
+                      "省下的调用数必须只算真实通道段")
+        self.assertNotIn("circuit_break_skipped = len(ordered) - index", src,
+                         "len(ordered) 含重抽位 ⇒ 虚报省钱量")
+
+    # ---------- 端到端：与 R264 链尾重抽共存 ----------
+    def test_circuit_break_does_not_kill_reroll_rescue(self):
+        """★★ 端到端回归（正是初版被全量测试抓到的那条场景）。
+
+        3 个通道：路由首抽 quality 拒 → 具体模型 quality 拒（此时跨 2 个
+        provider，止损命中）→ **跳过剩余真实通道**，但链尾路由重抽位
+        仍执行并把故事救回。
+        """
+        eng = self._engine(["openrouter/free", "glm-5.3-flash", "gemini-3-flash-preview"])
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            self._resp(self._stub_body()),    # 路由首抽：弱后端 → quality
+            self._resp(self._stub_body()),    # 具体模型 quality拒 ⇒ 止损命中
+            self._resp(self._good_body()),    # 链尾重抽：独立新样本 ⇒ 救回
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch("time.sleep"), patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out, "链尾重抽位必须仍能救回（R264 不得被 R697 废掉）")
+        self.assertEqual(client.chat.completions.create.call_count, 3,
+                         "第三个真实通道必须被止损跳过，只留重抽位")
+        self.assertEqual(out.get("circuit_break_stage"), "quality",
+                         "止损事实必须仍然留痕")
+        self.assertEqual(out.get("circuit_break_skipped"), 1,
+                         "只跳过了 1 个剩余真实通道（gemini），不含重抽位")
+
+    def test_transport_failover_still_walks_whole_chain(self):
+        """★★ 止损不得影响 transport 的完整 failover。
+
+        transport 是通道个体故障（超时/503）⇒ 换通道正是解法，
+        素材级 stage 表里根本没有 transport ⇒ 整条链必须走完。
+        """
+        eng = self._engine(["openrouter/free", "glm-5.3-flash", "gemini-3-flash-preview"])
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            Exception("Read timed out"),
+            Exception("Read timed out"),
+            self._resp(self._good_body()),
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch("time.sleep"), patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out, "transport 连挂两个通道后第三个应救回")
+        self.assertEqual(client.chat.completions.create.call_count, 3,
+                         "transport 必须走完整条链，不受止损影响")
+        self.assertIsNone(out.get("circuit_break_stage"),
+                          "全transport 场景不得记止损（否则误报省钱量）")
 
 
 if __name__ == "__main__":

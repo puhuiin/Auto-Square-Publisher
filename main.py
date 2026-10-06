@@ -3695,6 +3695,22 @@ def _summarize_max_tokens(provider_name: str, model: str = "") -> int:
 #   用 dict 而非 5 个模块变量：可整体 clear，且新增字段不会漏初始化。
 _LAST_REJECT_CTX: Dict[str, Any] = {}
 
+# ★★ R697：**当前这条素材**的拒稿 stage 累积（`{stage: {provider_name}}`），
+# 供链内止损判据 `_should_circuit_break_stage` 消费。
+# ⚠️ 为什么是模块级：`_log_reject` 是 `@staticmethod`（无 self），
+#   写成 `self.xxx` 会把属性挂到函数对象上、实例永远读不到（R696 已踩）。
+# ⚠️ 每次 summarize 入口**整体替换为新 dict**（不是 `.clear()`）：
+#   语义上"上一条素材的累积"对下一条素材**根本不存在**，
+#   替换比清空更不容易在后续维护中被漏掉。
+_ACTIVE_STAGE_SEEN: Dict[str, set] = {}
+
+# ★ R697：本条素材是否被**链内止损**终止（= 命中止损的 stage，未命中为 None）。
+# ⚠️ 同样是模块级（`_log_reject` 是 staticmethod，无 self），且每条素材在
+#   `summarize` 入口重置为 None。
+# ⚠️ 独立于 `_ACTIVE_STAGE_SEEN` 而非从它推导：止损**发生在循环里**，
+#   循环结束后 `seen` 仍然存在但"是否已止损"是历史事实，两者语义不同。
+_CIRCUIT_HIT: Optional[str] = None
+
 
 class MultiLLMEngine:
     """
@@ -3757,6 +3773,62 @@ class MultiLLMEngine:
 
 #Write2Earn #BinanceSquare #PEPE
 ---"""
+
+    # ══ R697：**链内止损**（同 stage 跨通道重复 ⇒ 不再试剩余通道）════
+    # 生产实证（近 5 天，被拒 ≥2 次的 7 个素材烧掉 123466 token
+    # = 全部拒稿 token 的 74.5%，产出为零）。按"同一 stage 在 ≥2 个不同
+    # provider 上重复出现"分层，**5/7 是素材级**（换通道也救不回来）：
+    #   Dogecoin/Cardano/Aave  stepfun-flash→stepfun→openrouter
+    #                          **三个通道全部 `quality`（长文正文过短）**
+    #   Strategy buys 334 BTC  4/5 次 `transport`（预算撞顶，跨通道同因）
+    #   SEC 3x Leveraged BTC   3/4 次 `transport`
+    #   Cardano/XRP/Zcash/Sui  3/4 次 `transport`
+    # 而链内 failover 一路跑到底（`for index, provider in enumerate(ordered)`
+    # 无任何止损）⇒ 第 4、5 个通道烧的是**注定同样的钱**。
+    #
+    # ⚠️ **只对「素材级 stage」生效，通道级的一律继续换**——
+    #   这条边界是本机制的全部价值所在，放宽即误伤好稿：
+    #     · `quality` / `numbers` = **内容**判据 ⇒ 取决于素材本身
+    #       （源文里到底有没有那个数字、长文能不能写到 500 字），
+    #       **换模型不改变判据结果** ⇒ 可止损。
+    #     · `transport`（超时/503/连接错误）= **通道个体**故障 ⇒ 换通道
+    #       正是解法，止损会造成"一次超时打死整条故事"。
+    #       ⚠️ 但 `transport` 里混着 `_BudgetExhaustedError`（预算撞顶），
+    #         那个是素材级（同一素材在 5 个通道都撞顶）——而它与超时
+    #         **共用同一个 stage 值** ⇒ 只凭 stage 无法区分
+    #         ⇒ transport **一律不止损**，保持既有行为（保守方向）。
+    _MATERIAL_STAGE_FOR_CIRCUIT = frozenset({"quality", "numbers"})
+    # 需同 stage 在 ≥N 个**不同 provider** 上重复才止损。
+    # ⚠️ N=2（不是 1）：单个通道的一次 quality 拒稿可能只是这次抽中的弱后端
+    #   （R264 记载 openrouter 路由通道"抽中弱后端"是完全独立的随机样本）
+    #   ⇒ N=1 会把链尾重抽机制（R264 补的重抽位）直接废掉。
+    _CIRCUIT_STAGE_REPEAT = 2
+
+    @classmethod
+    def _hit_material_stage(cls, seen: Dict[str, set]) -> Optional[str]:
+        """★ R697 链内止损判据（**纯函数**，便于单测穷举边界）。
+
+        seen: `{stage: {provider_name, ...}}`，由 `_log_reject` 在每次
+        素材级拒稿后累积，每条素材在 `summarize` 入口整体重置。
+
+        返回命中的 stage 名，未命中返回 `None`。
+
+        ⚠️「不同 provider 的个数」是硬判据，不是拒稿次数：同一通道连拒 5 次
+          **不算**跨通道重复（那是通道个体问题，继续换通道才对）。
+        ⚠️ 只看 `_MATERIAL_STAGE_FOR_CIRCUIT`（quality/numbers）——
+          transport 是**通道个体**故障（超时/503/连接错误），
+          换通道正是解法，止损会造成"一次超时打死整条故事"。
+          ⚠️ 它内部混着素材级的预算撞顶（`_BudgetExhaustedError`），
+            但两者共用同一个 stage 值、只凭 stage 无法区分
+            ⇒ transport 一律不止损（保守方向，宁多烧不误杀）。
+        ⚠️ 确定性：同序遍历 `_MATERIAL_STAGE_FOR_CIRCUIT`（frozenset 无序）
+          ⇒ **必须排序**，否则多 stage 同时命中时结果不可复现
+            （纪律：同样的输入必须给出同样的输出）。
+        """
+        for stage in sorted(cls._MATERIAL_STAGE_FOR_CIRCUIT):
+            if len(seen.get(stage) or ()) >= cls._CIRCUIT_STAGE_REPEAT:
+                return stage
+        return None
 
     def __init__(self):
         self.providers: List[LLMProviderConfig] = self._build_provider_chain()
@@ -4884,6 +4956,18 @@ class MultiLLMEngine:
             "completion_tokens": completion_tokens,
             "budget_cap": budget_cap,
         })
+        # ★★ R697：**素材级 stage 的跨通道累积**（链内止损的数据源）。
+        # 挂在 `_log_reject` 而非各 `raise` 点，是因为本类有 7 处质量门抛点
+        # （R697 计数）+ 2 处 transport 抛点；纪律 6 明确「补字段必漏一处」，
+        # 而**漏掉的那处止损会静默失效，与不实现完全无异**。
+        # ⚠️ 只累积 `_MATERIAL_STAGE_FOR_CIRCUIT` 内的 stage：transport 进表
+        #   会把"超时"误判成素材级 ⇒ 一次超时就打死整条故事。
+        # ⚠️ 载体是**模块级** `_ACTIVE_STAGE_SEEN`（同 R696 的理由：
+        #   `_log_reject` 是 staticmethod，函数体里没有 `self`）；
+        #   每条素材在 summarize 入口**整体替换为新 dict**（不是 clear），
+        #   确保上一条素材的累积绝不冒用到下一条。
+        if stage in MultiLLMEngine._MATERIAL_STAGE_FOR_CIRCUIT:
+            _ACTIVE_STAGE_SEEN.setdefault(stage, set()).add(provider)
         append_metrics({
             "title": (news_item.get("title") or "")[:60],
             "source": news_item.get("source"),
@@ -5287,6 +5371,13 @@ class MultiLLMEngine:
         返回 {"content", "tokens", "provider", ...}，全败返回 None。
         提供商按本次运行内的连续失败次数升序尝试（健康度优先调度）。
         """
+        # ★★ R697：`global` 声明必须放在**任何带注解的赋值之前**——
+        # Python 规定：函数体内一旦出现带注解的赋值（哪怕在后面），
+        # 该作用域内**所有**名字都被视为"该作用域的局部名"，
+        # 此时再写 `global X` 报 `SyntaxError: annotated name can't be global`。
+        # ⚠️ 本函数下方有 `circuit_break_stage: Optional[str] = None` 这类
+        # 带注解的循环内局部量 ⇒ global 只能提到这里（函数首部）。
+        global _ACTIVE_STAGE_SEEN, _CIRCUIT_HIT
         # 故事级死亡原因透出（_run_main 的 llm_failed 记录此前无 reason，只能靠标题关联
         # provider 级记录）：各 return None 前必赋值；此处默认值覆盖"无提供商"早退路径，
         # 循环内/循环后路径在下面另行赋值（fail_reason 同理，空链时避免引用未绑定）。
@@ -5298,6 +5389,16 @@ class MultiLLMEngine:
         # ⚠️ 不重置的后果比"字段为 None"更坏：那是**错误归因**（假数据），
         #   而 None 只是"未观测"（诚实）。二者不可混同。
         _LAST_REJECT_CTX.clear()
+        # ★★ R697：上一条素材的 stage 累积**对这条素材根本不存在**
+        # ⇒ 整体替换为新 dict。漏了这行 = 上一条素材的 quality 拒稿会让
+        #   这条素材**一进循环就触发链内止损** = 一条都不发（假拒稿事故）。
+        #   ⚠️ 必须用 `global`：`_ACTIVE_STAGE_SEEN` 是模块级可变量，
+        #   漏掉 `global` 会把它变成**函数局部名** ⇒ 模块级那张表永不被清，
+        #   且守卫 `test_stage_seen_is_reset_per_story` 会当场抓到。
+        _ACTIVE_STAGE_SEEN = {}
+        # ★ R697：止损命中标记也走模块级（同一个 staticmethod 限制）——
+        # 故事级 `llm_failed` 汇总行会读它，否则"止损省了多少"无法量化。
+        _CIRCUIT_HIT = None
         if not self.providers:
             logger.error("没有任何可用的 LLM 提供商配置！")
             # 空链也留痕：否则"连续 3 次失败熔断"在遥测里看不到任何前因，
@@ -5329,7 +5430,52 @@ class MultiLLMEngine:
         # fail_reason 缺省覆盖"全冷却空链"路径（循环一次不执行，避免引用未绑定）；
         # last_fail_reason 入口已赋默认值，其余 return None 前逐一覆写。
         fail_reason = "全部提供商处于冷却期，无可用通道"
+        # ★★ R697：链内止损的可观测出口——没有它就是"静默少发"
+        # （R612「沉默不是通过」：产出变化必须有行内证据）。
+        circuit_break_stage: Optional[str] = None   # 命中止损的 stage（None=未命中）
+        circuit_break_skipped = 0                   # 因止损而**没跑**的真实通道数（= 省下的调用）
+        # 止损已触发标记：触发后剩余真实通道全部跳过，但**链尾重抽位照常**
+        # （作用域仅本循环，故不需要 global）。
+        _circuit_tripped = False
         for index, provider in enumerate(ordered):
+            # ★★ R697：**链内止损判据**，检查点必须在 `for` 体最开头——
+            # 越晚检查就多烧一个通道（这笔钱正是要省下的）。
+            #
+            # ⚠️⚠️ **判据只在真实通道段（`index < base_len`）生效，这是 R697
+            # 与 R264 链尾重抽位的**唯一正确边界**，初版搞错过一次：
+            # 初版用 `break` 一刀切 ⇒ 把 R264 的链尾重抽位也跳过了 ⇒ 打破
+            # `TestRouterRerollOnQualityReject`（全量测试抓到，非假失败）。
+            #
+            #   止损的结论   ：**换一个通道**（不同模型）也过不了这堵墙。
+            #   重抽的语义   ：**同一个通道**（路由）再抽一次随机后端样本。
+            # 二者根本不冲突——止损否定的不是"再抽一次"，而是"换一家再抽"。
+            # 反过来看R264 的论证也站得住：「抽中弱后端」是**独立随机样本**，
+            # 同通道重抽确实有独立概率命中（R264 生产 13 次质量拒稿 100% 来自
+            # 路由通道）。⇒ 正确做法是**只跳过剩余真实通道**，重抽位保留。
+            #
+            # ⚠️ `_circuit_tripped` 后判据不再重复求值（表不变、幂等，
+            #   重复求值只会刷同一条warning 并把 skipped 计数写错）。
+            if index < base_len:
+                if not _circuit_tripped:
+                    _hit_stage = self._hit_material_stage(_ACTIVE_STAGE_SEEN)
+                    if _hit_stage:
+                        _CIRCUIT_HIT = _hit_stage
+                        circuit_break_stage = _hit_stage
+                        # 省下的调用数 = 当前index 到真实链末尾（**不含重抽位**）
+                        circuit_break_skipped = base_len - index
+                        _circuit_tripped = True
+                        logger.warning(
+                            f"⛔ 链内止损（R697）：该素材在 "
+                            f"{sorted(_ACTIVE_STAGE_SEEN.get(_hit_stage) or [])} 等 "
+                            f"≥{self._CIRCUIT_STAGE_REPEAT} 个通道上均被判 "
+                            f"`{_hit_stage}`，跳过剩余真实通道 "
+                            f"{circuit_break_skipped} 个"
+                            f"（内容判据不随模型改变 ⇒ 换通道是注定失败的钱；"
+                            f"链尾同通道重抽位不受影响，R264 随机样本仍有效）")
+                if _circuit_tripped:
+                    logger.info(f"⏭ 链内止损（R697）：跳过剩余真实通道 "
+                                f"[{provider.name}]（第 {index + 1}/{base_len} 位）")
+                    continue
             if index >= base_len:
                 if provider.name not in reroll_quality_ok:
                     continue  # 通道侧故障（超时/限流/空回）不重抽，直接结束
@@ -5738,6 +5884,11 @@ class MultiLLMEngine:
                         # R694b：成功稿是判断"封顶该定多少"的**主数据源**（拒稿只告诉你
                         # 撞顶了，成功才告诉你"这么多够用"）⇒ 必须一起带出去落盘。
                         "completion_tokens": completion_tokens, "budget_cap": budget_cap,
+                        # ★ R697：把链内止损的观测字段带出去落盘——
+                        # 止损是**行为变更**（少发稿），不留痕就是"静默优化"，
+                        # 下轮无法回答"到底省了多少调用、值不值"（R612）。
+                        "circuit_break_stage": circuit_break_stage,
+                        "circuit_break_skipped": circuit_break_skipped or None,
                         "persona": persona["name"], "title": article_title}
 
             except _QualityGateRejection as e:
@@ -10438,6 +10589,11 @@ def _run_main():
                     "completion_tokens": _LAST_REJECT_CTX.get("completion_tokens"),
                     "budget_cap": _LAST_REJECT_CTX.get("budget_cap"),
                     "finish_reason": _LAST_REJECT_CTX.get("finish_reason"),
+                    # ★ R697：这条故事是不是被**链内止损**终止的
+                    #（"同素材级 stage 跨 ≥2 通道重复 ⇒ 跳过剩余通道"）。
+                    # ⚠️ 与 `record_scope="story"` 配套读：这条行是"整条链打死"
+                    #   的唯一出口，而止损是其中**一类**成因。
+                    "circuit_break_stage": _CIRCUIT_HIT,
                     # 视角标记：让消费方不必靠"stage 是否为 None"猜自己拿到的是哪一层
                     "record_scope": "story",
                     "outcome": "llm_failed",
