@@ -18268,6 +18268,175 @@ class TestR698VideoExcludedFromQuota(unittest.TestCase):
                          f"这些落盘点带 sent_24h 却漏了 sent_24h_all：{missing}")
 
 
+class TestR699QuotaGateReloadsAtEveryJudgement(unittest.TestCase):
+    """★★★ R699：把 R698 的并发缺口**补到所有配额判断点**。
+
+    R698 只修了循环内的「逐条复查」（`posted_count > 0` 那处）。本轮复查
+    源码发现同一缺口还有**两处**，且其中一处更隐蔽：
+
+      ① 入口配额门：`cache_mgr` 在函数更早处构造，而紧邻其上的
+         `_maybe_post_daily_video` 可能刚往`sent_cache` 落了一条视频帖。
+      ② **R154 边界追赶的等待后重查**（最隐蔽）：该分支会原地
+         `time.sleep` 最多 **330 秒**，醒来后直接
+         `cache_mgr.count_since(24)` 读旧视图 ⇒ 这 330 秒里并发轮
+         发帖落盘，本轮完全看不见 ⇒ 两轮都认为"有空槽"。
+
+    ⚠️ `concurrency` 组把并发概率压到极低，但**不是数学保证**：
+    两轮仍可能在 `checkout` 之后、`reload` 之前交错。
+    ⇒ 正确做法是每个判断点前都 `reload()`，而不是依赖调度器。
+    """
+
+    def _run_main_src(self):
+        import inspect
+        return inspect.getsource(m._run_main)
+
+    def test_all_three_quota_judgements_reload(self):
+        """★★ 三个配额判断点**每一处**都必须在判断前 reload
+
+        判据用「reload 出现次数」+ 位置关系，而不是抄实现：
+        - 入口门：在 `if not dry_run and MAX_DAILY_POSTS > 0:` 之后、
+          第一次 `count_since(24)` 之前
+        - 等待后重查：在 `time.sleep(wait_sec)` 之后
+        - 逐条复查：在 `posted_count > 0` 之后
+        """
+        src = self._run_main_src()
+        n_reload = src.count("cache_mgr.reload()")
+        self.assertEqual(n_reload, 3,
+                         f"应恰有 3 处 reload（入口门/等待后/逐条复查），实得 {n_reload}")
+
+        # 位置关系：逐条复查的 reload 必须在该守卫的配额比较之前
+        i_per_post = src.find("if posted_count > 0 and MAX_DAILY_POSTS > 0:")
+        i_per_post_reload = src.find("cache_mgr.reload()", i_per_post)
+        i_per_post_cmp = src.find("cache_mgr.count_since(24) >= MAX_DAILY_POSTS", i_per_post)
+        self.assertGreater(i_per_post, 0, "未找到逐条复查守卫")
+        self.assertLess(i_per_post_reload, i_per_post_cmp,
+                        "逐条复查的 reload 必须在配额比较之前")
+
+        # 位置关系：等待后重查的 reload 必须在 sleep 之后
+        i_sleep = src.find("time.sleep(wait_sec)")
+        i_after_sleep = src.find("cache_mgr.reload()", i_sleep)
+        i_after_cmp = src.find("sent_24h = cache_mgr.count_since(24)", i_sleep)
+        self.assertGreater(i_sleep, 0, "未找到 R154 边界追赶的 sleep")
+        self.assertLess(i_after_sleep, i_after_cmp,
+                        "等待后重查的 reload 必须在重查之前（否则等了个空）")
+
+        # 位置关系：入口门 reload 在第一次配额计数之前
+        i_entry = src.find("if not dry_run and MAX_DAILY_POSTS > 0:")
+        i_entry_reload = src.find("cache_mgr.reload()", i_entry)
+        i_entry_cmp = src.find("sent_24h = cache_mgr.count_since(24)", i_entry)
+        self.assertLess(i_entry_reload, i_entry_cmp,
+                        "入口门的 reload 必须在首次计数之前")
+
+    def test_low_hour_gate_does_not_add_a_fourth_reload(self):
+        """★ 低窗子配额段**刻意不 reload**（避免第三次重复读同一文件）
+
+        这是一条**反向**守卫：防止后来者"顺手补全"成第四处。
+        理由写在源码注释里：入口门 + 等待后重查已覆盖，视图已是最新。
+        判据落在源码注释与结构上——`LOW_HOUR_CAP` 段内不得出现 reload。
+        """
+        import ast
+        src = self._run_main_src()
+        tree = ast.parse(src)
+        # 找 `if LOW_HOUR_CAP > 0:` 这个 If 节点。
+        # ⚠️ 判据必须落在**真实 AST 结构**上（左值是 LOW_HOUR_CAP、
+        #   比较符是 Gt、比较值是常量 0），不能用 `ast.dump` 字符串包含
+        #   之类的模糊匹配——首次写 `"LOW_HOUR_CAP" in ast.dump(...) and ">" in t`
+        #   实测找不到节点（`ast.dump` 输出的是 `Gt()`，没有 `>` 字符）⇒
+        #   断言恒假 = **假通过**（纪律 17 的又一次命中）。
+        low_node = None
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.If) or not isinstance(node.test, ast.Compare):
+                continue
+            c = node.test
+            if (isinstance(c.left, ast.Name) and c.left.id == "LOW_HOUR_CAP"
+                    and len(c.ops) == 1 and isinstance(c.ops[0], ast.Gt)
+                    and len(c.comparators) == 1
+                    and isinstance(c.comparators[0], ast.Constant)
+                    and c.comparators[0].value == 0):
+                low_node = node
+                break
+        self.assertIsNotNone(low_node, "未找到 `if LOW_HOUR_CAP > 0:` 节点")
+        body_src = ast.unparse(low_node)
+        self.assertNotIn("reload()", body_src,
+                         "低窗段不应再 reload（已有两处覆盖，第三处是纯重复 IO）")
+
+    def test_reload_is_actually_called_in_entry_gate(self):
+        """★★ 入口门那处 reload **必须真调用**（不是只写了个注释）
+
+        判据型守卫的假阳性：上一次 `test_all_three_quota_judgements_reload`
+        只数出现次数——若有人把某处改成注释里的文字，次数仍对。
+        这里用 AST 确认 `reload` 是**真实函数调用**。
+        """
+        import ast
+        src = self._run_main_src()
+        tree = ast.parse(src)
+        calls = 0
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) \
+                    and node.func.attr == "reload":
+                calls += 1
+        self.assertEqual(calls, 3,
+                         f"应有 3 个真实的 reload() 调用（不是注释文字），实得 {calls}")
+
+    def test_reload_does_not_change_single_run_behaviour(self):
+        """★★ 零回归：单轮场景下reload 是**纯读**，不改变任何配额判断结果
+
+        `reload` 做并集合并；单轮（无并发）时磁盘与本轮视图只差
+        「本轮已 record_sent 但未落盘的条目」——那些在内存里，并集后不变。
+        ⇒ 单轮下 reload 前后 `count_since` 必须完全相同。
+        """
+        import tempfile
+        import json
+        from datetime import datetime as _dt
+        now = _dt.now(timezone.utc)
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False,
+                                         encoding="utf-8") as f:
+            json.dump([{"id": f"a{i}", "title": "t", "source": "U.Today",
+                        "sent_at": (now - timedelta(hours=3)).isoformat()}
+                       for i in range(5)], f, ensure_ascii=False)
+            path = f.name
+        self.addCleanup(os.unlink, path)
+        mgr = m.CacheManager(path)
+        before = mgr.count_since(24)
+        mgr.reload()
+        self.assertEqual(mgr.count_since(24), before,
+                         "单轮下 reload 改变了配额计数 ⇒ 有副作用")
+
+    def test_reload_after_wait_sees_concurrent_write(self):
+        """★★ 端到端：等待期间并发轮写入 → reload 后配额判断必须看见
+
+        复刻 R154 边界追赶的真实场景：等待 → 另一轮发1 篇 → 本轮醒来。
+        """
+        import tempfile
+        import json
+        from datetime import datetime as _dt
+        now = _dt.now(timezone.utc)
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False,
+                                         encoding="utf-8") as f:
+            json.dump([{"id": f"a{i}", "title": "t", "source": "U.Today",
+                        "sent_at": (now - timedelta(hours=3)).isoformat()}
+                       for i in range(11)], f, ensure_ascii=False)
+            path = f.name
+        self.addCleanup(os.unlink, path)
+        mgr = m.CacheManager(path)
+        self.assertEqual(mgr.count_since(24), 11)
+
+        # 模拟等待期间另一轮写入
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        data.append({"id": "other-run-post", "title": "并发轮",
+                     "source": "U.Today",
+                     "sent_at": (now - timedelta(minutes=1)).isoformat()})
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+
+        # 不reload 会误判有空槽
+        self.assertEqual(mgr.count_since(24), 11)
+        mgr.reload()
+        self.assertEqual(mgr.count_since(24), 12,
+                         "等待后 reload 仍看不见并发轮写入 ⇒ 边界追赶会击穿配额")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 

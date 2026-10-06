@@ -10168,6 +10168,15 @@ def _run_main():
         logger.warning(f"视频定投环节异常（不影响图文主流程）: {e}")
 
     if not dry_run and MAX_DAILY_POSTS > 0:
+        # ★ R699：入口门也先 `reload()`。`cache_mgr` 是在本函数**更早**处构造的，
+        # 而上面 `_maybe_post_daily_video` 刚刚可能往 `sent_cache` 落了一条视频帖
+        #（它自己会写盘）⇒ 内存视图已落后于磁盘。
+        # ⚠️ R698 已让配额**排除**视频帖，所以这条视频帖对 `sent_24h` 无影响；
+        #   但 reload 顺带把并发轮的图文记录一并并入
+        #   （concurrency 组只是把竞态压到极低，不是数学保证——两轮仍可能在
+        #   `checkout` 之后、`reload` 之前交错）。
+        #   成本是一次小文件读，纯冷路径，不影响产出。
+        cache_mgr.reload()
         sent_24h = cache_mgr.count_since(24)
         if sent_24h >= MAX_DAILY_POSTS:
             # R154：边界追赶——调度网格(:03/:23/:43)常在槽释放前 1~2 分钟撞上饱和，
@@ -10180,13 +10189,27 @@ def _run_main():
                 logger.info(f"⏳ 配额槽 {pre_min} 分钟后释放，等待 {wait_sec}s 后重查（边界追赶）")
                 time.sleep(wait_sec)
                 quota_wait_sec += wait_sec
+                # ★★ R699：重查前必须 `reload()`。此前这里直接
+                # `cache_mgr.count_since(24)`，读的是**本轮启动时的磁盘快照**
+                # ——而上面刚等了最多 330 秒。这段时间里另一轮（并发 workflow /
+                # 手动发视频）完全可能发帖并落盘，本轮视图看不见 ⇒
+                # 两轮都认为"有空槽" ⇒ 加起来超 `MAX_DAILY_POSTS`。
+                # ⚠️ 这是 R698「逐条复查读本轮视图」缺口的**第二处**，
+                #   且更隐蔽：要真等过（`pre_min<=4`）才会触发。
+                #   两处都修才完整：入口门（此处）+ 循环内逐条复查。
+                cache_mgr.reload()
                 sent_24h = cache_mgr.count_since(24)
+                logger.info(f"⏳ 等待后重查 24h 配额：{sent_24h}/{MAX_DAILY_POSTS}"
+                            f"（已并入并发轮写入的记录）")
         # R662：低浏览窗子配额——**把配额从低窗挪向高窗的唯一有效杠杆**。
         # 判据（R660 的推论）：同批排序改不了"占不占配额"，
         # 而低窗有 52 轮/天 vs 高窗 20 轮/天 ⇒ 不设约束时配额**必然**被低窗先接走。
         # ⚠️ `LOW_HOUR_CAP = 0`（默认）时本段**完全跳过**，行为与改动前逐条一致。
         # ⚠️ 判定窗口与 R650 的 `in_pref` **同一口径**（北京 06-12 / UTC 22-04）
         #    ⇒ 两套口径必然漂移（R643 教训）。
+        # ⚠️ **此处不再单独 `reload()`**（R699）：入口门已在任何配额判断之前
+        #    reload 过，中间只隔着上面那个 R154 边界追赶的 sleep，而那里已补了
+        #    第二次 reload ⇒ 走到这里时视图已是最新。第三次读同一文件收益为零。
         # ⚠️ `low_hour_blocked` / `low_hour_sent` 已在**配额检查之外**初始化
         #    （dry_run 路径不经过这里，见上方注释），此处**不要**重复初始化。
         if LOW_HOUR_CAP > 0:
