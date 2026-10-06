@@ -1805,9 +1805,83 @@ class CacheManager:
         return sum(1 for cid in self.cached_ids
                    if isinstance(cid, str) and cid.startswith(prefix))
 
+    # ★★ R698：视频帖在 `sent_cache.json` 里的登记标记。**配额口径必须能把它挑出来**。
+    # ⚠️ 判据取 `source`（而不是 id 前缀）：合并侧 `git_state_merge.py` 会按 id
+    #   并集去重、**原样保留 source**，而 id 前缀在合并/去重全链路都可能被动过
+    #   （`publish_video.py` 侧生成、合并侧去重），只有 source 是稳定字段。
+    #   两处都判（id 前缀 OR source）⇒ 任一侧被改写都不会漏判。
+    _VIDEO_SOURCE = "video"
+    _VIDEO_ID_PREFIX = "video-"
+
+    @classmethod
+    def _is_video_entry(cls, item: dict) -> bool:
+        """该缓存条目是否为**视频帖**（R698：图文配额必须排除它）。
+
+        ⚠️ 为什么要排除：`_maybe_post_daily_video` 的设计注释明写
+        「视频定投自带当日封顶（`_video_sent_date`）与库存去重（`_video_sent`），
+        **不占用图文帖的日配额语义**」（main.py:10019）。但视频帖与图文帖
+        写在**同一张** `sent_cache.json`（`publish_video.py` 第69 行
+        「把视频帖登记进 sent_cache（幂等去重 + 24h 配额都依赖这张表）」），
+        而 `count_since` 遍历的就是这张表、**不区分类型**
+        ⇒ **设计意图与实现直接矛盾**：视频帖实际照样吃掉图文配额位。
+
+        ★ 生产实锤（不是推演）：`sent_cache` 里现存唯一一条
+        `{"id": "video-c9e6669c2a61209a", "source": "video",
+          "sent_at": "2026-09-26T00:11:58.854906+00:00"}`，
+        对应全历史**唯一一次** `chore(cache): record video post` 提交
+        （0116d84，2026-09-26 00:11:59）。
+        同日auto_post 遥测出现全历史**唯一一次** `sent_24h=13`（超出
+        `MAX_DAILY_POSTS=12`）：`00:09:49` 还是 12，`00:23:21` 变 13，
+        中间**没有任何 `binance_published` 行**——那一篇就是视频帖。
+        用 `sent_cache` 的 `sent_at` 重算24h 滚动窗口，峰值确为 13。
+        ⇒ 图文配额被击穿，`13 篇/天` 正是用户明确不许突破的红线。
+        """
+        if not isinstance(item, dict):
+            return False
+        src = item.get("source")
+        if isinstance(src, str) and src.strip().lower() == cls._VIDEO_SOURCE:
+            return True
+        cid = item.get("id")
+        return isinstance(cid, str) and cid.startswith(cls._VIDEO_ID_PREFIX)
+
     def count_since(self, hours: float = 24.0) -> int:
-        """统计最近 N 小时内已成功发布的条数（用于 24h 防刷屏配额）"""
+        """统计最近 N 小时内已成功发布的**图文帖**条数（用于 24h 防刷屏配额）。
+
+        ★★ R698：**排除视频帖**。此前本方法数的是整张表（含 `source="video"`
+        的条目），而 `_maybe_post_daily_video` 的设计声明是「视频定投不占用
+        图文帖的日配额语义」⇒ 实现与意图矛盾，实测已击穿到 13 篇/天
+        （详见 `_is_video_entry` docstring 的生产实锤）。
+        ⚠️ **仅图文配额这一处排除**：去重（`is_cached`）、标题近似去重
+        （`recent_titles`）必须**继续看见**视频帖——否则视频帖重跑会双发
+        （`video_publish.yml` 第 44 行的双发守卫正是靠 sent_cache 判定）。
+        区分点在于：配额是"额度"，视频帖有**自己的**当日封顶
+        （`_video_sent_date`），二者本就不该互相占位。
+        """
         return self._count_since(hours, None)
+
+    def count_all_since(self, hours: float = 24.0) -> int:
+        """R698：**不区分类型**的 24h 发布总数（图文 + 视频）。
+
+        存在的唯一理由是**可观测性**：配额门排除视频帖后，
+        `sent_24h` 就不再是"账号真实发了多少篇"。若只留排除后的口径，
+        就再也无法回答"昨天到底发了多少" ⇒ 必须两个口径并存，
+        配额用排除版、观测用全量版。
+        ⚠️ 不得拿它当配额判据（那会把刚修掉的击穿原样放回来）。
+        """
+        return self._count_since_all(hours)
+
+    def _count_since_all(self, hours: float) -> int:
+        cutoff = datetime.now(timezone.utc).timestamp() - hours * 3600
+        count = 0
+        for item in self.cached_items:
+            raw = item.get("sent_at", "")
+            try:
+                ts = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+            except Exception:
+                continue
+            if ts.timestamp() >= cutoff:
+                count += 1
+        return count
 
     def count_since_in_window(self, hours: float, in_pref: bool) -> int:
         """R662：统计最近 N 小时内**落在高/低浏览窗**的发布条数。
@@ -1816,9 +1890,13 @@ class CacheManager:
         （北京 06-12），`False` 只数低窗。
 
         ⚠️ **口径与 `count_since` 完全一致**（同一个 `_count_since` 内核、
-        同样的 `sent_at` 解析、同样的异常跳过）⇒ 两者可相加校验：
+        同样的 `sent_at` 解析、同样的异常跳过、**同样排除视频帖**）⇒ 两者可相加校验：
         `count_since(24) == count_since_in_window(24,True) + count_since_in_window(24,False)`
         ⇒ 若不等说明分段实现与总量口径漂移（守卫会抓）。
+
+        ★★ R698：视频帖排除是**必须同步**的——`LOW_HOUR_CAP` 是配额子门，
+        若这里数视频、总量 `count_since` 不数，注释里那条恒等式就会失效
+        （实测值不等的守卫会当场变红），等于自己把新坑焊上。
         """
         return self._count_since(hours, in_pref)
 
@@ -1833,6 +1911,10 @@ class CacheManager:
         cutoff = datetime.now(timezone.utc).timestamp() - hours * 3600
         count = 0
         for item in self.cached_items:
+            # ★★ R698：视频帖不占图文配额（与 `count_since` 同一口径，
+            #   否则上面那条可加性恒等式会失效）。
+            if self._is_video_entry(item):
+                continue
             raw = item.get("sent_at", "")
             try:
                 ts = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
@@ -1848,11 +1930,21 @@ class CacheManager:
         return count
 
     def minutes_since_last_sent(self) -> Optional[float]:
-        """距离最近一次成功发布的分钟数（无记录/解析失败返回 None）。
+        """距离最近一次**图文帖**发布的分钟数（无记录/解析失败返回 None）。
 
-        R578：发帖最小间隔的判据——2min 连发是刷屏感来源，跨运行也要守住。"""
+        R578：发帖最小间隔的判据——2min 连发是刷屏感来源，跨运行也要守住。
+
+        ★★ R698：**排除视频帖**。与 `count_since` 同一口径、同一理由
+        （视频帖有独立的 `_video_sent_date` 当日封顶，不参与图文节奏治理）。
+        ⚠️ 若不排除，一条视频帖会让随后 20 分钟内的所有图文轮次被
+        `MIN_POST_GAP_MIN` 静默挡掉——**用视频帖的节奏去卡图文帖**。
+        ⚠️ 与 `count_since` 一致地**只排除**：`recent_titles` /
+        `is_cached` 必须继续看见视频帖（去重职责不同，见 `count_since`）。
+        """
         latest = None
         for item in self.cached_items:
+            if self._is_video_entry(item):
+                continue
             raw = item.get("sent_at", "")
             try:
                 ts = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
@@ -1872,6 +1964,59 @@ class CacheManager:
             if isinstance(t, str) and t.strip():
                 titles.append(t.strip())
         return titles
+
+    def reload(self) -> int:
+        """★★ R698：重新从磁盘加载 `sent_cache.json` 并**合并**进内存视图。
+
+        存在的唯一理由：**配额逐条复查必须看得见另一轮并发写入的记录**。
+        此前 `_run_main` 里的复查（R237）读的是本轮进程内的 `cache_mgr`，
+        而该对象是**本轮启动时的磁盘快照 + 本轮自己新增的条目**——
+        另一轮（并发 workflow、或手动发视频）在这期间落盘的记录
+        **完全不可见** ⇒ 两轮各自按"我看到 11 篇"判断配额，
+        各自发 1 篇 ⇒ **实际 13 篇**，击穿 `MAX_DAILY_POSTS`。
+
+        ⚠️ 用**并集合并**而非直接替换：直接替换会丢掉本轮已 `record_sent`
+        但尚未落盘的条目（`record_sent` 是先 append 再 `_save_cache`，
+        落盘失败时内存里有、磁盘上没有——那种情况下替换会让"已发"变成"没发"，
+        下一轮重发同一条）。并集让两边都保留。
+
+        返回合并后的总条数（供调用方留痕；不抛异常——读失败就保持原视图）。
+        """
+        try:
+            fresh = self._load_cache()
+        except Exception as e:
+            logger.warning(f"重载去重缓存失败（沿用本轮视图）: {e}")
+            return len(self.cached_items)
+        if not fresh:
+            return len(self.cached_items)
+        by_id: Dict[str, dict] = {}
+        for item in self.cached_items:
+            if isinstance(item, dict) and item.get("id"):
+                by_id[item["id"]] = item
+        added = 0
+        for item in fresh:
+            if not isinstance(item, dict):
+                continue
+            iid = item.get("id")
+            if not iid:
+                continue
+            if iid not in by_id:
+                by_id[iid] = item
+                added += 1
+            else:
+                # 同 id 已存在：**保留本轮的 sent_at**（更近的真实发布时间），
+                # 但用磁盘版补齐本轮缺失的字段（并发轮可能带了 tokens 等）。
+                merged = dict(item)
+                merged["sent_at"] = by_id[iid].get("sent_at", item.get("sent_at"))
+                by_id[iid] = merged
+        merged_items = list(by_id.values())
+        if len(merged_items) > MAX_CACHE_SIZE:
+            merged_items = merged_items[-MAX_CACHE_SIZE:]
+        self.cached_items = merged_items
+        self.cached_ids = {i.get("id") for i in merged_items if isinstance(i, dict)}
+        if added:
+            logger.info(f"🔄 重载去重缓存：并入 {added} 条并发轮写入的记录（共 {len(merged_items)} 条）")
+        return len(merged_items)
 
     def record_sent(self, news_id: str, title: str, source: str, tokens: Optional[List[str]] = None) -> bool:
         """写入已发记录并落盘，返回落盘是否成功。
@@ -10061,6 +10206,12 @@ def _run_main():
                     append_run_summary(
                         quota_blocked=True,
                         sent_24h=sent_24h,
+                        # ★★ R698：全量口径（图文+视频）必须与`sent_24h` 同行落。
+                        # ⚠️ 靠 AST 穷举才发现**这处也带 `sent_24h`** 却漏了新字段
+                        #（纪律 6「新增字段必须逐路径接入」的真实一次命中：
+                        #   肉眼只盯着总配额饱和轮那处）。低窗让渡轮同样
+                        #   `quota_blocked=True`，缺了它就答不出"让渡时账号发了多少"。
+                        sent_24h_all=cache_mgr.count_all_since(24),
                         max_daily_posts=MAX_DAILY_POSTS,
                         low_hour_blocked=True,
                         low_hour_cap=LOW_HOUR_CAP,
@@ -10079,6 +10230,11 @@ def _run_main():
                 quota_blocked=True,
                 sent_24h=sent_24h,
                 max_daily_posts=MAX_DAILY_POSTS,
+                # ★★ R698：`sent_24h` 自本轮起**只数图文帖**（视频帖不占图文配额）。
+                # ⇒ 必须同时落**全量**口径，否则修复后「账号 24h 到底发了多少篇」
+                # 就彻底查不到了（`sent_24h` 少算视频帖那部分）。
+                # 两者之差 = 24h 内的视频帖条数，一个字段就能分辨。
+                sent_24h_all=cache_mgr.count_all_since(24),
                 # R663：低窗子配额字段**在饱和轮也必须落**。
                 # 生产实测缺口：02:08/02:19/02:43 三轮饱和时这三个字段全是
                 # `None`（只有正常发帖路径落）⇒ **饱和轮无法区分
@@ -10397,11 +10553,20 @@ def _run_main():
         # （schedule/push/裸 dispatch 触发都拿不到 input），无复查的第 2 篇将以
         # 第 13 篇穿透 24h 硬上限——配额是防刷屏红线（R5），须对全部触发路径与
         # max_posts 取值保持不变式。首条不查：入口已保证且省一次扫描；放在
-        # 拟人 sleep 之前，单空槽轮不再为注定发不出的第 2 篇白付 90~240s。
-        if posted_count > 0 and MAX_DAILY_POSTS > 0 \
-                and cache_mgr.count_since(24) >= MAX_DAILY_POSTS:
-            logger.info(f"24h 配额已满 ({MAX_DAILY_POSTS} 篇)，本轮不再继续发帖")
-            break
+        # 拟人 sleep 之前，单空槽轮不再为注定发不出的第 2 篇白付90~240s。
+        #
+        # ★★ R698：复查前**必须 `reload()`**。否则本复查读的是本轮启动时的
+        # 磁盘快照 + 本轮自己的增量，**看不见并发轮（另一 workflow / 手动发视频）
+        # 期间落盘的记录** ⇒ 两轮各自看到 11 篇、各发 1 篇 = 13 篇，击穿配额。
+        # 生产实锤：2026-09-26 `sent_24h` 12→13（详见 `count_since` docstring）。
+        # ⚠️ 只在"已发过至少 1 篇"时才 reload：首篇前无本轮增量，重载是纯浪费
+        #   （且首篇的额度由入口门保证，见上方注释）。
+        # ⚠️ reload 是**并集**合并，不会把本轮已 record_sent 的条目弄丢。
+        if posted_count > 0 and MAX_DAILY_POSTS > 0:
+            cache_mgr.reload()
+            if cache_mgr.count_since(24) >= MAX_DAILY_POSTS:
+                logger.info(f"24h 配额已满 ({MAX_DAILY_POSTS} 篇)，本轮不再继续发帖")
+                break
 
         # R578：发帖最小间隔——2min 连发是刷屏感来源（生产 253 篇里 99 个<30min）。
         # 与 cron 心跳对齐后自然形成 ~20min 稳定节奏；间隔未到则本轮不发（槽位留给下轮）。

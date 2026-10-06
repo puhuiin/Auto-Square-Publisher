@@ -17939,6 +17939,335 @@ class TestR697CircuitBreakInChain(unittest.TestCase):
                           "全transport 场景不得记止损（否则误报省钱量）")
 
 
+class TestR698VideoExcludedFromQuota(unittest.TestCase):
+    """★★★ R698：**视频帖不再击穿图文 24h 配额**。
+
+    生产实锤（不是推演，详见 `CacheManager.count_since` docstring）：
+      `sent_cache.json` 里唯一一条 `source="video"` 条目
+      （`sent_at=2026-09-26T00:11:58`）落地当天，auto_post 遥测出现
+      全历史**唯一一次** `sent_24h=13`（上限12）——`00:09:49` 还是 12，
+      `00:23:21` 变 13，中间没有任何 `binance_published` 行。
+    根因是**设计意图与实现直接矛盾**：`_maybe_post_daily_video` 的注释
+    明写「视频定投**不占用图文帖的日配额语义**」，而视频帖与图文帖写在
+    **同一张** `sent_cache.json`，`count_since` 遍历这张表且**不区分类型**。
+
+    ⚠️ `12篇/天` 是用户明确不许突破的红线 ⇒ 这条不是"优化"，是修红线漏洞。
+    """
+
+    def _mgr(self, items):
+        import tempfile
+        import json
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False,
+                                         encoding="utf-8") as f:
+            json.dump(items, f)
+            path = f.name
+        self.addCleanup(os.unlink, path)
+        return m.CacheManager(path)
+
+    def _items(self, n_article=12, with_video=True):
+        now = datetime.now(timezone.utc)
+        items = [
+            {"id": f"a{i}", "title": f"图文{i}", "source": "U.Today",
+             "sent_at": (now - timedelta(hours=1, minutes=i)).isoformat()}
+            for i in range(n_article)
+        ]
+        if with_video:
+            items.append({"id": "video-c9e6669c2a61209a", "title": "3分钟搞懂LP池",
+                          "source": "video", "tokens": [],
+                          "sent_at": (now - timedelta(minutes=5)).isoformat()})
+        return items
+
+    # ---------- 核心判据 ----------
+    def test_video_entry_does_not_consume_article_quota(self):
+        """★★ 复刻生产实锤：12 图文 + 1 视频 ⇒ 配额口径必须是 12，不是 13"""
+        mgr = self._mgr(self._items(12, with_video=True))
+        self.assertEqual(mgr.count_since(24), 12,
+                         "视频帖占了图文配额位（这就是 13 篇击穿的根因）")
+        self.assertTrue(mgr.count_since(24) >= 12, "配额门应仍然拦得住")
+
+    def test_all_since_keeps_observability(self):
+        """★★ 排除视频后必须留一个**全量**口径，否则"24h 发了多少"永远查不到
+
+        修复前 `sent_24h` 是唯一口径且含视频；修复后它只数图文
+        ⇒ 若不留全量口径，观测能力净下降（纪律 23：告警消失必须可归因）。
+        """
+        mgr = self._mgr(self._items(12, with_video=True))
+        self.assertEqual(mgr.count_all_since(24), 13,
+                         "全量口径必须仍能看到视频帖那一条")
+        self.assertEqual(mgr.count_all_since(24) - mgr.count_since(24), 1,
+                         "两个口径之差应恰为 24h 内的视频帖条数")
+
+    def test_count_all_since_is_not_a_quota_judgement(self):
+        """⚠️ 防御：`count_all_since` **不得**被拿去当配额判据
+
+        判据落到真实调用点：`_run_main` 里所有配额比较必须用 `count_since`。
+        只要没有把 `count_all_since` 喂给 `>= MAX_DAILY_POSTS`，就是安全的。
+        """
+        import ast
+        import inspect
+        src = textwrap.dedent(inspect.getsource(m._run_main))
+        tree = ast.parse(src)
+        quota_ok = True
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            fn = node.func
+            name = fn.attr if isinstance(fn, ast.Attribute) else getattr(fn, "id", "")
+            if name != "count_all_since":
+                continue
+            # 找到它的父级比较：X.count_all_since(...) >= 常量
+            for outer in ast.walk(tree):
+                if isinstance(outer, ast.Compare) and any(
+                        isinstance(c, ast.Call) and
+                        (c.func.attr if isinstance(c.func, ast.Attribute) else "") == "count_all_since"
+                        for c in outer.comparators):
+                    quota_ok = False
+        self.assertTrue(quota_ok,
+                        "count_all_since 不得出现在比较表达式里（会绕过配额门）")
+
+    # ---------- 边界穷举 ----------
+    def test_video_detected_by_either_marker(self):
+        """★★ 两个判据各自都要能命中（任一侧被改写都不漏判）
+
+        `source="video"` 与 id 前缀 `video-` 是两个独立标记；
+        合并侧去重可能动过其中之一 ⇒ 只判一个就会漏。
+        """
+        by_source = {"id": "x1", "source": "video", "sent_at": "2026-10-06T00:00:00+00:00"}
+        by_prefix = {"id": "video-x2", "source": "仓库", "sent_at": "2026-10-06T00:00:00+00:00"}
+        normal = {"id": "a1", "source": "U.Today", "sent_at": "2026-10-06T00:00:00+00:00"}
+        self.assertTrue(m.CacheManager._is_video_entry(by_source), "source 判据失效")
+        self.assertTrue(m.CacheManager._is_video_entry(by_prefix), "id 前缀判据失效")
+        self.assertFalse(m.CacheManager._is_video_entry(normal), "普通图文被误判成视频")
+
+    def test_source_comparison_is_case_and_space_insensitive(self):
+        """★ 判据不能被 `"Video"` / `" video "` 这类写法绕过"""
+        for src in ("Video", "VIDEO", " video ", "video"):
+            self.assertTrue(m.CacheManager._is_video_entry(
+                {"id": "x", "source": src, "sent_at": "2026-10-06T00:00:00+00:00"}),
+                f"source={src!r} 应被识别为视频帖")
+
+    def test_article_only_cache_unaffected(self):
+        """★★ 零回归：没有视频帖时，两个口径必须相等且等于原值"""
+        mgr = self._mgr(self._items(12, with_video=False))
+        self.assertEqual(mgr.count_since(24), 12)
+        self.assertEqual(mgr.count_all_since(24), 12)
+
+    def test_r662_additivity_identity_still_holds(self):
+        """★★★ 排除视频后，R662 那条可加性恒等式**必须仍然成立**
+
+        `count_since(24) == count_since_in_window(24,True) + count_since_in_window(24,False)`
+        是 R662 注释里写明的口径不变量。若只有 `count_since` 排除了视频、
+        而 `_count_since` 内核没排，恒等式会在有视频帖时失衡
+        ⇒ 实测，而不是只查源码里有没有那个 `continue`。
+        """
+        mgr = self._mgr(self._items(12, with_video=True))
+        total = mgr.count_since(24)
+        pref = mgr.count_since_in_window(24, True)
+        low = mgr.count_since_in_window(24, False)
+        self.assertEqual(total, pref + low,
+                         f"口径漂移：total={total} pref={pref} low={low}")
+
+    def test_gap_gate_ignores_video_only_when_asked(self):
+        """★★ `minutes_since_last_sent` 必须排除视频帖
+
+        不排除的后果：一条视频帖会把随后 20 分钟内所有图文轮次
+        被 `MIN_POST_GAP_MIN` 静默挡掉——**用视频的节奏卡图文的帖**。
+        """
+        now = datetime.now(timezone.utc)
+        # 只有视频帖在 1 分钟前 ⇒ 图文节奏门不得被它挡住
+        video_only = self._mgr([
+            {"id": "video-z", "title": "v", "source": "video", "tokens": [],
+             "sent_at": (now - timedelta(minutes=1)).isoformat()}])
+        self.assertIsNone(video_only.minutes_since_last_sent(),
+                          "视频帖不该参与图文最小间隔判据")
+        # 有图文帖时仍要正常返回
+        with_article = self._mgr([
+            {"id": "a1", "title": "a", "source": "U.Today",
+             "sent_at": (now - timedelta(minutes=3)).isoformat()},
+            {"id": "video-z", "title": "v", "source": "video", "tokens": [],
+             "sent_at": (now - timedelta(minutes=1)).isoformat()}])
+        gap = with_article.minutes_since_last_sent()
+        self.assertIsNotNone(gap)
+        self.assertAlmostEqual(gap, 3.0, delta=0.2,
+                               msg="应返回**图文帖**的间隔 3min，而非视频的 1min")
+
+    def test_dedup_still_sees_video_entries(self):
+        """★★★ 反向守卫：去重**必须继续看得见**视频帖
+
+        这是本机制最容易踩的连带错误：为了让配额排除视频，顺手把
+        `is_cached` / `recent_titles` 也排掉 ⇒ 视频帖重跑会**双发**
+        （`video_publish.yml` 的双发守卫正是靠 sent_cache 判定）。
+        区分点：配额是"额度"（视频有独立的 `_video_sent_date` 当日封顶），
+        去重是"同一篇不能发两次"（两者都要）。
+        """
+        mgr = self._mgr([{"id": "video-c9e6669c2a61209a", "title": "3分钟搞懂LP池",
+                          "source": "video", "tokens": [],
+                          "sent_at": datetime.now(timezone.utc).isoformat()}])
+        self.assertIn("video-c9e6669c2a61209a", mgr.cached_ids,
+                      "视频帖被踢出 cached_ids ⇒ 重跑会双发")
+        self.assertTrue(mgr.recent_titles(), "视频帖标题必须仍参与近似去重")
+        self.assertTrue(mgr.is_cached("video-c9e6669c2a61209a"),
+                        "is_cached 必须认得视频帖 id")
+
+    # ---------- 并发视图刷新 ----------
+    def test_reload_merges_concurrent_writes(self):
+        """★★ `reload()` 必须能并入**另一轮**写进磁盘的记录
+
+        R237 的逐条复查读的是本轮内存视图，看不见并发轮落盘的记录
+        ⇒ 两轮各自看到 11 篇、各发1 篇 = 13 篇。
+        """
+        import tempfile
+        import json
+        now = datetime.now(timezone.utc)
+        path = None
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False,
+                                         encoding="utf-8") as f:
+            json.dump([{"id": f"a{i}", "title": f"t{i}", "source": "U.Today",
+                        "sent_at": (now - timedelta(hours=2)).isoformat()}
+                       for i in range(11)], f)
+            path = f.name
+        self.addCleanup(os.unlink, path)
+        mgr = m.CacheManager(path)
+        self.assertEqual(mgr.count_since(24), 11)
+
+        # 模拟另一轮并发写入 1 条（直接改磁盘，不动 mgr 的内存）
+        # ⚠️ id 刻意用**中性**值：初版写成 "video-or-a13" ⇒ 被 `_is_video_entry`
+        # 正确识别为视频帖并从配额排除 ⇒ 断言 11 != 12 **假失败**。
+        # 那是**守卫的错**（测试数据自己撞上了被测判据），不是实现的错
+        #（纪律 17：失败时先分清"实现错"还是"守卫错"）。
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        data.append({"id": "concurrent-article-1", "title": "并发轮写的",
+                     "source": "U.Today",
+                     "sent_at": (now - timedelta(minutes=1)).isoformat()})
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+
+        # 不reload：看不见 ⇒ 仍认为有空槽（这就是击穿路径）
+        self.assertEqual(mgr.count_since(24), 11)
+        mgr.reload()
+        self.assertEqual(mgr.count_since(24), 12,
+                         "reload 后必须看见并发轮写入的记录")
+
+    def test_reload_keeps_this_round_unsaved_entry(self):
+        """★★★ `reload` 必须是**并集**，不能整体替换
+
+        `record_sent` 是"先 append 内存、再落盘"。若落盘失败，条目只在
+        内存里。此时 reload 整体替换 ⇒ 已发记录消失 ⇒ **下一轮重发同一条**
+        （比配额击穿更严重：内容重复上链）。
+        """
+        import tempfile
+        import json
+        now = datetime.now(timezone.utc)
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False,
+                                         encoding="utf-8") as f:
+            json.dump([], f)
+            path = f.name
+        self.addCleanup(os.unlink, path)
+        mgr = m.CacheManager(path)
+        # 模拟落盘失败：手动塞进内存
+        mgr.cached_items.append({"id": "unsaved-1", "title": "本轮已发",
+                                 "source": "U.Today",
+                                 "sent_at": (now - timedelta(minutes=1)).isoformat()})
+        mgr.cached_ids.add("unsaved-1")
+        mgr.reload()
+        self.assertIn("unsaved-1", mgr.cached_ids,
+                      "reload 把本轮未落盘的已发记录弄丢了 ⇒ 下轮会重发同一条")
+        self.assertEqual(mgr.count_since(24), 1)
+
+    def test_reload_survives_unreadable_file(self):
+        """★ reload 读失败必须**沿用本轮视图**而不是抛异常/清空
+
+        配额复查在主流程关键路径上，读失败就崩 = 一条都不发。
+        """
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False,
+                                         encoding="utf-8") as f:
+            f.write("{ 这不是合法 JSON")
+            path = f.name
+        self.addCleanup(os.unlink, path)
+        mgr = m.CacheManager(path)          # 加载已吞异常 => 空视图
+        mgr.cached_items.append({"id": "keep-me", "title": "t", "source": "s",
+                                 "sent_at": datetime.now(timezone.utc).isoformat()})
+        mgr.cached_ids.add("keep-me")
+        mgr.reload()
+        self.assertIn("keep-me", mgr.cached_ids,
+                      "读失败时 reload 不得清空本轮已积累的视图")
+
+    # ---------- workflow 层 ----------
+    def test_video_workflow_shares_concurrency_group(self):
+        """★★★ 两个工作流必须**共用同一个 concurrency 组**
+
+        两者都写 `sent_cache.json`、都往 main 推提交。分组名不同
+        ⇒ 它们可以并发跑 ⇒ 各自按自己的旧快照判断配额 ⇒ 加起来超限。
+        这正是 2026-09-26 的成因。
+        判据读**真实文件**（不是复制 workflow 文本）⇒ 手改必被抓。
+        """
+        import re
+        wdir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            ".github", "workflows")
+        auto = os.path.join(wdir, "auto_post.yml")
+        vid = os.path.join(wdir, "video_publish.yml")
+        self.assertTrue(os.path.exists(auto) and os.path.exists(vid),
+                        "找不到 workflow 文件，判据失效")
+
+        def group_of(path):
+            with open(path, "r", encoding="utf-8") as f:
+                text = f.read()
+            m = re.search(r"^concurrency:\s*\n(?:[ \t]+.*\n)*?[ \t]+group:\s*(\S+)",
+                          text, re.M)
+            return m.group(1).strip("'\"") if m else None
+
+        g_auto, g_vid = group_of(auto), group_of(vid)
+        self.assertIsNotNone(g_auto, "auto_post.yml 未声明 concurrency.group")
+        self.assertIsNotNone(g_vid, "video_publish.yml 未声明 concurrency.group")
+        self.assertEqual(g_vid, g_auto,
+                         f"分组名不同（{g_vid!r} vs {g_auto!r}）⇒ 可并发写同一张状态表")
+
+    def test_quota_recheck_reloads_before_judging(self):
+        """★★ 逐条复查必须**先 reload 再判断**（源码位置守卫）
+
+        判据：`_run_main` 源码里，`reload()` 必须出现在配额比较**之前**。
+        用 `rfind`/`find` 的相对位置表达"先后"，比复制实现更抗改写。
+        """
+        import inspect
+        src = inspect.getsource(m._run_main)
+        i_reload = src.find("cache_mgr.reload()")
+        i_guard = src.find("if posted_count > 0 and MAX_DAILY_POSTS > 0:")
+        i_cmp = src.find("cache_mgr.count_since(24) >= MAX_DAILY_POSTS")
+        self.assertGreater(i_reload, 0, "逐条复查前必须 reload（否则看不见并发轮）")
+        self.assertGreater(i_guard, 0, "未找到逐条复查的守卫条件")
+        self.assertGreater(i_cmp, 0, "未找到逐条复查的配额比较")
+        self.assertLess(i_reload, i_cmp,
+                        "reload 必须在配额比较之前（顺序反了等于没reload）")
+
+    def test_telemetry_has_both_quota_and_total_scope(self):
+        """★★ 新字段 `sent_24h_all` 必须落**所有**带 `sent_24h` 的落盘点
+
+        纪律 6：新增字段必须**逐路径**接入，不抽查。
+        靠 AST 穷举 `append_run_summary` 调用点——
+        本轮真实漏过一处（低窗让渡轮 10153 行，肉眼只盯着总配额饱和轮），
+      正是这条判据的价值所在。
+        """
+        import ast
+        import inspect
+        src = textwrap.dedent(inspect.getsource(m))
+        tree = ast.parse(src)
+        missing = []
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            fn = node.func
+            name = fn.id if isinstance(fn, ast.Name) else getattr(fn, "attr", "")
+            if name != "append_run_summary":
+                continue
+            kws = {k.arg for k in node.keywords}
+            if "sent_24h" in kws and "sent_24h_all" not in kws:
+                missing.append(node.lineno)
+        self.assertEqual(missing, [],
+                         f"这些落盘点带 sent_24h 却漏了 sent_24h_all：{missing}")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
