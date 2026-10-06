@@ -3675,6 +3675,27 @@ def _summarize_max_tokens(provider_name: str, model: str = "") -> int:
     return 1500 if _is_reasoning_channel(provider_name, model) else 600
 
 
+# ★★ R696：最后一次拒稿的完整上下文（通道级明细 → 故事级汇总的唯一桥梁）。
+# 生产实证（10-05 两轮）：`llm_failed` 行只有 reason，而同一次失败已被
+# 通道级 `_log_reject` 记过一次 ⇒ **同一次失败落两行**，第二行字段全残：
+#   18:36:29 openrouter transport tot=8942 fin=length  ← 通道级，信息完整
+#   18:36:29 openrouter stage=None tot=None fin=None  ← 故事级，字段全残
+#   18:42:21 stepfun-flash numbers tot=6646 fin=stop  ← 通道级
+#   18:42:21 stepfun-flash stage=None tot=None fin=None  ← 故事级
+# ⇒ 后果：①按 `stage` 聚合时凭空多出一个 `None` 桶，真实分布被稀释；
+#   ②"这条故事烧了多少 token / 撞了什么门"在成本视角**读不到**。
+#
+# ⚠️ **为什么是模块级而不是实例属性**：`_log_reject` 是 `@staticmethod`
+#   （函数体里没有 `self`）⇒ `self.last_reject_stage = ...` 会把属性挂到
+#   **函数对象**上，实例永远读不到 ⇒ 汇总行照样全 None，而 py_compile 与
+#   不相关的单测**全绿**（纪律 2「代码对 ≠ 跑起来对」的第一类形态）。
+#   守卫 `test_log_reject_records_context_on_engine` 直接抓到 `None != 'numbers'`。
+# ⚠️ **每次 summarize 入口必须 `clear()`**（纪律 5）：否则上一条素材的 stage
+#   会被下一条素材的汇总行冒用 ⇒ 产出**比 None 更坏的错误归因**（假数据）。
+#   用 dict 而非 5 个模块变量：可整体 clear，且新增字段不会漏初始化。
+_LAST_REJECT_CTX: Dict[str, Any] = {}
+
+
 class MultiLLMEngine:
     """
     智能多模型池提炼引擎：
@@ -3775,6 +3796,14 @@ class MultiLLMEngine:
         # 无法回答"最后撞的是谁"（质量门/超时原因里不带通道名）。
         self.last_attempted_provider: Optional[str] = None
         self.last_attempted_model: Optional[str] = None
+        # ★★ R696：**最后一次拒稿的完整上下文**改由**模块级** `_LAST_REJECT_CTX`
+        # 承载（定义见 `MultiLLMEngine` 之前的模块级区域）。
+        # ⚠️ 载体是模块级而非实例属性：`_log_reject` 是 `@staticmethod`（无 `self`）
+        #   ⇒ 写 `self.last_reject_*` 会把属性挂到**函数对象**上，实例永远读不到
+        #   ⇒ 汇总行照样全 None，而静态检查与单测都能绿（纪律 2 的第一类形态）。
+        # ⚠️ 跨故事残留由 summarize 入口的重置消除（纪律 5：每次调用开头兜底并
+        #   重置）——无重置时上一条素材的 stage 会被下一条的汇总行冒用，
+        #   产出**比 None 更坏的错误归因**。
 
     def _quality_fails(self) -> Dict[str, int]:
         """内容质量拒稿计数（延迟初始化）。
@@ -4828,7 +4857,33 @@ class MultiLLMEngine:
         与投递共用 metrics.jsonl（outcome=llm_rejected 区分，provider 字段可切分
         本地 DRY_RUN 与线上），append_metrics 本身永不抛异常。
         R163：content_preview + finish_reason——质量门拒稿时正文即被丢弃，
-        Actions 日志只剩长度，短回/拒答型故障无法归因。"""
+        Actions 日志只剩长度，短回/拒答型故障无法归因。
+
+        ★★ R696：本函数同时是**故事级汇总行的唯一数据源**——在此把完整
+        上下文（stage/tokens/finish/completion/cap）暂存到引擎实例，
+        供 `_run_main` 的 `llm_failed` 行复用。
+        ⚠️ 必须是 `_log_reject` 而不是各 `return None` 前逐处赋值：
+        本类有 20+ 条 return 路径（R695 已实证"补字段必漏一处"），
+        在**唯一出口**记录才是结构性的做法。
+        ⚠️ 用 `__dict__.get` 而非直接属性：测试大量用 `cls.__new__(cls)`
+        构造实例跳过 `__init__`，直接赋值会 AttributeError。
+        """
+        # ⚠️ **必须是模块级而不是 `self.`**：`_log_reject` 是 `@staticmethod`
+        #   （R 历史沿革，见上方装饰器）⇒ 函数体里**没有 `self`**，
+        #   写 `self.last_reject_stage = ...` 会把属性挂到**函数对象**上，
+        #   实例属性永远读不到 ⇒ 汇总行照样全 None，而静态检查与单测都能绿
+        #   （纪律 2「代码对 ≠ 跑起来对」的第一类形态）。
+        #   实测：守卫 `test_log_reject_records_context_on_engine` 直接抓到
+        #   `None != 'numbers'`。
+        # ⇒ 用模块级 dict 承载（**每次 summarize 入口会重置**，见 R697 说明）。
+        _LAST_REJECT_CTX.clear()
+        _LAST_REJECT_CTX.update({
+            "stage": stage,
+            "tokens_used": tokens_used,
+            "finish_reason": finish_reason,
+            "completion_tokens": completion_tokens,
+            "budget_cap": budget_cap,
+        })
         append_metrics({
             "title": (news_item.get("title") or "")[:60],
             "source": news_item.get("source"),
@@ -4853,6 +4908,11 @@ class MultiLLMEngine:
             #   `budget_cap` 一并落，让每条拒稿自带"是在哪个封顶下失败的"。
             "completion_tokens": completion_tokens,
             "budget_cap": budget_cap,
+            # R696：视角标记——本行是**通道级明细**（一次 failover 链可有多行）。
+            # 故事级汇总行（outcome=llm_failed）带 `record_scope="story"`。
+            # ⚠️ 有了这个标记，"拒稿原因分布"必须**只筛本视角**：
+            #   混着汇总行会把同一失败数两遍（生产 10-05 实录两轮同因双记）。
+            "record_scope": "provider",
             "outcome": "llm_rejected",
         })
 
@@ -5233,6 +5293,11 @@ class MultiLLMEngine:
         self.last_fail_reason = "无可用 LLM 提供商配置"
         self.last_attempted_provider = None
         self.last_attempted_model = None
+        # ★★ R696：重置「最后一次拒稿上下文」——防止**上一条素材的 stage 被
+        # 下一条素材的汇总行冒用**。纪律 5：状态必须每次调用开头兜底并重置。
+        # ⚠️ 不重置的后果比"字段为 None"更坏：那是**错误归因**（假数据），
+        #   而 None 只是"未观测"（诚实）。二者不可混同。
+        _LAST_REJECT_CTX.clear()
         if not self.providers:
             logger.error("没有任何可用的 LLM 提供商配置！")
             # 空链也留痕：否则"连续 3 次失败熔断"在遥测里看不到任何前因，
@@ -10358,6 +10423,23 @@ def _run_main():
                     # 只有 reason，"Request timed out" 无法归因到提供商
                     "provider": getattr(llm_engine, "last_attempted_provider", None),
                     "model": getattr(llm_engine, "last_attempted_model", None),
+                    # ★★ R696：补齐**可聚合字段**——此前本行 `stage`/`tokens_used`
+                    # 全缺，于是同一次失败在遥测里呈现为两行：
+                    #   通道级 `llm_rejected`（字段完整）+ 本行（stage/tokens 全 None）
+                    # 生产实录 10-05 两轮（18:36:29 openrouter / 18:42:21 stepfun-flash）
+                    # ⇒ ①按 stage 聚合凭空多一个 `None` 桶，真实分布被稀释；
+                    #   ②"这条故事烧了多少 token/撞了什么门"在成本视角读不到。
+                    # ⚠️ **语义澄清（防误判为重复记账）**：本行是**故事级汇总**
+                    #   （一次 failover 链 = 1 行），通道级 `_log_reject` 是**明细**
+                    #   （同一条链可能 4~6 行）。⇒ 统计"拒稿原因分布"用明细行，
+                    #   统计"多少条故事被打死/烧了多少"用本行，**两者不可相加**。
+                    "stage": _LAST_REJECT_CTX.get("stage"),
+                    "tokens_used": _LAST_REJECT_CTX.get("tokens_used"),
+                    "completion_tokens": _LAST_REJECT_CTX.get("completion_tokens"),
+                    "budget_cap": _LAST_REJECT_CTX.get("budget_cap"),
+                    "finish_reason": _LAST_REJECT_CTX.get("finish_reason"),
+                    # 视角标记：让消费方不必靠"stage 是否为 None"猜自己拿到的是哪一层
+                    "record_scope": "story",
                     "outcome": "llm_failed",
                 })
                 # 故事级停放（LLM 版）：同篇新闻的质量门/幻觉门系统性拒稿，重试也大概率

@@ -17514,6 +17514,184 @@ class TestR669TitleWidgetRootCause(unittest.TestCase):
         self.assertIsNone(p.last_title_widget_after)
 
 
+class TestR696StoryScopeRecord(unittest.TestCase):
+    """★ R696：故事级 `llm_failed` 与通道级 `llm_rejected` 的**双记账**治理。
+
+    生产实录（10-05 两轮）：同一次失败落两行，第二行 `stage`/`tokens_used`
+    全为 None ⇒ ①按 stage 聚合凭空多一个 `None` 桶；②"这条故事烧了多少
+    token/撞了什么门"在成本视角读不到。
+    """
+
+    def _engine(self):
+        # ⚠️ `_log_reject` 是 **@staticmethod**（无 self）⇒ 上下文落在
+        # **模块级 `_LAST_REJECT_CTX`**，不是实例属性。测试必须照实模拟。
+        m._LAST_REJECT_CTX.clear()
+        return m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+
+    def test_log_reject_records_context_in_module_ctx(self):
+        """★ `_log_reject` 必须把完整上下文写进模块级容器（R696 单一出口）"""
+        eng = self._engine()
+        with patch.object(m, "append_metrics", lambda *a, **k: None):
+            eng._log_reject(
+                {"title": "t", "source": "s", "impact_score": 10},
+                "P", "numbers", "编造数字", tokens_used=6646,
+                finish_reason="stop", completion_tokens=900,
+                budget_cap=6000)
+        self.assertEqual(m._LAST_REJECT_CTX.get("stage"), "numbers")
+        self.assertEqual(m._LAST_REJECT_CTX.get("tokens_used"), 6646)
+        self.assertEqual(m._LAST_REJECT_CTX.get("finish_reason"), "stop")
+        self.assertEqual(m._LAST_REJECT_CTX.get("completion_tokens"), 900)
+        self.assertEqual(m._LAST_REJECT_CTX.get("budget_cap"), 6000)
+
+    def test_context_is_module_level_not_instance(self):
+        """★★ 反向守卫：写 `self.` 会静默失效（属性挂到函数对象上）。
+
+        这正是本次真实踩的坑——第一版实现放在实例属性上，
+        `py_compile` 与不相关单测全绿，只有这条断言抓到 `None != 'numbers'`。
+        """
+        eng = self._engine()
+        with patch.object(m, "append_metrics", lambda *a, **k: None):
+            eng._log_reject({"title": "t", "source": "s"}, "P", "quality", "过短")
+        self.assertFalse(hasattr(eng, "last_reject_stage"),
+                         "上下文不得挂在实例上——_log_reject 是 staticmethod")
+
+    def test_summarize_entry_resets_context(self):
+        """★★ 防跨故事冒用：上一条素材的 stage 不得被下一条汇总行误用。
+
+        不重置的后果比 None 更坏——那是**错误归因**（假数据）。
+        """
+        import inspect
+        src = inspect.getsource(m.MultiLLMEngine.summarize)
+        self.assertIn("_LAST_REJECT_CTX.clear()", src,
+                      "summarize 入口必须重置上下文（纪律 5：每次调用开头兜底）")
+
+    def test_provider_row_tagged_provider_scope(self):
+        """★ 通道级明细行必须带 `record_scope="provider"`"""
+        rows = []
+        eng = self._engine()
+        with patch.object(m, "append_metrics", lambda d, **k: rows.append(d)):
+            eng._log_reject({"title": "t", "source": "s"}, "P", "quality", "过短")
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["record_scope"], "provider")
+
+    def test_story_row_is_never_fieldless(self):
+        """★★ 核心守卫：生产实录的 `stage=None` 桶必须不再出现。
+
+        复现原始缺陷——汇总行不带 stage/tokens 时，按 stage 聚合会多出
+        一个 `None` 桶，把"真实拒稿分布"稀释掉。
+        ⚠️ 用 `rfind("append_metrics({")` 切块而不是 `inspect.getsource`：
+        纪律 2 变体 2 记录过"测试期间编辑源文件 ⇒ 行号漂移 ⇒ 假失败"，
+        而按行号/`getsource` 定位的守卫天生怕插入行。
+        """
+        import inspect
+        src = inspect.getsource(m)   # 模块源文本，不依赖行号
+        blk = src.split('"outcome": "llm_failed"')[0]
+        blk = blk[blk.rfind("append_metrics({"):]
+        self.assertIn('"record_scope": "story"', blk,
+                      "故事级汇总行必须自我标注视角")
+        for field in ("stage", "tokens_used", "completion_tokens",
+                      "budget_cap", "finish_reason"):
+            self.assertIn(f'_LAST_REJECT_CTX.get("{field}")', blk,
+                          f"故事级汇总行缺 {field}（生产 10-05 两轮全为 None）")
+
+    def test_no_llm_failed_row_can_have_null_stage(self):
+        """★ 数据侧守卫：历史里 stage=None 的桶必须可被识别为"旧口径"。
+
+        这条断言锁住的是**读侧约定**——报表/分析看到 `record_scope` 缺失时，
+        应当知道那些行是 R696 之前写的（`llm_failed` 天然无 stage），
+        而不是当成"某类失败"。
+        """
+        rows = [
+            {"outcome": "llm_failed", "stage": None},              # R696 之前
+            {"outcome": "llm_failed", "stage": "transport",
+             "record_scope": "story"},                              # R696 之后
+            {"outcome": "llm_rejected", "stage": "transport",
+             "record_scope": "provider"},
+        ]
+        old = [r for r in rows
+               if r["outcome"] == "llm_failed" and "record_scope" not in r]
+        self.assertEqual(len(old), 1)
+        self.assertIsNone(old[0]["stage"])
+
+    def test_story_and_provider_scopes_are_distinguishable(self):
+        """★ 两个视角必须能无歧义区分（靠字段猜是隐患）"""
+        self.assertNotEqual("story", "provider")
+
+
+class TestR696FailoverWasteSignal(unittest.TestCase):
+    """★ R696：同素材被多通道连续拒的浪费规模要可被事后量化。
+
+    生产实测（近 5 天）：被拒 ≥2 次的 7 个素材烧掉 123466 token =
+    全部拒稿 token（165588）的 **74.5%**，产出为零；而 51 篇成功发布
+    总共才292675 token。
+    ⇒ 这是当前最大的成本项，比配额死锁更值得优化。
+
+    ⚠️ **不要误读成"停放失效"**（R696 亲自踩过一次这个坑）：
+    `Strategy buys just 334 Bitcoin` 的 5 次拒稿跨 18:28~18:36 共 8 分钟，
+    那是**同一轮内的 failover 链**（5 个通道依次尝试，各含退避 sleep），
+    不是 5 轮重试。停放只在**轮末**记一次、跨轮累积 ⇒ 机制并未失效。
+    ⇒ 治理手段是"链内止损"，不是调阈值。
+    """
+
+    def _rows(self):
+        return [
+            {"outcome": "llm_rejected", "title": "A", "tokens_used": 8000,
+             "record_scope": "provider"},
+            {"outcome": "llm_rejected", "title": "A", "tokens_used": 8000,
+             "record_scope": "provider"},
+            {"outcome": "llm_rejected", "title": "B", "tokens_used": 5000,
+             "record_scope": "provider"},
+        ]
+
+    def test_repeat_reject_waste_is_computable(self):
+        import collections
+        g = collections.defaultdict(list)
+        for r in self._rows():
+            g[r["title"]].append(r)
+        multi = {k: sum(x["tokens_used"] for x in v)
+                 for k, v in g.items() if len(v) > 1}
+        self.assertEqual(multi, {"A": 16000})
+
+    def test_same_run_failover_is_not_cross_run_retry(self):
+        """★★ 锁住上面那段澄清：链内多拒 ≠ 停放失效。
+
+        判据 = **时间跨度**：同轮 failover 在几分钟内（各通道含退避 sleep），
+        跨轮重试则至少隔一个 cron 间隔（20min）。
+        ⇒ 任何"停放没拦住"的分析都必须先做这个分层（纪律 26：归因前先分层）。
+        """
+        import datetime as _dt
+        stamps = ["2026-10-05T18:28:29", "2026-10-05T18:31:51",
+                  "2026-10-05T18:33:22", "2026-10-05T18:36:29"]
+        ts = [_dt.datetime.strptime(s, "%Y-%m-%dT%H:%M:%S") for s in stamps]
+        span_min = (ts[-1] - ts[0]).total_seconds() / 60
+        self.assertLess(span_min, 20,
+                        "生产实录这 5 次跨 8 分钟 = 同轮 failover 链")
+        # ⇒ 不得据此断言停放失效
+        self.assertEqual(m.SquarePublisher.PUBLISH_PARK_THRESHOLD, 2)
+
+    def test_park_threshold_left_untouched(self):
+        """★ 明确记录「本轮不改阈值」及其理由（防下轮误改）。
+
+        阈值 2 对**跨轮重试**是有效的；同轮链内止损是**另一个杠杆**，
+        两者不可混为一谈。
+        """
+        self.assertEqual(m.SquarePublisher.PUBLISH_PARK_THRESHOLD, 2)
+        self.assertEqual(m.SquarePublisher.PUBLISH_PARK_HOURS, 6)
+
+    def test_waste_share_is_the_decision_input(self):
+        """★ 治理依据固化：重复拒稿占拒稿 token 的比例必须可复算"""
+        import collections
+        rows = self._rows()
+        g = collections.defaultdict(list)
+        for r in rows:
+            g[r["title"]].append(r)
+        alltok = sum(r["tokens_used"] for r in rows)
+        multitok = sum(sum(x["tokens_used"] for x in v)
+                       for v in g.values() if len(v) > 1)
+        # 16000 / 21000 ≈ 76%，与生产 74.5% 同量级 ⇒ 判据形状可用
+        self.assertGreater(multitok / alltok, 0.5)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
