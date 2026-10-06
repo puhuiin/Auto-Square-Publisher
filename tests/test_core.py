@@ -18437,6 +18437,111 @@ class TestR699QuotaGateReloadsAtEveryJudgement(unittest.TestCase):
                          "等待后 reload 仍看不见并发轮写入 ⇒ 边界追赶会击穿配额")
 
 
+class TestR700PriceCueNoVerbalFiller(unittest.TestCase):
+    """★★ R700：价位正则**不得把口语动词的残字当成点位**。
+
+    生产实锤（全历史 11 条 `numbers` 拒稿里精确命中 2 条）：
+
+      | 拒稿时间 | reason 截断 | 真实正文 |
+      |---|---|---|
+      | 10-05 18:37:22 | `正文给出来源未证实的价位 站上打1` | 「…全网喊冲…」 |
+      | 10-05 13:06:15 | `正文给出来源未证实的价位 突破的打 1` | 「$SHIB 跨链…涨了 4.20%」 |
+
+    根因：cue 与数字之间的填充式`[^。！？\n]{0,12}?` 允许**任意汉字**，
+    于是「站上**打**1」的「1」被当成 1 美元点位⇒ 被 `_price_in_source`
+    判成"来源未证实" ⇒ **两条素材零产出**（全通道拒稿）。
+
+    ⚠️ 边界（务必读）：这**不是**"数字门太严"。另9 条价位类拒稿里，
+    DOGE 0.09 / ADA 0.24 / ETH 2750 / BTC 9万 全部**换模型后成功发出**
+    ⇒ 门没误杀它们，只是让 failover 多跑一轮。**真正该修的只有这 2 条**
+    （正则把非数字当数字），放宽容差会直接破掉 R589 的生产设计。
+    """
+
+    SRC = "Bitcoin 现价 85000 美元"
+
+    def _check(self, text):
+        return m.MultiLLMEngine._verify_numbers(text, self.SRC, label="正文")
+
+    # ---------- 修复目标：这 2 条必须放行 ----------
+    def test_slang_digit_no_longer_extracted_as_price(self):
+        """★★ 核心回归：生产那2 条原文必须通过"""
+        for text in ("$SHIB 站上打1就回落，消息面没跟上",
+                     "突破的打1，散户一脸懵"):
+            ok, reason = self._check(text)
+            self.assertTrue(ok, f"「{text}」被误当价位拒稿：{reason}")
+
+    # ---------- 反向守卫：真实编造价位仍必须拦 ----------
+    def test_real_fabricated_prices_still_rejected(self):
+        """★★★ R589 的生产设计**必须完好**：放宽只针对口语残字，不放宽容差。
+
+        ⚠️ 这是本改动最危险的边界：若有人把 `_CUE_GAP` 改成"禁止一切汉字"
+        或去掉 `_price_in_source` 比对，这些用例会红——那正是我们要防的回归。
+        """
+        for text, frag in (
+            ("$ETH 站上 2750 才算转强", "2750"),
+            ("跌破 0.09 就别碰了", "0.09"),
+            ("回踩 0.092 才有支撑", "0.092"),
+            ("站上 9万才有戏", "9万"),
+        ):
+            ok, reason = self._check(text)
+            self.assertFalse(ok, f"编造价位「{text}」未被拦（门失效了）")
+            self.assertIn("来源未证实", reason)
+
+    def test_price_in_source_still_allows_matching_values(self):
+        """★ 源文里**有**该价位时必须放行（否则成"一律拦"了）"""
+        ok, reason = self._check("$BTC 报 85033.86 创新高")
+        self.assertTrue(ok, f"源文有该价位却被拦：{reason}")
+
+    def test_non_price_units_still_excluded(self):
+        """★ R595b 的排除项不得被本次改动破坏"""
+        for text in ("日线站上均线了", "突破 3 倍杠杆"):
+            ok, reason = self._check(text)
+            self.assertTrue(ok, f"「{text}」不该当价位：{reason}")
+
+    def test_all_legal_cue_forms_still_extracted(self):
+        """★★ R595 补的动词族一个都不能少（这是防"顺手简化"的守卫）
+
+        生产 R595 记录：突破/跌破/站上/看至/跌穿 六测六漏。
+        本次只在 cue 与数字之间加了负向断言，**不得**顺带删掉任何 cue。
+        """
+        import re
+        import inspect
+        src = inspect.getsource(m.MultiLLMEngine._verify_numbers)
+        for cue in ("突破", "跌破", "站上", "看至", "跌穿", "冲上", "反弹到",
+                    "回踩", "支撑", "阻力", "目标价", "涨到", "跌到"):
+            self.assertIn(cue, src, f"cue 词「{cue}」被误删（R595 曾六测六漏）")
+
+    def test_cue_gap_defined_before_use(self):
+        """★★ `_CUE_GAP` 必须**定义在使用之前**（纪律 2「代码对≠跑起来对」）
+
+        `price_patterns` 是在函数体内组装的字符串元组，若 `_CUE_GAP` 定义在
+        它之后 ⇒ `py_compile` 全绿、CI 全绿，**运行时才 NameError**。
+        判据落到真实位置：`price_patterns = (` 之前必须已有 `_CUE_GAP = `。
+        """
+        import inspect
+        src = inspect.getsource(m.MultiLLMEngine._verify_numbers)
+        i_def = src.find("_CUE_GAP = ")
+        i_use = src.find("price_patterns = (")
+        self.assertGreater(i_def, 0, "未找到 _CUE_GAP 的定义")
+        self.assertGreater(i_use, 0, "未找到 price_patterns 的组装点")
+        self.assertLess(i_def, i_use,
+                        "_CUE_GAP 定义在使用之后 ⇒ 运行期 NameError")
+
+    def test_negative_lookahead_actually_present(self):
+        """★ 守卫必须锁住**修复本体**，而不只是行为
+
+        行为测试可能被"换一种实现同样对"绕过 ⇒ 另加一条源码判据：
+        `_CUE_GAP` 里必须含负向断言 `(?<![打喊挂])`。
+        """
+        import inspect
+        src = inspect.getsource(m.MultiLLMEngine._verify_numbers)
+        i = src.find("_CUE_GAP = ")
+        self.assertGreater(i, 0)
+        seg = src[i:i + 90]
+        self.assertIn("(?<![打喊挂])", seg,
+                      "修复本体（禁止口语动词的负向断言）丢失了")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
