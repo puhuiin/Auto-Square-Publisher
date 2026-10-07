@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-02T06:04:14.745428Z",
+  "as_of": "2026-10-07T11:38:57.870911Z",
   "min_n": 4,
   "note": "per-token avg/median Square views (creator-center export); ranking-only engagement boost (R608/R609; boost uses median_views for outlier robustness)",
   "tokens": {
@@ -29,9 +29,14 @@
       "n": 1
     },
     "SOL": {
-      "avg_views": 158,
-      "median_views": 156,
-      "n": 4
+      "avg_views": 147,
+      "median_views": 142,
+      "n": 5
+    },
+    "ADA": {
+      "avg_views": 122,
+      "median_views": 122,
+      "n": 1
     },
     "BTC": {
       "avg_views": 127,
@@ -59,9 +64,9 @@
       "n": 1
     },
     "XRP": {
-      "avg_views": 73,
-      "median_views": 54,
-      "n": 11
+      "avg_views": 76,
+      "median_views": 56,
+      "n": 12
     },
     "DOGE": {
       "avg_views": 164,
