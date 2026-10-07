@@ -3350,5 +3350,14 @@
       "SC",
       "XRP"
     ]
+  },
+  {
+    "id": "d8f94312bc695e26",
+    "title": "Solana DvP settlement requires 100% upfront cash for every trade",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-07T06:26:11.724570+00:00",
+    "tokens": [
+      "SOL"
+    ]
   }
 ]
