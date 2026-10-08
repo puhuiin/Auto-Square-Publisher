@@ -2,22 +2,21 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
+    "#TradingTournament",
     "#Futures",
-    "#TradingCompetition",
-    "#Megadrop"
+    "#AlphaCompetition"
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$PUMP",
-    "$USD1",
+    "$ZEST",
     "$JPMB",
     "$LLYB",
     "$SECZB",
     "$USDEB",
-    "$BTC"
+    "$SPCXB"
   ],
-  "strategy_guidance": "发帖可将新上线的bStocks交易对、USDⓈ-Margined期货合约等产品快讯，与当期活跃的期货交易活动、PUMP交易锦标赛、USD1 Airdrop等官方活动结合，引导用户参与互动评论获取Write2Earn奖励，同时关联交易返佣活动提升转化。可围绕新资产交易机会、活动参与攻略等用户关注的热点角度产出内容，贴合Binance Square社区的内容偏好。",
-  "last_updated": "2026-10-08T01:22:10.644698Z",
+  "strategy_guidance": "ZEST Alpha交易竞赛今日截止，优先产出竞赛冲刺、规则复盘类内容追时效热度，引导读者参与评论互动拿Write to Earn奖励；同时结合新上线的JPMB、LLYB等bStocks交易对、USDⓈ-Margined新合约及MET交易锦标赛等持续进行中的活动做延伸解读，关联合规的affiliate返佣活动引导用户参与。",
+  "last_updated": "2026-10-08T13:24:25.683562Z",
   "_feed_health": {},
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
