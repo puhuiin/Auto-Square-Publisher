@@ -1126,8 +1126,14 @@ class TestRecentOpeners(unittest.TestCase):
             self.assertNotIn(banned, sp,
                              f"SYSTEM_PROMPT 不得再教唆操纵归因框架: 「{banned}」")
         # 替代方案必须在场（只删不给替代=推回和稀泥，伤犀利人设）
-        self.assertIn("利好出尽/卖事实/获利了结/量能接不住/被大盘拖累", sp,
-                      "必须给可观察的重构菜单，而不只是禁止")
+        # ⚠️ R705 后这五个词在 prompt 里**带空格分行排版**（便于加约束），
+        #   连续字符串匹配会给假失败 ⇒ 改为「五个词逐个在场」判据，
+        #   语义更强（少一个词都算把替代菜单削掉了）。
+        for kw in ("利好出尽", "卖事实", "获利了结", "量能接不住", "被大盘拖累"):
+            self.assertIn(kw, sp,
+                          "可观察的重构菜单缺「%s」⇒ 只是禁止没给替代" % kw)
+        self.assertIn("只能当结论", sp,
+                      "R705：五词只能当结论、须跟本条素材的具体证据")
         self.assertIn("别把原因归给某方在出货或洗盘", sp)
         self.assertIn("没有源文证据就是编内幕", sp)
         self.assertIn("别默认套「庄家吸筹还是出货」那类操纵归因", sp)
@@ -18540,6 +18546,103 @@ class TestR700PriceCueNoVerbalFiller(unittest.TestCase):
         seg = src[i:i + 90]
         self.assertIn("(?<![打喊挂])", seg,
                       "修复本体（禁止口语动词的负向断言）丢失了")
+
+
+class TestR705NoClicheSellTheNews(unittest.TestCase):
+    """★★ R705：禁止把「利好出尽/卖事实」当解释裸套（**有实测数据支撑**）。
+
+    这不是"形态偏好"，是**数据结论**（2026-10-08，109 篇已发布帖）：
+
+      按时段分层后，"卖事实/利好出尽"帖的浏览中位**四个时段一致更低**：
+        凌晨 67 vs 96 · 上午 83 vs 109 · 下午 92 vs 101 · 晚上 95 vs 119
+      而**带独立判断**的帖四个时段**一致更高**（+17 / +22 / +26 / +39）
+      ⇒ 跨层一致 ⇒ 不是时段或币种混淆。
+
+    ★★ 背景（改之前必须读懂，否则会改错方向）：
+      R612 当年为杜绝"编造主力出货/洗盘内幕"，给了五个**替代词**：
+      利好出尽 / 卖事实 / 获利了结 / 量能接不住 / 被大盘拖累。
+      这个替代是**对的**（比编内幕好），但它自己变成了**新的万能模板**。
+      ⇒ 本轮**不是删掉这五个词**，而是升级为：
+         ① 只能当结论、必须跟本条素材的具体证据
+         ② 优先给与盘面直觉不同的判断
+         ③ 同批禁止连续两篇用同一解释
+      ⚠️ 若有人"顺手还原"成只给五个词 ⇒ 模板化复发 ⇒ 本测试拦下。
+    """
+
+    def _prompts(self):
+        """取全部候选 prompt 文本（含短讯/长文两处）。"""
+        import inspect
+        return inspect.getsource(m)
+
+    def test_cliche_must_come_with_evidence_in_every_prompt(self):
+        """★★ 五词不得单独当解释 ⇒ **每一处** prompt 都要有约束
+
+        ⚠️★ 本条曾被写成"全文搜一次"⇒ **假通过**（实测）：
+          删掉第 2 段的约束，长文 prompt 里那份还在 ⇒ 5 条守卫全绿；
+          反过来删两处长文的，第 2 段那份还在 ⇒ 又全绿。
+          ⇒ 全文字串包含挡不住"多处里只删一处"（R699 同族教训：
+            字符串包含当判据会掩盖局部回退）。
+        ⇒ 改为**逐处锁定**：短讯第2段 + 长文两处，共 3 处，缺一即失败。
+        """
+        s = self._prompts()
+        # ① 短讯/结构段：第 2 段（拆解博弈真相）
+        i2 = s.find("第 2 段（拆解博弈真相）")
+        self.assertGreater(i2, 0, "未找到『第 2 段（拆解博弈真相）』")
+        seg2 = s[i2:i2 + 2000]
+        self.assertIn("R705", seg2, "第 2 段缺 R705 约束")
+        self.assertIn("只能当结论", seg2, "第 2 段未要求『只能当结论』")
+        # ②③ 长文两处：逐句证据纪律段（各含"更别一遇利好不涨就套"）
+        n_long = 0
+        pos = 0
+        while True:
+            k = s.find("更别一遇利好不涨就套", pos)
+            if k < 0:
+                break
+            seg = s[k:k + 900]
+            self.assertIn("R705", seg,
+                          "长文 prompt（第 %d 处）缺 R705 约束" % (n_long + 1))
+            self.assertIn("只能当结论", seg,
+                          "长文 prompt（第 %d 处）未要求『只能当结论』" % (n_long + 1))
+            n_long += 1
+            pos = k + 10
+        self.assertEqual(n_long, 2,
+                         "长文 prompt 该有 2 处，实得 %d ⇒ 有处被删" % n_long)
+
+    def test_independent_judgement_encouraged(self):
+        """★ 必须明确鼓励「与盘面直觉不同的判断」（数据：这类浏览高 25~58%）"""
+        s = self._prompts()
+        self.assertTrue(
+            ("独立判断" in s) or ("与盘面直觉不同" in s),
+            "prompt 未鼓励独立判断 ⇒ 会继续产出千篇一律的观望稿")
+
+    def test_no_consecutive_same_explanation(self):
+        """★ 同批禁止连续两篇用同一解释（与 R668 禁『一、发生了什么』同源）"""
+        s = self._prompts()
+        self.assertTrue(
+            ("禁止连续两篇" in s) or ("连续两篇" in s),
+            "prompt 未禁止连续两篇套同一解释")
+
+    def test_r668_section_title_rule_still_present(self):
+        """★ 反向守卫：R668（小标题必须自带信息）不得被本次改动误删
+
+        两处规则都在第 2 段/结构说明里，改动时容易互相覆盖。
+        """
+        s = self._prompts()
+        self.assertIn("R668", s, "R668 小标题硬要求被误删")
+        self.assertIn("一、发生了什么", s,
+                      "R668 的反例被删 ⇒ 后来者不知道要禁什么")
+
+    def test_prompt_still_forbids_market_manipulation_claims(self):
+        """★★★ 最危险的一条：不得借「反模板」之名放回「主力出货」阴谋论
+
+        R612 的原始纪律是"没源文证据别点名某方在出货"。
+        本轮只是**收紧表达**，绝不能放宽事实纪律。
+        """
+        s = self._prompts()
+        self.assertTrue(
+            ("编内幕" in s) or ("别点名某方在出货" in s)
+            or ("不得把原因归给某方" in s),
+            "★ 事实纪律被放宽了：不得借反模板之名重新编造主力出货")
 
 
 if __name__ == "__main__":
