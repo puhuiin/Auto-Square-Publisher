@@ -9773,7 +9773,11 @@ class TestRunMainSemantics(unittest.TestCase):
                            + "盘面信号明确，资金正在悄悄换仓，结构修复需要时间。" * 25)
         short_payload = "BTC 放量突破关键位，短线情绪转多，注意回踩确认再进。"
 
-        def _summarize(item, campaign_intel=None, market_context="", token_hints=None, article=False):
+        # ★ R708：替身签名必须跟生产签名同步（多了 out_lang）。
+        #   不同步 ⇒ TypeError 被旁路吞掉 ⇒ llm_result=None ⇒ 走降级路径
+        #   ⇒ 断言看到的 article 值全错（症状离病因很远）。
+        def _summarize(item, campaign_intel=None, market_context="",
+                       token_hints=None, article=False, out_lang=None):
             if article:
                 return {"content": article_payload, "tokens": ["BTC"], "provider": "stub",
                         "title": "BTC 行情深度复盘测试标题"}
@@ -18714,6 +18718,101 @@ class TestR705NoClicheSellTheNews(unittest.TestCase):
             ("编内幕" in s) or ("别点名某方在出货" in s)
             or ("不得把原因归给某方" in s),
             "★ 事实纪律被放宽了：不得借反模板之名重新编造主力出货")
+
+
+class TestR708LangMix(unittest.TestCase):
+    """★★ R708：输出语种配比（简 40% / 英 30% / 繁 30%）
+
+    用户 2026-10-09 指定。三条设计约束都在注释里，这里逐条守卫：
+    ① 配比**按当天累计**而非每轮（单轮只发 1~2 篇，凑不出比例）
+    ② 繁体靠"简体素材→转换"补足（原生繁体源只有 BlockTempo 一个）
+    ③ 配比关掉 ⇒ **零行为变化**（不拖垮主流程，R612）
+    """
+
+    @staticmethod
+    def _mgr(langs):
+        import datetime as _dt
+        now = _dt.datetime.now(_dt.timezone.utc).isoformat()
+        c = m.CacheManager.__new__(m.CacheManager)
+        c.cached_items = [{"sent_at": now, "lang": l} for l in langs]
+        return c
+
+    def test_ratio_parsed_as_fraction_not_percent(self):
+        """★ 配比必须存**比例**（0.4）不是百分数（40.0）
+
+        ⚠️ 这条是实测踩过的坑：存百分数时 `want - have/total`
+        = 40.0 - 0.5 ⇒ **简体永远是"缺口最大"** ⇒ 配比彻底失效
+        （已发 10 篇简体仍继续选简体）。同 R622「权重须量纲对齐」。
+        """
+        mix = m._parse_lang_mix("zh-CN:40,en:30,zh-TW:30")
+        self.assertAlmostEqual(mix["zh-CN"], 0.40, places=6)
+        self.assertAlmostEqual(sum(mix.values()), 1.0, places=6)
+
+    def test_mix_steadily_alternates_not_all_one_lang(self):
+        """★★ 核心行为：连续分配**不得**一直停在同一语种
+
+        判据用**实测行为**：连跑 12 次，统计各语种出现次数。
+        """
+        seen = []
+        for _ in range(12):
+            seen.append(self._mgr(seen).pick_output_lang())
+        self.assertEqual(len(seen), 12)
+        for lg in m.OUTPUT_LANGS:
+            self.assertGreater(seen.count(lg), 0,
+                               "12 次分配里 %s 一次都没出现 ⇒ 配比没生效" % lg)
+        # 兜底语种应略多（用户："无法平均分配则简中多一点"）
+        self.assertGreaterEqual(seen.count("zh-CN"), seen.count("en"))
+
+    def test_mix_disabled_returns_none(self):
+        """★ 配比关闭 ⇒ 返回 None ⇒ 调用方回退旧行为（零影响）"""
+        self.assertEqual(m._parse_lang_mix("off"), {})
+        self.assertEqual(m._parse_lang_mix(""), {})
+        # 比例和 ≠ 100 ⇒ 解析失败 ⇒ 空表（不静默用错配置）
+        self.assertEqual(m._parse_lang_mix("zh-CN:40,en:30"), {})
+        self.assertEqual(m._parse_lang_mix("zh-CN:40,bogus:30,zh-TW:30"), {})
+
+    def test_record_sent_persists_lang(self):
+        """★★ 语种必须**落盘**——否则重启后配比从零开始、连发同语种"""
+        import tempfile
+        import os
+        d = tempfile.mkdtemp()
+        p = os.path.join(d, "c.json")
+        c = m.CacheManager(p)
+        self.assertTrue(c.record_sent("id1", "t", "s", tokens=["BTC"],
+                                      lang="en"))
+        back = m.CacheManager(p)
+        self.assertEqual(back.cached_items[0].get("lang"), "en")
+        # 未启用配比时落 None，不影响其它字段
+        self.assertTrue(c.record_sent("id2", "t2", "s2", tokens=["ETH"]))
+        self.assertIsNone(c.cached_items[-1].get("lang"))
+
+    def test_count_by_lang_treats_missing_as_zh_cn(self):
+        """★ 历史记录无 `lang` 字段 ⇒ 归入 zh-CN（它们确实是简体帖）
+
+        ⇒ 若按"丢弃"处理，配比会被历史数据带偏（永远偏向 en/zh-TW）。
+        """
+        import datetime as _dt
+        now = _dt.datetime.now(_dt.timezone.utc).isoformat()
+        c = m.CacheManager.__new__(m.CacheManager)
+        c.cached_items = [{"sent_at": now},          # 无 lang（旧记录）
+                          {"sent_at": now, "lang": "en"},
+                          {"sent_at": now, "lang": "zh-XX"}]  # 脏值
+        got = c.count_by_lang(24)
+        self.assertEqual(got.get("zh-CN"), 2, "无字段与脏值都应归入简体")
+        self.assertEqual(got.get("en"), 1)
+
+    def test_to_traditional_never_raises(self):
+        """★★ 简→繁必须**永不抛**（opencc 是可选依赖，不在 requirements）"""
+        self.assertEqual(m._to_traditional(""), "")
+        out = m._to_traditional("比特币资金流入，机构止损")
+        self.assertIsInstance(out, str)
+        self.assertIn("資金", out)          # opencc 或内置表至少要生效
+
+    def test_to_traditional_is_idempotent(self):
+        """★ 幂等：已是繁体再转一次不得变样（否则重复转会把帖改坏）"""
+        once = m._to_traditional("比特币暴涨")
+        twice = m._to_traditional(once)
+        self.assertEqual(once, twice, "简转繁不幂等 ⇒ 可能把繁体帖改坏")
 
 
 if __name__ == "__main__":

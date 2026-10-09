@@ -237,6 +237,115 @@ _SHORT_NOTE_BUDGET_CAP = _env_int("SHORT_NOTE_BUDGET_CAP", 6000) or 4000
 # R578：发帖最小间隔（分钟）——生产实录 253 篇里 99 个间隔<30min（最快 2min 连发）
 # 与 60 个>180min 空窗并存，节奏像刷屏不像人。0=关闭；默认 20 对齐 cron 心跳。
 MIN_POST_GAP_MIN = _env_int("MIN_POST_GAP_MIN", 20)
+
+# ══════════════════════════════════════════════════════════════
+# R708：输出语种配比（用户 2026-10-09 指定）
+#   简体 40% / 英文 30% / 繁体 30%；**无法整除时多出来的给简体**。
+# ══════════════════════════════════════════════════════════════
+# 设计要点（三条，改之前先读）：
+# ① **配比是"当天累计"而非"每轮"**：单轮只发 1~2 篇，一轮内凑不出
+#    40/30/30 ⇒ 必须跨轮记账（按 24h 窗口已发的各语种数算缺口）。
+# ② **兜底语种 = 简体**（用户原话"无法平均分配则简中多一点即可"）
+#    ⇒ 繁体源不足（目前仅 BlockTempo 一个 TW 源）时不会硬凑，
+#      差额自然落到简体。
+# ③ **可关**：`LANG_MIX=off` 或解析失败 ⇒ 全部按素材原语种（旧行为），
+#    绝不因为配比算不出来就停发（R612：旁路不阻塞）。
+LANG_MIX_RAW = os.getenv("LANG_MIX", "").strip() or "zh-CN:40,en:30,zh-TW:30"
+LANG_MIX_FALLBACK = "zh-CN"          # 无法整除时的兜底
+OUTPUT_LANGS = ("zh-CN", "en", "zh-TW")
+
+
+def _parse_lang_mix(raw: str) -> Dict[str, float]:
+    """解析 `zh-CN:40,en:30,zh-TW:30` → {"zh-CN":0.4, ...}。
+
+    ⚠️ 任一段解析失败 ⇒ 返回 {}（调用方回退旧行为），**不静默吃掉坏配置**
+    —— 但也不让它炸掉主流程（配比是优化项，不是发帖的前提）。
+    """
+    if not raw or raw.lower() in ("off", "0", "none"):
+        return {}
+    out: Dict[str, float] = {}
+    for seg in raw.split(","):
+        seg = seg.strip()
+        if not seg or ":" not in seg:
+            return {}
+        k, v = seg.split(":", 1)
+        k = k.strip()
+        try:
+            w = float(v.strip())
+        except ValueError:
+            return {}
+        if k not in OUTPUT_LANGS or w < 0:
+            return {}
+        # ★ 存**比例**（0.40）不是百分数（40.0）。
+        #   实测踩坑：存百分数后 `pick_output_lang` 里
+        #   `want - have/total` = 40.0 - 0.5 ⇒ 简体**永远**是"缺口最大"
+        #   ⇒ 配比失效（已发 10 篇简体仍继续选简体）。同 R622
+        #   「权重须量纲对齐」。
+        out[k] = w / 100.0
+    return out if abs(sum(out.values()) - 1.0) < 1e-6 else {}
+
+
+LANG_MIX = _parse_lang_mix(LANG_MIX_RAW)
+
+
+# ★ R708 **简 → 繁**转换。
+# ⚠️ 为什么不能直接用 `opencc`：它**不在 requirements.txt**（CI 装不上会全红），
+#   而本函数是"有则更好"的旁路 ⇒ 必须**可缺失**。
+# ⇒ 三级降级：opencc → 内置核心字表 → 原样返回（至少不崩）。
+# ⚠️ 内置表只覆盖币圈/财经高频字（约 120 组），**不是完整简繁对照**；
+#    它的职责是"opencc 不可用时的最低可用"，不是替代。
+_TR_CORE = {
+    "币": "幣", "区": "區", "块": "塊", "链": "鏈", "价": "价", "价": "價",
+    "资": "資", "产": "產", "资": "資", "市": "市", "场": "場", "资": "資",
+    "金": "金", "额": "額", "涨": "漲", "跌": "跌", "盘": "盤", "数": "數",
+    "据": "據", "据": "據", "资": "資", "讯": "訊", "闻": "聞", "网": "網",
+    "络": "絡", "术": "術", "术": "術", "应": "應", "用": "用", "户": "戶",
+    "仓": "倉", "位": "位", "风": "風", "险": "險", "控": "控", "损": "損",
+    "益": "益", "润": "潤", "亏": "虧", "买": "買", "卖": "賣", "购": "購",
+    "单": "單", "双": "雙", "总": "總", "额": "額", "亿": "億", "万": "萬",
+    "点": "點", "线": "線", "级": "級", "约": "約", "计": "計", "划": "劃",
+    "报": "報", "告": "告", "说": "說", "话": "話", "评": "評", "论": "論",
+    "观": "觀", "测": "測", "试": "試", "验": "驗", "证": "證", "认": "認",
+    "调": "調", "查": "查", "监": "監", "管": "管", "规": "規", "则": "則",
+    "条": "條", "款": "款", "约": "約", "签": "簽", "约": "約", "书": "書",
+    "项": "項", "目": "目", "选": "選", "择": "擇", "决": "決", "定": "定",
+    "稳": "穩", "态": "態", "势": "勢", "趋": "趨", "动": "動", "态": "態",
+    "变": "變", "化": "化", "进": "進", "出": "出", "口": "口", "关": "關",
+    "闭": "閉", "开": "開", "发": "發", "现": "現", "实": "實", "际": "際",
+    "经": "經", "济": "濟", "业务": "業務", "时间": "時間", "机会": "機會",
+    "机构": "機構", "投资": "投資", "交易": "交易", "市场": "市場",
+    "比特币": "比特幣", "以太坊": "以太坊", "以太币": "以太幣",
+    "区块链": "區塊鏈", "加密": "加密", "货币": "貨幣", "美元": "美元",
+    "代币": "代幣", "稳定币": "穩定幣", "合约": "合約", "杠杆": "槓桿",
+    "爆仓": "爆倉", "止损": "止損", "支撑": "支撐", "阻力": "阻力",
+    "放量": "放量", "缩量": "縮量", "资金": "資金", "流入": "流入",
+    "流出": "流出", "持仓": "持倉", "清算": "清算", "结算": "結算",
+    "钱包": "錢包", "地址": "地址", "矿工": "礦工", "挖矿": "挖礦",
+}
+
+
+def _to_traditional(text: str) -> str:
+    """简体 → 繁体（台湾用字）。失败时逐级降级，**永不抛**。
+
+    ① `opencc`（OpenCC 的 s2twp 最接近台湾习惯）
+    ② 内置 `_TR_CORE` 核心字表（opencc 缺失时的最低可用）
+    ③ 都不可用 ⇒ 原样返回（宁可繁体不到位，不可让发帖失败）
+    """
+    if not text:
+        return text
+    try:
+        import opencc  # 可选依赖，不在 requirements.txt
+        return opencc.OpenCC("s2twp").convert(text)
+    except Exception:
+        pass
+    try:
+        out = text
+        for k in sorted(_TR_CORE, key=len, reverse=True):
+            if k in out:
+                out = out.replace(k, _TR_CORE[k])
+        return out
+    except Exception:
+        return text
 # 蹭热点：优先种子注入。把人工精选、事实核验过的突发热点候选（如交易所被盗）以最高分注入
 # 候选池顶部，让机器人在 RSS 尚未充分覆盖时抢先蹭上热点；发够 max_posts 篇后经既有
 # record_sent→is_cached 预算机制自动停投、回落常规 RSS 发帖。种子照走全部既有关卡
@@ -1078,9 +1187,11 @@ RSS_FEEDS = [
         "lang": "en",
     },
     {
-        "name": "BlockTempo (动区动趋中文)",
+        "name": "BlockTempo (动区动趋中文/台湾繁体)",
         "url": "https://www.blocktempo.com/feed/",
-        "lang": "zh",
+        # ★ R708：**唯一**的繁体源。繁体配额主要靠"简体素材→繁体转换"补足，
+        #   这个源提供的是**原生繁体**（用词更贴近台湾读者）。
+        "lang": "zh-TW",
     },
     {
         "name": "Cointelegraph (全球综合快讯)",
@@ -1142,16 +1253,16 @@ RSS_FEEDS = [
      "lang": "en"},                                                  # 9
     # ── 中文（为「中英各半」备料；当前中文源严重不足，仅 BlockTempo + 吴说）──
     {"name": "吴说区块链 (中文深度)", "url": "https://www.wu-talk.com/feed",
-     "lang": "zh"},                                                  # 50 实测可达
+     "lang": "zh-CN"},                                                  # 50 实测可达
     # ⚠️ 以下 4 个本机 502(Tunnel) 无法验证，URL 有效，待线上源健康机制裁决
     {"name": "巴比特 8BTC (中文老牌)", "url": "https://www.8btc.com/feed",
-     "lang": "zh"},
+     "lang": "zh-CN"},
     {"name": "金色财经 (中文快讯)", "url": "https://www.jinse.cn/rss",
-     "lang": "zh"},
+     "lang": "zh-CN"},
     {"name": "币世界 (中文行情)", "url": "https://www.bishijie.com/rss.xml",
-     "lang": "zh"},
+     "lang": "zh-CN"},
     {"name": "PANews (中文研报)", "url": "https://www.panewslab.com/zh/rss",
-     "lang": "zh"},
+     "lang": "zh-CN"},
 ]
 
 # R667：X 通道专用的 **AI 主题源**（用户要求"加密、AI 相关都要有"）。
@@ -1979,6 +2090,58 @@ class CacheManager:
             count += 1
         return count
 
+    def count_by_lang(self, hours: int = 24) -> Dict[str, int]:
+        """★ R708：最近 N 小时内**各输出语种**的发帖数。
+
+        配比必须按**当天累计**算（单轮只发 1~2 篇，一轮内凑不出 40/30/30）
+        ⇒ 这里提供跨轮记账的数据面。
+        ⚠️ 旧记录没有 `lang` 字段 ⇒ 归入 `zh-CN`（它们确实是简体帖），
+        **不是丢弃**——否则配比会因为历史数据缺失而永远偏向繁体/英文。
+        """
+        from collections import defaultdict as _dd
+        out: Dict[str, int] = _dd(int)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        for it in self.cached_items:
+            ts = it.get("sent_at") or it.get("ts") or ""
+            if not ts:
+                continue
+            try:
+                if datetime.fromisoformat(ts) < cutoff:
+                    continue
+            except (ValueError, TypeError):
+                continue
+            lg = str(it.get("lang") or "zh-CN")
+            if lg not in OUTPUT_LANGS:
+                lg = "zh-CN"
+            out[lg] += 1
+        return dict(out)
+
+    def pick_output_lang(self, hours: int = 24) -> Optional[str]:
+        """★ R708：按配比选**当前缺口最大**的语种。
+
+        判据：(已发数 / 当天总数) 与目标占比的**差值**，差最大（即最欠）者优先。
+        ⚠️ 全零起步时按 `LANG_MIX` 的**声明顺序**取第一个（zh-CN）——
+           这不是随机，避免同条件下结果抖动（R666 可复现纪律）。
+        ⚠️ 配比关闭/解析失败 ⇒ 返回 None（调用方回退素材原语种）。
+        """
+        if not LANG_MIX:
+            return None
+        counts = self.count_by_lang(hours)
+        total = sum(counts.values())
+        if total == 0:
+            for lg in OUTPUT_LANGS:
+                if lg in LANG_MIX:
+                    return lg
+            return None
+        best, best_gap = None, None
+        for lg, want in LANG_MIX.items():
+            have = counts.get(lg, 0)
+            gap = want - (have / float(total))
+            # 并列时取声明顺序靠前的（zh-CN 优先，符合"简中多一点"）
+            if best_gap is None or gap > best_gap + 1e-9:
+                best, best_gap = lg, gap
+        return best
+
     def minutes_since_last_sent(self) -> Optional[float]:
         """距离最近一次**图文帖**发布的分钟数（无记录/解析失败返回 None）。
 
@@ -2068,7 +2231,8 @@ class CacheManager:
             logger.info(f"🔄 重载去重缓存：并入 {added} 条并发轮写入的记录（共 {len(merged_items)} 条）")
         return len(merged_items)
 
-    def record_sent(self, news_id: str, title: str, source: str, tokens: Optional[List[str]] = None) -> bool:
+    def record_sent(self, news_id: str, title: str, source: str, tokens: Optional[List[str]] = None,
+                    lang: Optional[str] = None) -> bool:
         """写入已发记录并落盘，返回落盘是否成功。
 
         Round 5：此前落盘失败只在 _save_cache 里记一条 error 就继续，调用方视为成功并
@@ -2082,6 +2246,10 @@ class CacheManager:
             # 始终写 tokens：缺省字段会让 token_posts_since 恒返回 0，单币限流对这条
             # 记录永远失效（存量脏数据仍按未知处理，新记录不再产生新的盲区）。
             "tokens": list(tokens or []),
+            # ★ R708：输出语种。**配比记账的唯一数据源**（`count_by_lang`）。
+            #   ⚠️ 必须落盘——否则重启后配比从零开始，会连发同一语种。
+            #   ⚠️ None 表示"未启用配比/未知"，读取时归入 zh-CN（历史帖确为简体）。
+            "lang": lang if lang in OUTPUT_LANGS else None,
         }
         self.cached_items.append(record)
         self.cached_ids.add(news_id)
@@ -3380,7 +3548,7 @@ class NewsFetcher:
                 "summary": summary[:1000],
                 "link": str(raw.get("link") or ""),
                 "source": str(raw.get("source") or f"priority_seed:{tag}"),
-                "lang": str(raw.get("lang") or "zh"),
+                "lang": str(raw.get("lang") or "zh-CN"),
                 "published": "",
                 "age_hours": 0.0,
                 "impact_score": PRIORITY_SEED_SCORE,
@@ -5639,7 +5807,19 @@ class MultiLLMEngine:
         market_context: str = "",
         token_hints: Optional[List[str]] = None,
         article: bool = False,
+        out_lang: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
+        """
+        结合最新币安官方活动情报与实时行情进行高收益转化提炼。
+        article=True 生成深度长文（TITLE 行 + 500~800 字正文，contentType=2），
+        否则 140~200 字短讯（R294：原写 160~240，与自家 few-shot 范文 157/173 字
+        及生产实测中位 148 矛盾——宣称的区间模型从未命中，对齐到实证区间）。
+        返回 {"content", "tokens", "provider", ...}，全败返回 None。
+        提供商按本次运行内的连续失败次数升序尝试（健康度优先调度）。
+
+        R708 `out_lang`：目标输出语种（zh-CN / en / zh-TW）。
+        ⚠️ None = 沿用素材原语种（旧行为）⇒ **配比关闭时零行为变化**。
+        """
         """
         结合最新币安官方活动情报与实时行情进行高收益转化提炼。
         article=True 生成深度长文（TITLE 行 + 500~800 字正文，contentType=2），
@@ -5832,6 +6012,22 @@ class MultiLLMEngine:
                 expansions = 0  # 预算扩容次数：不消耗 max_attempts 配额（扩容是纠正，不是重试）
                 system_prompt = (self.SYSTEM_PROMPT +
                                  f"\n\n【本条的写派人设】：你是「{persona['name']}」，表达风格要点：{persona['angle']}")
+                # ★★ R708：**输出语种指令**。放在人设之后（最后一条 system 指令
+                #   权重最高），且**显式否定**默认语种——只说"用英文写"时模型
+                #   常因上文全是中文规则而仍输出中文（实测同型：只在末尾加软
+                #   引导无效，见 R612「先用软引导，实测无效」）。
+                if out_lang == "en":
+                    system_prompt += (
+                        "\n\n【★ 输出语种（最高优先级，覆盖以上所有中文示例）】"
+                        "本条**全文必须用英文(English)输出**，不要出现任何中文句子。"
+                        "规则不变：仍要带 $TOKEN 挂件、3 个标签(#Write2Earn "
+                        "#BinanceSquare #核心代币名)、不喊单、数字必须来自素材。"
+                        "标题也用英文。语气与上方人设一致（写成英文版的老韭菜口吻）。")
+                elif out_lang == "zh-TW":
+                    system_prompt += (
+                        "\n\n【★ 输出语种（最高优先级）】本条**全文必须用繁体中文"
+                        "（台湾用字）输出**，如「比特幣」「區塊鏈」「資金」「止損」，"
+                        "不要写简体字。其余规则不变。")
                 while attempt < max_attempts:
                     response = client.chat.completions.create(
                         model=provider.model,
@@ -10873,8 +11069,20 @@ def _run_main():
                            and "binance" in PUBLISH_PLATFORMS
                            and score >= ARTICLE_MIN_IMPACT)
             t_llm_start = time.time()
+            # ★ R708：按**当天累计缺口**决定本篇输出语种。
+            #   ⚠️ 每篇都重算（不是每轮一次）：本轮可能发 2 篇，第二篇要看到
+            #   第一篇的语种后才不会连发同语种。
+            #   ⚠️ `pick_output_lang` 返回 None（配比关闭）⇒ 传 None ⇒ 旧行为。
+            out_lang = cache_mgr.pick_output_lang() if LANG_MIX else None
             llm_result = llm_engine.summarize(item, campaign_intel, market_context=market_context_str,
-                                              token_hints=detected_tokens, article=use_article)
+                                              token_hints=detected_tokens, article=use_article,
+                                              out_lang=out_lang)
+            # ★ 繁体**兜底转换**：模型可能仍漏写简体（尤其长文）⇒ 统一转一次。
+            #   ⚠️ 幂等：已是繁体的字不会被改坏（opencc s2twp 对繁体输入稳定）。
+            if llm_result and out_lang == "zh-TW":
+                for _k in ("content", "title"):
+                    if isinstance(llm_result.get(_k), str) and llm_result[_k]:
+                        llm_result[_k] = _to_traditional(llm_result[_k])
             if llm_result and use_article and not llm_result.get("title"):
                 # 防御：长文模式返回缺 title（理论不可达，_parse_article 已拦）→ 按短讯处理
                 use_article = False
@@ -10882,7 +11090,12 @@ def _run_main():
                 logger.warning("长文生成失败，降级为短讯重试同一新闻...")
                 use_article = False
                 llm_result = llm_engine.summarize(item, campaign_intel, market_context=market_context_str,
-                                                  token_hints=detected_tokens, article=False)
+                                                  token_hints=detected_tokens, article=False,
+                                                  out_lang=out_lang)
+                if llm_result and out_lang == "zh-TW":
+                    for _k in ("content", "title"):
+                        if isinstance(llm_result.get(_k), str) and llm_result[_k]:
+                            llm_result[_k] = _to_traditional(llm_result[_k])
             stage_timings["llm"] += time.time() - t_llm_start
             if not llm_result:
                 consecutive_llm_failures += 1
@@ -11056,7 +11269,8 @@ def _run_main():
                     consecutive_publish_failures = 0
                     publisher._publish_record(news_id, ok=True)  # 清掉可能存在的停放记次
                     # 落盘结果必须回看：帖子已真实发出而缓存没写上，下一轮必然重复发同一条
-                    persisted = cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
+                    persisted = cache_mgr.record_sent(news_id, title, source, tokens=post_tokens,
+                                                     lang=out_lang)
                     posted_titles_this_run.append(title)
                     if use_article:
                         # 长文当日额度核销：仅在真实发布成功后标记（DRY_RUN 不写，零副作用）。
@@ -11427,7 +11641,8 @@ def _run_main():
                     # 仅副平台模式：任一平台完成投递即入缓存，防止每 20 分钟重复处理同一新闻
                     delivered = _delivered_platforms(False, draft_exported, telegram_exported)
                     delivered_by = "+".join(delivered)
-                    persisted = cache_mgr.record_sent(news_id, title, source, tokens=post_tokens)
+                    persisted = cache_mgr.record_sent(news_id, title, source, tokens=post_tokens,
+                                                     lang=out_lang)
                     posted_titles_this_run.append(title)
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
