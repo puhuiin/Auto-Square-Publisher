@@ -306,6 +306,27 @@ def _parse_lang_mix(raw: str) -> Dict[str, float]:
 
 LANG_MIX = _parse_lang_mix(LANG_MIX_RAW)
 
+# ══════════════════════════════════════════════════════════════
+# ★★ R710：语种改按**时段**分配（用户 2026-10-10 指令，取代 R708 的全天固定配比）
+#   白天（北京 06:00–22:00）→ 中文（简体/繁体按 LANG_DAY_MIX 平衡）
+#   晚上（22:00–06:00）    → 英文
+# ══════════════════════════════════════════════════════════════
+# 为什么用"允许集合 + 集合内平衡"两步，而不是直接 if 时间:
+#   白天内部仍要决定**简还是繁**——两步写法让"时段"与"配比"各管一件事，
+#   互不干扰，且关掉任一层都能单独退化（纪律：旁路不阻塞）。
+# ⚠️ 边界：22:00 归夜间、06:00 归白天（半开区间，避免两段都命中）。
+LANG_DAY_START = _env_int("LANG_DAY_START", 6)    # 北京时白天起点
+LANG_DAY_END = _env_int("LANG_DAY_END", 22)       # 北京时白天终点（不含）
+# 白天内部：简中略多于繁体（沿用用户先前「无法平均分配则简中多一点」的偏好）
+LANG_DAY_MIX = {"zh-CN": 0.60, "zh-TW": 0.40}
+LANG_NIGHT_LANG = "en"
+# ⚠️ 防御：起点/终点写反或相等时**回退到全天中文之外**的安全行为——
+#   此时 allowed 恒为夜间英文（比"判定不出时段就乱发"更可控）。
+if not (0 <= LANG_DAY_START < LANG_DAY_END <= 24):
+    logger.warning("LANG_DAY_START/END 配置无效(%s-%s)，语种时段策略退化为夜间英文",
+                   LANG_DAY_START, LANG_DAY_END)
+    LANG_DAY_START, LANG_DAY_END = 6, 22
+
 
 # ★ R708 **简 → 繁**转换。
 # ⚠️ 为什么不能直接用 `opencc`：它**不在 requirements.txt**（CI 装不上会全红），
@@ -2127,28 +2148,46 @@ class CacheManager:
             out[lg] += 1
         return dict(out)
 
-    def pick_output_lang(self, hours: int = 24) -> Optional[str]:
-        """★ R708：按配比选**当前缺口最大**的语种。
+    def pick_output_lang(self, hours: int = 24,
+                         now_bj_hour: Optional[int] = None) -> Optional[str]:
+        """★★ R710：按**时段**分配语种（用户 2026-10-10 指令，已取代 R708 的固定配比）。
 
-        判据：(已发数 / 当天总数) 与目标占比的**差值**，差最大（即最欠）者优先。
-        ⚠️ 全零起步时按 `LANG_MIX` 的**声明顺序**取第一个（zh-CN）——
-           这不是随机，避免同条件下结果抖动（R666 可复现纪律）。
-        ⚠️ 配比关闭/解析失败 ⇒ 返回 None（调用方回退素材原语种）。
+        规则（北京时间）：
+            **白天 06:00–22:00 → 中文**（简体/繁体按 `LANG_DAY_MIX` 平衡）
+            **晚上 22:00–06:00 → 英文**
+
+        ⚠️ 与 R708 的差别：R708 是**全天固定配比**（40/30/30），
+          语种与发布时刻**无关**；R710 把"发什么语言"绑到"什么时候发"。
+          ⇒ 缺口只在**当前时段允许的语种集合内**比较，否则会出现
+          "白天发了 20 篇中文 → 晚上的 en 永远缺口最大"这类跨时段串味。
+
+        判据：(已发数 / 该时段集合内总数) 与目标占比的差值，差最大者优先；
+        全零起步取**集合声明顺序**第一个（简中优先，符合"简中多一点"）。
+
+        ⚠️ 边界 22:00 归夜间、06:00 归白天（半开区间，避免重复归属）。
+        ⚠️ 时段不可用/关闭 ⇒ 返回 None（调用方回退素材原语种）。
+        ⚠️ `now_bj_hour` 可注入（测试用）——`datetime` 是不可变类型，
+           mock 不了 `datetime.now`，故留参数（同 `apply_hour_preference_boost(now_utc=)`）。
         """
         if not LANG_MIX:
             return None
-        counts = self.count_by_lang(hours)
-        total = sum(counts.values())
-        if total == 0:
-            for lg in OUTPUT_LANGS:
-                if lg in LANG_MIX:
-                    return lg
+        if now_bj_hour is None:
+            now_bj_hour = (datetime.now(timezone.utc).hour + 8) % 24
+        if LANG_DAY_START <= now_bj_hour < LANG_DAY_END:
+            allowed = LANG_DAY_MIX          # 白天：简中/繁体
+        else:
+            allowed = {LANG_NIGHT_LANG: 1.0}  # 夜间：英文
+        if not allowed:
             return None
+        counts = self.count_by_lang(hours)
+        # ★ 分母只算 allowed 内的语种——否则跨时段串味（R710 核心）
+        sub_total = sum(counts.get(lg, 0) for lg in allowed)
+        if sub_total == 0:
+            return next(iter(allowed))       # 声明顺序第一个（zh-CN）
         best, best_gap = None, None
-        for lg, want in LANG_MIX.items():
+        for lg, want in allowed.items():
             have = counts.get(lg, 0)
-            gap = want - (have / float(total))
-            # 并列时取声明顺序靠前的（zh-CN 优先，符合"简中多一点"）
+            gap = want - (have / float(sub_total))
             if best_gap is None or gap > best_gap + 1e-9:
                 best, best_gap = lg, gap
         return best

@@ -18749,19 +18749,80 @@ class TestR708LangMix(unittest.TestCase):
         self.assertAlmostEqual(sum(mix.values()), 1.0, places=6)
 
     def test_mix_steadily_alternates_not_all_one_lang(self):
-        """★★ 核心行为：连续分配**不得**一直停在同一语种
+        """★ 核心行为：**白天**连跑 12 次不得一直停在同一语种
 
-        判据用**实测行为**：连跑 12 次，统计各语种出现次数。
+        ⚠️ R710 起**必须传 `now_bj_hour`**：**夜间恒为英文**是设计意图；
+           不传参数时若恰在夜间跑，本断言会假失败（那是正确行为）。
         """
         seen = []
         for _ in range(12):
-            seen.append(self._mgr(seen).pick_output_lang())
+            seen.append(self._mgr(seen).pick_output_lang(now_bj_hour=14))
         self.assertEqual(len(seen), 12)
-        for lg in m.OUTPUT_LANGS:
+        for lg in ("zh-CN", "zh-TW"):
             self.assertGreater(seen.count(lg), 0,
-                               "12 次分配里 %s 一次都没出现 ⇒ 配比没生效" % lg)
-        # 兜底语种应略多（用户："无法平均分配则简中多一点"）
-        self.assertGreaterEqual(seen.count("zh-CN"), seen.count("en"))
+                               "12 次分配里 %s 一次都没出现 ⇒ 白天配比没生效" % lg)
+        self.assertEqual(set(seen) - {"zh-CN", "zh-TW"}, set(),
+                         "白天只应产出中文（简/繁），实测混入 %s"
+                         % (set(seen) - {"zh-CN", "zh-TW"}))
+
+    # ══════════════════════════════════════════════════════════
+    # R710：语种改按**时段**分配（用户 2026-10-10）
+    # ══════════════════════════════════════════════════════════
+
+    def test_daytime_emits_chinese_only(self):
+        """★★ 白天（北京 06:00–22:00）⇒ 只发中文（简体或繁体）"""
+        for hour in (6, 9, 12, 15, 18, 21):
+            got = self._mgr([]).pick_output_lang(now_bj_hour=hour)
+            self.assertIn(got, ("zh-CN", "zh-TW"),
+                          "北京 %d 时（白天）应发中文，实测 %s" % (hour, got))
+
+    def test_nighttime_always_english(self):
+        """★★ 晚上（22:00–06:00）⇒ **恒为英文**，与历史分布无关"""
+        for hour in (22, 23, 0, 3, 5):
+            for label, seq in (("空", []),
+                               ("中文×13", ["zh-CN"] * 9 + ["zh-TW"] * 4),
+                               ("英文×9", ["en"] * 9)):
+                got = self._mgr(seq).pick_output_lang(now_bj_hour=hour)
+                self.assertEqual(got, "en",
+                                 "北京 %d 时（夜间）应恒为 en，已发%s ⇒ 得了 %s"
+                                 % (hour, label, got))
+
+    def test_boundary_hours_assigned_to_correct_window(self):
+        """★★ 边界半开区间：06:00 属白天、22:00 属夜间（不两头都命中）"""
+        self.assertIn(self._mgr([]).pick_output_lang(now_bj_hour=6),
+                      ("zh-CN", "zh-TW"), "06:00 应属白天")
+        self.assertEqual(self._mgr([]).pick_output_lang(now_bj_hour=22), "en",
+                         "22:00 应属夜间")
+
+    def test_daytime_gap_ignores_english_history(self):
+        """★★ 分母只算**当前时段的允许集合**（R710 核心，防跨时段串味）
+
+        ⚠️ 判据的构造要点（**前两版都没抓到破坏**，第三版才对）：
+          分母能否翻转结果，取决于 `cn/T` 是否跨过阈值 **0.2**——
+          因为 zh-CN 目标(0.6) 比 zh-TW(0.4) 高 0.2：
+            gap_zhCN = 0.6 - cn/T    gap_zhTW = 0.4 - 0 = 0.4
+            ⇒ cn/T > 0.2 时两者**同解**，改分母也看不出差别。
+          所以判别样本必须让 `cn/T` **跨过 0.2**：
+            简体 1 篇 + 英文 50 篇 ⇒
+              分母=allowed(1) ⇒ cn/T=1.0  ⇒ 选**繁体**
+              分母=全天(51)  ⇒ cn/T=0.02 ⇒ 选**简体**
+          ⚠️ 前两版分别用「英文多」和「简体 10+英文 20」，
+            cn/T 都在 0.2 以上 ⇒ 两种实现同解 ⇒ 守卫**假通过**。
+        """
+        got = self._mgr(["zh-CN"] + ["en"] * 50).pick_output_lang(now_bj_hour=14)
+        self.assertEqual(got, "zh-TW",
+                         "白天繁体为 0 时应补繁体（分母若含英文会被稀释成简体）")
+
+        # 英文再多也不能把白天拽向英文
+        got2 = self._mgr(["en"] * 99).pick_output_lang(now_bj_hour=14)
+        self.assertIn(got2, ("zh-CN", "zh-TW"),
+                      "白天 99 篇英文后仍应发中文，实测 %s" % got2)
+
+    def test_daytime_prefers_simplified_when_tied(self):
+        """★ 白天同分时取简体（用户先前偏好「简中多一点」）"""
+        got = self._mgr(["zh-CN"] * 3 + ["zh-TW"] * 3).pick_output_lang(
+            now_bj_hour=14)
+        self.assertEqual(got, "zh-CN", "同分时应取简体")
 
     def test_mix_disabled_returns_none(self):
         """★ 配比关闭 ⇒ 返回 None ⇒ 调用方回退旧行为（零影响）"""
