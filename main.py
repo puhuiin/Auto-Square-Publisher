@@ -187,7 +187,26 @@ def _positive_int(name: str, value: int, default: int) -> int:
 MAX_NEWS_AGE_HOURS = _positive_int("MAX_NEWS_AGE_HOURS", _env_int("MAX_NEWS_AGE_HOURS", 48), 48)  # 新闻最大时效(小时)，过期旧闻直接丢弃
 DUP_SIMILARITY_THRESHOLD = _clamp01("DUP_SIMILARITY_THRESHOLD", _env_float("DUP_SIMILARITY_THRESHOLD", 0.65))  # 跨源近似标题去重阈值 (0~1)
 MIN_IMPACT_SCORE = _env_int("MIN_IMPACT_SCORE", 0)                 # 最低热度分过滤，0 表示不过滤
-MAX_DAILY_POSTS = _env_int("MAX_DAILY_POSTS", 12)                  # 24h 滚动发帖配额，0 表示不限制
+# ★ R709：配额默认 12 → **25**（提量第一步，用户 2026-10-09 决策「先扩源再提量」）
+#   为什么改这里就能生效：`gh variable list` 实测仓库**没有** MAX_DAILY_POSTS
+#   （只有 PUBLISH_PLATFORMS）⇒ workflow 的 `${{ vars.MAX_DAILY_POSTS }}` 传空
+#   ⇒ `_env_int("MAX_DAILY_POSTS", <默认>)` 落到默认值。
+#   ⚠️ 一旦用户在仓库变量里设了这个值，本改动**不再生效**（env 优先）——
+#      这是刻意的：保留用户侧的最终控制权。
+#
+#   为什么 25 而不是 70（三条依据，缺一不可）：
+#   ① **供给已不是瓶颈**（R707 扩源的直接效果）：
+#      线上实测抓取 52 → **133**、候选 45 → **97**，`unprocessed=91`
+#      ⇒ 97 条候选对 25 篇配额，**富余 3 倍以上**。
+#   ② **节奏仍远低于刷屏线**：`MIN_POST_GAP_MIN=20` ⇒ 24h 理论上限 72 篇；
+#      25 篇平均间隔 **58 分钟/篇**，是刷屏判定线（2min）的 29 倍安全余量。
+#   ③ **单币限流仍有效**：`TOKEN_DAILY_LIMIT=3` ⇒ 25 篇至少需 9 个币
+#      （当前候选稳定覆盖 10+ 个）⇒ 限流机制继续发挥作用，不会靠单币刷量。
+#
+#   ⚠️ 分步提量的理由（不要一次跳到 70）：
+#      先看 25 档的**单篇浏览是否稀释**、有无风控码（20002/20022）。
+#      若稳定 → 下一档 40；若浏览摊薄明显 → 回滚此行即可（一个数字）。
+MAX_DAILY_POSTS = _env_int("MAX_DAILY_POSTS", 25)                  # 24h 滚动发帖配额，0 表示不限制
 TOKEN_DAILY_LIMIT = _env_int("TOKEN_DAILY_LIMIT", 3)               # 同一代币 24h 内最多发布篇数，0 表示不限制
 # R215：限流绕过阈值独立化——R208 复用 ARTICLE_MIN_IMPACT(20) 让"常规行情帖"
 # （等待联储/观点分析类，生产实录 20~26 分）也能无限绕过限流，BTC 单日 8/12 篇
@@ -1231,8 +1250,6 @@ RSS_FEEDS = [
      "lang": "en"},                                                  # 20
     {"name": "Crypto Briefing (深度与研报)", "url": "https://cryptobriefing.com/feed/",
      "lang": "en"},                                                  # 30
-    {"name": "DL News (监管与欧洲视角)", "url": "https://www.dlnews.com/arc/outboundfeeds/rss/",
-     "lang": "en"},                                                  # 40
     {"name": "The Defiant (DeFi 深度)", "url": "https://thedefiant.io/api/feed",
      "lang": "en"},                                                  # 99
     {"name": "BeInCrypto (山寨与行情)", "url": "https://beincrypto.com/feed/",
@@ -1251,18 +1268,12 @@ RSS_FEEDS = [
      "lang": "en"},                                                  # 10
     {"name": "CoinJournal (山寨异动)", "url": "https://coinjournal.net/feed/",
      "lang": "en"},                                                  # 9
+    {"name": "CryptoNews (全球快讯)", "url": "https://cryptonews.com/news/feed/",
+     "lang": "en"},                                                  # 20 本地实测
     # ── 中文（为「中英各半」备料；当前中文源严重不足，仅 BlockTempo + 吴说）──
     {"name": "吴说区块链 (中文深度)", "url": "https://www.wu-talk.com/feed",
      "lang": "zh-CN"},                                                  # 50 实测可达
     # ⚠️ 以下 4 个本机 502(Tunnel) 无法验证，URL 有效，待线上源健康机制裁决
-    {"name": "巴比特 8BTC (中文老牌)", "url": "https://www.8btc.com/feed",
-     "lang": "zh-CN"},
-    {"name": "金色财经 (中文快讯)", "url": "https://www.jinse.cn/rss",
-     "lang": "zh-CN"},
-    {"name": "币世界 (中文行情)", "url": "https://www.bishijie.com/rss.xml",
-     "lang": "zh-CN"},
-    {"name": "PANews (中文研报)", "url": "https://www.panewslab.com/zh/rss",
-     "lang": "zh-CN"},
 ]
 
 # R667：X 通道专用的 **AI 主题源**（用户要求"加密、AI 相关都要有"）。
