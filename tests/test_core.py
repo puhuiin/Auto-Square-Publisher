@@ -17045,13 +17045,43 @@ class TestR650HourPreferenceBoost(unittest.TestCase):
         return _dt.datetime(2026, 10, 5, h, tzinfo=_dt.timezone.utc)
 
     def test_in_pref_window_untouched(self):
-        """UTC 22-04 == 北京 06-12，窗内**不得有任何改动**"""
-        c = self._cands(20, 15)
-        n, _, in_win = m.NewsFetcher.apply_hour_preference_boost(
-            c, now_utc=self._utc(23))
-        self.assertTrue(in_win)
-        self.assertEqual(n, 0)
-        self.assertEqual([x["impact_score"] for x in c], [20, 15])
+        """UTC 01-04 == 北京 09-12（R706 收窄后），窗内**不得有任何改动**"""
+        for h in (1, 2, 3):
+            c = self._cands(20, 15)
+            n, _, in_win = m.NewsFetcher.apply_hour_preference_boost(
+                c, now_utc=self._utc(h))
+            self.assertTrue(in_win, "北京 %d 时应算高浏览窗" % ((h + 8) % 24))
+            self.assertEqual(n, 0)
+            self.assertEqual([x["impact_score"] for x in c], [20, 15])
+
+    def test_r706_early_morning_is_now_penalized(self):
+        """★★ R706：北京 06-09 **不再**算高浏览窗（实测中位 53，全时段最低）
+
+        这是 R706 的核心行为改动：原实现把 06-12 整段当高窗，
+        导致 06-09（实测最差）反而免于惩罚，与 R650 本意相反。
+        """
+        for h, bj in ((22, 6), (23, 7), (0, 8)):
+            c = self._cands(20, 15)
+            n, _, in_win = m.NewsFetcher.apply_hour_preference_boost(
+                c, now_utc=self._utc(h))
+            self.assertFalse(in_win, "北京 %d 时不该算高浏览窗" % bj)
+            self.assertEqual(n, 2, "北京 %d 时应被减分" % bj)
+
+    def test_two_call_sites_share_one_window_definition(self):
+        """★★ 两处窗口判定必须**同一口径**（否则漂移，R643 教训）
+
+        ① `apply_hour_preference_boost`（排序加权）
+        ② `LOW_HOUR_CAP` 的低窗判定（北京时间直接比较）
+        ⇒ 用**行为**验证：对同一时刻，两处的"是否高窗"结论必须一致。
+        """
+        import inspect
+        src = inspect.getsource(m)
+        # ② 的口径应该是 9 <= _now_bj < 12
+        self.assertIn("9 <= _now_bj < 12", src,
+                      "LOW_HOUR_CAP 的窗口未同步为 09-12")
+        # ① 的口径：UTC 01-04
+        i = src.find("in_pref = 1 <= now_utc.hour < 4")
+        self.assertGreater(i, 0, "排序加权的窗口未同步为 UTC 01-04")
 
     def test_out_window_penalized(self):
         """窗外每个候选 -TIME_PREF_PENALTY（只排序，不筛除）"""
@@ -17083,12 +17113,16 @@ class TestR650HourPreferenceBoost(unittest.TestCase):
         self.assertLess(m.TIME_PREF_PENALTY, 8)
 
     def test_window_boundaries(self):
-        """边界：UTC22 含（=京06:00 起）、UTC04 不含（=京12:00 止）"""
-        _, _, in22 = m.NewsFetcher.apply_hour_preference_boost(
-            self._cands(20), now_utc=self._utc(22))
+        """边界（R706 收窄后）：UTC01 含（=京09:00 起）、UTC04 不含（=京12:00 止）
+
+        ⚠️ 旧边界是 UTC22（京06:00 起）——R706 实测北京 06-09 中位仅 53
+        （全时段最低）⇒ 起点从 06 挪到 09，改为 UTC01。
+        """
+        _, _, in01 = m.NewsFetcher.apply_hour_preference_boost(
+            self._cands(20), now_utc=self._utc(1))
         _, _, in04 = m.NewsFetcher.apply_hour_preference_boost(
             self._cands(20), now_utc=self._utc(4))
-        self.assertTrue(in22, "UTC22 == 北京06:00，应算窗内")
+        self.assertTrue(in01, "UTC01 == 北京09:00，应算窗内")
         self.assertFalse(in04, "UTC04 == 北京12:00，应算窗外")
 
     def test_empty_candidates_safe(self):

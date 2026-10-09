@@ -3155,8 +3155,26 @@ class NewsFetcher:
         # 报 "type object 'datetime.datetime' has no attribute 'datetime'"。
         if not isinstance(now_utc, datetime):
             return 0, 0, False
-        # UTC 22-04 == 北京 06-12（跨零点的两段）
-        in_pref = now_utc.hour >= 22 or now_utc.hour < 4
+        # ★★ R706（2026-10-09，121 条样本）：高浏览窗**从 06-12 收窄到 09-12**。
+        #
+        # R650 原判据把北京 06-12 整段当高窗（依据：速率 88/天 vs 43/天）。
+        # 但**窗内切分**实测（R650 没做过这一步）：
+        #   06-09 时 中位 **53**（n=13）  ← 全时段最低，比 03-06 的 67 还低
+        #   09-12 时 中位 **111**（n=19）
+        # 控制币种后两个分层**方向一致**（不是混淆）：
+        #   BTC/ETH/SOL  53 → 120（+68） · 其余币 50 → 115（+64）
+        #
+        # ★ 为什么不受「口径之争」影响（这点关键）：
+        #   06-09 发的帖比 09-12 **早 3 小时 ⇒ 曝光时间更长**，
+        #   而绝对浏览反而低 58 ⇒ 若改用速率口径（再除以更长的时长）
+        #   **差距只会更大**。⇒ 两种口径下结论同向，可以放心改。
+        #
+        # ⇒ 原实现把 06-09 也算进高窗 ⇒ 低浏览时段**免于惩罚**，
+        #   与 R650「把配额投向高浏览时段」的本意**相反**。
+        # ⚠️ 只收窄窗口，**不改惩罚幅度**（TIME_PREF_PENALTY 保持保守）。
+        # ⚠️ 不新增 18-21（实测 122 也很高）：一次只改一件事，
+        #    扩展高窗是另一个决策，留待样本更多时再动。
+        in_pref = 1 <= now_utc.hour < 4        # 北京 09-12
         if in_pref:
             # 已在高浏览窗内：无需偏置
             return 0, 0, True
@@ -10248,14 +10266,17 @@ def _run_main():
         #    （dry_run 路径不经过这里，见上方注释），此处**不要**重复初始化。
         if LOW_HOUR_CAP > 0:
             _now_bj = (datetime.now(timezone.utc).hour + 8) % 24
-            _in_pref = 6 <= _now_bj < 12
+            # ★ R706：与 `apply_hour_preference_boost` **同一口径** 09-12
+            #   （原为 06-12）。两处若不一致就会漂移（R643 教训），
+            #   ⇒ 06-09 实测中位 53（全时段最低），不该算高浏览窗。
+            _in_pref = 9 <= _now_bj < 12
             if not _in_pref:
                 low_hour_sent = cache_mgr.count_since_in_window(24, False)
                 if low_hour_sent >= LOW_HOUR_CAP:
                     low_hour_blocked = True
                     logger.info(
                         f"⏸️ 低浏览窗子配额已用尽（{low_hour_sent}/{LOW_HOUR_CAP}，"
-                        f"北京 {_now_bj:02d}:00 不在高浏览窗 06-12）⇒ "
+                        f"北京 {_now_bj:02d}:00 不在高浏览窗 09-12）⇒ "
                         f"本轮静默，把剩余额度留给高窗轮次")
                     # R662 留痕：**必须记**，否则低窗阻断与"配额饱和"在遥测上
                     # 长得一样（都是"没发帖"）⇒ 无法回答"额度到底被谁吃了"
