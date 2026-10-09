@@ -19,30 +19,34 @@
   "strategy_guidance": "优先追当天启动的STABLE Alpha交易竞赛热度，结合新上线的JPMB、LLYB等bStocks及USDⓈ-Margined期货合约资讯输出快讯解读，引导用户参与评论互动拿Write to Earn相关奖励；同步带出现货交易锦标赛S4、MET交易锦标赛及期货交易赢BNB奖励的当期活动规则，提醒用户关注活动动态参与互动，贴合当期热点提升内容曝光。",
   "last_updated": "2026-10-09T14:03:58.618493Z",
   "_feed_health": {
+    "PANews (中文研报)": {
+      "parked_until": "2026-10-09T23:28:00.848943+00:00",
+      "fails": 3,
+      "last_fail": "2026-10-09T17:28:00.848943+00:00"
+    },
     "金色财经 (中文快讯)": {
-      "fails": 2,
-      "last_fail": "2026-10-09T16:43:31.443361+00:00"
+      "parked_until": "2026-10-09T23:28:00.378892+00:00",
+      "fails": 3,
+      "last_fail": "2026-10-09T17:28:00.378892+00:00"
     },
     "币世界 (中文行情)": {
-      "fails": 2,
-      "last_fail": "2026-10-09T16:43:31.407590+00:00"
-    },
-    "PANews (中文研报)": {
-      "fails": 2,
-      "last_fail": "2026-10-09T16:43:31.090285+00:00"
+      "parked_until": "2026-10-09T23:28:00.446397+00:00",
+      "fails": 3,
+      "last_fail": "2026-10-09T17:28:00.446397+00:00"
     },
     "Bitcoin Magazine (比特币核心)": {
       "fails": 1,
       "last_fail": "2026-10-09T13:43:47.165282+00:00"
     },
     "巴比特 8BTC (中文老牌)": {
-      "fails": 2,
-      "last_fail": "2026-10-09T16:43:31.404350+00:00"
+      "parked_until": "2026-10-09T23:28:00.311922+00:00",
+      "fails": 3,
+      "last_fail": "2026-10-09T17:28:00.311922+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-09",
