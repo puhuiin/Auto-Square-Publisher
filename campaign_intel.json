@@ -18,7 +18,12 @@
   ],
   "strategy_guidance": "优先围绕未截止的MET交易锦标赛、Futures交易奖励活动及新上线的JPMB、LLYB等bStocks交易对、USDⓈ-Margined新合约资讯产出快讯，引导读者参与官方活动互动获取Write to Earn奖励，可关联Affiliate邀新活动引导合规引流，切勿提及已过期的ZEST、CT、O1等Alpha竞赛及USD1空投活动。",
   "last_updated": "2026-10-09T01:44:01.334420Z",
-  "_feed_health": {},
+  "_feed_health": {
+    "Bitcoin Magazine (比特币核心)": {
+      "fails": 1,
+      "last_fail": "2026-10-09T13:43:47.165282+00:00"
+    }
+  },
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
     "date": "2026-09-09"
