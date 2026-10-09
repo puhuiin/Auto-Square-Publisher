@@ -1102,6 +1102,56 @@ RSS_FEEDS = [
         "url": "https://bitcoinmagazine.com/.rss/full/",
         "lang": "en",
     },
+    # ══════════════════════════════════════════════════════════
+    # ★★ R707 扩源（2026-10-09）：素材池 52 → 目标 150+
+    #
+    # 为什么必须扩源：**提量的硬约束是供给，不是配额**。
+    #   实测每天抓取仅 50~58 条 ⇒ 当前 12 篇/天就是供给上限，
+    #   不扩源直接把 MAX_DAILY_POSTS 调高只会让质量门放宽（用不合格稿凑数）。
+    #
+    # ★ 验证状态分两类（本机网络对部分域名走代理会 502，**不代表线上不可用**）：
+    #   ① `实测可达` —— 本机直连拿到条目，确定可用
+    #   ② `待线上验证` —— 本机 502(Tunnel) 但 URL 有效；
+    #      依赖源健康机制（feeds_failed / feeds_parked）自动停放，
+    #      ⇒ **下一轮按 `feeds_failed_sources` 剔除真坏的**，别手动猜。
+    # ══════════════════════════════════════════════════════════
+    # ── 英文（实测可达，items 数为本机实测）──
+    {"name": "The Block (机构与政策)", "url": "https://www.theblock.co/rss.xml",
+     "lang": "en"},                                                  # 20
+    {"name": "Crypto Briefing (深度与研报)", "url": "https://cryptobriefing.com/feed/",
+     "lang": "en"},                                                  # 30
+    {"name": "DL News (监管与欧洲视角)", "url": "https://www.dlnews.com/arc/outboundfeeds/rss/",
+     "lang": "en"},                                                  # 40
+    {"name": "The Defiant (DeFi 深度)", "url": "https://thedefiant.io/api/feed",
+     "lang": "en"},                                                  # 99
+    {"name": "BeInCrypto (山寨与行情)", "url": "https://beincrypto.com/feed/",
+     "lang": "en"},                                                  # 12
+    {"name": "AMBCrypto (技术与链上)", "url": "https://ambcrypto.com/feed/",
+     "lang": "en"},                                                  # 16
+    {"name": "ZyCrypto (新币与空投)", "url": "https://zycrypto.com/feed/",
+     "lang": "en"},                                                  # 14
+    {"name": "NewsBTC (比特币与山寨)", "url": "https://www.newsbtc.com/feed/",
+     "lang": "en"},                                                  # 10
+    {"name": "Watcher.Guru (快讯)", "url": "https://watcher.guru/news/feed",
+     "lang": "en"},                                                  # 10
+    {"name": "Bitcoinist (比特币向)", "url": "https://bitcoinist.com/feed/",
+     "lang": "en"},                                                  # 8
+    {"name": "Protos (隐私与合规)", "url": "https://protos.com/feed/",
+     "lang": "en"},                                                  # 10
+    {"name": "CoinJournal (山寨异动)", "url": "https://coinjournal.net/feed/",
+     "lang": "en"},                                                  # 9
+    # ── 中文（为「中英各半」备料；当前中文源严重不足，仅 BlockTempo + 吴说）──
+    {"name": "吴说区块链 (中文深度)", "url": "https://www.wu-talk.com/feed",
+     "lang": "zh"},                                                  # 50 实测可达
+    # ⚠️ 以下 4 个本机 502(Tunnel) 无法验证，URL 有效，待线上源健康机制裁决
+    {"name": "巴比特 8BTC (中文老牌)", "url": "https://www.8btc.com/feed",
+     "lang": "zh"},
+    {"name": "金色财经 (中文快讯)", "url": "https://www.jinse.cn/rss",
+     "lang": "zh"},
+    {"name": "币世界 (中文行情)", "url": "https://www.bishijie.com/rss.xml",
+     "lang": "zh"},
+    {"name": "PANews (中文研报)", "url": "https://www.panewslab.com/zh/rss",
+     "lang": "zh"},
 ]
 
 # R667：X 通道专用的 **AI 主题源**（用户要求"加密、AI 相关都要有"）。
@@ -2251,8 +2301,29 @@ class NewsFetcher:
 
     # ---------------- 源健康度（跨运行持久化） ----------------
     def _feed_health(self) -> Dict[str, Dict[str, Any]]:
+        """★ R707：加**实例级缓存**（每轮一次整文件读）。
+
+        原实现每次调用都 `intel_state_get` 读一次整文件。9 个源时尚可
+        （9 次读），**扩源到 26 后** `fetch_candidates` 里每个源的
+        `_feed_record(ok=True)` 各触发一次 ⇒ 实测 **27 次整文件读**
+        （被既有守卫 `test_round_does_not_write_state_for_healthy_feeds` 抓到）。
+
+        ⚠️ 一致性处理：**任何写操作后必须让缓存失效**（见 `_feed_record`），
+        否则会读到过期的健康状态（源已被停放却仍去抓）。
+        ⚠️ 线程安全：本方法在抓取线程池里被调用。缓存只读是安全的；
+        失效写 `= None` 只会让下一个线程重读一次（不撕裂状态）。
+        """
+        cached = getattr(self, "_feed_health_cache", None)
+        if isinstance(cached, dict):
+            return cached
         state = intel_state_get(self._FEED_HEALTH_KEY, {})
-        return state if isinstance(state, dict) else {}
+        state = state if isinstance(state, dict) else {}
+        self._feed_health_cache = state
+        return state
+
+    def _feed_health_invalidate(self) -> None:
+        """写操作后调用：让 `_feed_health()` 的缓存失效（R707）。"""
+        self._feed_health_cache = None
 
     def _feed_is_parked(self, name: str,
                         health: Optional[Dict[str, Dict[str, Any]]] = None) -> bool:
@@ -2293,6 +2364,7 @@ class NewsFetcher:
                 state.pop(name, None)
                 return state
             intel_state_update(self._FEED_HEALTH_KEY, _clear, default={})
+            self._feed_health_invalidate()   # R707：写后必须失效缓存
             return
 
         park_msg_holder = []
@@ -2338,6 +2410,7 @@ class NewsFetcher:
             return state
 
         intel_state_update(self._FEED_HEALTH_KEY, _record_fail, default={})
+        self._feed_health_invalidate()       # R707：写后必须失效缓存
         for msg in park_msg_holder:
             logger.warning(msg)
 
@@ -3323,6 +3396,9 @@ class NewsFetcher:
         # 自动停放连续故障源：本次运行完全不触碰它们。
         # R10：源健康状态读一次快照后复用（旧实现逐源各读一次整文件，9 源 = 9 次读，
         # 且全部串在同一把锁上）。
+        # ★ R707：缓存的语义是「**本轮内**复用」⇒ 每轮开始先失效，
+        #   保证读到的是最新状态（否则上一轮缓存会把刚停放/刚恢复的源读错）。
+        self._feed_health_invalidate()
         feed_health = self._feed_health()
         active_feeds = []
         for cfg in RSS_FEEDS:
@@ -3346,7 +3422,11 @@ class NewsFetcher:
         except ValueError:
             fetch_deadline = 300.0
         timed_out_feeds: List[str] = []
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=min(len(active_feeds) or 1, 10))
+        # ★ R707：并发上限 10 → 16。原值是为 9 个源定的，扩到 26 源后
+        #   26/10 = 3 批，慢源叠加时容易撞 300s deadline（R9 会砍掉迟到源）。
+        #   ⚠️ 不盲目拉满：并发过高会触发对端 429，反而丢源。
+        #      16 = 源数的 ~2/3，兼顾批次与礼貌。
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=min(len(active_feeds) or 1, 16))
         try:
             future_to_feed = {
                 executor.submit(self._fetch_single_feed, cfg, cache_mgr, limit_per_feed): cfg["name"]

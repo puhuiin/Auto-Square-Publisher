@@ -14996,6 +14996,39 @@ class TestFeedHealthReadAmplification(unittest.TestCase):
         self.assertLessEqual(counts["reads"], 12,
                              f"整文件读应压到个位数级别，实测 {counts['reads']}")
 
+    def test_feed_health_is_cached_per_round(self):
+        """★★ R707：`_feed_health()` 必须**每轮一次**整文件读，不能逐源各读
+
+        扩源到 26 后，逐源读会让 `_feed_record(ok=True)` 触发 26 次整文件读
+        （全部串在同一把锁上）。缓存后应为个位数。
+        ⚠️ 判据落在**行为**上：连续调用多次，整文件读只应发生一次。
+        """
+        reads = {"n": 0}
+
+        def fake_get(key, default=None):
+            reads["n"] += 1
+            return {}
+
+        f = m.NewsFetcher()
+        f._feed_health_cache = None
+        with patch.object(m, "intel_state_get", side_effect=fake_get):
+            for _ in range(26):          # 模拟 26 个源逐个查询
+                f._feed_health()
+        self.assertLessEqual(reads["n"], 2,
+                             "26 个源只应读 1~2 次，实测 %d ⇒ 缓存被绕过了"
+                             % reads["n"])
+
+    def test_feed_health_cache_invalidated_after_write(self):
+        """★★ 写操作后缓存**必须失效**——否则会读到过期的健康状态
+
+        （源已被停放却仍去抓，等于停放机制失效。）
+        """
+        f = m.NewsFetcher()
+        f._feed_health_cache = {"某源": {"fails": 1}}
+        f._feed_health_invalidate()
+        self.assertIsNone(getattr(f, "_feed_health_cache", "MISSING"),
+                          "写后未失效 ⇒ 后续会读到过期状态")
+
     def test_feed_is_parked_accepts_snapshot(self):
         f = m.NewsFetcher()
         with patch.object(m, "_read_intel_file") as rd:
@@ -16311,6 +16344,10 @@ class TestR634ParkExpiryResetsFailCount(unittest.TestCase):
                                 - timedelta(minutes=1)).isoformat()
         st[self.name] = info
         m.intel_state_set("_feed_health", st)
+        # ★ R707：这里是**绕过 `_feed_record` 直接写文件**（模拟外部修改），
+        #   `_feed_health()` 的缓存看不到 ⇒ 必须显式失效，否则后续断言
+        #   读到的是改动前的快照（缓存语义是"本轮内复用"）。
+        self.f._feed_health_invalidate()
 
     def test_first_fail_after_expiry_does_not_repark(self):
         """核心回归：到期后第一次失败不得立刻重新停放"""
