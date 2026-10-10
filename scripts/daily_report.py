@@ -81,37 +81,59 @@ def build_report(rows, hours: int) -> str:
 
     # ① 发帖量
     by_day = Counter(_cst(r["ts"]).strftime("%m-%d") for r in pub)
-    nxt = [r.get("next_slot_frees_min") for r in sums
-           if isinstance(r.get("next_slot_frees_min"), (int, float))]
-    quota_note = "无数据"
-    if nxt:
-        quota_note = ("配额已打满（下一槽位 %s 分钟后）" % min(nxt)) if min(nxt) > 30 \
-            else ("仍有余量（下一槽位 %s 分钟后）" % min(nxt))
-    L.append("")
     L.append("① 发帖：%d 篇 %s" % (len(pub), dict(by_day) if by_day else ""))
+
+    # ★ 配额状态：**必须看最近状态，不能用全窗口最小值**。
+    #   首版用 `min(所有轮次的 next_slot_frees_min)` ⇒ 被窗口早期的
+    #   "配额未满"轮次拉成 1 分钟 ⇒ 在**实际已打满 25/25** 时报"仍有余量"
+    #   （实测踩到：线上 quota_blocked=true / 槽位 192 分钟，日报说 1 分钟）。
+    #   ⇒ 改用 `sent_24h / max_daily_posts` 判定是否打满（中位数取最近 8 轮）。
+    quota_note = "无数据"
+    latest = sums[-1] if sums else {}
+    sent24 = latest.get("sent_24h")
+    cap = latest.get("max_daily_posts")
+    nxt_recent = [r.get("next_slot_frees_min") for r in sums[-8:]
+                  if isinstance(r.get("next_slot_frees_min"), (int, float))]
+    if isinstance(sent24, int) and isinstance(cap, int) and cap > 0:
+        if sent24 >= cap:
+            near = st.median(sorted(nxt_recent)) if nxt_recent else None
+            quota_note = "**已打满 %d/%d**" % (sent24, cap)
+            if near is not None:
+                quota_note += "（下一槽位约 %d 分钟后）⇒ 配额门拦截是**正常行为**" % near
+        else:
+            quota_note = "未打满 %d/%d" % (sent24, cap)
+    elif nxt_recent:
+        quota_note = "下一槽位 %d 分钟后" % min(nxt_recent)
     L.append("   配额：%s" % quota_note)
 
     # ② 候选与拦截漏斗
-    def avg(k):
-        return sum(r.get(k) or 0 for r in sums) / len(sums) if sums else 0
+    def avg(k, sel=None):
+        sel = sums if sel is None else sel
+        v = [r.get(k) or 0 for r in sel]
+        return sum(v) / len(v) if v else 0
     if sums:
-        L.append("")
-        L.append("② 管线（%d 轮，均值/轮）" % len(sums))
+        # ⚠️ 均值会被"配额满的早退轮"拉低（那些轮候选=0 且**根本没抓取**）。
+        #   只统计**真正抓过**的轮次（feeds_ok > 0），否则与①的"配额打满"看似矛盾。
+        active = [r for r in sums if (r.get("feeds_ok") or 0) > 0] or sums
+        L.append("② 管线（%d/%d 轮真正抓取，均值/轮）" % (len(active), len(sums)))
         L.append("   候选 %.0f ｜ 未处理(配额满) %.0f ｜ 无有效代币 %.1f ｜ 单币限流 %.1f"
-                 % (avg("candidates"), avg("unprocessed"),
-                    avg("skipped_no_token"), avg("skipped_token_limit")))
-        oks = [r.get("feeds_ok") for r in sums if isinstance(r.get("feeds_ok"), (int, float))]
+                 % (avg("candidates", active), avg("unprocessed", active),
+                    avg("skipped_no_token", active), avg("skipped_token_limit", active)))
+        oks = [r.get("feeds_ok") for r in active if isinstance(r.get("feeds_ok"), (int, float))]
         if oks:
             # ⚠️ 源总数取 **per_feed_yield 的键数**（当轮实际抓到的源），
             #    不是 `len(oks)`（那是**轮数**，会把"21 个源"显示成"51 个源"）。
-            last_pf = sums[-1].get("per_feed_yield") or {}
+            last_pf = active[-1].get("per_feed_yield") or {}
             n_src = len(last_pf) if last_pf else None
             L.append("   源健康：中位 %d 个正常%s"
                      % (sorted(oks)[len(oks) // 2],
                         (" / 共 %d 源" % n_src) if n_src else ""))
-            failed = sums[-1].get("feeds_failed_sources")
+            failed = active[-1].get("feeds_failed_sources")
             if failed:
                 L.append("   ⚠️ 上轮失败源：%s" % failed)
+            parked = active[-1].get("feeds_parked_sources")
+            if parked:
+                L.append("   ⏸️ 上轮停放源：%s" % parked)
 
     # ③ LLM 与拒稿
     if pub or rej:
@@ -167,9 +189,15 @@ def build_report(rows, hours: int) -> str:
     # ⑥ 结论
     L.append("")
     if fails:
-        L.append("结论：⚠️ 有发布失败，请查看上方明细")
+        L.append("结论：⚠️ 有发布失败 %d 次，请查看上方明细" % len(fails))
+    elif isinstance(sent24, int) and isinstance(cap, int) and cap > 0 and sent24 >= cap:
+        # ★ 配额打满是**预期结果**（配额就是上限），不是异常。
+        #   此前写"⚠️ 窗口内 0 篇发布" ⇒ 在配额打满的日子**每天都误报警**。
+        L.append("结论：✅ 运行正常。配额已打满 %d/%d，"
+                 "配额门按设计拦截（省掉整轮抓取），无需处理" % (sent24, cap))
     elif not pub:
-        L.append("结论：⚠️ 窗口内 0 篇发布（配额满 / 间隔门 / 无候选 均可能）")
+        L.append("结论：⚠️ 窗口内 0 篇发布，且配额未满"
+                 " ⇒ 可能命中间隔门/无候选/风控拦截，请查看上方明细")
     else:
         L.append("结论：✅ 运行正常，无发布失败")
     return "\n".join(L)
