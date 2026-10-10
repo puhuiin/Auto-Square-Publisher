@@ -199,6 +199,21 @@ _VOL_CONFIRM_RE = re.compile(
     r"放量(?:突破|站稳|站回|站上|上行|拉升|确认)"
     r"|放量.{0,3}(?:再|才|就)(?:评估|考虑|进场|加仓|跟进|看)")
 
+# R734：实操段「先看/盯 X 能不能」watch-lead 收敛——第3段模板的第三格。
+# 第3段（实操角度）实测塌成固定三件套「别急着X，先看Y能不能放量Z，量能接不接得住」：
+# 放量（R732 已修）、别急着（R733 已修），而 watch-lead「先看/盯」是第三格、尚无雷达。
+# 实测近 40 篇：先看 1%→28%（28×）、盯 8%→22%，急升。
+# ⚠️ **只追踪不设门、也暂不改 prompt**（R603/R734 判断）：① R732/R733 对同一段的
+#   改动还没被新帖验证，叠加第三条=未验证上叠加（R610/R616 陷阱）② 28% 低于 R603 的
+#   40% 行动线 ③「先看X能不能守住」比放量/别急着更接近正常操盘手口语，贸然打散伤人设。
+# ⇒ 本雷达先把这一格产品化进 dashboard（R600：手工发现的盲区要回头产品化），
+#   下窗口若跨 40% 且 R732/R733 已证生效，再按同套路给 prompt 菜单。
+# ⚠️ 判别 watch-lead（真收敛）vs「先看了一眼」（普通动词）：要求「先看…能不能/
+#   能否/有没有/顶/守/站」这类观察-条件结构，不匹配孤立「先看」。
+_WATCH_LEAD_RE = re.compile(
+    r"先看.{0,12}(?:能不能|能否|有没有|顶得?住|顶不顶|守得?住|守不守|站得?稳|站不站|破不破)"
+    r"|盯[住紧].{0,8}(?:能不能|有没有|后续|信号|动向|变化|量)")
+
 # R605：句长 burstiness（节奏方差）——整合自全网最新研究（textpulse 2026 对 6 万+
 # 文本的实证）：AI 文本最稳的「机器味」信号之一是**句长过于均匀**（标准差小），人类
 # 写作句长起伏大。该研究量化：人类句长变异系数 CV≈0.449、AI≈0.376，79% 的 AI 改写
@@ -260,6 +275,8 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
            "stock_advice_recent": 0, "stock_advice_older": 0,
            # R732：「放量」确认信号收敛（同 flat_desc/stock_advice 口径）。
            "vol_confirm": 0, "vol_confirm_recent": 0, "vol_confirm_older": 0,
+           # R734：watch-lead「先看/盯 X 能不能」收敛（第3段模板第三格，track-only）。
+           "watch_lead": 0, "watch_lead_recent": 0, "watch_lead_older": 0,
            # R610：近半的时间跨度（最早/最晚 ts）——判读近半的前提。R629 更正：
            # 原注释写"发布速率约 4~6 篇/天，一次加固上线 1 天后近半仍可能含 4 篇
            # 加固前旧稿"，**该数字是错的**。生产实测自 09-10 起稳定 **12 篇/天**
@@ -325,6 +342,10 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
         if _VOL_CONFIRM_RE.search(pv):
             out["vol_confirm"] += 1
             out["vol_confirm_recent" if _is_recent else "vol_confirm_older"] += 1
+        # R734：watch-lead「先看/盯 X 能不能」收敛——第3段模板第三格，同口径按帖计一次。
+        if _WATCH_LEAD_RE.search(pv):
+            out["watch_lead"] += 1
+            out["watch_lead_recent" if _is_recent else "watch_lead_older"] += 1
     out["offenders"] = dict(out["offenders"])
     return out
 
@@ -3491,6 +3512,31 @@ def render_text(s, rows=None):
                 else:
                     _vw = " ⚠️（放量收敛，R732 修复待新帖验证）" if _vp >= 40 else ""
                     lines.append(f"  📊 放量确认信号收敛: {_va}/{q['scanned']} 篇（{_vp:.0f}%）{_vw}")
+            # R734：watch-lead「先看/盯 X 能不能」收敛（第3段模板第三格）。
+            # track-only，本轮不改 prompt（见 _WATCH_LEAD_RE 注释的三条判断）；
+            # 近/远半窗是下窗口「是否跨 40% 行动线」的判据。
+            if q.get("watch_lead"):
+                _wa = q["watch_lead"]
+                _wp = 100 * _wa / q["scanned"]
+                _wr = q.get("watch_lead_recent", 0)
+                _wo = q.get("watch_lead_older", 0)
+                _rn4 = (q["scanned"] + 1) // 2
+                _on4 = q["scanned"] - _rn4
+                if _rn4 >= 3 and _on4 >= 3:
+                    _wrpct = 100 * _wr / _rn4
+                    _wopct = 100 * _wo / _on4
+                    if _wrpct >= 40 and _wrpct >= _wopct:
+                        _ww = " ⚠️（近半≥40% 且未低于远半 ⇒ 已过 R603 行动线，可考虑给 prompt 菜单）"
+                    elif _wrpct < _wopct:
+                        _ww = "（近半 < 远半，无需动作）"
+                    else:
+                        _ww = "（近/远持平，需更多样本）"
+                    lines.append(f"  📋 实操 watch-lead 收敛: 近半 {_wr}/{_rn4}（{_wrpct:.0f}%）· "
+                                 f"远半对照 {_wo}/{_on4}（{_wopct:.0f}%）· "
+                                 f"整窗 {_wa}/{q['scanned']}（{_wp:.0f}%）{_ww}")
+                else:
+                    _ww = " ⚠️（watch-lead 收敛，track-only 观察中）" if _wp >= 40 else ""
+                    lines.append(f"  📋 实操 watch-lead 收敛: {_wa}/{q['scanned']} 篇（{_wp:.0f}%）{_ww}")
         # R289：FNG 三件套收口——滞回驱动量直方图 + 武装未剥离一致性告警。
         # hook_count 是近窗引入次数（武装条件 ≥2，故 1 = 距武装一步之遥的压力面）；
         # armed 但 market_stripped=False = R101 互补剥离疑似失效（禁令与盘面行

@@ -20133,6 +20133,60 @@ class TestR733CautionPhraseConvergence(unittest.TestCase):
                       "R613 定位禁令被误删 ⇒ 别急着会重新回到段首")
 
 
+class TestR734WatchLeadRadar(unittest.TestCase):
+    """★★ R734：watch-lead「先看/盯 X 能不能」收敛雷达（第3段模板第三格，track-only）
+
+    ★ 本轮**刻意只加雷达、不改 prompt**（R603/R734 判断链）：R732/R733 对同一段的
+      改动还没被新帖验证 + 28% 低于 R603 的 40% 行动线 + 先看比放量/别急着更接近
+      正常口语。守卫锁的是「度量面存在且口径正确」，不锁 prompt。
+    """
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r734",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_quality_scan_tracks_watch_lead_per_post(self):
+        """★★ 字段落 quality_scan + 按帖计一次 + 近/远半窗（同 flat_desc 口径）"""
+        mr = self._mr()
+        hit = "消息落地，先看 2460 支撑能不能守住，守不住就撤。"
+        miss = "消息落地，等资金费率转正再评估，不然观望。"
+        rows = [{"outcome": "binance_published",
+                 "final_preview": (hit if i % 2 == 0 else miss) + " 第%d篇" % i,
+                 "ts": "2026-10-10T0%d:00:00+00:00" % i} for i in range(6)]
+        q = mr.quality_scan(rows, window=6)
+        self.assertEqual(q["watch_lead"], 3, "应按帖计一次、恰好命中 3 篇")
+        self.assertEqual(q["watch_lead_recent"] + q["watch_lead_older"],
+                         q["watch_lead"], "近/远两半之和必须等于整窗")
+
+    def test_watch_lead_regex_requires_observe_condition_structure(self):
+        """★ 正则必须要求「先看…能不能/守住」观察-条件结构，不匹配孤立「先看」"""
+        mr = self._mr()
+        self.assertTrue(mr._WATCH_LEAD_RE.search("先看 2460 的支撑能不能守住"))
+        self.assertTrue(mr._WATCH_LEAD_RE.search("先看能否顶住 1.32"))
+        self.assertTrue(mr._WATCH_LEAD_RE.search("盯住后续成交有没有放大"))
+        self.assertIsNone(mr._WATCH_LEAD_RE.search("先看了一眼行情就睡了"),
+                          "「先看了一眼」是普通动词，不是 watch-lead 收敛")
+
+    def test_watch_lead_is_track_only_not_a_hard_offender(self):
+        """★ R603 纪律：收敛类只走趋势行，不进 offenders 硬合规口径"""
+        mr = self._mr()
+        rows = [{"outcome": "binance_published",
+                 "final_preview": "先看支撑能不能守住。第%d篇" % i,
+                 "ts": "2026-10-10T0%d:00:00+00:00" % i} for i in range(4)]
+        q = mr.quality_scan(rows, window=4)
+        self.assertTrue(q["watch_lead"] >= 1)
+        for key in q["offenders"]:
+            self.assertNotIn("先看", key, "watch-lead 不得进 offenders 硬口径")
+            self.assertNotIn("盯", key, "watch-lead 不得进 offenders 硬口径")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
