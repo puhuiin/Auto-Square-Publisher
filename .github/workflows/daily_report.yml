@@ -1,0 +1,56 @@
+name: Daily Report
+
+# R723：每日状态报告推送到钉钉。
+# ★ 与 auto_post.yml 的关系：那边是"**有事才通知**"（Notifier，错误还有 12h 冷却），
+#   这边是"**每天固定一份快照**"——哪怕一切正常也要报。语义不同，故独立 workflow。
+# ⚠️ 时刻选 8:23（北京时间）：错开整点（GitHub 高负载时段 cron 易被丢弃，
+#   同 auto_post 的 7/27/47 错峰理由）；且此时前一天的完整数据都已落盘。
+on:
+  schedule:
+    - cron: '23 8 * * *'   # UTC ⇒ 北京时间 16:23
+  workflow_dispatch:
+
+permissions:
+  contents: write   # 只需读 metrics.jsonl + token_engagement.json
+
+concurrency:
+  group: daily-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # ⚠️ metrics.jsonl 由发帖机器人持续追加，**必须取最新**：
+      #   checkout 拿到的是上一次提交里的快照 ⇒ 直接跑会少掉最近若干轮。
+      - name: 取最新遥测
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main --depth=1
+          git show origin/main:metrics.jsonl > metrics.jsonl || \
+            echo "⚠️ metrics.jsonl 不存在（首次运行？）" > metrics.jsonl
+          wc -l metrics.jsonl
+
+      - name: 生成并发送每日报告
+        env:
+          # ★ 不写仓库、不写明文：token 走 secret（R619 教训）
+          DINGTALK_WEBHOOK_URL: ${{ secrets.DINGTALK_WEBHOOK_URL }}
+        run: |
+          if [ -z "$DINGTALK_WEBHOOK_URL" ]; then
+            echo "::warning::未配置 DINGTALK_WEBHOOK_URL，跳过发送（报告已打印在日志）"
+            python scripts/daily_report.py --dry-run
+            exit 0
+          fi
+          python scripts/daily_report.py --hours 24
+
+      - name: 结果写回 Step Summary
+        if: always()
+        run: python scripts/daily_report.py --dry-run >> "$GITHUB_STEP_SUMMARY" || true
