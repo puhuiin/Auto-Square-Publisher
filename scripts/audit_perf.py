@@ -116,6 +116,19 @@ def _median(xs):
     return xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2
 
 
+def _exposure_days(post_ts, snap_ts):
+    """曝光天数 = 浏览快照 ts − 发帖 ts（R641 口径）。
+    下限 0.25 天（6h）防止刚发的帖除出离谱大速率；任一 ts 不可解析返回 None
+    （R641：未知不编造，返 None 由上层跳过）。"""
+    try:
+        p = datetime.fromisoformat(str(post_ts)).replace(tzinfo=None)
+        s = datetime.fromisoformat(str(snap_ts).replace("Z", "+00:00")).replace(tzinfo=None)
+    except Exception:
+        return None
+    days = (s - p).total_seconds() / 86400.0
+    return max(days, 0.25) if days >= 0 else None
+
+
 def production():
     """★★ R731：导入生产模块，**不再复刻任何生产口径**。
 
@@ -298,10 +311,17 @@ def report(rows, hours, since_iso=None, quota=None, prod=None):
     #   数据源：content_stats.jsonl（创作者中心导出，按 content_id join）
     #   ⚠️ 没有浏览数据时**明确说明**，不静默跳过——否则"看不到差异"
     #     会被误读成"三种语言效果一样"（R704/R705 栽过的坑）。
+    #   ★★ R735：**必须同时给曝光天数校正后的速率**，不能只看原始浏览中位。
+    #     原始浏览是累积量（R641/R725）：老帖吃饱、新帖没攒够 ⇒ 原始中位把
+    #     「发得早」误读成「浏览高」。实测本轮就栽过：按原始浏览 overnight/英文
+    #     看着差 3 倍，按 views/曝光天数校正后只差 ~1.6 倍、英文的"劣势"几乎消失
+    #     （lang 字段仅 R712 后存在 ⇒ 带 lang 的帖全是新帖、曝光短 ⇒ 原始浏览被压低）。
+    #     ⇒ 这正是 R725「长文 48×实为 1.08×」的同型陷阱，必须用速率口径并存。
     lang_views = defaultdict(list)
+    lang_rates = defaultdict(list)
     stats_path = os.path.join(ROOT, "content_stats.jsonl")
     if os.path.exists(stats_path):
-        cid2v = {}
+        cid2v, cid2snap = {}, {}
         for line in open(stats_path, encoding="utf-8"):
             try:
                 d = json.loads(line)
@@ -310,18 +330,30 @@ def report(rows, hours, since_iso=None, quota=None, prod=None):
             v = d.get("views")
             if isinstance(v, (int, float)):
                 cid2v[str(d.get("content_id"))] = v
+                cid2snap[str(d.get("content_id"))] = d.get("ts")
         hit = 0
         for r in pub:
             lg = r.get("lang")
-            v = cid2v.get(str(r.get("content_id")))
+            cid = str(r.get("content_id"))
+            v = cid2v.get(cid)
             if lg and v is not None:
                 lang_views[lg].append(v)
+                # 曝光天数 = 快照 ts − 发帖 ts（R641 _exposure_days 同口径），下限 0.25 天
+                exp = _exposure_days(r.get("ts"), cid2snap.get(cid))
+                if exp:
+                    lang_rates[lg].append(v / exp)
                 hit += 1
         print("\n⑥½ 按语种 × 浏览（join content_stats，命中 %d/%d 篇）" % (hit, len(pub)))
         if lang_views:
-            print("   %-8s %6s %10s %10s" % ("语种", "样本", "中位浏览", "均值"))
+            print("   %-8s %6s %10s %10s %12s"
+                  % ("语种", "样本", "原始中位", "原始均值", "速率中位/天"))
             for lg, vs in sorted(lang_views.items()):
-                print("   %-8s %6d %10.0f %10.0f" % (lg, len(vs), _median(vs), sum(vs) / len(vs)))
+                rt = lang_rates.get(lg) or []
+                rt_s = "%.1f" % _median(rt) if rt else "—"
+                print("   %-8s %6d %10.0f %10.0f %12s"
+                      % (lg, len(vs), _median(vs), sum(vs) / len(vs), rt_s))
+            print("   ★ 原始浏览是累积量（老帖吃饱/新帖没攒够）⇒ **以速率中位为准**；"
+                  "lang 仅 R712 后有 ⇒ 带 lang 的帖都偏新、原始中位被系统性压低（R725 同型陷阱）")
             print("   ★ 样本 <5 时**不可据此下结论**（R704 的教训）")
         else:
             print("   ⚠️ 遥测里没有 lang 字段（R712 上线于 10-10 10:59），"

@@ -9441,6 +9441,13 @@ class TestRunMainSemantics(unittest.TestCase):
         # R608：浏览加权与趋势/热点加权同纪律——集成测试里置空（NewsFetcher 已被 mock，
         # 不置空会让 _load_token_engagement 返回 MagicMock、误触发加权并打乱配额/限流断言）。
         m.NewsFetcher._load_token_engagement.return_value = {}
+        # ★ R735：`_token_daily_limit` **直接读 TOKEN_ENGAGEMENT_FILE**（不走上面那个
+        #   被 mock 的 loader）⇒ 上面置空挡不住它。committed 的 token_engagement.json
+        #   一旦刷新（如 BTC 升到高档 ×2），本类"limit=1 则 1 篇后触顶"的断言就会
+        #   因 BTC 变 ×2 而假失败（R735 真实踩到：5 条 token_limit 测试同时红）。
+        #   ⇒ 在 _run_main 测试里把分档中性化（所有币都取 base），测的是限流**机制**
+        #     不是**档位**；档位另有 TestR719/R731 直接测 `_token_daily_limit`。
+        _start(patch.object(m, "_token_daily_limit", lambda t: m.TOKEN_DAILY_LIMIT))
         engine = MagicMock()
         engine.summarize.return_value = {
             "content": "BTC 放量突破关键位，短线情绪转多，注意回踩确认再进。",
@@ -20187,6 +20194,79 @@ class TestR734WatchLeadRadar(unittest.TestCase):
             self.assertNotIn("盯", key, "watch-lead 不得进 offenders 硬口径")
 
 
+class TestR735ExposureNormalizedLangViews(unittest.TestCase):
+    """★★★ R735：按语种/时段看浏览**必须用曝光天数校正后的速率**，不能只看原始浏览
+
+    ★ 真实教训（本轮差点栽）：用户导出浏览数据后，我按**原始浏览**读出
+      「overnight 死区 3×、英文帖近乎 0 浏览」，据此准备改时段窗口 + 动英文策略。
+      但原始浏览是**累积量**（R641/R725）：lang 字段仅 R712 后存在 ⇒ 带 lang 的帖
+      全是新帖、曝光短、浏览没攒够 ⇒ 原始中位被系统性压低。按 views/曝光天数校正后，
+      overnight 只差 ~1.6×、英文的"劣势"几乎消失 —— 这正是 R725「长文 48×实为 1.08×」
+      的同型陷阱。⇒ 没有速率列，下一个人（或我）还会据原始浏览误改机制。
+    """
+
+    @staticmethod
+    def _ap():
+        import importlib.util
+        path = os.path.join(os.path.dirname(m.__file__), "scripts", "audit_perf.py")
+        spec = importlib.util.spec_from_file_location("audit_perf_r735", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_exposure_days_floor_and_bad_ts(self):
+        """★ 曝光天数：正常算差、下限 0.25 天、ts 不可解析返 None（不编造）"""
+        ap = self._ap()
+        d = ap._exposure_days("2026-10-01T00:00:00+00:00", "2026-10-03T00:00:00Z")
+        self.assertAlmostEqual(d, 2.0, places=3)
+        floored = ap._exposure_days("2026-10-01T00:00:00+00:00", "2026-10-01T01:00:00Z")
+        self.assertEqual(floored, 0.25, "刚发 1 小时必须被 floor 到 0.25 天，防速率爆表")
+        self.assertIsNone(ap._exposure_days("garbage", "2026-10-01T00:00:00Z"),
+                          "ts 不可解析必须返 None（R641：未知不编造）")
+
+    def test_rate_differs_from_raw_when_exposure_varies(self):
+        """★★★ 核心判据：曝光天数不同的两组，**速率排序可与原始浏览排序相反**
+
+        这是整条教训的数学内核：A 组原始浏览高但发得早（曝光久），B 组原始浏览低
+        但刚发（曝光短）⇒ 原始看 A>B，速率看 B>A。只有速率口径能避免把「发得早」
+        误读成「浏览高」。先算清两种口径何时可区分（R710 纪律），再断言。
+        """
+        ap = self._ap()
+        rate_a = 100 / ap._exposure_days("2026-10-01T00:00:00+00:00", "2026-10-11T00:00:00Z")
+        rate_b = 40 / ap._exposure_days("2026-10-10T00:00:00+00:00", "2026-10-11T00:00:00Z")
+        self.assertGreater(100, 40, "原始浏览：A > B")
+        self.assertGreater(rate_b, rate_a,
+                           "速率：B > A（与原始相反）⇒ 速率口径确实能翻转结论")
+
+    def test_lang_panel_renders_rate_column(self):
+        """★★ ⑥½ 按语种面板必须打印「速率中位/天」列 + 累积量告警（防原始浏览误读）"""
+        import contextlib
+        import io
+        import os as _os
+        import tempfile
+        ap = self._ap()
+        stats = [{"content_id": "c1", "ts": "2026-10-11T00:00:00Z", "views": 50},
+                 {"content_id": "c2", "ts": "2026-10-11T00:00:00Z", "views": 50}]
+        pub = [{"outcome": "binance_published", "ts": "2026-10-03T00:00:00+00:00",
+                "lang": "en", "content_id": "c1"},
+               {"outcome": "binance_published", "ts": "2026-10-10T18:00:00+00:00",
+                "lang": "en", "content_id": "c2"}]
+        orig_root = ap.ROOT
+        tmp = tempfile.mkdtemp()
+        with open(_os.path.join(tmp, "content_stats.jsonl"), "w", encoding="utf-8") as f:
+            for d in stats:
+                f.write(json.dumps(d) + "\n")
+        ap.ROOT = tmp
+        try:
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                ap.report(pub, 240, None, None, None)
+            out = buf.getvalue()
+        finally:
+            ap.ROOT = orig_root
+        self.assertIn("速率中位/天", out, "⑥½ 必须有速率列")
+        self.assertIn("以速率中位为准", out, "必须给累积量告警，否则会被按原始浏览误读")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
-
