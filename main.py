@@ -4520,6 +4520,12 @@ class MultiLLMEngine:
 
     _RATE_LIMIT_MIN_SEC = 30        # Retry-After 缺失/畸形时的默认限流冷却
     _RATE_LIMIT_MAX_SEC = 4 * 3600  # 服务端可要求更长，但不能无限信任
+    # ★ R715：**配额耗尽与限流是两种问题**，不能共用上限。
+    #   限流（Retry-After=30s）是"别打太快"，几分钟后就该重试；
+    #   配额耗尽（Gemini 免费 20 次/**天**）是"今天的额度用完了"，
+    #   几小时后重试**必然再撞** ⇒ 复用 4h 上限会变成"每 4 小时 wasted 一次"。
+    #   12h 覆盖"当天剩余时间"的大多数情况，且跨过 UTC 日切。
+    _QUOTA_COOLDOWN_MAX_SEC = 12 * 3600
 
     @classmethod
     def _rate_limit_cooldown_sec(cls, exc: BaseException) -> Optional[int]:
@@ -4538,11 +4544,59 @@ class MultiLLMEngine:
         except Exception:
             return None
         if not raw:
-            return None
+            # ★★ R715：**header 缺 Retry-After 时，从错误正文里解析**。
+            # 实测（Gemini 生产实录）：`Error code: 429 - [{'error': {'code': 429,
+            #   ... 'Please retry in 2h11m3.9s.'}}]` —— 重试时长在 **JSON 正文**里，
+            #   **header 没有** ⇒ 旧实现回落指数退避（10→20→40…封顶 4h），
+            #   而实际需要 2h11m ⇒ 每 20 分钟一轮就重撞一次必然失败的 429。
+            return cls._quota_retry_sec_from_text(str(exc))
         try:
             sec = int(float(raw))
         except ValueError:
             return None  # HTTP-date 格式不解析：不猜
+        return max(cls._RATE_LIMIT_MIN_SEC, min(sec, cls._RATE_LIMIT_MAX_SEC))
+
+    # R715：正文里的重试提示（Gemini/OpenAI 兼容风格）
+    # ⚠️ 三种形态都要覆盖：`retry in 2h11m` / `retry in 30s` / `retryDelay: '7863s'`
+    _RETRY_IN_RE = re.compile(r"retry in\s+(\d+)\s*h(?:\s*(\d+)\s*m)?"
+                              r"|retry in\s+(\d+)\s*s", re.I)
+    _RETRY_DELAY_RE = re.compile(r"['\"]?retryDelay['\"]?\s*[:=]\s*['\"]?(\d+)", re.I)
+    _QUOTA_WORDS = ("quota exceeded", "resource_exhausted", "quota_value",
+                    "insufficient_quota", "配额")
+
+    @classmethod
+    def _quota_retry_sec_from_text(cls, text: str) -> Optional[int]:
+        """从错误正文解析重试秒数；解析不到返回 None（回落既有退避，零风险）。
+
+        ★ 为什么要长冷却：Gemini 免费额度 **20 次/天**，耗尽后按天重置。
+        即使按它给的 2h11m 冷却，到点后配额仍未恢复 ⇒ 再撞一次。
+        ⇒ 命中"配额耗尽"关键词时，**不低于 6 小时**（跨过当日剩余窗口）。
+        ⚠️ 判据要窄：只在确属配额耗尽时用长冷却，普通 429 仍按 Retry-After。
+        """
+        if not text:
+            return None
+        m = cls._RETRY_IN_RE.search(text)
+        if m:
+            if m.group(3):                       # `retry in 30s` 形态
+                sec = int(m.group(3))
+            else:                                # `retry in 2h11m` 形态
+                sec = int(m.group(1)) * 3600 + int(m.group(2) or 0) * 60
+        else:
+            m2 = cls._RETRY_DELAY_RE.search(text)
+            if not m2:
+                return None
+            try:
+                sec = int(float(m2.group(1)))
+            except ValueError:
+                return None
+        is_quota = any(w in text.lower() for w in cls._QUOTA_WORDS)
+        if is_quota:
+            # 配额按天重置 ⇒ 冷却下限 6h，且用**配额专属上限**（12h），
+            # 不用限流的 4h（否则 4h 后必然再撞，白白浪费一次 failover）
+            floor = 6 * 3600
+            sec = max(sec, floor)
+            return max(cls._RATE_LIMIT_MIN_SEC,
+                       min(sec, cls._QUOTA_COOLDOWN_MAX_SEC))
         return max(cls._RATE_LIMIT_MIN_SEC, min(sec, cls._RATE_LIMIT_MAX_SEC))
 
     def _breaker_record_rate_limit(self, name: str, cooldown_sec: int):

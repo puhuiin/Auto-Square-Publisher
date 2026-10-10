@@ -19132,6 +19132,88 @@ class TestR714GapEarlyExit(unittest.TestCase):
         self.assertIn("push:", txt, "push 触发器被删除 ⇒ 失去冗余兜底")
 
 
+class TestR715QuotaCooldownFromBody(unittest.TestCase):
+    """★★ R715：从 429 **正文**解析重试时长（Gemini 的 Retry-After 在 body 里）
+
+    ★ 生产实录：`Error code: 429 - [{'error': {...'Please retry in 2h11m3.9s.'}}]`
+      —— 重试时长在 **JSON 正文**，`headers` 里**没有** `Retry-After`
+      ⇒ 旧实现回落指数退避（10min→20→…→封顶 4h），
+        而实际需要 2h11m ⇒ **每 20 分钟一轮就重撞一次必然失败的 429**。
+    ★ 配额耗尽 ≠ 限流：前者按**天**重置（Gemini 免费 20 次/天），
+      几小时后重试必然再撞 ⇒ 需要**独立的长上限**（12h），
+      复用限流的 4h 上限等于"每 4 小时浪费一次 failover"。
+    """
+
+    GEMINI_429 = (
+        "Error code: 429 - [{'error': {'code': 429, 'message': 'You exceeded your "
+        "current quota, please check your plan and billing details. ... Quota exceeded "
+        "for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests,"
+        " limit: 20, model: gemini-3-flash\\nPlease retry in 2h11m3.938206144s.', "
+        "'status': 'RESOURCE_EXHAUSTED'}}]"
+    )
+
+    def test_parses_retry_in_hours(self):
+        """★★ `Please retry in 2h11m` ⇒ 精确解析出 2h11m = 7860 秒
+
+        ⚠️ 用**不含配额关键词**的样本单独验解析精度——
+        否则会被"配额下限 6h"抬起来，测不出解析对不对（我第一版就踩了这个：
+        断言 7860 而实际返回 21600，误以为是实现错）。
+        """
+        sec = m.MultiLLMEngine._quota_retry_sec_from_text(
+            "Error code: 429 - Too many requests. Please retry in 2h11m.")
+        self.assertIsNotNone(sec, "未解析出重试时长")
+        self.assertEqual(sec, 2 * 3600 + 11 * 60)
+
+    def test_parses_retry_in_seconds_form(self):
+        """★★ `Please retry in 30s` 形态也要能解析（第一版正则漏了它，被测试抓到）"""
+        sec = m.MultiLLMEngine._quota_retry_sec_from_text(
+            "Error code: 429 - rate limit exceeded. Please retry in 30s.")
+        self.assertEqual(sec, 30)
+
+    def test_quota_exhaustion_gets_long_cooldown(self):
+        """★★ 配额耗尽 ⇒ 冷却 ≥ 6 小时（**不复用限流的 4h 上限**）"""
+        sec = m.MultiLLMEngine._quota_retry_sec_from_text(self.GEMINI_429)
+        self.assertGreaterEqual(sec, 6 * 3600,
+                                "配额耗尽只冷却 %d 秒 ⇒ 会反复重撞" % sec)
+        self.assertLessEqual(sec, m.MultiLLMEngine._QUOTA_COOLDOWN_MAX_SEC)
+
+    def test_plain_rate_limit_not_inflated(self):
+        """★★ 反向：普通 429（30s）**不得**被抬到配额档（防过度冷却）"""
+        sec = m.MultiLLMEngine._quota_retry_sec_from_text(
+            "Error code: 429 - rate limit exceeded. Please retry in 30s.")
+        self.assertIsNotNone(sec)
+        self.assertLess(sec, 3600, "普通限流被抬到 1 小时以上 ⇒ 判据过宽")
+        self.assertLessEqual(sec, m.MultiLLMEngine._RATE_LIMIT_MAX_SEC,
+                             "普通限流应仍受限流上限约束")
+
+    def test_unparsable_returns_none(self):
+        """★ 解析不到 ⇒ **None**（回落既有退避，零风险，绝不猜）"""
+        self.assertIsNone(
+            m.MultiLLMEngine._quota_retry_sec_from_text("429 slow down"))
+        self.assertIsNone(m.MultiLLMEngine._quota_retry_sec_from_text(""))
+
+    def test_quota_and_rate_limit_have_separate_caps(self):
+        """★★ 两类问题必须有**不同上限**（否则配额的长冷却会被限流上限截断）
+
+        ⚠️ 这条是 R715 的核心：实现里若只写 `max(sec, 6h)` 而不换上限，
+        结果会被 `_RATE_LIMIT_MAX_SEC=4h` 静默压回 4h —— 实测踩过。
+        """
+        self.assertGreater(m.MultiLLMEngine._QUOTA_COOLDOWN_MAX_SEC,
+                           m.MultiLLMEngine._RATE_LIMIT_MAX_SEC,
+                           "配额上限未高于限流上限 ⇒ 长冷却不生效")
+        # 用真实样本证明没有被打折
+        sec = m.MultiLLMEngine._quota_retry_sec_from_text(self.GEMINI_429)
+        self.assertGreater(sec, m.MultiLLMEngine._RATE_LIMIT_MAX_SEC,
+                           "真实样本被限流上限截断了 ⇒ 长冷却未生效")
+
+    def test_retry_delay_field_form(self):
+        """★ 另一形态：`'retryDelay': '7863s'` 也要能解析"""
+        sec = m.MultiLLMEngine._quota_retry_sec_from_text(
+            "{'error': {'status': 'RESOURCE_EXHAUSTED', 'retryDelay': '7863s'}}")
+        self.assertIsNotNone(sec, "retryDelay 字段形态未覆盖")
+        self.assertGreaterEqual(sec, 6 * 3600)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
