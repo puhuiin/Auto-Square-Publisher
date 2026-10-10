@@ -10828,6 +10828,34 @@ def _run_main():
     # 4. 活动情报已在配额检查前刷新（R182），此处直接复用
 
     # 5. 获取待发布热点候选（按冲击力与山寨/Meme热度打分排序，结合官方活动代币加权 + 近似去重）
+    # ★★ R714：**最小间隔门提前到抓取之前**（省掉"反正发不出"的整轮抓取）。
+    #
+    # 为什么值得单独做：实测最近 40 轮里 **push 触发了 10 次**
+    # （repository_dispatch 27 / schedule 3）——每次运营者推代码都会多跑 1~2 轮，
+    # 而 push 轮几乎必然"距上一篇 0~3 分钟" ⇒ **必然被间隔门挡住**。
+    # 间隔检查原先在**发帖循环内**（R578 留下的位置）⇒ 判据在、抓取已经做完，
+    # 每轮白跑 20~60 秒的抓取 + 排序。
+    #
+    # ⚠️ **为什么不删 push 触发**（R133 的设计意图必须保留）：
+    #   那第三触发源是**冗余兜底**——2026-09-11 起 schedule 与外部 dispatch
+    #   同时静默 24h（09-09 还有 4.5h 吞投递），"运营者推代码"是当时的救命通道。
+    #   本条只做「反正发不出就别抓」，**不改变兜底语义**：
+    #   真需要 push 恢复发帖时，距上一篇早已超过间隔门，照常发。
+    #
+    # ⚠️ 与循环内的旧检查**并存**（不是替换）：循环内那处还兜着
+    #   "同轮内第 2 篇"的间隔（R237 场景），两处口径相同。
+    if MIN_POST_GAP_MIN > 0:
+        _gap_early = cache_mgr.minutes_since_last_sent()
+        if _gap_early is not None and _gap_early < MIN_POST_GAP_MIN:
+            logger.info(f"⏱️ 距上一篇仅 {_gap_early:.0f} 分钟（< {MIN_POST_GAP_MIN}min），"
+                        f"本轮提前退出（跳过抓取，省一轮 RSS 与排序开销）")
+            # ★ R714：`gap_early_exit` 让「间隔挡」在遥测里可区分——否则报表看到
+            #   published=0 无法判断是配额满、间隔挡、还是真没稿。
+            append_run_summary(gap_early_exit=True,
+                               fetch_elapsed_sec=0.0,
+                               run_elapsed_sec=round(time.time() - t_run_start, 1))
+            return
+
     t_fetch_start = time.time()
     candidates = fetcher.fetch_candidates(
         cache_mgr,

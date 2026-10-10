@@ -19051,6 +19051,87 @@ class TestR713PostGapThreshold(unittest.TestCase):
         self.assertLess(m.MIN_POST_GAP_MIN, observed_median_gap)
 
 
+class TestR714GapEarlyExit(unittest.TestCase):
+    """★★ R714：间隔门**提前到抓取之前**（省掉"反正发不出"的整轮抓取）
+
+    ★ 实测依据：最近 40 轮里 `push` 触发 **10 次**（dispatch 27 / schedule 3）
+      —— 每次运营者推代码都多跑 1~2 轮，而 push 轮几乎必然
+      「距上一篇 0~3 分钟」⇒ **必然被间隔门挡住**。
+      原实现间隔检查在**发帖循环内** ⇒ 判据在、抓取已做完，每轮白跑 20~60 秒。
+    """
+
+    def _run_main_src(self):
+        import inspect
+        src = inspect.getsource(m)
+        i = src.find("def _run_main(")
+        j = src.find("\ndef ", i + 10)
+        return src[i:j]
+
+    def test_early_exit_precedes_fetch(self):
+        """★★ 核心：早退必须在 `fetch_candidates` **之前**
+
+        ⚠️ 这是本条的全部价值所在：放在抓取之后就等于没做。
+        判据用**位置比较**，不用字符串计数（R710 的教训：先算清可区分条件）。
+        """
+        src = self._run_main_src()
+        early = src.find("_gap_early = cache_mgr.minutes_since_last_sent()")
+        fetch = src.find("t_fetch_start = time.time()")
+        loop_gap = src.find("gap = cache_mgr.minutes_since_last_sent()")
+        self.assertGreater(early, 0, "未找到早退检查")
+        self.assertGreater(fetch, 0, "未找到抓取起点")
+        self.assertLess(early, fetch,
+                        "早退检查在抓取之后 ⇒ 白跑一轮 RSS，本条改动失效")
+
+    def test_loop_level_check_still_present(self):
+        """★ 循环内的旧检查**必须保留**（不是替换）
+
+        R237 场景：同轮内第 2 篇还要再查一次间隔（拟人 sleep 会消耗时间）。
+        两处并存才是完整语义——删掉循环内那处会改变"同轮第 2 篇"的行为。
+        """
+        src = self._run_main_src()
+        self.assertIn("gap = cache_mgr.minutes_since_last_sent()", src,
+                      "循环内的间隔检查被删了 ⇒ 同轮第 2 篇的行为会变")
+
+    def test_early_exit_still_writes_telemetry(self):
+        """★★ 早退**必须仍落遥测**（否则「间隔挡」变成不可观测的黑洞）
+
+        ⚠️ 纪律：沉默不是通过（R612）。`published=0` 有多种成因，
+        没有标记就无法区分"配额满 / 间隔挡 / 真没稿"。
+        """
+        src = self._run_main_src()
+        i = src.find("_gap_early = cache_mgr.minutes_since_last_sent()")
+        j = src.find("t_fetch_start = time.time()", i)
+        seg = src[i:j]
+        self.assertIn("append_run_summary", seg, "早退未落 run_summary 遥测")
+        self.assertIn("gap_early_exit=True", seg, "早退缺少可区分标记")
+
+    def test_early_exit_does_not_fire_when_gap_ok(self):
+        """★★ 行为：间隔足够时**不得**早退（否则会误伤正常发帖）"""
+        import datetime as _dt
+        c = m.CacheManager.__new__(m.CacheManager)
+        c.cached_items = [{"sent_at": (_dt.datetime.now(_dt.timezone.utc)
+                                       - _dt.timedelta(minutes=99)).isoformat()}]
+        gap = c.minutes_since_last_sent()
+        self.assertGreater(gap, m.MIN_POST_GAP_MIN,
+                           "样本构造错误：99 分钟前应大于阈值")
+        # 判据本身：gap > 阈值 ⇒ 不进早退分支
+        self.assertFalse(gap < m.MIN_POST_GAP_MIN)
+
+    def test_push_trigger_not_removed(self):
+        """★★ 反向守卫：**不得删 push 触发器**（R133 的冗余兜底）
+
+        2026-09-11 起 schedule 与外部 dispatch 同时静默 24h，
+        「运营者推代码」是当时的救命通道。R714 只做"发不出就别抓"，
+        **不改变兜底语义**——真需要 push 恢复发帖时距上一篇早已超过间隔门。
+        """
+        import os
+        wf = os.path.join(os.path.dirname(m.__file__),
+                          ".github", "workflows", "auto_post.yml")
+        with open(wf, encoding="utf-8") as f:
+            txt = f.read()
+        self.assertIn("push:", txt, "push 触发器被删除 ⇒ 失去冗余兜底")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
