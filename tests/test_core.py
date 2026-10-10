@@ -19293,6 +19293,79 @@ class TestR716DedupEntityChannel(unittest.TestCase):
                               "_title_amount_fingerprint 装饰器被改坏 ⇒ 调用会 TypeError")
 
 
+class TestR718TokenLimitTiering(unittest.TestCase):
+    """★★ R718：单币限流**按浏览基线分档**（固定 3 篇是价值错配）
+
+    ★ 依据（过去 24h 实测，30 个挂件位 / 17 个币）：
+      ETH(基线 115) 3 篇 · SOL(113) 3 篇 · XRP(**56**，最低档) 3 篇
+      ⇒ 三者同被卡在 3 篇，**但浏览价值差 2 倍**。
+      HYPE(236，最高) 只发 2 篇——**不是被限流，是候选不够**
+      ⇒ 限流此刻不在压制高价值币，而在**均摊配额给低价值币**。
+    """
+
+    def test_high_tier_is_doubled(self):
+        """★★ 高档币（基线 ≥ 中位×1.3）限流放大到 2 倍"""
+        # 用真实基线里确定的高档币，不依赖线上数据变动
+        self.assertEqual(m._token_daily_limit("HYPE"),
+                         m.TOKEN_DAILY_LIMIT * 2)
+        self.assertEqual(m._token_daily_limit("ETH"),
+                         m.TOKEN_DAILY_LIMIT * 2)
+
+    def test_low_tier_is_tightened(self):
+        """★★ 低档币（基线 ≤ 中位×0.7）限流**收紧**
+
+        ⚠️ 这条是设计的核心：首版用 `LOW_MULT=1`（意为 ×1）⇒ **完全没收紧**，
+        实测 XRP/LTC 仍是 3 篇 ⇒ 分档等于没做（低档形同虚设）。
+        ⇒ 低档必须**真的小于**全局阈值。
+        """
+        self.assertLess(m._token_daily_limit("XRP"), m.TOKEN_DAILY_LIMIT,
+                        "低档币未被收紧 ⇒ 分档没生效")
+        self.assertGreaterEqual(m._token_daily_limit("XRP"), 1,
+                               "低档不得归零（该币仍应有最少机会）")
+
+    def test_unknown_token_uses_base_limit(self):
+        """★ **无基线的币走中档**——不得因缺数据惩罚冷门新币"""
+        self.assertEqual(m._token_daily_limit("ZZZ_NEW_COIN"),
+                         m.TOKEN_DAILY_LIMIT)
+
+    def test_base_limit_zero_disables_tiering(self):
+        """★ 全局 0（关闭限流）⇒ 分档也必须为 0，不能反而收紧"""
+        import unittest.mock as mock
+        with mock.patch.object(m, "TOKEN_DAILY_LIMIT", 0):
+            self.assertEqual(m._token_daily_limit("ETH"), 0)
+            self.assertEqual(m._token_daily_limit("XRP"), 0)
+
+    def test_never_drops_below_one(self):
+        """★★ 任何币的限流都 ≥1（否则该币彻底不能发）"""
+        import json
+        with open(m.TOKEN_ENGAGEMENT_FILE, encoding="utf-8-sig") as f:
+            toks = (json.load(f).get("tokens") or {})
+        n = 0
+        for t, v in toks.items():
+            if isinstance(v, dict) and isinstance(v.get("median_views"), (int, float)):
+                self.assertGreaterEqual(m._token_daily_limit(t), 1,
+                                        "%s 限流降到 0" % t)
+                n += 1
+        self.assertGreater(n, 0, "基线为空，本测试无意义")
+
+    def test_corrupt_baseline_degrades_loudly(self):
+        """★★ 基线损坏/缺失 ⇒ 降级到全局阈值，但**必须留日志**
+
+        ⚠️ 这条来自真实事故：首版把整个 record dict 存进 vals，
+        后续 `dict >= float` 抛 TypeError 被 `except Exception: return base`
+        **完全吞掉** ⇒ 分档失效却**毫无告警**，是靠逐币打印才发现的。
+        ⇒ 静默降级 + 无日志 = 缺陷隐身。
+        """
+        import json
+        import unittest.mock as mock
+        with mock.patch.object(m, "TOKEN_ENGAGEMENT_FILE", "不存在的路径.json"):
+            with mock.patch.object(m.logger, "warning") as warn:
+                self.assertEqual(m._token_daily_limit("ETH"),
+                                 m.TOKEN_DAILY_LIMIT)
+                self.assertTrue(warn.called,
+                                "基线不可用时未留日志 ⇒ 缺陷会隐身（R659 反面）")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 

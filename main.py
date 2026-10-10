@@ -208,6 +208,81 @@ MIN_IMPACT_SCORE = _env_int("MIN_IMPACT_SCORE", 0)                 # 最低热�
 #      若稳定 → 下一档 40；若浏览摊薄明显 → 回滚此行即可（一个数字）。
 MAX_DAILY_POSTS = _env_int("MAX_DAILY_POSTS", 25)                  # 24h 滚动发帖配额，0 表示不限制
 TOKEN_DAILY_LIMIT = _env_int("TOKEN_DAILY_LIMIT", 3)               # 同一代币 24h 内最多发布篇数，0 表示不限制
+
+# ══════════════════════════════════════════════════════════════
+# ★★ R718：单币限流**按浏览基线分档**（实测发现固定 3 篇是价值错配）
+#
+# ★ 依据（过去 24h 实测，30 个挂件位 / 17 个币）：
+#   ETH(基线 115) 3 篇 · SOL(113) 3 篇 · XRP(**56**，最低档) 3 篇
+#   ⇒ 三者都被固定阈值卡在 3 篇，**但浏览价值差 2 倍**。
+#   HYPE(236，最高) 只发 2 篇——**不是被限流，是候选不够**
+#   ⇒ 限流此刻**不在压制高价值币**，而是在**均摊配额给低价值币**。
+#
+# ⚠️ 为什么不直接调高全局阈值：配额固定 25，调高只会让单一币刷屏
+#   （R208 当初设限流就是为了防这个）。**分档**才能同时解决两端。
+# ⚠️ 三档都可用环境变量覆盖；上限 ≤ 全局 TOKEN_DAILY_LIMIT 的 2 倍
+#   （再高就退化成"取消限流"，失去防刷屏意义）。
+# ⚠️ 无基线（样本不足的币）走中档 ⇒ **不会因缺数据而惩罚冷门新币**。
+TOKEN_LIMIT_HIGH_MULT = _env_int("TOKEN_LIMIT_HIGH_MULT", 2)   # 高档倍率（×2）
+# ⚠️ 低档用**减量**而非倍率：倍率无法表达"收紧"——
+#   首版 LOW_MULT=1 意为"×1"= 不变，低档**根本没收紧**（实测 XRP/LTC 仍是 3 篇）。
+TOKEN_LIMIT_LOW_DELTA = _env_int("TOKEN_LIMIT_LOW_DELTA", 1)   # 低档减量（−1）
+_TOKEN_LIMIT_CAPS = (1, 2)
+
+
+def _token_daily_limit(token: str) -> int:
+    """★ R718：该代币的 24h 限流档位。
+
+    判据复用 R608 的浏览基线口径（同一份 `token_engagement.json`）：
+        中位 ×1.3 以上 → 高档（×2）
+        中位 ×0.7 以下 → 低档（×1，即收紧到全局阈值的一半以下）
+        其余/无基线   → 中档（全局阈值）
+    ⚠️ 判定只用**中位浏览**，与 R608 排序加权同源 ⇒ 两处结论不会打架。
+    ⚠️ 样本不足（min_n 未达）的币不在基线表内 ⇒ 走中档。
+    """
+    base = TOKEN_DAILY_LIMIT
+    if base <= 0:
+        return base
+    from statistics import median as _med
+    # 直接读文件（与 R608 同一份数据；此处不触发引擎加载，避免模块级循环依赖）
+    try:
+        # ★ 用**既有常量**而非硬编码路径：R608 的加载器也读它，
+        #   两处各写一份路径 ⇒ 换文件/改路径时必然漂移（R619 教训）。
+        with open(TOKEN_ENGAGEMENT_FILE, encoding="utf-8-sig") as f:
+            data = json.load(f)
+        toks = data.get("tokens")
+        if not isinstance(toks, dict):
+            return base
+        # ⚠️⚠️ 首版这里存了**整个 record dict** 而非数值 ⇒ `dict >= float`
+        # 抛 TypeError，被下面的 `except Exception` **静默吞掉** ⇒
+        # 分档**完全失效却毫无告警**（实测 ETH/SOL 全部仍返回基准值）。
+        # ⇒ 这里必须存 `median_views` **数值**。
+        vals = {k.upper().replace("$", ""): float(v["median_views"])
+                for k, v in toks.items()
+                if isinstance(v, dict) and isinstance(v.get("median_views"), (int, float))}
+        if not vals:
+            return base
+        key = str(token).upper().replace("$", "")
+        if key not in vals:
+            return base
+        m = _med(sorted(vals.values()))
+        if m <= 0:
+            return base
+        hi, lo = m * 1.3, m * 0.7
+        if vals[key] >= hi:                       # 高档：放大（防刷屏上限 ×2）
+            mult = max(_TOKEN_LIMIT_CAPS[0],
+                       min(_TOKEN_LIMIT_CAPS[1], int(TOKEN_LIMIT_HIGH_MULT)))
+            return max(1, base * mult)
+        if vals[key] <= lo:                       # 低档：收紧（减量，至少留 1 篇）
+            return max(1, base - max(1, int(TOKEN_LIMIT_LOW_DELTA)))
+        return base                                # 中档 / 无基线：不动
+    except Exception as _e:
+        # ⚠️ 旁路不得阻塞主流程（R612）：读不到基线就用全局阈值。
+        # ⚠️ 但**必须留痕**——首版这里只有 `except Exception: return base`，
+        # 结果上面的 TypeError 被完全吞掉、分档失效却无人知晓（巡检时靠
+        # 逐币打印才发现）。静默降级 + 无日志 = 缺陷隐身（R659 的反面）。
+        logger.warning("单币限流分档降级为全局阈值（%s: %s）", type(_e).__name__, _e)
+        return base
 # R215：限流绕过阈值独立化——R208 复用 ARTICLE_MIN_IMPACT(20) 让"常规行情帖"
 # （等待联储/观点分析类，生产实录 20~26 分）也能无限绕过限流，BTC 单日 8/12 篇
 # 穿透。真实市场级事件（加息/被盗/ETF 出逃）生产分布在 29~34 档；30 分界把
@@ -11222,7 +11297,14 @@ def _run_main():
 
             # 单代币 24h 限流：BTC 热点刷屏会拉低账号垂直度画像
             if TOKEN_DAILY_LIMIT > 0:
-                capped = [t for t in detected_tokens if cache_mgr.token_posts_since(t, 24) >= TOKEN_DAILY_LIMIT]
+                # ★ R718：限流**按浏览基线分档**（高浏览币 ×2 / 低浏览币收紧）。
+                #   实测依据：ETH(115)/SOL(113)/XRP(**56**) 曾同被卡在 3 篇，
+                #   而三者浏览价值差 2 倍 ⇒ 固定阈值在**均摊配额给低价值币**。
+                #   ⚠️ 逐币取阈值（同一新闻可多币，取各自档位），
+                #      不用全局值——否则分档等于没做。
+                _tok_lims = {t: _token_daily_limit(t) for t in detected_tokens}
+                capped = [t for t in detected_tokens
+                          if cache_mgr.token_posts_since(t, 24) >= _tok_lims[t]]
                 # 任一命中代币触顶即跳过。旧写法要求"全部代币都触顶"才跳过，
                 # 于是"同时提到 BTC 和某个冷门小币"的新闻会让已满额的 BTC 继续发，
                 # TOKEN_DAILY_LIMIT 形同虚设（Round 5）。
