@@ -20,9 +20,9 @@
   "last_updated": "2026-10-10T02:24:05.947180Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "fails": 3,
       "parked_until": "2026-10-10T16:56:55.588958+00:00",
-      "last_fail": "2026-10-10T10:56:55.588958+00:00"
+      "last_fail": "2026-10-10T10:56:55.588958+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
