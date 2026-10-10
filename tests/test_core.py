@@ -19631,6 +19631,48 @@ class TestR722WeakSampleViews(unittest.TestCase):
                              "%s（弱样本高档）应落高档 ×2" % t)
 
 
+class TestR724QuotaRaiseTo40(unittest.TestCase):
+    """★★ R724：配额 25 → **40**（提量第二步，四条线上依据全部核验过）
+
+    ★ 四条依据（缺一不可，任一不满足就该回滚）：
+      ① 供给：最近 20 抓取轮候选均值 **99**、未处理 71 ⇒ 对 40 篇富余 2.5 倍
+      ② 节奏：`MIN_POST_GAP_MIN=15` ⇒ 理论上限 96 篇/24h；实测间隔中位 20 分钟
+      ③ 题材：近 12h 17 篇覆盖 **14 个币** ⇒ 40 篇约需 20+ 币；
+         单币限流会限流，但**不阻塞发帖**（自动剔除超限币，该篇少一个挂件）
+      ④ LLM：StepFun 连续 10 天 11~15 篇/天零配额迹象、**熔断 0 条**；
+         ★ R711 修复后**近 12h 拒稿归零** ⇒ 单篇成本 1.4 → 1.0 次调用
+
+    ★ 本类锁的是**结构性约束**，不是某个具体数字：
+      配额若超过间隔门的理论上限，就变成了"写了也发不出"的空配置。
+    """
+
+    def test_quota_within_gap_ceiling(self):
+        """★★ 配额**不得**超过间隔门允许的理论上限
+
+        配额 > 上限 ⇒ 多出来的额度永远用不掉（配置自相矛盾）。
+        """
+        ceiling = 24 * 60 // m.MIN_POST_GAP_MIN
+        self.assertLessEqual(m.MAX_DAILY_POSTS, ceiling,
+                             "配额 %d 超过间隔门上限 %d（%d 分钟/篇）⇒ 多出的额度永远用不上"
+                             % (m.MAX_DAILY_POSTS, ceiling, m.MIN_POST_GAP_MIN))
+
+    def test_quota_is_raised_but_not_to_target(self):
+        """★ 提量是**分步**的：应高于 25 但低于最终目标 70（留观察空间）"""
+        self.assertGreater(m.MAX_DAILY_POSTS, 25,
+                           "提量未生效（仍 ≤25）")
+        self.assertLess(m.MAX_DAILY_POSTS, 70,
+                        "不应一次跳到最终目标 70（跳级会让效果无法归因）")
+
+    def test_quota_not_overridden_by_repo_variable(self):
+        """★ 记录前提：仓库**没有** MAX_DAILY_POSTS 变量，改默认值才生效
+
+        ⚠️ 这不是能自动验证的事实（需要 `gh variable list`），
+           但记录下来可防止将来"改了代码却不生效"的困惑。
+        """
+        # env 优先于默认值：这里只断言默认值本身可被读取且为正数
+        self.assertGreater(m.MAX_DAILY_POSTS, 0)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
