@@ -262,7 +262,11 @@ def _token_daily_limit(token: str) -> int:
         #   此前这里不过滤 ⇒ 中位被 n=1 的冷门币拉偏（83 vs 88.5）
         #   ⇒ **R608 排序加权与 R718 限流分档给出不同的档位**，
         #     而本函数注释恰恰声称"两处结论不会打架"——口径必须一致。
-        _min_n = data.get("min_n", 4) if isinstance(data.get("min_n"), int) else 4
+        # ★ R722：样本下限与 R608 排序加权**对齐到 n >= 2**（含弱样本）。
+        #   既然排序加权现在收 2<=n<min_n 的弱样本，这里也必须收
+        #   ⇒ 否则又出现「同一基线、两处结论打架」（R719 刚因 min_n 口径
+        #     不一致修过一次，别重蹈）。n=1 仍**不收**：单篇中位无意义。
+        _min_n = 2
         vals = {k.upper().replace("$", ""): float(v["median_views"])
                 for k, v in toks.items()
                 if isinstance(v, dict)
@@ -720,6 +724,9 @@ HOT_TOPIC_BOOST = 4                                                # 命中全�
 # 排序不碰 base_impact_score（准入）**，绝不盖过真突发、绝不饿死 $挂件（低浏览币照常
 # 可发、仍织挂件，只是边际靠后）。数据不足（无 token_engagement.json）时零行为变化。
 ENGAGEMENT_VIEW_BOOST = 5
+# ★ R722：弱样本（2 <= n < min_n）用**半权**——既不让高浏览新币完全失声，
+#   又不与足量样本同等对待（避免"两篇恰好都高 ⇒ 过度加权"）。
+ENGAGEMENT_VIEW_BOOST_WEAK = ENGAGEMENT_VIEW_BOOST // 2
 FRESHNESS_BOOST_RULES = ((3, 10), (12, 6), (24, 3))                # (新闻不超过 N 小时, 加分)
 # R650：时段偏置的**减分**幅度。量纲对齐（纪律 R622「权重须量纲对齐」）：
 # engagement ±5 / freshness ≤10 / campaign 8 / impact_score 中位 22。
@@ -3515,6 +3522,41 @@ class NewsFetcher:
                     break
         return hits
 
+    @classmethod
+    def _load_weak_views(cls, path: str = None) -> Dict[str, float]:
+        """★ R722：样本量**不足 min_n 但 >= 2** 的币（弱样本），单独返回。
+
+        ★ 为什么需要它（实测发现的缺陷）：
+          浏览最高的两枚币 **HYPE(中位 236) / LINK(193) 只有 2 篇样本**，
+          被 `min_n=4` **完全排除** ⇒ 享受不到任何浏览加权。
+          这也是 R718「高档 ×2」**空转**的真正根因 —— 不是没有高浏览币，
+          而是**高浏览新币被过滤了**。
+        ⚠️ 三层设计：n >= min_n 全权 / 2 <= n < min_n **半权** / n < 2 **不收**
+          （单篇中位毫无统计意义，LTC/ARK/UNI 那些 n=1 的不该进）。
+        ⚠️ 弱样本**只用于弱加权**，绝不与强样本同等对待
+          —— 避免"两篇恰好都高 ⇒ 过度加权"。
+        """
+        p = path or TOKEN_ENGAGEMENT_FILE
+        try:
+            with open(p, encoding="utf-8-sig") as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            return {}
+        if not isinstance(data, dict):
+            return {}
+        min_n = data.get("min_n", 4) if isinstance(data.get("min_n"), int) else 4
+        out: Dict[str, float] = {}
+        for t, v in (data.get("tokens") or {}).items():
+            if not isinstance(v, dict):
+                continue
+            n = v.get("n")
+            if not (isinstance(n, int) and 2 <= n < min_n):
+                continue
+            mv = v.get("median_views")
+            if isinstance(mv, (int, float)) and mv >= 0:
+                out[str(t).upper().replace("$", "")] = float(mv)
+        return out
+
     @staticmethod
     def _load_token_engagement(path: str = None) -> Dict[str, float]:
         """R608：读 token_engagement.json → {TOKEN: avg_views}，仅保留样本量 ≥min_n
@@ -3637,7 +3679,8 @@ class NewsFetcher:
     @staticmethod
     def apply_engagement_boost(candidates: List[Dict[str, Any]],
                                token_views: Dict[str, float],
-                               valid_symbols: Set[str]) -> Tuple[int, int]:
+                               valid_symbols: Set[str],
+                               weak_views: Optional[Dict[str, float]] = None) -> Tuple[int, int]:
         """R608：按真实浏览量给候选的首标的做**排序加权**——历史高浏览币 +BOOST、
         长期低浏览币 -BOOST，只碰 impact_score 不碰 base_impact_score（准入）。
         判定基于有足够样本币种均浏览的中位数：高于 1.3× 中位加分、低于 0.7× 中位减分，
@@ -3666,14 +3709,36 @@ class NewsFetcher:
                 continue
             primary = toks[0].upper().replace("$", "")
             av = token_views.get(primary)
+            # ★ R722：强样本没命中时，回落到**弱样本**（2 <= n < min_n），
+            #   标记 is_weak 以便走**半权**分支。
+            #   动机：HYPE(236)/LINK(193) 只有 2 篇样本，被 min_n=4 完全排除
+            #   ⇒ 高浏览新币享受不到任何加权（R718「高档 ×2」空转的真因）。
+            is_weak = False
+            if av is None and weak_views:
+                av = weak_views.get(primary)
+                is_weak = av is not None
             if av is None:
                 continue
-            if av >= hi_cut:
+            # ⚠️ R722 契约：四个分支**各自一次加减**，不抽 `_boost` 变量。
+            #   `test_main_marks_all_boost_sites` 用正则做
+            #   「加分点数 == 标记点数」的守恒检查；抽变量会被正则漏数
+            #   ⇒ 静默破坏契约（R659「正则守卫会静默失效」）。
+            if av >= hi_cut and is_weak:               # 弱样本高档：半权
+                item["impact_score"] += ENGAGEMENT_VIEW_BOOST_WEAK
+                _mark_boost(item, "eng_weak")
+                up += 1
+                up_toks.append(primary + "(弱)")
+            elif av >= hi_cut:                        # 强样本高档：全权
                 item["impact_score"] += ENGAGEMENT_VIEW_BOOST
                 _mark_boost(item, "eng")
                 up += 1
                 up_toks.append(primary)
-            elif av <= lo_cut:
+            elif av <= lo_cut and is_weak:             # 弱样本低档：半权
+                item["impact_score"] -= ENGAGEMENT_VIEW_BOOST_WEAK
+                _mark_boost(item, "eng_down")
+                down += 1
+                down_toks.append(primary + "(弱)")
+            elif av <= lo_cut:                         # 强样本低档：全权
                 item["impact_score"] -= ENGAGEMENT_VIEW_BOOST
                 # ⚠️ 减分**单独标记**为 `eng_down`：与加分方向相反，
                 # 混进 `eng` 会让"命中加权"读起来像"被优待"，而它其实是降权
@@ -3682,8 +3747,18 @@ class NewsFetcher:
                 down += 1
                 down_toks.append(primary)
         if up or down:
-            logger.info(f"📊 浏览加权明细: 高触达 +{ENGAGEMENT_VIEW_BOOST} {up_toks} / "
-                        f"低触达 -{ENGAGEMENT_VIEW_BOOST} {down_toks}")
+            # ⚠️ R722：日志须打印**实际使用**的权重并把弱样本单列。
+            #   弱样本走半权，若仍统一打 "+5" ⇒ 排查时会遇到
+            #   "说加 5 却只加了 2"（与 R705「字段名≠含义」同源：
+            #   **日志文案必须与行为一致**，否则它会把排查带偏）。
+            _plain_up = [t for t in up_toks if "(弱)" not in t]
+            _weak_up = [t for t in up_toks if "(弱)" in t]
+            _plain_dn = [t for t in down_toks if "(弱)" not in t]
+            _weak_dn = [t for t in down_toks if "(弱)" in t]
+            logger.info(f"📊 浏览加权明细: 高触达 +{ENGAGEMENT_VIEW_BOOST} {_plain_up} / "
+                        f"弱样本高档 +{ENGAGEMENT_VIEW_BOOST_WEAK} {_weak_up} / "
+                        f"低触达 -{ENGAGEMENT_VIEW_BOOST} {_plain_dn} / "
+                        f"弱样本低档 -{ENGAGEMENT_VIEW_BOOST_WEAK} {_weak_dn}")
         return up, down
 
     def _load_priority_seed(self) -> Optional[Dict[str, Any]]:
@@ -10977,7 +11052,8 @@ def _run_main():
                         NewsFetcher.apply_engagement_boost(
                             _obs_cands,
                             NewsFetcher._load_token_engagement(),
-                            SymbolValidator.get_valid_symbols())
+                            SymbolValidator.get_valid_symbols(),
+                            NewsFetcher._load_weak_views())
                         NewsFetcher.apply_hour_preference_boost(_obs_cands)
                     except Exception as _obs_boost_err:
                         logger.info(f"观测扫描：加权环节异常（不影响本段落盘）: {_obs_boost_err}")
@@ -11155,7 +11231,8 @@ def _run_main():
     token_views = NewsFetcher._load_token_engagement()
     if token_views:
         eng_up, eng_down = NewsFetcher.apply_engagement_boost(
-            candidates, token_views, valid_symbols_early)
+            candidates, token_views, valid_symbols_early,
+            NewsFetcher._load_weak_views())
         if eng_up or eng_down:
             candidates.sort(key=lambda x: (-x["impact_score"],
                                            x["age_hours"] if x.get("age_hours") is not None else float("inf")))

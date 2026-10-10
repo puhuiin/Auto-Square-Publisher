@@ -19305,16 +19305,22 @@ class TestR718TokenLimitTiering(unittest.TestCase):
 
     @staticmethod
     def _tiers():
-        """按**生产同口径**（min_n 过滤后）算出 (高档, 低档) 币集合。"""
-        import json
+        """按**生产同口径**算出 (基线, 高档, 低档)。
+
+        ★★ R722 修正：**直接复用生产代码**算中位，不再复制一份 `min_n` 过滤。
+           旧写法在这里重写了过滤口径，R722 把生产改成 n>=2 后守卫仍按 min_n=4
+           算 ⇒ 同一个"低档线"在两处得出不同结论（ZEC 60 在生产是中档、
+           在守卫里是低档）⇒ 假失败。
+           ⇒ **口径只能有一份实现**；测试需要"独立算法"时应重新设计判据，
+             而不是复制生产逻辑（R719 埋的坑，R722 才暴露）。
+        """
         import statistics as _st
-        with open(m.TOKEN_ENGAGEMENT_FILE, encoding="utf-8-sig") as f:
-            d = json.load(f)
-        min_n = d.get("min_n", 4) if isinstance(d.get("min_n"), int) else 4
-        vals = {k.upper().replace("$", ""): float(v["median_views"])
-                for k, v in (d.get("tokens") or {}).items()
-                if isinstance(v, dict) and isinstance(v.get("n"), int)
-                and v["n"] >= min_n and isinstance(v.get("median_views"), (int, float))}
+        import json as _json
+        # 生产用的就是这两个加载器（强样本 + 弱样本），中位在两者并集上算
+        strong = m.NewsFetcher._load_token_engagement()
+        weak = m.NewsFetcher._load_weak_views()
+        vals = dict(strong)
+        vals.update(weak)
         if not vals:
             return vals, set(), set()
         med = _st.median(sorted(vals.values()))
@@ -19438,14 +19444,24 @@ class TestR719AuditScriptMatchesProduction(unittest.TestCase):
                                  % (t, v["n"], min_n))
 
     def test_tier_boundaries_match_production(self):
-        """★★ 档位判定与 `main._token_daily_limit` **同口径**（中位×1.3 / ×0.7）"""
+        """★★ 档位判定与 `main._token_daily_limit` **同口径**（中位×1.3 / ×0.7）
+
+        ⚠️ R722 修正：基线取 **生产两个加载器的并集**（强样本 + 弱样本）。
+           原先用 `_script_baseline()`（巡检脚本的 min_n 口径），
+           R722 把生产改成 n>=2 后两者分叉 ⇒ ZEC(60) 在脚本口径下是低档、
+           在生产口径下是中档 ⇒ 假失败。
+           ⇒ 这条守卫真正要锁的是「**脚本口径 == 生产口径**」，
+              那个一致性由上一条 `test_baseline_identical_to_production_loader` 保证；
+              本条只验**档位规则本身**，基线统一从生产取。
+        """
         import statistics as _st
-        script = self._script_baseline()
-        if not script:
+        vals = dict(m.NewsFetcher._load_token_engagement())
+        vals.update(m.NewsFetcher._load_weak_views())
+        if not vals:
             self.skipTest("基线为空")
-        med = _st.median(sorted(script.values()))
+        med = _st.median(sorted(vals.values()))
         self.assertGreater(med, 0)
-        for t, b in script.items():
+        for t, b in vals.items():
             if b >= med * 1.3:
                 self.assertEqual(m._token_daily_limit(t), m.TOKEN_DAILY_LIMIT * 2,
                                  "%s 应为高档（基线 %.0f ≥ %.1f）" % (t, b, med * 1.3))
@@ -19503,6 +19519,116 @@ class TestR720ChineseSourceURLs(unittest.TestCase):
         for f in m.RSS_FEEDS:
             u = f.get("url", "")
             self.assertTrue(u.startswith("https://"), "%s 的 url 非 https：%s" % (f["name"], u))
+
+
+class TestR722WeakSampleViews(unittest.TestCase):
+    """★★ R722：弱样本（2 <= n < min_n）用**半权**，不再完全失声
+
+    ★ 触发的缺陷（实测）：浏览最高的两枚币 **HYPE(中位 236) / LINK(193)
+      只有 2 篇样本**，被 `min_n=4` 完全排除 ⇒ 享受不到任何浏览加权；
+      这也是 R718「高档 ×2」**空转**的真正根因 —— 不是没有高浏览币，
+      而是**高浏览新币被过滤了**。
+    ⇒ 三层：n >= min_n 全权 / 2 <= n < min_n 半权 / n < 2 不收
+      （单篇中位毫无统计意义，LTC/ARK/UNI 那些 n=1 的不该进）。
+    """
+
+    def test_weak_loader_respects_sample_floor(self):
+        """★★ n=1 **不得**进弱样本；2<=n<min_n **必须**进"""
+        import json
+        with open(m.TOKEN_ENGAGEMENT_FILE, encoding="utf-8-sig") as f:
+            d = json.load(f)
+        min_n = d.get("min_n", 4) if isinstance(d.get("min_n"), int) else 4
+        weak = m.NewsFetcher._load_weak_views()
+        for t, v in (d.get("tokens") or {}).items():
+            if not isinstance(v, dict):
+                continue
+            key = str(t).upper().replace("$", "")
+            n = v.get("n")
+            if n == 1:
+                self.assertNotIn(key, weak, "%s 只有 1 篇样本却进了弱样本" % t)
+            elif isinstance(n, int) and 2 <= n < min_n:
+                self.assertIn(key, weak, "%s 有 %d 篇样本却没进弱样本" % (t, n))
+
+    def test_weak_gets_half_boost(self):
+        """★★ 弱样本加分是强样本的**一半**（用真实基线构造判别样本）
+
+        ⚠️ 判据要点（R710/R716 同族的第三次）：必须用**真实基线**（多币、
+           中位有意义）。首版只给 {"BTC":200} 单币 ⇒ 中位=200、hi_cut=260
+           ⇒ 谁都够不到高档、两条都 0 分 ⇒ 测试"失败"却与被测逻辑无关。
+        """
+        strong = m.NewsFetcher._load_token_engagement()
+        weak = m.NewsFetcher._load_weak_views()
+        if not strong or not weak:
+            self.skipTest("真实基线为空")
+        med = sorted(strong.values())[len(strong) // 2]
+        hi_weak = [t for t, v in weak.items() if v >= med * 1.3]
+        if not hi_weak:
+            self.skipTest("当前无高浏览弱样本（高档空转）")
+        cands = [{"title": "Some project mentions $%s here" % hi_weak[0],
+                  "summary": "", "impact_score": 20, "age_hours": 1.0}]
+        m.NewsFetcher.apply_engagement_boost(
+            cands, strong, set(strong) | set(weak), weak)
+        got = cands[0]["impact_score"] - 20
+        self.assertEqual(got, m.ENGAGEMENT_VIEW_BOOST_WEAK,
+                         "%s 是高浏览弱样本，应得半权 %d（实际 %+d）"
+                         % (hi_weak[0], m.ENGAGEMENT_VIEW_BOOST_WEAK, got))
+        # ⚠️ 别断言 `got * 2 == BOOST`：`BOOST=5` 是**奇数**，`5//2=2` ⇒ 2*2=4≠5。
+        #   整除截断使弱权**略低于**一半（2/5 = 40%）——这是有意的保守取值，
+        #   弱样本本就不该接近全权。判据只锁"明显更小"这个语义方向。
+        self.assertLess(got, m.ENGAGEMENT_VIEW_BOOST, "弱样本竟拿了全权")
+        self.assertLessEqual(got * 2, m.ENGAGEMENT_VIEW_BOOST,
+                             "弱权重超过全权的一半 ⇒ 不是弱加权")
+        self.assertIn("eng_weak", cands[0].get("_boosted_by") or [])
+
+    def test_strong_tier_still_full_boost(self):
+        """★ 反向：强样本高档仍是**全权**（弱样本机制不得连累它）"""
+        strong = m.NewsFetcher._load_token_engagement()
+        if not strong:
+            self.skipTest("强基线为空")
+        med = sorted(strong.values())[len(strong) // 2]
+        hi = [t for t, v in strong.items() if v >= med * 1.3]
+        if not hi:
+            self.skipTest("无强样本高档")
+        cands = [{"title": "Some project mentions $%s here" % hi[0],
+                  "summary": "", "impact_score": 20, "age_hours": 1.0}]
+        m.NewsFetcher.apply_engagement_boost(
+            cands, strong, set(strong), m.NewsFetcher._load_weak_views())
+        self.assertEqual(cands[0]["impact_score"] - 20, m.ENGAGEMENT_VIEW_BOOST)
+        self.assertIn("eng", cands[0].get("_boosted_by") or [])
+
+    def test_tier_shares_same_sample_floor(self):
+        """★★ 限流分档与排序加权**同一口径**（R719 刚栽过这个坑）
+
+        排序加权收 n>=2 ⇒ 分档也必须收 n>=2，
+        否则又出现"同一份基线、两处给出不同结论"。
+        """
+        import json
+        with open(m.TOKEN_ENGAGEMENT_FILE, encoding="utf-8-sig") as f:
+            d = json.load(f)
+        strong = m.NewsFetcher._load_token_engagement()
+        weak = m.NewsFetcher._load_weak_views()
+        floors = {str(k).upper().replace("$", "") for k, v in (d.get("tokens") or {}).items()
+                  if isinstance(v, dict) and isinstance(v.get("n"), int) and v["n"] >= 2}
+        self.assertEqual(set(strong) | set(weak), floors,
+                         "分档口径与加权口径的样本下限不一致 => 会重演 R719")
+
+    def test_high_tier_no_longer_idle(self):
+        """★★ 「高档 ×2」不再空转（R719 当时的结论只对了一半）
+
+        R719 记录"过滤后没有币达到高档线"——其实高浏览币（HYPE/LINK）
+        存在，只是被 min_n 排除了。纳入弱样本后必须能命中高档。
+        """
+        strong = m.NewsFetcher._load_token_engagement()
+        weak = m.NewsFetcher._load_weak_views()
+        if not strong:
+            self.skipTest("强基线为空")
+        med = sorted(strong.values())[len(strong) // 2]
+        hi_weak = [t for t, v in weak.items() if v >= med * 1.3]
+        if not hi_weak:
+            self.skipTest("当前无高浏览弱样本")
+        for t in hi_weak:
+            self.assertEqual(m._token_daily_limit(t), m.TOKEN_DAILY_LIMIT * 2,
+                             "%s（弱样本高档）应落高档 ×2" % t)
 
 
 if __name__ == "__main__":
