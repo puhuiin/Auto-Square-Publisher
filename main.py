@@ -1389,6 +1389,20 @@ RSS_FEEDS = [
     # ── 中文（为「中英各半」备料；当前中文源严重不足，仅 BlockTempo + 吴说）──
     {"name": "吴说区块链 (中文深度)", "url": "https://www.wu-talk.com/feed",
      "lang": "zh-CN"},                                                  # 50 实测可达
+    # ── 中文加密源补齐（R720）──
+    # ★ 关键教训：R707 之前那批中文源"线上失败"，**很可能不是网络问题，是我 URL 写错了**。
+    #   深潮实际是 `/rss/v2/feed.xml?lang=...`（我写成 `/rss.xml` ⇒ 404）
+    #   Odaily 实际在**子域** `rss.odaily.news`（我写成 `odaily.news/feed` ⇒ 404）
+    # ⇒ "源不可用"与"源地址写错"在遥测里**长得一样**（都是 feeds_failed），
+    #    所以**别把 failed 直接读成"这个源不行"**——先核对官方公布的地址。
+    {"name": "深潮TechFlow (中文/简体)", "url": "https://www.techflowpost.com/rss/v2/feed.xml?lang=zh-CN&type=all&topic=all&tag=all",
+     "lang": "zh-CN"},                                                  # 50 条实测
+    # ★ 繁体源：此前**只有 BlockTempo 一家**（繁体需求占 30%）⇒ 单源风险。
+    #   深潮官方支持 `lang=zh-TW`，实测 50 条，是**第 2 个繁体源**。
+    {"name": "深潮TechFlow (中文/繁体)", "url": "https://www.techflowpost.com/rss/v2/feed.xml?lang=zh-TW&type=all&topic=all&tag=all",
+     "lang": "zh-TW"},                                                  # 50 条实测
+    {"name": "Odaily星球日报 (中文快讯)", "url": "https://rss.odaily.news/rss/newsflash",
+     "lang": "zh-CN"},                                                  # 10 条实测
     # ⚠️ 以下 4 个本机 502(Tunnel) 无法验证，URL 有效，待线上源健康机制裁决
 ]
 

@@ -19454,6 +19454,57 @@ class TestR719AuditScriptMatchesProduction(unittest.TestCase):
                                 "%s 应为低档（基线 %.0f ≤ %.1f）" % (t, b, med * 0.7))
 
 
+class TestR720ChineseSourceURLs(unittest.TestCase):
+    """★★ R720：中文源 URL 的教训 —— 「地址写错」与「源不可用」在遥测里长得一样
+
+    ★ 代价（真实发生）：R707 接入的 4 个中文源（巴比特/金色财经/币世界/PANews）
+      线上持续 `feeds_failed` ⇒ 我当时读成"这些源不行"并**剔除**。
+      本轮查官方地址后发现：**深潮实际是 `/rss/v2/feed.xml?lang=...`**（我写 `/rss.xml`）、
+      **Odaily 实际在子域 `rss.odaily.news`**（我写 `odaily.news/feed`）
+      ⇒ **404 而非源不可用**，且我据此误剔了可用源。
+
+    ⇒ 本类锁两件事：
+      ① 已验证可用的中文源**必须在册**（防止再次误剔）
+      ② URL 必须是**实测过的**那个（不是猜的路径）
+    """
+
+    # 本机实测可达且有条目（2026-10-10）
+    VERIFIED = {
+        "深潮TechFlow (中文/简体)": "https://www.techflowpost.com/rss/v2/feed.xml?lang=zh-CN",
+        "深潮TechFlow (中文/繁体)": "https://www.techflowpost.com/rss/v2/feed.xml?lang=zh-TW",
+        "Odaily星球日报 (中文快讯)": "https://rss.odaily.news/rss/newsflash",
+    }
+
+    def _by_name(self):
+        return {f["name"]: f for f in m.RSS_FEEDS}
+
+    def test_verified_chinese_sources_present(self):
+        """★★ 实测可用的中文源不得被"优化"掉（防再次误剔）"""
+        feeds = self._by_name()
+        for name in self.VERIFIED:
+            self.assertIn(name, feeds, "已验证可用的源 %s 被移除了" % name)
+
+    def test_urls_are_the_verified_ones(self):
+        """★★ URL 必须是**实测过的**那个（路径写错 ⇒ 静默 404 ⇒ 被误读成源坏了）"""
+        feeds = self._by_name()
+        for name, url in self.VERIFIED.items():
+            self.assertTrue(feeds[name]["url"].startswith(url),
+                            "%s 的 URL 与实测不一致：\n  册中 %s\n  实测 %s"
+                            % (name, feeds[name]["url"], url))
+
+    def test_traditional_chinese_has_redundancy(self):
+        """★★ 繁体源**至少 2 个**（繁体占输出 30%，单源=单点故障）"""
+        tw = [f for f in m.RSS_FEEDS if f.get("lang") == "zh-TW"]
+        self.assertGreaterEqual(len(tw), 2,
+                               "繁体源只有 %d 个 ⇒ 单点故障风险（BlockTempo 独家）" % len(tw))
+
+    def test_feed_urls_are_absolute_https(self):
+        """★ 所有源必须是绝对 https URL（相对路径在 GitHub runner 上会解析失败）"""
+        for f in m.RSS_FEEDS:
+            u = f.get("url", "")
+            self.assertTrue(u.startswith("https://"), "%s 的 url 非 https：%s" % (f["name"], u))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
