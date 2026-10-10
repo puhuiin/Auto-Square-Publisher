@@ -3831,5 +3831,17 @@
       "HYPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e90bbbb644089f76",
+    "title": "星球晚讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-10T11:00:54.194026+00:00",
+    "tokens": [
+      "SYN",
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
