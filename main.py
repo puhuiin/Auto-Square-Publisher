@@ -11297,6 +11297,12 @@ def _run_main():
     # R215：限流高影响放行计数——放行是限流决策的另一半，只记跳过会把
     # "限流正常工作"误读成"限流疯狂拦截"（生产 R208 时代 8 次放行零留痕）
     token_limit_bypassed = 0
+    # ★ R728：**逐币**记录限流拦截分布（`{代币: 次数}`）。
+    # 为什么必须有：R718 按浏览价值分档限流，但档位是否与**候选供给**匹配，
+    # 光看总数 `skipped_token_limit` 判断不了——总数上升可能是"候选变多"，
+    # 也可能是"某个高频币被误伤"。逐币才有决策面。
+    # ⚠️ 只在**有拦截**时落盘（append_metrics 过滤空值），避免每轮多一行空 dict。
+    token_limit_blocked_by: Dict[str, int] = {}
     # R216：门槛校准两端顶分——只计数不记分的话，若 28~29 的真事件被拦，
     # "误杀市场级事件"（R208 绕过想防的另一半）会静默发生而遥测不可见。
     # None 经 append_metrics 过滤 = 本轮没有该类候选，不写空字段。
@@ -11450,6 +11456,16 @@ def _run_main():
                         logger.info(f"代币 {capped} 24h 内已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)，"
                                     f"本条热度 {base_impact} 未达放行门槛，为避免刷屏跳过: {title}")
                         skip_counts["token_limit"] += 1
+                        # ★ R728：逐币记录「是哪个币被限流挡掉」。
+                        # 为什么需要：R718 按**浏览价值**分档，却**没考虑候选供给**。
+                        # 实测 XRP 浏览基线最低（56 ⇒ 低档收紧到 2 篇），而它恰是
+                        # 候选高频币（日志反复出现 `['XRP','BTC'] 已达限流`）
+                        # ⇒ 收紧对它可能是**反效果**（候选被批量浪费）。
+                        # ⚠️ 而「哪个币被拦最多」此前**遥测里完全看不到**，
+                        #   只有总数 `skipped_token_limit`
+                        # ⇒ 无法判断档位是否与供给匹配。这是唯一的决策数据面。
+                        for _tk in capped:
+                            token_limit_blocked_by[_tk] = token_limit_blocked_by.get(_tk, 0) + 1
                         continue
 
             # 风控拦截否认名单前置：20002/20022 拦过的内容重试大概率再被拦，
@@ -12227,6 +12243,10 @@ def _run_main():
         "intel_degraded": campaign_intel_degraded,
         # R215：限流放行计数——与 skipped_token_limit 互补，放行/拦截两侧都可观测
         "token_limit_bypassed": token_limit_bypassed,
+        # ★ R728：**逐币**限流拦截分布。判断"档位是否与候选供给匹配"的唯一数据面
+        #（XRP 浏览基线最低⇒低档收紧，可它是候选高频币 ⇒ 需看它实际被拦多少）。
+        # ⚠️ 空 dict 不落行（append_metrics 过滤）——多数轮无拦截，不该增行体积。
+        "token_limit_blocked_by": token_limit_blocked_by or None,
         # R216：门槛校准两端顶分——拦截顶分贴门槛 = 真事件被吞需复评；放行顶分
         # 贴门槛 = 常规帖在越线边缘需收紧。None 不落行（append_metrics 过滤）。
         "token_limit_capped_top": token_limit_capped_top,

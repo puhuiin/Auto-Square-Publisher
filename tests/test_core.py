@@ -19673,6 +19673,45 @@ class TestR724QuotaRaiseTo40(unittest.TestCase):
         self.assertGreater(m.MAX_DAILY_POSTS, 0)
 
 
+class TestR728TokenLimitBlockedBy(unittest.TestCase):
+    """★★ R728：**逐币**记录限流拦截分布 —— 判断档位是否与候选供给匹配的唯一数据面
+
+    ★ 为什么需要：R718 按**浏览价值**分档限流，但**没考虑候选供给**。
+      实测矛盾：XRP 浏览基线最低（56 ⇒ 低档收紧到 2 篇），
+      而它恰是**候选高频币**（日志反复出现 `['XRP','BTC'] 已达限流`）
+      ⇒ 收紧对它可能是**反效果**（候选被批量浪费）。
+      ⚠️ 而「哪个币被拦最多」此前**遥测里完全看不到**（只有总数）
+      ⇒ 无数据就无法判断档位是否配比合理。
+    """
+
+    def test_field_exists_and_is_dict(self):
+        """★★ 新字段必须是 dict 且已落进 run_summary"""
+        src = open(m.__file__, encoding="utf-8").read()
+        self.assertIn('"token_limit_blocked_by"', src, "run_summary 未落该字段")
+        self.assertIn("token_limit_blocked_by: Dict[str, int] = {}", src,
+                      "计数器未初始化")
+
+    def test_empty_dict_not_persisted(self):
+        """★★ 无拦截时**不落行**（多数轮无拦截，不该给 metrics.jsonl 增体积）"""
+        src = open(m.__file__, encoding="utf-8").read()
+        self.assertIn("token_limit_blocked_by or None", src,
+                      "空 dict 未转 None ⇒ 每轮都会落一个空对象")
+
+    def test_accumulates_all_capped_tokens(self):
+        """★★ 一条新闻可能触发**多个**币同时触顶 ⇒ 逐个累加，不能只记第一个"""
+        src = open(m.__file__, encoding="utf-8").read()
+        self.assertIn("for _tk in capped:", src,
+                      "必须遍历 capped 全体（['XRP','BTC'] 会同时候选）")
+        self.assertIn("token_limit_blocked_by.get(_tk, 0) + 1", src,
+                      "未按币累加计数")
+
+    def test_counts_are_per_token_not_global(self):
+        """★ 不得退化成单个全局计数（那正是 R728 要解决的观测缺口）"""
+        src = open(m.__file__, encoding="utf-8").read()
+        self.assertNotIn('"token_limit_blocked_by": token_limit_bypassed', src,
+                         "错把放行计数当拦截分布")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
