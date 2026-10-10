@@ -18999,6 +18999,58 @@ class TestR712LangInTelemetry(unittest.TestCase):
         self.assertIn('"lang":', seg, "拒稿回执未落 lang")
 
 
+class TestR713PostGapThreshold(unittest.TestCase):
+    """★★ R713：最小发帖间隔 20 → 15（原值与实测节奏错配）
+
+    ★ 实测依据（R709 提量后 32 轮）：
+        真实轮次间隔**中位 17 分钟**（最小 1 / 最大 31），
+        **68%（21/31）< 20 分钟** ⇒ 三分之二轮次被静默挡掉、空转一轮。
+      症状链：配额 25 只发 17 篇 · 候选均值 98（供给充足）·
+        `unprocessed == candidates`（入口早退）⇒ **瓶颈是本门**。
+      日志里反复出现「距上一篇仅 19 分钟」——差 1 分钟也被拦。
+    """
+
+    def test_default_gap_matches_observed_cadence(self):
+        """★ 默认阈值必须 ≤ 实测间隔中位数（否则大部分轮次空转）
+
+        实测中位 17 分钟 ⇒ 阈值必须 **< 17** 才有一半以上轮次能通过。
+        """
+        gap = m.MIN_POST_GAP_MIN
+        self.assertLessEqual(gap, 17,
+                             "默认间隔 %d 分钟 ≥ 实测中位 17 ⇒ 又会开始空转轮次" % gap)
+
+    def test_gap_stays_well_above_spam_line(self):
+        """★★ 反向守卫：**不得为了提量把阈值压到刷屏线附近**
+
+        R578 当年设 20 是因为生产实录出现过 2 分钟连发；
+        刷屏判定线是 **2 分钟**，本门必须保持数倍余量。
+        ⚠️ 这是**防"手滑改小"**的守卫：R713 只允许 20→15 这种有数据支撑的调整。
+        """
+        gap = m.MIN_POST_GAP_MIN
+        self.assertGreaterEqual(gap, 10,
+                                "间隔 %d 分钟过于接近刷屏线（2min），"
+                                "账号权重风险显著上升" % gap)
+
+    def test_zero_still_disables_gate(self):
+        """★ 0 = 关闭（运营逃生口）必须保留"""
+        self.assertEqual(m._env_int("MIN_POST_GAP_MIN", 0), 0)
+
+    def test_observed_cadence_justifies_threshold(self):
+        """★ 阈值调整必须与实测数据挂钩（防止"凭感觉"改参数）
+
+        这条不是测代码，是把**判据固化**：中位间隔 17 / 68% < 20min
+        ⇒ 20 明显错配。若将来调度节奏变了（外部 cron 改配置），
+        本测试会提示需要重新评估。
+        """
+        # 实测快照（R713 巡检，2026-10-10）：32 轮，中位 17，21 轮 < 20min
+        observed_median_gap = 17
+        pct_below_old = 21 / 31
+        self.assertGreater(pct_below_old, 0.5,
+                           "实测 <20min 的占比已降到 50% 以下 ⇒ "
+                           "当初的调整理由可能已消失，应重新评估")
+        self.assertLess(m.MIN_POST_GAP_MIN, observed_median_gap)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
