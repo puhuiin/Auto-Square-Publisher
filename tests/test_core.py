@@ -20095,6 +20095,44 @@ class TestR732VolumeConfirmConvergence(unittest.TestCase):
                              "放量收敛不得进 offenders 硬口径（只做趋势追踪）")
 
 
+class TestR733CautionPhraseConvergence(unittest.TestCase):
+    """★★ R733：「别急着X」克制句式的词法收敛（R613 定位修复后的残留）
+
+    ★ 必须分清的两件事（否则会误判 R613 失败去重修）：
+      - R613 的**定位**修复（别拿「别急着」当第3段头句）**生效**：
+        近 40 篇只有 1 篇还拿它作段首。
+      - 但它**迁到句中、成了提示克制的默认动词前缀**（近 40 篇 11 处全是
+        「别急着抄底/满仓/喊多/追」= 27.5%，早期仅 3.75%）。
+    ⇒ 修法同 R732：给克制语气**说法菜单** + 反收敛指令，打散词法默认；
+      **不做「别急着」全词禁令**（R616：合法口语，设门误伤 + 伤野生操盘手人设）。
+    ⚠️ R613 的定位禁令（test_action_paragraph_not_defaulting_to_bieji_zhe）
+      继续保留，本类只补「词法收敛」这一层。
+    """
+
+    def test_system_prompt_gives_caution_phrase_menu(self):
+        """★★ 第3段必须给克制语气的替代说法菜单（≥3 个互异表述）"""
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        alts = ("这个位置不值得追", "没必要现在就进", "等…落地再说也不迟",
+                "留着子弹比追高强", "手痒也先压住", "现在进场性价比太低")
+        hits = [a for a in alts if a in sp]
+        self.assertGreaterEqual(len(hits), 3,
+            "克制语气替代说法菜单不足（只命中 %s）⇒ 模型会继续默认「别急着X」" % hits)
+
+    def test_system_prompt_names_the_lexical_convergence(self):
+        """★ 必须显式点名「别急着X」已成默认句式 + 要求打散（不是默认词）"""
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        self.assertIn("别都用「别急着」", sp,
+                      "缺「别都用别急着、它只是说法之一」的显式反收敛指令")
+        self.assertIn("从段首迁到句中", sp,
+                      "必须说明这是 R613 定位修复后的词法残留（否则会被误读成 R613 失败）")
+
+    def test_r613_positional_ban_still_intact(self):
+        """★★ R613 的定位禁令不得被本轮改动顺手删掉（两层各管一件事）"""
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        self.assertIn("别拿「别急着」当头句", sp,
+                      "R613 定位禁令被误删 ⇒ 别急着会重新回到段首")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
