@@ -19,23 +19,23 @@
   "strategy_guidance": "当前现货交易锦标赛（Season 4、MET赛事）、期货交易奖励活动、多支TradFi股票bStock及CT永续合约新上线、USDC高息理财、USD1空投延期等活动均处于流量窗口期，可优先输出活动参与指引、新交易标的的玩法科普内容，引导读者参与评论互动获取Write to Earn奖励；同时可关联新用户福利、Binance Blockchain Week 2026邀新活动等内容覆盖不同受众，提升内容在Binance Square的曝光量。",
   "last_updated": "2026-10-10T14:44:06.226626Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "parked_until": "2026-10-10T16:56:55.588958+00:00",
-      "fails": 3,
-      "last_fail": "2026-10-10T17:43:36.442554+00:00"
+    "ZyCrypto (新币与空投)": {
+      "fails": 1,
+      "last_fail": "2026-10-10T17:23:27.040178+00:00"
     },
     "深潮TechFlow (中文/繁体)": {
       "fails": 1,
       "last_fail": "2026-10-10T15:23:47.578771+00:00"
     },
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "last_fail": "2026-10-10T17:23:27.040178+00:00"
+    "CoinJournal (山寨异动)": {
+      "fails": 3,
+      "parked_until": "2026-10-10T16:56:55.588958+00:00",
+      "last_fail": "2026-10-10T18:03:28.262265+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-10",
