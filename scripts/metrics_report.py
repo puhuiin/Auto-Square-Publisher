@@ -185,6 +185,20 @@ _STOCK_ADVICE_RE = re.compile(
     r"|等回踩|回踩确认"
     r"|杠杆.{0,4}降到最低|把杠杆压到最低")
 
+# R732：「放量」作确认信号的收敛——与 flat_desc/stock_advice 同类（句中短语、
+# 前缀雷达抓不到），单建按帖占比指标。实测近 40 篇 43% 用「放量突破/放量站稳」
+# 当唯一确认信号（早期 12.5% → 全史 25% → 近 43%，是真实风格坍塌，不是话题驱动）。
+# 根因是 SYSTEM_PROMPT 把「放量突破近期前高」当领头示范词喂给模型（R611/R597 同型），
+# R732 已把它改成「确认维度菜单 + 反收敛指令」。此雷达是验证该修复是否生效的
+# 唯一度量面（R600：把手工 grep 产品化进 dashboard，否则下轮还得人工 grep）。
+# ⚠️ **只追踪不设门**：「放量」本身是合法的确认维度，问题是收敛成唯一说法；
+#    设门会误伤真正该说放量的帖（R616：按角色约束，不做 blanket 词禁）。
+# ⚠️ 不匹配 opencc 转换表那种孤立词：要求「放量」后面跟确认动作
+#    （突破/站稳/站上/上行/确认/再…），避免把「放量下跌」这类纯描述也算进来。
+_VOL_CONFIRM_RE = re.compile(
+    r"放量(?:突破|站稳|站回|站上|上行|拉升|确认)"
+    r"|放量.{0,3}(?:再|才|就)(?:评估|考虑|进场|加仓|跟进|看)")
+
 # R605：句长 burstiness（节奏方差）——整合自全网最新研究（textpulse 2026 对 6 万+
 # 文本的实证）：AI 文本最稳的「机器味」信号之一是**句长过于均匀**（标准差小），人类
 # 写作句长起伏大。该研究量化：人类句长变异系数 CV≈0.449、AI≈0.376，79% 的 AI 改写
@@ -244,6 +258,8 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
            "flat_desc_recent": 0, "flat_desc_older": 0,
            # R614：实操段套话的近/远对照（同 manip_frame/flat_desc 口径）。
            "stock_advice_recent": 0, "stock_advice_older": 0,
+           # R732：「放量」确认信号收敛（同 flat_desc/stock_advice 口径）。
+           "vol_confirm": 0, "vol_confirm_recent": 0, "vol_confirm_older": 0,
            # R610：近半的时间跨度（最早/最晚 ts）——判读近半的前提。R629 更正：
            # 原注释写"发布速率约 4~6 篇/天，一次加固上线 1 天后近半仍可能含 4 篇
            # 加固前旧稿"，**该数字是错的**。生产实测自 09-10 起稳定 **12 篇/天**
@@ -304,6 +320,11 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
         if _STOCK_ADVICE_RE.search(pv):
             out["stock_advice"] += 1
             out["stock_advice_recent" if _is_recent else "stock_advice_older"] += 1
+        # R732：「放量」作确认信号的收敛——同 flat_desc 口径，每帖最多计一次。
+        # 这是 R732 prompt 修复（去领头示范词 + 给确认维度菜单）唯一的度量面。
+        if _VOL_CONFIRM_RE.search(pv):
+            out["vol_confirm"] += 1
+            out["vol_confirm_recent" if _is_recent else "vol_confirm_older"] += 1
     out["offenders"] = dict(out["offenders"])
     return out
 
@@ -3445,6 +3466,31 @@ def render_text(s, rows=None):
                 else:
                     _sw = " ⚠️（套话收敛）" if _sp >= 40 else ""
                     lines.append(f"  🧰 实操段套话复读: {_sa}/{q['scanned']} 篇（{_sp:.0f}%）{_sw}")
+            # R732：「放量」确认信号收敛的度量面（R732 prompt 修复的验证口径）。
+            # 同 flat_desc/stock_advice：只追踪不设门 + 近/远半窗对照区分
+            # 「风格回归」与「本批新闻恰好多谈量能」。近半 < 远半 = 修复生效中。
+            if q.get("vol_confirm"):
+                _va = q["vol_confirm"]
+                _vp = 100 * _va / q["scanned"]
+                _vr = q.get("vol_confirm_recent", 0)
+                _vo = q.get("vol_confirm_older", 0)
+                _rn3 = (q["scanned"] + 1) // 2
+                _on3 = q["scanned"] - _rn3
+                if _rn3 >= 3 and _on3 >= 3:
+                    _vrpct = 100 * _vr / _rn3
+                    _vopct = 100 * _vo / _on3
+                    if _vrpct >= 40 and _vrpct >= _vopct:
+                        _vw = " ⚠️（近半未低于远半，修复可能未生效，读样本确认）"
+                    elif _vrpct < _vopct:
+                        _vw = "（近半 < 远半，修复生效中↓）"
+                    else:
+                        _vw = "（近/远持平，需更多样本）"
+                    lines.append(f"  📊 放量确认信号收敛: 近半 {_vr}/{_rn3}（{_vrpct:.0f}%）· "
+                                 f"远半对照 {_vo}/{_on3}（{_vopct:.0f}%）· "
+                                 f"整窗 {_va}/{q['scanned']}（{_vp:.0f}%）{_vw}")
+                else:
+                    _vw = " ⚠️（放量收敛，R732 修复待新帖验证）" if _vp >= 40 else ""
+                    lines.append(f"  📊 放量确认信号收敛: {_va}/{q['scanned']} 篇（{_vp:.0f}%）{_vw}")
         # R289：FNG 三件套收口——滞回驱动量直方图 + 武装未剥离一致性告警。
         # hook_count 是近窗引入次数（武装条件 ≥2，故 1 = 距武装一步之遥的压力面）；
         # armed 但 market_stripped=False = R101 互补剥离疑似失效（禁令与盘面行

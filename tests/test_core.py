@@ -19997,6 +19997,104 @@ class TestR731TokenLimitLogShowsPerTokenTier(unittest.TestCase):
                          "逐币档位不是取自生产函数 ⇒ 又一处口径分叉")
 
 
+class TestR732VolumeConfirmConvergence(unittest.TestCase):
+    """★★★ R732：根治「放量」确认信号收敛（实测 12.5%→25%→43% 的风格坍塌）
+
+    ★ 根因（R611/R597 同型）：SYSTEM_PROMPT 把「放量突破近期前高」当**领头示范词**
+      喂给模型 ⇒ 模型把「等待确认」全收敛成「等放量站稳/放量突破」。
+    ⇒ 修法同 R596：**去领头示范词 + 给确认维度菜单 + 反收敛指令**；
+      范文不再逐字示范「放量」（R597/R598：范文示范句=模板）。
+    ⚠️ **锁结构不锁词**：「放量」仍是合法的一种确认维度，守卫断言的是
+      「给了菜单 + 打散指令」，不是「放量被禁」（R616：按角色约束，别 blanket 词禁）。
+    """
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r732",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    # 确认维度菜单里应并列的若干互异维度（锁"给了菜单"而非"放量被禁"）
+    _DIMENSIONS = ("成交承接", "资金费率", "链上活跃", "交易所余额",
+                   "解锁", "持仓量", "价量背离", "消息兑现度")
+
+    def test_system_prompt_gives_confirmation_menu_not_single_lead_example(self):
+        """★★★ 第3段必须给**多个互异确认维度**（≥5），不是单一领头示范词"""
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        hits = [d for d in self._DIMENSIONS if d in sp]
+        self.assertGreaterEqual(len(hits), 5,
+            "确认维度菜单维度不足（只命中 %s）⇒ 又回到单一示范词，会被逐字复用" % hits)
+
+    def test_system_prompt_has_anti_convergence_instruction(self):
+        """★★ 必须显式告诉模型「别每帖都拿『放量』当确认信号 / 每帖换一个维度」"""
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        self.assertIn("每帖换一个", sp, "缺「每帖换一个维度」的反收敛指令")
+        self.assertIn("不是默认词", sp,
+                      "缺「放量只是众多维度之一、不是默认词」的显式打散指令")
+
+    def test_exemplar_no_longer_models_volume_as_confirmation(self):
+        """★★ 范文（第 4 段前的真人范文一）不得再用「放量上行」示范确认信号
+
+        R597/R598 教训：范文里的逐字示范句会被当模板照抄——「放量上行」正是
+        被 43% 的帖复读的那句，必须从范文里拿掉，换成另一个可观察维度。
+        """
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        i = sp.find("真人实战范文对照")
+        self.assertGreater(i, 0, "未找到范文块")
+        exemplar = sp[i:i + 900]
+        self.assertNotIn("放量上行", exemplar,
+                         "范文仍在逐字示范「放量上行」⇒ 会被模型照抄（R597/R598）")
+
+    def test_quality_scan_tracks_vol_confirm_per_post(self):
+        """★★ 雷达字段落 quality_scan + 近/远半窗对照（同 flat_desc 口径）"""
+        mr = self._mr()
+        # 构造 6 篇：3 篇命中「放量+确认动作」、3 篇用其他维度（不该命中）
+        hit = "消息落地，等放量站稳再评估强度，站不上就观望。"
+        miss = "消息落地，等资金费率转正、交易所余额不再流入再评估，不然观望。"
+        rows = []
+        for i in range(6):
+            rows.append({"outcome": "binance_published",
+                         "final_preview": (hit if i % 2 == 0 else miss) + " 第%d篇" % i,
+                         "ts": "2026-10-10T0%d:00:00+00:00" % i})
+        q = mr.quality_scan(rows, window=6)
+        self.assertEqual(q["vol_confirm"], 3, "应按帖计一次、恰好命中 3 篇")
+        self.assertEqual(q["vol_confirm_recent"] + q["vol_confirm_older"],
+                         q["vol_confirm"], "近/远两半之和必须等于整窗")
+
+    def test_vol_confirm_regex_requires_confirmation_verb(self):
+        """★ 正则必须要求「放量 + 确认动作」，不匹配孤立「放量」或「放量下跌」
+
+        避免误伤纯描述用法（如「放量下跌」是在描述盘面，不是把放量当确认信号）。
+        """
+        mr = self._mr()
+        self.assertTrue(mr._VOL_CONFIRM_RE.search("等放量突破再进场"))
+        self.assertTrue(mr._VOL_CONFIRM_RE.search("放量站稳 110 再看"))
+        self.assertIsNone(mr._VOL_CONFIRM_RE.search("今天放量下跌，恐慌盘涌出"),
+                          "「放量下跌」是描述不是确认信号，不该命中")
+        self.assertIsNone(mr._VOL_CONFIRM_RE.search("成交放量明显"),
+                          "孤立「放量」不该命中（否则与纯描述混淆）")
+
+    def test_vol_confirm_is_track_only_not_a_hard_offender(self):
+        """★ R603 纪律：收敛类指标只走独立趋势行，**不进 offenders 硬合规口径**
+
+        （放量是合法维度，混进 offenders 会把它当违禁词统计，与"锁结构不锁词"相悖）
+        """
+        mr = self._mr()
+        rows = [{"outcome": "binance_published",
+                 "final_preview": "等放量突破再进场。第%d篇" % i,
+                 "ts": "2026-10-10T0%d:00:00+00:00" % i} for i in range(4)]
+        q = mr.quality_scan(rows, window=4)
+        self.assertTrue(q["vol_confirm"] >= 1)
+        for key in q["offenders"]:
+            self.assertNotIn("放量", key,
+                             "放量收敛不得进 offenders 硬口径（只做趋势追踪）")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
