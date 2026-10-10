@@ -2887,6 +2887,29 @@ class NewsFetcher:
     def _title_words(title: str) -> Set[str]:
         return set(re.sub(r"[^a-z0-9$]+", " ", title.lower()).split())
 
+    _NUMERIC_TOKEN = re.compile(r"^\d+(?:\.\d+)?$")
+
+    @classmethod
+    def _title_entities(cls, title: str) -> Set[str]:
+        """★ R716：**实体词集**——判重用，**剔除纯数字 token**。
+
+        为什么（生产实证 10-10 12:05 / 12:24 两条）：
+          源标题 A：`Hyperliquid 鏈上永續份額已超 56%,...14 億美元...$HYPE`
+          源标题 B：`Hyperliquid 10亿收入全砸$HYPE回购,币价还跌1.69%...`
+          核心实体**完全相同**（`hyperliquid` + `$HYPE`），
+          但 Jaccard = 2/7 = **0.286** ≪ 阈值 0.65 ⇒ **判重漏放**。
+          根因：新闻标题里的数字（价格/百分比/金额）**几乎总是不同**，
+          却稀释了词集相似度。⇒ **数字不该参与"是不是同一事件"的判断**。
+
+        ⚠️ 退化为纯数字标题时返回原词集（不能返回空集——那会让
+          "两条都无实体"变成永不相等，判重通道整体失效）。
+        ⚠️ 与 `_title_words` **并存**（不替换）：后者是原始词集，
+          供 `_title_amount_fingerprint` 之外的既有调用与回退路径使用。
+        """
+        raw = cls._title_words(title)
+        ents = {w for w in raw if not cls._NUMERIC_TOKEN.match(w)}
+        return ents or raw
+
     @staticmethod
     def _title_amount_fingerprint(title: str) -> frozenset:
         """金额/百分比指纹：$4.6M / 460万美元 / 4600000美元 归一到同一 log10 量级桶；百分比原样收录。
@@ -2981,7 +3004,8 @@ class NewsFetcher:
         跨源去重是 O(候选 × 历史)，历史侧每条都要跑 8 次正则。历史标题在整轮内
         不变，却对每个候选重算一遍：45 候选 × 180 条历史实测约 270ms 纯重复计算。
         指纹算一次、增量追加即可。"""
-        return (title, cls._title_words(title),
+        # ★ R716：词集用**实体词集**（剔数字），金额指纹仍走原口径
+        return (title, cls._title_entities(title),
                 cls._title_amount_fingerprint(title), cls._title_tokens_upper(title))
 
     @classmethod
@@ -2992,16 +3016,33 @@ class NewsFetcher:
     @classmethod
     def _match_dedup_index(cls, title: str, index, threshold: float) -> Optional[str]:
         """对预编译索引做判重，语义与 _find_near_duplicate 完全一致"""
+        # ★ R716：分两级判重，**共享实体数**是护栏（防过度判重）
+        ents = cls._title_entities(title)
         words = cls._title_words(title)
         amt_b = cls._title_amount_fingerprint(title)
         tok_b = cls._title_tokens_upper(title)
         for other, ow, amt_a, tok_a in index:
-            if ow and words:
-                inter = len(words & ow)
-                if inter and (inter / len(words | ow)) >= threshold:
+            if ow and ents:
+                inter = len(ents & ow)
+                # ① 实体通道：Jaccard 达标即认。
+                #    ⚠️ 曾加过"共享实体 ≥2"护栏，实测**站不住**（已移除）：
+                #    数学上当 Jaccard ≥ 0.65 时交集必然 ≥2（除非两标题实体集
+                #    完全相同且只有 1 个实体），所以护栏几乎不触发，
+                #    反而会对"完全相同的单实体标题"引入**漏判**。
+                #    ⇒ 防误杀不靠额外阈值，靠"实体不同则 Jaccard 自然低"
+                #      （"ETH ETF inflows surge" vs "ETH ETF outflows surge"
+                #        交集 3、并集 5 ⇒ 0.6 < 0.65 ⇒ 不判重）。
+                if inter and (inter / len(ents | ow)) >= threshold:
                     return other
             if cls._fingerprint_match(amt_a, amt_b, tok_a, tok_b):
                 return other
+            # ② 回退通道：原词集（含数字）Jaccard 达标且共享 ≥3
+            #    ——保留旧口径的判重能力，不因新增实体通道而丢失。
+            ow_full = cls._title_words(other)
+            if ow_full and words:
+                i2 = len(words & ow_full)
+                if i2 >= 3 and (i2 / len(words | ow_full)) >= threshold:
+                    return other
         return None
 
     @classmethod

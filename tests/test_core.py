@@ -19214,6 +19214,85 @@ class TestR715QuotaCooldownFromBody(unittest.TestCase):
         self.assertGreaterEqual(sec, 6 * 3600)
 
 
+class TestR716DedupEntityChannel(unittest.TestCase):
+    """★★ R716：判重增加**实体通道**（数字不再稀释相似度）
+
+    ★ 生产实证（10-10 12:05 / 12:24，两条真实**源标题**）：
+      A `Hyperliquid 鏈上永續份額已超 56%,...14 億美元...$HYPE`
+      B `Hyperliquid 10亿收入全砸$HYPE回购,币价还跌1.69%...`
+      核心实体**完全相同**（`hyperliquid` + `$HYPE`），
+      但旧口径 Jaccard = 2/7 = **0.286** ≪ 0.65 ⇒ **判重漏放**，
+      结果 19 分钟内连发同一题材两篇。
+      根因：新闻标题里的数字（价格/百分比/金额）几乎总是不同，
+      却稀释了词集相似度 ⇒ 数字不该参与"是不是同一事件"的判断。
+
+    ⚠️ 配套的**护栏**（没有它会误杀）：同币不同方向的新闻
+      （"ETH surges 5%" vs "ETH plunges 8%"）去数字后词集都是 `{ethereum}`，
+      Jaccard=1.0 ⇒ 必须靠**共享实体数 ≥ 2** 拦住。
+    """
+
+    A = "Hyperliquid 鏈上永續份額已超 56%,累計協議收入破 14 億美元,回購 $HYPE 也砸了"
+    B = "Hyperliquid 10亿收入全砸$HYPE回购,币价还跌1.69%,踏空的你慌不慌? $HYPE"
+
+    def test_catches_same_event_different_wording(self):
+        """★★ 目标案例：同事件、不同措辞（含繁简差异）必须被拦"""
+        self.assertIsNotNone(
+            m.NewsFetcher._find_near_duplicate(self.B, [self.A]),
+            "同事件不同措辞仍未被判重 ⇒ 本条改动未生效")
+
+    def test_does_not_kill_same_coin_opposite_direction(self):
+        """★★ 防误杀：同币不同方向的两条新闻**不得**被判重"""
+        up = "Ethereum surges 5% as ETF inflows accelerate"
+        down = "Ethereum plunges 8% as ETF outflows hit record"
+        self.assertIsNone(m.NewsFetcher._find_near_duplicate(down, [up]),
+                          "同币反向新闻被误杀 ⇒ 实体通道缺'共享≥2'护栏")
+
+    def test_does_not_kill_unrelated_coins(self):
+        """★ 不同币种、不同事件**不得**被判重"""
+        btc = "Bitcoin ETF inflows hit record high"
+        eth = "Ethereum plunges 8% as ETF outflows hit record"
+        self.assertIsNone(m.NewsFetcher._find_near_duplicate(eth, [btc]))
+
+    def test_single_entity_identical_titles_still_dup(self):
+        """★★ 判别式：**实体完全相同的单实体标题仍须判重**
+
+        ⚠️ 这条是"共享 ≥2 护栏"能否被测出来的**唯一判别样本**：
+          `Bitcoin` vs `Bitcoin` ⇒ 实体交集 = 1、Jaccard = 1.0
+          ⇒ 拆掉护栏就判重、留着护栏就**漏判**。
+        ★ 我第一版的"防误杀"样本（同币反向）**区分不了护栏**——
+          那两条的实体 Jaccard 只有 0.33，**本来就 < 0.65 不会判重**，
+          拆不拆护栏结果一样 ⇒ 假通过（R710 同族教训：先算清可区分条件）。
+        """
+        self.assertIsNotNone(
+            m.NewsFetcher._find_near_duplicate("Bitcoin", ["Bitcoin"]),
+            "完全相同的单实体标题被漏判 ⇒ 存在多余护栏挡住了本该判重的情形")
+
+    def test_entity_set_excludes_numeric_tokens(self):
+        """★ `_title_entities` 剔除纯数字，但**全数字标题要退化**"""
+        ents = m.NewsFetcher._title_entities("BTC 100 200 300")
+        self.assertTrue(ents, "全数字标题的实体集退化为空 ⇒ 判重通道会失效")
+        e2 = m.NewsFetcher._title_entities("Bitcoin ETF 123 inflow")
+        self.assertIn("bitcoin", e2)
+        self.assertNotIn("123", e2)
+
+    def test_old_word_set_still_available(self):
+        """★ `_title_words` 必须**保留**（回退通道与其他调用方依赖）"""
+        w = m.NewsFetcher._title_words("Bitcoin ETF 123 inflow")
+        self.assertIn("123", w, "原始词集被改动 ⇒ 回退通道失效")
+
+    def test_amount_fingerprint_still_staticmethod(self):
+        """★★ 反向守卫：`_title_amount_fingerprint` 必须是 staticmethod
+
+        ⚠️ 实测踩过：插入新方法时装饰器链被带歪，它变成 classmethod 后
+        `cls._title_amount_fingerprint(title)` 会**多传一个参数** ⇒
+        TypeError 在**运行时**才炸（`py_compile` 查不出）。
+        """
+        import inspect
+        f = inspect.getattr_static(m.NewsFetcher, "_title_amount_fingerprint")
+        self.assertIsInstance(f, staticmethod,
+                              "_title_amount_fingerprint 装饰器被改坏 ⇒ 调用会 TypeError")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
