@@ -9918,10 +9918,19 @@ class TestRunMainSemantics(unittest.TestCase):
             slept = []
             # 时间无法在测试中真实推进（sleep 被 patch）：用 count_since 的调用
             # 序列模拟"等待后最老帖滚出窗口"——首次查=1（满）、重查=0（腾出）
-            counts = iter([1, 0])
+            # ⚠️ R731：**不要用 `iter([1, 0])`**。那样替身只够 2 次调用，
+            #   生产侧**任何**新增的 `count_since` 调用都会让它 StopIteration
+            #   ⇒ 测试以**完全无关的原因**假失败（R731 给 run_summary 补落
+            #     `sent_24h` 时真实踩到：症状是 StopIteration，离病因极远）。
+            #   ⇒ 改成"序列走完后粘住最后一个值"：语义即"腾出之后一直是腾出的"，
+            #     且对调用次数不敏感（纪律：替身要多备，别让调用次数变成隐式契约）。
+            _counts = [1, 0]
+
+            def _count_since(*a, **k):
+                return _counts.pop(0) if len(_counts) > 1 else _counts[0]
             with patch.object(m, "MAX_DAILY_POSTS", 1), \
                  patch.object(m.CacheManager, "count_since",
-                              side_effect=lambda *a, **k: next(counts)), \
+                              side_effect=_count_since), \
                  patch.object(m.time, "sleep", side_effect=lambda s: slept.append(s)), \
                  patch.object(m, "_quota_next_slot_estimate",
                               return_value=("2026-01-01T00:03:00+00:00", 3)):
@@ -18345,6 +18354,18 @@ class TestR698VideoExcludedFromQuota(unittest.TestCase):
             kws = {k.arg for k in node.keywords}
             if "sent_24h" in kws and "sent_24h_all" not in kws:
                 missing.append(node.lineno)
+        # ★★ R731 扩面：配额口径也能走**dict 字面量**落盘
+        #   （`append_metrics({...})` 的发帖轮 run_summary）。
+        #   原判据只穷举 `append_run_summary(**kwargs)` 调用点 ⇒ R731 给发帖轮
+        #   补落 `sent_24h` 时，这条守卫**完全看不见那处**，配对契约等于没锁。
+        #   ⇒ 两种落盘形态都要覆盖（纪律：回写面必须与使用面对齐，且穷举所有形态）。
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Dict):
+                continue
+            keys = {k.value for k in node.keys
+                    if isinstance(k, ast.Constant) and isinstance(k.value, str)}
+            if "sent_24h" in keys and "sent_24h_all" not in keys:
+                missing.append(node.lineno)
         self.assertEqual(missing, [],
                          f"这些落盘点带 sent_24h 却漏了 sent_24h_all：{missing}")
 
@@ -19710,6 +19731,270 @@ class TestR728TokenLimitBlockedBy(unittest.TestCase):
         src = open(m.__file__, encoding="utf-8").read()
         self.assertNotIn('"token_limit_blocked_by": token_limit_bypassed', src,
                          "错把放行计数当拦截分布")
+
+
+class TestR731AuditReportUsesProductionCalibration(unittest.TestCase):
+    """★★★ R731：巡检脚本**不得自算生产口径** —— 自算连错三处的实证
+
+    ★ 真实代价（R719 上线起报告一直是错的，直到 R731 读报告时量级不对才发现）：
+      ① `base_limit * mult` 里传的是**日配额**（25/40），而档位该乘的是
+         `TOKEN_DAILY_LIMIT`(3) ⇒ 报告印"限流档 50/25/24"，真实是 **6/3/2**。
+      ② 档位基线用脚本的 `engagement_baseline()`（min_n=4 ⇒ 8 币 / 中位 88.5），
+         生产 `_token_daily_limit` 自 R722 起用 **n>=2**（13 币 / 中位 83.0）。
+      ③ `--quota` 默认写死 25，R724 已把生产默认提到 **40**。
+    ⇒ 三处同根：**脚本重算了一遍生产逻辑**。R719 的立项理由正是
+      「报告与生产不一致的巡检脚本是误导源，比没有更糟」，它自己却犯了。
+
+    ⇒ 本类用**端到端渲染判据**（跑 report、解析打印出来的那一列），
+      而不是"源码里有没有调某个函数"——后者挡不住"调了但喂错参数"。
+    """
+
+    @staticmethod
+    def _script():
+        import importlib.util
+        import os
+        path = os.path.join(os.path.dirname(m.__file__), "scripts", "audit_perf.py")
+        spec = importlib.util.spec_from_file_location("audit_perf_r731", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    #: 覆盖三个档位各至少一枚（高/中/低），否则"两种实现同解"会假通过（R710 教训）
+    PROBE_TOKENS = ("ETH", "BTC", "XRP")
+
+    def _render(self, tokens=None, quota=None):
+        """跑真实 report()，返回打印出的报告文本"""
+        import contextlib
+        import io
+        from datetime import datetime, timedelta, timezone
+        tokens = list(tokens or self.PROBE_TOKENS)
+        ts = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+        rows = [{"outcome": "binance_published", "ts": ts, "tokens": tokens,
+                 "source": "probe", "content_id": "c1"},
+                {"outcome": "run_summary", "ts": ts, "candidates": 9,
+                 "unprocessed": 0, "published": 1,
+                 "token_limit_blocked_by": {t: 1 for t in tokens}}]
+        script = self._script()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            script.report(rows, 24, None, quota, script.production())
+        return buf.getvalue()
+
+    @staticmethod
+    def _tier_col(text):
+        """解析 ③ 的"限流档"列 → {币: 档位}"""
+        import re
+        out = {}
+        for mt in re.finditer(r"^\s{3}(\S+)\s+\d+ 篇.*?限流档 (\S+)\s*$",
+                              text, re.M):
+            out[mt.group(1)] = mt.group(2)
+        return out
+
+    def test_tier_column_equals_production_limit(self):
+        """★★★ 报告印出的档位必须**逐币等于** `main._token_daily_limit`
+
+        这是唯一能抓住原 bug 的判据：喂配额时会渲染成 50/25/24，
+        喂对了才是 6/3/2。只断言"调用了生产函数"挡不住喂错参数。
+        """
+        cols = self._tier_col(self._render())
+        self.assertTrue(cols, "没解析到任何「限流档」列，判据失效（渲染格式变了？）")
+        for t in self.PROBE_TOKENS:
+            self.assertIn(t, cols, "报告缺 %s 行" % t)
+            self.assertEqual(cols[t], str(m._token_daily_limit(t)),
+                             "%s 的档位与生产不一致：报告 %s vs 生产 %d"
+                             % (t, cols[t], m._token_daily_limit(t)))
+
+    def test_tier_column_never_scales_with_quota(self):
+        """★★ 反向：档位**不得**随日配额变化（原 bug 的指纹）
+
+        ⚠️ 必须显式传两个不同的 `quota` 再比较——档位列若仍由配额推导，
+           两次渲染会给出不同的数（50 vs 80）。这就是"两种实现何时可区分"
+           的那个条件（R710：凭"看起来区分度大"选样本会假通过）。
+        """
+        a = self._tier_col(self._render(quota=25))
+        b = self._tier_col(self._render(quota=120))
+        self.assertEqual(a, b, "档位列随配额改变 ⇒ 它仍在用配额推导（R731 原 bug）")
+
+    def test_quota_line_reads_production_default(self):
+        """★ 配额上限不得写死：不传 --quota 时必须显示生产 MAX_DAILY_POSTS"""
+        text = self._render()
+        self.assertIn("配额上限 %d" % m.MAX_DAILY_POSTS, text,
+                      "① 行未按生产默认值显示配额上限（R724 提量后会显示旧值）")
+
+    def test_cli_quota_default_is_none(self):
+        """★ CLI 默认值必须是 None（= 向生产取值），不能是字面量数字"""
+        import ast
+        import inspect
+        tree = ast.parse(inspect.getsource(self._script()))
+        found = []
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Call)
+                    and getattr(node.func, "attr", "") == "add_argument"
+                    and node.args
+                    and isinstance(node.args[0], ast.Constant)
+                    and node.args[0].value == "--quota"):
+                for kw in node.keywords:
+                    if kw.arg == "default":
+                        found.append(kw.value)
+        self.assertEqual(len(found), 1, "未找到 --quota 的 default（判据失效）")
+        self.assertIsNone(getattr(found[0], "value", "sentinel"),
+                          "--quota 默认值被写死 ⇒ 生产提量后报告显示旧上限（R724 实测）")
+
+    def test_script_does_not_recompute_tier_boundaries(self):
+        """★★ 脚本内不得再出现档位边界常数（中位×1.3 / ×0.7）的重算
+
+        ⚠️ 用 **AST** 而非字符串搜索：注释里本就写着"中位×1.3 / ×0.7"
+           在讲这段历史，字符串判据会被注释误伤（R699 教训）。
+        """
+        import ast
+        import inspect
+        tree = ast.parse(inspect.getsource(self._script()))
+        bad = [n.lineno for n in ast.walk(tree)
+               if isinstance(n, ast.Constant)
+               and isinstance(n.value, float) and n.value in (1.3, 0.7)]
+        self.assertEqual(bad, [], "脚本又在自算档位边界（行 %s）⇒ 口径必然再分叉" % bad)
+
+    def test_weak_sample_tokens_are_not_rendered_as_missing(self):
+        """★ 弱样本币（R722 半权）不得显示成"基线 —"
+
+        HYPE(236)/LINK(193) 是**浏览最高**的两枚，却因 min_n=4 被旧报告渲染成
+        "基线 — 限流档 —" ⇒ 恰好把 R722 的效果藏了起来（R722 的受益币正是它们）。
+        """
+        weak = dict(m.NewsFetcher._load_weak_views())
+        if not weak:
+            self.skipTest("当前无弱样本币（基线数据变化）")
+        probe = sorted(weak, key=lambda k: -weak[k])[0]
+        text = self._render(tokens=[probe])
+        line = [l for l in text.splitlines()
+                if l.strip().startswith(probe + " ")]
+        self.assertTrue(line, "报告缺弱样本币 %s 的行" % probe)
+        self.assertNotIn("基线 —", line[0],
+                         "弱样本币 %s 的基线被显示成缺失：%s" % (probe, line[0]))
+        self.assertIn("弱", line[0], "未标注样本强弱 ⇒ 读者分不清全权/半权")
+
+    def test_per_token_block_section_reports_sample_base(self):
+        """★ R728 的逐币拦截必须进报告，且**必须同时报样本基数**
+
+        ⚠️ 只报分布不报基数会被误读：配额/间隔早退轮只评估 1~2 条候选，
+           拦截天然是 0（R729 实测踩过这个小样本假象）。
+        """
+        text = self._render()
+        self.assertIn("逐币限流拦截", text, "R728 的数据面没进报告 ⇒ 下轮还得手工翻")
+        self.assertIn("有拦截记录的轮次", text, "未报样本基数 ⇒ 分布会被过度解读")
+
+
+class TestR731QuotaScopeLandsEveryRound(unittest.TestCase):
+    """★★ R731：配额口径（分子+分母）必须**每轮**落盘，不只落饱和轮
+
+    ★ 缺陷（实测）：`sent_24h` / `max_daily_posts` 原先只在"配额打满早退"
+      路径落盘 ⇒ 日报只能在**打满时**说"已打满 25/25"；R724 提量后不再打满，
+      配额行就退化成"下一槽位 N 分钟后"，而槽位数在未打满时**毫无约束含义**
+      （实测 28/40 未打满、槽位却显示 1 分钟）
+      ⇒ **系统越健康，日报读起来越像被卡住**（方向反了，同 R723 修过的那族）。
+
+    ⚠️ 本类走**真实 `_run_main`**（dry 模式）而非读源码：dry 模式下入口配额门
+       根本不执行 ⇒ 若实现去复用那个分支里的 `sent_24h` 局部变量，
+       这里会直接炸（未定义变量 ⇒ 整行 JSON 序列化失败、行被静默丢弃，R673 实录）。
+    """
+
+    def _summary_row(self):
+        harness = TestRunMainSemantics("test_dry_run_writes_nothing")
+        tmpdir, paths = harness._iso_files()
+        patches = harness._base_patches(tmpdir, paths, dry=True)
+        try:
+            m._run_main()
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+        finally:
+            harness._teardown(patches, tmpdir)
+        sums = [r for r in rows if r.get("outcome") == "run_summary"]
+        self.assertEqual(len(sums), 1, "每轮恰好一条 run_summary")
+        return sums[0]
+
+    def test_publishing_round_carries_quota_numerator_and_denominator(self):
+        """★★★ 发帖轮的 run_summary 必须同时带分子与**分母**"""
+        s = self._summary_row()
+        self.assertIsInstance(s.get("sent_24h"), int,
+                              "发帖轮缺 sent_24h ⇒ 日报答不出「发了多少」")
+        self.assertIsInstance(s.get("max_daily_posts"), int,
+                              "发帖轮缺 max_daily_posts ⇒ 日报只能拿槽位凑，"
+                              "未打满时会读成被卡住")
+        self.assertEqual(s["max_daily_posts"], m.MAX_DAILY_POSTS,
+                         "分母必须是生产配额本身")
+
+    def test_total_scope_lands_alongside(self):
+        """★★ R698 契约：全量口径必须与 sent_24h **同行**（否则答不出视频击穿）"""
+        s = self._summary_row()
+        self.assertIsInstance(s.get("sent_24h_all"), int,
+                              "带了 sent_24h 却漏 sent_24h_all（R698 的击穿漏洞观测位）")
+        self.assertGreaterEqual(s["sent_24h_all"], s["sent_24h"],
+                                "全量口径不得小于图文口径")
+
+
+class TestR731TokenLimitLogShowsPerTokenTier(unittest.TestCase):
+    """★★ R731：限流跳过日志必须印**逐币真实档位**，不能印全局常量
+
+    ★ 缺陷：日志原文是 `已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)` = 恒印 3，
+      而 R718 分档 + R722 弱样本之后档位是逐币的（ETH/SOL/HYPE/LINK=6、
+      XRP=2、其余=3）⇒ 这行**对高档币和低档币全是错的**。
+    ⚠️ 为什么单独锁：排查限流时日志是第一手证据。R722 栽过同型
+      （"弱样本加 2 分却打印 +5"⇒ 排查被带偏）⇒ 纪律：日志文案必须与行为一致。
+    """
+
+    @staticmethod
+    def _log_call():
+        """AST 定位那条 logger.info（用 AST 而非字符串：注释里也有同样的话）"""
+        import ast
+        import inspect
+        import textwrap
+        tree = ast.parse(textwrap.dedent(inspect.getsource(m)))
+        for node in ast.walk(tree):
+            if not (isinstance(node, ast.Call)
+                    and getattr(node.func, "attr", "") == "info"):
+                continue
+            for arg in node.args:
+                if not isinstance(arg, ast.JoinedStr):
+                    continue
+                lit = "".join(v.value for v in arg.values
+                              if isinstance(v, ast.Constant))
+                if "24h 内已达限流上限" in lit and "为避免刷屏跳过" in lit:
+                    return arg
+        return None
+
+    def test_log_exists_and_keeps_greppable_prefix(self):
+        """★ 前缀必须保留：历史日志按它 grep 核对遥测（R731 本轮即这么验的 R728）"""
+        arg = self._log_call()
+        self.assertIsNotNone(arg, "没找到限流跳过日志 ⇒ 后续判据全部空转")
+        import ast
+        lit = "".join(v.value for v in arg.values if isinstance(v, ast.Constant))
+        self.assertIn("24h 内已达限流上限", lit, "可 grep 的前缀被改掉")
+
+    def test_log_renders_per_token_limits_not_global_constant(self):
+        """★★★ 必须引用逐币档位，且**不得**再引用全局 TOKEN_DAILY_LIMIT"""
+        import ast
+        arg = self._log_call()
+        self.assertIsNotNone(arg)
+        names = set()
+        for v in arg.values:
+            if isinstance(v, ast.FormattedValue):
+                names |= {n.id for n in ast.walk(v.value)
+                          if isinstance(n, ast.Name)}
+        self.assertNotIn("TOKEN_DAILY_LIMIT", names,
+                         "日志仍在印全局阈值 ⇒ 对 ETH(6)/XRP(2) 全是错的")
+        self.assertIn("_cap_lims", names,
+                      "日志未引用逐币档位（_cap_lims）⇒ 排查时读不到真实档位")
+
+    def test_per_token_limits_come_from_production_function(self):
+        """★ 逐币档位必须取自 `_token_daily_limit`（唯一事实源），不得另算一份"""
+        import inspect
+        import re
+        src = inspect.getsource(m)
+        i = src.find("_tok_lims = {")
+        self.assertGreater(i, 0, "未找到逐币档位字典")
+        self.assertRegex(src[i:i + 200],
+                         re.compile(r"_token_daily_limit\("),
+                         "逐币档位不是取自生产函数 ⇒ 又一处口径分叉")
 
 
 if __name__ == "__main__":

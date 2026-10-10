@@ -11453,7 +11453,18 @@ def _run_main():
                         if not _is_seed and (token_limit_capped_top is None
                                              or base_impact > token_limit_capped_top):
                             token_limit_capped_top = base_impact
-                        logger.info(f"代币 {capped} 24h 内已达限流上限 ({TOKEN_DAILY_LIMIT} 篇)，"
+                        # ⚠️⚠️ R731：**必须印逐币真实档位**。此前这里印的是全局
+                        # `TOKEN_DAILY_LIMIT`(3)，而 R718 分档 + R722 弱样本之后
+                        # 档位已经是**逐币**的（ETH/SOL/HYPE/LINK=6、XRP=2、其余=3）
+                        # ⇒ 这行日志对高档币和低档币**全是错的**：ETH 实际发到 6 篇
+                        #   才触顶，日志却说"已达限流上限 (3 篇)"。
+                        # ★ 为什么这条值得单独修：排查限流时**日志是第一手证据**，
+                        #   R722 就栽过同型（"弱样本加 2 分却打印 +5"⇒ 排查被带偏）。
+                        #   纪律：**日志文案必须与行为一致**。
+                        # ⚠️ 前缀「代币 {capped} 24h 内已达限流上限」保持不变——
+                        #   历史日志按它 grep（本轮就是这么核对 R728 遥测的），改掉会断掉复查口径。
+                        _cap_lims = "、".join("%s=%s篇" % (t, _tok_lims.get(t)) for t in capped)
+                        logger.info(f"代币 {capped} 24h 内已达限流上限（逐币档位 {_cap_lims}），"
                                     f"本条热度 {base_impact} 未达放行门槛，为避免刷屏跳过: {title}")
                         skip_counts["token_limit"] += 1
                         # ★ R728：逐币记录「是哪个币被限流挡掉」。
@@ -12251,6 +12262,27 @@ def _run_main():
         # 贴门槛 = 常规帖在越线边缘需收紧。None 不落行（append_metrics 过滤）。
         "token_limit_capped_top": token_limit_capped_top,
         "token_limit_bypass_top": token_limit_bypass_top,
+        # ★★ R731：配额口径（分子+分母）**每轮都落**，不再只落"配额打满早退"轮。
+        # 缺陷（实测）：`sent_24h` / `max_daily_posts` 此前只在饱和早退路径
+        #   （append_run_summary 的两处）落盘 ⇒ 日报的配额行只有在**打满时**
+        #   才能说出"已打满 25/25"；一旦 R724 提量后不再打满，它就退化成
+        #   "下一槽位 N 分钟后"，而槽位数在**未打满时毫无约束含义**
+        #   （实测窗口 28/40 未打满，槽位却显示 1 分钟）
+        #   ⇒ **系统越健康，日报读起来越像被卡住**，方向正好反了（R723 修过
+        #     同族的"配额状态方向反了"，根因都是：分母不在手上就只能拿槽位凑）。
+        # ⇒ 分母必须每轮都在行内，消费侧才能直接说"未打满 28/40"
+        #   （同 R618：写入侧补落准入分，消费侧才解释得了异常值）。
+        # ⚠️ 这里**现算**而不复用入口门的 `sent_24h` 局部变量，两个原因：
+        #   ① 那个变量只在 `not dry_run and MAX_DAILY_POSTS > 0` 分支里定义
+        #      ⇒ dry-run / 不限配额时引用它会 NameError，而
+        #        **未定义变量会让整行 JSON 序列化失败、该行被静默丢弃**（R673 实录）
+        #   ② 它是**本轮发帖之前**的快照 ⇒ 落进 run_summary 会少算本轮刚发的篇数
+        "sent_24h": cache_mgr.count_since(24),
+        # ★★ R698：全量口径（图文+视频）必须与 `sent_24h` **同行**落，
+        #   否则答不出"视频帖有没有把图文配额算穿"（R698 修过的真实击穿漏洞）。
+        "sent_24h_all": cache_mgr.count_all_since(24),
+        # ⚠️ 0 = 运营显式配置的"不限制"，照实落（消费侧按 >0 判定，R723 已这样写）
+        "max_daily_posts": MAX_DAILY_POSTS,
         # R220：每源入选率进遥测——此前只渲染进易失的 Actions Step Summary
         #（且只列前 5 名），历史不可回查；"某源扫了 N 条却 0 入选"的源治理决策
         #（换源/撤源）一直没有数据面。键取源名首词（与 Step Summary 渲染同规约，

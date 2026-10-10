@@ -116,7 +116,41 @@ def _median(xs):
     return xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2
 
 
-def report(rows, hours, since_iso=None, base_limit=25):
+def production():
+    """★★ R731：导入生产模块，**不再复刻任何生产口径**。
+
+    ⚠️ 为什么必须这样：R719 为了"验证一致性"在脚本里重算了限流档位，
+       结果**连错三处**（全部实测，报告从 R719 上线起一直是错的）：
+       ① `base_limit * mult` 里的 `base_limit` 传的是**日配额**（25/40），
+          而档位该乘的是 `TOKEN_DAILY_LIMIT`(3) ⇒ 报告印出"限流档 50/25/24"，
+          真实档位是 **6/3/2**（量级差一个数量级，R622「量纲必须对齐」同型）。
+       ② 档位基线用脚本的 `engagement_baseline()`（min_n=4 ⇒ 8 币、中位 88.5），
+          而生产 `_token_daily_limit` 自 R722 起用 **n>=2**（13 币、中位 83.0）
+          ⇒ 分档边界本就不同（R719 刚因同一类口径分叉修过一次）。
+       ③ `--quota` 默认值写死 25，而 R724 已把生产默认提到 **40**。
+    ⇒ 三处同根：**脚本自己算了一遍生产逻辑**。口径只能有一份实现
+      （R722 纪律）⇒ 这里直接调生产函数，让它成为唯一事实源。
+    ⚠️ 导入失败时**必须喊出来**（R718 教训：静默降级会让缺陷完全隐身），
+       并把受影响的列显示成 `?` ——**绝不退回自己算一个数**，
+       因为"算错的报告比没有报告更糟"（R719 的立项理由）。
+    """
+    import importlib.util
+    try:
+        path = os.path.join(ROOT, "main.py")
+        spec = importlib.util.spec_from_file_location("_prod_main_r731", path)
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["_prod_main_r731"] = mod
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception as e:                       # pragma: no cover - 环境异常
+        print("⚠️⚠️ 无法导入生产模块 main.py（%s: %s）\n"
+              "   ⇒ 配额上限与限流档位**无法按生产口径显示**（列显示 ?）。\n"
+              "   ⇒ 不退回脚本自算：R719 的三处错档位正是自算造成的。"
+              % (type(e).__name__, e))
+        return None
+
+
+def report(rows, hours, since_iso=None, quota=None, prod=None):
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     cut = (now - timedelta(hours=hours)).isoformat()
     pub = [r for r in rows if str(r.get("outcome", "")).startswith("binance_published")
@@ -133,10 +167,14 @@ def report(rows, hours, since_iso=None, base_limit=25):
     print("=" * 72)
 
     # ① 配额达成
+    #   ★ R731：配额上限取**生产默认值**（R724 已 25→40），不再写死在脚本里。
     by_day = Counter(_cst(r["ts"]).strftime("%m-%d") for r in pub)
     n_min = by_day[max(by_day)] if by_day else 0
-    print("\n① 配额：%d 篇 | 按天 %s | 单日峰值 %d（配额上限 %d）"
-          % (len(pub), dict(by_day), n_min, base_limit))
+    if quota is None:
+        quota = getattr(prod, "MAX_DAILY_POSTS", None) if prod else None
+    print("\n① 配额：%d 篇 | 按天 %s | 单日峰值 %d（配额上限 %s）"
+          % (len(pub), dict(by_day), n_min,
+             quota if isinstance(quota, int) else "?"))
     nxt = [r.get("next_slot_frees_min") for r in sums
            if isinstance(r.get("next_slot_frees_min"), (int, float))]
     if nxt:
@@ -158,23 +196,35 @@ def report(rows, hours, since_iso=None, base_limit=25):
         print("   %02d-%02d时 %2d 篇 %s" % (h, h + 3, used[h], bar))
 
     # ③ 币种 vs 浏览基线
-    print("\n③ 币种分布 vs 浏览基线（R608）")
+    #   ★ R731：基线分「强样本」(n>=min_n，R608 全权) / 「弱样本」(2<=n<min_n，
+    #     R722 半权)。此前只显示强样本 ⇒ HYPE(236)/LINK(193) 这两枚**浏览最高**
+    #     的币显示成"基线 —"，恰好把 R722 的效果藏了起来（它们正是 R722 的受益币）。
+    print("\n③ 币种分布 vs 浏览基线（强=R608 全权 / 弱=R722 半权）｜限流档取生产口径")
+    weak = {}
+    if prod:
+        try:
+            weak = dict(prod.NewsFetcher._load_weak_views())
+        except Exception as e:
+            print("   ⚠️ 弱样本基线读取失败（%s）⇒ 弱样本币会显示成 —" % e)
     c = Counter()
     for r in pub:
         for t in (r.get("tokens") or []):
             c[t.upper().replace("$", "")] += 1
     tot = sum(c.values()) or 1
     for t, n in c.most_common(12):
-        b = be.get(t)
-        # R718 的档位（与 main.py 同口径：中位×1.3 / ×0.7）
-        lim = "—"
-        if b and be:
-            med = _median(be.values())
-            if med > 0:
-                mult = 2 if b >= med * 1.3 else (0 if b <= med * 0.7 else 1)
-                lim = "%d" % (base_limit * mult if mult else max(1, base_limit - 1))
-        print("   %-9s %2d 篇 %5.1f%%  基线 %-6s 限流档 %s"
-              % (t, n, 100 * n / tot, "%.0f" % b if b else "—", lim))
+        b, tag = be.get(t), "强"
+        if b is None:
+            b, tag = weak.get(t), "弱"
+        # ★★ 限流档**直接问生产**，不在脚本里重算（R719 自算连错三处，见 production()）
+        lim = "?"
+        if prod:
+            try:
+                lim = "%d" % prod._token_daily_limit(t)
+            except Exception:
+                lim = "?"
+        print("   %-9s %2d 篇 %5.1f%%  基线 %-9s 限流档 %s"
+              % (t, n, 100 * n / tot,
+                 ("%.0f(%s)" % (b, tag)) if b else "—", lim))
 
     # ④ 源效率：入选 → 发布
     print("\n④ 源效率（入选 → 最终发布）")
@@ -204,6 +254,38 @@ def report(rows, hours, since_iso=None, base_limit=25):
     rc = Counter((r.get("reason") or "")[:34] for r in rej)
     for k, v in rc.most_common(4):
         print("      %2d  %s" % (v, k))
+
+    # ⑤½ 逐币限流拦截分布（R728 落的字段，R731 把它接进报告）
+    #   ★ 为什么必须进报告：R728 的立项问题是「档位是否与候选供给匹配」，
+    #     而答案只在这个字段里。上一轮是**手工**翻 metrics 才读出来的
+    #     ——手工读出来的结论下一轮还得再手工读一遍（R719 的立项理由）。
+    #   ⚠️ 只有「评估数够多」的轮次才有判读价值：配额/间隔早退轮只评估 1~2 条，
+    #     拦截自然是 0（R729 实测踩过这个小样本假象）⇒ 必须同时报评估基数。
+    blk = Counter()
+    rounds_with = 0
+    for r in sums:
+        d = r.get("token_limit_blocked_by")
+        if isinstance(d, dict) and d:
+            rounds_with += 1
+            for k, v in d.items():
+                blk[str(k).upper().replace("$", "")] += v or 0
+    print("\n⑤½ 逐币限流拦截（R728）｜有拦截记录的轮次 %d/%d" % (rounds_with, len(sums)))
+    if blk:
+        tb = sum(blk.values()) or 1
+        for t, v in blk.most_common(10):
+            lim = "?"
+            if prod:
+                try:
+                    lim = "%d" % prod._token_daily_limit(t)
+                except Exception:
+                    lim = "?"
+            print("   %-9s 被拦 %4d 次 %5.1f%%  （该币限流档 %s）"
+                  % (t, v, 100 * v / tb, lim))
+        print("   ★ 判读：占比极高的币 = 候选供给远超其档位 ⇒ 档位与供给错配；"
+              "分布均匀 ⇒ 供给维度不是关键")
+    else:
+        print("   ⚠️ 窗口内无逐币拦截记录 ⇒ **无法归因**（该字段 R728 上线于 "
+              "10-10 19:30；且只在真正评估到候选的轮次才会产生）")
 
     # ⑥ 语种（R712）
     langs = Counter(r.get("lang") for r in pub if r.get("lang"))
@@ -273,9 +355,11 @@ def report(rows, hours, since_iso=None, base_limit=25):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--hours", type=int, default=24)
-    ap.add_argument("--quota", type=int, default=25,
-                    help="24h 配额上限（与 main.py MAX_DAILY_POSTS 默认值一致）")
+    # ★ R731：默认 None ⇒ 取**生产** MAX_DAILY_POSTS（R724 已 25→40）。
+    #   写死默认值的代价是实测过的：R719 写 25，R724 提量后报告一直显示旧上限。
+    ap.add_argument("--quota", type=int, default=None,
+                    help="24h 配额上限；默认读生产 main.MAX_DAILY_POSTS")
     ap.add_argument("--local", action="store_true")
     ap.add_argument("--since", default=None, help="上线切点，北京时间 'YYYY-MM-DDTHH:MM'")
     a = ap.parse_args()
-    report(load_rows(a.local), a.hours, a.since, a.quota)
+    report(load_rows(a.local), a.hours, a.since, a.quota, production())
