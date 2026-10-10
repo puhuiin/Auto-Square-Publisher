@@ -5449,7 +5449,8 @@ class MultiLLMEngine:
                     article: Optional[bool] = None,
                     content_cjk: Optional[int] = None,
                     completion_tokens: Optional[int] = None,
-                    budget_cap: Optional[int] = None) -> None:
+                    budget_cap: Optional[int] = None,
+                    lang: Optional[str] = None) -> None:
         """拒单遥测：每次 LLM 尝试被丢弃都记一行（stage=quality/numbers/transport）。
         投递遥测只记录成功，失败全黑盒会导致未来调优只看得到"活下来的稿子"
         （幸存者偏差：高热新闻是否系统性被质量门误杀，无数据回答不了）。
@@ -5513,6 +5514,10 @@ class MultiLLMEngine:
             #   "长文成功率 100%"——**统计假象**，拒稿行无法归属）
             #   ⇒ 有了它才能回答"长文 vs 短讯 哪个更常被拒、为什么"
             "article": article,
+            # ★ R712：拒稿行的输出语种——按语种聚合拒稿率的**唯一依据**。
+            # R711 靠 reason 文案才发现英文被全掐，但那是**逐条读**；
+            # 没有该字段就无法可聚合地回答"英文拒稿率 vs 中文拒稿率"。
+            "lang": lang if lang in OUTPUT_LANGS else None,
             "content_cjk": content_cjk,
             # ★★ R694b：`tokens_used` = prompt + completion，而预算封顶只管
             #   completion ⇒ 不拆开就永远无法用数据回答"封顶该定多少"。
@@ -5946,7 +5951,11 @@ class MultiLLMEngine:
                              article=article,
                              # R694b：无 provider ⇒ 从未发起 LLM 调用 ⇒ 预算域数据
                              # 必须显式为 None（"未观测"），不能借用上一轮的残值。
-                             completion_tokens=None, budget_cap=None)
+                             completion_tokens=None, budget_cap=None,
+                             # ★ R712：该分支同样要带 lang——否则"全部不可用"
+                             # 这类**结构性失败**在遥测里恰好缺语种维度，
+                             # 事后无法回答"是英文时段更容易全挂吗"。
+                             lang=out_lang)
             return None
 
         user_prompt, persona = self._build_user_prompt(news_item, campaign_intel, market_context, token_hints,
@@ -6214,7 +6223,8 @@ class MultiLLMEngine:
                                              r"[\u4e00-\u9fff]", content)),
                                          # R694b：拆出 completion + 本次封顶
                                          completion_tokens=completion_tokens,
-                                         budget_cap=budget_cap)
+                                         budget_cap=budget_cap,
+                                         lang=out_lang)
                         logger.warning(f"提供商 [{provider.name}] 长文门拦截，"
                                        f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                         raise _QualityGateRejection(art_reason)
@@ -6241,7 +6251,8 @@ class MultiLLMEngine:
                                              # 省略即在遥测里留一个不可解释的 None 缺口。
                                              article=bool(article),
                                              completion_tokens=completion_tokens,
-                                             budget_cap=budget_cap)
+                                             budget_cap=budget_cap,
+                                             lang=out_lang)
                             logger.warning(f"提供商 [{provider.name}] 长文拒答/身份门拦截，"
                                            f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                             raise _QualityGateRejection(id_reason)
@@ -6260,7 +6271,8 @@ class MultiLLMEngine:
                                              r"[\u4e00-\u9fff]", content)),
                                          # R694b：拆出 completion + 本次封顶
                                          completion_tokens=completion_tokens,
-                                         budget_cap=budget_cap)
+                                         budget_cap=budget_cap,
+                                         lang=out_lang)
                         logger.warning(f"提供商 [{provider.name}] 质量门拦截，"
                                        f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                         raise _QualityGateRejection(fail_reason)
@@ -6291,7 +6303,8 @@ class MultiLLMEngine:
                                      finish_reason=finish_for_telemetry,
                                      article=bool(article),
                                      completion_tokens=completion_tokens,
-                                     budget_cap=budget_cap)
+                                     budget_cap=budget_cap,
+                                     lang=out_lang)
                     raise _QualityGateRejection(nums_reason)
 
                 # 0.2 AI 腔门：标志性机器人文风直接判废换模型重写（发布出去等于自曝身份）
@@ -6318,7 +6331,8 @@ class MultiLLMEngine:
                                      content_cjk=len(re.findall(
                                          r"[\u4e00-\u9fff]", content)),
                                      completion_tokens=completion_tokens,
-                                     budget_cap=budget_cap)
+                                     budget_cap=budget_cap,
+                                     lang=out_lang)
                     raise _QualityGateRejection(flavor_reason)
 
                 # 0.3★★ 段落长度门（R672 的**硬门**，此前只记不卡）
@@ -6361,7 +6375,8 @@ class MultiLLMEngine:
                         content_cjk=len(re.findall(
                             r"[\u4e00-\u9fff]", content)),
                         completion_tokens=completion_tokens,
-                        budget_cap=budget_cap)
+                        budget_cap=budget_cap,
+                        lang=out_lang)
                     raise _QualityGateRejection(
                         "para_too_long: 最长段 %d 汉字" % _para_here)
 
@@ -6415,7 +6430,8 @@ class MultiLLMEngine:
                                          tokens_used, latency_sec, provider.model,
                                          persona=persona["name"], article=article,
                                          completion_tokens=completion_tokens,
-                                         budget_cap=budget_cap)
+                                         budget_cap=budget_cap,
+                                         lang=out_lang)
                         self.last_fail_reason = "模型与新闻侧均无有效标的，强行挂 $BTC 属无关曝光"
                         return None
 
@@ -6492,7 +6508,8 @@ class MultiLLMEngine:
                                  finish_reason=_ff_empty or None,
                                  article=article,
                                  completion_tokens=completion_tokens,
-                                 budget_cap=budget_cap)
+                                 budget_cap=budget_cap,
+                                 lang=out_lang)
                 fail_reason = str(e)
                 enter_breaker = is_budget_exhausted or fails >= 2
                 if enter_breaker:
@@ -6536,7 +6553,8 @@ class MultiLLMEngine:
                                  # 在首次 `create()` 之前就抛出 ⇒ 这两个变量此刻是循环体
                                  # 开头兜底的 None（"没跑成功"），不是缺失变量。
                                  completion_tokens=completion_tokens,
-                                 budget_cap=budget_cap)
+                                 budget_cap=budget_cap,
+                                 lang=out_lang)
                 enter_breaker = True
                 logger.warning(f"提供商 [{provider.name}] 请求失败: {fail_reason} (本次运行连续失败 {self._fail_counts[provider.name]} 次)")
 
@@ -11639,6 +11657,13 @@ def _run_main():
                         # 唯一度量面；None=Mock/异常态防御性降级
                         "content_chars": content_chars,
                         "content_cjk": content_cjk,
+                        # ★★ R712：**输出语种**进遥测——按语种归因的**唯一 join 键**。
+                        # 为什么必须落：`content_cjk` **分不出简繁**（都是 CJK），
+                        # 英文帖虽 cjk=0 但那是**副作用**不是标记 ⇒ 没有它就无法回答
+                        # "英文帖浏览是否低于中文""繁体占比是否达 6:4"。
+                        # ⚠️ None = 未启用配比/未观测，**不是"中文"**（R659 三分法）；
+                        #   历史行无此字段，读取时按 zh-CN 兜底（它们确实是中文帖）。
+                        "lang": out_lang if out_lang in OUTPUT_LANGS else None,
                         # R647：结尾站队提问（None=Mock/异常态，未知不是 False）
                         "ending_question": _tail_q,
                         # R672：最长段落的汉字数（None=未观测/非长文）

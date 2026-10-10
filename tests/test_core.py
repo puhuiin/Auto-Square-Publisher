@@ -18936,6 +18936,69 @@ class TestR711QualityGateByLang(unittest.TestCase):
         self.assertIn("过短", reason)
 
 
+class TestR712LangInTelemetry(unittest.TestCase):
+    """★★ R712：输出语种必须落进**遥测**（否则无法按语种归因）
+
+    ★ 为什么这是必需品而不是"锦上添花"：
+      R711 那次英文被全掐，我是**逐条读 reason 文案**才发现的。
+      没有 `lang` 字段的话，以下问题**根本无法可聚合地回答**：
+        · 英文帖的拒稿率 vs 中文帖的拒稿率
+        · 繁体占比是否达到 6:4
+        · 英文帖浏览是否低于中文帖（需 join content_stats）
+    """
+
+    def test_every_log_reject_call_passes_lang(self):
+        """★★ **穷举** `_log_reject` 调用点，逐个必须带 `lang=`
+
+        ⚠️ 用 AST 而非文本计数（纪律：AST 穷举调用点，不抽查）：
+          文本 `grep "lang=out_lang"` 会漏掉参数形式不同的调用，
+          也会被注释里的同名字符串欺骗。
+        ★ 实测价值：加字段时我漏了 `no_provider` 分支那一处，
+          **编译与全量测试都通过**，是 AST 抓出来的
+          ⇒ 又一次印证"代码对 ≠ 跑起来对"。
+        """
+        import ast
+        import inspect
+        tree = ast.parse(inspect.getsource(m))
+        calls = [n for n in ast.walk(tree)
+                 if isinstance(n, ast.Call)
+                 and isinstance(n.func, ast.Attribute)
+                 and n.func.attr == "_log_reject"]
+        self.assertGreaterEqual(len(calls), 5, "调用点异常少（AST 口径变了？）")
+        missing = [n.lineno for n in calls if "lang" not in {k.arg for k in n.keywords}]
+        self.assertEqual(missing, [],
+                         "这些 _log_reject 调用漏传 lang=：行 %s" % missing)
+
+    def test_published_receipt_records_lang(self):
+        """★★ 成功回执必须带 `lang` 键（与 content_id 同级，供 join）"""
+        import inspect
+        src = inspect.getsource(m)
+        i = src.find('"content_id": content_id,')
+        self.assertGreater(i, 0, "未找到成功回执的 content_id 落盘点")
+        seg = src[i:i + 1200]
+        self.assertIn('"lang": out_lang', seg,
+                      "成功回执未落 lang ⇒ 无法把浏览数据按语种 join 回来")
+
+    def test_lang_is_never_false(self):
+        """★ `lang` 未启用时必须是 **None**，不能落 False/空串（R659 三分法）"""
+        import inspect
+        src = inspect.getsource(m)
+        self.assertNotIn('"lang": False', src,
+                         "lang 不得用 False 表示'不是英文'——那是二元语种遗留写法")
+        # 落盘语句必须走 `in OUTPUT_LANGS` 白名单
+        self.assertIn('out_lang if out_lang in OUTPUT_LANGS else None', src,
+                      "lang 落盘必须经白名单过滤，脏值不得进遥测")
+
+    def test_reject_receipt_records_lang_too(self):
+        """★★ 拒稿回执同样落 lang（R712 的另一半，R711 的教训）"""
+        import inspect
+        src = inspect.getsource(m)
+        i = src.find('def _log_reject(')
+        self.assertGreater(i, 0)
+        seg = src[i:i + 6000]
+        self.assertIn('"lang":', seg, "拒稿回执未落 lang")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
