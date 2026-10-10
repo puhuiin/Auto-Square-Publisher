@@ -19303,25 +19303,53 @@ class TestR718TokenLimitTiering(unittest.TestCase):
       ⇒ 限流此刻不在压制高价值币，而在**均摊配额给低价值币**。
     """
 
+    @staticmethod
+    def _tiers():
+        """按**生产同口径**（min_n 过滤后）算出 (高档, 低档) 币集合。"""
+        import json
+        import statistics as _st
+        with open(m.TOKEN_ENGAGEMENT_FILE, encoding="utf-8-sig") as f:
+            d = json.load(f)
+        min_n = d.get("min_n", 4) if isinstance(d.get("min_n"), int) else 4
+        vals = {k.upper().replace("$", ""): float(v["median_views"])
+                for k, v in (d.get("tokens") or {}).items()
+                if isinstance(v, dict) and isinstance(v.get("n"), int)
+                and v["n"] >= min_n and isinstance(v.get("median_views"), (int, float))}
+        if not vals:
+            return vals, set(), set()
+        med = _st.median(sorted(vals.values()))
+        return vals, {k for k, v in vals.items() if v >= med * 1.3}, \
+            {k for k, v in vals.items() if v <= med * 0.7}
+
     def test_high_tier_is_doubled(self):
-        """★★ 高档币（基线 ≥ 中位×1.3）限流放大到 2 倍"""
-        # 用真实基线里确定的高档币，不依赖线上数据变动
-        self.assertEqual(m._token_daily_limit("HYPE"),
-                         m.TOKEN_DAILY_LIMIT * 2)
-        self.assertEqual(m._token_daily_limit("ETH"),
-                         m.TOKEN_DAILY_LIMIT * 2)
+        """★★ 高档币（基线 ≥ 中位×1.3）限流放大到 2 倍
+
+        ⚠️ **动态判定**而非写死币种：min_n 过滤后当前只有 8 个币有基线
+          （HYPE 的 n<4 被排除、ETH 115 差 0.05 未过线）⇒ **此刻没有高档币**。
+          写死"HYPE 是高档"会在数据变化后**假失败**（R713 的教训）。
+        ⇒ 从基线里现算高档集合；为空则说明"高档当前空转"，跳过而非失败。
+        """
+        vals, high, _low = self._tiers()
+        if not high:
+            self.skipTest("当前无币达到高档线（min_n 过滤后样本不足），高档档位空转")
+        for t in high:
+            self.assertEqual(m._token_daily_limit(t), m.TOKEN_DAILY_LIMIT * 2,
+                             "%s（基线 %.0f）应为高档 ×2" % (t, vals[t]))
 
     def test_low_tier_is_tightened(self):
         """★★ 低档币（基线 ≤ 中位×0.7）限流**收紧**
 
         ⚠️ 这条是设计的核心：首版用 `LOW_MULT=1`（意为 ×1）⇒ **完全没收紧**，
         实测 XRP/LTC 仍是 3 篇 ⇒ 分档等于没做（低档形同虚设）。
-        ⇒ 低档必须**真的小于**全局阈值。
+        ⇒ 动态取低档集合逐个验证（当前应为 XRP/ZEC）。
         """
-        self.assertLess(m._token_daily_limit("XRP"), m.TOKEN_DAILY_LIMIT,
-                        "低档币未被收紧 ⇒ 分档没生效")
-        self.assertGreaterEqual(m._token_daily_limit("XRP"), 1,
-                               "低档不得归零（该币仍应有最少机会）")
+        _vals, _high, low = self._tiers()
+        self.assertTrue(low, "低档集合为空（数据异常）⇒ 本测试无意义")
+        for t in low:
+            self.assertLess(m._token_daily_limit(t), m.TOKEN_DAILY_LIMIT,
+                            "低档 %s 未被收紧 ⇒ 分档没生效" % t)
+            self.assertGreaterEqual(m._token_daily_limit(t), 1,
+                                   "低档 %s 不得归零" % t)
 
     def test_unknown_token_uses_base_limit(self):
         """★ **无基线的币走中档**——不得因缺数据惩罚冷门新币"""
@@ -19364,6 +19392,66 @@ class TestR718TokenLimitTiering(unittest.TestCase):
                                  m.TOKEN_DAILY_LIMIT)
                 self.assertTrue(warn.called,
                                 "基线不可用时未留日志 ⇒ 缺陷会隐身（R659 反面）")
+
+
+class TestR719AuditScriptMatchesProduction(unittest.TestCase):
+    """★★ R719：巡检脚本的浏览基线口径必须与**生产加载器逐字一致**
+
+    ⚠️ 首版 bug：脚本不过滤 `min_n` ⇒ 把 n=1 的冷门币也算进中位
+    （19 币 vs 生产 8 币）⇒ **算出的限流档位与生产不一致**：
+    报告会写「ETH 高档 6 篇」，而生产其实按 3 篇跑。
+    ⇒ 巡检报告若与生产口径不符，它就是**误导源**，比没有更糟。
+    """
+
+    @staticmethod
+    def _script_baseline():
+        import importlib.util
+        import os
+        path = os.path.join(os.path.dirname(m.__file__), "scripts", "audit_perf.py")
+        spec = importlib.util.spec_from_file_location("audit_perf_r719", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.engagement_baseline()
+
+    def test_baseline_identical_to_production_loader(self):
+        """★★ 币集合与数值必须**完全一致**（含 min_n 过滤口径）"""
+        script = self._script_baseline()
+        prod = m.NewsFetcher._load_token_engagement()
+        self.assertEqual(set(script), set(prod),
+                         "币集合不一致：脚本 %s vs 生产 %s"
+                         % (sorted(script), sorted(prod)))
+        for k in prod:
+            self.assertAlmostEqual(script[k], prod[k], places=6,
+                                   msg="%s 数值不一致" % k)
+
+    def test_script_excludes_low_sample_tokens(self):
+        """★ 反向：样本不足（n < min_n）的币**不得**进入基线"""
+        import json
+        with open(m.TOKEN_ENGAGEMENT_FILE, encoding="utf-8-sig") as f:
+            d = json.load(f)
+        min_n = d.get("min_n", 4) if isinstance(d.get("min_n"), int) else 4
+        script = self._script_baseline()
+        for t, v in (d.get("tokens") or {}).items():
+            if isinstance(v, dict) and isinstance(v.get("n"), int) and v["n"] < min_n:
+                self.assertNotIn(t.upper().replace("$", ""), script,
+                                 "%s 样本仅 %d 条（< min_n=%d）却进了基线"
+                                 % (t, v["n"], min_n))
+
+    def test_tier_boundaries_match_production(self):
+        """★★ 档位判定与 `main._token_daily_limit` **同口径**（中位×1.3 / ×0.7）"""
+        import statistics as _st
+        script = self._script_baseline()
+        if not script:
+            self.skipTest("基线为空")
+        med = _st.median(sorted(script.values()))
+        self.assertGreater(med, 0)
+        for t, b in script.items():
+            if b >= med * 1.3:
+                self.assertEqual(m._token_daily_limit(t), m.TOKEN_DAILY_LIMIT * 2,
+                                 "%s 应为高档（基线 %.0f ≥ %.1f）" % (t, b, med * 1.3))
+            elif b <= med * 0.7:
+                self.assertLess(m._token_daily_limit(t), m.TOKEN_DAILY_LIMIT,
+                                "%s 应为低档（基线 %.0f ≤ %.1f）" % (t, b, med * 0.7))
 
 
 if __name__ == "__main__":

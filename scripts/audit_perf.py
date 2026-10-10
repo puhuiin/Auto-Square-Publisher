@@ -22,6 +22,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 import urllib.request
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
@@ -51,9 +52,20 @@ def load_rows(local: bool) -> list:
         h = {"Accept": "application/vnd.github+json", "User-Agent": "audit",
              "Authorization": "Bearer " + tok}
 
-        def api(path):
-            return json.loads(urllib.request.urlopen(
-                urllib.request.Request(API + path, headers=h), timeout=180).read().decode())
+        def api(path, tries=4):
+            """⚠️ 大 blob（metrics.jsonl 已 >4MB）**偶发 IncompleteRead**：
+            网络抖动会读到一半就断。必须重试，否则巡检脚本本身变成不稳定源。"""
+            import time as _t
+            last = None
+            for i in range(tries):
+                try:
+                    return json.loads(urllib.request.urlopen(
+                        urllib.request.Request(API + path, headers=h),
+                        timeout=240).read().decode())
+                except Exception as e:
+                    last = e
+                    _t.sleep(3 * (i + 1))
+            raise last
 
         # ⚠️ metrics.jsonl 常超 1MB ⇒ contents API 会返回空 content，
         #    必须走 blob（实测踩过）。
@@ -71,15 +83,27 @@ def load_rows(local: bool) -> list:
 
 
 def engagement_baseline() -> dict:
-    """R608 的浏览基线（币 → 中位浏览）。缺失返回空 dict。"""
+    """R608 的浏览基线（币 → 中位浏览）。缺失返回空 dict。
+
+    ⚠️ **必须复刻生产的 `min_n` 过滤**（R608 的加载器只收样本量达标的币）。
+       首版这里不过滤 ⇒ 把 n=1 的冷门币也算进中位 ⇒ **算出的档位与生产不一致**，
+       报告会说"ETH 是高档 6 篇"而生产其实按 3 篇跑。
+       ⇒ 口径要与 `MultiLLMEngine._load_token_engagement` 逐字一致。
+    """
     p = os.path.join(ROOT, "token_engagement.json")
     try:
         d = json.load(open(p, encoding="utf-8-sig"))
     except Exception:
         return {}
+    min_n = d.get("min_n", 4) if isinstance(d.get("min_n"), int) else 4
     out = {}
     for t, v in (d.get("tokens") or {}).items():
-        if isinstance(v, dict) and isinstance(v.get("median_views"), (int, float)):
+        if not isinstance(v, dict):
+            continue
+        n = v.get("n")
+        if not (isinstance(n, int) and n >= min_n):
+            continue                       # 样本不足 ⇒ 生产也不参与加权
+        if isinstance(v.get("median_views"), (int, float)):
             out[t.upper().replace("$", "")] = float(v["median_views"])
     return out
 

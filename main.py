@@ -257,9 +257,17 @@ def _token_daily_limit(token: str) -> int:
         # 抛 TypeError，被下面的 `except Exception` **静默吞掉** ⇒
         # 分档**完全失效却毫无告警**（实测 ETH/SOL 全部仍返回基准值）。
         # ⇒ 这里必须存 `median_views` **数值**。
+        # ⚠️⚠️ 必须**同样做 min_n 过滤**（R719 守卫抓到）：生产加载器
+        #   `_load_token_engagement` 只收样本量达标的币（当前 8/19）。
+        #   此前这里不过滤 ⇒ 中位被 n=1 的冷门币拉偏（83 vs 88.5）
+        #   ⇒ **R608 排序加权与 R718 限流分档给出不同的档位**，
+        #     而本函数注释恰恰声称"两处结论不会打架"——口径必须一致。
+        _min_n = data.get("min_n", 4) if isinstance(data.get("min_n"), int) else 4
         vals = {k.upper().replace("$", ""): float(v["median_views"])
                 for k, v in toks.items()
-                if isinstance(v, dict) and isinstance(v.get("median_views"), (int, float))}
+                if isinstance(v, dict)
+                and isinstance(v.get("n"), int) and v["n"] >= _min_n
+                and isinstance(v.get("median_views"), (int, float))}
         if not vals:
             return base
         key = str(token).upper().replace("$", "")
