@@ -20268,5 +20268,58 @@ class TestR735ExposureNormalizedLangViews(unittest.TestCase):
         self.assertIn("以速率中位为准", out, "必须给累积量告警，否则会被按原始浏览误读")
 
 
+class TestR736RejectionTimeLayering(unittest.TestCase):
+    """★★ R736：audit_perf ⑤ 拒稿必须按时间分层，否则"修复前的历史簇"被读成当前危机
+
+    ★ 真实踩到（本轮）：24h 窗口里 17 条「中文字符过少」拒稿**全部**在 R711 语种
+      质量门修复**之前**（10-10 03~05 时），现成的"拒稿率 43%"把早已修好的问题报成
+      现状。daily_report 用「近 12h 为准」(R723) 挡住了，audit_perf 此前没有 ⇒ 口径
+      不一致（R731 主题）。本类锁：全簇落在远半时必须打「历史存量，别当现状」告警。
+    """
+
+    @staticmethod
+    def _ap():
+        import importlib.util
+        path = os.path.join(os.path.dirname(m.__file__), "scripts", "audit_perf.py")
+        spec = importlib.util.spec_from_file_location("audit_perf_r736", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _render(self, rej_hours_ago):
+        import contextlib
+        import io
+        from datetime import datetime, timezone, timedelta
+        ap = self._ap()
+        now = datetime.now(timezone.utc)
+        rows = []
+        for h in rej_hours_ago:
+            rows.append({"outcome": "llm_failed",
+                         "ts": (now - timedelta(hours=h)).isoformat(),
+                         "reason": "质量门: 中文字符过少 (0)，疑似跑偏英文输出"})
+        # 一条发布让分母非零
+        rows.append({"outcome": "binance_published",
+                     "ts": (now - timedelta(hours=1)).isoformat(),
+                     "final_preview": "x", "tokens": ["BTC"]})
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            ap.report(rows, 24, None, None, None)
+        return buf.getvalue()
+
+    def test_stale_cluster_flagged_as_historical(self):
+        """★★★ 全部拒稿落在窗口远半（>12h 前）⇒ 必须标「历史存量，别当现状」"""
+        out = self._render([20, 21, 22])  # 24h 窗口的远半
+        self.assertIn("时间分层", out, "⑤ 必须有拒稿时间分层行")
+        self.assertIn("历史存量", out,
+                      "全簇在远半却没标『历史存量』⇒ 会把修复前的拒稿读成当前危机")
+
+    def test_recent_rejections_not_flagged_stale(self):
+        """★ 反向：拒稿都在近半（刚发生）时**不得**打历史存量告警（否则是误报）"""
+        out = self._render([1, 2, 3])  # 24h 窗口的近半
+        self.assertIn("时间分层", out)
+        self.assertNotIn("历史存量", out,
+                         "近半的真实当前拒稿被误标成历史存量 ⇒ 会漏掉真问题")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

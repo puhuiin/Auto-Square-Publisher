@@ -267,6 +267,30 @@ def report(rows, hours, since_iso=None, quota=None, prod=None):
     rc = Counter((r.get("reason") or "")[:34] for r in rej)
     for k, v in rc.most_common(4):
         print("      %2d  %s" % (v, k))
+    # ★★ R736：拒稿**必须按时间分层**，否则一个"修复前的历史簇"会被读成当前危机。
+    #   实测踩到：24h 窗口里 17 条「中文字符过少」拒稿**全部**在 10-10 03~05 时
+    #   （R711 语种质量门修复**之前**），现成的"拒稿率 43%"把早已修好的问题报成现状
+    #   （R713/R723 同型：别把修复前的数当现状）。daily_report 已用「近 12h 为准」挡住
+    #   这个坑，audit_perf 此前没有 ⇒ 口径不一致（R731 主题）。
+    #   ⇒ 把拒稿按窗口**近/远半**切开：若全簇在远半 = 历史存量、当前已无，不是现状。
+    if rej:
+        rej_sorted = sorted(rej, key=lambda r: r.get("ts") or "")
+        _ts = [r.get("ts") for r in rej_sorted if r.get("ts")]
+        # 窗口中点（UTC naive isoformat，与上文 `cut` 同口径做字符串比较）
+        now_naive = datetime.now(timezone.utc).replace(tzinfo=None)
+        cut_naive = datetime.fromisoformat(cut)
+        mid_iso = (cut_naive + (now_naive - cut_naive) / 2).isoformat()
+        recent = sum(1 for r in rej if (r.get("ts") or "") >= mid_iso)
+        older = len(rej) - recent
+        span = ("%s~%s" % (_cst(_ts[0]).strftime("%m-%d %H:%M"),
+                           _cst(_ts[-1]).strftime("%m-%d %H:%M"))) if _ts else "?"
+        if recent == 0 and older > 0:
+            note = " ⚠️ **全部落在窗口远半（%s）⇒ 历史存量，当前已无，别当现状**" % span
+        elif older == 0:
+            note = "（全部在近半 ⇒ 确为当前）"
+        else:
+            note = "（跨度 %s；近半 %d / 远半 %d）" % (span, recent, older)
+        print("      ↳ 时间分层: 近半 %d · 远半 %d%s" % (recent, older, note))
 
     # ⑤½ 逐币限流拦截分布（R728 落的字段，R731 把它接进报告）
     #   ★ 为什么必须进报告：R728 的立项问题是「档位是否与候选供给匹配」，
