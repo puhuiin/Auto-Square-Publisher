@@ -18876,6 +18876,66 @@ class TestR708LangMix(unittest.TestCase):
         self.assertEqual(once, twice, "简转繁不幂等 ⇒ 可能把繁体帖改坏")
 
 
+class TestR711QualityGateByLang(unittest.TestCase):
+    """★★ R711：质量门/长文门必须**按语种分支**（修 R710 引入的产能掐断）
+
+    ★ 事故实录（线上遥测实锤，不是推断）：
+      R710 上线后夜间发英文，但 `_passes_quality_gate` 仍硬编码
+      `cjk_count < 40` ⇒ 英文帖 cjk=0 ⇒ **20 条质量拒稿里 17 条**死于
+      「中文字符过少 (0)，疑似跑偏英文输出」⇒ **英文产能被整条掐断**。
+      同型问题还有三处（长文 `cjk<420`、长文字数上限 2500、标题 8~40 字符）。
+    """
+
+    EN_SHORT = (
+        "Bitcoin ETFs logged another week of outflows while on-chain activity "
+        "stayed flat. The market kept pricing a recovery the data never confirmed."
+    )
+    ZH_SHORT = (
+        "$BTC 报 85695 美元,贝莱德刚喊 AI 代理能拉爆加密需求,盘面愣是一点反应都没有。"
+        "全网热搜的 AI 相关小币也没跟涨,资金没往这边扎堆,全在等落地信号。"
+    )
+
+    def test_english_short_passes_when_out_lang_is_en(self):
+        """★★ 核心回归：英文稿在 out_lang='en' 下**必须过门**"""
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(
+            self.EN_SHORT, out_lang="en")
+        self.assertTrue(ok, "英文稿被质量门拒了：%s" % reason)
+
+    def test_english_short_still_rejected_without_lang_flag(self):
+        """★ 反向：不给 out_lang 时仍按中文门判（保持 R710 前的默认行为）"""
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(self.EN_SHORT)
+        self.assertFalse(ok)
+        self.assertIn("中文字符过少", reason)
+
+    def test_chinese_still_gated_by_cjk(self):
+        """★ 中文门**未被放宽**（改语种分支不能顺带松掉中文质量门）"""
+        # 中文门：英文稿仍应被拒
+        self.assertFalse(m.MultiLLMEngine._passes_quality_gate(
+            self.EN_SHORT, out_lang="zh-CN")[0])
+        # 真中文稿正常通过
+        self.assertTrue(m.MultiLLMEngine._passes_quality_gate(
+            self.ZH_SHORT, out_lang="zh-CN")[0])
+
+    def test_english_article_passes_all_three_gates(self):
+        """★★ 英文长文要连过**标题 / 词数 / 长度**三道门"""
+        body = ("Institutional money left spot bitcoin funds for a fourth "
+                "straight week while derivatives positioning stayed crowded. "
+                "Spot holders can wait for volume to prove the bid is real. "
+                "Watch the funding rate and the open interest next. ")
+        art = "TITLE: Bitcoin ETF outflows explained in three charts\n\n" + body * 12
+        ok, reason, title, _ = m.MultiLLMEngine._parse_article(art, out_lang="en")
+        self.assertTrue(ok, "英文长文被拒：%s" % reason)
+        self.assertTrue(title)
+
+    def test_english_article_word_floor_still_blocks_mini_essay(self):
+        """★ 英文词数下沿仍要挡住"三五句话的迷你长文"（别为产能放到底）"""
+        mini = "TITLE: Why bitcoin flows matter for traders today\n\n" + (
+            "Bitcoin flows matter for traders today, and that is the whole point. ")
+        ok, reason, _, _ = m.MultiLLMEngine._parse_article(mini, out_lang="en")
+        self.assertFalse(ok, "迷你长文不该过门")
+        self.assertIn("过短", reason)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 

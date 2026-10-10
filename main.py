@@ -5066,12 +5066,13 @@ class MultiLLMEngine:
         return True, ""
 
     @classmethod
-    def _passes_quality_gate(cls, content: str) -> Tuple[bool, str]:
+    def _passes_quality_gate(cls, content: str,
+                             out_lang: Optional[str] = None) -> Tuple[bool, str]:
         """
         AI 输出质量硬门槛：防止低质量/跑偏输出被直接发布。
         - 上游元回复（User Safety: …）单独归类，勿与内容过短混谈
         - 拒答/身份暴露（"作为AI我无法…"）直接判废并切换下一模型
-        - 中文字符必须 >= 40（本账号面向中文读者，纯英文输出视为跑偏）
+        - **字符门按目标语种分支**（R711）：中文 ≥40 CJK / 英文 ≥40 拉丁字母
         - 总长度必须在 60~1200 字符之间
         R359：拒答/身份/元回复检测抽进 _passes_identity_gate（长文正文/标题共用同一真源），
         本函数只余短讯专属的长度/CJK 门；默认 label="正文" 保持既有拒稿原因子串兼容、零回归。
@@ -5084,8 +5085,19 @@ class MultiLLMEngine:
             return False, f"内容过短 ({len(content)} 字符)"
         if len(content) > 1200:
             return False, f"内容过长 ({len(content)} 字符)"
-        if cjk_count < 40:
-            return False, f"中文字符过少 ({cjk_count})，疑似跑偏英文输出"
+        # ★★ R711：**字符门按目标语种分支**。
+        # 事故实录：R710 上线后夜间发英文，而本门仍硬编码 `cjk_count < 40`
+        # ⇒ 英文帖 cjk=0 ⇒ **20 条拒稿里 17 条死于这一条**（"中文字符过少(0)"）
+        # ⇒ 英文产能被整条掐断（只有个别稿因路径差异侥幸通过）。
+        # ⚠️ 长度门（60~1200）**不分语种**：英文同内容字符数更大，
+        #    沿用同一区间可避免"为了过门而写短"。
+        if out_lang == "en":
+            en_count = len(re.findall(r"[A-Za-z]", content))
+            if en_count < 40:
+                return False, f"英文字符过少 ({en_count})，疑似跑偏非英文输出"
+        else:
+            if cjk_count < 40:
+                return False, f"中文字符过少 ({cjk_count})，疑似跑偏英文输出"
         return True, ""
 
     # AI 腔特征清单（来源：Wikipedia "Signs of AI writing" 的中文交易语境移植）。
@@ -5146,11 +5158,15 @@ class MultiLLMEngine:
     _ARTICLE_TITLE_RE = re.compile(r"^\s*TITLE[:：]\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE)
 
     @classmethod
-    def _parse_article(cls, content: str) -> Tuple[bool, str, str, str]:
+    def _parse_article(cls, content: str,
+                     out_lang: Optional[str] = None) -> Tuple[bool, str, str, str]:
         """
         长文门 + TITLE 解析：返回 (ok, reason, title, body)。
         - TITLE 行必须存在且 8~40 字（prompt 要求 10~25 字，边界放宽防误杀）
         - 正文 CJK >= 420（500~800 字目标的下沿容差）、总长 <= 2500
+        ★ R711：英文长文按**词数**判据（≥280 词 ≈ 中文 500 字），
+          长度上限放宽到 4000 字符（同等"字数"英文字符数约为中文的 1.8 倍）
+          ⇒ 否则英文长文必然撞 2500 字符上限而**永远发不出去**。
         短讯门（60~1200 字）对长文完全不适用，两套门各管各的模式。
 
         R590：下沿从 350 抬到 420。生产 metrics_report 实录长文正文 CJK 中位仅 455、
@@ -5168,14 +5184,30 @@ class MultiLLMEngine:
         if not m:
             return False, "长文缺 TITLE 行（contentType=2 必须带标题）", "", content
         title = m.group(1).strip().strip('"“”')
-        if len(title) < 8 or len(title) > 40:
-            return False, f"长文标题长度不当 ({len(title)} 字符，要求 8~40)", "", content
+        # ★ R711：**标题长度按语种分档**。8~40 字符对英文只够 ~12 词，
+        #   而英文标题习惯 6~10 词 ⇒ 上限 40 偏紧（实测 46 字符被误杀）。
+        #   放宽到 60（≈ 英文 10~12 词），与中文档位各自成立。
+        t_max = 60 if out_lang == "en" else 40
+        if len(title) < 8 or len(title) > t_max:
+            return False, (f"长文标题长度不当 ({len(title)} 字符，要求 8~{t_max})"
+                           if out_lang == "en"
+                           else f"长文标题长度不当 ({len(title)} 字符，要求 8~40)"), "", content
         body = cls._ARTICLE_TITLE_RE.sub("", content, count=1).strip()
-        cjk = len(re.findall(r"[一-鿿]", body))
-        if cjk < 420:
-            return False, f"长文正文过短 (CJK {cjk}，目标 500~800 字)", title, body
-        if len(body) > 2500:
-            return False, f"长文正文过长 ({len(body)} 字符，上限 2500)", title, body
+        if out_lang == "en":
+            # ★ R711：英文用**词数**（比字母数更贴近"字数"语义）
+            # 下沿 250 词：模型按中文"字数"直觉写英文会偏短（实测 256 词），
+            # 卡 280 会让长文反复被拒；250 仍足以挡住"三五句话的迷你长文"。
+            words = len(re.findall(r"[A-Za-z][A-Za-z'\-]*", body))
+            if words < 250:
+                return False, f"长文正文过短 (英文 {words} 词，目标 300~500 词)", title, body
+            if len(body) > 4000:
+                return False, f"长文正文过长 ({len(body)} 字符，英文上限 4000)", title, body
+        else:
+            cjk = len(re.findall(r"[一-鿿]", body))
+            if cjk < 420:
+                return False, f"长文正文过短 (CJK {cjk}，目标 500~800 字)", title, body
+            if len(body) > 2500:
+                return False, f"长文正文过长 ({len(body)} 字符，上限 2500)", title, body
         # R644 排版门**刻意不在这里**（首版放在此处，实测误杀 10 例既有测试）。
         # 原因：_parse_article 是**语义门**（标题容错/字数/拒答/数字幻觉），
         # 排版是**形态门**——混进去会让"合成测试文本"（无分段但语义合规）
@@ -6072,7 +6104,13 @@ class MultiLLMEngine:
                         "本条**全文必须用英文(English)输出**，不要出现任何中文句子。"
                         "规则不变：仍要带 $TOKEN 挂件、3 个标签(#Write2Earn "
                         "#BinanceSquare #核心代币名)、不喊单、数字必须来自素材。"
-                        "标题也用英文。语气与上方人设一致（写成英文版的老韭菜口吻）。")
+                        "语气与上方人设一致（写成英文版的老韭菜口吻）。\n"
+                        # ★ R711：字数要求必须**显式换算**——原文写的是中文"字数"，
+                        #   模型按 140~200 中文字去写英文会明显偏短（实测 ~256 词
+                      #   仍低于 280 词下沿 ⇒ 长文被拒）。给英文自己的区间。
+                        "★ 篇幅按英文习惯：短讯 **110~170 words**，"
+                        "长文 **300~500 words**（中文的 140~200 字 ≈ 英文 110~170 词）。"
+                        "标题 8~12 words。")
                 elif out_lang == "zh-TW":
                     system_prompt += (
                         "\n\n【★ 输出语种（最高优先级）】本条**全文必须用繁体中文"
@@ -6163,7 +6201,7 @@ class MultiLLMEngine:
                 # append_metrics 整行静默丢弃（与 widget_count 同款坑，测试实锤）
                 finish_for_telemetry = final_finish if isinstance(final_finish, str) else None
                 if article:
-                    art_ok, art_reason, article_title, content = self._parse_article(content)
+                    art_ok, art_reason, article_title, content = self._parse_article(content, out_lang=out_lang)
                     if not art_ok:
                         self._log_reject(news_item, provider.name, "quality", art_reason,
                                          tokens_used, latency_sec, provider.model,
@@ -6208,7 +6246,7 @@ class MultiLLMEngine:
                                            f"finish={final_finish or '?'} 预览: {preview or '(空)'}")
                             raise _QualityGateRejection(id_reason)
                 else:
-                    passed, fail_reason = self._passes_quality_gate(content)
+                    passed, fail_reason = self._passes_quality_gate(content, out_lang=out_lang)
                     if not passed:
                         self._log_reject(news_item, provider.name, "quality", fail_reason,
                                          tokens_used, latency_sec, provider.model,
