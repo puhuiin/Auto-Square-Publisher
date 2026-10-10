@@ -212,6 +212,42 @@ def report(rows, hours, since_iso=None, base_limit=25):
         for k, v in langs.most_common():
             print("   %-7s %2d 篇" % (k, v))
 
+    # ⑥½ 按语种看浏览效果（★ 验证 R710 时段语种策略的关键维度）
+    #   数据源：content_stats.jsonl（创作者中心导出，按 content_id join）
+    #   ⚠️ 没有浏览数据时**明确说明**，不静默跳过——否则"看不到差异"
+    #     会被误读成"三种语言效果一样"（R704/R705 栽过的坑）。
+    lang_views = defaultdict(list)
+    stats_path = os.path.join(ROOT, "content_stats.jsonl")
+    if os.path.exists(stats_path):
+        cid2v = {}
+        for line in open(stats_path, encoding="utf-8"):
+            try:
+                d = json.loads(line)
+            except Exception:
+                continue
+            v = d.get("views")
+            if isinstance(v, (int, float)):
+                cid2v[str(d.get("content_id"))] = v
+        hit = 0
+        for r in pub:
+            lg = r.get("lang")
+            v = cid2v.get(str(r.get("content_id")))
+            if lg and v is not None:
+                lang_views[lg].append(v)
+                hit += 1
+        print("\n⑥½ 按语种 × 浏览（join content_stats，命中 %d/%d 篇）" % (hit, len(pub)))
+        if lang_views:
+            print("   %-8s %6s %10s %10s" % ("语种", "样本", "中位浏览", "均值"))
+            for lg, vs in sorted(lang_views.items()):
+                print("   %-8s %6d %10.0f %10.0f" % (lg, len(vs), _median(vs), sum(vs) / len(vs)))
+            print("   ★ 样本 <5 时**不可据此下结论**（R704 的教训）")
+        else:
+            print("   ⚠️ 遥测里没有 lang 字段（R712 上线于 10-10 10:59），"
+                  "或 content_id 未命中 ⇒ 本轮无法按语种归因")
+    else:
+        print("\n⑥½ 按语种 × 浏览：**缺 content_stats.jsonl** ⇒ 无法归因"
+              "（需从创作者中心导出后重跑）")
+
     # ⑦ 可选：上线前后对比
     if since_iso:
         cst_cut = datetime.fromisoformat(since_iso)
