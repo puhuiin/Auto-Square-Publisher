@@ -379,6 +379,45 @@ def report(rows, hours, since_iso=None, quota=None, prod=None):
             print("   ★ 原始浏览是累积量（老帖吃饱/新帖没攒够）⇒ **以速率中位为准**；"
                   "lang 仅 R712 后有 ⇒ 带 lang 的帖都偏新、原始中位被系统性压低（R725 同型陷阱）")
             print("   ★ 样本 <5 时**不可据此下结论**（R704 的教训）")
+
+            # ⑥¾ R739 受控实验：语种×时段 2×2（off-pattern = 实验帖）
+            #   R710 下 en 只在夜、zh 只在昼 ⇒ en-昼 / zh-夜 这两格**只可能来自 R739 实验**
+            #   （按 (lang,小时) 唯一可识别，无需额外遥测标记）。拿它们和同格对照比
+            #   曝光校正速率，才能把「语种」从「时段」里拆出来：
+            #     en-昼 vs zh-昼  → 纯语种效应（同为白天高流量）
+            #     zh-夜 vs zh-昼  → 纯时段效应（同为中文）
+            cells = {("zh", "昼"): [], ("zh", "夜"): [], ("en", "昼"): [], ("en", "夜"): []}
+            for r in pub:
+                lg = r.get("lang")
+                cid = str(r.get("content_id"))
+                v = cid2v.get(cid)
+                if not lg or v is None:
+                    continue
+                exp = _exposure_days(r.get("ts"), cid2snap.get(cid))
+                if not exp:
+                    continue
+                lang = "en" if lg == "en" else ("zh" if lg in ("zh-CN", "zh-TW") else None)
+                if lang is None:
+                    continue
+                bj = _cst(r["ts"]).hour
+                slot = "昼" if 6 <= bj < 22 else "夜"
+                cells[(lang, slot)].append(v / exp)
+            off = len(cells[("en", "昼")]) + len(cells[("zh", "夜")])
+            print("\n⑥¾ R739 语种×时段 2×2（速率中位/天｜off-pattern=实验帖）")
+            print("   %-10s %8s %8s" % ("", "昼06-22", "夜22-06"))
+            for lang in ("zh", "en"):
+                row = []
+                for slot in ("昼", "夜"):
+                    xs = cells[(lang, slot)]
+                    mark = "*" if (lang, slot) in (("en", "昼"), ("zh", "夜")) else " "
+                    row.append("%s%s(n%d)" % (mark, ("%.0f" % _median(xs)) if xs else "—", len(xs)))
+                print("   %-10s %8s %8s" % (lang, row[0], row[1]))
+            if off == 0:
+                print("   ⚠️ off-pattern 格（en-昼* / zh-夜*）为空 ⇒ R739 实验**未启用或未攒够样本**"
+                      "（设仓库变量 `LANG_EXPERIMENT_PCT`>0 启动；各 off 格 n≥8 再做归因）")
+            else:
+                print("   ★ 判读：en-昼 vs zh-昼 = 纯语种效应；zh-夜 vs zh-昼 = 纯时段效应。"
+                      "各 off 格 n<8 时仍不下结论（R725）")
         else:
             print("   ⚠️ 遥测里没有 lang 字段（R712 上线于 10-10 10:59），"
                   "或 content_id 未命中 ⇒ 本轮无法按语种归因")

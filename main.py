@@ -434,6 +434,20 @@ if not (0 <= LANG_DAY_START < LANG_DAY_END <= 24):
                    LANG_DAY_START, LANG_DAY_END)
     LANG_DAY_START, LANG_DAY_END = 6, 22
 
+# ★ R739：语种×时段**受控实验**——打破 R710 造成的「语种与时段完全共线」。
+#   背景（R735/R737 实测）：R710 规定白天中文/夜间英文 ⇒ 英文**只**在夜、中文**只**在昼
+#   ⇒ 数据里永远没有「英文白天」「中文深夜」的格子 ⇒ en夜 vs zh昼 的 3× 浏览差
+#   **无法归因**到底是"语种(受众错配)"还是"时段(流量)"还是"新帖曝光短"。被动再导出
+#   多少次都解不开这个共线，必须主动发一小部分 off-pattern 帖把 2×2 填满。
+#   机制：每篇以 LANG_EXPERIMENT_PCT% 概率成为「实验帖」，取**与时段规则相反**的语种
+#   （白天→英文、夜间→简中），其余帖照常走 R710。off-pattern 帖（en-昼 / zh-夜）在
+#   遥测里按 (lang, 小时) 唯一可识别（R710 下绝不可能出现），audit_perf 据此做 2×2 归因。
+#   ⚠️ **默认 0 = 完全关闭**（R710 逐字原样，零行为变化）；启用走仓库变量
+#   `LANG_EXPERIMENT_PCT`（同 LOW_HOUR_CAP/OBSERVE_ON_SATURATED 的 env 门控惯例，随时可撤）。
+#   ⚠️ 代价要说清：实验帖里的「英文白天」若确实劣于中文，会占掉几个高流量槽——这是
+#   买"可归因数据"必付的成本，故取**小比例**；跑够样本（各 off-pattern 格 n≥8~10）即可撤。
+LANG_EXPERIMENT_PCT = _env_int("LANG_EXPERIMENT_PCT", 0)
+
 
 # ★ R708 **简 → 繁**转换。
 # ⚠️ 为什么不能直接用 `opencc`：它**不在 requirements.txt**（CI 装不上会全红），
@@ -2273,7 +2287,8 @@ class CacheManager:
         return dict(out)
 
     def pick_output_lang(self, hours: int = 24,
-                         now_bj_hour: Optional[int] = None) -> Optional[str]:
+                         now_bj_hour: Optional[int] = None,
+                         experiment_roll: Optional[float] = None) -> Optional[str]:
         """★★ R710：按**时段**分配语种（用户 2026-10-10 指令，已取代 R708 的固定配比）。
 
         规则（北京时间）：
@@ -2297,7 +2312,16 @@ class CacheManager:
             return None
         if now_bj_hour is None:
             now_bj_hour = (datetime.now(timezone.utc).hour + 8) % 24
-        if LANG_DAY_START <= now_bj_hour < LANG_DAY_END:
+        is_day = LANG_DAY_START <= now_bj_hour < LANG_DAY_END
+        # ★ R739 受控实验：以 LANG_EXPERIMENT_PCT% 概率取**与时段相反**的语种，
+        #   打破 R710 的语种×时段共线（白天→英文、夜间→简中）。默认 PCT=0 ⇒ 整段跳过
+        #   ⇒ 行为与 R710 逐字一致。`experiment_roll` 可注入（测试用，同 now_bj_hour 理由）。
+        if LANG_EXPERIMENT_PCT > 0:
+            if experiment_roll is None:
+                experiment_roll = random.random()
+            if 0.0 <= experiment_roll < LANG_EXPERIMENT_PCT / 100.0:
+                return LANG_NIGHT_LANG if is_day else "zh-CN"
+        if is_day:
             allowed = LANG_DAY_MIX          # 白天：简中/繁体
         else:
             allowed = {LANG_NIGHT_LANG: 1.0}  # 夜间：英文

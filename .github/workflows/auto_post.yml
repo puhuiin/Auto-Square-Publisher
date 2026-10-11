@@ -219,6 +219,10 @@ jobs:
           ARTICLE_MIN_IMPACT: ${{ vars.ARTICLE_MIN_IMPACT }}
           LOG_LEVEL: ${{ vars.LOG_LEVEL }}
           PUBLISH_PLATFORMS: ${{ vars.PUBLISH_PLATFORMS }}
+          #   LANG_EXPERIMENT_PCT:     R739 语种×时段受控实验比例 (默认 0 = 关闭=R710 原样)
+          #     设 >0（如 20）即有该比例的帖取与时段相反的语种（白天发英文/夜间发简中），
+          #     打破「语种与时段共线」好归因 en/zh 效应；跑够样本后把变量设回 0 或删除即停。
+          LANG_EXPERIMENT_PCT: ${{ vars.LANG_EXPERIMENT_PCT }}
 
           # CI 环境无 localhost，显式关闭 Reasonix 本地网关探测（本地跑时自动启用）
           REASONIX_GW_OFF: "1"

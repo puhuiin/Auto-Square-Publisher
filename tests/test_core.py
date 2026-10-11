@@ -20379,5 +20379,60 @@ class TestR738HotlistAbsentRadar(unittest.TestCase):
             self.assertNotIn("热搜", key, "热搜缺席不得进 offenders 硬口径")
 
 
+class TestR739LangTimeExperiment(unittest.TestCase):
+    """★★★ R739：语种×时段受控实验 —— 打破 R710 的共线，让 en/zh 效应可归因
+
+    R710 规定白天中文/夜间英文 ⇒ en 只在夜、zh 只在昼 ⇒ en夜 vs zh昼 的 3× 浏览差
+    **无法归因**（语种? 时段? 曝光?）。R739 以 LANG_EXPERIMENT_PCT% 概率发**与时段相反**
+    的语种（白天→英文、夜间→简中），把 2×2 的 off-diagonal 填满。
+    ⚠️ 默认 PCT=0 必须**零行为变化**（R710 逐字原样）——这是最高优先级守卫（R724 教训：
+      env 门控改动绝不能动默认行为）。
+    """
+
+    def _cm(self):
+        cm = m.CacheManager.__new__(m.CacheManager)
+        cm.cached_items = []
+        return cm
+
+    def test_default_off_is_r710_verbatim(self):
+        """★★★ PCT=0 时，无论 roll 取值，都必须是 R710 原样（白天 zh / 夜间 en）"""
+        with patch.object(m, "LANG_EXPERIMENT_PCT", 0):
+            cm = self._cm()
+            for roll in (0.0, 0.01, 0.5, 0.99):
+                self.assertEqual(cm.pick_output_lang(now_bj_hour=10, experiment_roll=roll),
+                                 "zh-CN", "PCT=0 白天必须恒为中文（roll=%s）" % roll)
+                self.assertEqual(cm.pick_output_lang(now_bj_hour=2, experiment_roll=roll),
+                                 "en", "PCT=0 夜间必须恒为英文（roll=%s）" % roll)
+
+    def test_experiment_fires_flips_to_opposite_lang(self):
+        """★★ PCT>0 且 roll 命中 ⇒ 取与时段**相反**的语种（白天→en、夜间→zh-CN）"""
+        with patch.object(m, "LANG_EXPERIMENT_PCT", 20):
+            cm = self._cm()
+            self.assertEqual(cm.pick_output_lang(now_bj_hour=10, experiment_roll=0.05),
+                             "en", "白天实验帖必须发英文（填 en-昼 格）")
+            self.assertEqual(cm.pick_output_lang(now_bj_hour=2, experiment_roll=0.05),
+                             "zh-CN", "夜间实验帖必须发简中（填 zh-夜 格）")
+
+    def test_experiment_no_fire_is_normal_r710(self):
+        """★ PCT>0 但 roll 未命中（>=pct/100）⇒ 照常走 R710"""
+        with patch.object(m, "LANG_EXPERIMENT_PCT", 20):
+            cm = self._cm()
+            self.assertEqual(cm.pick_output_lang(now_bj_hour=10, experiment_roll=0.5), "zh-CN")
+            self.assertEqual(cm.pick_output_lang(now_bj_hour=2, experiment_roll=0.5), "en")
+
+    def test_fire_boundary_exclusive(self):
+        """★ roll == pct/100 边界**不**命中（半开区间，与 fraction 语义一致）"""
+        with patch.object(m, "LANG_EXPERIMENT_PCT", 20):
+            cm = self._cm()
+            # roll 恰好 0.20 ⇒ 不命中 ⇒ 正常 R710
+            self.assertEqual(cm.pick_output_lang(now_bj_hour=10, experiment_roll=0.20), "zh-CN")
+
+    def test_lang_mix_off_still_short_circuits(self):
+        """★ LANG_MIX 关闭时实验也不生效（返 None，调用方回退素材原语种）"""
+        with patch.object(m, "LANG_MIX", {}), patch.object(m, "LANG_EXPERIMENT_PCT", 50):
+            cm = self._cm()
+            self.assertIsNone(cm.pick_output_lang(now_bj_hour=10, experiment_roll=0.0))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
