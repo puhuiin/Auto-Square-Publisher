@@ -4130,5 +4130,16 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "2e4dcf184cc48e14",
+    "title": "星球早讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-11T02:47:31.524320+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
