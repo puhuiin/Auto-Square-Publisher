@@ -20321,5 +20321,63 @@ class TestR736RejectionTimeLayering(unittest.TestCase):
                          "近半的真实当前拒稿被误标成历史存量 ⇒ 会漏掉真问题")
 
 
+class TestR738HotlistAbsentRadar(unittest.TestCase):
+    """★★ R738：「热搜缺席」第2段模板收敛雷达（track-only）
+
+    ★ fresh look 抓到的新收敛（R732/R733 验证生效之后才冒头）：「全网热搜前X/榜
+      连[币]影子都没有」早80篇 0% → 近窗 25~35%（最近 10 篇一度 70%）。
+    ⚠️ **只加雷达、不改 prompt**（R607 同款判断）：广口径 25~35% 仍低于 R603 的 40%
+      行动线；且最近 10 篇的 70% 很可能是**话题簇**（那批新闻恰好多是"小币有消息但
+      没热度"，此时"热搜没它"是**真观察**不是套话）。R607 教训：确认是风格收敛（跨
+      不同话题仍高）而非话题假象，再给 prompt 技法指导。雷达的近/远半窗就是这个判据。
+    """
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r738",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_regex_matches_absence_not_normal_trending_mention(self):
+        """★★ 必须判别「缺席」(真收敛) vs「热搜是X/热搜挂着X」(陈述当前热点，正常)"""
+        mr = self._mr()
+        for s in ["全网热搜榜都没它的位置", "全网热搜前十里连 $XRP 的影子都没",
+                  "热搜榜连 $FIL 影子都看不到", "卻擠不進熱搜前五"]:
+            self.assertTrue(mr._HOTLIST_ABSENT_RE.search(s), "应命中缺席模板：%s" % s)
+        for s in ["午间刷盘高峰全网热搜是STRK、MAGIC", "全网都在热搜 $STRK",
+                  "全網熱搜還掛著TRUMP、BTC", "热搜挂着 $STRK"]:
+            self.assertIsNone(mr._HOTLIST_ABSENT_RE.search(s),
+                              "陈述当前热点的正常用法不该命中：%s" % s)
+
+    def test_quality_scan_tracks_hotlist_absent_per_post(self):
+        """★ 字段落 quality_scan + 按帖计一次 + 近/远半窗（同 flat_desc 口径）"""
+        mr = self._mr()
+        hit = "利好砸下来,全网热搜前五连它影子都没有,没新资金。"
+        miss = "利好砸下来,成交承接也跟上了,资金费率转正。"
+        rows = [{"outcome": "binance_published",
+                 "final_preview": (hit if i % 2 == 0 else miss) + " 第%d篇" % i,
+                 "ts": "2026-10-10T0%d:00:00+00:00" % i} for i in range(6)]
+        q = mr.quality_scan(rows, window=6)
+        self.assertEqual(q["hotlist_absent"], 3, "应按帖计一次、恰好命中 3 篇")
+        self.assertEqual(q["hotlist_absent_recent"] + q["hotlist_absent_older"],
+                         q["hotlist_absent"], "近/远两半之和必须等于整窗")
+
+    def test_hotlist_absent_is_track_only_not_offender(self):
+        """★ R603 纪律：收敛类只走趋势行，不进 offenders 硬合规口径"""
+        mr = self._mr()
+        rows = [{"outcome": "binance_published",
+                 "final_preview": "热搜榜连影子都没有。第%d篇" % i,
+                 "ts": "2026-10-10T0%d:00:00+00:00" % i} for i in range(4)]
+        q = mr.quality_scan(rows, window=4)
+        self.assertTrue(q["hotlist_absent"] >= 1)
+        for key in q["offenders"]:
+            self.assertNotIn("热搜", key, "热搜缺席不得进 offenders 硬口径")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

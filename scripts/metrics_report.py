@@ -214,6 +214,19 @@ _WATCH_LEAD_RE = re.compile(
     r"先看.{0,12}(?:能不能|能否|有没有|顶得?住|顶不顶|守得?住|守不守|站得?稳|站不站|破不破)"
     r"|盯[住紧].{0,8}(?:能不能|有没有|后续|信号|动向|变化|量)")
 
+# R738：「热搜缺席」第2段模板——「全网热搜前X/榜 连[币]影子都没有 ⇒ 没新资金/热度退」。
+# 这是 R732/R733 验证生效**之后**冒出来的新收敛（fresh look 抓到）：早80篇 0% →
+# 近40篇 **22%**，9 篇横跨 ARB/ZK/XRP/FIL/ZEC 等不同币同一结构 ⇒ 真风格收敛非话题。
+# ⚠️ **只追踪不设门、不改 prompt**（R603/R734 同款判断）：22% < 40% 行动线；且「某币
+#   没上热搜」本是正常市场观察（和 watch-lead/放量 一样是半合法说法），贸然打散伤人设。
+#   先产品化进 dashboard（R600），下窗口跨 40% 再给 prompt 菜单。
+# ⚠️ 只匹配「缺席」语义（热搜 + 没/连影子/看不到/挤不进），不碰「热搜是 X / 热搜挂着 X」
+#   这类陈述当前热点的正常用法（实测 5 条正常样本零误报）。
+_HOTLIST_ABSENT_RE = re.compile(
+    r"(?:热搜|熱搜)(?:榜)?(?:前[\d一二三四五六七八九十]+)?.{0,10}(?:没|沒|连|連|看不到|找不到|根本[没沒]|没它|沒它)"
+    r"|(?:挤不进|擠不進|进不了|進不了).{0,4}(?:热搜|熱搜)"
+    r"|(?:热搜|熱搜).{0,10}(?:影子|位置|名字)")
+
 # R605：句长 burstiness（节奏方差）——整合自全网最新研究（textpulse 2026 对 6 万+
 # 文本的实证）：AI 文本最稳的「机器味」信号之一是**句长过于均匀**（标准差小），人类
 # 写作句长起伏大。该研究量化：人类句长变异系数 CV≈0.449、AI≈0.376，79% 的 AI 改写
@@ -277,6 +290,8 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
            "vol_confirm": 0, "vol_confirm_recent": 0, "vol_confirm_older": 0,
            # R734：watch-lead「先看/盯 X 能不能」收敛（第3段模板第三格，track-only）。
            "watch_lead": 0, "watch_lead_recent": 0, "watch_lead_older": 0,
+           # R738：「热搜缺席」第2段模板（track-only，0%→22% 新收敛）。
+           "hotlist_absent": 0, "hotlist_absent_recent": 0, "hotlist_absent_older": 0,
            # R610：近半的时间跨度（最早/最晚 ts）——判读近半的前提。R629 更正：
            # 原注释写"发布速率约 4~6 篇/天，一次加固上线 1 天后近半仍可能含 4 篇
            # 加固前旧稿"，**该数字是错的**。生产实测自 09-10 起稳定 **12 篇/天**
@@ -346,6 +361,10 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
         if _WATCH_LEAD_RE.search(pv):
             out["watch_lead"] += 1
             out["watch_lead_recent" if _is_recent else "watch_lead_older"] += 1
+        # R738：「热搜缺席」第2段模板——同口径按帖计一次（track-only）。
+        if _HOTLIST_ABSENT_RE.search(pv):
+            out["hotlist_absent"] += 1
+            out["hotlist_absent_recent" if _is_recent else "hotlist_absent_older"] += 1
     out["offenders"] = dict(out["offenders"])
     return out
 
@@ -3537,6 +3556,30 @@ def render_text(s, rows=None):
                 else:
                     _ww = " ⚠️（watch-lead 收敛，track-only 观察中）" if _wp >= 40 else ""
                     lines.append(f"  📋 实操 watch-lead 收敛: {_wa}/{q['scanned']} 篇（{_wp:.0f}%）{_ww}")
+            # R738：「热搜缺席」第2段模板收敛（track-only，R603/R734 同款：22% < 40% 行动线
+            # 时只追踪不改 prompt；跨 40% 再给菜单）。
+            if q.get("hotlist_absent"):
+                _ha = q["hotlist_absent"]
+                _hp = 100 * _ha / q["scanned"]
+                _hr = q.get("hotlist_absent_recent", 0)
+                _ho = q.get("hotlist_absent_older", 0)
+                _rn5 = (q["scanned"] + 1) // 2
+                _on5 = q["scanned"] - _rn5
+                if _rn5 >= 3 and _on5 >= 3:
+                    _hrpct = 100 * _hr / _rn5
+                    _hopct = 100 * _ho / _on5
+                    if _hrpct >= 40 and _hrpct >= _hopct:
+                        _hw = " ⚠️（近半≥40% 且未低于远半 ⇒ 过 R603 行动线，可考虑给 prompt 菜单）"
+                    elif _hrpct < _hopct:
+                        _hw = "（近半 < 远半，无需动作）"
+                    else:
+                        _hw = "（近/远持平，需更多样本）"
+                    lines.append(f"  📻 热搜缺席模板收敛: 近半 {_hr}/{_rn5}（{_hrpct:.0f}%）· "
+                                 f"远半对照 {_ho}/{_on5}（{_hopct:.0f}%）· "
+                                 f"整窗 {_ha}/{q['scanned']}（{_hp:.0f}%）{_hw}")
+                else:
+                    _hw = " ⚠️（热搜缺席收敛，track-only 观察中）" if _hp >= 40 else ""
+                    lines.append(f"  📻 热搜缺席模板收敛: {_ha}/{q['scanned']} 篇（{_hp:.0f}%）{_hw}")
         # R289：FNG 三件套收口——滞回驱动量直方图 + 武装未剥离一致性告警。
         # hook_count 是近窗引入次数（武装条件 ≥2，故 1 = 距武装一步之遥的压力面）；
         # armed 但 market_stripped=False = R101 互补剥离疑似失效（禁令与盘面行
