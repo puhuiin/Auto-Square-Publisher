@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-10T17:21:48.223381Z",
+  "as_of": "2026-10-11T13:18:24.333375Z",
   "min_n": 4,
   "note": "per-token avg/median Square views (creator-center export); ranking-only engagement boost (R608/R609; boost uses median_views for outlier robustness)",
   "tokens": {
@@ -18,25 +18,20 @@
       "median_views": 107,
       "n": 1
     },
-    "BTC": {
-      "avg_views": 94,
-      "median_views": 99,
-      "n": 32
-    },
     "QNT": {
       "avg_views": 137,
       "median_views": 98,
       "n": 4
     },
-    "ETH": {
-      "avg_views": 122,
+    "BTC": {
+      "avg_views": 92,
       "median_views": 95,
-      "n": 24
+      "n": 37
     },
-    "SOL": {
-      "avg_views": 84,
-      "median_views": 88,
-      "n": 16
+    "ETH": {
+      "avg_views": 118,
+      "median_views": 90,
+      "n": 26
     },
     "SC": {
       "avg_views": 83,
@@ -48,6 +43,11 @@
       "median_views": 69,
       "n": 1
     },
+    "SOL": {
+      "avg_views": 77,
+      "median_views": 68,
+      "n": 18
+    },
     "USDC": {
       "avg_views": 66,
       "median_views": 66,
@@ -58,45 +58,50 @@
       "median_views": 65,
       "n": 4
     },
-    "DOGE": {
-      "avg_views": 109,
-      "median_views": 63,
-      "n": 7
-    },
     "SYN": {
       "avg_views": 63,
       "median_views": 63,
       "n": 1
     },
-    "ZEC": {
-      "avg_views": 71,
+    "STRK": {
+      "avg_views": 60,
       "median_views": 60,
-      "n": 10
+      "n": 2
     },
     "OP": {
       "avg_views": 59,
       "median_views": 59,
       "n": 1
     },
-    "UNI": {
-      "avg_views": 53,
+    "ZEC": {
+      "avg_views": 66,
       "median_views": 53,
-      "n": 2
+      "n": 12
     },
-    "XRP": {
-      "avg_views": 64,
-      "median_views": 51,
-      "n": 17
+    "DOGE": {
+      "avg_views": 96,
+      "median_views": 50,
+      "n": 8
     },
     "SHIB": {
-      "avg_views": 61,
+      "avg_views": 57,
       "median_views": 44,
-      "n": 11
+      "n": 12
+    },
+    "FIL": {
+      "avg_views": 44,
+      "median_views": 44,
+      "n": 2
     },
     "KAIA": {
       "avg_views": 41,
       "median_views": 41,
       "n": 1
+    },
+    "XRP": {
+      "avg_views": 58,
+      "median_views": 36,
+      "n": 21
     },
     "AERO": {
       "avg_views": 32,
@@ -113,7 +118,22 @@
       "median_views": 25,
       "n": 7
     },
+    "UNI": {
+      "avg_views": 43,
+      "median_views": 22,
+      "n": 3
+    },
     "LTC": {
+      "avg_views": 13,
+      "median_views": 13,
+      "n": 1
+    },
+    "WLD": {
+      "avg_views": 13,
+      "median_views": 13,
+      "n": 1
+    },
+    "ARB": {
       "avg_views": 13,
       "median_views": 13,
       "n": 1
@@ -128,12 +148,27 @@
       "median_views": 9,
       "n": 1
     },
+    "ZK": {
+      "avg_views": 9,
+      "median_views": 9,
+      "n": 1
+    },
     "TRX": {
-      "avg_views": 27,
+      "avg_views": 17,
       "median_views": 7,
-      "n": 3
+      "n": 5
+    },
+    "NIGHT": {
+      "avg_views": 5,
+      "median_views": 5,
+      "n": 1
     },
     "DOT": {
+      "avg_views": 1,
+      "median_views": 1,
+      "n": 1
+    },
+    "IMX": {
       "avg_views": 1,
       "median_views": 1,
       "n": 1
