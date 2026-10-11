@@ -4204,5 +4204,15 @@
       "USDC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "dd8565bcf319dbec",
+    "title": "Filecoin Nears End of Six-Year Vesting, Removing 68 Million FIL in Annual Releases",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-11T05:48:46.023716+00:00",
+    "tokens": [
+      "FIL"
+    ],
+    "lang": "zh-CN"
   }
 ]
