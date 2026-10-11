@@ -19,6 +19,10 @@
   "strategy_guidance": "优先围绕新上线的4只bStocks证券代币及多只TradFi USDⓈ-Margined永续合约展开内容，结合正在进行的现货/期货交易锦标赛、新用户专属活动及币安学院 quizzes 等官方 ongoing 活动，引导读者参与互动、完成任务获取活动奖励，同时带#Write2Earn 标签引导评论互动赚取创作者激励。",
   "last_updated": "2026-10-11T03:04:01.156517Z",
   "_feed_health": {
+    "CoinJournal (山寨异动)": {
+      "fails": 1,
+      "last_fail": "2026-10-11T07:06:01.909221+00:00"
+    },
     "ZyCrypto (新币与空投)": {
       "fails": 1,
       "last_fail": "2026-10-11T02:06:59.991612+00:00"
