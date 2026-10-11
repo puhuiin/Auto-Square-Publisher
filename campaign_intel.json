@@ -19,19 +19,19 @@
   "strategy_guidance": "当前现货交易锦标赛、期货交易竞赛及新bStocks、Futures合约上线活动均处于进行中阶段，建议优先以活动冲刺、新资产交易逻辑角度发帖追热度，结合Write2Earn规则引导用户参与评论互动拿奖励，同时匹配交易竞赛规则引导交易返佣。",
   "last_updated": "2026-10-11T15:08:04.953187Z",
   "_feed_health": {
+    "ZyCrypto (新币与空投)": {
+      "fails": 1,
+      "last_fail": "2026-10-11T16:23:30.278952+00:00"
+    },
     "CoinJournal (山寨异动)": {
       "parked_until": "2026-10-11T17:03:28.210394+00:00",
       "last_fail": "2026-10-11T18:23:27.864708+00:00",
       "fails": 3
-    },
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "last_fail": "2026-10-11T16:23:30.278952+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
+    "date": "2026-09-09"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-11",
