@@ -1,11 +1,5 @@
 [
   {
-    "id": "7e2ebb0538c23f29",
-    "title": "Bernie Sanders Pushes Bill to Ban Advanced AI Development",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-04T06:13:33.923299Z"
-  },
-  {
     "id": "b8433627e99d0e31",
     "title": "OpenAI Releases GPT-6 Astra: The Closest AI Model Yet to AGI",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -4727,5 +4721,15 @@
       "APT"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "f634f3856d38c9a7",
+    "title": "State of TRON Q3 2026 Report Highlights $2.21 Trillion in Stablecoin Settlement Amid Network Activity Growth",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-12T18:07:01.515279+00:00",
+    "tokens": [
+      "TRX"
+    ],
+    "lang": "en"
   }
 ]
