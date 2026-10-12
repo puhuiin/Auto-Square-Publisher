@@ -19,8 +19,8 @@
   "_feed_health": {
     "ZyCrypto (新币与空投)": {
       "last_fail": "2026-10-12T18:06:02.049471+00:00",
-      "fails": 3,
-      "parked_until": "2026-10-13T00:06:02.049471+00:00"
+      "parked_until": "2026-10-13T00:06:02.049471+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
