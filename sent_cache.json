@@ -1,11 +1,5 @@
 [
   {
-    "id": "8897b1aefe67674d",
-    "title": "A memecoin making app becomes crypto’s top fee generators as Robinhood Chain activity explodes",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-09-03T17:15:37.719336Z"
-  },
-  {
     "id": "f2c69e276dd5330c",
     "title": "Bitcoin (BTC) Rally Driven by Short Covering, Not Fresh Leverage: QCP",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4695,5 +4689,17 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "adff51c532ef9ef0",
+    "title": "吴说每日精选加密新闻 - 宜信相关公司涉嫌违法犯罪被立案侦查,旗下投资曾涉及 Circle、Matrixport 等加密项目",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-12T13:50:46.915229+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "RLUSD"
+    ],
+    "lang": "en"
   }
 ]
