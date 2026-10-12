@@ -1,11 +1,5 @@
 [
   {
-    "id": "42687f23a664f4f1",
-    "title": "DOGE, SHIB, PEPE, or Something Else: Which Meme Coin Can Make History in September? (3 AIs Weigh In)",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-03T04:40:11.069032Z"
-  },
-  {
     "id": "66ed3b9ffd71b3bc",
     "title": "XRP’s $2.14 bull case just met a $474 million ETF tailwind",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4670,6 +4664,17 @@
     "tokens": [
       "BTC",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "46a542c7890c420e",
+    "title": "Thailand wants a piece of the $120 billion Bitcoin and Ethereum ETF market, but on its own terms",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-12T12:04:45.986857+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
