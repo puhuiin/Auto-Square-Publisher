@@ -4480,5 +4480,16 @@
       "CHIP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "899d8e70ed6f7c28",
+    "title": "星球早讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-12T01:44:35.591105+00:00",
+    "tokens": [
+      "XRP",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
