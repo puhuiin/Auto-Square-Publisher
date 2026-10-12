@@ -1,11 +1,5 @@
 [
   {
-    "id": "6172928261ab6d22",
-    "title": "Dogecoin (DOGE), Hyperliquid (HYPE), Shiba Inu (SHIB) and Bitcoin (BTC) Price Analysis for September 2: Recapturing Bullish Momentum",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-03T04:56:20.496528Z"
-  },
-  {
     "id": "3165682e5c1807f6",
     "title": "‘Crypto Capital of the World’: SEC Chair Expects Clarity Act to Pass This Month",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -4681,5 +4675,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "c25accf78311f210",
+    "title": "Fake Shiba Inu (SHIB) Alert: Viral Airdrop Exposed as 'Wallet Drainer' by Veteran",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-12T12:52:29.425437+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-CN"
   }
 ]
