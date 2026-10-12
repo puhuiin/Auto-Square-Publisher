@@ -1,11 +1,5 @@
 [
   {
-    "id": "165b5c4e9319fa94",
-    "title": "Linqto Founder Faces Federal Charges Over Alleged $450,000,000 Pre-IPO Price Inflation Fraud Scheme",
-    "source": "DailyHodl (山寨异动与百倍币叙事)",
-    "sent_at": "2026-09-03T13:39:20.476863Z"
-  },
-  {
     "id": "8897b1aefe67674d",
     "title": "A memecoin making app becomes crypto’s top fee generators as Robinhood Chain activity explodes",
     "source": "CoinDesk (权威宏观与机构)",
@@ -4691,5 +4685,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "c9c8db06f4132366",
+    "title": "分析:比特币短线陷入81400-84500美元区间,需关注CPI与ETF流向",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-12T13:27:13.839131+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
