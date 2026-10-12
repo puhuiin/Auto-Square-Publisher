@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-11T13:18:24.333375Z",
+  "as_of": "2026-10-12T11:08:09.189829Z",
   "min_n": 4,
   "note": "per-token avg/median Square views (creator-center export); ranking-only engagement boost (R608/R609; boost uses median_views for outlier robustness)",
   "tokens": {
@@ -7,6 +7,11 @@
       "avg_views": 193,
       "median_views": 193,
       "n": 2
+    },
+    "RSR": {
+      "avg_views": 164,
+      "median_views": 164,
+      "n": 1
     },
     "COMP": {
       "avg_views": 160,
@@ -24,14 +29,14 @@
       "n": 4
     },
     "BTC": {
-      "avg_views": 92,
-      "median_views": 95,
-      "n": 37
+      "avg_views": 86,
+      "median_views": 88,
+      "n": 43
     },
     "ETH": {
-      "avg_views": 118,
-      "median_views": 90,
-      "n": 26
+      "avg_views": 114,
+      "median_views": 88,
+      "n": 27
     },
     "SC": {
       "avg_views": 83,
@@ -43,45 +48,40 @@
       "median_views": 69,
       "n": 1
     },
-    "SOL": {
-      "avg_views": 77,
-      "median_views": 68,
-      "n": 18
-    },
     "USDC": {
       "avg_views": 66,
       "median_views": 66,
       "n": 1
-    },
-    "BNB": {
-      "avg_views": 100,
-      "median_views": 65,
-      "n": 4
     },
     "SYN": {
       "avg_views": 63,
       "median_views": 63,
       "n": 1
     },
-    "STRK": {
-      "avg_views": 60,
-      "median_views": 60,
-      "n": 2
-    },
     "OP": {
       "avg_views": 59,
       "median_views": 59,
       "n": 1
     },
+    "BNB": {
+      "avg_views": 81,
+      "median_views": 58,
+      "n": 5
+    },
     "ZEC": {
-      "avg_views": 66,
-      "median_views": 53,
-      "n": 12
+      "avg_views": 67,
+      "median_views": 54,
+      "n": 13
     },
     "DOGE": {
       "avg_views": 96,
       "median_views": 50,
       "n": 8
+    },
+    "CHIP": {
+      "avg_views": 47,
+      "median_views": 47,
+      "n": 1
     },
     "SHIB": {
       "avg_views": 57,
@@ -93,35 +93,60 @@
       "median_views": 44,
       "n": 2
     },
+    "SOL": {
+      "avg_views": 66,
+      "median_views": 43,
+      "n": 22
+    },
+    "STRK": {
+      "avg_views": 40,
+      "median_views": 42,
+      "n": 4
+    },
     "KAIA": {
       "avg_views": 41,
       "median_views": 41,
       "n": 1
     },
-    "XRP": {
-      "avg_views": 58,
-      "median_views": 36,
-      "n": 21
-    },
-    "AERO": {
-      "avg_views": 32,
-      "median_views": 32,
+    "CFX": {
+      "avg_views": 38,
+      "median_views": 38,
       "n": 1
     },
-    "HYPE": {
-      "avg_views": 104,
-      "median_views": 30,
-      "n": 5
+    "TIA": {
+      "avg_views": 38,
+      "median_views": 38,
+      "n": 1
+    },
+    "XRP": {
+      "avg_views": 56,
+      "median_views": 36,
+      "n": 23
     },
     "ADA": {
-      "avg_views": 51,
-      "median_views": 25,
-      "n": 7
+      "avg_views": 50,
+      "median_views": 36,
+      "n": 8
+    },
+    "HYPE": {
+      "avg_views": 89,
+      "median_views": 22,
+      "n": 6
     },
     "UNI": {
       "avg_views": 43,
       "median_views": 22,
       "n": 3
+    },
+    "AERO": {
+      "avg_views": 18,
+      "median_views": 18,
+      "n": 2
+    },
+    "PENGU": {
+      "avg_views": 15,
+      "median_views": 15,
+      "n": 1
     },
     "LTC": {
       "avg_views": 13,
@@ -133,14 +158,24 @@
       "median_views": 13,
       "n": 1
     },
-    "ARB": {
-      "avg_views": 13,
-      "median_views": 13,
-      "n": 1
-    },
     "BAT": {
       "avg_views": 12,
       "median_views": 12,
+      "n": 1
+    },
+    "APT": {
+      "avg_views": 11,
+      "median_views": 11,
+      "n": 1
+    },
+    "ARB": {
+      "avg_views": 10,
+      "median_views": 10,
+      "n": 2
+    },
+    "INJ": {
+      "avg_views": 10,
+      "median_views": 10,
       "n": 1
     },
     "PYTH": {
@@ -153,15 +188,30 @@
       "median_views": 9,
       "n": 1
     },
+    "EIGEN": {
+      "avg_views": 8,
+      "median_views": 8,
+      "n": 1
+    },
     "TRX": {
-      "avg_views": 17,
-      "median_views": 7,
-      "n": 5
+      "avg_views": 14,
+      "median_views": 5,
+      "n": 6
     },
     "NIGHT": {
       "avg_views": 5,
       "median_views": 5,
       "n": 1
+    },
+    "PEPE": {
+      "avg_views": 3,
+      "median_views": 3,
+      "n": 1
+    },
+    "AAVE": {
+      "avg_views": 2,
+      "median_views": 2,
+      "n": 2
     },
     "DOT": {
       "avg_views": 1,

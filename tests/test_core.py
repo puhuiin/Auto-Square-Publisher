@@ -20434,5 +20434,64 @@ class TestR739LangTimeExperiment(unittest.TestCase):
             self.assertIsNone(cm.pick_output_lang(now_bj_hour=10, experiment_roll=0.0))
 
 
+class TestR741CampaignCtaRepetitionRadar(unittest.TestCase):
+    """★★ R741：活动 CTA 套话复读雷达（track-only）
+
+    ★ fresh look（第三批导出）抓到：同一战役活跃期，每帖都挂**逐字相同**的引入句
+      「顺便提一嘴，币安 KGST/USDT 零手续费 10/14 截止…」——「顺便提一嘴」0%→22%、
+      KGST 1%→17%、近半窗 70%。这是 campaign_intel guidance 被渲染成固定句（R619/R620
+      只修了 guidance 的**收益承诺措辞**，没管注入后的**复读**）。
+    ⚠️ **只加雷达不改 prompt**，且有一个硬理由：该战役 10-14 截止，现在改 prompt
+      **在战役结束前无法验证**（R616）⇒ 改了不能闭环。正确动作：先建雷达，下个战役
+      **开始时**给「活动提法每帖换说法」菜单（campaign 信息本身保留=返佣红线）。
+    """
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r741",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_regex_matches_cta_boilerplate(self):
+        """★ 命中活动 CTA 套话引入句（顺便提一嘴/KGST/零手续费）"""
+        mr = self._mr()
+        for s in ["顺便提一嘴,币安 KGST/USDT 零手续费活动 10/14 截止",
+                  "顺便提醒下,现在有现货期货交易锦标赛",
+                  "KGST/USDT 零手续费 14 号截止"]:
+            self.assertTrue(mr._CAMPAIGN_CTA_RE.search(s), "应命中：%s" % s)
+        for s in ["ETH 跌破 2500，短线别追", "合约别上高杠杆,止损带紧"]:
+            self.assertIsNone(mr._CAMPAIGN_CTA_RE.search(s),
+                              "无关正文不该命中（否则与普通内容混淆）：%s" % s)
+
+    def test_quality_scan_tracks_per_post_with_split(self):
+        """★ 字段落 quality_scan + 按帖计一次 + 近/远半窗（同 flat_desc 口径）"""
+        mr = self._mr()
+        hit = "利好没接住量。顺便提一嘴,锦标赛还在进行。"
+        miss = "利好没接住量,先看成交能不能放大。"
+        rows = [{"outcome": "binance_published",
+                 "final_preview": (hit if i % 2 == 0 else miss) + " 第%d篇" % i,
+                 "ts": "2026-10-10T0%d:00:00+00:00" % i} for i in range(6)]
+        q = mr.quality_scan(rows, window=6)
+        self.assertEqual(q["campaign_cta"], 3, "应按帖计一次、恰好命中 3 篇")
+        self.assertEqual(q["campaign_cta_recent"] + q["campaign_cta_older"],
+                         q["campaign_cta"], "近/远两半之和必须等于整窗")
+
+    def test_campaign_cta_is_track_only_not_offender(self):
+        """★ R603 纪律：收敛类只走趋势行，不进 offenders 硬合规口径"""
+        mr = self._mr()
+        rows = [{"outcome": "binance_published",
+                 "final_preview": "顺便提一嘴,活动截止。第%d篇" % i,
+                 "ts": "2026-10-10T0%d:00:00+00:00" % i} for i in range(4)]
+        q = mr.quality_scan(rows, window=4)
+        self.assertTrue(q["campaign_cta"] >= 1)
+        for key in q["offenders"]:
+            self.assertNotIn("顺便", key, "活动CTA不得进 offenders 硬口径")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

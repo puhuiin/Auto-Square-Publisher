@@ -227,6 +227,18 @@ _HOTLIST_ABSENT_RE = re.compile(
     r"|(?:挤不进|擠不進|进不了|進不了).{0,4}(?:热搜|熱搜)"
     r"|(?:热搜|熱搜).{0,10}(?:影子|位置|名字)")
 
+# R741：活动 CTA 套话复读——campaign_intel 的 guidance 被模型渲染成**逐字相同**的引入句。
+# 实测（第三批导出 fresh look）：「顺便提一嘴/顺便提醒」0%→22%、KGST/零手续费 1%→17%、
+# 锦标赛 0%→15% ⇒ 同一战役（KGST 10/14 截止）活跃期间，每帖都挂同一句
+# 「顺便提一嘴，币安 KGST/USDT 零手续费 10/14 截止…」。
+# ⚠️ **只追踪不改 prompt**（R603/R741 判断，且有一个硬理由）：该战役 10-14 截止，
+#   现在改 prompt **在战役结束前无法验证**（R616：prompt 改动必须新帖回测）⇒ 改了也
+#   不能闭环。正确动作：先建雷达；若下个战役仍 >40% 或同样复读，在战役**开始**时给
+#   「活动提法每帖换种说法」的菜单（ campaign 信息本身必须保留——返佣红线，R619/R620）。
+_CAMPAIGN_CTA_RE = re.compile(
+    r"顺便提一嘴|顺便提醒|順便提一嘴|顺带提醒|再提一嘴"
+    r"|KGST|零手續費|零手续费")
+
 # R605：句长 burstiness（节奏方差）——整合自全网最新研究（textpulse 2026 对 6 万+
 # 文本的实证）：AI 文本最稳的「机器味」信号之一是**句长过于均匀**（标准差小），人类
 # 写作句长起伏大。该研究量化：人类句长变异系数 CV≈0.449、AI≈0.376，79% 的 AI 改写
@@ -292,6 +304,8 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
            "watch_lead": 0, "watch_lead_recent": 0, "watch_lead_older": 0,
            # R738：「热搜缺席」第2段模板（track-only，0%→22% 新收敛）。
            "hotlist_absent": 0, "hotlist_absent_recent": 0, "hotlist_absent_older": 0,
+           # R741：活动 CTA 套话复读（track-only；campaign 信息保留=返佣红线，只追引入句复读）。
+           "campaign_cta": 0, "campaign_cta_recent": 0, "campaign_cta_older": 0,
            # R610：近半的时间跨度（最早/最晚 ts）——判读近半的前提。R629 更正：
            # 原注释写"发布速率约 4~6 篇/天，一次加固上线 1 天后近半仍可能含 4 篇
            # 加固前旧稿"，**该数字是错的**。生产实测自 09-10 起稳定 **12 篇/天**
@@ -365,6 +379,10 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
         if _HOTLIST_ABSENT_RE.search(pv):
             out["hotlist_absent"] += 1
             out["hotlist_absent_recent" if _is_recent else "hotlist_absent_older"] += 1
+        # R741：活动 CTA 套话复读——同口径按帖计一次（track-only）。
+        if _CAMPAIGN_CTA_RE.search(pv):
+            out["campaign_cta"] += 1
+            out["campaign_cta_recent" if _is_recent else "campaign_cta_older"] += 1
     out["offenders"] = dict(out["offenders"])
     return out
 
@@ -3580,6 +3598,30 @@ def render_text(s, rows=None):
                 else:
                     _hw = " ⚠️（热搜缺席收敛，track-only 观察中）" if _hp >= 40 else ""
                     lines.append(f"  📻 热搜缺席模板收敛: {_ha}/{q['scanned']} 篇（{_hp:.0f}%）{_hw}")
+            # R741：活动 CTA 套话复读（track-only）。campaign 信息本身是返佣红线必须保留，
+            # 追的是**引入句逐字复读**；战役期内改 prompt 无法验证 ⇒ 跨战役 >40% 再给菜单。
+            if q.get("campaign_cta"):
+                _ca = q["campaign_cta"]
+                _cp = 100 * _ca / q["scanned"]
+                _cr = q.get("campaign_cta_recent", 0)
+                _co = q.get("campaign_cta_older", 0)
+                _rn6 = (q["scanned"] + 1) // 2
+                _on6 = q["scanned"] - _rn6
+                if _rn6 >= 3 and _on6 >= 3:
+                    _crpct = 100 * _cr / _rn6
+                    _copct = 100 * _co / _on6
+                    if _crpct >= 40 and _crpct >= _copct:
+                        _cw = " ⚠️（近半≥40% ⇒ 下个战役开始时给「活动提法每帖换说法」菜单）"
+                    elif _crpct < _copct:
+                        _cw = "（近半 < 远半，无需动作）"
+                    else:
+                        _cw = "（近/远持平，需更多样本）"
+                    lines.append(f"  🎁 活动CTA套话复读: 近半 {_cr}/{_rn6}（{_crpct:.0f}%）· "
+                                 f"远半对照 {_co}/{_on6}（{_copct:.0f}%）· "
+                                 f"整窗 {_ca}/{q['scanned']}（{_cp:.0f}%）{_cw}")
+                else:
+                    _cw = " ⚠️（活动CTA复读，track-only 观察中）" if _cp >= 40 else ""
+                    lines.append(f"  🎁 活动CTA套话复读: {_ca}/{q['scanned']} 篇（{_cp:.0f}%）{_cw}")
         # R289：FNG 三件套收口——滞回驱动量直方图 + 武装未剥离一致性告警。
         # hook_count 是近窗引入次数（武装条件 ≥2，故 1 = 距武装一步之遥的压力面）；
         # armed 但 market_stripped=False = R101 互补剥离疑似失效（禁令与盘面行
