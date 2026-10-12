@@ -1,11 +1,5 @@
 [
   {
-    "id": "0643669928d86939",
-    "title": "幣安上線美股選擇權：實物交割 1,000 檔股票加 ETF，阿布達比券商 Nest Trading 領路",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-09-02T02:21:34.125788Z"
-  },
-  {
     "id": "42687f23a664f4f1",
     "title": "DOGE, SHIB, PEPE, or Something Else: Which Meme Coin Can Make History in September? (3 AIs Weigh In)",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4667,5 +4661,16 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "631785488df8a802",
+    "title": "星球晚讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-12T11:44:48.399541+00:00",
+    "tokens": [
+      "BTC",
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
