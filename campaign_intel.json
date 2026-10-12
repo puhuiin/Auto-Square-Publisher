@@ -19,14 +19,14 @@
   "strategy_guidance": "优先追贴10月14日即将截止的KGST/USDT零手续费活动，以活动冲刺角度引导用户参与相关交易话题讨论。同时结合新上线的bStocks TradFi资产、USDⓈ-Margined合约及进行中的交易竞赛热点，打造对应话题内容。引导读者参与话题互动，获取Write2Earn评论奖励与活动流量。",
   "last_updated": "2026-10-12T03:24:01.964440Z",
   "_feed_health": {
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "last_fail": "2026-10-12T07:03:29.392620+00:00"
-    },
     "CoinJournal (山寨异动)": {
       "parked_until": "2026-10-12T13:23:31.949189+00:00",
-      "fails": 3,
-      "last_fail": "2026-10-12T07:23:31.949189+00:00"
+      "last_fail": "2026-10-12T07:23:31.949189+00:00",
+      "fails": 3
+    },
+    "ZyCrypto (新币与空投)": {
+      "last_fail": "2026-10-12T07:03:29.392620+00:00",
+      "fails": 1
     }
   },
   "_fallback_image": {
