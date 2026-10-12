@@ -1,11 +1,5 @@
 [
   {
-    "id": "66ed3b9ffd71b3bc",
-    "title": "XRP’s $2.14 bull case just met a $474 million ETF tailwind",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-03T04:42:13.315895Z"
-  },
-  {
     "id": "6172928261ab6d22",
     "title": "Dogecoin (DOGE), Hyperliquid (HYPE), Shiba Inu (SHIB) and Bitcoin (BTC) Price Analysis for September 2: Recapturing Bullish Momentum",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4677,5 +4671,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "6af336e42c8b65f8",
+    "title": "Another Spot Solana ETF Set to Launch This Month",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-12T12:26:43.936647+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]

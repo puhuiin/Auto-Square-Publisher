@@ -20,9 +20,9 @@
   "last_updated": "2026-10-12T03:24:01.964440Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "parked_until": "2026-10-12T13:23:31.949189+00:00",
       "last_fail": "2026-10-12T07:23:31.949189+00:00",
-      "fails": 3
+      "fails": 3,
+      "parked_until": "2026-10-12T13:23:31.949189+00:00"
     },
     "ZyCrypto (新币与空投)": {
       "fails": 2,
