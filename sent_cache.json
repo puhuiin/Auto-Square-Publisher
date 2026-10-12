@@ -1,11 +1,5 @@
 [
   {
-    "id": "b8433627e99d0e31",
-    "title": "OpenAI Releases GPT-6 Astra: The Closest AI Model Yet to AGI",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-04T06:15:22.772165Z"
-  },
-  {
     "id": "292bc390acd12df1",
     "title": "Bitcoin Surges Above Key Moving Average, Key Resistance About to Crack",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4729,6 +4723,16 @@
     "sent_at": "2026-10-12T18:07:01.515279+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f33a363bfd0ce2f9",
+    "title": "Bitcoin Spooked? Crypto Fear and Greed Index Drops to Pre-Rally August Lows",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-10-12T18:27:40.160015+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
