@@ -1,11 +1,5 @@
 [
   {
-    "id": "5c941dcc357b60f5",
-    "title": "XRP Records Abnormal ETF Imbalance as Select US Funds Outperform Token Surge by 100%",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-04T00:22:47.790557Z"
-  },
-  {
     "id": "f8dc6262e97b68c6",
     "title": "Bessent Delivers Bitcoin's Best Ad, Scaramucci Claims",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4708,6 +4702,16 @@
     "sent_at": "2026-10-12T14:46:40.724870+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c209600ebe891100",
+    "title": "Chainlink eyes $13.50 breakout as ETF inflows hit yearly high",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-10-12T15:07:50.510683+00:00",
+    "tokens": [
+      "LINK"
     ],
     "lang": "en"
   }
