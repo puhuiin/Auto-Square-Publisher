@@ -1,11 +1,5 @@
 [
   {
-    "id": "292bc390acd12df1",
-    "title": "Bitcoin Surges Above Key Moving Average, Key Resistance About to Crack",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-04T06:17:35.774954Z"
-  },
-  {
     "id": "c81947ffe478142b",
     "title": "Thai Businessmen Sue Tether for Freezing $42,417,785 in USDT on Informal Government Request",
     "source": "DailyHodl (山寨异动与百倍币叙事)",
@@ -4733,6 +4727,17 @@
     "sent_at": "2026-10-12T18:27:40.160015+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2a7899a2d98a46ae",
+    "title": "Standard Chartered brings Ripple’s RLUSD into banking custody after $765 million quarterly surge",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-12T20:06:38.439498+00:00",
+    "tokens": [
+      "RLUSD",
+      "XRP"
     ],
     "lang": "en"
   }
