@@ -1,11 +1,5 @@
 [
   {
-    "id": "6241b6c33104e22b",
-    "title": "What Is Pons? The Robinhood Chain Meme Coin Factory Token Up 18,000% Since July",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-04T06:09:18.819028Z"
-  },
-  {
     "id": "7e2ebb0538c23f29",
     "title": "Bernie Sanders Pushes Bill to Ban Advanced AI Development",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -4721,6 +4715,16 @@
     "sent_at": "2026-10-12T16:27:02.727516+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "46da3e178c48f846",
+    "title": "加密内存池上线,Aptos主网支持按笔交易降低MEV风险",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-12T17:10:02.509386+00:00",
+    "tokens": [
+      "APT"
     ],
     "lang": "zh-CN"
   }
