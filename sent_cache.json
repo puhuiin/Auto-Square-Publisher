@@ -1,11 +1,5 @@
 [
   {
-    "id": "09f382f5d2275a89",
-    "title": "XRP and Solana Cleared in Fresh SEC Nasdaq Order: Main Crypto News This Morning",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-04T15:57:38.648887+00:00"
-  },
-  {
     "id": "47b470a6884c9c76",
     "title": "Bitcoin faces a two-week Fed trap as inflation rewrite threatens to upend rate cuts",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4749,5 +4743,15 @@
       "ICP"
     ],
     "lang": "en"
+  },
+  {
+    "id": "26c0e24c38a4be8a",
+    "title": "Cardano (ADA) Network Marks Biggest Transaction Day Since 2021",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-12T22:10:42.480636+00:00",
+    "tokens": [
+      "ADA"
+    ],
+    "lang": "zh-TW"
   }
 ]
