@@ -1,14 +1,5 @@
 [
   {
-    "id": "aea50e10b3608728",
-    "title": "Crypto exchange recovery rules split NES holders into winners and losers after $286M exploit fallout",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-11T20:24:18.544204+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "648f927dd237fddf",
     "title": "Blockstream Tells Hackers To Return Remaining Bitcoin Stolen in Liquid Theft",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -4817,6 +4808,16 @@
     "title": "Kalshi 年化交易额约 9000 亿美元,研究员称估值或偏低",
     "source": "吴说区块链 (中文深度)",
     "sent_at": "2026-10-13T21:04:06.326053+00:00",
+    "tokens": [
+      "ARK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e8766f506700ec18",
+    "title": "ARK Invest’s Cathie Wood says nearly 90% of data center financing is in the US",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-13T21:24:25.988141+00:00",
     "tokens": [
       "ARK"
     ],
