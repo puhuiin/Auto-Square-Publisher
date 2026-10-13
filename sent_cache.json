@@ -1,14 +1,5 @@
 [
   {
-    "id": "7c4fe3172cc04a92",
-    "title": "$47M Still Missing After Liquid Hack as Blockstream Bargains With 'White Hats'",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-09T04:59:10.044542+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "f1be1a46577193f2",
     "title": "Hyperliquid (HYPE), Zcash (ZEC), Ethereum (ETH) and Shiba Inu (SHIB) Price Analysis for September 9: Volatility Implosion Introduces New Implications",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4783,5 +4774,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "28d2d2ab9e6695a1",
+    "title": "LayerZero jumps 22% – Can ZRO beat THIS before its $62M unlock?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-13T07:10:16.606490+00:00",
+    "tokens": [
+      "ZRO"
+    ],
+    "lang": "en"
   }
 ]
