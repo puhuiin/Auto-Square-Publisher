@@ -17,13 +17,13 @@
   "strategy_guidance": "优先追贴今日截止的KGST Earn活动与正在进行中的S16 LoL世界赛预测活动，结合新上线RWUSD、bStocks新交易对、Futures新合约及交易竞赛等日常快讯，引导读者参与官方互动活动获取Write2Earn奖励；同时关联交易竞赛、新资产上线等话题引导用户参与交易获取返佣。",
   "last_updated": "2026-10-13T16:04:14.829261Z",
   "_feed_health": {
-    "深潮TechFlow (中文/繁体)": {
-      "last_fail": "2026-10-13T15:03:45.804269+00:00",
-      "fails": 2
-    },
     "ZyCrypto (新币与空投)": {
       "last_fail": "2026-10-13T13:03:34.030163+00:00",
       "fails": 1
+    },
+    "深潮TechFlow (中文/繁体)": {
+      "last_fail": "2026-10-13T15:03:45.804269+00:00",
+      "fails": 2
     },
     "深潮TechFlow (中文/简体)": {
       "last_fail": "2026-10-13T13:03:54.935185+00:00",
@@ -31,8 +31,8 @@
     }
   },
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
+    "date": "2026-09-09"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-13",

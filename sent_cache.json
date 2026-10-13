@@ -1,14 +1,5 @@
 [
   {
-    "id": "27a3824c0145064f",
-    "title": "Bitcoin Slips Below $77K as Fed Hike Odds Surge",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-10T17:26:16.006028+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "fd2c6220fbf412ba",
     "title": "Where Did 361 Billion Shiba Inu (SHIB) Go? Inside South Korea's Latest Cryptocurrency Whale Move",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4803,6 +4794,16 @@
     "sent_at": "2026-10-13T16:25:05.341620+00:00",
     "tokens": [
       "FLOKI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2ba75ff56a0fd31d",
+    "title": "Just $1 of SHIB Removed as Shiba Inu Burn Resumes From Temporary Hiatus",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-13T16:44:21.491536+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
