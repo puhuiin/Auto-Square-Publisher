@@ -1,14 +1,5 @@
 [
   {
-    "id": "00d40a8ba4fe85e2",
-    "title": "BitMine’s staked ETH equals nearly 12% of Ethereum’s active stake, but who controls it?",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-11T13:44:05.369589+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "457d764ab4dfab8e",
     "title": "Bitcoin Rises as Markets Digest Inflation Data Ahead of Fed Rate Decision",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -4816,6 +4807,16 @@
     "sent_at": "2026-10-13T20:04:10.545107+00:00",
     "tokens": [
       "ARK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1856471c50235795",
+    "title": "Ripple Brings AI-Powered Payments to XRP Ledger",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-13T20:24:39.519687+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
