@@ -1,14 +1,5 @@
 [
   {
-    "id": "c0268d926d4e7771",
-    "title": "Tron Founder Reacts as First TRX ETF Goes Live",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-09T17:08:45.324602+00:00",
-    "tokens": [
-      "TRX"
-    ]
-  },
-  {
     "id": "8926c3dd0408ee47",
     "title": "Ethereum (ETH) at a Crossroads: Jump to $3,000 or a Plunge to $2,000 Comes Next?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4789,6 +4780,16 @@
     "tokens": [
       "ENA",
       "USDE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c8b6fc7b33395be8",
+    "title": "Ethereum Price Prediction: Hyperliquid Whale Opens $60M ETH Long",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-13T12:32:02.655237+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
