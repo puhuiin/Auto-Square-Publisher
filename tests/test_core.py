@@ -20493,5 +20493,73 @@ class TestR741CampaignCtaRepetitionRadar(unittest.TestCase):
             self.assertNotIn("顺便", key, "活动CTA不得进 offenders 硬口径")
 
 
+class TestR743EnglishRhythmInstruction(unittest.TestCase):
+    """★★ R743：英文分支必须带**句长节奏指令**（R711 同族：规则写在一个分支漏了另一个）
+
+    ★ 实测依据：英文帖句长 CV 中位 **0.312**，低于 AI 基线 0.376，是三语种里最平的
+      （中文 0.385 / 繁中 0.403）；全史 CV 还从早期 0.517 缓降到近段 0.403。
+      中文两分支早有「长短句交错、别清一色中长句」（R606/R644），**英文分支一直没有**
+      ——R711 修了英文长度门、R712 加了遥测，节奏指令漏了（同族缺口）。
+    ⚠️ 锁的是「英文分支存在节奏指令」这个结构，不是具体措辞；且指令必须描述**技法**
+      而非给可照抄的范句（R597/R598/R732：范例句会被逐字复用成新模板）。
+    """
+
+    @staticmethod
+    def _english_block():
+        """从源码取 out_lang == "en" 那段 **system 指令**（AST 定位）。
+        ⚠️ main.py 里有多处 `if out_lang == "en":`（质量门/解析门等），必须挑出
+        **拼 system_prompt 的那处**（含「输出语种/English」），否则判据会锁错块。"""
+        import ast
+        import inspect
+        import textwrap
+        src = textwrap.dedent(inspect.getsource(m))
+        tree = ast.parse(src)
+        candidates = []
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.If):
+                continue
+            t = ast.dump(node.test)
+            if "out_lang" not in t or "'en'" not in t:
+                continue
+            chunks = []
+            for stmt in node.body:
+                for sub in ast.walk(stmt):
+                    if isinstance(sub, ast.Constant) and isinstance(sub.value, str):
+                        chunks.append(sub.value)
+            blob = "\n".join(chunks)
+            if "English" in blob or "输出语种" in blob:
+                candidates.append(blob)
+        return candidates[0] if candidates else None
+
+    def test_english_branch_has_rhythm_instruction(self):
+        """★★★ 英文 system 指令必须包含句长节奏指导"""
+        block = self._english_block()
+        self.assertIsNotNone(block, "没定位到 out_lang=='en' 指令块 ⇒ 判据失效")
+        self.assertIn("句长节奏", block,
+                      "英文分支缺句长节奏指令 ⇒ 英文帖继续按 AI 均匀句长写（实测 CV 0.312 < AI 基线）")
+
+    def test_rhythm_instruction_describes_technique_not_template(self):
+        """★ 节奏指令必须给**可执行判据**（短句词数/禁连续中长句），不是空话"""
+        block = self._english_block()
+        self.assertIn("短句", block, "必须给出'短句'这个可执行概念")
+        self.assertTrue(("连续三句" in block) or ("三个" in block),
+                        "必须点名'禁连续中等长度句'这个具体判据，否则模型无从执行")
+
+    def test_chinese_branches_keep_their_rhythm_rules(self):
+        """★ 反向：中文两分支的节奏规则不得被本轮改动顺带删掉
+
+        ⚠️ 该规则在 **user_prompt** 两个分支里（不在 SYSTEM_PROMPT）——先核实再断言，
+        别把层搞错（R694「名字≠含义」：grep 到真实定义再写判据）。
+        """
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        for article in (False, True):
+            prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=article)
+            tag = "长文" if article else "短讯"
+            self.assertIn("长短句交错", prompt, "%s user_prompt 的长短句规则被误删" % tag)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
