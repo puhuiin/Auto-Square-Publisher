@@ -1,14 +1,5 @@
 [
   {
-    "id": "6a4b17ae903f1765",
-    "title": "Bitwise to Close Dogecoin ETF Before Its First Anniversary",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-11T17:49:46.345077+00:00",
-    "tokens": [
-      "DOGE"
-    ]
-  },
-  {
     "id": "aea50e10b3608728",
     "title": "Crypto exchange recovery rules split NES holders into winners and losers after $286M exploit fallout",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4818,6 +4809,16 @@
     "sent_at": "2026-10-13T20:44:36.323642+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c5345b120f2ee3b7",
+    "title": "Kalshi 年化交易额约 9000 亿美元,研究员称估值或偏低",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-13T21:04:06.326053+00:00",
+    "tokens": [
+      "ARK"
     ],
     "lang": "en"
   }
