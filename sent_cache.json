@@ -1,14 +1,5 @@
 [
   {
-    "id": "c7321d571e78c99b",
-    "title": "Solana (SOL) to Triple Transaction Size as Major Upgrade Goes Live",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-08T12:18:52.053602+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "2709777895b250fc",
     "title": "Bitcoin slips to $78,800 as BNB and DeFi tokens buck the selloff",
     "source": "CoinDesk (权威宏观与机构)",
@@ -4772,5 +4763,15 @@
       "BLUR"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "63dfbf3701d32fc3",
+    "title": "Rome拟推出代币ROME,已完成900万美元融资",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-13T03:27:10.011307+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
