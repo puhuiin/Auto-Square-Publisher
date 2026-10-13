@@ -1,14 +1,5 @@
 [
   {
-    "id": "7a1d259c676977ff",
-    "title": "Bitwise to put down Dogecoin ETF less than a year after launch",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-09-11T09:25:15.815593+00:00",
-    "tokens": [
-      "DOGE"
-    ]
-  },
-  {
     "id": "fccdbb3d522d2828",
     "title": "Ripple's On-Chain Lending Partner Picks XRP Ledger for Token, Leaves Ethereum Behind",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4811,6 +4802,16 @@
     "sent_at": "2026-10-13T18:05:18.535883+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ffca4a8de8012092",
+    "title": "Cardano Under Pressure: Falling Network Activity Adds to ADA Selling Concerns",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-13T18:24:38.298650+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
