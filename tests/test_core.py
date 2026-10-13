@@ -19660,15 +19660,18 @@ class TestR722WeakSampleViews(unittest.TestCase):
 
 
 class TestR724QuotaRaiseTo40(unittest.TestCase):
-    """★★ R724：配额 25 → **40**（提量第二步，四条线上依据全部核验过）
+    """★★ R724：配额 25 → **40**（提量第二步，四条线上依据大部分核验过）
 
-    ★ 四条依据（缺一不可，任一不满足就该回滚）：
+    ★ 四条依据：
       ① 供给：最近 20 抓取轮候选均值 **99**、未处理 71 ⇒ 对 40 篇富余 2.5 倍
       ② 节奏：`MIN_POST_GAP_MIN=15` ⇒ 理论上限 96 篇/24h；实测间隔中位 20 分钟
       ③ 题材：近 12h 17 篇覆盖 **14 个币** ⇒ 40 篇约需 20+ 币；
-         单币限流会限流，但**不阻塞发帖**（自动剔除超限币，该篇少一个挂件）
-      ④ LLM：StepFun 连续 10 天 11~15 篇/天零配额迹象、**熔断 0 条**；
-         ★ R711 修复后**近 12h 拒稿归零** ⇒ 单篇成本 1.4 → 1.0 次调用
+         ⚠️⚠️ R731 已证伪本条原写的「单币限流不阻塞发帖、只是少一个挂件」——
+         代码实测 `capped` 非空且热度 <30 时**整条稿被丢弃**（`continue`），
+         `token_posts_since` 全文仅 1 个消费点、没有"剔除超限币继续发"的分支。
+         （R744 正是按这个更正后的事实把限流跟配额一起提的。）
+      ④ LLM：StepFun 连续 10 天零配额迹象、熔断 0；R711 修复后拒稿归零
+         ⇒ 单篇成本 1.4 → 1.0 次调用
 
     ★ 本类锁的是**结构性约束**，不是某个具体数字：
       配额若超过间隔门的理论上限，就变成了"写了也发不出"的空配置。
@@ -20559,6 +20562,75 @@ class TestR743EnglishRhythmInstruction(unittest.TestCase):
             prompt, _ = eng._build_user_prompt(item, None, "", ["BTC"], article=article)
             tag = "长文" if article else "短讯"
             self.assertIn("长短句交错", prompt, "%s user_prompt 的长短句规则被误删" % tag)
+
+
+class TestR744QuotaRaiseTo50(unittest.TestCase):
+    """★★★ R744：配额 40 → **50** + 单币限流 3 → 4（用户 2026-10-13「发更多、发到上限」）
+
+    ★ 诊断（48h 实测）：配额**已经打满**——发布 39.5/天、`sent_24h` 中位 40、
+      157 轮里 49 轮配额满早退、未处理候选 6129 条 ⇒ 墙不是候选数，是配额本身。
+      真正的次级墙是**单币限流**：被拦候选 BTC 1426 次（72%）、XRP 387、SOL 325、
+      ETH 321；48h 评估候选 48% 死于限流、49% 死于无代币。
+
+    ★ 三个前置条件全部用真实数据核过（R724 立的规矩）：
+      ① 浏览未摊薄：曝光校正速率中位/天按配额时代分层
+         12时代 35.8(n=132) → 25时代 27.0(n=10) → **40时代 52.0(n=118)**（升了）
+      ② 无风控码：48h `skipped_risk_blocked = 0`
+      ③ LLM 熔断 0：`no_provider` 全史 0、近 48h 157 轮全 success
+
+    ⚠️ 本类锁**结构不变量**而非具体数字：配额可以再提，但单币占比上限
+       与「不超过间隔门理论上限」这两条自洽性约束必须一直成立。
+    """
+
+    def test_quota_within_gap_ceiling(self):
+        """★★ 配额不得超过间隔门允许的理论上限（否则多出的额度永远用不上）"""
+        ceiling = 24 * 60 // m.MIN_POST_GAP_MIN
+        self.assertLessEqual(m.MAX_DAILY_POSTS, ceiling,
+                             "配额 %d 超过间隔门上限 %d ⇒ 自相矛盾的配置"
+                             % (m.MAX_DAILY_POSTS, ceiling))
+
+    def test_quota_is_raised_stepwise(self):
+        """★ 分步提量：高于 40（第三步）但低于最终目标 70（不跳级，保可归因）"""
+        self.assertGreater(m.MAX_DAILY_POSTS, 40, "R744 提量未生效")
+        self.assertLess(m.MAX_DAILY_POSTS, 70, "不应跳到最终目标 70（跳级无法归因）")
+
+    def test_single_token_share_stays_bounded(self):
+        """★★★ 防刷屏自洽性：**任何档位的单币日上限占配额 ≤ 20%**
+
+        R208 的初衷是防单一币种刷屏（当年 BTC 8/12 = 67%）。配额提上去后，
+        如果单币上限不跟着审查，占比会悄悄回到刷屏区。这条守卫把
+        「配额 ↑ ⇒ 单币占比必须仍受控」变成结构不变量——将来再提配额/限流
+        时，要么一起调、要么让这条守卫响。
+        ⚠️ 用生产档位函数实测高档币占比，不是重算公式（口径只有一份，R731）。
+        """
+        quota = m.MAX_DAILY_POSTS
+        self.assertGreater(quota, 0)
+        # 取基线表里最高档的一枚币（高档 ×TOKEN_LIMIT_HIGH_MULT）
+        strong = dict(m.NewsFetcher._load_token_engagement())
+        weak = dict(m.NewsFetcher._load_weak_views())
+        vals = dict(strong)
+        vals.update(weak)
+        if not vals:
+            self.skipTest("基线为空")
+        import statistics as _st
+        med = _st.median(sorted(vals.values()))
+        if med <= 0:
+            self.skipTest("基线中位为 0")
+        top = max(vals, key=lambda k: vals[k])
+        cap = m._token_daily_limit(top)
+        share = cap / float(quota)
+        self.assertLessEqual(share, 0.20,
+                             "最高档币 %s 上限 %d 篇 = 配额的 %.0f%%（>20%%）⇒ 回到 R208 的刷屏区"
+                             % (top, cap, share * 100))
+
+    def test_token_limit_raised_with_quota(self):
+        """★ 单币限流必须跟配额同步放松（否则提量只会被「死于限流」吃掉）
+
+        依据：R728 遥测全史被拦候选 BTC 1426/XRP 387/SOL 325/ETH 321 次，
+        48h 评估候选 48% 死于限流。若限流不跟着提，多出来的配额发不出去。
+        """
+        self.assertGreaterEqual(m.TOKEN_DAILY_LIMIT, 4,
+                                "单币限流未随配额放松 ⇒ 提量会被限流墙吃掉")
 
 
 if __name__ == "__main__":
