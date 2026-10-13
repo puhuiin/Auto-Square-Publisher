@@ -16,16 +16,10 @@
   ],
   "strategy_guidance": "优先追贴最紧迫的KGST系列限时活动（高APR灵活理财10月13日截止、零手续费交易10月14日截止），可输出活动参与攻略、交易成本对比类内容引导用户互动；同时结合当日新上线的TradFi USDⓈ-Margined永续合约及新bStocks标的，输出新标的交易规则、配置思路类快讯，关联当期交易竞赛引导读者参与评论互动拿奖励，同步关联交易返佣引导。",
   "last_updated": "2026-10-12T15:43:58.487596Z",
-  "_feed_health": {
-    "ZyCrypto (新币与空投)": {
-      "last_fail": "2026-10-12T18:06:02.049471+00:00",
-      "parked_until": "2026-10-13T00:06:02.049471+00:00",
-      "fails": 3
-    }
-  },
+  "_feed_health": {},
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-12",
