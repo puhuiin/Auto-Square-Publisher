@@ -1,14 +1,5 @@
 [
   {
-    "id": "539cf362d72855bc",
-    "title": "Ethereum Price Analysis: ETH Struggles Below $2.5K, Is a Deeper Pullback Coming?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-09T00:12:12.900371+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "7c4fe3172cc04a92",
     "title": "$47M Still Missing After Liquid Hack as Blockstream Bargains With 'White Hats'",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -4780,6 +4771,16 @@
     "sent_at": "2026-10-13T06:04:35.721249+00:00",
     "tokens": [
       "LINK"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7ada3219517e995e",
+    "title": "Pearl 用比特币算力跑 AI 推理,矿工收入翻倍的故事才刚刚开始",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-13T06:25:19.609133+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
