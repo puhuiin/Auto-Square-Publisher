@@ -1,14 +1,5 @@
 [
   {
-    "id": "5e3f762829145c2b",
-    "title": "Charles Schwab Filing Reveals Millions in XRP ETF Collateral",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-09T07:44:33.214449+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "da391c92b1e3e056",
     "title": "Major Bullish Signal for Bitcoin: Analyst Explains Why BTC Could Explode Soon",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4784,5 +4775,16 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "03c40a492eb70551",
+    "title": "Payy 就跨链桥攻击事件开启为期 30 天的理赔申请,窗口期结束后将完全关停",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-13T07:47:02.311238+00:00",
+    "tokens": [
+      "USDC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
