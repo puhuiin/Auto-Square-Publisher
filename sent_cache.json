@@ -1,15 +1,5 @@
 [
   {
-    "id": "8027d0b0df22b1f0",
-    "title": "XRP Ledger Targets 2028 Quantum Readiness, Outpaces Ethereum",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-10T09:24:06.953923+00:00",
-    "tokens": [
-      "XRP",
-      "ETH"
-    ]
-  },
-  {
     "id": "3eaea121cde9fc42",
     "title": "Bitwise Buys $107 Million of Solana in 20 Days",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4796,6 +4786,16 @@
     "tokens": [
       "SOL",
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "cfc3cea946c07194",
+    "title": "Dogecoin rebounds from $0.0800 as ETF outflows keep downside risks in focus",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-10-13T14:25:01.143919+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
