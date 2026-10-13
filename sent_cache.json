@@ -1,14 +1,5 @@
 [
   {
-    "id": "c95e15cf78bb8f5a",
-    "title": "3 Red Flags Are Emerging for Chainlink After LINK’s Powerful 95% Rally",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-08T19:38:13.875580+00:00",
-    "tokens": [
-      "LINK"
-    ]
-  },
-  {
     "id": "a2b1f62968cf6afa",
     "title": "AI agents are executing millions of micro-payments on XRP Ledger, but hardly any tokens are being bought",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4776,5 +4767,17 @@
       "SUI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "15da5ca0a9be988f",
+    "title": "山寨季指数创一年新高,26 个分类里 20 个在跌",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-13T04:50:08.061511+00:00",
+    "tokens": [
+      "DOGE",
+      "SHIB",
+      "PEPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
