@@ -1,14 +1,5 @@
 [
   {
-    "id": "947f13a0ecca9d58",
-    "title": "Morning Minute: AI Agents Cut BTC Quantum Attack Benchmark by 86%",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-11T12:44:16.763083+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "99b83ad25b925ab7",
     "title": "125.3 Billion SHIB Moved to Fresh Wallet as Whale Activity Heats Up",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4812,6 +4803,16 @@
     "sent_at": "2026-10-13T18:45:07.955445+00:00",
     "tokens": [
       "AVAX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "81e54a5d6bf84f12",
+    "title": "Ethena falls 12% and eyes $0.19 liquidity sweep – Yet ENA’s bullish outlook survives IF...",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-13T19:04:14.150866+00:00",
+    "tokens": [
+      "ENA"
     ],
     "lang": "en"
   }
