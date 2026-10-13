@@ -1,14 +1,5 @@
 [
   {
-    "id": "457d764ab4dfab8e",
-    "title": "Bitcoin Rises as Markets Digest Inflation Data Ahead of Fed Rate Decision",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-11T17:45:12.590912+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "6a4b17ae903f1765",
     "title": "Bitwise to Close Dogecoin ETF Before Its First Anniversary",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -4817,6 +4808,16 @@
     "sent_at": "2026-10-13T20:24:39.519687+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "44d2860fb6509a0d",
+    "title": "SEC files Form 25 for Bitwise Dogecoin ETF as wind-down nears its end",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-13T20:44:36.323642+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
