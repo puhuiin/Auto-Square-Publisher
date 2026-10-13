@@ -1,15 +1,5 @@
 [
   {
-    "id": "5629fa4bf9a8fa2a",
-    "title": "Solana 反攻 Meme 戰場：STONK、ZCAT 雙破億，官方親自下場喊單",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-09-07T06:28:22.305049+00:00",
-    "tokens": [
-      "MEME",
-      "BTC"
-    ]
-  },
-  {
     "id": "d5fa94d24298e584",
     "title": "SHIB Clears Key Japan Hurdle as Massive Market Door Opens",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4764,5 +4754,17 @@
       "SUI"
     ],
     "lang": "en"
+  },
+  {
+    "id": "3e929879188d3351",
+    "title": "加密早报:Strategy 上周增持 250 枚比特币,OneKey 终止 CryptoBilis 授权",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-13T01:49:32.242710+00:00",
+    "tokens": [
+      "ETH",
+      "XRP",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
