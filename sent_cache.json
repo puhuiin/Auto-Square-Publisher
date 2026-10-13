@@ -1,14 +1,5 @@
 [
   {
-    "id": "416752d0c6ed78ca",
-    "title": "Two Factors Could Break Bitcoin (BTC) out of Range Trading As Chances of Fed Rate Hike Next Week Hover Around 60%: CoinShares",
-    "source": "DailyHodl (山寨异动与百倍币叙事)",
-    "sent_at": "2026-09-08T04:50:39.115741+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "4bfd83fd9859dfd8",
     "title": "Will the Crypto Trenches Show Up for Hunter Biden's Meme Coin?",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -4763,6 +4754,17 @@
     "title": "全線回調:加密市場和美股同時下殺,山寨幣血流成河",
     "source": "深潮TechFlow (中文/繁体)",
     "sent_at": "2026-10-13T02:08:29.939778+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c573af0c58829c06",
+    "title": "Mixin 完成 2300 万美元兑付:一场持续三年的履约,除了信任还验证了什么?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-13T02:26:37.138701+00:00",
     "tokens": [
       "BTC",
       "ETH"
