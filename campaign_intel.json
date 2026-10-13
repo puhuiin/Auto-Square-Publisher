@@ -24,16 +24,11 @@
     "深潮TechFlow (中文/简体)": {
       "fails": 1,
       "last_fail": "2026-10-13T13:03:54.935185+00:00"
-    },
-    "CoinJournal (山寨异动)": {
-      "parked_until": "2026-10-13T13:45:59.910436+00:00",
-      "last_fail": "2026-10-13T07:45:59.910436+00:00",
-      "fails": 3
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-13",

@@ -1,14 +1,5 @@
 [
   {
-    "id": "bfe2dea43d9f96c5",
-    "title": "Unicoin sues Uniswap Labs, seeks to cancel UNI registration",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-09-10T09:05:47.002171+00:00",
-    "tokens": [
-      "UNI"
-    ]
-  },
-  {
     "id": "8027d0b0df22b1f0",
     "title": "XRP Ledger Targets 2028 Quantum Readiness, Outpaces Ethereum",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4796,5 +4787,16 @@
       "HYPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "1a88436acaea64e2",
+    "title": "Grayscale Buys $20 Million of Solana",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-13T14:05:10.747230+00:00",
+    "tokens": [
+      "SOL",
+      "XRP"
+    ],
+    "lang": "en"
   }
 ]
