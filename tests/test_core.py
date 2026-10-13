@@ -19296,9 +19296,12 @@ class TestR716DedupEntityChannel(unittest.TestCase):
             "完全相同的单实体标题被漏判 ⇒ 存在多余护栏挡住了本该判重的情形")
 
     def test_entity_set_excludes_numeric_tokens(self):
-        """★ `_title_entities` 剔除纯数字，但**全数字标题要退化**"""
+        """★ `_title_entities` 剔除纯数字。R745 起**不再退化为原词集**：
+        数字是量词不是实体——「突破10万」vs「跌破10万」两边都退化成 {'10'}、
+        Jaccard=1.0 会把方向相反的两个事件判成重复（错杀好稿）。
+        纯中文/含汉字标题的判重由 R745 的 CJK 二元组通道接管。"""
         ents = m.NewsFetcher._title_entities("BTC 100 200 300")
-        self.assertTrue(ents, "全数字标题的实体集退化为空 ⇒ 判重通道会失效")
+        self.assertEqual(ents, {"btc"}, "数字必须剔除且不再退化回原词集")
         e2 = m.NewsFetcher._title_entities("Bitcoin ETF 123 inflow")
         self.assertIn("bitcoin", e2)
         self.assertNotIn("123", e2)
@@ -20631,6 +20634,74 @@ class TestR744QuotaRaiseTo50(unittest.TestCase):
         """
         self.assertGreaterEqual(m.TOKEN_DAILY_LIMIT, 4,
                                 "单币限流未随配额放松 ⇒ 提量会被限流墙吃掉")
+
+
+class TestR745CjkDedupChannel(unittest.TestCase):
+    """★★★ R745：CJK 二元组判重通道 —— 堵「纯中文标题三通道全盲」+ 修数字兜底误杀
+
+    ★ 生产实证（10-13）：FTX「广撒网」故事从深潮**简体/繁体两个 feed**各发一篇
+      （英文 13:26 + 中文 13:46），白占两个配额。根因：判重三通道（实体/跨语言
+      指纹/词集回退）**只认 ASCII 与数字**，纯中文标题两头都空集，简繁同题互相看不见。
+      ⇒ 新增第三通道：`_to_simplified_for_dedup` 繁→简归一（opencc t2s，缺省降级
+        `_TR_CORE` 反查表）后取 CJK 二元组算 Jaccard，阈值同 0.65。
+    ★ 连带修掉的**既有**误杀：R716 的「全数字标题退化为原词集」兜底把
+      「比特币突破10万美元」vs「比特币跌破10万美元」判成重复（两边实体集都是
+      {'10'}、Jaccard=1.0 ⇒ 方向相反的事件被错杀）。数字是量词不是实体 ⇒ 移除兜底
+      （含汉字标题的判重已由 CJK 通道接管）。
+    """
+
+    A = "「广撒网」策略正在失效:加密进入价值投资时代"
+    B = "「廣撒網」策略正在失效:加密進入價值投資時代"
+
+    def test_production_case_simplified_traditional_dedup(self):
+        """★★★ 生产实证对：简繁同题必须判重（opencc 与降级路径都要命中）"""
+        f = m.NewsFetcher._find_near_duplicate
+        m._S2T_DEDUP_CONV = None
+        m._S2T_DEDUP_TRIED = True   # 强制 CI/生产走的降级路径（opencc 不在 requirements）
+        try:
+            self.assertIsNotNone(f(self.A, [self.B]),
+                                 "降级路径下简繁同题漏放 ⇒ 同故事占两个配额（原 bug）")
+        finally:
+            m._S2T_DEDUP_TRIED = False  # 恢复懒加载，让后续走真实环境
+        # opencc 存在时（本地）也应命中；不存在时此断言等价于上一条
+        self.assertIsNotNone(f(self.A, [self.B]), "opencc 路径下简繁同题漏放")
+
+    def test_shared_number_opposite_direction_not_killed(self):
+        """★★★ 防误杀（R745 连带修掉的既有缺陷）：共享数字、方向相反的两个事件
+        不得判重——R716 的数字兜底曾把这类对判成 Jaccard=1.0 错杀好稿"""
+        f = m.NewsFetcher._find_near_duplicate
+        self.assertIsNone(f("比特币突破10万美元关口", ["比特币跌破10万美元关口"]),
+                          "突破/跌破是两个事件，曾被数字兜底错杀")
+
+    def test_different_cjk_stories_not_killed(self):
+        """★ 防误杀：不同题材的纯中文标题不得因共享常用词被判重"""
+        f = m.NewsFetcher._find_near_duplicate
+        self.assertIsNone(f("以太坊质押收益率创历史新高", ["比特币突破关键阻力位"]))
+        self.assertIsNone(f("香港证监会发布虚拟资产新规", ["美国SEC批准现货ETF"]))
+
+    def test_r716_channels_regression(self):
+        """★ R716 实体通道与跨语言指纹不得因本改动回归"""
+        f = m.NewsFetcher._find_near_duplicate
+        self.assertIsNotNone(f("Hyperliquid 10亿收入全砸$HYPE回购,币价还跌1.69%",
+                               ["Hyperliquid 鏈上永續份額已超 56%,14 億美元,$HYPE"]),
+                              "R716 实体通道回归")
+        self.assertIsNone(f("ETH ETF inflows surge", ["ETH ETF outflows surge"]),
+                          "0.6 < 0.65 的近题边界被误伤")
+
+    def test_cjk_channel_is_third_channel_in_match(self):
+        """★ 通道接线：`_dedup_entry` 五元组含 CJK 指纹，`_match_dedup_index` 用它"""
+        e = m.NewsFetcher._dedup_entry(self.A)
+        self.assertEqual(len(e), 5, "指纹元组应为 (原文,词集,金额,符号,CJK二元组)")
+        self.assertTrue(e[4], "CJK 二元组指纹为空 ⇒ 通道没接上")
+        m._S2T_DEDUP_CONV = None
+        m._S2T_DEDUP_TRIED = True
+        try:
+            idx = m.NewsFetcher.build_dedup_index([self.B])
+        finally:
+            m._S2T_DEDUP_TRIED = False
+        self.assertIsNotNone(
+            m.NewsFetcher._match_dedup_index(self.A, idx, m.DUP_SIMILARITY_THRESHOLD),
+            "降级路径下索引判重漏放")
 
 
 if __name__ == "__main__":

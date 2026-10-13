@@ -522,6 +522,54 @@ def _to_traditional(text: str) -> str:
         return out
     except Exception:
         return text
+
+
+# ★ R745：判重专用的 **繁 → 简** 归一化。
+#   为什么判重需要它：深潮等媒体同时提供简体/繁体两个 feed（R720 接入），
+#   同一故事两边标题互为简繁变体（如「广撒网…进入价值投资时代」vs「廣撒網…進入價值投資時代」）。
+#   判重的三个通道（实体词集/跨语言指纹/词集回退）**全部只认 ASCII 与数字**
+#   ⇒ 纯中文标题两头都是空集，**同故事简繁两版互相看不见**，各占一个配额
+#   （生产实证 10-13：FTX 广撒网故事简体源 13:26 发英文版、繁体源 13:46 发中文版）。
+#   把标题归一到简体后再取 CJK 二元组做 Jaccard，同故事简繁变体即完全一致。
+#   ⚠️ 降级链与 _to_traditional 同构（opencc 不在 requirements ⇒ CI/生产走②）：
+#     ① opencc t2s  ② _TR_CORE 反查表（繁→简，最长键优先）  ③ 原样返回，永不抛。
+#   ② 表只覆盖核心字 ⇒ 个别字（如「廣」）归不掉，但 bigram Jaccard 阈值 0.65
+#     对 1~2 个未归一字符有足够容差（实测 FTX 对在反查表路径下 ≈0.8 仍命中）。
+_S2T_DEDUP_CONV = None
+_S2T_DEDUP_TRIED = False
+
+
+def _to_simplified_for_dedup(text: str) -> str:
+    """繁 → 简（判重归一用）。逐级降级，永不抛；`_S2T_DEDUP_CONV=None` 可强制走降级路径。"""
+    global _S2T_DEDUP_CONV, _S2T_DEDUP_TRIED
+    if not text:
+        return text
+    if not _S2T_DEDUP_TRIED:
+        _S2T_DEDUP_TRIED = True
+        try:
+            import opencc
+            _S2T_DEDUP_CONV = opencc.OpenCC("t2s")
+        except Exception:
+            _S2T_DEDUP_CONV = None
+    if _S2T_DEDUP_CONV is not None:
+        try:
+            return _S2T_DEDUP_CONV.convert(text)
+        except Exception:
+            pass
+    try:
+        rev = getattr(_to_simplified_for_dedup, "_rev_core", None)
+        if rev is None:
+            # 繁→简反查表：值作键、键作值；跳过简繁同形项（无意义）；最长键优先。
+            rev = {v: k for k, v in sorted(_TR_CORE.items(), key=lambda kv: len(kv[0]),
+                                           reverse=True) if k != v}
+            _to_simplified_for_dedup._rev_core = rev
+        out = text
+        for k in sorted(rev, key=len, reverse=True):
+            if k in out:
+                out = out.replace(k, rev[k])
+        return out
+    except Exception:
+        return text
 # 蹭热点：优先种子注入。把人工精选、事实核验过的突发热点候选（如交易所被盗）以最高分注入
 # 候选池顶部，让机器人在 RSS 尚未充分覆盖时抢先蹭上热点；发够 max_posts 篇后经既有
 # record_sent→is_cached 预算机制自动停投、回落常规 RSS 发帖。种子照走全部既有关卡
@@ -3038,6 +3086,23 @@ class NewsFetcher:
     def _title_words(title: str) -> Set[str]:
         return set(re.sub(r"[^a-z0-9$]+", " ", title.lower()).split())
 
+    _CJK_RUN = re.compile(r"[\u4e00-\u9fff]+")
+
+    @classmethod
+    def _cjk_bigrams(cls, title: str) -> frozenset:
+        """★ R745：CJK 二元组指纹（判重第三通道的输入）。
+
+        先 `_to_simplified_for_dedup` 归一（简繁变体 → 同一字符串），再对每段
+        连续汉字取相邻二元组。纯中文标题的 ASCII 词集/实体集**恒为空** ⇒
+        既有三通道全瞎（生产实证：FTX 广撒网故事简体/繁体两源各发一篇、占两配额）。
+        bigram 只在段内取、不跨标点；不同故事共享 2/3 bigram 才可能超阈值 0.65，
+        防误杀（实测「比特币突破10万美元」vs「比特币跌破10万美元」Jaccard≈0.45 不命中）。"""
+        t = _to_simplified_for_dedup(title or "")
+        out = set()
+        for run in cls._CJK_RUN.findall(t):
+            out.update(zip(run, run[1:]))
+        return frozenset(out)
+
     _NUMERIC_TOKEN = re.compile(r"^\d+(?:\.\d+)?$")
 
     @classmethod
@@ -3052,14 +3117,18 @@ class NewsFetcher:
           根因：新闻标题里的数字（价格/百分比/金额）**几乎总是不同**，
           却稀释了词集相似度。⇒ **数字不该参与"是不是同一事件"的判断**。
 
-        ⚠️ 退化为纯数字标题时返回原词集（不能返回空集——那会让
-          "两条都无实体"变成永不相等，判重通道整体失效）。
+        ⚠️⚠️ R745 移除了旧的「全数字标题退化为原词集」兜底：
+          数字是**量词不是实体**——两个不同事件共享同一数字（生产实证：
+          「比特币突破10万美元」vs「比特币跌破10万美元」两边实体集都退化成
+          {'10'}，Jaccard=1.0 ⇒ **方向相反的两个事件被判成重复、错杀好稿**）。
+          旧兜底当年防的是"纯数字/纯中文标题空集永不判重"，但那类标题
+          **只要含汉字就由 R745 的 CJK 二元组通道接管**（本 feed 全部新闻都含）；
+          纯 ASCII 数字标题（无英文词、无汉字）在本管线中实际不存在。
         ⚠️ 与 `_title_words` **并存**（不替换）：后者是原始词集，
           供 `_title_amount_fingerprint` 之外的既有调用与回退路径使用。
         """
         raw = cls._title_words(title)
-        ents = {w for w in raw if not cls._NUMERIC_TOKEN.match(w)}
-        return ents or raw
+        return {w for w in raw if not cls._NUMERIC_TOKEN.match(w)}
 
     @staticmethod
     def _title_amount_fingerprint(title: str) -> frozenset:
@@ -3149,18 +3218,20 @@ class NewsFetcher:
         return cls._fingerprint_match(amt_a, amt_b, token_a, token_b)
 
     @classmethod
-    def _dedup_entry(cls, title: str) -> Tuple[str, frozenset, frozenset, frozenset]:
-        """预计算单条标题的判重指纹：(原文, 词集, 金额量级, 大写符号)。
+    def _dedup_entry(cls, title: str) -> Tuple[str, frozenset, frozenset, frozenset, frozenset]:
+        """预计算单条标题的判重指纹：(原文, 词集, 金额量级, 大写符号, CJK二元组)。
 
         跨源去重是 O(候选 × 历史)，历史侧每条都要跑 8 次正则。历史标题在整轮内
         不变，却对每个候选重算一遍：45 候选 × 180 条历史实测约 270ms 纯重复计算。
         指纹算一次、增量追加即可。"""
         # ★ R716：词集用**实体词集**（剔数字），金额指纹仍走原口径
+        # ★ R745：CJK 二元组（简繁归一后）——纯中文标题前三通道恒空集
         return (title, cls._title_entities(title),
-                cls._title_amount_fingerprint(title), cls._title_tokens_upper(title))
+                cls._title_amount_fingerprint(title), cls._title_tokens_upper(title),
+                cls._cjk_bigrams(title))
 
     @classmethod
-    def build_dedup_index(cls, titles: List[str]) -> List[Tuple[str, frozenset, frozenset, frozenset]]:
+    def build_dedup_index(cls, titles: List[str]) -> List[Tuple[str, frozenset, frozenset, frozenset, frozenset]]:
         """把历史标题列表编译成可复用的判重索引"""
         return [cls._dedup_entry(t) for t in titles]
 
@@ -3172,7 +3243,9 @@ class NewsFetcher:
         words = cls._title_words(title)
         amt_b = cls._title_amount_fingerprint(title)
         tok_b = cls._title_tokens_upper(title)
-        for other, ow, amt_a, tok_a in index:
+        # ★ R745：CJK 通道输入（简繁归一后的二元组）
+        cjk_b = cls._cjk_bigrams(title)
+        for other, ow, amt_a, tok_a, cjk_a in index:
             if ow and ents:
                 inter = len(ents & ow)
                 # ① 实体通道：Jaccard 达标即认。
@@ -3193,6 +3266,14 @@ class NewsFetcher:
             if ow_full and words:
                 i2 = len(words & ow_full)
                 if i2 >= 3 and (i2 / len(words | ow_full)) >= threshold:
+                    return other
+            # ③ CJK 通道（R745）：简繁归一后的二元组 Jaccard。
+            #    填补「纯中文标题 ⇒ 前三通道恒空集」的盲区：深潮简/繁两个
+            #    feed 是同故事简繁变体的最大来源；不同故事需共享 2/3
+            #    bigram 才达阈值，近题不误杀（破/跌一字之差 ≈0.45 不命中）。
+            if cjk_a and cjk_b:
+                inter_c = len(cjk_a & cjk_b)
+                if inter_c and (inter_c / len(cjk_a | cjk_b)) >= threshold:
                     return other
         return None
 
