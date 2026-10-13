@@ -21,20 +21,25 @@
       "fails": 2,
       "last_fail": "2026-10-13T15:03:45.804269+00:00"
     },
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "last_fail": "2026-10-13T13:03:34.030163+00:00"
-    },
     "深潮TechFlow (中文/简体)": {
       "fails": 1,
       "last_fail": "2026-10-13T13:03:54.935185+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "fails": 1,
+      "last_fail": "2026-10-13T13:03:34.030163+00:00"
     }
   },
   "_fallback_image": {
     "date": "2026-09-09",
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun-flash": {
+      "fails": 1,
+      "cooldown_until": "2026-10-13T15:36:47.598562+00:00"
+    }
+  },
   "_article_sent_date": "2026-10-13",
   "_publish_park": {},
   "_intel_refresh_fail": {},

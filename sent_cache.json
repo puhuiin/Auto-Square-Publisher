@@ -1,14 +1,5 @@
 [
   {
-    "id": "0eb03b5136780e24",
-    "title": "468 Billion Shiba Inu (SHIB) in 24 Hours Removed: Inflows Turn Positive For the Price",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-10T12:46:01.259791+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "ecf15f2f21e0da35",
     "title": "Vitalik Buterin Pushes Ethereum Plan to Slash Quantum-Safe Privacy Costs",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -4801,5 +4792,16 @@
       "ETH"
     ],
     "lang": "en"
+  },
+  {
+    "id": "92eb6784e4b231da",
+    "title": "NEAR Claims Crown in Crypto's Pivot to AI: Wintermute",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-13T15:30:35.182470+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
