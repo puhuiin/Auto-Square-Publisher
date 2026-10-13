@@ -1,16 +1,5 @@
 [
   {
-    "id": "e23dbf862fe8de58",
-    "title": "Binance Coin (BNB), Uniswap (UNI), Gram (GRAM) and ChainLink (LINK) Price Analysis for September 5: Memecoin and Altcoin Season Is Here",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-05T01:07:04.924918+00:00",
-    "tokens": [
-      "BNB",
-      "UNI",
-      "LINK"
-    ]
-  },
-  {
     "id": "5629fa4bf9a8fa2a",
     "title": "Solana 反攻 Meme 戰場：STONK、ZCAT 雙破億，官方親自下場喊單",
     "source": "BlockTempo (动区动趋中文)",
@@ -4765,5 +4754,15 @@
       "XLM"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f2a079cc23c3fac1",
+    "title": "Is Sui’s record $80M USDsui stablecoin supply a sign of wider adoption?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-13T01:26:39.835815+00:00",
+    "tokens": [
+      "SUI"
+    ],
+    "lang": "en"
   }
 ]
