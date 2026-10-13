@@ -1,14 +1,5 @@
 [
   {
-    "id": "84b630b0be2e518e",
-    "title": "STONK 市值 2.8 億鎂創新高,平台六成收入拿去回購",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-09-11T13:04:51.950219+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "ff7c25bc54d4e878",
     "title": "Major Ripple (XRP) Move on AI: Here’s What’s Changing",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4814,6 +4805,16 @@
     "sent_at": "2026-10-13T19:24:09.104655+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3f17a52d4201423b",
+    "title": "Cardano Eyes a 960% Rally as On-Chain Activity Heats Up, Echoing Its 2020 Breakout",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-13T19:44:36.762990+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
