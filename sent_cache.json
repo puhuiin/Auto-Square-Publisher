@@ -1,14 +1,5 @@
 [
   {
-    "id": "99b83ad25b925ab7",
-    "title": "125.3 Billion SHIB Moved to Fresh Wallet as Whale Activity Heats Up",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-11T12:48:51.417539+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "84b630b0be2e518e",
     "title": "STONK 市值 2.8 億鎂創新高,平台六成收入拿去回購",
     "source": "BlockTempo (动区动趋中文)",
@@ -4813,6 +4804,16 @@
     "sent_at": "2026-10-13T19:04:14.150866+00:00",
     "tokens": [
       "ENA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9b543b416b85376d",
+    "title": "Critical Shiba Inu (SHIB) Warning: Here’s the Latest Threat",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-13T19:24:09.104655+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
