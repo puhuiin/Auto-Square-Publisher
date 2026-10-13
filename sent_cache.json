@@ -1,14 +1,5 @@
 [
   {
-    "id": "40b2dee6dd220f22",
-    "title": "Biggest XRP Myth Shattered by Top Crypto Asset Manager",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-09T00:09:26.559704+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "539cf362d72855bc",
     "title": "Ethereum Price Analysis: ETH Struggles Below $2.5K, Is a Deeper Pullback Coming?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4779,6 +4770,16 @@
     "sent_at": "2026-10-13T05:46:12.647806+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "47969dfb0d32d269",
+    "title": "Anthropic’s Claude AI Predicts a Wild Price for Chainlink (LINK)",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-13T06:04:35.721249+00:00",
+    "tokens": [
+      "LINK"
     ],
     "lang": "zh-CN"
   }
