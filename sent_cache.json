@@ -1,14 +1,5 @@
 [
   {
-    "id": "8926c3dd0408ee47",
-    "title": "Ethereum (ETH) at a Crossroads: Jump to $3,000 or a Plunge to $2,000 Comes Next?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-09T19:44:33.963161+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "b325ee21c4bfe434",
     "title": "Ripple Veteran Schwartz Predicts XRP Can Flip Bitcoin, But There Is a Catch",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4792,5 +4783,17 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "02a2fe67b7b768db",
+    "title": "CoinShares 雙週報告:美國現貨比特幣 ETF 單週淨流出 6.79 億美元,為近四個月最大",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-13T13:05:29.264310+00:00",
+    "tokens": [
+      "BTC",
+      "USDC",
+      "ETH"
+    ],
+    "lang": "en"
   }
 ]
