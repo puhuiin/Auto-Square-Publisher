@@ -1,11 +1,5 @@
 [
   {
-    "id": "47b470a6884c9c76",
-    "title": "Bitcoin faces a two-week Fed trap as inflation rewrite threatens to upend rate cuts",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-04T18:57:42.017775+00:00"
-  },
-  {
     "id": "fc0801ea158f13a2",
     "title": "川普急喊聯準會「立刻降息」！否則中斷逆差國貿易",
     "source": "BlockTempo (动区动趋中文)",
@@ -4751,6 +4745,18 @@
     "sent_at": "2026-10-12T22:10:42.480636+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "bb3774600289153f",
+    "title": "Stellar’s $3.5 Billion RWA Surge Leaves XRP Ledger, Solana and Avalanche Playing Catch-Up",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-13T00:44:27.035811+00:00",
+    "tokens": [
+      "XRP",
+      "XLM",
+      "SOL"
     ],
     "lang": "zh-TW"
   }
