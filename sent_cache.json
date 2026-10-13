@@ -1,14 +1,5 @@
 [
   {
-    "id": "cedfc2e330656948",
-    "title": "Kansas Jayhawks Showcase XRP Following Successful Game",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-08T07:28:59.161053+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "c7321d571e78c99b",
     "title": "Solana (SOL) to Triple Transaction Size as Major Upgrade Goes Live",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4771,5 +4762,15 @@
       "BTC"
     ],
     "lang": "en"
+  },
+  {
+    "id": "fe963c0ac57e4fa4",
+    "title": "Blur 宣佈 11 月關閉前端:BLUR 下跌 16%,這場“軟退場”意味著什麼?",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-13T03:08:31.650941+00:00",
+    "tokens": [
+      "BLUR"
+    ],
+    "lang": "zh-TW"
   }
 ]
