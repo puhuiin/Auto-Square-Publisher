@@ -1,14 +1,5 @@
 [
   {
-    "id": "4943142de716dba4",
-    "title": "TRX ETF登陸芝加哥交易所,波場全球合規化再迎里程碑",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-09-09T12:29:14.318962+00:00",
-    "tokens": [
-      "TRX"
-    ]
-  },
-  {
     "id": "80f2211307ed1d9b",
     "title": "Wintermute Highlights Bitcoin Resilience With Equity Investors Rotating Capital Into BTC",
     "source": "DailyHodl (山寨异动与百倍币叙事)",
@@ -4787,5 +4778,16 @@
       "GLM"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "371951f74c6001e7",
+    "title": "Wintermute:加密市场失去流量支撑,BTC 短期承压",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-13T11:47:37.161413+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
