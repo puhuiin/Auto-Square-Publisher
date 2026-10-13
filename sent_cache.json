@@ -1,14 +1,5 @@
 [
   {
-    "id": "ecf15f2f21e0da35",
-    "title": "Vitalik Buterin Pushes Ethereum Plan to Slash Quantum-Safe Privacy Costs",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-10T13:05:09.829854+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "885d68f4a1f0d087",
     "title": "Solana sees record 263K tokens issued in a single day",
     "source": "Cointelegraph (全球综合快讯)",
@@ -4803,5 +4794,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "9997527b06c3e384",
+    "title": "区块最终确认时间缩短至约150毫秒,Solana Alpenglow将于10月21日上线mainnet-beta",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-13T16:05:13.111332+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
   }
 ]
