@@ -1,15 +1,5 @@
 [
   {
-    "id": "f1be1a46577193f2",
-    "title": "Hyperliquid (HYPE), Zcash (ZEC), Ethereum (ETH) and Shiba Inu (SHIB) Price Analysis for September 9: Volatility Implosion Introduces New Implications",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-09T05:03:09.013241+00:00",
-    "tokens": [
-      "ETH",
-      "SHIB"
-    ]
-  },
-  {
     "id": "5e3f762829145c2b",
     "title": "Charles Schwab Filing Reveals Millions in XRP ETF Collateral",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4784,5 +4774,15 @@
       "ZRO"
     ],
     "lang": "en"
+  },
+  {
+    "id": "b903b1bace7d79ac",
+    "title": "HYPE空头名义价值830.53万美元,某地址当前浮亏505.90万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-13T07:27:48.788983+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
