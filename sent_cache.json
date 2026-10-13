@@ -1,14 +1,5 @@
 [
   {
-    "id": "a76efb52f0222213",
-    "title": "The fight over Ethereum’s supply is forcing a choice between high staking yields and the value of your ETH",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-08T16:51:14.222723+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "c95e15cf78bb8f5a",
     "title": "3 Red Flags Are Emerging for Chainlink After LINK’s Powerful 95% Rally",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4775,5 +4766,15 @@
       "SOL"
     ],
     "lang": "en"
+  },
+  {
+    "id": "598c3a6210569ee6",
+    "title": "Sui crypto gets $30M AI boost, but SUI slips toward $1",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-13T04:27:11.801383+00:00",
+    "tokens": [
+      "SUI"
+    ],
+    "lang": "zh-CN"
   }
 ]
