@@ -1,14 +1,5 @@
 [
   {
-    "id": "4bfd83fd9859dfd8",
-    "title": "Will the Crypto Trenches Show Up for Hunter Biden's Meme Coin?",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-08T04:51:06.913354+00:00",
-    "tokens": [
-      "MEME"
-    ]
-  },
-  {
     "id": "cedfc2e330656948",
     "title": "Kansas Jayhawks Showcase XRP Following Successful Game",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4770,5 +4761,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "16413f8cf1da8303",
+    "title": "Bitget UEX 日报|油价升至近一个月高位;纳指回落、Meta 逆势大涨;Strategy 增持 250 枚 BTC",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-13T02:48:06.678517+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
   }
 ]
