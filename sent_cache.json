@@ -1,15 +1,5 @@
 [
   {
-    "id": "fccdbb3d522d2828",
-    "title": "Ripple's On-Chain Lending Partner Picks XRP Ledger for Token, Leaves Ethereum Behind",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-11T09:44:09.680959+00:00",
-    "tokens": [
-      "XRP",
-      "ETH"
-    ]
-  },
-  {
     "id": "947f13a0ecca9d58",
     "title": "Morning Minute: AI Agents Cut BTC Quantum Attack Benchmark by 86%",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -4812,6 +4802,16 @@
     "sent_at": "2026-10-13T18:24:38.298650+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "04dc6684623f662e",
+    "title": "Avalanche Highlights KSD Links Ahead of Korea’s 2027 Tokenization Rollout",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-13T18:45:07.955445+00:00",
+    "tokens": [
+      "AVAX"
     ],
     "lang": "en"
   }
