@@ -1,14 +1,5 @@
 [
   {
-    "id": "e8e82b7fc42d4f43",
-    "title": "AI Agents Just Slashed the Cost of a Quantum Attack on Bitcoin",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-10T22:24:39.763325+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "d8b62fe86c5e4ddd",
     "title": "Ripple Burns 15 Million RLUSD in Major Treasury Move",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4808,6 +4799,17 @@
     "sent_at": "2026-10-13T17:24:23.872054+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "df3cf37ab87e54cf",
+    "title": "Base推出Earn & Borrow,为平台提供稳定币收益及加密抵押借贷方案",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-13T17:44:35.392301+00:00",
+    "tokens": [
+      "USDC",
+      "AAVE"
     ],
     "lang": "en"
   }
