@@ -1,14 +1,5 @@
 [
   {
-    "id": "c1a915e047fce9a5",
-    "title": "Symbiosis says recovered 15 BTC from bridge hack, offers 20% bounty",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-09-14T13:09:41.715287+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "00d5263ccb24c0ed",
     "title": "Dogecoin ETFs struggled for buyers while rival XRP and Solana funds pulled in $3 billion",
     "source": "CoinDesk (权威宏观与机构)",
@@ -4865,5 +4856,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "6ace3db7366ff60f",
+    "title": "Chainlink数据服务上线Stellar,支持开发借贷市场等DeFi应用",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-14T14:44:24.520487+00:00",
+    "tokens": [
+      "LINK",
+      "XLM"
+    ],
+    "lang": "en"
   }
 ]
