@@ -1,14 +1,5 @@
 [
   {
-    "id": "70d814283e98203b",
-    "title": "Shiba Inu (SHIB) Signal Flashes Green: 2 Price Scenarios",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-14T13:49:38.014657+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "97b6548128e982d2",
     "title": "+65% on Chainlink (LINK) Volume in 24 Hours: Can It Help the Price Break $12?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4866,5 +4857,15 @@
       "INJ"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "67071ab56f345830",
+    "title": "Solana's Alpenglow Goes Live Next Week: How Will SOL Price React?",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-14T15:24:21.739479+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
   }
 ]
