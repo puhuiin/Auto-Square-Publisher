@@ -20567,15 +20567,17 @@ class TestR743EnglishRhythmInstruction(unittest.TestCase):
             self.assertIn("长短句交错", prompt, "%s user_prompt 的长短句规则被误删" % tag)
 
 
-class TestR744QuotaRaiseTo50(unittest.TestCase):
-    """★★★ R744：配额 40 → **50** + 单币限流 3 → 4（用户 2026-10-13「发更多、发到上限」）
+class TestR748QuotaRaiseTo60(unittest.TestCase):
+    """★★★ R748：配额 50 → **60** + 单币限流 4 → 5（用户「能不能继续提高」）
 
-    ★ 诊断（48h 实测）：配额**已经打满**——发布 39.5/天、`sent_24h` 中位 40、
+    ★ 诊断（36h 实测，R744 后）：发布 48.0/天、新配额轮 `sent_24h` **中位=50**
       157 轮里 49 轮配额满早退、未处理候选 6129 条 ⇒ 墙不是候选数，是配额本身。
       真正的次级墙是**单币限流**：被拦候选 BTC 1426 次（72%）、XRP 387、SOL 325、
       ETH 321；48h 评估候选 48% 死于限流、49% 死于无代币。
 
-    ★ 三个前置条件全部用真实数据核过（R724 立的规矩）：
+    ★ 前置条件：②③ 已核（风控 0 / 熔断 0、72h 拒稿 0）；① 浏览未摊薄**暂无法干净
+      验证**（50 时代仅 1.5 天）——已设显式回滚触发器：下次导出若 60 时代单篇
+      速率中位 <40/天（40 时代为 52/天）就改回 50/4。历史规律：
       ① 浏览未摊薄：曝光校正速率中位/天按配额时代分层
          12时代 35.8(n=132) → 25时代 27.0(n=10) → **40时代 52.0(n=118)**（升了）
       ② 无风控码：48h `skipped_risk_blocked = 0`
@@ -20594,7 +20596,7 @@ class TestR744QuotaRaiseTo50(unittest.TestCase):
 
     def test_quota_is_raised_stepwise(self):
         """★ 分步提量：高于 40（第三步）但低于最终目标 70（不跳级，保可归因）"""
-        self.assertGreater(m.MAX_DAILY_POSTS, 40, "R744 提量未生效")
+        self.assertGreater(m.MAX_DAILY_POSTS, 50, "R748 提量未生效")
         self.assertLess(m.MAX_DAILY_POSTS, 70, "不应跳到最终目标 70（跳级无法归因）")
 
     def test_single_token_share_stays_bounded(self):
@@ -20632,8 +20634,8 @@ class TestR744QuotaRaiseTo50(unittest.TestCase):
         依据：R728 遥测全史被拦候选 BTC 1426/XRP 387/SOL 325/ETH 321 次，
         48h 评估候选 48% 死于限流。若限流不跟着提，多出来的配额发不出去。
         """
-        self.assertGreaterEqual(m.TOKEN_DAILY_LIMIT, 4,
-                                "单币限流未随配额放松 ⇒ 提量会被限流墙吃掉")
+        self.assertGreaterEqual(m.TOKEN_DAILY_LIMIT, 5,
+                                "单币限流未随配额放松 ⇒ 多出的槽位发不出去")
 
 
 class TestR745CjkDedupChannel(unittest.TestCase):
