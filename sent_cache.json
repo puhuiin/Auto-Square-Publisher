@@ -1,15 +1,5 @@
 [
   {
-    "id": "8a0079bfb888b2fa",
-    "title": "BNB Chain Flips Solana to Become Fastest-Growing Chain by RWA Value",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-12T17:48:26.472468+00:00",
-    "tokens": [
-      "BNB",
-      "SOL"
-    ]
-  },
-  {
     "id": "fbe2591e87b70201",
     "title": "Bitcoin’s 24% Rally Hit a Wall: CryptoQuant Reveals What Comes Next",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4838,5 +4828,15 @@
       "PYTH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "82959be2d528d94e",
+    "title": "Grok AI Predicts Hyperliquid to Surge 20x by 2027",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-14T03:44:05.153474+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
