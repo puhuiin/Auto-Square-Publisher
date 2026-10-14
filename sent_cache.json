@@ -1,14 +1,5 @@
 [
   {
-    "id": "10d004d182327cf7",
-    "title": "Bitcoin’s slide below $77,000 sets up a Monday tech test as AI leaders sound warning",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-13T18:26:03.313142+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "b06acbfadd212f04",
     "title": "What Happens to XRP if the CLARITY Act Vote Fails on September 15? AI Maps the Downside",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4855,6 +4846,16 @@
       "TIA",
       "CRV",
       "RENDER"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9d1bd908ec57120a",
+    "title": "2,200% on Hyperliquid (HYPE): Whale Who Bought at $3.5 Cashes Out",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-14T11:50:33.441711+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
