@@ -1,14 +1,5 @@
 [
   {
-    "id": "d9de8667a0c44e5d",
-    "title": "Seoul's SHIB Phenomenon: Korean Demand Rivals Binance Spot Liquidity for Shiba Inu Coin",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-16T13:44:17.072689+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "8917b079e6ba026a",
     "title": "Bitcoin Stays Stuck as Traders Wait for the Fed’s Next Move",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4882,6 +4873,16 @@
     "tokens": [
       "TAO",
       "ICP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "af5515acf5d8656f",
+    "title": "XRP Whales Are Making a Bigger Mark on Binance as Outflow Gap Nears August Levels",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-14T23:04:21.257952+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
