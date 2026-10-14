@@ -17,13 +17,7 @@
   ],
   "strategy_guidance": "今日截止的Alpha Trading Competition（DGAI交易赛）是当前最紧迫的流量热点，建议优先围绕赛事参与规则、操作指引输出内容，引导用户参与评论互动获取Write to Earn奖励；同时可联动新上线的bStocks交易对、RWUSD零手续费活动、Futures新合约等官方动态，结合交易大赛、理财产品的当期规则输出内容，匹配活动标签提升曝光。",
   "last_updated": "2026-10-14T16:25:35.050346Z",
-  "_feed_health": {
-    "CryptoPotato (山寨币/Meme热点)": {
-      "fails": 1,
-      "last_fail": "2026-10-14T17:43:30.754875+00:00",
-      "reset_at": "2026-10-14T23:23:29.296333+00:00"
-    }
-  },
+  "_feed_health": {},
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
     "date": "2026-09-09"

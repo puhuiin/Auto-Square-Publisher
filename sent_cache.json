@@ -1,14 +1,5 @@
 [
   {
-    "id": "055261bf99205521",
-    "title": "216% Shiba Inu (SHIB) Outbreak: 1.6 Billion Tokens Added",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-16T14:44:12.013676+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "2b548624ef89fcfa",
     "title": "Breaking: Fed Raises Interest Rates by 25 Bps, Bitcoin Price Reacts",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4886,5 +4877,15 @@
       "ENA"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e216cc71193b7f1a",
+    "title": "Microsoft Copilot AI Predicts Unbelievable Chainlink (LINK) Price",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-14T23:47:46.457394+00:00",
+    "tokens": [
+      "LINK"
+    ],
+    "lang": "zh-TW"
   }
 ]
