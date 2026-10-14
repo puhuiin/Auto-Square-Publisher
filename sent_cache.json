@@ -1,14 +1,5 @@
 [
   {
-    "id": "c102659e9ea1da7c",
-    "title": "Cardano's Hoskinson Shares Crucial Warning About AI and Privacy",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-12T14:03:36.764408+00:00",
-    "tokens": [
-      "ADA"
-    ]
-  },
-  {
     "id": "8a0079bfb888b2fa",
     "title": "BNB Chain Flips Solana to Become Fastest-Growing Chain by RWA Value",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4837,5 +4828,15 @@
       "SOL"
     ],
     "lang": "en"
+  },
+  {
+    "id": "89705ea3adb3e880",
+    "title": "Why PYTH crypto’s 10% price rally could extend beyond $0.089",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-14T03:26:32.015623+00:00",
+    "tokens": [
+      "PYTH"
+    ],
+    "lang": "zh-TW"
   }
 ]
