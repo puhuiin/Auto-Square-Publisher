@@ -19,14 +19,14 @@
   "last_updated": "2026-10-14T16:25:35.050346Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
-      "reset_at": "2026-10-14T22:23:25.838399+00:00",
-      "fails": 1,
-      "last_fail": "2026-10-14T17:43:30.754875+00:00"
+      "reset_at": "2026-10-14T22:42:33.488256+00:00",
+      "last_fail": "2026-10-14T17:43:30.754875+00:00",
+      "fails": 1
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-14",

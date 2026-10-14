@@ -1,14 +1,5 @@
 [
   {
-    "id": "170e65bf3eb43efb",
-    "title": "Celsius sues BitMEX for $495 million just 11 days before exchange shutdown",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-16T13:24:31.237655+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "d9de8667a0c44e5d",
     "title": "Seoul's SHIB Phenomenon: Korean Demand Rivals Binance Spot Liquidity for Shiba Inu Coin",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4882,5 +4873,16 @@
       "ZEC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e3ee383e97e1c4cb",
+    "title": "TAO vs. ICP vs. NEAR: Which AI-Related Altcoin Will Perform the Best in Q4? (3 AIs Speculate)",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-14T22:44:08.510414+00:00",
+    "tokens": [
+      "TAO",
+      "ICP"
+    ],
+    "lang": "zh-TW"
   }
 ]
