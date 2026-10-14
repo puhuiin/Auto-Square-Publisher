@@ -1,14 +1,5 @@
 [
   {
-    "id": "ac61156611c6bd2c",
-    "title": "Three Signals to Watch as Solana Pushes 24/7 Tokenized Stock Trading",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-14T23:04:07.023232+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "1a5fab66e3a1c804",
     "title": "Only $29 in SHIB Burned: Who's Behind Low 24-Hour Total?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4869,6 +4860,16 @@
     "sent_at": "2026-10-14T16:44:52.169225+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a4aaf70ebe2986ff",
+    "title": "Ripple Joins Forces With Stripe-Owned Privy to Advance AI-Powered Payments on XRP Ledger: Will XRP Price React?",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-14T17:05:19.051342+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
