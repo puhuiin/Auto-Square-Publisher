@@ -1,14 +1,5 @@
 [
   {
-    "id": "cd162dc2f2a83b5f",
-    "title": "Bitcoin’s $80,000 ceiling looks fragile after stocks shrugged off near-5% Treasury yields",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-12T22:46:48.879436+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "d15a72951588cbc1",
     "title": "241 Billion Shiba Inu Netflow Threatens Rally",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4840,5 +4831,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "a0d2168417048978",
+    "title": "Pump.fun drops 12% – Can PUMP recover amid $29.7M sandwich bot attacks?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-14T04:44:08.115382+00:00",
+    "tokens": [
+      "PUMP"
+    ],
+    "lang": "en"
   }
 ]
