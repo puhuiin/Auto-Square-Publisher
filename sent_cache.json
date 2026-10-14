@@ -1,14 +1,5 @@
 [
   {
-    "id": "376b3268be1571d3",
-    "title": "Big Pattern for Shiba Inu (SHIB): Triangle Breakout Nears as Whale Concentration Tops 94.68%",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-14T01:36:08.203307+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "0cc4a342b6e45001",
     "title": "Ethereum's $3,000 Push Signals Anomalous Shiba Inu (SHIB) Netflow Across Tier-1 Exchanges",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4860,5 +4851,16 @@
       "SHIB"
     ],
     "lang": "en"
+  },
+  {
+    "id": "3035b43316958cfe",
+    "title": "TechFlow 情报局:OpenAI 数学证明翻车,Gemini 4 刷爆 HN 评论区",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-14T13:12:40.836456+00:00",
+    "tokens": [
+      "XRP",
+      "EPIC"
+    ],
+    "lang": "zh-CN"
   }
 ]
