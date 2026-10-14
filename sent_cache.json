@@ -1,14 +1,5 @@
 [
   {
-    "id": "3977e77066bd324c",
-    "title": "Strike CEO Jack Mallers: Inflation Outlook, Bond Stress and BTC vs Gold",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-09-15T13:19:11.501810+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "76b019afd09b3c59",
     "title": "Ether, solana, XRP likely to gain if Clarity Act progresses",
     "source": "CoinDesk (权威宏观与机构)",
@@ -4876,6 +4867,16 @@
     "sent_at": "2026-10-14T18:24:10.748196+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "edf3a5c30c0b9b34",
+    "title": "Major shareholder presses SkyAI on Solana sales after treasury shrinks 70% in a month",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-14T18:44:17.266598+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
