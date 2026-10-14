@@ -1,14 +1,5 @@
 [
   {
-    "id": "71debd7850dcc74a",
-    "title": "From 'Digital Gold' to $10,000: Bloomberg Strategist Flags Crucial Bitcoin Sell Signals",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-13T22:49:20.812643+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "376b3268be1571d3",
     "title": "Big Pattern for Shiba Inu (SHIB): Triangle Breakout Nears as Whale Concentration Tops 94.68%",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4859,5 +4850,15 @@
       "AVAX"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "2eb6bd92dfd712d7",
+    "title": "Shiba Inu (SHIB) Volume Around Zero, Price Future Stays Unclear",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-14T12:44:36.774255+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "en"
   }
 ]
