@@ -1,14 +1,5 @@
 [
   {
-    "id": "c611e1eb5b65a186",
-    "title": "Ripple Price Analysis: Consecutive Lower Highs Spell Trouble for XRP Ahead of Crucial Week",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-13T10:09:23.541983+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "a910c3a7348cc5de",
     "title": "Solana Founder Links Elon Musk and Altman's AI Slowdown to 'Profitability at $1 Trillion Market Cap'",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4845,5 +4836,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "5c09534ec092f5ca",
+    "title": "币安将于10月28日下架EPIC、QUICK",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-14T06:09:15.441333+00:00",
+    "tokens": [
+      "EPIC"
+    ],
+    "lang": "zh-CN"
   }
 ]
