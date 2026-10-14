@@ -1,14 +1,5 @@
 [
   {
-    "id": "d24287140c52aab1",
-    "title": "Zcash (ZEC), Litecoin (LTC) Achieve New Listing in Europe Despite 2027 Ban Looming",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-14T18:29:26.220353+00:00",
-    "tokens": [
-      "LTC"
-    ]
-  },
-  {
     "id": "d4b785e8a4a3da7d",
     "title": "Mallers: Bitcoin and AI Could Give Humans Back Their Time",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -4869,5 +4860,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c21c2985829ed4aa",
+    "title": "两个月前以 1,936 美元做多 2 万枚 ETH 的巨鲸已平仓,获利约 893 万美元",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-14T16:24:17.198293+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "en"
   }
 ]
