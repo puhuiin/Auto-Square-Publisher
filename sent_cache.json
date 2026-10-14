@@ -1,14 +1,5 @@
 [
   {
-    "id": "d4b785e8a4a3da7d",
-    "title": "Mallers: Bitcoin and AI Could Give Humans Back Their Time",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-09-14T20:44:20.455424+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "ac61156611c6bd2c",
     "title": "Three Signals to Watch as Solana Pushes 24/7 Tokenized Stock Trading",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4866,6 +4857,16 @@
     "title": "两个月前以 1,936 美元做多 2 万枚 ETH 的巨鲸已平仓,获利约 893 万美元",
     "source": "吴说区块链 (中文深度)",
     "sent_at": "2026-10-14T16:24:17.198293+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7661a2a5eb08452d",
+    "title": "Blockaid:以太坊 UNCX 共享代币锁仓池遭攻击,约 8.6 万美元资产被盗",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-14T16:44:52.169225+00:00",
     "tokens": [
       "ETH"
     ],
