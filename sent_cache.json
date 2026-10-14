@@ -1,14 +1,5 @@
 [
   {
-    "id": "9edf4df07e671917",
-    "title": "Ripple Price Analysis: XRP Trapped in Descending Channel as Key Levels Loom",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-15T14:43:00.142212+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "decd44c22cfb754d",
     "title": "ETH wallet exploit backfires as MEV bot captures $7.7M, Kelp freezes address",
     "source": "Cointelegraph (全球综合快讯)",
@@ -4878,6 +4869,16 @@
     "sent_at": "2026-10-14T19:24:14.816746+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b9cddb2af38ce154",
+    "title": "'Biggest Increase in History': Strategy CEO Predicts Explosive Bitcoin Banking Surge",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-14T19:44:24.473004+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
