@@ -1,14 +1,5 @@
 [
   {
-    "id": "151e53e9ffa6cd48",
-    "title": "Solana Defies Death Cross as SOL Climbs Above $100: Bear Trap Ahead?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-12T20:26:19.349118+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "cd162dc2f2a83b5f",
     "title": "Bitcoin’s $80,000 ceiling looks fragile after stocks shrugged off near-5% Treasury yields",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4839,5 +4830,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "3266e39f3657b906",
+    "title": "XRP News: Evernorth’s Listing Exposes a $677M Gap",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-14T04:27:52.287150+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]

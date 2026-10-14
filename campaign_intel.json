@@ -4,24 +4,31 @@
     "#BinanceSquare",
     "#TradingTournament",
     "#Futures",
-    "#LoLWorldChampionship"
+    "#LOLWorlds"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$BTC",
-    "$USDC",
     "$KGST",
     "$RWUSD",
-    "$JPMB"
+    "$USDC",
+    "$SPCXB",
+    "$BBB",
+    "$UVXYB"
   ],
-  "strategy_guidance": "优先追贴今日截止的KGST Earn活动与正在进行中的S16 LoL世界赛预测活动，结合新上线RWUSD、bStocks新交易对、Futures新合约及交易竞赛等日常快讯，引导读者参与官方互动活动获取Write2Earn奖励；同时关联交易竞赛、新资产上线等话题引导用户参与交易获取返佣。",
-  "last_updated": "2026-10-13T16:04:14.829261Z",
+  "strategy_guidance": "今日KGST/USDT零手续费活动、新bStocks标的及RWUSD新币上线为最高时效热点，可优先围绕这些内容结合仍在进行的Spot交易赛、Futures任务赛、LOL世界赛预测活动策划发帖，引导用户参与话题互动与合规交易讨论，参与评论互动拿Write2Earn奖励，同时可结合官方活动规则引导用户参与对应合规交易以获取活动返佣；可侧重新币解读、活动冲刺、赛事预测等角度切入，注意不得提及交易收益相关承诺。",
+  "last_updated": "2026-10-14T04:24:08.123900Z",
   "_feed_health": {},
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
+    "date": "2026-09-09"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun-flash": {
+      "fails": 1,
+      "cooldown_until": "2026-10-14T04:34:27.663838+00:00"
+    }
+  },
   "_article_sent_date": "2026-10-14",
   "_publish_park": {},
   "_intel_refresh_fail": {},
