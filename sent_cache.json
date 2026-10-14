@@ -1,14 +1,5 @@
 [
   {
-    "id": "f9c801e8cb411cc2",
-    "title": "Token Burns Still Make Crypto Traders Pay Attention — Revenue-Linked Burns Could Be the Bigger Upside Play. Where Does Wanted Network Fit?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-15T10:26:48.740856+00:00",
-    "tokens": [
-      "BNB"
-    ]
-  },
-  {
     "id": "3f33dc7ad5cd037b",
     "title": "Shiba Inu (SHIB) Loses 78% in One of the Most Important Metrics for Price",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4872,6 +4863,16 @@
     "title": "Ethereum Whale Lands 17,786% Gains in Nine Years",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-10-14T17:44:38.335301+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3207de5420098840",
+    "title": "Ethereum’s quantum race takes a new turn as zkSync courts banks and Starknet weighs exit",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-14T18:04:14.238925+00:00",
     "tokens": [
       "ETH"
     ],
