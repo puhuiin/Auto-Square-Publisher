@@ -262,6 +262,17 @@ def _sentence_cv(text):
     return _st.pstdev(lens) / mean
 
 
+def _is_cv_eligible(text):
+    """★ R747：CV 只对「句子数 ≥3」的文本计算。
+
+    2 个句长算 CV 要么 0 要么极大（纯噪声）；R605 的人类/AI 基线是全文统计量，
+    对 2~3 句片段无意义。⚠️ 这只解决"片段内句数"，截断判定在收集处用
+    content_chars 做（正文不在遥测里，只能靠长度字段判断 preview 是否被砍）。"""
+    import re as _re
+    segs = [_re.sub(r"\s", "", s) for s in _re.split(r"[。！？!?\n]+", text or "")]
+    return sum(1 for s in segs if s) >= 3
+
+
 def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     """对最近 N 篇发布帖的 final_preview 做禁令合规扫描（信息性，非门禁）。
     返回 {"scanned", "fng_anchor", "banned_device", "ai_flavor", "offenders": {...},
@@ -270,6 +281,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     R162：fng_ban_active 直录后，"禁令武装 → 新帖避开"的咬合从推断变事实
     （violation>0 即模型无视禁令，是执法升级的实证依据）。"""
     previews = []
+    cv_rows = []         # ★ R747：(preview, ts, 是否可度量CV) ——与 previews 同窗口切片
     for r in rows:
         if not isinstance(r, dict) or r.get("dry_run") is True:
             continue
@@ -278,7 +290,21 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
         pv = (r.get("final_preview") or "").strip()
         if pv:
             previews.append((pv, r.get("fng_ban_active"), r.get("ts")))
+            # ★★ R747：`final_preview` 是 **200 字截断字段**（R615 已明示：
+            #   正文统计必须用 content_cjk）。实测 73% 的发布帖 content_chars > 200
+            #   ⇒ 在这些帖上算"全文句长 CV"实际只算开头 2~3 句——而 2 个数的 CV
+            #   要么 0 要么极大，纯噪声；R605 的人类/AI 基线（0.449/0.376）是**全文**
+            #   统计量，与片段 CV 不可比。曾据片段 CV 得出"英文 CV 0.312 退化"并驱动
+            #   R743（R747 复查：那是片段噪声 + 长文占比变化的组成假象）。
+            #   ⇒ 只有 preview 未截断（content_chars ≤ preview 长度）才可度量 CV。
+            cc = r.get("content_chars")
+            cv_rows.append((pv, r.get("ts"),
+                            not (isinstance(cc, int) and cc > len(pv))))
     previews = previews[-window:]
+    cv_rows = cv_rows[-window:]          # ★ R747：CV 样本与 scanned **同窗口**（首版漏了
+                                          # 这条，覆盖率算出 680% 的荒唐数）
+    cv_full = [p for p, _t, ok in cv_rows if ok and _is_cv_eligible(p)]
+    cv_truncated = sum(1 for _p, _t, ok in cv_rows if not ok)
     out = {"scanned": len(previews), "fng_anchor": 0, "banned_device": 0,
            "ai_flavor": 0, "offenders": collections.Counter(),
            "fng_ban_armed": 0, "fng_violation": 0, "fng_avoided": 0,
@@ -314,12 +340,19 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
            # 的生产阶段**，所以"近半含旧稿"的窗口比原以为的**窄得多**（约 1 天
            # 而非 4~5 天）。把这个跨度显性化，读者才能自己判断近半是否已完全
            # 落在修复之后，而不是被一个无信息的百分比误导。
-           "recent_span": (None, None)}
+           "recent_span": (None, None),
+           # R747：CV 样本的诚实性计数——被 200 字截断、不可度量的帖数。
+           # 若 burstiness_cvs 远小于 scanned，说明"全文节奏"这一指标当前基本不可度量
+           # （正文不在遥测里），此时🎵行必须明说，不得拿片段 CV 冒充全文 CV。
+           "cv_truncated": cv_truncated,
+           "cv_eligible": len(cv_full)}
     # 近/远切分点：窗口后一半为「近」（时间上更近=修复后），前一半为「远」（对照）。
     # 奇数窗时近半多 1 篇；窗口 <2 时不切分（两半都留 0，由渲染层不显示对照）。
     _split = (len(previews) + 1) // 2
     for _idx, (pv, ban_active, _ts) in enumerate(previews):
         _is_recent = _idx >= _split
+        # R747：该帖是否可度量 CV（preview 未截断）；与 previews 同窗口对齐
+        _cv_ok = cv_rows[_idx][2] if _idx < len(cv_rows) else False
         if _is_recent and _ts:
             # _lo 取首次出现、_hi 每次覆盖为最新（previews 已按时间升序）。
             # 两者都写成「None 才赋值」会让 _hi 永远停在第一篇，跨度退化成单点。
@@ -354,7 +387,10 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
             out["manip_frame"] += 1
             out["manip_frame_recent" if _is_recent else "manip_frame_older"] += 1
         # R605：句长 burstiness（节奏方差）——句数≥2 才计入，短帖跳过
-        _cv = _sentence_cv(pv)
+        # ★ R747：只在「preview 覆盖全文」（content_chars ≤ 200 未截断）且**句数 ≥3**
+        #   的帖上计算——2 句的 CV 是噪声（要么 0 要么极大），且片段 CV 与 R605 的
+        #   全文基线（人 0.449/AI 0.376）不可比。被截断的帖一律不计入（见收集处注释）。
+        _cv = _sentence_cv(pv) if (_cv_ok and _is_cv_eligible(pv)) else None
         if _cv is not None:
             out["burstiness_cvs"].append(_cv)
         # R607：「利好不涨」描述复读——句中短语，前缀雷达抓不到，单独按帖计一次
@@ -3459,6 +3495,8 @@ def render_text(s, rows=None):
             # 的「长短句交错」此前无度量，这里给中位 CV + 偏平尾；研究自陈个体判决不可靠，
             # 故只观测不设门。中位 ≥0.449 说明节奏比人类基线还活。
             _cvs = q.get("burstiness_cvs") or []
+            _trunc = q.get("cv_truncated") or 0
+            _elig = q.get("cv_eligible") or 0
             if len(_cvs) >= 3:
                 _cvs_sorted = sorted(_cvs)
                 _med = _cvs_sorted[len(_cvs_sorted) // 2]
@@ -3467,6 +3505,16 @@ def render_text(s, rows=None):
                     "（偏平，接近 AI 基线0.376，建议强化长短句交错）" if _med < 0.40 else "")
                 lines.append(f"  🎵 句长节奏 CV 中位 {_med:.2f}（{len(_cvs)} 篇；人≈0.45/AI≈0.38）"
                              f" · 偏平 {_flat} 篇{_tag}")
+                # ★ R747：样本必须可代表全窗，否则中位数是"可度量子集"的中位数而非
+                #   "全站节奏"——把覆盖率与截断数打出来，防止又一次拿片段噪声下结论。
+                _cover = 100 * _elig // max(1, q["scanned"])
+                lines.append(f"     ↳ 覆盖率 {_elig}/{q['scanned']} 篇（{_cover}%；"
+                             f"{_trunc} 篇正文被 200 字 preview 截断、不可度量）"
+                             + (" ⚠️ 覆盖率过低 ⇒ 该中位数只代表短帖子集" if _cover < 40 else ""))
+            elif q["scanned"] >= 3:
+                lines.append(f"  🎵 句长节奏 CV: **不可度量**（窗口内 {q['scanned']} 篇仅 "
+                             f"{len(_cvs)} 篇 preview 未截断且 ≥3 句；{_trunc} 篇被截断）"
+                             "⇒ 正文不在遥测里，勿据片段 CV 下结论（R747）")
             # R607：「利好不涨」描述复读——加密新闻最常见场景被收敛到固定描述句
             # （连个像样的反弹都没有/盘面不买账/连个水花都没溅）。句中短语、前缀雷达
             # 看不见。只追踪：≥40% 才提示（且可能是话题驱动而非风格退化，需读样本甄别）。

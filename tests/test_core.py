@@ -20704,5 +20704,132 @@ class TestR745CjkDedupChannel(unittest.TestCase):
             "降级路径下索引判重漏放")
 
 
+class TestR747CvRadarHonesty(unittest.TestCase):
+    """★★★ R747：CV 雷达必须只量「preview 未截断且 ≥3 句」的帖，否则诚实报不可度量
+
+    ★ 实测缺陷：`final_preview` 是 200 字截断字段（R615 早明示），73% 的发布帖
+      content_chars>200 ⇒ 在这些帖上算"全文句长 CV"实际只算开头 2~3 句；而 2 个
+      句长的 CV 要么 0 要么极大（纯噪声）。R605 的人/AI 基线（0.449/0.376）是
+      **全文**统计量，与片段 CV 不可比。曾据片段 CV 得出"英文 0.312 退化"并驱动
+      R743——复查那是片段噪声 + 长文占比变化的**组成假象**（R651 代理变量同族）。
+    ⇒ 本类锁两件事：① 截断帖不计入 CV ② 样本不足时行必须说"不可度量"，
+      并带覆盖率与截断数（防止再拿子集中位数当全站结论）。
+    """
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r747",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _row(self, text, chars):
+        return {"outcome": "binance_published", "final_preview": text,
+                "content_chars": chars, "ts": "2026-10-14T10:00:00+00:00"}
+
+    def test_truncated_preview_excluded_from_cv(self):
+        """★★★ content_chars > preview 长度（被 200 字截断）⇒ 不计入 CV
+
+        ⚠️ 样本必须让「无门控时能算出 CV」——preview 里放 ≥3 句。否则 _sentence_cv
+        本身返回 None，破坏门控也测不出来（假通过，R712/R726 家族）。
+        """
+        mr = self._mr()
+        pv = ("第一句在这里。第二句跟着来了。第三句也到了。" + "补" * 170)[:200]
+        q = mr.quality_scan([self._row(pv, 794)], window=1)
+        self.assertEqual(q["cv_truncated"], 1, "截断帖必须被计数")
+        self.assertEqual(q["cv_eligible"], 0, "截断帖不得进 CV 样本")
+        self.assertEqual(len(q["burstiness_cvs"]), 0,
+                         "截断帖不得产生 CV 值（无门控时这里会有值 ⇒ 门控失效）")
+        # 反证：同文本若未被截断，必须能算出 CV（证明样本本身有信号）
+        q2 = mr.quality_scan([self._row(pv, len(pv))], window=1)
+        self.assertGreaterEqual(len(q2["burstiness_cvs"]), 1,
+                                "未截断的同文本应可度量 ⇒ 证明上一条的空 CV 是门控起的作用")
+
+    def test_untruncated_multi_sentence_included(self):
+        """★ 未截断且 ≥3 句 ⇒ 正常计入（反向前提：门控没把可度量的也杀掉）"""
+        mr = self._mr()
+        pv = "短句一。长一点的第二句话在这里拖着看。短三。第四句也短。"
+        q = mr.quality_scan([self._row(pv, len(pv))], window=1)
+        self.assertEqual(q["cv_eligible"], 1, "未截断帖应可度量")
+        self.assertEqual(len(q["burstiness_cvs"]), 1, "应产生 1 个 CV 值")
+
+    def test_two_sentence_fragment_not_measurable(self):
+        """★ 未截断但仅 2 句 ⇒ 不可度量（2 个数的 CV 是噪声）"""
+        mr = self._mr()
+        pv = "第一句话。第二句话。"
+        q = mr.quality_scan([self._row(pv, len(pv))], window=1)
+        self.assertEqual(len(q["burstiness_cvs"]), 0, "2 句片段不得产生 CV")
+
+    def test_report_says_unmeasurable_when_all_truncated(self):
+        """★★ 全窗皆截断时，🎵 行必须说「不可度量」而不是报一个子集中位数"""
+        import contextlib
+        import io
+        mr = self._mr()
+        rows = [self._row("x" * 200, 794) for _ in range(5)]
+        s = mr.summarize(rows)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            out = mr.render_text(s, rows)
+        self.assertIn("不可度量", out, "全截断窗口必须明说不可度量，不得拿片段 CV 冒充全文 CV")
+
+    def test_coverage_line_reports_sample_base(self):
+        """★ 可度量时必须同时给覆盖率 + 截断数（R731/R729：分布必带样本基数）"""
+        import contextlib
+        import io
+        mr = self._mr()
+        pv = "短句一。长一点的第二句话在这里拖着看。短三。第四句也短。"
+        rows = [self._row(pv, len(pv)) for _ in range(4)]
+        s = mr.summarize(rows)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            out = mr.render_text(s, rows)
+        self.assertIn("覆盖率", out, "CV 行必须给覆盖率")
+        self.assertIn("截断", out, "必须报告被截断、不可度量的篇数")
+
+
+class TestR746CampaignCtaPhrasingMenu(unittest.TestCase):
+    """★★ R746：campaign guidance 注入时必须带「活动提法每帖换说法」指令
+
+    ★ R741 立的计划：实测同战役活跃期每帖挂逐字相同的引入句（「顺便提一嘴」近半
+      70%、KGST 1%→17%），R619/R620 只修了 guidance 的收益承诺措辞、没管注入后的
+      复读。战役 10-14 结束 ⇒ 现在加指令，正好被下个战役的 🎁 雷达验证（R741/R616：
+      战役期内改无法验证，所以等到边界后才落地）。
+    ⚠️ 锁的是「提法要轮换」这个结构；**campaign 信息本身必须保留**（返佣红线）。
+    """
+
+    @staticmethod
+    def _intel_block():
+        """从源码取注入 intel_section 的那段（含 R746 指令的字符串常量）"""
+        import ast
+        import inspect
+        import textwrap
+        src = textwrap.dedent(inspect.getsource(m))
+        tree = ast.parse(src)
+        chunks = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                if "顺便提一嘴" in node.value or "活动提法每帖换一种" in node.value:
+                    chunks.append(node.value)
+        return "\n".join(chunks)
+
+    def test_injection_carries_phrasing_variety_instruction(self):
+        """★★★ 注入侧必须带「每帖换一种」的活动提法指令"""
+        blob = self._intel_block()
+        self.assertIn("活动提法每帖换一种", blob,
+                      "缺「活动提法每帖换一种」指令 ⇒ 下个战役又会复读同一句（R741 实测 70%）")
+        self.assertIn("别再用「顺便提一嘴", blob,
+                      "必须点名这个已复读的固定引入句（R741 数据）")
+
+    def test_instruction_preserves_campaign_info_not_just_variety(self):
+        """★ 返佣红线：只轮换**提法**，campaign 信息本身不得被要求弱化"""
+        blob = self._intel_block()
+        self.assertIn("活动信息说准就行", blob,
+                      "必须明示活动信息要说准（保留）= 返佣红线，别为轮换把活动说丢")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
