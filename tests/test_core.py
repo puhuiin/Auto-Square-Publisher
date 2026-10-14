@@ -15566,6 +15566,26 @@ class TestLengthBandSync(unittest.TestCase):
             self.assertTrue(140 <= cjk <= 200,
                             f"范文 CJK {cjk} 字落在宣称区间 140~200 之外：{seg[:40]}")
 
+    def test_exemplar_tokens_all_have_cashtag(self):
+        """R752：范文里提到的代币必须带 $ 前缀——范文是模型最强的模仿对象，
+        裸 ticker 列表会被照抄（R597/R598/R732 同族：给示范=给模板）。
+
+        $ 不是装饰而是**返佣入口**（R615/R316：$挂件=读者进交易页的第一入口、
+        Write2Earn 抓手）。旧范文二写「DOGE、PEPE、SHIB 都在蠢蠢欲动」——
+        违背自家 rule4「每次提到代币一律用 $大写」，实测生产帖并未来照抄
+        （23/91 裸 ticker 全是 ETF/USDC 设计使然），但"范文违背自家规则"本身
+        就是 R615「规则写在一个面、漏了另一个面」的隐患，且每个 $ 都是一个挂件位。
+        ⚠️ 标签行（#PEPE）与更长单词内的子串不得误伤。
+        """
+        import re as _re
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        i = sp.find("【真人实战范文对照")
+        self.assertGreater(i, 0, "SYSTEM_PROMPT 必须包含范文对照块")
+        block = sp[i:]
+        bare = _re.findall(r"(?<![\$#A-Za-z])(BTC|ETH|XRP|SOL|DOGE|SHIB|PEPE|BNB|ADA|AVAX|LINK)(?![A-Za-z])", block)
+        self.assertEqual(bare, [],
+                         "范文里出现不带 $ 的代币 %s ⇒ 违背 rule4 且会被模型照抄" % bare)
+
 
 class TestVideoManagerUpload(unittest.TestCase):
     """VideoManager 上传流水线：presign 请求体(fileName+size)、S3 Content-Type、就绪轮询、fileTicket 提取。"""
