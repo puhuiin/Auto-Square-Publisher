@@ -1,15 +1,5 @@
 [
   {
-    "id": "64530d9f65955e30",
-    "title": "Shiba Inu (SHIB), Hyperliquid (HYPE), Binance Coin (BNB) and Zcash (ZEC) Price Analysis for September 12: Sudden Surge",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-12T01:11:18.713066+00:00",
-    "tokens": [
-      "SHIB",
-      "BNB"
-    ]
-  },
-  {
     "id": "da4d1ad5d9824ba3",
     "title": "Bitwise is closing the lowest-fee Dogecoin ETF after rivals captured nearly all the capital",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4821,6 +4811,18 @@
     "sent_at": "2026-10-13T22:24:37.872584+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "12ab12c6985caf50",
+    "title": "Shiba Inu (SHIB), Zcash (ZEC), Monero (XMR) and Dogecoin (DOGE) Price Analysis for October 14: Bears Show More Dominance",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-14T00:47:37.671107+00:00",
+    "tokens": [
+      "SHIB",
+      "ZEC",
+      "DOGE"
     ],
     "lang": "zh-TW"
   }
