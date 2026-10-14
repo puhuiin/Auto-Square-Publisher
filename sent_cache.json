@@ -1,14 +1,5 @@
 [
   {
-    "id": "9979ec10dde1966a",
-    "title": "Blockstream bets 600 Bitcoin by rejecting Liquid hacker’s $50 million bounty demand",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-12T13:05:16.589486+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "ab8c5c543f3d5209",
     "title": "$1.2 Trillion Dogecoin Giveaway? Co-Founder Puts Forward Bold Idea",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4831,5 +4822,17 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "3b85ce7ae1acfef6",
+    "title": "加密市场小幅反弹,Layer2板块涨近3%",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-14T02:25:27.687200+00:00",
+    "tokens": [
+      "OP",
+      "ZK",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
