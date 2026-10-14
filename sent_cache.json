@@ -1,16 +1,5 @@
 [
   {
-    "id": "b38c9801a0ee7169",
-    "title": "BASIS.pro Expands On-Chain Infrastructure with XDC Network Partnership and Zypher DAO as Auto Earn Goes Live",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-16T10:44:11.305789+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "SOL"
-    ]
-  },
-  {
     "id": "a8aa0c68e4b42f5e",
     "title": "BTC, ETH, and XRP Plunge After CLARITY Setback but All Eyes Turn on Fed Now: Market Watch",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4884,5 +4873,15 @@
       "ETH"
     ],
     "lang": "en"
+  },
+  {
+    "id": "ec5da81fca2b37bf",
+    "title": "上线链上,ARK Venture Fund通过Securitize推进代币化",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-14T22:04:41.395961+00:00",
+    "tokens": [
+      "ARK"
+    ],
+    "lang": "zh-TW"
   }
 ]

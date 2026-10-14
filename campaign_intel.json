@@ -20,8 +20,8 @@
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
       "fails": 1,
-      "reset_at": "2026-10-14T21:43:36.854965+00:00",
-      "last_fail": "2026-10-14T17:43:30.754875+00:00"
+      "last_fail": "2026-10-14T17:43:30.754875+00:00",
+      "reset_at": "2026-10-14T22:03:35.669882+00:00"
     }
   },
   "_fallback_image": {
@@ -32,5 +32,5 @@
   "_article_sent_date": "2026-10-14",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 9
+  "_img_rot": 10
 }
