@@ -1,16 +1,5 @@
 [
   {
-    "id": "a8aa0c68e4b42f5e",
-    "title": "BTC, ETH, and XRP Plunge After CLARITY Setback but All Eyes Turn on Fed Now: Market Watch",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-16T13:06:44.928414+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "XRP"
-    ]
-  },
-  {
     "id": "170e65bf3eb43efb",
     "title": "Celsius sues BitMEX for $495 million just 11 days before exchange shutdown",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4883,5 +4872,15 @@
       "ARK"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "54a365da3d90d2b9",
+    "title": "Analyst traces $100M laundering trail through gas payments, leaving Zcash privacy intact",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-14T22:24:22.349439+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
