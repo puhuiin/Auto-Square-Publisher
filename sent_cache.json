@@ -1,14 +1,5 @@
 [
   {
-    "id": "ab8c5c543f3d5209",
-    "title": "$1.2 Trillion Dogecoin Giveaway? Co-Founder Puts Forward Bold Idea",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-12T13:24:48.621788+00:00",
-    "tokens": [
-      "DOGE"
-    ]
-  },
-  {
     "id": "63fa31f3ec674d5d",
     "title": "Shiba Inu Surpasses 1.8 Million Addresses Across ETH and Shibarium",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4834,5 +4825,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c80f31e9d5ec23de",
+    "title": "BAT 一週漲 95%、資金費為負:老幣復活還是空頭的燃料?",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-14T02:44:08.387973+00:00",
+    "tokens": [
+      "BAT",
+      "BTC"
+    ],
+    "lang": "en"
   }
 ]
