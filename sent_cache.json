@@ -1,14 +1,5 @@
 [
   {
-    "id": "1a5fab66e3a1c804",
-    "title": "Only $29 in SHIB Burned: Who's Behind Low 24-Hour Total?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-15T01:44:51.864472+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "5ca18758a825e879",
     "title": "Swiss Bitcoin Payment Platform Takes Servers Offline After Suspected Internal Breach",
     "source": "DailyHodl (山寨异动与百倍币叙事)",
@@ -4870,6 +4861,18 @@
     "sent_at": "2026-10-14T17:05:19.051342+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "36bcbc1ee24e2893",
+    "title": "代币化ETF总市值达6.865亿美元,以太坊占比约44%居首",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-14T17:24:50.470029+00:00",
+    "tokens": [
+      "BNB",
+      "ETH",
+      "SOL"
     ],
     "lang": "en"
   }
