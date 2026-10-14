@@ -1,14 +1,5 @@
 [
   {
-    "id": "661e50e3f2c7f718",
-    "title": "AI Could Be Bitcoin’s Next Onboarding Engine, Nakamoto CEO Says",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-09-15T20:46:45.229300+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "092aa4c59a86ad1d",
     "title": "Solana lender Kamino taps fintech veteran Michael Weisz as CEO for massive U.S. expansion",
     "source": "CoinDesk (权威宏观与机构)",
@@ -4880,6 +4871,16 @@
     "sent_at": "2026-10-14T20:24:32.193407+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2ba015de6b65735e",
+    "title": "SUI Demand Explodes as US ETFs Rack Up Five Straight Weeks of Inflows",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-14T20:44:13.284656+00:00",
+    "tokens": [
+      "SUI"
     ],
     "lang": "en"
   }
