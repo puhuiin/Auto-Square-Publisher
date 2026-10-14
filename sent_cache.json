@@ -1,14 +1,5 @@
 [
   {
-    "id": "da4d1ad5d9824ba3",
-    "title": "Bitwise is closing the lowest-fee Dogecoin ETF after rivals captured nearly all the capital",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-12T09:43:59.257553+00:00",
-    "tokens": [
-      "DOGE"
-    ]
-  },
-  {
     "id": "1522076581b26b57",
     "title": "How High Could XRP Go if Trump Gives Every American $5K? ChatGPT Sets Specific Targets",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4823,6 +4814,16 @@
       "SHIB",
       "ZEC",
       "DOGE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "98be706d2ba79aba",
+    "title": "加密早报:AMC CEO 再度公开质疑 Robinhood,SpaceXSI 整合订阅服务",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-14T01:13:11.785407+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
