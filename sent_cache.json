@@ -1,15 +1,5 @@
 [
   {
-    "id": "63fa31f3ec674d5d",
-    "title": "Shiba Inu Surpasses 1.8 Million Addresses Across ETH and Shibarium",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-12T13:44:26.870800+00:00",
-    "tokens": [
-      "ETH",
-      "SHIB"
-    ]
-  },
-  {
     "id": "c102659e9ea1da7c",
     "title": "Cardano's Hoskinson Shares Crucial Warning About AI and Privacy",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4834,6 +4824,17 @@
     "tokens": [
       "BAT",
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d944b562b0b35d39",
+    "title": "吴说:主要 Meme 市场 24h 交易量约 2.48 亿美元环比降 9.2%,PONS、SEALS、AI 居前",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-14T03:04:09.090002+00:00",
+    "tokens": [
+      "BNB",
+      "SOL"
     ],
     "lang": "en"
   }
