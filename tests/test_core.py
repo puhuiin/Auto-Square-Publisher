@@ -20669,8 +20669,11 @@ class TestR748QuotaRaiseTo60(unittest.TestCase):
 
         依据：R728 遥测全史被拦候选 BTC 1426/XRP 387/SOL 325/ETH 321 次，
         48h 评估候选 48% 死于限流。若限流不跟着提，多出来的配额发不出去。
+        R753 再补：R748 上线 4h 后实测配额 60 未打满（滑窗发布 50~52），
+        墙是候选通过率——评估候选 93% 死亡、其中 58% 死于限流（BTC 一家
+        104 次@cap10，而需求约 35/天）⇒ 限流必须再跟一档（5→6，高档 12=20%）。
         """
-        self.assertGreaterEqual(m.TOKEN_DAILY_LIMIT, 5,
+        self.assertGreaterEqual(m.TOKEN_DAILY_LIMIT, 6,
                                 "单币限流未随配额放松 ⇒ 多出的槽位发不出去")
 
 
