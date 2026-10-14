@@ -1,14 +1,5 @@
 [
   {
-    "id": "b06acbfadd212f04",
-    "title": "What Happens to XRP if the CLARITY Act Vote Fails on September 15? AI Maps the Downside",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-13T20:32:33.045388+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "71debd7850dcc74a",
     "title": "From 'Digital Gold' to $10,000: Bloomberg Strategist Flags Crucial Bitcoin Sell Signals",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4856,6 +4847,16 @@
     "sent_at": "2026-10-14T11:50:33.441711+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7ec90adf5fe84da8",
+    "title": "Avalanche enables DIFC Courts to verify documents globally in seconds",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-14T12:10:48.821452+00:00",
+    "tokens": [
+      "AVAX"
     ],
     "lang": "zh-CN"
   }
