@@ -1,14 +1,5 @@
 [
   {
-    "id": "d15a72951588cbc1",
-    "title": "241 Billion Shiba Inu Netflow Threatens Rally",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-13T01:22:42.978743+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "72aef50f6d3d0113",
     "title": "Shytoshi Kusama's Silence Rattles SHIB Community Despite 'Polish' X Update",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4841,5 +4832,15 @@
       "PUMP"
     ],
     "lang": "en"
+  },
+  {
+    "id": "1b31e3cfd3341b71",
+    "title": "Lido DAO exposes token flaw and forces a budget review",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-14T05:04:29.745400+00:00",
+    "tokens": [
+      "LDO"
+    ],
+    "lang": "zh-CN"
   }
 ]
