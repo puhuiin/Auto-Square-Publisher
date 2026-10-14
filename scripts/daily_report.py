@@ -186,7 +186,51 @@ def build_report(rows, hours: int) -> str:
             for t, n in toks.most_common(8))
         L.append("   币种：%s" % top)
 
-    # ⑥ 结论
+    # ⑥ 内容质量雷达（R750：把 R596~R747 建的收敛/质量指标接进日报）
+    #   ★ 为什么：这些雷达此前只活在 metrics_report dashboard 里，而用户每天看的
+    #     是这份钉钉日报 ⇒ 质量趋势对用户不可见（R600 教训的人工面复发）。
+    #   ★ 口径**必须复用** metrics_report 的 quality_scan（单一实现）——日报自己
+    #     重算一遍就是 R731「报告与生产口径分叉」的翻版。故这里 import 后直接调用，
+    #     并由守卫锁「日报数值 == quality_scan 数值」。
+    #   ⚠️ 只列**非零**行：日报要短，全零的雷达不占版面；全零时明说"未检出"。
+    try:
+        import importlib.util as _ilu
+        _spec = _ilu.spec_from_file_location(
+            "metrics_report_r750",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        _mr = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_mr)
+        _q = _mr.quality_scan(rows, window=20)
+    except Exception as _e:
+        _q = None
+        L.append("")
+        L.append("⑥ 内容质量：⚠️ 质量扫描不可用（%s: %s）"
+                 "——不静默跳过，看不到差异会被读成'没差异'（R704）"
+                 % (type(_e).__name__, _e))
+    if _q:
+        _scanned = _q.get("scanned") or 0
+        _lines = []
+        for _key, _label, _thr in (
+                ("manip_frame", "🎭操纵归因", 40),
+                ("vol_confirm", "📊放量确认", 40),
+                ("stock_advice", "🧰实操套话", 40),
+                ("watch_lead", "📋先看watch-lead", 40),
+                ("hotlist_absent", "📻热搜缺席", 40),
+                ("campaign_cta", "🎁活动CTA", 40)):
+            _v = _q.get(_key) or 0
+            if _v:
+                _pct = 100 * _v / max(1, _scanned)
+                _warn = " ⚠️" if _pct >= _thr else ""
+                _lines.append("%s %d/%d=%d%%%s" % (_label, _v, _scanned, _pct, _warn))
+        if _lines:
+            L.append("")
+            L.append("⑥ 内容质量（近20篇）：%s" % " ｜ ".join(_lines))
+        else:
+            L.append("")
+            L.append("⑥ 内容质量（近20篇）：✅ 未检出收敛复读")
+
+    # ⑦ 结论
     L.append("")
     if fails:
         L.append("结论：⚠️ 有发布失败 %d 次，请查看上方明细" % len(fails))

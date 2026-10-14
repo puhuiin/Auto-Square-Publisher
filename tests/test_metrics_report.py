@@ -6957,3 +6957,87 @@ class TestRejectTelemetryFields(unittest.TestCase):
         self.assertIn('"article": article,', src,
                       "★ 回执未落 article 键")
         self.assertIn('"content_cjk": content_cjk,', src)
+
+
+class TestR750DailyReportQualitySection(unittest.TestCase):
+    """★★ R750：每日钉钉日报必须带「内容质量」段，且数值 == metrics_report 口径
+
+    ★ 缺口（本轮发现）：R596~R747 建的六个质量雷达只活在 metrics_report dashboard
+      里，而用户每天看的是钉钉日报 ⇒ 质量趋势对用户不可见（R600「人工面」复发）。
+    ★ 口径纪律（R731）：日报**不得自己重算**一遍雷达——必须 import metrics_report
+      的 quality_scan 复用。守卫直接锁「日报印出的数字 == quality_scan 的数字」。
+    ⚠️ 样本要让每条雷达都有命中，否则"全零时不报"会让守卫空转（R712 家族）。
+    """
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r750",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _rows(self):
+        # 每条帖命中一个不同雷达（按帖计一次，20 篇窗口内）
+        bodies = [
+            "这波是主力借利好出货的经典剧本。",           # 🎭 manip
+            "等放量突破再进场，别急着抄底。",             # 📊 vol + 🧰 stock
+            "先看 2460 的支撑能不能守住。",              # 📋 watch-lead
+            "全网热搜前五都没它影子。",                  # 📻 hotlist
+            "顺便提一嘴，锦标赛还在进行。",              # 🎁 campaign
+        ]
+        rows = []
+        for i, b in enumerate(bodies * 4):               # 20 篇
+            rows.append({"outcome": "binance_published",
+                         "ts": "2026-10-14T%02d:00:00+00:00" % (i % 24),
+                         "final_preview": b + " 第%d篇" % i,
+                         "content_chars": 20, "content_cjk": 10,
+                         "lang": "zh-CN", "tokens": ["BTC"]})
+        return rows
+
+    def test_daily_report_has_quality_section(self):
+        """★★ 日报必须含「内容质量」段且列出命中的雷达"""
+        dr = self._dr()
+        text = dr.build_report(self._rows(), 24)
+        self.assertIn("内容质量", text, "日报缺内容质量段 ⇒ 质量趋势对用户不可见")
+        # ★ 有命中时必须**列出雷达**（只出现段名/未检出 ⇒ 数字没接上）
+        self.assertIn("🎭", text, "有操纵归因命中却未列出雷达 ⇒ 质量数字没接进日报")
+
+    def test_daily_report_numbers_equal_quality_scan(self):
+        """★★★ 口径一致：日报印出的每个雷达数字必须 == quality_scan 的同名计数"""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r750b",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mr = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mr)
+        rows = self._rows()
+        q = mr.quality_scan(rows, window=20)
+        text = self._dr().build_report(rows, 24)
+        # 逐雷达核对：非零的必须在日报里出现且数字一致
+        for key, label in (("manip_frame", "🎭操纵归因"),
+                           ("vol_confirm", "📊放量确认"),
+                           ("stock_advice", "🧰实操套话"),
+                           ("watch_lead", "📋先看watch-lead"),
+                           ("hotlist_absent", "📻热搜缺席"),
+                           ("campaign_cta", "🎁活动CTA")):
+            v = q.get(key) or 0
+            if v:
+                self.assertIn("%s %d/20" % (label, v), text,
+                              "%s 日报数字与 quality_scan 不一致（%d vs 日报缺失/不符）"
+                              % (label, v))
+
+    def test_zero_hits_reports_clean_not_silent(self):
+        """★ 全零时明说"未检出"——不静默跳过（看不到差异会被读成没差异，R704）"""
+        dr = self._dr()
+        rows = [{"outcome": "binance_published",
+                 "ts": "2026-10-14T10:00:00+00:00",
+                 "final_preview": "ETH 跌破 2500，短线别追。第%d篇" % i,
+                 "content_chars": 20, "content_cjk": 10,
+                 "lang": "zh-CN", "tokens": ["ETH"]} for i in range(20)]
+        text = dr.build_report(rows, 24)
+        self.assertIn("未检出", text, "全零时未明说 ⇒ 读者无法区分'干净'与'没测'")
