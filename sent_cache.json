@@ -1,14 +1,5 @@
 [
   {
-    "id": "e6796f60d64e0984",
-    "title": "Velocity extends Series A to $48M at $200M valuation with backing from Visa, Circle, and Ripple",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-09-15T13:51:40.772866+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "9edf4df07e671917",
     "title": "Ripple Price Analysis: XRP Trapped in Descending Channel as Key Levels Loom",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4877,6 +4868,16 @@
     "sent_at": "2026-10-14T19:04:33.348245+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "249d40ece8d8afdb",
+    "title": "Solana Sets a Date for Its Next Major Upgrade",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-10-14T19:24:14.816746+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
