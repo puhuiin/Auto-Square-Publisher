@@ -2779,6 +2779,34 @@ class NewsFetcher:
             logger.warning(f"数据源 [{name}] 的停放截止时间 {raw_until!r} 无法解析 ({e})，按未停放处理。")
             return False
 
+    @staticmethod
+    def _reset_after_last_fail(info: dict) -> bool:
+        """★ R751：成功复位标记（reset_at）是否新于最后一次失败（last_fail）。
+
+        为什么需要它：`git_state_merge` 对 `_` 状态键是 max-wins 并集 ⇒
+        ① pop 删除会被远端复活（旧实现）② 即便改写 fails=0，max(0, 旧fails) 也
+        会把旧计数赢回来。唯一在 max-wins 下语义正确的是**时间戳比较**——
+        reset_at 存的是成功时刻，与 last_fail 比大小即可判定"失败链是否已被切断"。
+        ⚠️ 解析失败一律按"未复位"处理（保守：不因脏数据放松限流），并留 warning。
+        """
+        reset = info.get("reset_at")
+        last_fail = info.get("last_fail")
+        if not reset:
+            return False
+        if not last_fail:
+            return True
+        try:
+            r = datetime.fromisoformat(str(reset).replace("Z", "+00:00"))
+            f = datetime.fromisoformat(str(last_fail).replace("Z", "+00:00"))
+            if r.tzinfo is None:
+                r = r.replace(tzinfo=timezone.utc)
+            if f.tzinfo is None:
+                f = f.replace(tzinfo=timezone.utc)
+            return r > f
+        except Exception:
+            logger.warning("源健康 reset_at/last_fail 解析失败，按未复位处理（保守）")
+            return False
+
     def _feed_record(self, name: str, ok: bool):
         if ok:
             # R10：无记录时不写盘——成功源占绝大多数，而 `_clear` 对不存在的键
@@ -2786,9 +2814,20 @@ class NewsFetcher:
             # 无意义整文件写（状态为空时全部是空操作）。与 `_publish_record` 同款守卫。
             if name not in self._feed_health():
                 return
+
             def _clear(state):
+                # ★★ R751：成功复位**不能是 pop 删除**——`git_state_merge.merge_state`
+                #   对 `_` 键是 max-wins 并集（`None 让位给非 None`）⇒ 本地删除会被
+                #   远端旧条目**复活**：源失败2次→本轮成功→合并后 fails 仍是2⇒
+                #   下次再失败1次就凑满 FEED_PARK_THRESHOLD(3) 被停放，**连续失败
+                #   语义被击穿**（6h GC 窗口内必现；生产实证 ZyCrypto 停放 30/234 轮）。
+                #   ⇒ 改写「reset_at 时间戳 + fails=0」：max-wins 对时间戳的语义
+                #   就是"最新胜出"，与 _img_rot 同款修法（R751：跨进程状态经
+                #   max-wins 合并时只能存单调量/时间戳，不能存会被撤销的删除）。
+                #   消费侧 `_record_fail` 见 reset_at 新于 last_fail 即重新计数。
                 state = dict(state or {})
-                state.pop(name, None)
+                state[name] = {"fails": 0,
+                               "reset_at": datetime.now(timezone.utc).isoformat()}
                 return state
             intel_state_update(self._FEED_HEALTH_KEY, _clear, default={})
             self._feed_health_invalidate()   # R707：写后必须失效缓存
@@ -2813,6 +2852,9 @@ class NewsFetcher:
             # 于是停放从"冷却"退化成"永久禁用"。
             # 同 R610/R622 的分层纪律：**判据变化后要确认它仍表达原意**。
             _now = datetime.now(timezone.utc)
+            # ★ R751：**成功复位标记优先于一切**——reset_at 新于 last_fail 说明
+            #   失败链已被一次成功切断（哪怕合并把远端旧 fails 复活了，max-wins 下
+            #   reset_at 取的是最新时间戳，语义正确）⇒ 本次失败是**新连续链的第 1 次》。
             if info.get("parked_until"):
                 try:
                     _until = datetime.fromisoformat(
@@ -2828,6 +2870,8 @@ class NewsFetcher:
                     # 处理；这里同样重置（保守：宁可多试，不要永久禁用）
                     fails = 0
                     info.pop("parked_until", None)
+            if self._reset_after_last_fail(info):
+                fails = 0
             info["fails"] = fails + 1
             if info["fails"] >= self.FEED_PARK_THRESHOLD:
                 info["parked_until"] = (_now + timedelta(hours=self.FEED_PARK_HOURS)).isoformat()
@@ -11792,7 +11836,18 @@ def _run_main():
                 # 配图（用户反馈"全是走势卡太单调、要恢复好看的新闻图"）：
                 # 新闻原图（每张各异、最"好看"）优先；只有该帖无新闻图时，才在
                 # 走势卡/情绪卡之间【按帖轮换】兜底——既恢复新闻图多样性，又不让走势卡刷屏。
+                # ★★ R751：`_img_rot` 必须是**单调递增序列**（不是 0/1 翻转）！
+                #   踩坑实录：旧公式 `(_img_rot+1)%2` 在 git_state_merge 的
+                #   **max-wins 合并**（`_pick_scalar=max`，为 ISO 时间戳设计）下永久冻死——
+                #   计数器写入 1 而远端是 2 ⇒ max(1,2)=2 ⇒ 轮换九年不动。生产实证：
+                #   冻在 2（even ⇒ chart 永远优先）⇒ 96h 内情绪卡 card 档 **0 次**、
+                #   65% 的帖全是走势卡，R519-520 的多样性修复静默死亡 9 天。
+                #   ⇒ 改单调递增：max-wins 语义"最新=最大"天然正确，奇偶派生偏好。
+                #   ⚠️ 通用教训：**跨进程状态经过 max-wins 合并时，只能存单调量**
+                #     （时间戳/自增序列）；toggle/计数器必须换成序列+派生。
                 _img_rot = intel_state_get("_img_rot", 0)
+                if not isinstance(_img_rot, int) or _img_rot < 0:
+                    _img_rot = 0
                 _prefer = ["raw", "chart", "card"] if _img_rot % 2 == 0 else ["raw", "card", "chart"]
                 uploaded_image_url = ImageManager.prepare_and_upload(
                     square_api_key, raw_img,
@@ -11808,8 +11863,10 @@ def _run_main():
                     raw_img.strip() != ImageManager.DEFAULT_FALLBACK_IMAGE)
                 # 只有落到走势卡/情绪卡（无新闻图那部分）才推进轮换，让二者交替；
                 # 新闻图命中不占轮换位（新闻图本就各异、无需轮换）。
+                # ★ R751：写**自增后的原值**（不取模）——max-wins 合并下"更大=更新"，
+                #   取模会让计数器在 0/1 间震荡、被远端旧值永久压死（旧公式的坑）。
                 if image_tier in ("chart", "card"):
-                    intel_state_set("_img_rot", (_img_rot + 1) % 2)
+                    intel_state_set("_img_rot", _img_rot + 1)
             elif not binance_enabled and raw_img:
                 # 草稿模式无 S3 上传：直接给新闻原图直链，供手动下载后上传 OKX
                 uploaded_image_url = raw_img

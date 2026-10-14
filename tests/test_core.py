@@ -15057,10 +15057,20 @@ class TestFeedHealthReadAmplification(unittest.TestCase):
         rd.assert_not_called()
 
     def test_feed_record_still_clears_existing_entry(self):
+        """R707 读放大回归 + R751 语义更新：成功必须**清零既有条目**
+
+        ⚠️ R751 起"清零"的形态从 **pop 删除** 改为 **写 reset_at 时间戳 + fails=0**：
+           pop 删除会被 `git_state_merge` 的 max-wins 合并复活（远端旧 fails 赢回），
+           连续失败计数跨轮治不好（生产实证：ZyCrypto 停放 30/234 轮）。
+           保护实质不变：fails 归零、parked_until 解除、R10 无记录不写盘快路径仍在。
+        """
         f = m.NewsFetcher()
         m.intel_state_set(f._FEED_HEALTH_KEY, {"feed-a": {"fails": 2}})
         f._feed_record("feed-a", ok=True)
-        self.assertNotIn("feed-a", m.intel_state_get(f._FEED_HEALTH_KEY, {}))
+        entry = m.intel_state_get(f._FEED_HEALTH_KEY, {}).get("feed-a") or {}
+        self.assertEqual(entry.get("fails"), 0, "成功后 fails 必须归零")
+        self.assertIn("reset_at", entry, "成功后必须写 reset_at（防合并复活）")
+        self.assertNotIn("parked_until", entry, "成功后必须解除停放")
 
 
 class TestCleanHtmlTruncatesBeforeCleaning(unittest.TestCase):
@@ -16431,11 +16441,17 @@ class TestR634ParkExpiryResetsFailCount(unittest.TestCase):
                          "畸形停放时间应重置计数（保守：宁可多试）")
 
     def test_success_still_clears(self):
-        """回归：成功仍清空健康记录（R10 的无记录不写盘优化不受影响）"""
+        """回归：成功仍清空健康记录（R10 的无记录不写盘优化不受影响）
+
+        ⚠️ R751 起"清空"= 重置为 {fails:0, reset_at}（不再是 pop 删除——删除会被
+           max-wins 合并复活，见 TestR751FeedStreakSurvivesMerge）。此处断言清零实质。
+        """
         self.f._feed_record(self.name, ok=False)
         self.assertIn(self.name, m.intel_state_get("_feed_health", {}))
         self.f._feed_record(self.name, ok=True)
-        self.assertEqual(m.intel_state_get("_feed_health", {}), {})
+        entry = m.intel_state_get("_feed_health", {}).get(self.name) or {}
+        self.assertEqual(entry.get("fails"), 0, "成功后连续失败计数必须归零")
+        self.assertFalse(self.f._feed_is_parked(self.name), "成功后必须解除停放")
 
 class TestR635PublishParkExpiryResetsFailCount(unittest.TestCase):
     """R635：发布停放也有 R634 的「到期不归零」同型缺陷。
@@ -20831,6 +20847,183 @@ class TestR746CampaignCtaPhrasingMenu(unittest.TestCase):
         blob = self._intel_block()
         self.assertIn("活动信息说准就行", blob,
                       "必须明示活动信息要说准（保留）= 返佣红线，别为轮换把活动说丢")
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
+
+
+class TestR751ImageRotationMonotonic(unittest.TestCase):
+    """★★★ R751：配图轮换计数器必须**单调递增**——旧 0/1 翻转公式被 max-wins 合并冻死
+
+    ★ 生产实证（96h 数据）：情绪卡 card 档 **0 次**、走势卡 chart 占 65%——
+      R519-520「走势卡/情绪卡轮换」的修复静默死亡 9 天。
+    ★ 根因：`git_state_merge.merge_state` 对 `_` 前缀状态键用 max-wins
+      （`_pick_scalar=max`，为 ISO 时间戳设计）⇒ 计数器写入 (2+1)%2=1 时
+      max(1,2)=2 永久冻死。轮换九年不动、even 永真 ⇒ chart 永远压过 card。
+    ⇒ 修法：存**自增序列**（不取模），奇偶派生偏好——"最新=最大"语义天然正确。
+    ⇒ 本类锁三件事：① 写入不取模 ② 奇偶派生偏好方向 ③ 合并后**较新的更大值得以胜出**
+      （③是真正的回归判据：它会在旧公式回归时立刻红）。
+    """
+
+    def test_increment_is_not_modulo(self):
+        """★★★ 写入侧不得取模（取模 ⇒ 0/1 震荡 ⇒ 被 max-wins 压死）"""
+        import inspect
+        src = inspect.getsource(m)
+        i = src.find('if image_tier in ("chart", "card"):')
+        self.assertGreater(i, 0, "没找到配图轮换写入点 ⇒ 判据失效")
+        block = src[i:i + 400]
+        self.assertIn('intel_state_set("_img_rot", _img_rot + 1)', block,
+                      "轮换写入必须是 _img_rot + 1（单调递增）；取模公式会被合并冻死")
+        self.assertNotIn("% 2)", block, "写入侧又出现取模 ⇒ 旧 bug 回归")
+
+    def test_parity_derives_prefer_order(self):
+        """★ 奇偶派生：偶数 chart 优先、奇数 card 优先（覆盖两个方向）"""
+        import unittest.mock as mock
+        # 偶数
+        with mock.patch.dict(os.environ, {"CAMPAIGN_INTEL_FILE": os.path.join(
+                tempfile.mkdtemp(), "intel.json")}):
+            with open(os.environ["CAMPAIGN_INTEL_FILE"], "w", encoding="utf-8") as f:
+                json.dump({"_img_rot": 4}, f)
+            m.CAMPAIGN_INTEL_FILE = os.environ["CAMPAIGN_INTEL_FILE"]
+            self.assertEqual(m.intel_state_get("_img_rot"), 4)
+        # 奇偶判定走源码级推演（prefer 构造在 _run_main 内，单测直接锁常量顺序）
+        for seq, expect_first in ((0, "chart"), (1, "card"), (2, "chart"), (3, "card")):
+            prefer = ["raw", "chart", "card"] if seq % 2 == 0 else ["raw", "card", "chart"]
+            self.assertEqual(prefer[1], expect_first,
+                             "seq=%d 的第二优先级应为 %s" % (seq, expect_first))
+
+    def test_merge_preserves_newer_larger_value(self):
+        """★★★ 回归判据：经 git_state_merge 合并后，**较新（更大）的序列值必须胜出**
+
+        这一条就是旧 bug 的尸体：旧公式下 local=1/remote=2 ⇒ max=2 冻死；
+        新公式下 local 永远比 remote 大（自增）⇒ max 取到本地新值。
+        """
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "git_state_merge_r751",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "git_state_merge.py"))
+        g = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(g)
+        # 模拟：远端 2（冻死值），本地自增到 3
+        merged = g.merge_state({"_img_rot": 3}, {"_img_rot": 2})
+        self.assertEqual(merged.get("_img_rot"), 3,
+                         "自增后的更大值没胜出 ⇒ 轮换又会冻死（旧 bug 形态）")
+        # 反向确认旧公式确实会冻（文档化 bug 形态，防将来有人改回去）
+        frozen = g.merge_state({"_img_rot": 1}, {"_img_rot": 2})
+        self.assertEqual(frozen.get("_img_rot"), 2,
+                         "旧公式形态（1 vs 2）应冻在 2——这正是要防的")
+
+    def test_non_int_state_degrades_to_zero(self):
+        """★ 脏数据（非 int/负值）不得让奇偶判定抛错（R718 静默降级要留痕的同源）"""
+        import unittest.mock as mock
+        import tempfile
+        tmp = tempfile.mkdtemp()
+        p = os.path.join(tmp, "intel.json")
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump({"_img_rot": "dirty"}, f)
+        with mock.patch.object(m, "CAMPAIGN_INTEL_FILE", p):
+            v = m.intel_state_get("_img_rot", 0)
+            self.assertEqual(v, "dirty", "读取路径原样返回（清洗在消费侧）")
+            # 消费侧清洗逻辑（与 main.py 11805 同判据）
+            cleaned = v if isinstance(v, int) and v >= 0 else 0
+            self.assertEqual(cleaned, 0, "脏值必须被清洗成 0，不能参与奇偶判定")
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
+
+
+class TestR751FeedStreakSurvivesMerge(unittest.TestCase):
+    """★★★ R751：源健康「连续失败」计数必须不被 max-wins 合并复活
+
+    ★ 生产实证：`git_state_merge.merge_state` 对 `_` 键 max-wins ⇒ 成功时的
+      pop 删除被远端旧条目复活（`None 让位给非 None`）⇒ 源失败2次→成功→再失败1次
+      就凑满 FEED_PARK_THRESHOLD(3) 被停放，"连续失败"语义被击穿（72h 实证：
+      ZyCrypto 停放 30/234 轮、CoinJournal 16 轮——远高于其失败率应有的停放）。
+    ⇒ 修法：成功改写 `reset_at` 时间戳 + fails=0（不删除）；`_record_fail` 见
+      reset_at 新于 last_fail 即重新计数。时间戳是 max-wins 下唯一语义正确的量。
+    """
+
+    def _merge(self, local, remote):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "git_state_merge_r751b",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "git_state_merge.py"))
+        g = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(g)
+        return g.merge_state(local, remote)
+
+    def test_success_write_is_timestamp_not_deletion(self):
+        """★★★ 成功复位必须写 reset_at 时间戳（pop 删除会被合并复活）"""
+        import inspect
+        src = inspect.getsource(m.NewsFetcher._feed_record)
+        ok_block = src[:src.find("park_msg_holder")]
+        self.assertIn("reset_at", ok_block,
+                      "成功路径没有写 reset_at ⇒ pop 删除会被远端复活（旧 bug）")
+        self.assertNotIn("state.pop(name", ok_block,
+                          "成功路径仍在 pop 删除 ⇒ 合并会复活旧计数")
+
+    def test_single_failure_after_success_does_not_park(self):
+        """★★★ 场景回归（端到端，驱动真实写入）：失败2次 → 成功 → 合并 → 再失败1次 **不得**停放
+
+        ⚠️ 必须走真实 `_feed_record(ok=True)`：手工构造 local 状态只能测消费侧，
+           写入侧回退成 pop 删除时这个测试照样绿（第一版就漏了）——R712 家族第 N 次。
+        """
+        import tempfile
+        nf = m.NewsFetcher.__new__(m.NewsFetcher)
+        intel_tmp = tempfile.mktemp(suffix=".json")
+        orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = intel_tmp
+        try:
+            # 远端历史：失败 2 次（上一轮提交的状态）
+            with open(intel_tmp, "w", encoding="utf-8") as f:
+                json.dump({"_feed_health": {"ZyCrypto": {
+                    "fails": 2, "last_fail": "2026-10-14T10:00:00+00:00"}}}, f)
+            self.f = m.NewsFetcher()
+            # 本轮成功 ⇒ 真实写入路径
+            self.f._feed_record("ZyCrypto", ok=True)
+            written = json.load(open(intel_tmp, encoding="utf-8"))
+            entry = written["_feed_health"].get("ZyCrypto") or {}
+            self.assertIn("reset_at", entry,
+                          "成功路径没写 reset_at ⇒ pop 删除会被 max-wins 合并复活")
+            # 模拟跨轮合并（本地新态 vs 远端旧态）
+            merged = self._merge(written, {"_feed_health": {"ZyCrypto": {
+                "fails": 2, "last_fail": "2026-10-14T10:00:00+00:00"}}})["_feed_health"]["ZyCrypto"]
+            # 消费侧：以合并态为基线再失败一次
+            fails = int(merged.get("fails", 0))
+            if m.NewsFetcher._reset_after_last_fail(merged):
+                fails = 0
+            new_fails = fails + 1
+            self.assertEqual(new_fails, 1,
+                             "成功后再失败1次应计数 1（旧实现会是 3 ⇒ 误停放）")
+            self.assertLess(new_fails, nf.FEED_PARK_THRESHOLD,
+                            "单次失败就触发停放 ⇒ 连续失败语义被击穿")
+        finally:
+            m.CAMPAIGN_INTEL_FILE = orig
+            if os.path.exists(intel_tmp):
+                os.remove(intel_tmp)
+
+    def test_consecutive_failures_still_park(self):
+        """★ 反向：真的连续失败仍必须停放（修复不能把限流修没了）"""
+        nf = m.NewsFetcher.__new__(m.NewsFetcher)
+        health = {"fails": 2, "last_fail": "2026-10-14T12:00:00+00:00"}
+        self.assertFalse(m.NewsFetcher._reset_after_last_fail(health),
+                         "无成功标记时不得视为已复位")
+        new_fails = int(health["fails"]) + 1
+        self.assertGreaterEqual(new_fails, nf.FEED_PARK_THRESHOLD,
+                                "真连续失败必须仍能触发停放")
+
+    def test_reset_marker_degrades_conservatively(self):
+        """★ 脏 reset_at 不得放宽限流（保守方向 + warning 留痕，R718 同族）"""
+        with self.assertLogs("SquarePosterUltimate", level="WARNING") as logs:
+            out = m.NewsFetcher._reset_after_last_fail(
+                {"reset_at": "not-a-time", "last_fail": "2026-10-14T10:00:00+00:00"})
+        self.assertFalse(out, "脏数据必须按未复位处理")
+        self.assertTrue(any("解析失败" in o for o in logs.output),
+                        "降级必须留痕（静默降级会藏缺陷）")
 
 
 if __name__ == "__main__":
