@@ -1,15 +1,5 @@
 [
   {
-    "id": "76b019afd09b3c59",
-    "title": "Ether, solana, XRP likely to gain if Clarity Act progresses",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-09-15T13:35:45.165236+00:00",
-    "tokens": [
-      "XRP",
-      "SOL"
-    ]
-  },
-  {
     "id": "e6796f60d64e0984",
     "title": "Velocity extends Series A to $48M at $200M valuation with backing from Visa, Circle, and Ripple",
     "source": "CoinDesk (权威宏观与机构)",
@@ -4877,6 +4867,16 @@
     "sent_at": "2026-10-14T18:44:17.266598+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "be453800a9f3cd5b",
+    "title": "MEXC CEO: This Bitcoin cycle is nothing like the last one",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-14T19:04:33.348245+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
