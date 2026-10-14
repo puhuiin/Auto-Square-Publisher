@@ -1,14 +1,5 @@
 [
   {
-    "id": "5ca18758a825e879",
-    "title": "Swiss Bitcoin Payment Platform Takes Servers Offline After Suspected Internal Breach",
-    "source": "DailyHodl (山寨异动与百倍币叙事)",
-    "sent_at": "2026-09-15T10:09:43.998057+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "f9c801e8cb411cc2",
     "title": "Token Burns Still Make Crypto Traders Pay Attention — Revenue-Linked Burns Could Be the Bigger Upside Play. Where Does Wanted Network Fit?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4873,6 +4864,16 @@
       "BNB",
       "ETH",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c0224117cfe4cb82",
+    "title": "Ethereum Whale Lands 17,786% Gains in Nine Years",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-14T17:44:38.335301+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
