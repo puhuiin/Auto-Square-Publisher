@@ -1,14 +1,5 @@
 [
   {
-    "id": "fbe2591e87b70201",
-    "title": "Bitcoin’s 24% Rally Hit a Wall: CryptoQuant Reveals What Comes Next",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-12T18:05:41.934500+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "151e53e9ffa6cd48",
     "title": "Solana Defies Death Cross as SOL Climbs Above $100: Bear Trap Ahead?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4836,6 +4827,16 @@
     "sent_at": "2026-10-14T03:44:05.153474+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e93e862424f96f77",
+    "title": "Who Really Owns Nasdaq's New XRP Stock? Fresh SEC Filing Names Key Ripple Insiders",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-14T04:05:04.263882+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
