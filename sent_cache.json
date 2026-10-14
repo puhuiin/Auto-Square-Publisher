@@ -1,14 +1,5 @@
 [
   {
-    "id": "484211f25a19bda6",
-    "title": "42% Shiba Inu (SHIB) On-Chain Increase Is Not Yet Bullish: Explaining Why",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-13T13:47:26.452684+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "10396bac4a1f25d5",
     "title": "Dogecoin Developer Turns to Community for Next Core Upgrade Tests",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4851,5 +4842,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "6cb0fb4b3290234f",
+    "title": "Binance Delisting Knocks 2 Altcoins Down as Much as 10% Within Minutes",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-14T07:45:09.339776+00:00",
+    "tokens": [
+      "EPIC",
+      "QUICK"
+    ],
+    "lang": "zh-TW"
   }
 ]
