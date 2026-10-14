@@ -19,24 +19,24 @@
   "last_updated": "2026-10-14T16:25:35.050346Z",
   "_feed_health": {
     "深潮TechFlow (中文/繁体)": {
-      "last_fail": "2026-10-14T14:23:54.137166+00:00",
       "fails": 2,
-      "reset_at": "2026-10-14T18:03:37.553693+00:00"
-    },
-    "CryptoPotato (山寨币/Meme热点)": {
-      "last_fail": "2026-10-14T17:43:30.754875+00:00",
-      "fails": 1,
-      "reset_at": "2026-10-14T18:03:35.525169+00:00"
+      "last_fail": "2026-10-14T14:23:54.137166+00:00",
+      "reset_at": "2026-10-14T18:23:35.950396+00:00"
     },
     "深潮TechFlow (中文/简体)": {
-      "last_fail": "2026-10-14T14:23:54.111761+00:00",
       "fails": 2,
-      "reset_at": "2026-10-14T18:03:36.591929+00:00"
+      "last_fail": "2026-10-14T14:23:54.111761+00:00",
+      "reset_at": "2026-10-14T18:23:34.762456+00:00"
+    },
+    "CryptoPotato (山寨币/Meme热点)": {
+      "fails": 1,
+      "last_fail": "2026-10-14T17:43:30.754875+00:00",
+      "reset_at": "2026-10-14T18:23:33.329879+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-14",

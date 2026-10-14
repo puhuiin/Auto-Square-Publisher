@@ -1,14 +1,5 @@
 [
   {
-    "id": "3f33dc7ad5cd037b",
-    "title": "Shiba Inu (SHIB) Loses 78% in One of the Most Important Metrics for Price",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-15T13:04:11.710131+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "3977e77066bd324c",
     "title": "Strike CEO Jack Mallers: Inflation Outlook, Bond Stress and BTC vs Gold",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -4875,6 +4866,16 @@
     "sent_at": "2026-10-14T18:04:14.238925+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f5088de658dca6a1",
+    "title": "XRP Price Faces a Turning Point as ETFs Record 13 Weeks of Inflows",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-14T18:24:10.748196+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
