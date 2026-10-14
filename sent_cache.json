@@ -1,15 +1,5 @@
 [
   {
-    "id": "c1fd5ab0e69d4afe",
-    "title": "Ethereum ETFs Stay Strong as Bitcoin Funds Lose $460M in a Week",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-13T13:07:19.733729+00:00",
-    "tokens": [
-      "ETH",
-      "BTC"
-    ]
-  },
-  {
     "id": "29eb5696d93a14ad",
     "title": "Almost Best Ethereum Q3 in History? ETH on the Edge of Record",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4848,5 +4838,16 @@
       "BTC"
     ],
     "lang": "en"
+  },
+  {
+    "id": "a557886c3d4c59ff",
+    "title": "Binance will delist EPIC and QUICK on October 28, 2026",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-14T07:04:23.110999+00:00",
+    "tokens": [
+      "EPIC",
+      "QUICK"
+    ],
+    "lang": "zh-CN"
   }
 ]
