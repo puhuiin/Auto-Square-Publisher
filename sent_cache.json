@@ -1,14 +1,5 @@
 [
   {
-    "id": "a910c3a7348cc5de",
-    "title": "Solana Founder Links Elon Musk and Altman's AI Slowdown to 'Profitability at $1 Trillion Market Cap'",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-13T12:49:41.680346+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "c1fd5ab0e69d4afe",
     "title": "Ethereum ETFs Stay Strong as Bitcoin Funds Lose $460M in a Week",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4846,5 +4837,16 @@
       "EPIC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e9457c27a746a7d5",
+    "title": "Real Vision 创始人:为何大多数公链难逃消亡?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-14T06:44:13.533968+00:00",
+    "tokens": [
+      "ETH",
+      "BTC"
+    ],
+    "lang": "en"
   }
 ]
