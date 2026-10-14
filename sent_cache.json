@@ -1,14 +1,5 @@
 [
   {
-    "id": "092aa4c59a86ad1d",
-    "title": "Solana lender Kamino taps fintech veteran Michael Weisz as CEO for massive U.S. expansion",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-09-15T23:07:21.117653+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "5bca485a33b62cf5",
     "title": "Shiba Inu (SHIB), Hyperliquid (HYPE), Dogecoin (DOGE) and Monero (XMR) Price Analysis For September 16: Bears Take Upper Hand",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4881,6 +4872,16 @@
     "sent_at": "2026-10-14T20:44:13.284656+00:00",
     "tokens": [
       "SUI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2ab51e7bbcab069f",
+    "title": "Shiba Inu Forms First 4-Hour Death Cross Setup in October: Potential Scenarios",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-14T21:04:11.487064+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
