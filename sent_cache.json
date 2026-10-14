@@ -1,16 +1,5 @@
 [
   {
-    "id": "54e01b7dc45e7825",
-    "title": "'Long Way to Flip ETH,' Binance's CZ Reacts as BNB Chain Outperforms Solana in DeFi TVL",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-14T18:06:42.107101+00:00",
-    "tokens": [
-      "ETH",
-      "BNB",
-      "SOL"
-    ]
-  },
-  {
     "id": "d24287140c52aab1",
     "title": "Zcash (ZEC), Litecoin (LTC) Achieve New Listing in Europe Despite 2027 Ban Looming",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4868,5 +4857,17 @@
       "BTC"
     ],
     "lang": "en"
+  },
+  {
+    "id": "afe3825d602c236c",
+    "title": "Ondo Finance TVL 达 40 亿美元,代币化股票及 ETF 规模超 13 亿美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-14T16:08:25.501158+00:00",
+    "tokens": [
+      "BNB",
+      "ONDO",
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
