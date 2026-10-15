@@ -1,14 +1,5 @@
 [
   {
-    "id": "ed8864efc388e989",
-    "title": "Dragonfly’s Qureshi calls for end to Zcash dev fund after 2028",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-09-18T13:44:03.815298+00:00",
-    "tokens": [
-      "ZEC"
-    ]
-  },
-  {
     "id": "26c58fdab2744f43",
     "title": "Visa and Mastercard Paying $167,500,000 To Settle ATM Surcharge Lawsuit – Here’s the Deadline for Submitting a Claim",
     "source": "DailyHodl (山寨异动与百倍币叙事)",
@@ -4913,5 +4904,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "348f4bff59b4410f",
+    "title": "Bitwise CIO:选择你自己的冒险,所有路径都通向比特币",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-15T07:07:10.778421+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]

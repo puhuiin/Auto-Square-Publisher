@@ -17,16 +17,10 @@
   ],
   "strategy_guidance": "今日为Binance Earn U灵活理财7%VIP专属APR活动截止日，发帖机器人需优先围绕该活动冲刺输出内容，提醒用户抓住最后参与窗口，切入角度为活动冲刺提醒。可结合仍在进行的现货/MET交易锦标赛、新上线的bStock及RWUSD交易对、7年P2P周年庆、S16英雄联盟世界赛预测等当期热点，引导读者参与官方活动互动、关注新交易对动态，提升内容互动量以获取Write to Earn激励。",
   "last_updated": "2026-10-15T04:44:08.237172Z",
-  "_feed_health": {
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "reset_at": "2026-10-15T06:46:04.862706+00:00",
-      "last_fail": "2026-10-15T01:03:32.664126+00:00"
-    }
-  },
+  "_feed_health": {},
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-15",
@@ -37,7 +31,7 @@
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 20,
+  "_img_rot": 21,
   "_alert_state": {
     "6c9a2bc41637c03e": "2026-10-15T02:05:13.454365+00:00",
     "057ca16cd7d7d7b4": "2026-10-15T02:05:14.116156+00:00"
