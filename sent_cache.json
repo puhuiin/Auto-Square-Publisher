@@ -1,14 +1,5 @@
 [
   {
-    "id": "cd641d8317b0e1d4",
-    "title": "Solana to Go Parabolic? Here’s Why SOL Can Explode by 1,100%",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-19T02:29:02.405036+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "72b92c74b8d858a1",
     "title": "XRP to $2 Roadmap: Why the Weekly Close Could Trigger 35% Rally",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4924,5 +4915,16 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "91d4093c18781ce2",
+    "title": "TechFlow 情报局:芯片股崩盘拖累全球市场,美国通胀抬头加息预期升温",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-15T13:24:39.390901+00:00",
+    "tokens": [
+      "USDC",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
