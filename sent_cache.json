@@ -1,14 +1,5 @@
 [
   {
-    "id": "98c682a6b0de334b",
-    "title": "Shiba Inu (SHIB) Secures Key Price Breakout",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-21T13:54:42.014105+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "dcace69da3c2455c",
     "title": "Ripple Price Analysis: XRP Approaches a Critical Breakout Level After 8% Daily Surge",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4953,5 +4944,15 @@
       "LINK"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "6033e9ae009c88bf",
+    "title": "Hyperliquid whale stakes $100M – So why is HYPE still below $80?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-15T23:04:48.200672+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
