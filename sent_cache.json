@@ -1,14 +1,5 @@
 [
   {
-    "id": "5b21e0b377314ec8",
-    "title": "Sui (SUI) Hits a 4-Month High: 3 Reasons Why It Can Pump Even More",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-21T11:09:50.673517+00:00",
-    "tokens": [
-      "SUI"
-    ]
-  },
-  {
     "id": "ad0979a2c05a7364",
     "title": "2 key economic reports threaten Bitcoin’s $80k rally as BTC price model predicts $95k incoming",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4950,5 +4941,15 @@
       "XRP"
     ],
     "lang": "en"
+  },
+  {
+    "id": "9f1dc6aea30eaa4a",
+    "title": "Jito [JTO] drops 14% as TVL shrinks $193M: Can THIS offer relief?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-15T22:04:38.157894+00:00",
+    "tokens": [
+      "JTO"
+    ],
+    "lang": "zh-CN"
   }
 ]

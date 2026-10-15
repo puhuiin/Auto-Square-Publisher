@@ -18,35 +18,35 @@
   "last_updated": "2026-10-15T17:04:15.725160Z",
   "_feed_health": {
     "深潮TechFlow (中文/繁体)": {
-      "parked_until": "2026-10-15T23:43:46.998842+00:00",
       "fails": 3,
+      "parked_until": "2026-10-15T23:43:46.998842+00:00",
       "last_fail": "2026-10-15T17:43:46.998842+00:00"
     },
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "last_fail": "2026-10-15T19:43:28.989048+00:00",
-      "reset_at": "2026-10-15T21:43:32.865171+00:00"
+    "深潮TechFlow (中文/简体)": {
+      "fails": 3,
+      "parked_until": "2026-10-15T23:43:46.904413+00:00",
+      "last_fail": "2026-10-15T17:43:46.904413+00:00"
     },
     "CryptoPotato (山寨币/Meme热点)": {
       "fails": 1,
-      "last_fail": "2026-10-15T18:43:27.498451+00:00",
-      "reset_at": "2026-10-15T21:43:32.621020+00:00"
+      "reset_at": "2026-10-15T22:03:28.451184+00:00",
+      "last_fail": "2026-10-15T18:43:27.498451+00:00"
     },
-    "深潮TechFlow (中文/简体)": {
-      "parked_until": "2026-10-15T23:43:46.904413+00:00",
-      "fails": 3,
-      "last_fail": "2026-10-15T17:43:46.904413+00:00"
+    "ZyCrypto (新币与空投)": {
+      "fails": 1,
+      "reset_at": "2026-10-15T22:03:28.004617+00:00",
+      "last_fail": "2026-10-15T19:43:28.989048+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-15",
-    "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg",
+    "date": "2026-10-15"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-15",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 32,
+  "_img_rot": 33,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
