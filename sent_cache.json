@@ -1,14 +1,5 @@
 [
   {
-    "id": "2a16075b716ffa63",
-    "title": "Solana Rockets to $112 as BSOL Trading Volume Hits $85 Million",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-18T21:06:35.569200+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "0d80871844e1311a",
     "title": "Bitcoin faces an eight-year rates test as the BOE unwinds £368 billion",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4920,6 +4911,16 @@
       "XRP",
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a3b635222df0be7d",
+    "title": "Ripple Prime推出传统资产永续合约交易服务",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-15T12:25:12.388023+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
