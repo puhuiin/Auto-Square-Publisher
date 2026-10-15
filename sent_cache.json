@@ -1,14 +1,5 @@
 [
   {
-    "id": "b7eaaa5d8c6da743",
-    "title": "Shiba Inu (SHIB) Builds 'Bull Combo': Will Weekly Chart Finally Delete a Zero?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-19T18:44:17.721839+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "376c4930bbbe2403",
     "title": "Zcash(ZEC)ETF 單週吸金 9821 萬鎂,贏過比特幣",
     "source": "BlockTempo (动区动趋中文)",
@@ -4931,6 +4922,16 @@
     "sent_at": "2026-10-15T16:04:08.191585+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2f231bce64465627",
+    "title": "300 Million DOGE Moves to Binance Amid Uptober Crash",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-15T16:24:18.973895+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
