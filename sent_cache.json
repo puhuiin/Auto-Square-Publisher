@@ -1,14 +1,5 @@
 [
   {
-    "id": "27a7665f3201ed5e",
-    "title": "Ripple CEO, Wall Street Heavyweights Head to Swell 2026: Agenda Revealed",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-17T14:48:03.682074+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "1a8c836095c2db51",
     "title": "Cardano’s Splash fix patches the exploit, but leaves 2.4M ADA missing and holders trapped",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4902,5 +4893,15 @@
       "ID"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "16e1819758ecc313",
+    "title": "Alea 研报:代币化美股一年扩张 7.6 倍,撑起市场的是增发而不是股价",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-15T03:45:56.939176+00:00",
+    "tokens": [
+      "ONDO"
+    ],
+    "lang": "zh-TW"
   }
 ]
