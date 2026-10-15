@@ -1,14 +1,5 @@
 [
   {
-    "id": "0978ce83004c1392",
-    "title": "XRP Security Alert: Web3 App Wallet Users Urged to Act Now",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-20T14:10:32.765375+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "4467c41f48499a85",
     "title": "'I'm Not Giving Up': Ethereum's Buterin Doubles Down on Privacy",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4941,6 +4932,16 @@
     "tokens": [
       "XRP",
       "RLUSD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7742e4a137ea0545",
+    "title": "Zcash Co-Founder Doubles Down on Explosive $5,000 ZEC Call, Reveals $2,000 Is Already a “No-Brainer”",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-15T19:25:33.837525+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
