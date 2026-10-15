@@ -1,14 +1,5 @@
 [
   {
-    "id": "6546a08cc6797c29",
-    "title": "835 Million Shiba Inu (SHIB) Hits Exchanges in 24 Hours: Inflows Break Key Barrier",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-20T13:29:39.821336+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "577ee2caac11ccbe",
     "title": "XRP Burn Rate Jumps Sharply: Major Trend Change Emerges",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4936,6 +4927,16 @@
     "title": "Solana hits record $7B in tokenized equities volume in Q3 2026",
     "source": "Crypto Briefing (深度与研报)",
     "sent_at": "2026-10-15T18:24:39.856299+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5471b471cb160609",
+    "title": "Assessing Solana’s short-term risk after price tests $100–$105 support zone",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-15T18:44:52.578048+00:00",
     "tokens": [
       "SOL"
     ],

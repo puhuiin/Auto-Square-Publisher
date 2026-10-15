@@ -18,24 +18,24 @@
   "last_updated": "2026-10-15T17:04:15.725160Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
-      "fails": 1,
-      "last_fail": "2026-10-15T16:03:28.889820+00:00",
-      "reset_at": "2026-10-15T18:23:27.821924+00:00"
+      "last_fail": "2026-10-15T18:43:27.498451+00:00",
+      "reset_at": "2026-10-15T18:23:27.821924+00:00",
+      "fails": 1
     },
     "深潮TechFlow (中文/繁体)": {
-      "fails": 3,
+      "last_fail": "2026-10-15T17:43:46.998842+00:00",
       "parked_until": "2026-10-15T23:43:46.998842+00:00",
-      "last_fail": "2026-10-15T17:43:46.998842+00:00"
+      "fails": 3
     },
     "深潮TechFlow (中文/简体)": {
-      "fails": 3,
+      "last_fail": "2026-10-15T17:43:46.904413+00:00",
       "parked_until": "2026-10-15T23:43:46.904413+00:00",
-      "last_fail": "2026-10-15T17:43:46.904413+00:00"
+      "fails": 3
     }
   },
   "_fallback_image": {
-    "date": "2026-09-09",
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
+    "date": "2026-10-15",
+    "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-15",
