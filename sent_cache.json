@@ -1,14 +1,5 @@
 [
   {
-    "id": "5c776a8be0a5838c",
-    "title": "'We're So Back?' Dogecoin Cofounder's Cryptic X Message Sparks Crypto Buzz",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-19T13:48:49.848994+00:00",
-    "tokens": [
-      "DOGE"
-    ]
-  },
-  {
     "id": "9efdc59f5417297b",
     "title": "Ethereum co-founder Vitalik Buterin argues that local AI can protect your privacy without losing speed",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4927,6 +4918,16 @@
     "sent_at": "2026-10-15T14:44:55.118420+00:00",
     "tokens": [
       "FIL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "79909a8c7895404a",
+    "title": "Ripple Prime adds RWA swaps referencing perpetual futures listed on Hyperliquid",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-15T15:04:14.053585+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
