@@ -1,14 +1,5 @@
 [
   {
-    "id": "d8884637e80ca7bb",
-    "title": "Scam Alert: Charles Hoskinson's and Cardano's YouTube Are Hacked, Don't Click Any Links",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-18T11:09:36.903539+00:00",
-    "tokens": [
-      "ADA"
-    ]
-  },
-  {
     "id": "f97a9c9a716ba4a4",
     "title": "SHIB 100% Burn Crash: Rare $0 Day Hits Shiba Inu",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4911,5 +4902,15 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "bed7185de250980b",
+    "title": "473M XRP at Work: Evernorth’s Game Plan Takes Shape With Ripple, Coinbase, Kraken, and BitGo",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-15T06:29:05.310123+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
