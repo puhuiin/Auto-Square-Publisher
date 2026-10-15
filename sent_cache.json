@@ -1,14 +1,5 @@
 [
   {
-    "id": "f375fd2520c16460",
-    "title": "比特幣守穩7.65萬鎂、以太坊站回2428,Fed升息市場靜待下一步",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-09-17T02:09:28.277523+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "ac6132b51c2ad5a5",
     "title": "Zcash gains 20% as Paradigm founder reveals firm made ZEC investment",
     "source": "Cointelegraph (全球综合快讯)",
@@ -4889,6 +4880,17 @@
     "title": "当货币变得可编程,加密行业的下一站或是重写代币规则",
     "source": "深潮TechFlow (中文/简体)",
     "sent_at": "2026-10-15T01:06:39.511406+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "a3d558a02a7d3166",
+    "title": "美股潮向(10 月 15 日):美国 9 月 CPI 超预期,CoreWeave 暴跌逾 15%",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-15T01:24:43.775717+00:00",
     "tokens": [
       "BTC",
       "ETH"
