@@ -1,14 +1,5 @@
 [
   {
-    "id": "ef77f17c936f25e0",
-    "title": "Bitcoin to Outperform Gold if ETF Hedging Eases, JPMorgan Says",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-17T21:04:07.653958+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "279accfc0e19daeb",
     "title": "Stellar activates Protocol 28 as network hits record throughput and RWA value climbs",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4907,5 +4898,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c744b55d609fe409",
+    "title": "Osmosis 社区提案停止 OSMO 通胀发行",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-15T04:44:54.595712+00:00",
+    "tokens": [
+      "OSMO"
+    ],
+    "lang": "zh-TW"
   }
 ]
