@@ -1,15 +1,5 @@
 [
   {
-    "id": "2a1531a745e4e2e7",
-    "title": "Ripple (XRP) ETFs Hit 10-Week Green Streak, but Solana (SOL) Funds Go Even Further",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-20T18:47:24.370929+00:00",
-    "tokens": [
-      "XRP",
-      "SOL"
-    ]
-  },
-  {
     "id": "81ed1319cb7a9db3",
     "title": "Offshore Bitcoin futures crash 97% as traders abandon traditional risk",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4944,6 +4934,16 @@
     "sent_at": "2026-10-15T20:04:43.029383+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9d459807b6d31f80",
+    "title": "Solana Alpenglow升级将于10月21日激活,最终性将从12.8秒降至150毫秒",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-15T20:24:18.488305+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
