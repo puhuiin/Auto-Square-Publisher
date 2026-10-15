@@ -1,14 +1,5 @@
 [
   {
-    "id": "df271881d1fc1418",
-    "title": "Over 31,000% Shiba Inu Burn Rate Surge Ignites 72.23 Million SHIB Tokens",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-20T15:25:37.520902+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "2a1531a745e4e2e7",
     "title": "Ripple (XRP) ETFs Hit 10-Week Green Streak, but Solana (SOL) Funds Go Even Further",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4943,6 +4934,16 @@
     "sent_at": "2026-10-15T19:44:31.188499+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d17b861747a6b7dc",
+    "title": "Machi loses $269,000 on ETH, then opens another long seven minutes later",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-15T20:04:43.029383+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
