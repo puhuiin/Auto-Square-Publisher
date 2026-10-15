@@ -1,16 +1,5 @@
 [
   {
-    "id": "f6bcafcf7d4b5456",
-    "title": "Shiba Inu (SHIB), Zcash (ZEC), Ethereum (ETH) and Dogecoin (DOGE) Price Analysis For September 18: Pivotal Moment for the Market",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-18T02:26:37.183906+00:00",
-    "tokens": [
-      "SHIB",
-      "ZEC",
-      "ETH"
-    ]
-  },
-  {
     "id": "2101ff6d952c86f3",
     "title": "Another Raid on XRP: Ripple Veteran David Schwartz Personally Exposes Fake Airdrop",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4907,6 +4896,16 @@
     "sent_at": "2026-10-15T05:04:41.596578+00:00",
     "tokens": [
       "LINK"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7d6fdbb14172d68e",
+    "title": "Firelight forces XRP-linked tokens lockup as withdrawal delay queue grows",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-15T05:31:19.977271+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
