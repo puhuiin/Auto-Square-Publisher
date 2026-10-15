@@ -1,14 +1,5 @@
 [
   {
-    "id": "81ed1319cb7a9db3",
-    "title": "Offshore Bitcoin futures crash 97% as traders abandon traditional risk",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-20T19:08:37.257312+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "040c6a4b6837f6c1",
     "title": "Why Solana’s new 250ms speed boost could actually trigger network instability",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4944,6 +4935,16 @@
     "sent_at": "2026-10-15T20:24:18.488305+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6bd18403d6fb847b",
+    "title": "Ripple (XRP) Deepens Wall Street Push With 24/7 RWA Swaps for Institutions",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-15T20:44:33.045319+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
