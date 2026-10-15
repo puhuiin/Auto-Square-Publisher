@@ -1,14 +1,5 @@
 [
   {
-    "id": "040c6a4b6837f6c1",
-    "title": "Why Solana’s new 250ms speed boost could actually trigger network instability",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-20T21:24:38.034596+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "d0add3177c9d8d43",
     "title": "144 Billion SHIB Netflow Sends Warning Amid 5% Price Rally",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4945,6 +4936,16 @@
     "sent_at": "2026-10-15T20:44:33.045319+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "91780b0b11c74f20",
+    "title": "Starknet opens seven-day vote on independent Layer 1 over quantum risks",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-15T21:04:44.247361+00:00",
+    "tokens": [
+      "STRK"
     ],
     "lang": "en"
   }
