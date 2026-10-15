@@ -1,15 +1,5 @@
 [
   {
-    "id": "376c4930bbbe2403",
-    "title": "Zcash(ZEC)ETF 單週吸金 9821 萬鎂,贏過比特幣",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-09-19T19:06:40.804400+00:00",
-    "tokens": [
-      "ZEC",
-      "BTC"
-    ]
-  },
-  {
     "id": "f3ac34f3228d8e96",
     "title": "Avalanche Treasury CEO:AI 代理大軍殺進金融,L1 區塊空間要不夠用了",
     "source": "BlockTempo (动区动趋中文)",
@@ -4932,6 +4922,16 @@
     "sent_at": "2026-10-15T16:24:18.973895+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ef7a2fa86d8e2999",
+    "title": "Zcash price drops 13% – Why ZEC’s $1,036 support matters now",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-15T16:44:54.346563+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
