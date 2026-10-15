@@ -1,14 +1,5 @@
 [
   {
-    "id": "1a8c836095c2db51",
-    "title": "Cardano’s Splash fix patches the exploit, but leaves 2.4M ADA missing and holders trapped",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-17T18:26:52.248674+00:00",
-    "tokens": [
-      "ADA"
-    ]
-  },
-  {
     "id": "4dacadd4b93af76c",
     "title": "SEC Green Lights Tokenized Stock Trading Despite Clarity Act Fail",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -4903,5 +4894,15 @@
       "ONDO"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "388ad8eaedc111c8",
+    "title": "Galaxy 研报:预测市场的下一站是条件市场,22 个 DAO 已把 5050 万美元交给市场来治理",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-15T04:04:04.065008+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
