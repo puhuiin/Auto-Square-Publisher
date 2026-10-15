@@ -1,14 +1,5 @@
 [
   {
-    "id": "9efdc59f5417297b",
-    "title": "Ethereum co-founder Vitalik Buterin argues that local AI can protect your privacy without losing speed",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-19T14:06:56.726659+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "de9b107432ffd39e",
     "title": "XRP Ledger Spikes 8.9% in Network Activity as Price Reclaims $1.43",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4928,6 +4919,16 @@
     "sent_at": "2026-10-15T15:04:14.053585+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5348c19a0960a790",
+    "title": "Zcash risks slide toward $1,000 as inflation fears outweigh ETF inflows",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-10-15T15:24:40.811167+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
