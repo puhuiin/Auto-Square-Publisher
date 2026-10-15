@@ -1,15 +1,5 @@
 [
   {
-    "id": "71a940e66369e05b",
-    "title": "比特幣強勢突破 8 萬美元、以太坊衝上 $2500!全網 24 小時爆倉 4.7 億鎂",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-09-18T19:04:28.166849+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ]
-  },
-  {
     "id": "2a16075b716ffa63",
     "title": "Solana Rockets to $112 as BSOL Trading Volume Hits $85 Million",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4918,6 +4908,18 @@
     "sent_at": "2026-10-15T11:28:44.240252+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a9759f00992f8a0b",
+    "title": "Why Isn’t XRP Rising? 13 Weeks of ETF Inflows Haven’t Moved the Price",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-15T12:06:12.093114+00:00",
+    "tokens": [
+      "XRP",
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
