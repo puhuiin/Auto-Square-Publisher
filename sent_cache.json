@@ -1,14 +1,5 @@
 [
   {
-    "id": "d4f8ab6495e14008",
-    "title": "Vitalik Buterin Rejects Cybersecurity Doom Over AI Hacking",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-17T11:06:53.658807+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "5ee2677b5801896f",
     "title": "State hackers drive 420% surge in onchain malware, Chainalysis finds",
     "source": "Cointelegraph (全球综合快讯)",
@@ -4896,6 +4887,18 @@
     "tokens": [
       "EPIC",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "fd4bef1ed579b2c0",
+    "title": "Near Protocol (NEAR), XRP, Zcash (ZEC) and Chainlink (LINK) Price Analysis for October 15: Can Bulls Sustain Liquidity?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-15T02:06:12.470715+00:00",
+    "tokens": [
+      "XRP",
+      "ZEC",
+      "LINK"
     ],
     "lang": "zh-CN"
   }
