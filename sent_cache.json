@@ -1,15 +1,5 @@
 [
   {
-    "id": "dae92230bef8bb6c",
-    "title": "Ripple's David Schwartz Addresses Exchanges' Hesitation on Listing Bitcoin-Based Asset",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-18T14:26:41.936918+00:00",
-    "tokens": [
-      "XRP",
-      "BTC"
-    ]
-  },
-  {
     "id": "43d3fc9ff4899c81",
     "title": "Binance Sees 6-Month High in XRP Whale Inflows With 1.6 Billion Tokens Shifted",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4915,5 +4905,17 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "5fbb23c3df8ee3ed",
+    "title": "ViaBTC 推出“挖矿焕新季”,新用户享 30 天五折费率优惠",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-15T07:48:00.507966+00:00",
+    "tokens": [
+      "BTC",
+      "LTC",
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
