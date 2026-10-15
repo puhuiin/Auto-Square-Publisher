@@ -1,14 +1,5 @@
 [
   {
-    "id": "279accfc0e19daeb",
-    "title": "Stellar activates Protocol 28 as network hits record throughput and RWA value climbs",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-17T23:24:46.544135+00:00",
-    "tokens": [
-      "XLM"
-    ]
-  },
-  {
     "id": "f6bcafcf7d4b5456",
     "title": "Shiba Inu (SHIB), Zcash (ZEC), Ethereum (ETH) and Dogecoin (DOGE) Price Analysis For September 18: Pivotal Moment for the Market",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4908,5 +4899,15 @@
       "OSMO"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "019762eea7b9c383",
+    "title": "Chainlink sees $10M ETF inflows – Why LINK’s price still struggles",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-15T05:04:41.596578+00:00",
+    "tokens": [
+      "LINK"
+    ],
+    "lang": "zh-CN"
   }
 ]
