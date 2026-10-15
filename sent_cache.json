@@ -1,14 +1,5 @@
 [
   {
-    "id": "b91e8ca94918b4b7",
-    "title": "This blockchain just voted to shut itself down for a Solana-powered AI pivot",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-21T13:45:22.073321+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "98c682a6b0de334b",
     "title": "Shiba Inu (SHIB) Secures Key Price Breakout",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4950,6 +4941,16 @@
     "sent_at": "2026-10-15T22:24:33.685237+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a26d81c443f24a08",
+    "title": "Claude AI Predicts that Chainlink (LINK) Could Hit Triple Digits in 2026",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-15T22:42:45.682776+00:00",
+    "tokens": [
+      "LINK"
     ],
     "lang": "zh-CN"
   }
