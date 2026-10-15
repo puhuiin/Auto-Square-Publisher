@@ -1,14 +1,5 @@
 [
   {
-    "id": "de9b107432ffd39e",
-    "title": "XRP Ledger Spikes 8.9% in Network Activity as Price Reclaims $1.43",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-19T14:28:45.282868+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "6c1790d3041a1420",
     "title": "Grayscale Is Making Its Red-Hot Zcash ETF More Affordable",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -4929,6 +4920,16 @@
     "sent_at": "2026-10-15T15:24:40.811167+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0341aa9ed585cb4d",
+    "title": "索赔324.8枚BTC、约合2720万美元,Lewis Barber起诉BitMEX运营方HDR Global Trading",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-15T15:42:10.836952+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
