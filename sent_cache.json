@@ -1,14 +1,5 @@
 [
   {
-    "id": "399c74853d322cd1",
-    "title": "Circle wants you to love USDC a little like you love Chelsea",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-20T02:38:07.386087+00:00",
-    "tokens": [
-      "USDC"
-    ]
-  },
-  {
     "id": "813ded4833c2ba0e",
     "title": "Grayscale’s Zcash ETF files for 3-for-1 forward share split",
     "source": "Cointelegraph (全球综合快讯)",
@@ -4935,6 +4926,16 @@
     "sent_at": "2026-10-15T17:24:51.556485+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "be1c39b248b86c4e",
+    "title": "Ethereum’s faster-exit plan would leave new validators waiting to earn",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-15T17:44:31.077843+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
