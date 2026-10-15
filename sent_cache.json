@@ -1,14 +1,5 @@
 [
   {
-    "id": "577ee2caac11ccbe",
-    "title": "XRP Burn Rate Jumps Sharply: Major Trend Change Emerges",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-20T13:51:20.959187+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "0978ce83004c1392",
     "title": "XRP Security Alert: Web3 App Wallet Users Urged to Act Now",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4939,6 +4930,17 @@
     "sent_at": "2026-10-15T18:44:52.578048+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9be25482df1ca244",
+    "title": "XRP News: DriveWealth RLUSD Settlement Starting in Europe",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-15T19:04:13.626266+00:00",
+    "tokens": [
+      "XRP",
+      "RLUSD"
     ],
     "lang": "en"
   }
