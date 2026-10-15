@@ -1,14 +1,5 @@
 [
   {
-    "id": "1eb2298b64c7c86d",
-    "title": "Why Bitcoin’s rally above $80,000 isn’t backed by institutional conviction",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-20T11:23:55.390314+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "6546a08cc6797c29",
     "title": "835 Million Shiba Inu (SHIB) Hits Exchanges in 24 Hours: Inflows Break Key Barrier",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4937,6 +4928,16 @@
     "sent_at": "2026-10-15T18:04:14.628614+00:00",
     "tokens": [
       "ACH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "505af9aa9b7aff01",
+    "title": "Solana hits record $7B in tokenized equities volume in Q3 2026",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-15T18:24:39.856299+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
