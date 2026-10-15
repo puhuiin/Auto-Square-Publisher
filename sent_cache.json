@@ -1,14 +1,5 @@
 [
   {
-    "id": "0d80871844e1311a",
-    "title": "Bitcoin faces an eight-year rates test as the BOE unwinds £368 billion",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-18T23:26:48.819923+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "cd641d8317b0e1d4",
     "title": "Solana to Go Parabolic? Here’s Why SOL Can Explode by 1,100%",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4923,5 +4914,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "2e7db263a03bf37b",
+    "title": "Zcash Tanks Double Digits After 'Meteoric Rise' Sees Leverage Build Up",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-10-15T12:47:17.184828+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
