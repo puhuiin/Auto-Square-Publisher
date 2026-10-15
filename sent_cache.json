@@ -1,16 +1,5 @@
 [
   {
-    "id": "149d6e7881701cb4",
-    "title": "SEC Rejects 19th XRP Short ETF While Bitcoin and Ethereum Drop $1.11 Billion: Main Crypto News This Morning",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-17T13:27:41.805661+00:00",
-    "tokens": [
-      "XRP",
-      "BTC",
-      "ETH"
-    ]
-  },
-  {
     "id": "b2559ea04660a29f",
     "title": "7 Out of 7 Shiba Inu (SHIB) Spot Flow Timeframes Turn Negative",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4901,5 +4890,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "7132905df850f63a",
+    "title": "VanEck 撤回首檔 stETH ETF!ETF 能原生質押後,Lido 的華爾街門票沒了",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-10-15T02:44:05.786395+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
