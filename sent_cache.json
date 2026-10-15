@@ -1,14 +1,5 @@
 [
   {
-    "id": "f97a9c9a716ba4a4",
-    "title": "SHIB 100% Burn Crash: Rare $0 Day Hits Shiba Inu",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-18T13:24:32.318015+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "ed8864efc388e989",
     "title": "Dragonfly’s Qureshi calls for end to Zcash dev fund after 2028",
     "source": "Cointelegraph (全球综合快讯)",
@@ -4912,5 +4903,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4c030bf7aafb9909",
+    "title": "Bitcoin miners plunge up to 13% in Wall Street’s worst selloff since July",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-10-15T06:47:34.761971+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
