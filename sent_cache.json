@@ -1,14 +1,5 @@
 [
   {
-    "id": "26c58fdab2744f43",
-    "title": "Visa and Mastercard Paying $167,500,000 To Settle ATM Surcharge Lawsuit – Here’s the Deadline for Submitting a Claim",
-    "source": "DailyHodl (山寨异动与百倍币叙事)",
-    "sent_at": "2026-09-18T14:04:45.290753+00:00",
-    "tokens": [
-      "ATM"
-    ]
-  },
-  {
     "id": "dae92230bef8bb6c",
     "title": "Ripple's David Schwartz Addresses Exchanges' Hesitation on Listing Bitcoin-Based Asset",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4912,6 +4903,16 @@
     "sent_at": "2026-10-15T07:07:10.778421+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "043383e9a78dba32",
+    "title": "VanEck Pulls Plug on Lido Staked ETH ETF After Yearlong Wait",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-15T07:30:51.688582+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
