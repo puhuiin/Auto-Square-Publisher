@@ -17,16 +17,21 @@
   ],
   "strategy_guidance": "今日为Binance Earn U灵活理财7%VIP专属APR活动截止日，发帖机器人需优先围绕该活动冲刺输出内容，提醒用户抓住最后参与窗口，切入角度为活动冲刺提醒。可结合仍在进行的现货/MET交易锦标赛、新上线的bStock及RWUSD交易对、7年P2P周年庆、S16英雄联盟世界赛预测等当期热点，引导读者参与官方活动互动、关注新交易对动态，提升内容互动量以获取Write to Earn激励。",
   "last_updated": "2026-10-15T04:44:08.237172Z",
-  "_feed_health": {},
+  "_feed_health": {
+    "CryptoPotato (山寨币/Meme热点)": {
+      "fails": 1,
+      "last_fail": "2026-10-15T16:03:28.889820+00:00"
+    }
+  },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg",
-    "date": "2026-09-09"
+    "date": "2026-09-09",
+    "url": "https://public.bnbstatic.com/image/pgc/20260909/d1ccdcec31a64bba9a3211b495009a6e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-15",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 25,
+  "_img_rot": 26,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

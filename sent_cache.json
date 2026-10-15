@@ -1,14 +1,5 @@
 [
   {
-    "id": "6c1790d3041a1420",
-    "title": "Grayscale Is Making Its Red-Hot Zcash ETF More Affordable",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-19T15:08:01.351815+00:00",
-    "tokens": [
-      "ZEC"
-    ]
-  },
-  {
     "id": "b7eaaa5d8c6da743",
     "title": "Shiba Inu (SHIB) Builds 'Bull Combo': Will Weekly Chart Finally Delete a Zero?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4928,6 +4919,16 @@
     "title": "索赔324.8枚BTC、约合2720万美元,Lewis Barber起诉BitMEX运营方HDR Global Trading",
     "source": "Odaily星球日报 (中文快讯)",
     "sent_at": "2026-10-15T15:42:10.836952+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a6afdc9768879b86",
+    "title": "Bitcoin whale accumulation meets $760M in ETF outflows – Is BTC’s recovery at risk?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-15T16:04:08.191585+00:00",
     "tokens": [
       "BTC"
     ],
