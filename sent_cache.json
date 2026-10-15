@@ -1,14 +1,5 @@
 [
   {
-    "id": "dcace69da3c2455c",
-    "title": "Ripple Price Analysis: XRP Approaches a Critical Breakout Level After 8% Daily Surge",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-21T14:25:04.807876+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "041007f8ff27afd7",
     "title": "NEAR jumps nearly 80% in a week as Intents volume nears $30B",
     "source": "Cointelegraph (全球综合快讯)",
@@ -4952,6 +4943,16 @@
     "sent_at": "2026-10-15T23:04:48.200672+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "d41e9c5675d9603e",
+    "title": "Ethereum dips below $2,400 as hot inflation fuels selling and long liquidations",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-10-15T23:25:19.862031+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-TW"
   }
