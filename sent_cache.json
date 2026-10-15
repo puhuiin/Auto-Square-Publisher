@@ -1,14 +1,5 @@
 [
   {
-    "id": "981003d730e91152",
-    "title": "Solana's Heartbeat Quickens: Block Times Fall 17% in Latest Speed Upgrade",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-19T13:27:01.612641+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "5c776a8be0a5838c",
     "title": "'We're So Back?' Dogecoin Cofounder's Cryptic X Message Sparks Crypto Buzz",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4926,6 +4917,16 @@
     "sent_at": "2026-10-15T14:24:32.820366+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "bd320a3a628f4373",
+    "title": "新产品与奖励机制升级:Filecoin 加速面向企业与 AI Agent 的网络转型",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-15T14:44:55.118420+00:00",
+    "tokens": [
+      "FIL"
     ],
     "lang": "en"
   }
