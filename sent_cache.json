@@ -1,14 +1,5 @@
 [
   {
-    "id": "a16ba6a3b05d5421",
-    "title": "Fidelity surge brings in $310M BTC saving Bitcoin ETFs from a disastrous week",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-19T23:28:26.294892+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "399c74853d322cd1",
     "title": "Circle wants you to love USDC a little like you love Chelsea",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4934,6 +4925,16 @@
     "tokens": [
       "XRP",
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "db0e78f2df86de28",
+    "title": "DeFi Development boosts CHAD dividend to 14% amid push to grow Solana holdings",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-15T17:24:51.556485+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
