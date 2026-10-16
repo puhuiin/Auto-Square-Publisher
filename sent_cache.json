@@ -1,14 +1,5 @@
 [
   {
-    "id": "03f952d83de76387",
-    "title": "Dogecoin (DOGE) Faces Deep Discount as Elon Musk Reappears on Crypto Timeline",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-24T15:49:53.556918+00:00",
-    "tokens": [
-      "DOGE"
-    ]
-  },
-  {
     "id": "24d0316d319d3061",
     "title": "XRP and DOGE Are Deep in the Red: Could That Be a Bullish Signal?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4994,6 +4985,16 @@
     "title": "Polymarket Bitcoin and Rate Hike Odds Shift as CME Says No Change",
     "source": "CryptoNews (全球快讯)",
     "sent_at": "2026-10-16T15:44:04.852898+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9edcc0e40cd001ed",
+    "title": "Bitcoin steadies near $82,000 as Warsh declines to signal another Fed hike",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-16T16:07:15.012956+00:00",
     "tokens": [
       "BTC"
     ],
