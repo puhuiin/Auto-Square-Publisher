@@ -1,14 +1,5 @@
 [
   {
-    "id": "75c0294e4b5bcd00",
-    "title": "AI Boom Effect: Running Ethereum at Home Is Now Easier Than Ever, Vitalik Confirms",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-26T15:08:34.072080+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "023555c9668e7e97",
     "title": "Shiba Inu 657% Burn Rate Surge Sends 15.16 Million SHIB to Dead Wallets",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5018,6 +5009,17 @@
     "sent_at": "2026-10-16T23:24:47.762542+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "5b954bf31d5192cc",
+    "title": "STRK’s L1 Bet: Eli Ben-Sasson on Starknet’s Exit Plan",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-16T23:45:02.208156+00:00",
+    "tokens": [
+      "STRK",
+      "ETH"
     ],
     "lang": "zh-TW"
   }
