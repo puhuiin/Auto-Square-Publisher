@@ -1,14 +1,5 @@
 [
   {
-    "id": "b00ce3200ea0afaf",
-    "title": "Ethereum Crosses $2,700: Bull Trap or the Start of a Major Rally?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-21T18:50:53.016941+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "c3f9b6a52d9ffb35",
     "title": "Bitcoin hits $86,000 putting ETF investors back in profit after $86 billion wipeout",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4957,5 +4948,17 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "61f35f923b7dd756",
+    "title": "Multiliquid 开发商 Uniform Labs 完成 800 万美元融资,Polychain 领投",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-16T00:43:53.712753+00:00",
+    "tokens": [
+      "USDC",
+      "ETH",
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]

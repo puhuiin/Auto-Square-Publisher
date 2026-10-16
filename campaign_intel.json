@@ -17,26 +17,26 @@
   "strategy_guidance": "优先追S16英雄联盟全球总决赛预测活动的实时热度，结合赛事赛果、选手动态等角度发帖引导用户参与预测互动拿奖励；同时可搭配新上线的RWUSD、bStocks交易对动态，以及正在进行的现货交易赛Season6相关资讯，引导用户参与对应交易活动获取返佣，覆盖不同兴趣用户的互动需求。",
   "last_updated": "2026-10-15T17:04:15.725160Z",
   "_feed_health": {
-    "CryptoPotato (山寨币/Meme热点)": {
-      "fails": 1,
-      "last_fail": "2026-10-15T18:43:27.498451+00:00",
-      "reset_at": "2026-10-16T00:03:31.689976+00:00"
-    },
     "ZyCrypto (新币与空投)": {
-      "fails": 1,
       "last_fail": "2026-10-15T22:41:26.008379+00:00",
-      "reset_at": "2026-10-16T00:03:31.760000+00:00"
+      "fails": 1,
+      "reset_at": "2026-10-16T00:23:29.716891+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg",
-    "date": "2026-10-15"
+    "date": "2026-10-15",
+    "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-openrouter": {
+      "fails": 1,
+      "cooldown_until": "2026-10-16T00:53:21.071599+00:00"
+    }
+  },
   "_article_sent_date": "2026-10-15",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 35,
+  "_img_rot": 36,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
