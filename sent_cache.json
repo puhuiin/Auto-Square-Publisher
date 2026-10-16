@@ -1,14 +1,5 @@
 [
   {
-    "id": "00a3d8322ced23d6",
-    "title": "Solana’s 150-millisecond settlement upgrade reaches second public test network",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-09-26T12:23:59.026059+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "ad45cab59a6c147c",
     "title": "Bitget hacker moves $83 million in stolen XRP that Ripple cannot freeze",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5015,6 +5006,16 @@
     "sent_at": "2026-10-16T22:24:38.579160+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "23bf9c95d273e089",
+    "title": "Cross River Bank links $2.4B RLUSD to core banking system",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-16T22:44:31.379947+00:00",
+    "tokens": [
+      "RLUSD"
     ],
     "lang": "zh-CN"
   }
