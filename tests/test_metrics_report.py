@@ -7109,3 +7109,104 @@ class TestR755CampaignCtaRadarNarrowing(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TestR756LangViewPanelEraSplit(unittest.TestCase):
+    """★★ R756：按语种浏览面板必须给近/远半窗，否则崩盘会被读成语种反转
+
+    ★ 实测踩到：崩盘期（10-15 热 CPI）数据主导窗口后，⑥¾ 2×2 显示
+      en昼 22 > zh昼 10，而剔除崩盘期的同格实测是 zh昼 55.5 > en昼 36
+      ⇒ **方向相反**。混窗口均值把外部事件伪装成语种差异。
+    ⇒ ⑥½ 加「近半速率」列 + 2×2 加警示：近半整体坍塌 = 外部事件。
+    """
+
+    @staticmethod
+    def _ap():
+        import importlib.util
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "scripts", "audit_perf.py")
+        spec = importlib.util.spec_from_file_location("audit_perf_r756", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _rows(self):
+        """构造：远半窗 zh-CN 高浏览、近半窗 zh-CN 低浏览（模拟崩盘）
+
+        ⚠️ 面板的数据源是 ROOT/content_stats.jsonl，测试必须自备（否则走
+        "缺数据"分支，列根本不渲染 ⇒ 判据空转，R712 家族）。
+        """
+        import tempfile
+        from datetime import datetime, timedelta, timezone
+        rows = []
+        now = datetime.now(timezone.utc)
+        tmp = tempfile.mkdtemp()
+        stats = []
+        for i in range(8):
+            old = i < 4
+            ts = (now - timedelta(days=3 if old else 0, hours=1)).isoformat()
+            rows.append({"outcome": "binance_published", "ts": ts, "lang": "zh-CN",
+                         "final_preview": "ETH 跌破 2500，短线别追。",
+                         "content_id": "c%d" % i})
+            # 远半 3 天前发 ⇒ 曝光 ~3 天、浏览 300（速率 100）；近半 1 小时前发 ⇒
+            # 曝光 ~0.5 天、浏览 5（速率 10）⇒ 模拟"近半整体坍塌"。
+            stats.append({"content_id": "c%d" % i,
+                          "ts": (now - timedelta(hours=1)).isoformat(),
+                          "views": 300 if old else 5})
+        with open(os.path.join(tmp, "content_stats.jsonl"), "w", encoding="utf-8") as f:
+            for d in stats:
+                f.write(json.dumps(d) + chr(10))
+        return rows, tmp
+
+    def test_panel_shows_recent_half_column(self):
+        """★★ ⑥½ 必须打印「近半速率」列"""
+        import contextlib
+        import io
+        ap = self._ap()
+        rows, tmp = self._rows()
+        orig = ap.ROOT
+        ap.ROOT = tmp
+        try:
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                ap.report(rows, 24, None, None, None)
+            out = buf.getvalue()
+        finally:
+            ap.ROOT = orig
+        # ⚠️ 必须精确定位**表头行**：下方解读提示里也含「近半速率」三个字，
+        #    只 assertIn 会在删掉列头后仍通过（假阳性漏放，R755 同族）。
+        header = [l for l in out.splitlines() if "语种" in l and "样本" in l]
+        self.assertTrue(header, "没找到 ⑥½ 表头行 ⇒ 判据失效")
+        self.assertIn("近半速率", header[0],
+                      "⑥½ 表头缺近半速率列 ⇒ 崩盘期会被混窗均值读成语种差异（R756）")
+        # 数据行必须真的有第 6 列（不是只有表头）
+        # ⚠️ 排除 ⑥ 语种段的 "zh-CN 4 篇" 行（同前缀，会被误匹配）
+        data = [l for l in out.splitlines()
+                if l.strip().startswith("zh-CN") and "篇" not in l]
+        self.assertTrue(data, "没有 zh-CN 数据行")
+        self.assertGreaterEqual(len(data[0].split()), 6,
+                                "数据行列数不足 ⇒ 近半速率列没真正渲染")
+        # 并给出解读提示（否则读者不知道这一列是干什么的）
+        self.assertIn("近半", out, "缺近半/整窗对照的解读提示")
+
+    def test_panel_warns_about_regime_events(self):
+        """★ 2×2 面板必须带市场级事件警示"""
+        import contextlib
+        import io
+        ap = self._ap()
+        rows, tmp = self._rows()
+        orig = ap.ROOT
+        ap.ROOT = tmp
+        try:
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                ap.report(rows, 24, None, None, None)
+            out = buf.getvalue()
+        finally:
+            ap.ROOT = orig
+        self.assertIn("市场级事件", out,
+                      "2×2 缺市场级事件警示 ⇒ 崩盘期语种反转会被当真（R756）")
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

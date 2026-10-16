@@ -356,6 +356,11 @@ def report(rows, hours, since_iso=None, quota=None, prod=None):
                 cid2v[str(d.get("content_id"))] = v
                 cid2snap[str(d.get("content_id"))] = d.get("ts")
         hit = 0
+        # ★ R756：**近/远半窗分层**（R736 同款）。混窗口均值会把「市场崩盘」读成
+        #   「语种劣势反转」——实测：崩盘期数据主导后 2×2 显示 en昼 22 > zh昼 10，
+        #   而崩盘前同格实测是 zh昼 55.5 > en昼 36，方向相反。
+        #   分层后一眼看出"近半整体坍塌"（外部事件）vs"两半一致"（真实差异）。
+        lang_rows = []
         for r in pub:
             lg = r.get("lang")
             cid = str(r.get("content_id"))
@@ -366,19 +371,27 @@ def report(rows, hours, since_iso=None, quota=None, prod=None):
                 exp = _exposure_days(r.get("ts"), cid2snap.get(cid))
                 if exp:
                     lang_rates[lg].append(v / exp)
+                    lang_rows.append((lg, v / exp))
                 hit += 1
         print("\n⑥½ 按语种 × 浏览（join content_stats，命中 %d/%d 篇）" % (hit, len(pub)))
         if lang_views:
-            print("   %-8s %6s %10s %10s %12s"
-                  % ("语种", "样本", "原始中位", "原始均值", "速率中位/天"))
+            print("   %-8s %6s %10s %10s %12s %12s"
+                  % ("语种", "样本", "原始中位", "原始均值", "速率中位/天", "近半速率"))
+            # 近/远切分点：按发布事件时间排序后的后一半（与 quality_scan 同口径）
+            _lr_sorted = [x for x in lang_rows]
+            _split = (len(_lr_sorted) + 1) // 2
             for lg, vs in sorted(lang_views.items()):
                 rt = lang_rates.get(lg) or []
                 rt_s = "%.1f" % _median(rt) if rt else "—"
-                print("   %-8s %6d %10.0f %10.0f %12s"
-                      % (lg, len(vs), _median(vs), sum(vs) / len(vs), rt_s))
+                _rc = [r for l, r in _lr_sorted[_split:] if l == lg]
+                _rs = ("%.1f" % _median(_rc)) if _rc else "—"
+                print("   %-8s %6d %10.0f %10.0f %12s %12s"
+                      % (lg, len(vs), _median(vs), sum(vs) / len(vs), rt_s, _rs))
             print("   ★ 原始浏览是累积量（老帖吃饱/新帖没攒够）⇒ **以速率中位为准**；"
                   "lang 仅 R712 后有 ⇒ 带 lang 的帖都偏新、原始中位被系统性压低（R725 同型陷阱）")
             print("   ★ 样本 <5 时**不可据此下结论**（R704 的教训）")
+            print("   ★ 近半速率 vs 整窗：若近半**整体**远低于整窗 ⇒ 外部事件（如市场崩盘）"
+                  "而非语种差异（R756：崩盘期曾让 2×2 的语种结论整体反转）")
 
             # ⑥¾ R739 受控实验：语种×时段 2×2（off-pattern = 实验帖）
             #   R710 下 en 只在夜、zh 只在昼 ⇒ en-昼 / zh-夜 这两格**只可能来自 R739 实验**
@@ -418,6 +431,13 @@ def report(rows, hours, since_iso=None, quota=None, prod=None):
             else:
                 print("   ★ 判读：en-昼 vs zh-昼 = 纯语种效应；zh-夜 vs zh-昼 = 纯时段效应。"
                       "各 off 格 n<8 时仍不下结论（R725）")
+            # ★ R756：**市场级事件会让本面板的语种结论整体反转**（实测踩到）：
+            #   崩盘期数据主导窗口后，本面板显示 en昼 22 > zh昼 10；而剔除崩盘期的
+            #   同格实测是 zh昼 55.5 > en昼 36 ⇒ **方向相反**。
+            #   ⇒ 结构性结论（语种/时段效应）必须配合 ⑥½ 的「近半 vs 整窗」读：
+            #     近半整体坍塌 = 外部事件，别读成语种反转；两半一致才是真实差异。
+            print("   ⚠️ 本面板为整窗口径：市场级事件（如崩盘）会**整体**压低并可能反转"
+                  "语种对比 ⇒ 结构性判读前先看 ⑥½ 的近半/整窗是否一致（R756）")
         else:
             print("   ⚠️ 遥测里没有 lang 字段（R712 上线于 10-10 10:59），"
                   "或 content_id 未命中 ⇒ 本轮无法按语种归因")
