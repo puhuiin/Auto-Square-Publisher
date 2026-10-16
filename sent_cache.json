@@ -1,14 +1,5 @@
 [
   {
-    "id": "61b14757de806e53",
-    "title": "This Signal Has Flipped to Altcoin Season as Crypto Rally Spreads Beyond Bitcoin",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-22T11:48:22.153542+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "3e3c5ba5d9003138",
     "title": "Shiba Inu (SHIB) Breaks $50 Million Volume Barrier on Single Exchange",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4969,5 +4960,15 @@
       "STRK"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "60495036162cfcad",
+    "title": "Meme 幣平均 17.2 天見頂:速朽狂歡與資金大遷徙",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-16T03:09:50.085235+00:00",
+    "tokens": [
+      "DOGE"
+    ],
+    "lang": "zh-CN"
   }
 ]
