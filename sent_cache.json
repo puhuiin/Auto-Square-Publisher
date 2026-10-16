@@ -1,14 +1,5 @@
 [
   {
-    "id": "f5c0f3ecc686c07e",
-    "title": "SEC Commissioner Hester ‘Crypto Mom’ Peirce Advocates Privacy-Preserving Tech",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-09-24T21:44:22.399992+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "2a6642319a6b7ecc",
     "title": "Fed proposes new capital, redemption rules for stablecoin issuers",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5000,6 +4991,16 @@
     "tokens": [
       "TIA",
       "STRK",
+      "INJ"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3529ae7933b1453f",
+    "title": "Injective (INJ) Explodes to a 1-Year High: Has Its Bull Run Begun?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-16T17:07:57.913073+00:00",
+    "tokens": [
       "INJ"
     ],
     "lang": "en"
