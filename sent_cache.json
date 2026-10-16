@@ -1,14 +1,5 @@
 [
   {
-    "id": "1f59e8c70bd32a58",
-    "title": "Bitcoin ETF Inflows Suddenly Turn Positive for 2026",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-23T19:29:12.347679+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "1cb9440e96940e92",
     "title": "Former Hack VC partner Hsin-Ju Chuang found dead at 37",
     "source": "Cointelegraph (全球综合快讯)",
@@ -4988,6 +4979,16 @@
     "tokens": [
       "BTC",
       "RWUSD"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "2b66bce1986f24fc",
+    "title": "Google Quantum 40x Breakthrough Rekindles Fears of Q-Day",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-16T12:08:52.769058+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
