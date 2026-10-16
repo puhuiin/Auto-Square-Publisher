@@ -1,14 +1,5 @@
 [
   {
-    "id": "4fe06bc638a41a59",
-    "title": "MultiversX restarts after exploit halt, but Kraken still bars new EGLD trades",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-25T12:08:31.182873+00:00",
-    "tokens": [
-      "EGLD"
-    ]
-  },
-  {
     "id": "c4ac355fa09cbaa1",
     "title": "XRP Held by Whales Breaks Records: Analyzing XRP Price Effect",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5006,6 +4997,16 @@
     "sent_at": "2026-10-16T18:24:37.151067+00:00",
     "tokens": [
       "TIA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "54d4a0a754c321dc",
+    "title": "Ethereum Price Prediction: ETH Outpaces the Market as Crypto Rebounds",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-16T18:44:20.555310+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
