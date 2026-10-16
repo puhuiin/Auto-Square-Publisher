@@ -1,15 +1,5 @@
 [
   {
-    "id": "c01d934a20b1d611",
-    "title": "Stellar (XLM) Rally Proves Stronger Than XRP's at Key 50-Week Barrier",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-22T15:45:54.484218+00:00",
-    "tokens": [
-      "XLM",
-      "XRP"
-    ]
-  },
-  {
     "id": "393342a82f65155a",
     "title": "Zcash gets first European ETP following US ETF launch",
     "source": "Cointelegraph (全球综合快讯)",
@@ -4976,5 +4966,16 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "7bc42cacd3075e4f",
+    "title": "Robinhood生态HOOKR市值短时突破3200万美元,创历史新高",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-16T05:07:03.226265+00:00",
+    "tokens": [
+      "ETH",
+      "UNI"
+    ],
+    "lang": "zh-TW"
   }
 ]
