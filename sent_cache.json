@@ -1,14 +1,5 @@
 [
   {
-    "id": "3cccee4df2dd0922",
-    "title": "Why Bitcoin’s rally is dangerous according to new Fed data",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-22T19:27:21.091546+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "82c596faf66fa263",
     "title": "Cardano Joins Solana, XRPL in AI Agent Payments Race as ADA Gains 6%",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4975,6 +4966,18 @@
     "sent_at": "2026-10-16T05:27:50.106992+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a4dc7f31d2a45adf",
+    "title": "应用层迎来爆发,盘点 7 款即刻可用的前沿链上隐私应用",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-16T05:45:47.377441+00:00",
+    "tokens": [
+      "ETH",
+      "ZEC",
+      "SOL"
     ],
     "lang": "zh-CN"
   }

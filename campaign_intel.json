@@ -18,8 +18,8 @@
   "last_updated": "2026-10-16T05:24:00.846964Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
-      "reset_at": "2026-10-16T05:24:02.181398+00:00",
       "last_fail": "2026-10-16T04:23:31.145915+00:00",
+      "reset_at": "2026-10-16T05:43:30.292842+00:00",
       "fails": 1
     }
   },
@@ -27,12 +27,7 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg",
     "date": "2026-10-15"
   },
-  "_llm_breaker": {
-    "Preset-stepfun-flash": {
-      "fails": 1,
-      "cooldown_until": "2026-10-16T05:34:26.575471+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-10-16",
   "_publish_park": {},
   "_intel_refresh_fail": {},
