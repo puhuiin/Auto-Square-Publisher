@@ -1,16 +1,5 @@
 [
   {
-    "id": "82c596faf66fa263",
-    "title": "Cardano Joins Solana, XRPL in AI Agent Payments Race as ADA Gains 6%",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-22T21:29:42.940861+00:00",
-    "tokens": [
-      "ADA",
-      "SOL",
-      "XRP"
-    ]
-  },
-  {
     "id": "c7e9ab9506479897",
     "title": "Zcash 攻進歐洲!21shares 上線 ZEC ETP,灰度美國 ETF 後再擴張",
     "source": "BlockTempo (动区动趋中文)",
@@ -4980,5 +4969,17 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "54d9c4bf6da85a85",
+    "title": "應用層迎來爆發,盤點 7 款即刻可用的前沿鏈上隱私應用",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-16T06:08:34.656274+00:00",
+    "tokens": [
+      "ETH",
+      "ZEC",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
