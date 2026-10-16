@@ -16,13 +16,7 @@
   ],
   "strategy_guidance": "优先围绕仍在进行的现货交易锦标赛、币安P2P七周年活动、新上线资产及零手续费交易规则创作内容，引导读者参与官方活动互动与合规交易。可结合$RWUSD、$KGST零手续费交易福利，以及$BNB相关交易赛规则输出操作指引类内容，绑定#Write2Earn活动引导评论互动拿奖励。",
   "last_updated": "2026-10-16T05:24:00.846964Z",
-  "_feed_health": {
-    "CryptoNews (全球快讯)": {
-      "last_fail": "2026-10-16T07:43:49.551454+00:00",
-      "reset_at": "2026-10-16T13:26:00.845725+00:00",
-      "fails": 1
-    }
-  },
+  "_feed_health": {},
   "_fallback_image": {
     "date": "2026-10-15",
     "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg"
