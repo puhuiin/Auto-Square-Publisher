@@ -1,15 +1,5 @@
 [
   {
-    "id": "24d0316d319d3061",
-    "title": "XRP and DOGE Are Deep in the Red: Could That Be a Bullish Signal?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-24T19:09:14.950425+00:00",
-    "tokens": [
-      "XRP",
-      "DOGE"
-    ]
-  },
-  {
     "id": "ecf06422e00ccb1a",
     "title": "SUI Flashes a Key Macro Signal: Has the Bull Market Begun?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4996,6 +4986,17 @@
     "source": "Crypto Briefing (深度与研报)",
     "sent_at": "2026-10-16T16:07:15.012956+00:00",
     "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c57c3030f9b09113",
+    "title": "Filecoin – How rising whale demand could extend FIL’s 14% gains",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-16T16:27:39.607905+00:00",
+    "tokens": [
+      "FIL",
       "BTC"
     ],
     "lang": "en"
