@@ -1,15 +1,5 @@
 [
   {
-    "id": "c3b704430b993650",
-    "title": "IOTA Rival Dropped by Coinbase",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-23T23:48:51.350721+00:00",
-    "tokens": [
-      "IOTA",
-      "IOTX"
-    ]
-  },
-  {
     "id": "a17c993ad5b1e132",
     "title": "Bitcoin Cash (BCH), ZCash (ZEC), Uniswap (UNI) and Shiba Inu (SHIB) Price Analysis for September 24: Bulls Take Unexpected Bets",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4991,5 +4981,16 @@
       "ZRO"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "2310615d741cbafd",
+    "title": "TechFlow 情報局:Anthropic 增長神話破滅被砍到 1.5 萬億估值,特斯拉 Roadster 能飛能翻滾還能倒著開",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-16T12:50:27.998854+00:00",
+    "tokens": [
+      "ETH",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
