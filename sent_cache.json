@@ -1,15 +1,5 @@
 [
   {
-    "id": "4197b010badfa87c",
-    "title": "Shiba Inu (SHIB) Secures Most Bullish Q3 Ever: Why October Hides a 167% Trigger",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-23T14:23:49.190399+00:00",
-    "tokens": [
-      "SHIB",
-      "PENGU"
-    ]
-  },
-  {
     "id": "4d28f7a81854ef02",
     "title": "534 Billion Shiba Inu (SHIB) Traded in 24 Hours: Is It the Stopping Point for the Memecoin?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4985,5 +4975,15 @@
       "RWUSD"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ba500b4c543bd7fe",
+    "title": "NEAR 上线支持隐私账户的 SOL 收益金库",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-16T08:25:08.140052+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
