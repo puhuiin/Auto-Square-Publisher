@@ -1,14 +1,5 @@
 [
   {
-    "id": "d888333af58970ae",
-    "title": "L2 growth and $120 billion in staking hide Ethereum’s supply reality",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-21T23:45:06.393847+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "471f23a28666b926",
     "title": "X Sues Two Bitcoin Influencers Over Bot Army That Milked Creator Payouts",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -4962,6 +4953,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b94830a691c57389",
+    "title": "Ledger 被盗大户实为刷单诈骗犯:损失逾 60 枚 BTC",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-16T01:45:20.101771+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
