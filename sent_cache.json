@@ -1,16 +1,5 @@
 [
   {
-    "id": "808ae0e21cef713d",
-    "title": "Bitcoin Rally Slows as $15.6 Billion Options Expiry Hits—XRP and Solana Keep Climbing",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-25T19:46:13.656864+00:00",
-    "tokens": [
-      "XRP",
-      "BTC",
-      "SOL"
-    ]
-  },
-  {
     "id": "d30bfa867f4221e3",
     "title": "Former Hack VC partner Hsin-Ju Chuang’s death ruled a suicide",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5012,6 +5001,16 @@
     "sent_at": "2026-10-16T20:44:28.824810+00:00",
     "tokens": [
       "STRK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9c47c2820f6c4585",
+    "title": "Stellar Eyes 200% Rally as XLM Closes In on $1 Billion Stablecoin Milestone",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-16T21:04:03.071530+00:00",
+    "tokens": [
+      "XLM"
     ],
     "lang": "en"
   }
