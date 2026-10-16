@@ -1,14 +1,5 @@
 [
   {
-    "id": "355ce648f1c9875b",
-    "title": "Shiba Inu Rally May Resume: 74 Billion SHIB Netflow Confirms Brewing Demand",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-24T14:44:50.621661+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "7234d03e7b7ae969",
     "title": "Binance Delisting Countdown: 13 Pairs Face Removal as Hyperliquid (HYPE) Arrives",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4993,6 +4984,16 @@
     "sent_at": "2026-10-16T14:47:07.433230+00:00",
     "tokens": [
       "PYTH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "68ee0567c7fe1a1d",
+    "title": "Injective jumps 27% in a day, leaving NEAR and Sei behind",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-16T15:07:22.845345+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "en"
   }
