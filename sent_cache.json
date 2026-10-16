@@ -1,14 +1,5 @@
 [
   {
-    "id": "6728674f2997c041",
-    "title": "Bloomberg’s James Seyffart: Why Trillions in Advisor Wealth Could Flow Into Bitcoin",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-09-24T14:23:57.847456+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "355ce648f1c9875b",
     "title": "Shiba Inu Rally May Resume: 74 Billion SHIB Netflow Confirms Brewing Demand",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4992,6 +4983,16 @@
     "sent_at": "2026-10-16T14:26:57.428745+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1873deafb77b17f8",
+    "title": "Why PYTH crypto faces a crucial $0.10 test after 45% volume surge",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-16T14:47:07.433230+00:00",
+    "tokens": [
+      "PYTH"
     ],
     "lang": "en"
   }
