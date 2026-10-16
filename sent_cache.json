@@ -1,14 +1,5 @@
 [
   {
-    "id": "c4ac355fa09cbaa1",
-    "title": "XRP Held by Whales Breaks Records: Analyzing XRP Price Effect",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-25T14:26:26.130406+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "seed::bitget-hack-2026-09::2",
     "title": "Bitget 事件后行业驰援 Bybit CEO 主动伸援手 受影响资产有望修复 $XRP $AVAX 韧性可期",
     "source": "priority_seed:bitget-hack",
@@ -5007,6 +4998,16 @@
     "sent_at": "2026-10-16T18:44:20.555310+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "302149dca8cc2229",
+    "title": "Nvidia reportedly bars neoclouds from GTC Berlin over AMD and TPU use",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-16T19:04:28.895332+00:00",
+    "tokens": [
+      "GTC"
     ],
     "lang": "en"
   }
