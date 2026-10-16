@@ -1,14 +1,5 @@
 [
   {
-    "id": "781769256438f0c9",
-    "title": "Binance buys $100 million Circle stake in five-year USDC promotion deal",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-09-22T11:27:24.781096+00:00",
-    "tokens": [
-      "USDC"
-    ]
-  },
-  {
     "id": "61b14757de806e53",
     "title": "This Signal Has Flipped to Altcoin Season as Crypto Rally Spreads Beyond Bitcoin",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4966,5 +4957,17 @@
       "ZEC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ee35c138cbb0b083",
+    "title": "加密市场小幅反弹,AI板块上涨3.63%,仅Meme及CeFi板块下跌",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-16T02:45:12.924059+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "STRK"
+    ],
+    "lang": "zh-TW"
   }
 ]
