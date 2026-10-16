@@ -1,14 +1,5 @@
 [
   {
-    "id": "c825cea315fadb00",
-    "title": "Bitcoin posts on X can pay even when Bitcoin doesn’t",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-26T11:48:53.297060+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "00a3d8322ced23d6",
     "title": "Solana’s 150-millisecond settlement upgrade reaches second public test network",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5016,5 +5007,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f54229f4b4603599",
+    "title": "Cardano governance hits a wall as treasury reaches 91% cap",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-16T22:24:38.579160+00:00",
+    "tokens": [
+      "ADA"
+    ],
+    "lang": "zh-CN"
   }
 ]
