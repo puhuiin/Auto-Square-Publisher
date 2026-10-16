@@ -1,14 +1,5 @@
 [
   {
-    "id": "5d37a19e054ecfa6",
-    "title": "History Repeating? Cardano (ADA) Could be Gearing Up for a 1,000% Explosion",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-25T15:23:59.434543+00:00",
-    "tokens": [
-      "ADA"
-    ]
-  },
-  {
     "id": "9289cfb8769c1d85",
     "title": "Ethena Partners With Binance to Back USDe With a Tokenized Stock Basis Trade",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5009,6 +5000,17 @@
       "XRP",
       "AVAX",
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "seed::bitget-hack-2026-09::1",
+    "title": "Bitget 被盗复盘：后台系统被入侵伪造授权签名 冷钱包安然无恙 $ETH $BNB 自托管更显价值",
+    "source": "priority_seed:bitget-hack",
+    "sent_at": "2026-10-16T20:04:16.766288+00:00",
+    "tokens": [
+      "ETH",
+      "BNB"
     ],
     "lang": "en"
   }
