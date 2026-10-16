@@ -18,14 +18,14 @@
   "last_updated": "2026-10-16T05:24:00.846964Z",
   "_feed_health": {
     "CryptoNews (全球快讯)": {
-      "reset_at": "2026-10-16T09:43:34.322471+00:00",
       "fails": 1,
-      "last_fail": "2026-10-16T07:43:49.551454+00:00"
+      "last_fail": "2026-10-16T07:43:49.551454+00:00",
+      "reset_at": "2026-10-16T09:43:34.322471+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-15",
-    "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg",
+    "date": "2026-10-15"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-16",
