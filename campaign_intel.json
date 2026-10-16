@@ -29,8 +29,8 @@
   },
   "_llm_breaker": {
     "Preset-openrouter": {
-      "fails": 1,
-      "cooldown_until": "2026-10-16T00:53:21.071599+00:00"
+      "cooldown_until": "2026-10-16T00:53:21.071599+00:00",
+      "fails": 1
     }
   },
   "_article_sent_date": "2026-10-15",
