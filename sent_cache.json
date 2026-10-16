@@ -1,16 +1,5 @@
 [
   {
-    "id": "3b67b63fd1846e73",
-    "title": "Dogecoin (DOGE), Shiba Inu (SHIB), Near Protocol (NEAR) and Zcash (ZEC) Price Analysis For September 23: Volatility Breaks All Limits",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-23T03:15:55.076383+00:00",
-    "tokens": [
-      "DOGE",
-      "SHIB",
-      "ZEC"
-    ]
-  },
-  {
     "id": "3797e0024c29cb64",
     "title": "Bitcoin faces $16 billion options expiry Friday, then two more tests hit the rally",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -4983,5 +4972,16 @@
       "RWUSD"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "97f3ee5e9e18a6ea",
+    "title": "币安将支持VELODROME代币合并至Aerodrome及AERO合约置换",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-16T07:05:34.276052+00:00",
+    "tokens": [
+      "VELODROME",
+      "AERO"
+    ],
+    "lang": "zh-TW"
   }
 ]
