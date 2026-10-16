@@ -1,14 +1,5 @@
 [
   {
-    "id": "9774d75571a598f1",
-    "title": "Ethereum (ETH) Price Analysis: Bulls Eye $3K Following Breakout Above $2.7K Resistance",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-22T14:27:16.439676+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "0c09a691b2c27f04",
     "title": "Countdown to Cardano's 9th Anniversary: History Behind ADA Naming Emerges",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4973,5 +4964,16 @@
       "AAVE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "7c249fb39d800155",
+    "title": "Castle Labs 研报:Solana 构建全栈链上经济,从消费级应用到 RWA 飞轮",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-16T04:24:41.926610+00:00",
+    "tokens": [
+      "SOL",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
