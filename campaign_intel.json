@@ -18,24 +18,20 @@
   "last_updated": "2026-10-15T17:04:15.725160Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
+      "last_fail": "2026-10-16T04:23:31.145915+00:00",
       "fails": 1,
-      "last_fail": "2026-10-16T04:23:31.145915+00:00"
-    },
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "reset_at": "2026-10-16T04:23:31.581113+00:00",
-      "last_fail": "2026-10-15T22:41:26.008379+00:00"
+      "reset_at": "2026-10-16T04:43:30.209087+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg",
-    "date": "2026-10-15"
+    "date": "2026-10-15",
+    "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-16",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 40,
+  "_img_rot": 41,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

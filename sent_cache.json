@@ -1,14 +1,5 @@
 [
   {
-    "id": "0c09a691b2c27f04",
-    "title": "Countdown to Cardano's 9th Anniversary: History Behind ADA Naming Emerges",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-22T14:37:23.698948+00:00",
-    "tokens": [
-      "ADA"
-    ]
-  },
-  {
     "id": "c01d934a20b1d611",
     "title": "Stellar (XLM) Rally Proves Stronger Than XRP's at Key 50-Week Barrier",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4972,6 +4963,16 @@
     "sent_at": "2026-10-16T04:24:41.926610+00:00",
     "tokens": [
       "SOL",
+      "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "053406eaee972807",
+    "title": "以太坊现货ETF昨日总净流出6022.22万美元,贝莱德ETHA净流出4438.61万美元居首",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-16T04:44:10.522638+00:00",
+    "tokens": [
       "ETH"
     ],
     "lang": "zh-CN"
