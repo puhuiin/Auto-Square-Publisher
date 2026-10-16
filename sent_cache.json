@@ -1,14 +1,5 @@
 [
   {
-    "id": "93473d0ae6189e00",
-    "title": "Solana moves Alpenglow into testnet as SOL nears January highs",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-23T14:48:58.076435+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "f85aedd309d6a107",
     "title": "Solana Hits Highest-Ever RWA Value at $4.6 Billion",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4986,5 +4977,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "25bae72d8c4bab5b",
+    "title": "单月反弹 70%、3 家机构申报 ETF,拆解 INJ 暴涨背后的数据真相",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-16T09:08:41.063552+00:00",
+    "tokens": [
+      "INJ"
+    ],
+    "lang": "zh-CN"
   }
 ]
