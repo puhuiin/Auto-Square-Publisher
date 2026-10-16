@@ -1,14 +1,5 @@
 [
   {
-    "id": "9289cfb8769c1d85",
-    "title": "Ethena Partners With Binance to Back USDe With a Tokenized Stock Basis Trade",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-25T16:03:40.921638+00:00",
-    "tokens": [
-      "ENA"
-    ]
-  },
-  {
     "id": "ac1dbddcde60ae55",
     "title": "Circle and Tether Freeze Stablecoins Tied to Bitget Hack—But Most Funds Slip Away",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5011,6 +5002,16 @@
     "tokens": [
       "ETH",
       "BNB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f98bc152bb5be1b2",
+    "title": "SEI Perpetual Futures Trade on CFTC-Regulated OG.com Markets",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-16T20:24:36.242055+00:00",
+    "tokens": [
+      "SEI"
     ],
     "lang": "en"
   }
