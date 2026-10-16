@@ -1,15 +1,5 @@
 [
   {
-    "id": "ac1dbddcde60ae55",
-    "title": "Circle and Tether Freeze Stablecoins Tied to Bitget Hack—But Most Funds Slip Away",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-25T19:24:42.573901+00:00",
-    "tokens": [
-      "USDC",
-      "ETH"
-    ]
-  },
-  {
     "id": "808ae0e21cef713d",
     "title": "Bitcoin Rally Slows as $15.6 Billion Options Expiry Hits—XRP and Solana Keep Climbing",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5012,6 +5002,16 @@
     "sent_at": "2026-10-16T20:24:36.242055+00:00",
     "tokens": [
       "SEI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b442aa92f78c7ace",
+    "title": "Starknet’s STRK Climbs 210% in Four Weeks, but Can the Rally Last?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-16T20:44:28.824810+00:00",
+    "tokens": [
+      "STRK"
     ],
     "lang": "en"
   }
