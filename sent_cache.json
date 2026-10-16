@@ -1,14 +1,5 @@
 [
   {
-    "id": "c7e9ab9506479897",
-    "title": "Zcash 攻進歐洲!21shares 上線 ZEC ETP,灰度美國 ETF 後再擴張",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-09-22T23:47:11.619901+00:00",
-    "tokens": [
-      "ZEC"
-    ]
-  },
-  {
     "id": "3b67b63fd1846e73",
     "title": "Dogecoin (DOGE), Shiba Inu (SHIB), Near Protocol (NEAR) and Zcash (ZEC) Price Analysis For September 23: Volatility Breaks All Limits",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4981,5 +4972,16 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e2ed2e5e9baf014f",
+    "title": "GasFree 用户突破 50 万,TRC-20 代币转账免持 TRX 更便捷",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-16T06:48:20.597853+00:00",
+    "tokens": [
+      "TRX",
+      "RWUSD"
+    ],
+    "lang": "zh-CN"
   }
 ]
