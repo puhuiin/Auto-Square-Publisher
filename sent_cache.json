@@ -1,14 +1,5 @@
 [
   {
-    "id": "7ee01a98bb00b5e4",
-    "title": "Nearly $20 million in XRP drained from 6,678 wallets across six attack waves",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-23T19:07:14.368094+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "1f59e8c70bd32a58",
     "title": "Bitcoin ETF Inflows Suddenly Turn Positive for 2026",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -4986,6 +4977,17 @@
     "sent_at": "2026-10-16T09:44:56.295623+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "aab35116db2be4c4",
+    "title": "SEC 批准 23 家美股上市公司 KPI 二元期权上市,涉及 Coinbase、Robinhood 及 MARA",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-16T11:44:56.823106+00:00",
+    "tokens": [
+      "BTC",
+      "RWUSD"
     ],
     "lang": "zh-CN"
   }
