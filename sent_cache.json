@@ -1,15 +1,5 @@
 [
   {
-    "id": "d30bfa867f4221e3",
-    "title": "Former Hack VC partner Hsin-Ju Chuang’s death ruled a suicide",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-09-25T21:46:17.501985+00:00",
-    "tokens": [
-      "XLM",
-      "SOL"
-    ]
-  },
-  {
     "id": "ea226a4c6fd08924",
     "title": "Bitget clarifies $388M in assets affected by security breach",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5011,6 +5001,16 @@
     "sent_at": "2026-10-16T21:04:03.071530+00:00",
     "tokens": [
       "XLM"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1fc11c862682390c",
+    "title": "Charles Hoskinson Reveals What Comes After Smart Contracts as Cardano Pushes Into AI",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-16T21:24:37.702574+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
