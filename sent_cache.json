@@ -1,15 +1,5 @@
 [
   {
-    "id": "seed::bitget-hack-2026-09::1",
-    "title": "Bitget 被盗复盘：后台系统被入侵伪造授权签名 冷钱包安然无恙 $ETH $BNB 自托管更显价值",
-    "source": "priority_seed:bitget-hack",
-    "sent_at": "2026-09-25T15:06:24.651400+00:00",
-    "tokens": [
-      "ETH",
-      "BNB"
-    ]
-  },
-  {
     "id": "5d37a19e054ecfa6",
     "title": "History Repeating? Cardano (ADA) Could be Gearing Up for a 1,000% Explosion",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5007,6 +4997,18 @@
     "sent_at": "2026-10-16T19:24:06.588679+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "seed::bitget-hack-2026-09::2",
+    "title": "Bitget 事件后行业驰援 Bybit CEO 主动伸援手 受影响资产有望修复 $XRP $AVAX 韧性可期",
+    "source": "priority_seed:bitget-hack",
+    "sent_at": "2026-10-16T19:44:35.079141+00:00",
+    "tokens": [
+      "XRP",
+      "AVAX",
+      "BTC"
     ],
     "lang": "en"
   }
