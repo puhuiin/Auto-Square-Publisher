@@ -1,14 +1,5 @@
 [
   {
-    "id": "ea7e3e0fdb7e46db",
-    "title": "Dogecoin Ten-Cents Dream Gets Closer as Price Eyes Crucial Breakout, OI Up 16%",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-21T15:28:27.328142+00:00",
-    "tokens": [
-      "DOGE"
-    ]
-  },
-  {
     "id": "b00ce3200ea0afaf",
     "title": "Ethereum Crosses $2,700: Bull Trap or the Start of a Major Rally?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -4956,5 +4947,15 @@
       "AAVE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "213bebca9b42970f",
+    "title": "Ripple Taps $9 Billion Perpetual Futures Boom",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-16T00:04:39.893246+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
