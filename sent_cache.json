@@ -1,16 +1,5 @@
 [
   {
-    "id": "seed::bitget-hack-2026-09::2",
-    "title": "Bitget 事件后行业驰援 Bybit CEO 主动伸援手 受影响资产有望修复 $XRP $AVAX 韧性可期",
-    "source": "priority_seed:bitget-hack",
-    "sent_at": "2026-09-25T14:46:30.265315+00:00",
-    "tokens": [
-      "XRP",
-      "AVAX",
-      "BTC"
-    ]
-  },
-  {
     "id": "seed::bitget-hack-2026-09::1",
     "title": "Bitget 被盗复盘：后台系统被入侵伪造授权签名 冷钱包安然无恙 $ETH $BNB 自托管更显价值",
     "source": "priority_seed:bitget-hack",
@@ -5008,6 +4997,16 @@
     "sent_at": "2026-10-16T19:04:28.895332+00:00",
     "tokens": [
       "GTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0df83e307dbebd2b",
+    "title": "Fortitude sold $8.3 million in borrowed Zcash to fund its mining expansion",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-16T19:24:06.588679+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
