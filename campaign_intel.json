@@ -3,35 +3,40 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#LOLWorlds",
-    "#P2P"
+    "#BinanceP2P",
+    "#NewListing"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$FF",
-    "$BTC",
+    "$KGST",
     "$RWUSD",
-    "$USDT",
-    "$USDC"
+    "$BTC",
+    "$USDT"
   ],
-  "strategy_guidance": "优先追S16英雄联盟全球总决赛预测活动的实时热度，结合赛事赛果、选手动态等角度发帖引导用户参与预测互动拿奖励；同时可搭配新上线的RWUSD、bStocks交易对动态，以及正在进行的现货交易赛Season6相关资讯，引导用户参与对应交易活动获取返佣，覆盖不同兴趣用户的互动需求。",
-  "last_updated": "2026-10-15T17:04:15.725160Z",
+  "strategy_guidance": "优先围绕仍在进行的现货交易锦标赛、币安P2P七周年活动、新上线资产及零手续费交易规则创作内容，引导读者参与官方活动互动与合规交易。可结合$RWUSD、$KGST零手续费交易福利，以及$BNB相关交易赛规则输出操作指引类内容，绑定#Write2Earn活动引导评论互动拿奖励。",
+  "last_updated": "2026-10-16T05:24:00.846964Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
-      "fails": 1,
-      "reset_at": "2026-10-16T05:03:25.758868+00:00",
-      "last_fail": "2026-10-16T04:23:31.145915+00:00"
+      "reset_at": "2026-10-16T05:24:02.181398+00:00",
+      "last_fail": "2026-10-16T04:23:31.145915+00:00",
+      "fails": 1
     }
   },
   "_fallback_image": {
-    "date": "2026-10-15",
-    "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261015/87f50f7b3c474f7b8af768877d8053f8.jpg",
+    "date": "2026-10-15"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun-flash": {
+      "fails": 1,
+      "cooldown_until": "2026-10-16T05:34:26.575471+00:00"
+    }
+  },
   "_article_sent_date": "2026-10-16",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 42,
+  "_img_rot": 43,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
