@@ -20500,15 +20500,24 @@ class TestR741CampaignCtaRepetitionRadar(unittest.TestCase):
         return mod
 
     def test_regex_matches_cta_boilerplate(self):
-        """★ 命中活动 CTA 套话引入句（顺便提一嘴/KGST/零手续费）"""
+        """★ 命中活动 CTA 套话**引入句**（顺便提一嘴/顺便提醒类）
+
+        ⚠️ R755 收窄：原第三个样本「KGST/USDT 零手续费 14 号截止」（纯活动内容、
+        无引入句）已移入**不命中**组——战役期提活动是返佣红线**要求**的行为，
+        把它算成套话复读会让雷达在战役期恒定误报 50%（实测误报，详见
+        TestR755CampaignCtaRadarNarrowing）。织入率由回执 campaign_tag_count 跟踪。
+        """
         mr = self._mr()
         for s in ["顺便提一嘴,币安 KGST/USDT 零手续费活动 10/14 截止",
                   "顺便提醒下,现在有现货期货交易锦标赛",
-                  "KGST/USDT 零手续费 14 号截止"]:
+                  "順便提一嘴,期貨交易競賽還在跑",
+                  "再提一嘴,S16 预测活动有奖励。"]:
             self.assertTrue(mr._CAMPAIGN_CTA_RE.search(s), "应命中：%s" % s)
-        for s in ["ETH 跌破 2500，短线别追", "合约别上高杠杆,止损带紧"]:
+        for s in ["ETH 跌破 2500，短线别追", "合约别上高杠杆,止损带紧",
+                  "KGST/USDT 零手续费 14 号截止",
+                  "想参与的话币安现货锦标赛还有奖池,零手续费也能省成本"]:
             self.assertIsNone(mr._CAMPAIGN_CTA_RE.search(s),
-                              "无关正文不该命中（否则与普通内容混淆）：%s" % s)
+                              "无关正文/单纯提活动不该命中（否则与普通内容混淆）：%s" % s)
 
     def test_quality_scan_tracks_per_post_with_split(self):
         """★ 字段落 quality_scan + 按帖计一次 + 近/远半窗（同 flat_desc 口径）"""

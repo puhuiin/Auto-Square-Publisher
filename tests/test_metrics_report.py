@@ -7041,3 +7041,71 @@ class TestR750DailyReportQualitySection(unittest.TestCase):
                  "lang": "zh-CN", "tokens": ["ETH"]} for i in range(20)]
         text = dr.build_report(rows, 24)
         self.assertIn("未检出", text, "全零时未明说 ⇒ 读者无法区分'干净'与'没测'")
+
+
+class TestR755CampaignCtaRadarNarrowing(unittest.TestCase):
+    """★★ R755：活动CTA雷达只量「引入句逐字复读」，不提活动内容词
+
+    ★ 误报实证：R746 菜单上线后的新战役里，引入句实际只有 1/118 篇复用
+      「顺便提一嘴」（10 种不同引入方式各出现一次 ⇒ 轮换生效），
+      但雷达因把 KGST/零手续费 也算进匹配而报 **50%** 假警报
+      ⇒ 差点驱动一次"修复没生效"的错误 prompt 加固（R616/R734 同族陷阱）。
+    ★ 判据：战役期提活动是**返佣红线要求的行为**（每帖都提说明织入正常），
+      回执侧另有 `campaign_tag_count` 跟踪织入率 ⇒ 本雷达只量引入句复读。
+    """
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r755",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_campaign_mention_is_not_repetition(self):
+        """★★★ 提活动（含 KGST/零手续费）不得判为套话复读"""
+        mr = self._mr()
+        for s in ["想参与的话币安现货锦标赛还有奖池,KGST 也支持零手续费交易,合规玩就行。",
+                  "对了,RWUSD 和 KGST 零手续费活动还在,想操作的不用额外掏成本。",
+                  "最近币安P2P七周年有零手续费活动,交易 $ZRO 也能省点成本。"]:
+            self.assertIsNone(mr._CAMPAIGN_CTA_RE.search(s),
+                              "提活动被判成复读 ⇒ 战役期必假警报: %s" % s[:30])
+
+    def test_leadin_reuse_still_detected(self):
+        """★ 反向：引入句逐字复用必须仍能抓到（R741 的原使命）"""
+        mr = self._mr()
+        for s in ["顺便提一嘴,币安 P2P 七周年活动现在跨境转账零手续费。",
+                  "顺便提醒,现货锦标赛 S6 还在进行。",
+                  "順便提一嘴,期貨交易競賽還在跑。",
+                  "再提一嘴,S16 预测活动有奖励。"]:
+            self.assertIsNotNone(mr._CAMPAIGN_CTA_RE.search(s),
+                                 "引入句复读漏检 ⇒ R741 的使命被削弱: %s" % s[:20])
+
+    def test_regex_excludes_campaign_content_tokens(self):
+        """★★ 正则源码不得含活动内容词（防将来有人"补全"把误报加回来）"""
+        # ⚠️ 用 .pattern 而非 getsource：源码含上方注释，注释里点名这些词
+        # （解释为何移除）会把判据变成恒假（R699 同族：判据要指向真实定义）。
+        pat = mr._CAMPAIGN_CTA_RE.pattern
+        for w in ("KGST", "零手續費", "零手续费", "锦标赛"):
+            self.assertNotIn(w, pat,
+                             "正则又含活动内容词 %s ⇒ 提活动会被误判成复读" % w)
+
+    def test_quality_scan_counts_per_post(self):
+        """★ 端到端：20 篇里 1 篇复用引入句 ⇒ 计数 1（不是按词频）"""
+        mr = self._mr()
+        rows = []
+        for i in range(20):
+            body = ("顺便提一嘴,活动还在进行。" if i == 3 else
+                    "想参与的话,活动页有详情,合规玩就行。")
+            rows.append({"outcome": "binance_published",
+                         "final_preview": body + " 第%d篇" % i,
+                         "ts": "2026-10-16T%02d:00:00+00:00" % (i % 24)})
+        q = mr.quality_scan(rows, window=20)
+        self.assertEqual(q["campaign_cta"], 1, "应按帖计一次")
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
