@@ -1,15 +1,5 @@
 [
   {
-    "id": "cb47899f8be0946b",
-    "title": "Dogecoin (DOGE) Hits Major Milestone With DogeOS Launch",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-30T18:23:55.403296+00:00",
-    "tokens": [
-      "DOGE",
-      "ZK"
-    ]
-  },
-  {
     "id": "28b94a180875ced4",
     "title": "Bitget’s hackers turn to Zcash after $50 million laundering route gets blocked",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5089,6 +5079,16 @@
     "tokens": [
       "BNB",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ca00803261035bfd",
+    "title": "马斯克:解决美债问题的唯一办法是依靠人工智能和机器人",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-17T20:27:14.580466+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
