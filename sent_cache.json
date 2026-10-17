@@ -1,14 +1,5 @@
 [
   {
-    "id": "f85ae665e265c6f8",
-    "title": "$1 Billion XRP Treasury Closes in Nasdaq Listing Amid Tokenization Boom: Main Crypto News This Morning",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-30T15:44:10.786555+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "adddf91ffbec420d",
     "title": "Bitcoin Jumps on Cool PCE Inflation Data as Bond Yields Hit 20-Year Highs",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5084,6 +5075,16 @@
     "sent_at": "2026-10-17T18:47:02.714117+00:00",
     "tokens": [
       "ARB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a5d946cd2f8e4b07",
+    "title": "Can Worldcoin’s recovery catalysts help defend THESE key levels?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-17T19:07:06.796592+00:00",
+    "tokens": [
+      "WLD"
     ],
     "lang": "en"
   }
