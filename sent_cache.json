@@ -1,15 +1,5 @@
 [
   {
-    "id": "220b7b65487c63fa",
-    "title": "Lido’s 1,500 ETH reserve target could slow stETH withdrawals in a crunch",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-29T01:10:34.939857+00:00",
-    "tokens": [
-      "ETH",
-      "TRUMP"
-    ]
-  },
-  {
     "id": "47d3b8f96b3738ef",
     "title": "Compound DAO used protocol reserves to buy $52 million worth of COMP, and delegates call it a mandate breach",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5066,5 +5056,16 @@
       "ZEC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "d5b6d3c17dfc2de3",
+    "title": "JST 第五次回购销毁圆满收官:本次销毁超 1.7 亿枚、价值约 2353 万美元,回购机制即将全面升级",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-17T13:08:17.735499+00:00",
+    "tokens": [
+      "JST",
+      "TRX"
+    ],
+    "lang": "zh-TW"
   }
 ]
