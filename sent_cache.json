@@ -1,14 +1,5 @@
 [
   {
-    "id": "92248f12b91ffc3c",
-    "title": "Dogecoin Is Getting Apps as DogeOS Opens Its Public Testnet",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-30T22:07:33.834080+00:00",
-    "tokens": [
-      "DOGE"
-    ]
-  },
-  {
     "id": "bd0a2d1e10c89154",
     "title": "Mark Moss: The Bitcoin Endgame – BTC to $1 Million by 2030",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5090,6 +5081,16 @@
     "sent_at": "2026-10-17T20:47:04.737158+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "741cbaa04e3dad69",
+    "title": "TRON moved $2.2 trillion in stablecoins while TRX supply grew for 108 straight days",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-17T21:06:44.479753+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "en"
   }
