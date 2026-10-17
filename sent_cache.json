@@ -1,14 +1,5 @@
 [
   {
-    "id": "b44bea7c62dc7248",
-    "title": "Quant (QNT) Rockets 75% Today as Major Banking Catalyst Fuels 180% Weekly Rally",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-27T12:26:07.642413+00:00",
-    "tokens": [
-      "QNT"
-    ]
-  },
-  {
     "id": "e8049abde73a28a9",
     "title": "DOGE Rally Brewing? Whales Load Up as Dogecoin ETFs Post Record Inflows",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5036,5 +5027,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "6d4593302e2a04d6",
+    "title": "Gemini 500万美元和解协议被拒撤销,已缴罚款及永久禁令维持",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-17T03:24:36.542625+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
