@@ -1,14 +1,5 @@
 [
   {
-    "id": "95bbbbc4308430ee",
-    "title": "An Austrian Economist Explains Why AI Will Make Everyone an Entrepreneur w/ Per Bylund",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-09-26T19:48:13.535983+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "4b6e4de09bce7dac",
     "title": "'You Are Not Ready': Solana Founder Puts Attention on Blockchain's Next Big Upgrade",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5029,5 +5020,17 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "8f30420bd727973e",
+    "title": "微软联合多方捣毁接受 USDT 付款的钓鱼网络,涉及超 7.5 万家机构",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-17T01:24:41.559589+00:00",
+    "tokens": [
+      "ETH",
+      "USDC",
+      "TRX"
+    ],
+    "lang": "zh-TW"
   }
 ]
