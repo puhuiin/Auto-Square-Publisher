@@ -1,14 +1,5 @@
 [
   {
-    "id": "b7a9b9038645e358",
-    "title": "Bitcoin (BTC) May Offer a Buying Opportunity Before the Next Big Pump: Analysts",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-29T17:43:53.368913+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "a5500c1cbe64bbe3",
     "title": "Understanding Why This Cryptocurrency Jumped 400%: Quant (QNT) Defies Market Slowdown",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5076,6 +5067,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "92ca45f059bda630",
+    "title": "Solana Cancels Major Shanghai Event As Attendance Surge Creates Problems",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-10-17T15:46:58.826175+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
