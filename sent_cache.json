@@ -1,14 +1,5 @@
 [
   {
-    "id": "7117a61af895ec50",
-    "title": "Solana Sees Biggest ETF Week Since Launch",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-27T15:03:51.446624+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "9565cd1ed5e02662",
     "title": "New Bitcoin proposal rescues locked multisig wallets – At a hidden cost",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5040,5 +5031,15 @@
       "LTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "57497e75470d6582",
+    "title": "Aptos burns 174K APT in 30 days as total burn hits 1.9 million",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-17T04:08:16.167885+00:00",
+    "tokens": [
+      "APT"
+    ],
+    "lang": "zh-TW"
   }
 ]

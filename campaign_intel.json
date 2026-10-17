@@ -22,16 +22,16 @@
     "ZyCrypto (新币与空投)": {
       "fails": 1,
       "last_fail": "2026-10-16T23:23:35.917638+00:00",
-      "reset_at": "2026-10-17T03:45:57.062083+00:00"
+      "reset_at": "2026-10-17T04:06:56.267571+00:00"
     },
     "CoinJournal (山寨异动)": {
-      "fails": 1,
-      "last_fail": "2026-10-17T03:46:27.199043+00:00"
+      "fails": 2,
+      "last_fail": "2026-10-17T04:07:26.613140+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261016/090e79becca044878e28d46342959237.jpg",
-    "date": "2026-10-16"
+    "date": "2026-10-16",
+    "url": "https://public.bnbstatic.com/image/pgc/20261016/090e79becca044878e28d46342959237.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-17",
