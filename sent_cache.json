@@ -1,15 +1,5 @@
 [
   {
-    "id": "65ddf9d2daf8e358",
-    "title": "Bitget says Bitcoin withdrawals are open after $387M hack, but ETH and USDT must wait",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-28T21:19:33.135057+00:00",
-    "tokens": [
-      "ETH",
-      "BTC"
-    ]
-  },
-  {
     "id": "0217b279261410a5",
     "title": "Hyperliquid (HYPE) Drops 5% – Could Whales Trigger an Even Bigger Sell-Off?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5061,6 +5051,17 @@
     "sent_at": "2026-10-17T09:49:37.503682+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "49c8e8305121da76",
+    "title": "星球晚讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-17T11:48:34.634545+00:00",
+    "tokens": [
+      "ZEC",
+      "BTC"
     ],
     "lang": "zh-CN"
   }
