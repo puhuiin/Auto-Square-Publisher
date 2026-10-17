@@ -1,14 +1,5 @@
 [
   {
-    "id": "e7b717e13f94db85",
-    "title": "Bitget Customers Withdraw Over 4,000 Bitcoins in One Hour Following $388M Hack",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-09-29T22:04:06.996655+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "c823f0c8ade0cdbb",
     "title": "Chainlink Rally Brings Profit-Taking, While CCIP 2.0 Targets Institutional Money",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5079,6 +5070,16 @@
     "sent_at": "2026-10-17T16:30:05.193408+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "341371571bd878e0",
+    "title": "Solana Ad Lasted 10 Minutes in China. Critics Blamed CZ",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-17T16:48:53.003541+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
