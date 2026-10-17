@@ -1,14 +1,5 @@
 [
   {
-    "id": "47d3b8f96b3738ef",
-    "title": "Compound DAO used protocol reserves to buy $52 million worth of COMP, and delegates call it a mandate breach",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-29T05:23:56.375221+00:00",
-    "tokens": [
-      "COMP"
-    ]
-  },
-  {
     "id": "774f49dcf91f9a3e",
     "title": "Breaking the Bear Cycle: XRP on Track for Rare Triple-Green Monthly Close",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5067,5 +5058,17 @@
       "TRX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f1872a63aff9d3f4",
+    "title": "BitTorrent 品牌升级与 BTT 首期回购销毁同步落地,双核驱动开启 Web3 基建新纪元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-17T13:32:48.846933+00:00",
+    "tokens": [
+      "JST",
+      "BTTC",
+      "TRX"
+    ],
+    "lang": "zh-CN"
   }
 ]
