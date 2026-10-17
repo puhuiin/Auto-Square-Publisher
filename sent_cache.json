@@ -1,14 +1,5 @@
 [
   {
-    "id": "a5500c1cbe64bbe3",
-    "title": "Understanding Why This Cryptocurrency Jumped 400%: Quant (QNT) Defies Market Slowdown",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-29T18:21:04.615468+00:00",
-    "tokens": [
-      "QNT"
-    ]
-  },
-  {
     "id": "24dd10ba6d250973",
     "title": "Zcash (ZEC) Plunges 12% Daily: Healthy Correction or the End of the Rally?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5077,6 +5068,16 @@
     "sent_at": "2026-10-17T15:46:58.826175+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c711b9aa3fcab6f5",
+    "title": "Crypto Scammer Loses $4.8 Million In Stolen Bitcoin To Another Group Of Thieves",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-10-17T16:10:03.715615+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
