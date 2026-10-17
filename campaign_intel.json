@@ -3,26 +3,30 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#BinanceAlpha",
-    "#Futures"
+    "#AlphaTrading",
+    "#Megadrop"
   ],
   "incentivized_tokens": [
     "$ACU",
-    "$BNB",
+    "$DGAI",
+    "$STABLE",
+    "$ZEST",
     "$FF",
-    "$BTC",
-    "$RWUSD",
-    "$BBB",
-    "$MDBB",
-    "$PENGB"
+    "$BNB",
+    "$USDT",
+    "$USDC"
   ],
-  "strategy_guidance": "当前最紧迫的是今日截止的ACU Alpha交易竞赛，建议优先围绕该竞赛做冲刺向内容，如交易思路复盘、活动参与攻略；同时结合Season6 Spot交易锦标赛、新上线的RWUSD零手续费活动、新增bStocks交易对、新USDⓈ-Margined合约等当期热点，引导读者参与官方活动互动与合规交易，获取Write to Earn互动奖励与交易返佣。",
-  "last_updated": "2026-10-16T17:44:10.339397Z",
+  "strategy_guidance": "优先追贴当前仍在进行的 Alpha 交易大赛与现货交易锦标赛，结合最新上线的 bStock 及 TradFi 合约快讯，引导读者围绕‘参与评论/互动拿奖励’和‘追当期活动热度’展开讨论，强调活动冲刺节奏与抄作业思路，避免任何收益承诺。",
+  "last_updated": "2026-10-17T06:06:35.292819Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "parked_until": "2026-10-17T10:26:33.806858+00:00",
+      "fails": 3,
       "last_fail": "2026-10-17T04:26:33.806858+00:00",
-      "fails": 3
+      "parked_until": "2026-10-17T10:26:33.806858+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "fails": 1,
+      "last_fail": "2026-10-17T06:10:05.858992+00:00"
     }
   },
   "_fallback_image": {
@@ -33,7 +37,7 @@
   "_article_sent_date": "2026-10-17",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 72,
+  "_img_rot": 73,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
