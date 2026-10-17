@@ -1,14 +1,5 @@
 [
   {
-    "id": "b7bb3dd0aba10c76",
-    "title": "Bitwise Extends Solana Purchase Despite Price Drop",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-29T15:23:48.423071+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "d90d58a5074a6128",
     "title": "André Dragosch: Why Bitcoin’s Fair Value is $197,000",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5071,6 +5062,17 @@
     "sent_at": "2026-10-17T14:29:40.450594+00:00",
     "tokens": [
       "STRK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0d8dea5b9f5ec286",
+    "title": "涉损约80.76万美元,UNCX披露Smart Token Vesting V2跨链攻击事件",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-17T14:49:50.062498+00:00",
+    "tokens": [
+      "BNB",
+      "ETH"
     ],
     "lang": "en"
   }
