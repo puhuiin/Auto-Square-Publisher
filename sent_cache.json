@@ -1,14 +1,5 @@
 [
   {
-    "id": "8663e51b8cd0092a",
-    "title": "Ethereum is preparing a 200 million gas push as its Layer 1 scaling strategy accelerates",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-01T12:26:38.702268+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "e2797a3214dacee5",
     "title": "Top 10 Shiba Inu (SHIB) Whales Inject 10 Billion in 24 Hours",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5098,5 +5089,15 @@
       "DOGE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "2f9cbda0daffcba5",
+    "title": "Almost 86 Trillion SHIB: Shiba Inu Eyes Key Support Threshold",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-17T22:29:37.195343+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-CN"
   }
 ]
