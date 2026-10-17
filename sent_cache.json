@@ -1,14 +1,5 @@
 [
   {
-    "id": "e2797a3214dacee5",
-    "title": "Top 10 Shiba Inu (SHIB) Whales Inject 10 Billion in 24 Hours",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-01T13:06:07.161938+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "6225fea8e19b0be0",
     "title": "Ripple's 'North Star' XRP Records 10 Million Agentic Payments Milestone Amid AI Boom: Main Crypto News Morning",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5097,6 +5088,17 @@
     "sent_at": "2026-10-17T22:29:37.195343+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "655d1df88e6bcf6f",
+    "title": "Pump.fun taps Hyperliquid for perpetual futures trading — Will it boost PUMP, HYPE?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-17T22:48:42.605231+00:00",
+    "tokens": [
+      "PUMP",
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
