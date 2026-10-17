@@ -1,14 +1,5 @@
 [
   {
-    "id": "ad8742ad0354114a",
-    "title": "Quant (QNT) Whale Breaks 3-Year Silence With $10 Million Exit After 400% Pump",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-29T17:05:02.127778+00:00",
-    "tokens": [
-      "QNT"
-    ]
-  },
-  {
     "id": "b7a9b9038645e358",
     "title": "Bitcoin (BTC) May Offer a Buying Opportunity Before the Next Big Pump: Analysts",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5074,6 +5065,17 @@
     "sent_at": "2026-10-17T15:10:36.092860+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a075dd016ddceea1",
+    "title": "Grayscale Opens DeFi And AI Crypto Funds To Investors With Just $2,500",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-17T15:29:39.460336+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "en"
   }
