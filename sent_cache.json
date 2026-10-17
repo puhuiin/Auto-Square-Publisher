@@ -1,14 +1,5 @@
 [
   {
-    "id": "88e775fdd94a8ec5",
-    "title": "比特幣 ETF 一週吸金 28 億鎂,超持幣者套現:籌碼結構比歷次市頂健康",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-09-27T12:04:26.774663+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "b44bea7c62dc7248",
     "title": "Quant (QNT) Rockets 75% Today as Major Banking Catalyst Fuels 180% Weekly Rally",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5035,5 +5026,15 @@
       "USDC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a8cb19644645019d",
+    "title": "法官拒绝撤销 Gemini 与 CFTC 的 500 万美元和解协议",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-17T02:48:07.159918+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
