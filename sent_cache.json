@@ -1,14 +1,5 @@
 [
   {
-    "id": "bd0a2d1e10c89154",
-    "title": "Mark Moss: The Bitcoin Endgame – BTC to $1 Million by 2030",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-01T01:33:20.867882+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "4c65301283d87aff",
     "title": "MetaMask exits Ethereum validators amid undisclosed security incident",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5091,6 +5082,16 @@
     "sent_at": "2026-10-17T21:06:44.479753+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "bb6604efdc944fc3",
+    "title": "Strive Prices $630 Million SATS Preferred Offering at $90",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-17T21:27:49.831598+00:00",
+    "tokens": [
+      "SATS"
     ],
     "lang": "en"
   }
