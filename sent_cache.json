@@ -1,14 +1,5 @@
 [
   {
-    "id": "28b94a180875ced4",
-    "title": "Bitget’s hackers turn to Zcash after $50 million laundering route gets blocked",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-30T21:26:33.893796+00:00",
-    "tokens": [
-      "ZEC"
-    ]
-  },
-  {
     "id": "92248f12b91ffc3c",
     "title": "Dogecoin Is Getting Apps as DogeOS Opens Its Public Testnet",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5089,6 +5080,16 @@
     "sent_at": "2026-10-17T20:27:14.580466+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1e98a43beb3d27f8",
+    "title": "XRP Could Reach $2.16 as Peter Brandt Spots This Historically Proven Pattern",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-17T20:47:04.737158+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
