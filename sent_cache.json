@@ -1,14 +1,5 @@
 [
   {
-    "id": "742512ec0f4c2bf6",
-    "title": "SEC staff’s staking-token split spotlights the exit risks behind staked ETH tokens",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-27T16:26:26.786188+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "0f68a89c7242821f",
     "title": "Bitget freezes XRP withdrawals as 27M stolen tokens move",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5043,5 +5034,17 @@
       "APT"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "08f34bbce4bd7a88",
+    "title": "播客笔记 | 对话孙宇晨:AI 黄金时代,普通人如何下注?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-17T05:09:27.329744+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "TRX"
+    ],
+    "lang": "zh-TW"
   }
 ]
