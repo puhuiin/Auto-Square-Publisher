@@ -1,14 +1,5 @@
 [
   {
-    "id": "4b7144988dbc469b",
-    "title": "Hyperliquid to Unlock $856 Million Worth of HYPE in Six Days",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-30T17:08:10.783576+00:00",
-    "tokens": [
-      "HYPE"
-    ]
-  },
-  {
     "id": "8cb1b0c611433fdd",
     "title": "Stolen Bitget Funds Converted to BTC via CoW, Chainflip: Report",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5086,6 +5077,16 @@
     "sent_at": "2026-10-17T19:26:52.128862+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "21ff45b4aec6f1df",
+    "title": "Bitcoin ETFs log $228M in weekly sales as monthly outflows near $618M",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-17T19:47:10.920654+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
