@@ -1,14 +1,5 @@
 [
   {
-    "id": "24dd10ba6d250973",
-    "title": "Zcash (ZEC) Plunges 12% Daily: Healthy Correction or the End of the Rally?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-29T21:23:59.774815+00:00",
-    "tokens": [
-      "ZEC"
-    ]
-  },
-  {
     "id": "e7b717e13f94db85",
     "title": "Bitget Customers Withdraw Over 4,000 Bitcoins in One Hour Following $388M Hack",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5076,6 +5067,16 @@
     "title": "Crypto Scammer Loses $4.8 Million In Stolen Bitcoin To Another Group Of Thieves",
     "source": "Bitcoinist (比特币向)",
     "sent_at": "2026-10-17T16:10:03.715615+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4918ba86f6769ecc",
+    "title": "Bitcoin ETFs Lose $82 Million As BlackRock Leads Friday’s Withdrawals",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-17T16:30:05.193408+00:00",
     "tokens": [
       "BTC"
     ],
