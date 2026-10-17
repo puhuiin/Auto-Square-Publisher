@@ -1,15 +1,5 @@
 [
   {
-    "id": "9cc1dcd521893712",
-    "title": "Solana (SOL) ETF Beats XRP in Unexpected 300% Way",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-29T12:48:48.706000+00:00",
-    "tokens": [
-      "SOL",
-      "XRP"
-    ]
-  },
-  {
     "id": "b7bb3dd0aba10c76",
     "title": "Bitwise Extends Solana Purchase Despite Price Drop",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5071,6 +5061,16 @@
       "ETH",
       "BTC",
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5f7df6e85a7cd0ca",
+    "title": "STRK最大多头浮亏101.9万美元,另一巨鲸强平2136万枚STRK并亏损20.7万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-17T14:29:40.450594+00:00",
+    "tokens": [
+      "STRK"
     ],
     "lang": "en"
   }
