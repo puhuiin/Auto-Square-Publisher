@@ -1,14 +1,5 @@
 [
   {
-    "id": "c3df0ebfb290feee",
-    "title": "11 Days Until XRP Activates Key Features for Major Use Cases",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-28T16:57:33.410829+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "7830c1984091c3c1",
     "title": "Tom Lee's Bitmine Buys Another $47M of ETH, Taking It to 4.9% of Ethereum Supply",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5058,5 +5049,15 @@
       "UNI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "5d72f35fee04c768",
+    "title": "CME Futures launch news fails to spur UNI’s price rally — What happened?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-17T09:05:24.538568+00:00",
+    "tokens": [
+      "UNI"
+    ],
+    "lang": "zh-TW"
   }
 ]
