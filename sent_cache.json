@@ -1,14 +1,5 @@
 [
   {
-    "id": "9565cd1ed5e02662",
-    "title": "New Bitcoin proposal rescues locked multisig wallets – At a hidden cost",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-27T15:20:52.898520+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "09ba533d5239ef0d",
     "title": "Ripple Heads to Seoul: Korea's Banking Giants Set for XRP Spotlight",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5041,5 +5032,15 @@
       "APT"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d6623c7439182530",
+    "title": "81 Billion Shiba Inu (SHIB) Traded in 24 Hours: There's Hope",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-17T04:30:26.867949+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-CN"
   }
 ]
