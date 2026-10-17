@@ -1,14 +1,5 @@
 [
   {
-    "id": "09ba533d5239ef0d",
-    "title": "Ripple Heads to Seoul: Korea's Banking Giants Set for XRP Spotlight",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-27T15:28:18.213045+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "742512ec0f4c2bf6",
     "title": "SEC staff’s staking-token split spotlights the exit risks behind staked ETH tokens",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5040,6 +5031,16 @@
     "sent_at": "2026-10-17T04:30:26.867949+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0bf85eb776f1154a",
+    "title": "Will APT’s price clear $0.87 after Aptos’s launch of Block-STM v2 upgrade?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-17T04:46:52.763299+00:00",
+    "tokens": [
+      "APT"
     ],
     "lang": "zh-CN"
   }
