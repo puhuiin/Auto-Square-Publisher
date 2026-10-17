@@ -1,14 +1,5 @@
 [
   {
-    "id": "d90d58a5074a6128",
-    "title": "André Dragosch: Why Bitcoin’s Fair Value is $197,000",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-09-29T16:03:55.430188+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "ad8742ad0354114a",
     "title": "Quant (QNT) Whale Breaks 3-Year Silence With $10 Million Exit After 400% Pump",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5073,6 +5064,16 @@
     "tokens": [
       "BNB",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9170d504cb502920",
+    "title": "152 Million SHIB Tokens Sent to Dead Wallets From Coinbase Uncovered",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-17T15:10:36.092860+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
