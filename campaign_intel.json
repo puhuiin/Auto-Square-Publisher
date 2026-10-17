@@ -20,19 +20,19 @@
   "last_updated": "2026-10-17T06:06:35.292819Z",
   "_feed_health": {
     "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-10-17T09:03:31.135971+00:00",
-      "last_fail": "2026-10-17T06:10:05.858992+00:00",
-      "fails": 1
+      "fails": 1,
+      "last_fail": "2026-10-17T09:23:29.881191+00:00",
+      "reset_at": "2026-10-17T09:03:31.135971+00:00"
     },
     "CoinJournal (山寨异动)": {
+      "fails": 3,
       "parked_until": "2026-10-17T10:26:33.806858+00:00",
-      "last_fail": "2026-10-17T04:26:33.806858+00:00",
-      "fails": 3
+      "last_fail": "2026-10-17T04:26:33.806858+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-16",
-    "url": "https://public.bnbstatic.com/image/pgc/20261016/090e79becca044878e28d46342959237.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261016/090e79becca044878e28d46342959237.jpg",
+    "date": "2026-10-16"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-17",

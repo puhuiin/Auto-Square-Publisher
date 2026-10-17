@@ -1,14 +1,5 @@
 [
   {
-    "id": "7830c1984091c3c1",
-    "title": "Tom Lee's Bitmine Buys Another $47M of ETH, Taking It to 4.9% of Ethereum Supply",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-28T17:01:56.882109+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "0b2f4ab6513762c1",
     "title": "Chainlink launches new version of its crypto bridge tech 'CCIP' to give apps more control over their security",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5059,5 +5050,17 @@
       "UNI"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "4c20d9b2e5bd4df2",
+    "title": "你为什么会被 Papertrade 反撸?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-17T09:25:14.873077+00:00",
+    "tokens": [
+      "USDC",
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
