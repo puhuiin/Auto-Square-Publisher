@@ -1,14 +1,5 @@
 [
   {
-    "id": "4b6e4de09bce7dac",
-    "title": "'You Are Not Ready': Solana Founder Puts Attention on Blockchain's Next Big Upgrade",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-26T21:48:12.021609+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "9b105a606a6f0767",
     "title": "Ripple Pioneer Approves: Nik Bougalis Returns to Rewrite XRP Ledger Core",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5030,6 +5021,16 @@
       "ETH",
       "USDC",
       "TRX"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "3ff99e135003c375",
+    "title": "美国SOL现货ETF单日总净流出1266.80万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-17T01:44:46.359628+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
