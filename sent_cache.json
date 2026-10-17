@@ -1,14 +1,5 @@
 [
   {
-    "id": "7b8192aa019ea140",
-    "title": "848% XRP Ledger Burn Rate Increase Raises Questions",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-30T13:04:08.835926+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "f85ae665e265c6f8",
     "title": "$1 Billion XRP Treasury Closes in Nasdaq Listing Amid Tokenization Boom: Main Crypto News This Morning",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5083,6 +5074,16 @@
     "sent_at": "2026-10-17T18:27:45.854208+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d3f74f1db58e09b8",
+    "title": "Arbitrum Courts European Investors Managing €800 Billion With New Revenue Pitch",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-17T18:47:02.714117+00:00",
+    "tokens": [
+      "ARB"
     ],
     "lang": "en"
   }
