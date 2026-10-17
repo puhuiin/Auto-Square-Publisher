@@ -1,14 +1,5 @@
 [
   {
-    "id": "9b105a606a6f0767",
-    "title": "Ripple Pioneer Approves: Nik Bougalis Returns to Rewrite XRP Ledger Core",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-26T23:56:37.428167+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "5a651ef9a0013cf2",
     "title": "劃時代》Aave 開放 Apple、Nvidia 等七支代幣化美股可抵押借 USDC",
     "source": "BlockTempo (动区动趋中文)",
@@ -5031,6 +5022,16 @@
     "sent_at": "2026-10-17T01:44:46.359628+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "d4139285122701fd",
+    "title": "美国NEAR现货ETF单日净流入260.62万美元,ZEC现货ETF净流出121.97万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-17T02:04:44.566667+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-TW"
   }
