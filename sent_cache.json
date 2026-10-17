@@ -1,15 +1,5 @@
 [
   {
-    "id": "5a651ef9a0013cf2",
-    "title": "劃時代》Aave 開放 Apple、Nvidia 等七支代幣化美股可抵押借 USDC",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-09-27T04:43:43.192117+00:00",
-    "tokens": [
-      "USDC",
-      "AAVE"
-    ]
-  },
-  {
     "id": "88e775fdd94a8ec5",
     "title": "比特幣 ETF 一週吸金 28 億鎂,超持幣者套現:籌碼結構比歷次市頂健康",
     "source": "BlockTempo (动区动趋中文)",
@@ -5034,5 +5024,16 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "cd07782e6613c05b",
+    "title": "Slush接入Halliday,支持从25条链及银行卡等渠道入金SUI或USDC",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-17T02:24:41.775686+00:00",
+    "tokens": [
+      "SUI",
+      "USDC"
+    ],
+    "lang": "zh-CN"
   }
 ]
