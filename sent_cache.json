@@ -1,14 +1,5 @@
 [
   {
-    "id": "8cb1b0c611433fdd",
-    "title": "Stolen Bitget Funds Converted to BTC via CoW, Chainflip: Report",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-30T17:46:55.893805+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "cb47899f8be0946b",
     "title": "Dogecoin (DOGE) Hits Major Milestone With DogeOS Launch",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5087,6 +5078,17 @@
     "sent_at": "2026-10-17T19:47:10.920654+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "dd1c4e0b183ac6ab",
+    "title": "USDD向 Gate DEX Bonus 活动追加激励 总奖池提升至 154000 USDD",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-17T20:06:59.908531+00:00",
+    "tokens": [
+      "BNB",
+      "ETH"
     ],
     "lang": "en"
   }
