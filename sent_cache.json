@@ -1,14 +1,5 @@
 [
   {
-    "id": "3bf9cf19897a255e",
-    "title": "1 Billion Shiba Inu (SHIB) Burned in 24 Hours: This Sets Bull Market Back",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-28T12:28:18.560492+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "b770fa90927b07f8",
     "title": "Here’s what happened in crypto today",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5051,6 +5042,18 @@
     "sent_at": "2026-10-17T07:47:47.005493+00:00",
     "tokens": [
       "TIA"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "70b89110497e7557",
+    "title": "Binance Founder CZ Voices Support for XRP, ZEC and SOL Amid China Crypto Controversy",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-17T08:04:23.453158+00:00",
+    "tokens": [
+      "XRP",
+      "ZEC",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
