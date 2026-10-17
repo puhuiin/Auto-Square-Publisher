@@ -1,14 +1,5 @@
 [
   {
-    "id": "0217b279261410a5",
-    "title": "Hyperliquid (HYPE) Drops 5% – Could Whales Trigger an Even Bigger Sell-Off?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-28T21:21:31.370902+00:00",
-    "tokens": [
-      "HYPE"
-    ]
-  },
-  {
     "id": "6de4ed3b397c693d",
     "title": "BNB Chain Appoints Thomas Chen as Chief Business Officer",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5062,6 +5053,16 @@
     "tokens": [
       "ZEC",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ca429b821a2ee9e6",
+    "title": "黑客青睐 Zcash 洗钱,多起被盗案资金转入 ZEC 网络匿踪",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-17T12:24:42.368911+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
