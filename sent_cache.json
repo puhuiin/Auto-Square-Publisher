@@ -1,14 +1,5 @@
 [
   {
-    "id": "0b2f4ab6513762c1",
-    "title": "Chainlink launches new version of its crypto bridge tech 'CCIP' to give apps more control over their security",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-09-28T17:12:35.471581+00:00",
-    "tokens": [
-      "LINK"
-    ]
-  },
-  {
     "id": "65ddf9d2daf8e358",
     "title": "Bitget says Bitcoin withdrawals are open after $387M hack, but ETH and USDT must wait",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5060,6 +5051,16 @@
       "USDC",
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "935f5c4f5a99a108",
+    "title": "创2025年第三季度以来新高,Solana应用收入环比增长48%至2.99亿美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-17T09:49:37.503682+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
