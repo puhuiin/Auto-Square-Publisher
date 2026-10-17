@@ -1,14 +1,5 @@
 [
   {
-    "id": "07f70d79f8ee03a8",
-    "title": "從 Datavault AI 到 SOIL 與 Firelight:「XRP Seoul 2026」公布第 4 批全球講者陣容",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-10-01T05:29:21.056385+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "8663e51b8cd0092a",
     "title": "Ethereum is preparing a 200 million gas push as its Layer 1 scaling strategy accelerates",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5095,5 +5086,17 @@
       "XLM"
     ],
     "lang": "en"
+  },
+  {
+    "id": "94f3885fd35618c2",
+    "title": "23亿美元未偿余额,Coinbase加密抵押贷款与银行存款上链同步推进",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-17T22:08:28.427674+00:00",
+    "tokens": [
+      "USDC",
+      "XRP",
+      "DOGE"
+    ],
+    "lang": "zh-TW"
   }
 ]
