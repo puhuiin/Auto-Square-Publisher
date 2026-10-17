@@ -1,14 +1,5 @@
 [
   {
-    "id": "98d57b77f5201ef8",
-    "title": "Evernorth’s XRP buying power could shrink if SPAC shareholders redeem this week",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-09-28T15:26:16.612612+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "c3df0ebfb290feee",
     "title": "11 Days Until XRP Activates Key Features for Major Use Cases",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5057,5 +5048,15 @@
       "XLM"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "31d456ca16ad87ee",
+    "title": "分析师:UNI 较峰值回撤超 30%,交易所流入放缓或预示筑底",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-17T08:45:10.369855+00:00",
+    "tokens": [
+      "UNI"
+    ],
+    "lang": "zh-CN"
   }
 ]
