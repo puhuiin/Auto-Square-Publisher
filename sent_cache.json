@@ -1,14 +1,5 @@
 [
   {
-    "id": "b8e3d168425b2635",
-    "title": "花旗把穩定幣支付接進企業帳戶!跟 Coinbase 合作,不用碰加密資產也能收 USDC",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-09-30T02:04:03.740309+00:00",
-    "tokens": [
-      "USDC"
-    ]
-  },
-  {
     "id": "89552ad4c4807a81",
     "title": "XRP Ledger starts carrying fund records from Brazil operator overseeing $4 trillion",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5080,6 +5071,16 @@
     "sent_at": "2026-10-17T17:24:12.823461+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "63fe1419ab9b32bb",
+    "title": "Bitwise Holds Over Half a Billion XRP",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-17T17:44:12.475709+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
