@@ -1,14 +1,5 @@
 [
   {
-    "id": "6de4ed3b397c693d",
-    "title": "BNB Chain Appoints Thomas Chen as Chief Business Officer",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-29T01:08:37.521848+00:00",
-    "tokens": [
-      "BNB"
-    ]
-  },
-  {
     "id": "220b7b65487c63fa",
     "title": "Lido’s 1,500 ETH reserve target could slow stETH withdrawals in a crunch",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5061,6 +5052,16 @@
     "title": "黑客青睐 Zcash 洗钱,多起被盗案资金转入 ZEC 网络匿踪",
     "source": "吴说区块链 (中文深度)",
     "sent_at": "2026-10-17T12:24:42.368911+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b44b108f6d32e762",
+    "title": "盗取资金持续流入ZEC,涉及Cryptobills Ledger事件及价值1200万美元的Triple-A黑客攻击",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-17T12:44:25.898381+00:00",
     "tokens": [
       "ZEC"
     ],
