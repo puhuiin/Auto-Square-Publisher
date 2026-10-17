@@ -1,14 +1,5 @@
 [
   {
-    "id": "bb441b27a197697a",
-    "title": "Zcash AI Bug Crisis Over? Cofounder Shares Update Amid Unexpected Positive",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-01T16:08:35.727879+00:00",
-    "tokens": [
-      "ZEC"
-    ]
-  },
-  {
     "id": "88aaaaa028b10562",
     "title": "XRP Holders, Mark Your Calendars for October 8: Nasdaq Listing Is Coming for Ripple-Backed Treasury",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5101,5 +5092,15 @@
       "ADA"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "d829bac63927845f",
+    "title": "Ripple Opens Wall Street Trading To Hyperliquid With New 24/7 Market Access",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-10-17T23:26:35.624669+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
