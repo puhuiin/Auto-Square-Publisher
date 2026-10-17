@@ -19,20 +19,20 @@
   "strategy_guidance": "优先追贴当前仍在进行的 Alpha 交易大赛与现货交易锦标赛，结合最新上线的 bStock 及 TradFi 合约快讯，引导读者围绕‘参与评论/互动拿奖励’和‘追当期活动热度’展开讨论，强调活动冲刺节奏与抄作业思路，避免任何收益承诺。",
   "last_updated": "2026-10-17T06:06:35.292819Z",
   "_feed_health": {
-    "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-10-17T07:03:32.007132+00:00",
-      "fails": 1,
-      "last_fail": "2026-10-17T06:10:05.858992+00:00"
-    },
     "CoinJournal (山寨异动)": {
       "parked_until": "2026-10-17T10:26:33.806858+00:00",
       "fails": 3,
       "last_fail": "2026-10-17T04:26:33.806858+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-10-17T07:23:27.867317+00:00",
+      "fails": 1,
+      "last_fail": "2026-10-17T06:10:05.858992+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261016/090e79becca044878e28d46342959237.jpg",
-    "date": "2026-10-16"
+    "date": "2026-10-16",
+    "url": "https://public.bnbstatic.com/image/pgc/20261016/090e79becca044878e28d46342959237.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-17",
