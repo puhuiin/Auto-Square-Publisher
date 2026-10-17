@@ -1,15 +1,5 @@
 [
   {
-    "id": "c823f0c8ade0cdbb",
-    "title": "Chainlink Rally Brings Profit-Taking, While CCIP 2.0 Targets Institutional Money",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-09-30T01:25:50.717068+00:00",
-    "tokens": [
-      "LINK",
-      "USDC"
-    ]
-  },
-  {
     "id": "b8e3d168425b2635",
     "title": "花旗把穩定幣支付接進企業帳戶!跟 Coinbase 合作,不用碰加密資產也能收 USDC",
     "source": "BlockTempo (动区动趋中文)",
@@ -5080,6 +5070,16 @@
     "sent_at": "2026-10-17T16:48:53.003541+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1418cde2b63ea0a0",
+    "title": "Shiba Inu flashes mixed signals, but which way will its price really go?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-17T17:24:12.823461+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
