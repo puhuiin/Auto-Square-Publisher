@@ -1,14 +1,5 @@
 [
   {
-    "id": "774f49dcf91f9a3e",
-    "title": "Breaking the Bear Cycle: XRP on Track for Rare Triple-Green Monthly Close",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-29T12:08:36.989898+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "9cc1dcd521893712",
     "title": "Solana (SOL) ETF Beats XRP in Unexpected 300% Way",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5070,5 +5061,17 @@
       "TRX"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4ac7a8869c579b88",
+    "title": "吴说每日精选加密新闻 + 吴说每周精选:新闻 Top10 与热门文章",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-17T14:09:42.384961+00:00",
+    "tokens": [
+      "ETH",
+      "BTC",
+      "ZEC"
+    ],
+    "lang": "en"
   }
 ]
