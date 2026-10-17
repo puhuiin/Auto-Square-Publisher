@@ -1,14 +1,5 @@
 [
   {
-    "id": "89552ad4c4807a81",
-    "title": "XRP Ledger starts carrying fund records from Brazil operator overseeing $4 trillion",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-09-30T05:26:32.616949+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "36e5fb308416ad31",
     "title": "Coinbase Tops Shiba Inu Monthly Burners With 143,956,168 SHIB Burned",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5081,6 +5072,16 @@
     "sent_at": "2026-10-17T17:44:12.475709+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1d82f395175938ab",
+    "title": "Analyzing STRK’s 15% fall, $2M in long liquidations — What’s next?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-17T18:07:01.079862+00:00",
+    "tokens": [
+      "STRK"
     ],
     "lang": "en"
   }
