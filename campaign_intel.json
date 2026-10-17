@@ -21,7 +21,7 @@
     "ZyCrypto (新币与空投)": {
       "last_fail": "2026-10-17T15:09:05.149765+00:00",
       "fails": 1,
-      "reset_at": "2026-10-17T19:06:06.147120+00:00"
+      "reset_at": "2026-10-17T19:26:01.704882+00:00"
     }
   },
   "_fallback_image": {
@@ -30,12 +30,7 @@
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-17",
-  "_publish_park": {
-    "f1872a63aff9d3f4": {
-      "last_fail": "2026-10-17T13:07:49.915947+00:00",
-      "fails": 1
-    }
-  },
+  "_publish_park": {},
   "_intel_refresh_fail": {},
   "_img_rot": 90,
   "_alert_state": {},

@@ -1,14 +1,5 @@
 [
   {
-    "id": "adddf91ffbec420d",
-    "title": "Bitcoin Jumps on Cool PCE Inflation Data as Bond Yields Hit 20-Year Highs",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-09-30T16:06:15.694531+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "4b7144988dbc469b",
     "title": "Hyperliquid to Unlock $856 Million Worth of HYPE in Six Days",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5085,6 +5076,16 @@
     "sent_at": "2026-10-17T19:07:06.796592+00:00",
     "tokens": [
       "WLD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "55c840c319fc1f94",
+    "title": "Is Cardano Complete? Hoskinson Says 'Yes' but There Is One Thing Left",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-17T19:26:52.128862+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
