@@ -1,14 +1,5 @@
 [
   {
-    "id": "36e5fb308416ad31",
-    "title": "Coinbase Tops Shiba Inu Monthly Burners With 143,956,168 SHIB Burned",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-09-30T12:24:03.003464+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "7b8192aa019ea140",
     "title": "848% XRP Ledger Burn Rate Increase Raises Questions",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5082,6 +5073,16 @@
     "sent_at": "2026-10-17T18:07:01.079862+00:00",
     "tokens": [
       "STRK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3ab4135c6a82a347",
+    "title": "Ripple CTO Emeritus Exposes Suspected Wallet Scam Targeting Recovery Phrases",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-17T18:27:45.854208+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
