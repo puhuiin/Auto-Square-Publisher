@@ -1,14 +1,5 @@
 [
   {
-    "id": "84267cd8f3925c4d",
-    "title": "Trump Taps Jay Clayton, the SEC Chair Who Sued Ripple, to Lead AI Push",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-04T17:43:58.876538+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "c91c808639330f2c",
     "title": "Bitcoin and Ethereum ETF Weekly Flows: The Good, the Bad, and the Concerning",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5132,6 +5123,16 @@
     "sent_at": "2026-10-18T15:44:16.384498+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1833fba0d2c29fcb",
+    "title": "XRP clings to $1.25 as Evernorth’s rumored $655M purchase stays unconfirmed",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-18T16:05:09.325588+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
