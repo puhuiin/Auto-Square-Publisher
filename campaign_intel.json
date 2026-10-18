@@ -3,26 +3,24 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Futures",
+    "#BinanceFutures",
     "#NewListing"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$FF",
-    "$BTC",
     "$RWUSD",
-    "$BBB",
-    "$MDBB",
-    "$PENGB",
-    "$UVXYB"
+    "$USDC",
+    "$BTC",
+    "$USDT"
   ],
-  "strategy_guidance": "当前可重点结合未过期的Spot Trading Tournament Season 6 FF奖励赛、S16 LoL冠军赛预测活动、新上线RWUSD零手续费交易及新增bStocks交易对、Futures新合约等核心热点产出内容，引导读者参与活动互动、关注新交易对交易。可通过引导用户参与评论互动获取Write2Earn奖励，同时通过合规交易导流获取对应返佣。",
-  "last_updated": "2026-10-18T06:44:17.307095Z",
+  "strategy_guidance": "当前无明确截止日期的核心活跃活动包括现货交易锦标赛S6、新上线的RWUSD与bStocks代币化证券交易对、币安期货新TraFi永续合约系列，发帖时可围绕这些官方动态结合Write2Earn规则，引导用户参与评论互动获取奖励。可同步联动S16英雄联盟世界冠军赛预测、7周年P2P活动、社区AI反馈征集等泛娱乐向无截止日活动，拓展内容触达的圈层。发帖时需严格规避交易收益相关承诺表述，仅聚焦活动规则、参与方式等客观信息，符合平台内容规范。",
+  "last_updated": "2026-10-18T18:54:24.689426Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
       "parked_until": "2026-10-18T16:56:46.572292+00:00",
-      "fails": 3,
-      "last_fail": "2026-10-18T18:43:30.696529+00:00"
+      "last_fail": "2026-10-18T18:43:30.696529+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
