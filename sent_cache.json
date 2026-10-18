@@ -1,15 +1,5 @@
 [
   {
-    "id": "531800cc8a525f86",
-    "title": "DOGE Director Highlights 'Avalanche' of New Projects as Dogecoin Infrastructure Expands",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-04T06:04:42.721107+00:00",
-    "tokens": [
-      "DOGE",
-      "AVAX"
-    ]
-  },
-  {
     "id": "d68c0ed13e18250c",
     "title": "Analyst Explains What Can Trigger DOGE’s Next Double-Digit Surge",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5130,5 +5120,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ef1e60aeec04fc32",
+    "title": "比特币年底能否突破 10 万美元引发分歧,通胀与美联储政策成关键变量",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-18T13:44:44.031595+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
