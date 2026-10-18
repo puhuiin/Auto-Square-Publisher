@@ -15376,6 +15376,46 @@ class TestFngAnchorRegexPrecision(unittest.TestCase):
         for text in self.FALSE_POSITIVES:
             self.assertIsNone(m._FNG_ANCHOR_RE.search(text), f"假阳性仍命中: {text}")
 
+    def test_english_anchor_branch_matches_real_posts(self):
+        """R766：英文分支真阳性——全部取自生产真实帖文（165 篇英文帖实测 37%
+        引用情绪指数、人工核验零误报；中文正则此前只算到 2/165）。"""
+        for text in ("Greed index sits at 64 and $ADA just bounced 8%.",
+                     "The Fear & Greed Index sits at 57, already deep in greedy territory.",
+                     "Full market sentiment is stuck at 53/100, neutral.",
+                     "Greed sits at 57/100, but Brent crude hit $106.",
+                     "Fear & Greed crashed from 82 to 56 in a month, yet $BTC is stuck.",
+                     "The 53/100 neutral sentiment index already proves the point.",
+                     "The neutral 53 sentiment reading proves every-"):
+            self.assertIsNotNone(m._FNG_ANCHOR_RE.search(text),
+                                 "英文指数引用漏检: %s" % text[:40])
+
+    def test_english_branch_rejects_idioms(self):
+        """R766：英文分支假阳性——情绪类惯语（无指数引用）不得命中。
+        R10 纪律：正则过宽会误武装禁令 + 报表虚报违规。"""
+        for text in ("Fear of missing out is driving the rally.",
+                     "Market sentiment improved after the Fed pivot.",
+                     "There is real fear that the 24-hour outage continues.",
+                     "Greed is good, but this looks overdone.",
+                     "52/100 nodes upgraded to the new client.",
+                     "The index rose 24 points on the rebalance."):
+            self.assertIsNone(m._FNG_ANCHOR_RE.search(text),
+                              "英文惯语误报: %s" % text[:40])
+
+    def test_english_branch_counts_night_posts(self):
+        """★★ 端到端：此前英文帖对 hook 计数贡献为 0（中文正则失明）⇒ 夜间
+        5 窗恒不武装。扩展后英文引用必须进入计数（R101/R176 的设计意图是
+        覆盖全部帖子，R710 下夜间全是英文帖）。"""
+        eng_with = ("Greed index sits at 64, yet $TRX is down 0.4% in 24H. "
+                    "The neutral 53 sentiment reading proves everything.")
+        eng_without = ("$BTC just broke $82,000 as ETF inflows hit a "
+                       "three-week high. Volume confirms the move.")
+        # 5 窗里 2 篇英文引用 ⇒ 应武装（旧正则下计数为 0）
+        rows = [{"final_preview": eng_with if i % 2 == 0 else eng_without,
+                 "outcome": "binance_published"} for i in range(5)]
+        cnt = sum(1 for r in rows if m._FNG_ANCHOR_RE.search(r["final_preview"]))
+        self.assertEqual(cnt, 3, "5 窗里 3 篇英文引用必须被数到（旧正则为 0）")
+        self.assertGreaterEqual(cnt, 2, "达到武装门槛 ⇒ 夜间英文窗不再恒不武装")
+
     def test_report_side_in_sync(self):
         import importlib.util
         spec = importlib.util.spec_from_file_location(

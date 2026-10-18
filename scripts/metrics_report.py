@@ -36,7 +36,17 @@ TOP_N = 8
 # 后果是：误武装情绪锚点禁令 → 盘面情绪行被剥离、prompt 注入"严禁提及"，
 # 报表还把合规内容记成违规。收紧为"间隙只允许中文/空格，且数字紧跟"，实测真阳性全保留。
 _FNG_ANCHOR_RE = re.compile(
-    r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^\s。！？，、；：\nA-Za-z0-9]{0,4}\s?\d{2}")
+    r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^\s。！？，、；：\nA-Za-z0-9]{0,4}\s?\d{2}"
+    # R766：英文分支（与 main 侧字节同步，守卫见 TestQualityPatternSync）——
+    # 实测英文帖 37% 引用情绪指数且爬升，中文正则对英文侧失明 ⇒ 本面板
+    # 「FNG 锚点压力」只报中文、R101/R176 禁令武装也数不到英文帖。分支高精度：
+    # 只认明确指数引用（Fear & Greed 专名 / sentiment|greed|fear+index|reading
+    # / 情绪词与 \d\d/100 互相邻近 30 字符内），实测 165 篇英文帖 60 命中零误报；
+    # "fear of missing out"、"52/100 nodes upgraded" 等惯语不命中。
+    r"|fear\s*&\s*greed|(?:sentiment|greed|fear)\s+(?:index|reading)"
+    r"|(?:(?:sentiment|greed|fear)[^.\n]{0,30}\d{2}/100"
+    r"|\d{2}/100[^.\n]{0,30}(?:sentiment|greed|fear))",
+    re.IGNORECASE)
 _OVERUSED_DEVICES = ("先泼盆冷水",)  # main._OVERUSED_OPENING_DEVICES
 # R286：长文标题禁用领词表——与 main._GENERIC_LEADINS 同步（防漂移测试见
 # TestQualityPatternSync）。标题是信息流里决定点不点开的第一触点：生产实录
