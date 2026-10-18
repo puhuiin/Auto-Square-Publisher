@@ -20881,6 +20881,170 @@ class TestR746CampaignCtaPhrasingMenu(unittest.TestCase):
                       "必须明示活动信息要说准（保留）= 返佣红线，别为轮换把活动说丢")
 
 
+class TestR758CampaignCtaRotationPool(unittest.TestCase):
+    """★★★ R758：活动提法套路轮换池 + 结尾模板禁令（R746 的升级）
+
+    ★ 生产实证（用户第七批粘贴，10-17~10-18）：R746 的「别用顺便提一嘴」只禁住
+      引入句，模型把活动提法整体收敛成**结尾整句模板**——82 篇有正文帖里 76 篇
+      （93%）都是「想[练手/试水]的…去[参加]ACU Alpha 竞赛」，标题行同型 95%。
+      且该句式在 final_preview（前 200 字）之外 ⇒ R741/R755 的 🎁 雷达读数为 0
+      而实际 93%（R647 尾部盲区至今最严重实例）。
+    ★ 修法（与 R592 同根）：轮换池 + 跨帖 draw_fresh——**让代码抽框架，不让模型
+      选**（R597/R598/R732/R746 四次实证模型自己选必收敛到一个）。池里只有框架
+      描述没有范例句；框架措辞刻意避开「想练手/想试水」等已收敛字眼。
+    ★ 本类锁：① 池存在且不含范句/不含已收敛字眼 ② 只在 guidance 可用时注入
+      ③ 长短文两个分支都抽（R615/R611：规则写在一个分支漏了另一个消费面）
+      ④ 注入禁令点名收敛模板（结构描述非范句）⑤ 遥测字段接线 ⑥ 正则判别力
+      （实测变体全中 + 新框架零误报 + 判据有牙齿）。
+    """
+
+    # 用户第七批粘贴实测的 6 个模板变体（正文结尾口径 76/82=93% 的字面形态）
+    _OBSERVED = [
+        "想练手的话，今天 ACU Alpha 交易竞赛最后一天，抓住机会。",
+        "想试试水又怕虧的，ACU Alpha 交易竞赛可以试，别梭哈。",
+        "想练短线手感的赶今天 ACU Alpha 竞赛截止，冲!",
+        "想练手的别瞎冲，币安 Alpha 交易赛还在打。",
+        "想練手的話可以去參與幣安現貨交易錦標賽 S5/S6，顺便还能赚返佣。",
+        "想要更多交易经验，去币安 Alpha 大赛。",
+    ]
+    # R758 新池框架会产出的说法 + 正常提活动——**都不得误报**（R601：误报率
+    # 决定雷达会不会被信任；尤其「想验证判断」含"验"字，正则会误伤它）
+    _CLEAN = [
+        "想验证判断的，官方大赛可以实地检验。",
+        "看盘和下场比赛是两回事，想下场的走官方入口。",
+        "评论区扣1参与Write to Earn拿奖励。",
+        "真想按这个思路操作的，锦标赛入口在文末。",
+        "今天锦标赛截止，别错过。",
+        "想感谢大家的支持，大赛再见。",
+        "只想安安稳稳持仓，不碰大赛。",
+        "Wanna validate your read? The official contest is open.",
+    ]
+
+    def test_pool_exists_and_is_substantial(self):
+        """★ 池必须存在且够大（<6 个框架撑不起"每帖不一样"）"""
+        self.assertGreaterEqual(len(m.CAMPAIGN_CTA_STYLE_POOL), 6)
+        for it in m.CAMPAIGN_CTA_STYLE_POOL:
+            self.assertIn("：", it, "池条目应是「框架名：描述」结构（遥测 key 取冒号前）")
+
+    def test_pool_hands_back_no_converged_words(self):
+        """★★★ 池里不得出现已收敛的意图词——给字眼=给模板（R597/R598/R732）"""
+        for it in m.CAMPAIGN_CTA_STYLE_POOL:
+            for w in ("想练手", "想練手", "想试水", "想試水", "想磨盘感", "想磨盤感"):
+                self.assertNotIn(w, it,
+                                 "池条目含已收敛字眼 %s ⇒ 模型会照抄成新模板" % w)
+
+    def test_injection_only_when_guidance_usable(self):
+        """★★ guidance 降级时 prompt 明令不得提活动 ⇒ 不得再给"怎么提"的套路
+        （自相矛盾的指令）；可用时必须注入且记录抽中的框架。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        # 降级（无 last_updated ⇒ fail-closed）
+        prompt, _ = eng._build_user_prompt(item, {"strategy_guidance": "g"}, "", ["BTC"])
+        self.assertIsNone(eng.last_campaign_cta_style,
+                          "降级时不得抽活动提法框架（prompt 同时禁提活动）")
+        self.assertNotIn("本篇活动提法套路", prompt)
+        # 可用（新鲜时间戳）
+        import datetime as _dt
+        fresh = {"strategy_guidance": "现货交易锦标赛进行中。",
+                 "last_updated": _dt.datetime.now(_dt.timezone.utc).isoformat()}
+        prompt2, _ = eng._build_user_prompt(item, fresh, "", ["BTC"])
+        self.assertIsNotNone(eng.last_campaign_cta_style,
+                             "guidance 可用时必须抽框架并记录（轮换可见性）")
+        self.assertIn("本篇活动提法套路", prompt2)
+        self.assertIn(eng.last_campaign_cta_style, prompt2)
+
+    def test_injection_covers_both_branches(self):
+        """★★★ 长短文都提活动（intel_section 两分支共享）⇒ 抽取点必须在
+        `if article:` 分支**外**（R615/R611：规则写在一个分支漏了另一个消费面）"""
+        import inspect
+        src = inspect.getsource(m)
+        i = src.find("self.last_campaign_cta_style = None")
+        k = src.find("if article:", src.find("def _build_user_prompt"))
+        self.assertGreater(i, 0, "没找到活动提法抽取点 ⇒ 判据失效")
+        self.assertLess(i, k,
+                        "活动提法抽取落在 article 分支内/后 ⇒ 长文活动提法无轮换")
+
+    def test_hint_bans_converged_template(self):
+        """★★ 注入指令必须点名收敛模板（结构描述）+ 实测占比（R733/R616 同款）"""
+        import ast
+        import inspect
+        import textwrap
+        tree = ast.parse(textwrap.dedent(inspect.getsource(m)))
+        blob = chr(10).join(n.value for n in ast.walk(tree)
+                           if isinstance(n, ast.Constant) and isinstance(n.value, str)
+                           and "想练手/想试水" in n.value)
+        self.assertTrue(blob, "注入指令没点名收敛模板 ⇒ 模型不知道哪个句式被禁")
+        self.assertIn("93%", blob, "禁令要带实测占比（无数据支撑的禁令会被当耳旁风）")
+        self.assertIn("去参加某竞赛/锦标赛", blob,
+                      "模板描述须含「去参加…竞赛」收尾结构（结构描述，非范句）")
+
+    def test_hint_preserves_campaign_info_redline(self):
+        """★ 返佣红线：只轮换提法，活动名称/奖励/截止必须说准"""
+        import ast
+        import inspect
+        import textwrap
+        tree = ast.parse(textwrap.dedent(inspect.getsource(m)))
+        blob = chr(10).join(n.value for n in ast.walk(tree)
+                           if isinstance(n, ast.Constant) and isinstance(n.value, str)
+                           and "活动名称、奖励、截止时间要说准" in n.value)
+        self.assertIn("返佣红线", blob,
+                      "必须明示活动信息要说准=返佣红线（R619/R620：弱化=少赚 Write2Earn）")
+
+    def test_style_rotates_across_calls(self):
+        """★★ 连续多帖抽到的框架必须互异（draw_fresh 契约；不互异=没轮换）"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        import datetime as _dt
+        fresh = {"strategy_guidance": "现货交易锦标赛进行中。",
+                 "last_updated": _dt.datetime.now(_dt.timezone.utc).isoformat()}
+        item = {"title": "BTC news", "summary": "s", "age_hours": 1.0}
+        seen = []
+        for _ in range(4):
+            eng._build_user_prompt(item, fresh, "", ["BTC"])
+            seen.append(eng.last_campaign_cta_style)
+        self.assertEqual(len(set(seen)), len(seen),
+                         "连续 %d 帖抽到重复框架 %s ⇒ draw_fresh 失效" % (len(seen), seen))
+
+    def test_regex_detects_all_observed_variants(self):
+        """★★★ 实测变体零漏报（漏一个=该变体继续收敛而雷达不报）"""
+        for s in self._OBSERVED:
+            self.assertIsNotNone(m._CAMPAIGN_CTA_TPL_RE.search(s),
+                                 "实测模板变体漏检: %s" % s[:24])
+
+    def test_regex_no_false_positive_on_new_frames(self):
+        """★★★ 新框架说法零误报——尤其「想验证判断」含"验"，正则会误伤它
+        （误报率决定雷达会不会被信任，R601）"""
+        for s in self._CLEAN:
+            self.assertIsNone(m._CAMPAIGN_CTA_TPL_RE.search(s),
+                              "新框架/正常提法误报: %s" % s[:24])
+
+    def test_precision_guard_has_teeth(self):
+        """★★ 假阳性演练：把意图类放宽到含「验」（回归形态：把新框架词并进来），
+        precision 判据必须能失败——否则它只是个恒真断言（R712 家族纪律）"""
+        import re as _re
+        loose = _re.compile(
+            r"想[验][^。！!；;" + chr(10) + r"]{0,40}?"
+            r"(?:锦标赛|竞赛|競賽|錦標賽|大赛|大賽)",
+            _re.IGNORECASE)
+        hit = [s for s in self._CLEAN if loose.search(s)]
+        self.assertTrue(hit,
+                        "放宽正则都抓不到误报样本 ⇒ precision 判据是恒真的，无牙齿")
+
+    def test_receipt_plumbs_new_fields(self):
+        """★ 回执必须落 campaign_cta_tpl/campaign_cta_style（无消费面=没修，R619）"""
+        import inspect
+        src = inspect.getsource(m)
+        self.assertGreater(src.find('"campaign_cta_tpl": _campaign_cta_tpl'), 0,
+                           "回执缺 campaign_cta_tpl 字段")
+        self.assertGreater(src.find('"campaign_cta_style": campaign_cta_style_used'), 0,
+                           "回执缺 campaign_cta_style 字段")
+        self.assertIn('getattr(llm_engine, "last_campaign_cta_style", None)', src,
+                      "style 读取未走 getattr ⇒ Mock 替身会炸")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 

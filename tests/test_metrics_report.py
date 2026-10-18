@@ -6514,6 +6514,51 @@ class TestR673ImageTierGuardrail(unittest.TestCase):
         self.assertIn('else ["chart", "raw", "card"]', src)
 
 
+
+class TestR758DailyReportTailTemplateHonesty(unittest.TestCase):
+    """R758: 日报的结尾模板行必须用覆盖数作分母, 且无遥测时明说"""
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r758",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _rows(n, tpl):
+        return [{"outcome": "binance_published",
+                 "ts": "2026-10-18T%02d:00:00+00:00" % (i % 24),
+                 "final_preview": "盘面分析第%d段,多空分歧仍在。" % i,
+                 "content_chars": 20, "content_cjk": 10,
+                 "lang": "zh-CN", "tokens": ["BTC"],
+                 "campaign_cta_tpl": (tpl if i < n else None)} for i in range(16)]
+
+    def test_report_shows_metric_with_coverage_denominator(self):
+        """有遥测时出行, 分母是覆盖数(不是 scanned)"""
+        dr = self._dr()
+        text = dr.build_report(self._rows(8, True), 24)
+        line = [ln for ln in text.split(chr(10)) if "活动CTA结尾模板" in ln]
+        self.assertEqual(len(line), 1)
+        self.assertIn("8/8=100%", line[0], "分母必须是覆盖数 8, 不是 scanned 16")
+        self.assertIn("⚠️", line[0])
+
+    def test_report_no_telemetry_says_so(self):
+        """无遥测时明说暂无全文遥测, 不静默并入未检出"""
+        dr = self._dr()
+        text = dr.build_report(self._rows(0, None), 24)
+        line = [ln for ln in text.split(chr(10)) if "活动CTA结尾模板" in ln]
+        self.assertEqual(len(line), 1)
+        self.assertIn("暂无全文遥测", line[0])
+        self.assertIn("不是0命中", line[0])
+        self.assertIn("未检出", line[0], "六雷达全零时仍要保留未检出表述(R750)")
+
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
@@ -7206,6 +7251,105 @@ class TestR756LangViewPanelEraSplit(unittest.TestCase):
             ap.ROOT = orig
         self.assertIn("市场级事件", out,
                       "2×2 缺市场级事件警示 ⇒ 崩盘期语种反转会被当真（R756）")
+
+class TestR758CampaignCtaTailTemplateRadar(unittest.TestCase):
+    """★★★ R758：活动CTA**结尾整句模板**收敛雷达（读全文遥测，不是扫 preview）
+
+    ★ 生产实证（用户第七批粘贴，10-17~10-18）：82 篇有正文帖里 76 篇（93%）
+      把活动提法收敛成同一句式「想[练手/试水]的…去[参加]ACU Alpha 竞赛」，
+      标题行同型 95%。而该句式在**文尾**、final_preview 只存前 200 字
+      ⇒ R741/R755 的引入句雷达读数为 0 而实际 93%（R647 尾部盲区至今最严重
+      实例）。修法同 R663/R672b：在全文可得处算派生布尔落盘（campaign_cta_tpl），
+      雷达读标记不扫预览。
+    ★ 本类锁四件事：① 读遥测标记（预览里没有也要算）② 无遥测的历史帖不计
+      分子也不计分母 ③ 覆盖率 <100% 时分母用覆盖数 ④ 渲染对"无遥测"诚实闭嘴。
+    """
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r758",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _rows(n, tpl_values, ts_prefix="2026-10-18T"):
+        """构造发布行：preview 故意**不含**模板词（模板在文尾，预览不可见）"""
+        rows = []
+        for i in range(n):
+            rows.append({
+                "outcome": "binance_published",
+                "final_preview": "盘面分析第%d段,多空分歧仍在,后续略。" % i,
+                "ts": "%s%02d:00:00+00:00" % (ts_prefix, i % 24),
+                "campaign_cta_tpl": tpl_values[i] if i < len(tpl_values) else None,
+            })
+        return rows
+
+    def test_counts_telemetry_flag_even_when_preview_lacks_template(self):
+        """★★★ 遥测标记为真就要计——模板在文尾，preview 里没有是**正常的**"""
+        mr = self._mr()
+        rows = self._rows(10, [True] * 3 + [False] * 7)
+        q = mr.quality_scan(rows, window=20)
+        self.assertEqual(q["campaign_cta_tpl"], 3,
+                         "预览里看不到模板就不计 ⇒ 又回到 R647 盲区")
+        self.assertEqual(q["campaign_cta_tpl_cov"], 10)
+
+    def test_missing_telemetry_excluded_from_both_sides(self):
+        """★★ 历史帖无字段（None）⇒ 不计分子也不计分母（未知不是 False）"""
+        mr = self._mr()
+        rows = self._rows(10, [True] * 2 + [None] * 8)
+        q = mr.quality_scan(rows, window=20)
+        self.assertEqual(q["campaign_cta_tpl"], 2)
+        self.assertEqual(q["campaign_cta_tpl_cov"], 2,
+                         "None 行进分母 ⇒ 占比被未观测帖稀释（R747 纪律）")
+
+    def test_no_telemetry_at_all_reports_absent(self):
+        """★ 全窗无遥测 ⇒ 分子 0 且覆盖 0（渲染层据此诚实闭嘴）"""
+        mr = self._mr()
+        rows = self._rows(8, [None] * 8)
+        q = mr.quality_scan(rows, window=20)
+        self.assertEqual(q["campaign_cta_tpl"], 0)
+        self.assertEqual(q["campaign_cta_tpl_cov"], 0)
+
+    def test_render_says_no_telemetry_not_zero_hits(self):
+        """★★★ 渲染必须明说"无遥测数据"而不是"0 命中"（R747：量测口径先自证）"""
+        mr = self._mr()
+        rows = self._rows(8, [None] * 8)
+        s = mr.summarize(rows)
+        out = mr.render_text(s, rows)
+        line = [ln for ln in out.split(chr(10)) if "活动CTA结尾模板收敛" in ln]
+        self.assertEqual(len(line), 1, "无遥测时也要出行（说清楚为什么没有数）")
+        self.assertIn("无遥测数据", line[0],
+                      "无遥测却显示 0 命中 ⇒ 会被读成'修复生效'（最坏的误读）")
+
+    def test_render_alerts_when_template_converged(self):
+        """★ ≥40% 且近半不低于远半 ⇒ 告警并要求查轮换是否生效"""
+        mr = self._mr()
+        # 远半窗 4 篇全 False、近半窗 12 篇全 True（收敛在**新帖**里才算复发）
+        rows = self._rows(16, [False] * 4 + [True] * 12)
+        s = mr.summarize(rows)
+        out = mr.render_text(s, rows)
+        line = [ln for ln in out.split(chr(10)) if "活动CTA结尾模板收敛" in ln]
+        self.assertEqual(len(line), 1)
+        self.assertIn("75%", line[0])
+        self.assertIn("收敛复发", line[0])
+
+    def test_render_shows_coverage_denominator(self):
+        """★ 混合窗口（有遥测+无遥测）⇒ 百分比分母是覆盖数不是 scanned"""
+        mr = self._mr()
+        rows = self._rows(16, [True] * 4 + [None] * 12)
+        q = mr.quality_scan(rows, window=20)
+        self.assertEqual(q["campaign_cta_tpl_cov"], 4)
+        s = mr.summarize(rows)
+        out = mr.render_text(s, rows)
+        line = [ln for ln in out.split(chr(10)) if "活动CTA结尾模板收敛" in ln]
+        self.assertEqual(len(line), 1)
+        self.assertIn("4/4", line[0], "分母必须是覆盖数 4，不是 scanned 16")
+        self.assertIn("仅计有全文遥测的帖", line[0])
 
 
 if __name__ == "__main__":

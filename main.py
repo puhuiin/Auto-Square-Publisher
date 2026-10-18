@@ -4370,6 +4370,59 @@ _PERSONA_BAG = ShuffleBag([p["name"] for p in WRITING_PERSONAS])
 _ENDING_BAG = ShuffleBag(ENDING_STYLE_POOL)
 _TRADE_CTA_BAG = ShuffleBag(TRADE_CTA_STYLE_POOL)
 
+# R758：活动提法套路轮换池（R746 菜单的升级——那版只禁了引入句，没管
+# **结尾整句模板**）。实测（用户第七批粘贴，10-17~10-18）：有正文的 82 篇里
+# 76 篇（93%）把活动提法收敛成同一句式——「想[练手/试水/磨盘感]的[又怕X的]，
+# [可以]去[参加]ACU Alpha[交易]竞赛/锦标赛[练手]」，标题行同型 95%（74 篇
+# 中 70 篇）；且该句式在 final_preview（前 200 字）之外 ⇒ R741/R755 的 🎁
+# 雷达结构性失明（R647 尾部盲区至今最严重的实例）：近窗读数 0 而实际 93%。
+# R746 给的是「引入方式」四选一，模型每帖都选「结尾当行动项」且渲染成同一句
+# ⇒ 与 R592 同解：**轮换的是切入框架，且必须跨帖 draw_fresh**（让代码抽，
+# 不讓模型选——模型凡是自己选，就会每次都选同一个，R597/R598/R732/R746
+# 四次教训同根）。
+# ⚠️ 池里只有**框架描述**没有范例句（R597/R598/R732：范句会被逐字复用成新模板）。
+# ⚠️ 框架措辞刻意避开「想练手/想试水」等已收敛字眼（换词不换结构会被 R758
+#   雷达放过后再次收敛，新框架从语义层面另起灶）。
+# ⚠️ campaign 信息本身（活动名/奖励/截止）必须说准——返佣红线（R619/R620：
+#   只说评论互动拿奖励，绝不暗示交易收益）。
+CAMPAIGN_CTA_STYLE_POOL = [
+    "验证判断框架：把活动说成验证自己读盘判断的场所（这套思路行不行，上场比一场就知道），不评价参赛者水平",
+    "成本对照框架：讲清实盘成本（手续费/滑点/资金费）与大赛试错成本的差别，想小成本试错的人可以去——不得编具体费用数字",
+    "提问带出：先用一个和本帖判断相关的问题引出（怎么知道这套思路到底行不行），再把活动作为验证途径带出",
+    "条件句承接：接在本文盘面判断后面——真想按这个思路操作的，官方有正在进行的大赛可以实地验证",
+    "清单融入：把活动放进「现在该做啥」的清单里当其中一项，前后配别的可执行观察动作，不单独成段",
+    "时点框架：仅当活动确有截止时间时用截止当行动点；没有确切截止信息就不得提倒计时或最后一天",
+    "看盘与下场对照：看盘和下场比赛是两回事，想下场的走官方入口——不催单、不承诺任何结果",
+    "互动奖励框架：提 Write to Earn 时只说评论互动拿奖励，绝不暗示参加活动会带来交易收益或保证收益",
+]
+_CAMPAIGN_CTA_BAG = ShuffleBag(CAMPAIGN_CTA_STYLE_POOL)
+
+# R758：campaign CTA 收敛模板检测（**全文**，不是 preview）。
+# 判据 = 「想练手/试水/磨盘感」类意图短语与「竞赛/锦标赛」类活动名词**同句**
+# 共现（句读符截断，避免一篇里两处各自出现被误判）。这是用户第七批粘贴实测
+# 93% 的那个模板的字面形态；位置无关（R733 纪律：一个短语被禁在某位置会换
+# 位置复发，段首→句中、引入句→结尾句都已实证）。
+# ⚠️ 只追**旧框架字面**：新池框架（验证判断/成本对照/提问带出…）刻意不含这些
+#   意图词，不会被误计；若模型把新框架也收敛成另一套同型句式，字面雷达放行
+#   ——那种「换词不换结构」的复发靠 R738 fresh-look 扫描抓（R603 manip_frame
+#   同族：词级探测抓不住语义框架，须为语义框架单建指标）。
+_CAMPAIGN_CTA_TPL_RE = re.compile(
+    # 意图短语 = 「想练手/想试水/想试试水/想磨盘感/想摸盘感/想练习/想体验/
+    # 想练短线手感/想要更多交易经验」一族（全部为用户第七批粘贴实测出现过的
+    # 形态或其简繁变体——不加未观测变体，避免「想感谢/想念」类误报）。
+    # ⚠️ 类里**故意没有「验」**：R758 新池的「验证判断框架」会产出
+    # 「想验证判断的…大赛」——那是要鼓励的新说法，不能被子雷达当旧模板误报
+    # （R601：误报率决定雷达会不会被信任）。
+    r"(?:想[练練试試磨摸体體]|想要更多交易[经經]验|想[练練][^。！!；;\n]{0,4}手感)"
+    # 与活动名词同句共现（问号可跨——英文问句形态 "Wanna test your read? The
+    # ACU contest is live"；句号/感叹号/分号不可跨，避免两处各自出现被误判）。
+    r"[^。！!；;\n]{0,40}?"
+    r"(?:锦标赛|竞赛|競賽|錦標賽|交易大賽|交易大赛|交易賽事|交易赛事"
+    r"|交易赛|交易賽|大赛|大賽)"
+    r"|(?:wanna|want to|looking to)\s+(?:practice|test|try|sharpen)"
+    r"[^。！!；;\n]{0,60}?(?:contest|tournament)",
+    re.IGNORECASE)
+
 # 开场钩子套路池（R521 用户诉求"多加吸引人阅读的开头/标题、提升阅读量"）：
 # 每条是一种**开场模式**（非固定句子，故不与 opener_guard 的整句去重冲突），
 # 每帖轮换一种，逼模型把第一句写成信息流里让人停下来的钩子。数字只用真实资料。
@@ -4747,6 +4800,9 @@ class MultiLLMEngine:
         self.last_opening_hook: Optional[str] = None
         # R592：最近一次交易建议角度（监测「回踩/拿稳/插针」是否复读）。
         self.last_trade_cta_style: Optional[str] = None
+        # R758：最近一次抽中的活动提法框架（监测 campaign CTA 是否收敛；
+        # None=guidance 降级/无活动，不是"没抽到"）
+        self.last_campaign_cta_style: Optional[str] = None
         # R268：最近一次稿子的帖内 CTA 剥离数（0=无需清理；回执直录测频率）
         self.last_cta_dedupes: Optional[int] = None
         # R162：FNG 禁令状态遥测——R158 呼吸周期此前只能靠扫 preview 间接推断，
@@ -6175,6 +6231,30 @@ class MultiLLMEngine:
 
         # 结尾互动与写派人设风格轮换：从最近投递回执预热洗牌袋，避免每轮新进程首抽随机扎堆。
         recent_published = self._recent_published_rows(20)
+        # R758：活动提法套路轮换（续 R746）——**长短文都抽**（campaign 提法在两个
+        # 分支的 intel_section 里都会注入，不像结尾站队是短讯专属），且只在
+        # guidance 可用（未降级）时抽： degraded 时 prompt 明令不得提活动，
+        # 给"怎么提"的套路是自相矛盾的指令。
+        # ⚠️ 必须放在 `if article` 分支外：长文分支同样会提活动（R746 菜单在
+        #   intel_section 里共享），只放 else 分支= 长文活动提法无轮换（R615/
+        #   R611 同族"规则写在一个分支漏了另一个消费面"）。
+        self.last_campaign_cta_style = None
+        if getattr(self, "last_campaign_guidance_usable", False):
+            campaign_cta_style = _CAMPAIGN_CTA_BAG.draw_fresh(
+                (r.get("campaign_cta_style") for r in recent_published),
+                key=lambda s: s.split("：")[0])
+            self.last_campaign_cta_style = campaign_cta_style.split("：")[0]
+            # R746 菜单禁的是**引入句**（顺便提一嘴类）；R758 补禁**结尾整句模板**
+            # （实测近批 93% 同一句式）并给每帖轮换的切入框架。框架由代码抽、
+            # 不讓模型选——R597/R598/R732/R746 四次实证模型自己选必收敛到一个。
+            # ⚠️ 禁令用**结构描述**不用近范句（范句会被逐字复用，R597/R598/R732）。
+            intel_section += (
+                f"【本篇活动提法套路（本条若提这个活动，照这个框架现写）】：{campaign_cta_style}\n"
+                "★ 别把活动提法写成同一句式——以「想练手/想试水」类念头开头、"
+                "以「去参加某竞赛/锦标赛」收尾的那个模板，实测近批 93% 的帖都长一样，"
+                "读者连看几篇就会判定这是模板号：按上面给的框架另起说法，"
+                "每帖都不一样；活动名称、奖励、截止时间要说准（返佣红线），"
+                "但不准为凑格式把活动信息说丢。\n")
         # R592：实操建议角度同样跨运行 draw_fresh，短讯落标签供后续窗口去重。
         self.last_trade_cta_style = None
         if article:
@@ -12052,6 +12132,18 @@ def _run_main():
                                        if ln.strip()), "")
                         _ord_head = bool(re.match(
                             r"^[一二三四五六七八九十]+[、.]|^\d+[、.]", _first))
+                    # R758：**campaign CTA 收敛模板**（全文判，非 preview）。
+                    # ★ 为什么必须全文：用户第七批粘贴实测 93% 的帖把活动提法
+                    #   收敛成「想练手…去参加…竞赛」同一句式，而该句式在文尾、
+                    #   final_preview 只存前 200 字 ⇒ R741/R755 的 🎁 雷达读数为
+                    #   0 而实际 93%（R647 尾部盲区至今最严重实例）。R672b/R663
+                    #   的同款解法：在**全文可得处**（发布前 final_content）算派生
+                    #   布尔落盘，不加长预览（metrics 膨胀）。
+                    # None = Mock/异常态（未知不是 False，纪律 12）。
+                    _campaign_cta_tpl = None
+                    if isinstance(final_content, str) and final_content.strip():
+                        _campaign_cta_tpl = bool(
+                            _CAMPAIGN_CTA_TPL_RE.search(final_content))
                     # R663：**异常优先留存**的结尾原文。
                     # ★ 为什么只留"不一致"的那种（R647 守卫明确禁止全量存尾段，
                     # 理由是 metrics.jsonl 膨胀：323 篇 × 120 字 = **+60%**）：
@@ -12181,6 +12273,9 @@ def _run_main():
                     opening_hook_used = _oh if isinstance(_oh, str) else None
                     _tc = getattr(llm_engine, "last_trade_cta_style", None)
                     trade_cta_style_used = _tc if isinstance(_tc, str) else None
+                    # R758：抽中的活动提法框架（None=guidance 降级/无活动可提）
+                    _cct = getattr(llm_engine, "last_campaign_cta_style", None)
+                    campaign_cta_style_used = _cct if isinstance(_cct, str) else None
                     # R268：帖内 CTA 剥离数（Mock 替身/异常态防御性降级 None；
                     # append_metrics 过滤 None，0 也过滤=只在真剥离时留痕）
                     _cd = getattr(llm_engine, "last_cta_dedupes", None)
@@ -12284,6 +12379,13 @@ def _run_main():
                         "campaign_tag_count": campaign_tag_count,
                         # R291：注入的活动标签原文（None=本轮无活动标签可注入）
                         "campaign_tag": campaign_tag_used,
+                        # R758：抽中的活动提法框架 + 是否命中收敛模板（全文判）。
+                        # ★ 两个字段配对消费：框架在轮换（style 每帖不同）而模板
+                        #   命中仍高 ⇒ 模型无视轮换自己收敛（R746 的失败形态）；
+                        #   框架没轮换（style=None 而 tpl=True）⇒ 轮换没上线。
+                        # None=Mock/异常态/历史帖（未知不是 False，纪律 12）。
+                        "campaign_cta_style": campaign_cta_style_used,
+                        "campaign_cta_tpl": _campaign_cta_tpl,
                         "ending_style": ending_style_used,
                         "opening_hook": opening_hook_used,
                         "trade_cta_style": trade_cta_style_used,

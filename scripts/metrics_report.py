@@ -294,7 +294,14 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
             continue
         pv = (r.get("final_preview") or "").strip()
         if pv:
-            previews.append((pv, r.get("fng_ban_active"), r.get("ts")))
+            # R758：第 4 元素 = `campaign_cta_tpl` 遥测标记（**全文**判的收敛
+            # 模板，main.py 在发布前对 final_content 计算）。preview 只有前
+            # 200 字而 campaign CTA 在文尾（用户第七批实测 93% 收敛且在预览
+            # 外）⇒ 不带这个标记，雷达对尾部模板结构性失明（R647 盲区）。
+            # 历史行无该字段 ⇒ None（未知不是 False，与 fng_ban_active 同纪律）。
+            _tpl = r.get("campaign_cta_tpl")
+            previews.append((pv, r.get("fng_ban_active"), r.get("ts"),
+                             _tpl if isinstance(_tpl, bool) else None))
             # ★★ R747：`final_preview` 是 **200 字截断字段**（R615 已明示：
             #   正文统计必须用 content_cjk）。实测 73% 的发布帖 content_chars > 200
             #   ⇒ 在这些帖上算"全文句长 CV"实际只算开头 2~3 句——而 2 个数的 CV
@@ -337,6 +344,17 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
            "hotlist_absent": 0, "hotlist_absent_recent": 0, "hotlist_absent_older": 0,
            # R741：活动 CTA 套话复读（track-only；campaign 信息保留=返佣红线，只追引入句复读）。
            "campaign_cta": 0, "campaign_cta_recent": 0, "campaign_cta_older": 0,
+           # R758：campaign CTA **结尾整句模板**收敛（用户第七批粘贴实测 93%）。
+           # 与 campaign_cta（引入句，扫 preview）是两个盲区互补的信号：引入句
+           # 在前 200 字内可见，结尾整句模板只在文尾 ⇒ 必须靠 main.py 全文遥测
+           # 标记（campaign_cta_tpl）才看得见。_cov = 有该字段的行数（历史帖
+           # 没有 ⇒ 覆盖率 <100% 时占比只对有遥测的帖子有意义，R747 纪律）。
+           "campaign_cta_tpl": 0, "campaign_cta_tpl_recent": 0,
+           "campaign_cta_tpl_older": 0, "campaign_cta_tpl_cov": 0,
+           # 近/远半窗各自的**有遥测帖数**——占比分母必须用覆盖数而非半窗总数，
+           # 否则新旧帖混合窗口里百分比被无遥测的旧帖稀释（R610：同一判据要在
+           # 所有消费面一起落地，改一处漏一处等于没改）。
+           "campaign_cta_tpl_cov_recent": 0, "campaign_cta_tpl_cov_older": 0,
            # R610：近半的时间跨度（最早/最晚 ts）——判读近半的前提。R629 更正：
            # 原注释写"发布速率约 4~6 篇/天，一次加固上线 1 天后近半仍可能含 4 篇
            # 加固前旧稿"，**该数字是错的**。生产实测自 09-10 起稳定 **12 篇/天**
@@ -354,7 +372,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     # 近/远切分点：窗口后一半为「近」（时间上更近=修复后），前一半为「远」（对照）。
     # 奇数窗时近半多 1 篇；窗口 <2 时不切分（两半都留 0，由渲染层不显示对照）。
     _split = (len(previews) + 1) // 2
-    for _idx, (pv, ban_active, _ts) in enumerate(previews):
+    for _idx, (pv, ban_active, _ts, _ctpl) in enumerate(previews):
         _is_recent = _idx >= _split
         # R747：该帖是否可度量 CV（preview 未截断）；与 previews 同窗口对齐
         _cv_ok = cv_rows[_idx][2] if _idx < len(cv_rows) else False
@@ -424,6 +442,17 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
         if _CAMPAIGN_CTA_RE.search(pv):
             out["campaign_cta"] += 1
             out["campaign_cta_recent" if _is_recent else "campaign_cta_older"] += 1
+        # R758：活动 CTA **结尾整句模板**收敛——读全文遥测标记（不是扫 preview）。
+        # None（历史帖无字段）不计分子也不计分母：宁可口径收窄，不可把"未观测"
+        # 当"未命中"（R747：观测指标的量测口径要先自证）。
+        if _ctpl is not None:
+            out["campaign_cta_tpl_cov"] += 1
+            out["campaign_cta_tpl_cov_recent" if _is_recent
+                else "campaign_cta_tpl_cov_older"] += 1
+            if _ctpl:
+                out["campaign_cta_tpl"] += 1
+                out["campaign_cta_tpl_recent" if _is_recent
+                    else "campaign_cta_tpl_older"] += 1
     out["offenders"] = dict(out["offenders"])
     return out
 
@@ -3675,6 +3704,41 @@ def render_text(s, rows=None):
                 else:
                     _cw = " ⚠️（活动CTA复读，track-only 观察中）" if _cp >= 40 else ""
                     lines.append(f"  🎁 活动CTA套话复读: {_ca}/{q['scanned']} 篇（{_cp:.0f}%）{_cw}")
+            # R758：活动 CTA **结尾整句模板**收敛（读全文遥测 campaign_cta_tpl）。
+            # 与上面的引入句雷达互补：引入句在 preview 内，结尾整句模板只在文尾。
+            # ⚠️ 覆盖率 <100% 时占比分母用**有遥测帖数**（cv 列同步给出），
+            #   并明说"仅对有遥测的 N 篇有意义"——不可把无遥测旧帖当未命中
+            #   （R747：指标的量测口径要先自证；R731：分布必带样本基数）。
+            _tpl = q.get("campaign_cta_tpl", 0)
+            _tcov = q.get("campaign_cta_tpl_cov", 0)
+            if _tcov > 0:
+                _tp = 100 * _tpl / _tcov
+                _tcr = q.get("campaign_cta_tpl_recent", 0)
+                _tco = q.get("campaign_cta_tpl_older", 0)
+                _trc = q.get("campaign_cta_tpl_cov_recent", 0)
+                _toc = q.get("campaign_cta_tpl_cov_older", 0)
+                if _trc >= 3 and _toc >= 3:
+                    _trpct = 100 * _tcr / _trc
+                    _topct = 100 * _tco / _toc
+                    if _trpct >= 40 and _trpct >= _topct:
+                        _tw = (" ⚠️（近半≥40% ⇒ 收敛复发：R758 轮换池未生效，"
+                               "查 campaign_cta_style 是否每帖不同）")
+                    elif _trpct < _topct:
+                        _tw = "（近半 < 远半 ⇒ R758 轮换生效中）"
+                    else:
+                        _tw = "（近/远持平，需更多样本）"
+                    lines.append(f"  🎁 活动CTA结尾模板收敛: 近半 {_tcr}/{_trc}"
+                                 f"（{_trpct:.0f}%）· 远半对照 {_tco}/{_toc}"
+                                 f"（{_topct:.0f}%）· 整窗 {_tpl}/{_tcov}"
+                                 f"（{_tp:.0f}%）{_tw}")
+                else:
+                    _tw = " ⚠️（结尾模板收敛，track-only 观察中）" if _tp >= 40 else ""
+                    lines.append(f"  🎁 活动CTA结尾模板收敛: {_tpl}/{_tcov} 篇"
+                                 f"（{_tp:.0f}%，仅计有全文遥测的帖）{_tw}")
+            elif q.get("campaign_cta_tpl_cov") == 0 and _tpl == 0:
+                lines.append("  🎁 活动CTA结尾模板收敛: 无遥测数据"
+                             "（窗口内帖子均早于 R758 上线，campaign_cta_tpl "
+                             "字段不存在——不是 0 命中）")
         # R289：FNG 三件套收口——滞回驱动量直方图 + 武装未剥离一致性告警。
         # hook_count 是近窗引入次数（武装条件 ≥2，故 1 = 距武装一步之遥的压力面）；
         # armed 但 market_stripped=False = R101 互补剥离疑似失效（禁令与盘面行

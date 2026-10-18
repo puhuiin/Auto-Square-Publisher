@@ -223,12 +223,33 @@ def build_report(rows, hours: int) -> str:
                 _pct = 100 * _v / max(1, _scanned)
                 _warn = " ⚠️" if _pct >= _thr else ""
                 _lines.append("%s %d/%d=%d%%%s" % (_label, _v, _scanned, _pct, _warn))
-        if _lines:
+        _six_clean = not _lines
+        # R758：活动CTA**结尾整句模板**收敛（用户第七批粘贴实测 93% 的那个模板）。
+        # ★ 分母是**有全文遥测的帖数**（覆盖率）不是 scanned——混合窗口里旧帖
+        #   无该字段，用 scanned 会稀释占比（R610：同一判据所有消费面一起落地）。
+        _tpl_v = _q.get("campaign_cta_tpl") or 0
+        _tpl_cov = _q.get("campaign_cta_tpl_cov") or 0
+        if _tpl_cov > 0:
+            _tpct = 100 * _tpl_v / _tpl_cov
+            _twarn = " ⚠️" if _tpct >= 40 else ""
+            _lines.append("🎁活动CTA结尾模板 %d/%d=%d%%%s"
+                          % (_tpl_v, _tpl_cov, _tpct, _twarn))
             L.append("")
             L.append("⑥ 内容质量（近20篇）：%s" % " ｜ ".join(_lines))
         else:
-            L.append("")
-            L.append("⑥ 内容质量（近20篇）：✅ 未检出收敛复读")
+            # ★ 覆盖 0 时**必须明说无遥测**，绝不并进"未检出"——那会把"没数据"
+            #   读成"没问题"（R747：指标的量测口径要先自证）。
+            _note = "🎁活动CTA结尾模板暂无全文遥测（R758上线后新帖才计数，不是0命中）"
+            if _six_clean:
+                L.append("")
+                L.append("⑥ 内容质量（近20篇）：✅ 未检出收敛复读（另：%s）" % _note)
+            elif _lines:
+                _lines.append(_note)
+                L.append("")
+                L.append("⑥ 内容质量（近20篇）：%s" % " ｜ ".join(_lines))
+            else:
+                L.append("")
+                L.append("⑥ 内容质量（近20篇）：✅ 未检出收敛复读")
 
     # ⑦ 结论
     L.append("")
