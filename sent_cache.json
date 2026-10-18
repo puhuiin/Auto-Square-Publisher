@@ -1,14 +1,5 @@
 [
   {
-    "id": "a664e8e0745d3420",
-    "title": "Bitcoin sees big overnight rally as ETF demand returns before the next US jobs test",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-02T12:28:23.558180+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "3f16b2ada643a177",
     "title": "EIP-8363 Authors Pull Ethereum Staking Reward Burn From Hegotá Upgrade",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5110,5 +5101,15 @@
       "DOGE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d56c8c9b1debafb9",
+    "title": "Vitalik Buterin Reveals Why AI Could Push Bitcoin Miners Out",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-18T03:45:03.497541+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
