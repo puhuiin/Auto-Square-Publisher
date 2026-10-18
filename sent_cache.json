@@ -1,14 +1,5 @@
 [
   {
-    "id": "d9c01076e8fb7483",
-    "title": "Shiba Inu's Long-Awaited Golden Cross Back for First Time in Two Years: What's Next?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-02T18:46:41.046653+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "5e987d69a442fbf6",
     "title": "Travala’s Crypto Loyalty Program Passes 170,000 Members, Sets Long-Term Goal of 30% of AVA Supply Locked",
     "source": "DailyHodl (山寨异动与百倍币叙事)",
@@ -5117,5 +5108,17 @@
       "USDC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "seed::bitget-hack-2026-09::0",
+    "title": "Bitget 遭黑客攻击约 3.52 亿美元 用户保护基金 5,500 枚 $BTC 全额兜底 $ETH 用户零损失",
+    "source": "priority_seed:bitget-hack",
+    "sent_at": "2026-10-18T05:46:37.315770+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
