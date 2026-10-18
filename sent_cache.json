@@ -1,15 +1,5 @@
 [
   {
-    "id": "f8e1dca0f6ea09f4",
-    "title": "方舟女股神:當 Agent 開始花錢,投資人須關注 AI 使用什麼基礎設施",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-10-04T02:26:35.038453+00:00",
-    "tokens": [
-      "ARK",
-      "PUMP"
-    ]
-  },
-  {
     "id": "531800cc8a525f86",
     "title": "DOGE Director Highlights 'Avalanche' of New Projects as Dogecoin Infrastructure Expands",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5130,5 +5120,15 @@
       "SHIB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "f21cff0ccb868781",
+    "title": "比特币年末重返10万美元?市场观点出现分歧",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-18T13:19:08.950285+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
