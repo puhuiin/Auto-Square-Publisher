@@ -86,11 +86,102 @@ _FORCE_STRIP_CASHTAGS = frozenset({
 })
 
 
-# R670：正文挂件上限（main.py `MAX_TOKENS_PER_POST` 的默认值）。
-# ⚠️ **不 import main**：那会连带触发模块级副作用；
-#   引用 main 的常量在本模块直接写也会 NameError，而 `py_compile` 仍通过
-#   （R668 教训：编译过 ≠ 能跑）。⇒ 口径写死并在此处**指向真源**。
-_WIDGET_CAP = 3
+_MAIN_AST_CACHE = {"key": None, "tree": None}
+
+
+def _parse_main_ast(main_path=None):
+    """R657：**AST 解析结果按 (路径, mtime, size) 缓存**。
+
+    R617 立判据：报表必须用 AST 而非 import/正则/硬编码来读 `main.py` 的
+    通道池与置顶清单。但那两个探针**每次调用都重新 `ast.parse` 整个
+    main.py（9884 行）**——实测 `render_text` 里被调 6 次、累计 **3.6 秒**，
+    占整体 4.2s 的 **86%**（`ast.parse` 单次 0.51s）。
+
+    ⇒ 缓存键必须含 **mtime + size**：只按路径缓存会让"改了 main.py 之后
+    报表仍报旧结论"——那是比慢更坏的结果（R612「沉默不是通过」的变体：
+    探针在跑，但报的是过期答案）。
+    解析失败**缓存 None**（失败也要缓存，否则每次都重试失败路径）。
+    """
+    path = main_path or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "main.py")
+    try:
+        stt = os.stat(path)
+        key = (os.path.abspath(path), int(stt.st_mtime), int(stt.st_size))
+    except OSError:
+        return None
+    if _MAIN_AST_CACHE["key"] == key:
+        return _MAIN_AST_CACHE["tree"]
+    tree = None
+    try:
+        import ast
+        with open(path, "r", encoding="utf-8") as f:
+            tree = ast.parse(f.read())
+    except Exception:
+        tree = None          # 响亮失败语义由调用方的"空集"承担
+    _MAIN_AST_CACHE["key"] = key
+    _MAIN_AST_CACHE["tree"] = tree
+    return tree
+
+
+def _widget_cap_from_main(main_path=None):
+    """R764：AST 解析 main.py 的 `MAX_TOKENS_PER_POST`（正文挂件上限）。
+
+    ★ 为什么不写死 3：**R731/R763 家族——报告不得自算生产口径**。该上限是
+      env 可配的（`_env_int("MAX_TOKENS_PER_POST", 3)`），写死会让"改了 env
+      之后报告静默失真"：挂件额度行的「未用满」阈值错、降格分层把 4~9 挂件的
+      合规帖误判成"超限"（假告警）——而 R670 的注释其实早就写着"上限可配"，
+      却把值写死了（R747 家族：注释知道、代码不知道）。
+    ★ 为什么不 import main：模块级副作用（读环境、写状态文件），报表必须纯
+      只读（R623 同款判据）⇒ 走 AST（R657 缓存）。
+    ★ 返回 None = 解析失败 ⇒ 调用方**不得静默用 3**（R617：沉默不是通过）。
+    """
+    import ast
+    tree = _parse_main_ast(main_path)
+    if tree is None:
+        return None
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        for tgt in node.targets:
+            if (isinstance(tgt, ast.Name)
+                    and tgt.id == "MAX_TOKENS_PER_POST"):
+                v = node.value
+                if isinstance(v, ast.Constant) and isinstance(v.value, int):
+                    return v.value
+                if (isinstance(v, ast.Call) and len(v.args) >= 2
+                        and isinstance(v.args[1], ast.Constant)
+                        and isinstance(v.args[1].value, int)):
+                    return v.args[1].value
+    return None
+
+
+# R670/R764：正文挂件上限——**AST 取生产常量，不写死**（R731/R763 家族；
+# 旧注释"口径写死并在此处指向真源"正是该修的形态：注释知道上限可配、代码却
+# 写死 3，env 一改挂件额度行与降格分层一起失真）。
+# ⚠️ 为什么是懒加载不是导入时解析：ast.parse(main.py) ~0.6s，而本模块的
+#   消费者（daily_report、几十个测试模块）**大多数永远不碰挂件行**——
+#   实测导入时解析让测试套件从 4.6s 涨到 18.5s（每个 importlib 加载的模块
+#   实例各付一次，R657 缓存只在本实例内有效）。懒加载后：首次使用才解析，
+#   之后走缓存（每进程一次）。
+# ⚠️ 解析失败时**响亮告警**并回落 3（已知次优：此处无法像 R763 那样显示 ?，
+#   因为推导链需要个整数；但绝不静默——告警文本点名失真的两面）。
+_WIDGET_CAP_CACHE = {"v": None, "done": False}
+
+
+def _widget_cap():
+    """R764：正文挂件上限（懒加载 + 进程内缓存）。失败回落 3 但**先打印告警**。"""
+    if not _WIDGET_CAP_CACHE["done"]:
+        v = _widget_cap_from_main()
+        if v is None:
+            import sys as _sys
+            print("⚠️⚠️ 无法从 main.py 解析 MAX_TOKENS_PER_POST（AST）⇒ 挂件上限"
+                  "回落为 3。若生产改过该 env：挂件额度行「未用满」阈值与降格分层"
+                  "都会失真（4~9 挂件的合规帖会被误判超限）——修好 main.py 路径即恢复。",
+                  file=_sys.stderr)
+            v = 3
+        _WIDGET_CAP_CACHE["v"] = v
+        _WIDGET_CAP_CACHE["done"] = True
+    return _WIDGET_CAP_CACHE["v"]
 
 # R670：挂件降格（R367）上线时刻。
 # ★ **从数据推导**而不是写死日期（纪律7/ R659）：
@@ -129,7 +220,7 @@ def _derive_widget_cap_since(rows):
         wc = _num(r.get("widget_count"))
         if wc is None or _is_stablecoin_only(r.get("tokens")):
             continue
-        if wc > _WIDGET_CAP:
+        if wc > _widget_cap():
             ts = str(r.get("ts") or "")
             if not last_over_ts or ts > last_over_ts:
                 last_over_ts = ts
@@ -140,7 +231,7 @@ def _derive_widget_cap_since(rows):
         wc = _num(r.get("widget_count"))
         if wc is None or _is_stablecoin_only(r.get("tokens")):
             continue
-        if wc > _WIDGET_CAP and str(r.get("ts") or "") > last_over_ts:
+        if wc > _widget_cap() and str(r.get("ts") or "") > last_over_ts:
             over_after += 1
     # ★ 还有超限 ⇒ 降格从未生效（不可分层，否则会掩盖真故障）
     return "" if over_after else last_over_ts
@@ -1117,13 +1208,16 @@ def summarize(rows):
         "para_max_n": 0, "para_max_sum": 0, "para_max_over60": 0,
         # R672b：**复读指纹**（prompt 已预防，此处验证是否奏效）
         "fp_n": 0, "fp_p3_yes": 0, "fp_n4": 0, "fp_p4_yes": 0,
-        "para_max_over80": 0,        # R670：**只统计 R367 降格上线之后**的分布。降格前的老稿
+        "para_max_over80": 0,
+        # R670：widget_hist 只统计 R367 降格上线之后的分布。降格前的老稿
         # `widget_count` 可达 12（当时逻辑还不存在）⇒ 混进分布会让
         # 护栏显示"4/8/12 个"⇒ **读者误以为降格没生效**（R659 陷阱）。
-        # ⚠️ 上线时刻**存在 s 里**而非全局变量：全局会被**下一次 summarize
-        #   调用污染**（R621纪律 18 的变体——那次是"改了不还原"，
-        #   这次是"跨调用残留"）⇒ 测试间与多次调用会互相串味。
-        "widget_cap_since": "",
+        # ⚠️ 上线时刻（widget_cap_since）**在 dict 字面量开头已赋真实推导值**
+        #   （见本函数上方的 `_cap_since`）——**此处绝不能再写一次键**：dict
+        #   字面量里后一个同名键覆盖前一个，曾因重复写 `""` 把该字段变成
+        #   恒为空的死字段、配套测试沦为恒真断言（R764 抓到）。
+        # ⚠️ 存在 s 里而非全局变量：全局会被**下一次 summarize 调用污染**
+        #   （R621纪律 18 的变体）⇒ 测试间与多次调用会互相串味。
         "widget_hist": collections.Counter(),
         "widget_hist_new": collections.Counter(),
         # R610：稳定币-only 零挂件（合规，不告警）——与上面失守桶分开计数，
@@ -2556,41 +2650,6 @@ def _provider_pool_from_main(main_path=None):
     return []
 
 
-_MAIN_AST_CACHE = {"key": None, "tree": None}
-
-
-def _parse_main_ast(main_path=None):
-    """R657：**AST 解析结果按 (路径, mtime, size) 缓存**。
-
-    R617 立判据：报表必须用 AST 而非 import/正则/硬编码来读 `main.py` 的
-    通道池与置顶清单。但那两个探针**每次调用都重新 `ast.parse` 整个
-    main.py（9884 行）**——实测 `render_text` 里被调 6 次、累计 **3.6 秒**，
-    占整体 4.2s 的 **86%**（`ast.parse` 单次 0.51s）。
-
-    ⇒ 缓存键必须含 **mtime + size**：只按路径缓存会让"改了 main.py 之后
-    报表仍报旧结论"——那是比慢更坏的结果（R612「沉默不是通过」的变体：
-    探针在跑，但报的是过期答案）。
-    解析失败**缓存 None**（失败也要缓存，否则每次都重试失败路径）。
-    """
-    path = main_path or os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "main.py")
-    try:
-        stt = os.stat(path)
-        key = (os.path.abspath(path), int(stt.st_mtime), int(stt.st_size))
-    except OSError:
-        return None
-    if _MAIN_AST_CACHE["key"] == key:
-        return _MAIN_AST_CACHE["tree"]
-    tree = None
-    try:
-        import ast
-        with open(path, "r", encoding="utf-8") as f:
-            tree = ast.parse(f.read())
-    except Exception:
-        tree = None          # 响亮失败语义由调用方的"空集"承担
-    _MAIN_AST_CACHE["key"] = key
-    _MAIN_AST_CACHE["tree"] = tree
-    return tree
 
 
 def _bypass_impact_from_main(main_path=None):
@@ -4038,25 +4097,27 @@ def render_text(s, rows=None):
             #   却把标签写死「≤2 个占」⇒ 有 36 篇用满 3 个时也显示 100%，
             #   **显示与计算不符**（R747 家族：雷达行必须量它自称的东西，
             #   一个恒为 100% 的"使用率"没有任何信息量）。
-            _nnotfull = sum(v for k, v in _whn.items() if k < _WIDGET_CAP)
+            _cap = _widget_cap()
+            _nnotfull = sum(v for k, v in _whn.items() if k < _cap)
             _nmax = max(_whn)
-            _nflag = "✅" if _nmax <= _WIDGET_CAP else "❌"
+            _nflag = "✅" if _nmax <= _cap else "❌"
             lines.append(
-                f"  📊 挂件额度使用（降格后 {_nn} 篇，**上限 {_WIDGET_CAP}**"
+                f"  📊 挂件额度使用（降格后 {_nn} 篇，**上限 {_cap}**"
                 f"← main.py `MAX_TOKENS_PER_POST`）: "
                 + " · ".join(f"{k}个 {v}" for k, v in sorted(_whn.items()))
-                + f"　⇒ 未用满（<{_WIDGET_CAP} 个）占 **{_nnotfull/_nn*100:.0f}%**")
+                + f"　⇒ 未用满（<{_cap} 个）占 **{_nnotfull/_nn*100:.0f}%**")
             lines.append(
                 f"     ↳ {_nflag} 近窗最大 **{_nmax}** 个"
-                + ("" if _nmax <= _WIDGET_CAP else "（**超限 ⇒ 降格失效**）")
+                + ("" if _nmax <= _cap else "（**超限 ⇒ 降格失效**）")
                 + "　·未用满是常态（源文常只提 1~2 个币），抽样验证**零漏挂**"
                 f"⇒ **本行是使用率现状，不是缺陷告警**")
         elif s.get("widget_hist"):
             _whall = s.get("widget_hist") or {}
             _wtot = sum(_whall.values())
-            _wover = sum(v for k, v in _whall.items() if k > _WIDGET_CAP)
+            _cap2 = _widget_cap()
+            _wover = sum(v for k, v in _whall.items() if k > _cap2)
             lines.append(
-                f"  ❌ 挂件降格**未生效**：超上限（>{_WIDGET_CAP} 个）"
+                f"  ❌ 挂件降格**未生效**：超上限（>{_cap2} 个）"
                 f"{_wover}/{_wtot} 篇**持续出现在末次超限之后**"
                 f"（时间聚集判据）⇒ 须查 `_cap_cashtag_widgets` 接线: "
                 + " · ".join(f"{k}个 {v}" for k, v in sorted(_whall.items())))

@@ -6429,6 +6429,27 @@ class TestR670WidgetCapGuardrail(unittest.TestCase):
         self.assertEqual(got, "2026-10-06T03:00:00+00:00",
                          "应取最后一个超限的 ts（降格失效的最后一刻）")
 
+    def test_cap_since_field_equals_derived_value(self):
+        """★★★ R764：`s["widget_cap_since"]` 必须等于推导函数的返回值——
+        dict 字面量里**重复写同一个键**会让后一个覆盖前一个（本字段曾因
+        重复赋 "" 变成恒空的死字段，配套测试随之沦为恒真断言）。判据=
+        字段与函数同源，且随数据变化。"""
+        rows = [self._p("2026-10-06T02:00:00+00:00", 2),
+                self._p("2026-10-06T03:00:00+00:00", 9),
+                self._p("2026-10-06T04:00:00+00:00", 7)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["widget_cap_since"],
+                         mr._derive_widget_cap_since(rows),
+                         "字段与推导函数不一致 ⇒ 键被覆盖/字段已死")
+        self.assertEqual(s["widget_cap_since"], "2026-10-06T04:00:00+00:00",
+                         "末次超限（wc=7 @04:00）即分层线")
+        # 无超限时必须真的是空串（不是恒空的那种"空"）
+        rows2 = [self._p("2026-10-06T02:00:00+00:00", 1),
+                 self._p("2026-10-06T03:00:00+00:00", 3)]
+        s2 = mr.summarize(rows2)
+        self.assertEqual(s2["widget_cap_since"], "",
+                         "无超限 ⇒ 空串（此时才是真正的'不可分层'）")
+
     def test_no_oversize_returns_empty(self):
         rows = [self._p("2026-10-06T02:00:00+00:00", 1),
                 self._p("2026-10-06T03:00:00+00:00", 3)]
@@ -6469,12 +6490,19 @@ class TestR670WidgetCapGuardrail(unittest.TestCase):
           ⚠️ ② 踩了纪律 11「并列信号不能共用分母」：
              分子数"之后的全部行"、分母数"全部行" ⇒ 比值天然偏大。
         """
+        # ★ R764 修正：原注释"末次之后仍超限"与数据不符——wc=7 @04:00 本身就是
+        #   末次超限（last_over_ts 取 max ts，其后不可能再有超限 ⇒ 旧代码的
+        #   over_after 恒 0）。本用例的真实语义是**最新帖仍超限**：分层线=最新
+        #   ts ⇒ 其后无帖 ⇒ widget_hist_new 空 ⇒ 渲染走 ❌ 分支。
+        #   （旧断言 s["widget_cap_since"]=="" 因 dict 重复键恒真而一直通过。）
         rows = [self._p("2026-10-06T02:00:00+00:00", 2),   # 合规
                 self._p("2026-10-06T03:00:00+00:00", 9),   # 超限
-                self._p("2026-10-06T04:00:00+00:00", 7)]   # ★ 末次之后仍超限
+                self._p("2026-10-06T04:00:00+00:00", 7)]   # 最新帖仍超限
         s = mr.summarize(rows)
-        self.assertEqual(s["widget_cap_since"], "",
-                         "末次超限之后仍有超限 ⇒ 不可分层")
+        self.assertEqual(s["widget_cap_since"], "2026-10-06T04:00:00+00:00",
+                         "末次超限即分层线（R764：该字段不再是恒空的死字段）")
+        self.assertEqual(dict(s["widget_hist_new"]), {},
+                         "分层线=最新帖 ⇒ 其后无帖 ⇒ 新桶空 ⇒ 触发 ❌ 分支")
         text = mr.render_text(s, rows)
         self.assertIn("❌", text)
         self.assertIn("降格**未生效**", text)
@@ -6486,13 +6514,80 @@ class TestR670WidgetCapGuardrail(unittest.TestCase):
         self.assertEqual(s["widget_hist"][0], 0,
                          "稳定币-only 不应计入使用率分布")
 
+    def test_widget_cap_follows_production_constant(self):
+        """★★★ R764：挂件上限必须跟生产常量走（AST 取，不写死 3）——
+        R731/R763 家族的第三个实例。判据=注入一棵"常量=9"的假 AST 树：
+        ① `_widget_cap()` 必须变 9；② 渲染行的「未用满（<9 个）」必须跟着变；
+        ③ 降格分层推导必须跟着变（同数据 cap=3 判"降格未生效"、cap=9 判"可分层"）。
+        """
+        import ast
+        self.assertEqual(mr._widget_cap(), 3, "默认应解析出生产默认值 3")
+        fake = ast.parse('MAX_TOKENS_PER_POST = _env_int("MAX_TOKENS_PER_POST", 9)')
+        _orig_parse = mr._parse_main_ast
+        _orig_cache = (mr._WIDGET_CAP_CACHE["v"], mr._WIDGET_CAP_CACHE["done"])
+        mr._parse_main_ast = lambda *a, **k: fake
+        mr._WIDGET_CAP_CACHE["v"], mr._WIDGET_CAP_CACHE["done"] = None, False
+        try:
+            self.assertEqual(mr._widget_cap(), 9,
+                             "改了生产常量 _widget_cap 必须跟着变 ⇒ 不是写死的 3")
+            # ② 渲染行：cap=9 时 wc=5 算"未用满"；wc=12 建分层点
+            rows = [self._p("2026-10-06T02:00:00+00:00", 12),    # 超限(cap=9)⇒分层点
+                    self._p("2026-10-06T03:00:00+00:00", 5),
+                    self._p("2026-10-06T04:00:00+00:00", 1)]
+            s = mr.summarize(rows)
+            text = mr.render_text(s, rows)
+            line = [ln for ln in text.split(chr(10)) if "挂件额度使用" in ln][0]
+            self.assertIn("上限 9", line, "渲染行的上限必须跟生产常量: %s" % line)
+            self.assertIn("未用满（<9 个）占 **100%**", line,
+                          "cap=9 时 wc=5/1 都算未用满: %s" % line)
+            self.assertNotIn("降格**未生效**", text,
+                             "cap=9 时末次超限之后没有超限 ⇒ 不该报降格失效")
+            # ③ 推导链：cap=9 ⇒ wc=12 是唯一超限且在最早 ⇒ 可分层（返回其 ts）
+            self.assertEqual(mr._derive_widget_cap_since(rows),
+                             "2026-10-06T02:00:00+00:00",
+                             "cap=9 时应以 wc=12 那篇为分层点")
+        finally:
+            mr._parse_main_ast = _orig_parse
+            mr._WIDGET_CAP_CACHE["v"], mr._WIDGET_CAP_CACHE["done"] = _orig_cache
+        # 对比：同一份数据回到默认 cap=3 ⇒ 分层点从 02:00 挪到 03:00
+        # （wc=5 在 cap=3 时也算超限）——**分层点随 cap 变**即证明 cap 真的
+        # 流进了推导链（不必指望返回 ""：last_over_ts 取 max ts，其后不可
+        # 能有超限 ⇒ 旧代码的 over_after 恒 0，"不可分层"分支本就不可达）。
+        self.assertEqual(mr._widget_cap(), 3, "恢复后应回到 3")
+        self.assertEqual(mr._derive_widget_cap_since(rows),
+                         "2026-10-06T03:00:00+00:00",
+                         "cap=3 时 wc=5 也是超限 ⇒ 分层点挪到 03:00"
+                         "（与 cap=9 的 02:00 不同 ⇒ cap 传导到了推导链）")
+
+    def test_widget_cap_warns_loudly_when_unparsable(self):
+        """★ 解析失败时**响亮告警**并回落 3——不静默（R617：沉默不是通过）。
+        已知次优（此处无法显示 ?，推导链需要整数），但告警必须点名失真的两面。
+        """
+        _orig_parse = mr._parse_main_ast
+        _orig_cache = (mr._WIDGET_CAP_CACHE["v"], mr._WIDGET_CAP_CACHE["done"])
+        mr._parse_main_ast = lambda *a, **k: None
+        mr._WIDGET_CAP_CACHE["v"], mr._WIDGET_CAP_CACHE["done"] = None, False
+        try:
+            import contextlib
+            import io as _io
+            buf = _io.StringIO()
+            with contextlib.redirect_stderr(buf):
+                got = mr._widget_cap()
+            self.assertEqual(got, 3, "解析失败回落 3")
+            self.assertIn("MAX_TOKENS_PER_POST", buf.getvalue(),
+                          "回落必须响亮告警并点名常量，不得静默")
+            self.assertIn("失真", buf.getvalue())
+        finally:
+            mr._parse_main_ast = _orig_parse
+            mr._WIDGET_CAP_CACHE["v"], mr._WIDGET_CAP_CACHE["done"] = _orig_cache
+
     def test_widget_usage_percent_matches_its_label(self):
         """★★★ R762：百分比必须与标签同口径——旧代码算 `k <= _WIDGET_CAP`
         （=全部，恒 100%）却把标签写死「≤2 个占」：36 篇用满 3 个时也显示
         100%，一个恒真的"使用率"没有任何信息量（R747 家族：雷达行必须量
         它自称的东西）。判据=标签说"未用满（<上限）"，数字就必须是
         「挂件数 < 上限」的占比。"""
-        cap = mr._WIDGET_CAP
+        cap = mr._widget_cap()
         # 首行超限（wc=9）⇒ 推导出降格上线时刻，其后才进 widget_hist_new
         rows = [self._p("2026-10-06T02:00:00+00:00", 9),
                 self._p("2026-10-06T03:00:00+00:00", 1),
