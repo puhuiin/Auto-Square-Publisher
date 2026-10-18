@@ -1,16 +1,5 @@
 [
   {
-    "id": "938084a0ac75530f",
-    "title": "Dogecoin (DOGE), Cardano (ADA), Aave (AAVE) and Bonk (BONK) Price Analysis for October 3: Can Market Recapture Volatility?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-03T01:52:37.171355+00:00",
-    "tokens": [
-      "DOGE",
-      "ADA",
-      "AAVE"
-    ]
-  },
-  {
     "id": "3f99e698fdc8fbe6",
     "title": "Crypto hackers exploit third-party Aave tool to steal 114 ETH",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5120,6 +5109,16 @@
     "sent_at": "2026-10-18T06:24:59.423322+00:00",
     "tokens": [
       "PUMP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "607b522d04b2f248",
+    "title": "Ethereum sets October 26 for Hoodi’s 200 million gas test",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-18T06:46:07.376802+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-TW"
   }
