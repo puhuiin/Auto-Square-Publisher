@@ -1,14 +1,5 @@
 [
   {
-    "id": "d58e97dc8e026d91",
-    "title": "Ethereum’s past outflow charts can change when more exchange wallets are identified",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-05T02:28:31.094866+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "049f850ff998e8c7",
     "title": "XRP and SOL ETF Demand Craters as Weekly Inflows Drop 94%+",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5137,6 +5128,17 @@
     "sent_at": "2026-10-18T17:44:12.754990+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a2d2bc3a109c9072",
+    "title": "Vitalik推出AI偏执模式,隐藏身份、请求来源与支付痕迹",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-18T18:04:45.746880+00:00",
+    "tokens": [
+      "ETH",
+      "USDC"
     ],
     "lang": "en"
   }
