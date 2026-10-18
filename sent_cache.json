@@ -1,14 +1,5 @@
 [
   {
-    "id": "d5c66835f02a0911",
-    "title": "3x Bitcoin and Ether futures funds clear SEC listing hurdle",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-04T16:06:25.570001+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "11f41c116785e9d3",
     "title": "Ethereum Creator Vitalik Buterin Reveals Privacy-Focused AI Experiment",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5130,6 +5121,16 @@
     "sent_at": "2026-10-18T15:04:10.611488+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ac295feed70a6daa",
+    "title": "孙宇晨地址从 Poloniex 多签地址收到 7.2 万亿枚 PEPE,价值约 2844 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-18T15:24:10.362983+00:00",
+    "tokens": [
+      "PEPE"
     ],
     "lang": "en"
   }
