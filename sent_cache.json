@@ -1,15 +1,5 @@
 [
   {
-    "id": "1f3aea852c0676ef",
-    "title": "Arbitrum pauses new Stylus activations over AI-assisted attack risks",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-03T13:11:38.850415+00:00",
-    "tokens": [
-      "ARB",
-      "ETH"
-    ]
-  },
-  {
     "id": "df3dfcd3b3385fd2",
     "title": "Over $1.5 Billion in Bitcoin Tops BlackRock Holdings in One Month",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5121,6 +5111,16 @@
     "sent_at": "2026-10-18T08:24:09.168676+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "020a49e479286339",
+    "title": "Hyperliquid调整交易优先级机制,部分CoreWriter用户将被降级",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-18T09:04:41.277954+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
