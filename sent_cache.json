@@ -1,14 +1,5 @@
 [
   {
-    "id": "763cc46aa58cb394",
-    "title": "88 Trillion SHIB Threshold Back in Play as Shiba Inu Loses New Price Target",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-03T22:26:33.252847+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "9cee7ac5250a5182",
     "title": "Cardano (ADA) Completes First Daily Golden Cross of 2026 After 14-Month Wait",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5124,6 +5115,18 @@
     "sent_at": "2026-10-18T12:04:44.305380+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "183588b950efc2a6",
+    "title": "TechFlow 情报局:DeepSeek 新产品被指“换皮”GPT-6,Starknet 99.95% 票数支持转型独立 L1",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-18T12:27:11.138856+00:00",
+    "tokens": [
+      "HYPE",
+      "ETH",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
