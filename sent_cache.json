@@ -1,14 +1,5 @@
 [
   {
-    "id": "747627165d4496cc",
-    "title": "Solana Debuts Institutional Settlement Standard With J.P. Morgan Input",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-06T06:09:47.376580+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "79791f5e81e3b729",
     "title": "Ethereum’s proposed 3x ETF could reach CME’s futures threshold with just $362 million",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5148,5 +5139,16 @@
       "ADA"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "9e038e32d895ae08",
+    "title": "Cross River Bank Adds Ripple’s RLUSD To Its Payment Infrastructure",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-10-18T22:25:05.252296+00:00",
+    "tokens": [
+      "RLUSD",
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
