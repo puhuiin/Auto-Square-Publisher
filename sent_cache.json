@@ -1,17 +1,5 @@
 [
   {
-    "id": "792b439d64b8c912",
-    "title": "Cardano (ADA), XRP, Zcash (ZEC) and Sui (SUI) Price Analysis October 6: Market Retains Momentum",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-06T02:17:51.129701+00:00",
-    "tokens": [
-      "ADA",
-      "XRP",
-      "ZEC",
-      "ONDO"
-    ]
-  },
-  {
     "id": "9760cd2d0562ccdc",
     "title": "XRP Ledger Takes Big Step Toward Smart Escrow Launch",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5147,6 +5135,16 @@
     "tokens": [
       "USDC",
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f065c314b0545f6a",
+    "title": "Ethereum Price Prediction: Is ETH’s 7% Weekly Drop Just the Start?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-18T21:44:09.006537+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
