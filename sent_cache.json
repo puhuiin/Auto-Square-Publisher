@@ -1,14 +1,5 @@
 [
   {
-    "id": "e8993b21314d6b7a",
-    "title": "ETH Upgrade Countdown Begins: 24 Hours Left for Glamsterdam Testnet Launch",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-05T19:06:42.982667+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "7d8639a5adf6bc7e",
     "title": "Coinbase Business Chief: Big Banks Increasing BTC Exposure | Shan Aggarwal",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5143,6 +5134,16 @@
     "sent_at": "2026-10-18T20:24:10.692373+00:00",
     "tokens": [
       "APT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4132e27ee4846a81",
+    "title": "Filecoin’s bearish week meets a massive upgrade on October 19 – Can FIL hold $1?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-18T20:44:55.799981+00:00",
+    "tokens": [
+      "FIL"
     ],
     "lang": "en"
   }
