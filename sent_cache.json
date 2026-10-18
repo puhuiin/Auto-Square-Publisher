@@ -1,15 +1,5 @@
 [
   {
-    "id": "049f850ff998e8c7",
-    "title": "XRP and SOL ETF Demand Craters as Weekly Inflows Drop 94%+",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-05T06:06:30.970391+00:00",
-    "tokens": [
-      "XRP",
-      "SOL"
-    ]
-  },
-  {
     "id": "53f5ed2da67ec56b",
     "title": "Shiba Inu (SHIB) Records Immediate Gains Following Official Solana Listing",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5139,6 +5129,16 @@
     "tokens": [
       "ETH",
       "USDC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1df311ae7350feb9",
+    "title": "CZ 回应推出 BNB 手机提议:不确定随身携带“加密手机”是否是个好主意",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-18T18:23:48.361071+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
