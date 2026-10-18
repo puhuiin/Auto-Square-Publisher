@@ -1,14 +1,5 @@
 [
   {
-    "id": "e5f09ae496e11a13",
-    "title": "Quant (QNT) Could Explode to $2,000: Analyst Reveals the Critical Factor",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-01T18:44:09.319301+00:00",
-    "tokens": [
-      "QNT"
-    ]
-  },
-  {
     "id": "2e9c3d8324642bd3",
     "title": "Zcash 隱私交易要衝 5 萬 TPS!Tachyon 程式碼 Udon 先上線",
     "source": "BlockTempo (动区动趋中文)",
@@ -5102,6 +5093,16 @@
     "sent_at": "2026-10-18T01:04:28.184957+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6f1da9aca24365e4",
+    "title": "价值1.1亿美元,某巨鲸1360枚BTC多单设置80500美元市价止损",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-18T01:24:09.216039+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
