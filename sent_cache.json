@@ -1,14 +1,5 @@
 [
   {
-    "id": "caef903f07d5150d",
-    "title": "DeFi Development Corp Adds $3 Million in Solana as SOL Buys Slow",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-05T22:44:22.951076+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "792b439d64b8c912",
     "title": "Cardano (ADA), XRP, Zcash (ZEC) and Sui (SUI) Price Analysis October 6: Market Retains Momentum",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5145,6 +5136,17 @@
     "sent_at": "2026-10-18T21:03:26.635611+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fd8c4197cedcef41",
+    "title": "Cardano Stablecoin Market Tops $70 Million As USDC Dominates Supply",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-10-18T21:24:27.441067+00:00",
+    "tokens": [
+      "USDC",
+      "ADA"
     ],
     "lang": "en"
   }
