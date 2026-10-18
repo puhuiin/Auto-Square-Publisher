@@ -1,14 +1,5 @@
 [
   {
-    "id": "df3dfcd3b3385fd2",
-    "title": "Over $1.5 Billion in Bitcoin Tops BlackRock Holdings in One Month",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-03T16:04:37.900108+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "1bf4303eb074bb99",
     "title": "Trump Is Hosting Yet Another Meme Coin Dinner: Here Are the Details",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5123,5 +5114,15 @@
       "HYPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "25809ddc7577000f",
+    "title": "Hyperliquid 调整 write priority fees 规则 测试网上线并增加 10 HYPE 门槛",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-18T09:24:39.017900+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
