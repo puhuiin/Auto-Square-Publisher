@@ -21014,6 +21014,25 @@ class TestR758CampaignCtaRotationPool(unittest.TestCase):
             self.assertIsNotNone(m._CAMPAIGN_CTA_TPL_RE.search(s),
                                  "实测模板变体漏检: %s" % s[:24])
 
+    def test_english_branch_matches_chinese_semantics(self):
+        """★★★ R761：英文分支必须与中文分支同语义——只收「练手/试水」族，
+        **不收 test**（test your read ≈ 中文「想验证判断」，是新池框架要鼓励的
+        说法，中文分支同样排除「验」）。最初的 test 来自我自己编的测试示例
+        （零真实样本校准：实测英文帖 campaign 提法 0/160 在 preview 可见），
+        已移除。当前英文分支未经校准 ⇒ 宁可漏报不可误报（R601）。"""
+        # 新框架的英文渲染：不得误报
+        for s in ["Wanna test your read? The official contest is open.",
+                  "Want to validate your thesis? The tournament is live.",
+                  "Looking to check your edge? The contest runs till Friday."]:
+            self.assertIsNone(m._CAMPAIGN_CTA_TPL_RE.search(s),
+                              "英文新框架渲染误报: %s" % s[:30])
+        # 旧模板的英文直译（练手/试水族）：要报
+        for s in ["Wanna practice? The Binance contest is live.",
+                  "Want to try your hand? The trading tournament is open.",
+                  "Looking to sharpen your skills? Join the contest."]:
+            self.assertIsNotNone(m._CAMPAIGN_CTA_TPL_RE.search(s),
+                                 "英文旧模板漏报: %s" % s[:30])
+
     def test_regex_no_false_positive_on_new_frames(self):
         """★★★ 新框架说法零误报——尤其「想验证判断」含"验"，正则会误伤它
         （误报率决定雷达会不会被信任，R601）"""
