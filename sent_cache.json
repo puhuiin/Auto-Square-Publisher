@@ -1,14 +1,5 @@
 [
   {
-    "id": "9631e4e0f546a4ef",
-    "title": "Zcash gets a Washington lobbyist to push crypto policy",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-05T02:06:30.981114+00:00",
-    "tokens": [
-      "ZEC"
-    ]
-  },
-  {
     "id": "d58e97dc8e026d91",
     "title": "Ethereum’s past outflow charts can change when more exchange wallets are identified",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5136,6 +5127,16 @@
     "sent_at": "2026-10-18T17:24:45.112083+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "bb27b735b60d391a",
+    "title": "Cardano Is One Upgrade Away From Being Fully Complete, Hoskinson Declares — Will It Be Enough To Ignite ADA’s Price?",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-18T17:44:12.754990+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
