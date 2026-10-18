@@ -9629,6 +9629,10 @@ class SquarePublisher(BasePublisher):
         content = self._sanitize_content(content, max_chars=char_limit)
         content = self._weave_cashtags(content, ensure_tokens)
         content = self._ensure_token_widget(content, ensure_tokens)
+        # ★★ R772：与正文发布同源——**织入之后必须再补一次空格**（补空格在
+        #   _sanitize_content 里、跑在 weave 之前，织出的新挂件会绕回它）。
+        #   视频帖无降级路径（拒稿即视频+文案全丢），挂件不可点击的代价更高。
+        content = self._pad_tight_cashtags(content)
         # R367：视频文案同样压唯一挂件数到上限，杜绝 220095 币对超限（视频帖无降级路径，
         # 一旦拒稿视频与文案一并丢失，更须在提交前把挂件数守住）。
         content = self._cap_cashtag_widgets(content, MAX_TOKENS_PER_POST)

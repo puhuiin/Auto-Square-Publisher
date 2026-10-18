@@ -17130,17 +17130,29 @@ class TestR643CashtagSpacing(unittest.TestCase):
                              "%s 仍紧贴中文 ⇒ 币安不渲染可点击标签（返佣入口失效）" % w)
 
     def test_publish_body_wiring_pads_after_weave(self):
-        """★★ 源码级接线守卫：publish() 正文链路必须 **weave 之后再 pad**。
-        顺序反了（pad 在 weave 前）就是 R772 的 bug——补的空格被织入绕回。
+        """★★★ 源码级接线守卫（**全覆盖扫描**）：publish() 的**每一处**
+        _weave_cashtags(content, ensure_tokens) 之后都必须再补一次空格。
+        R772 修正文链路时发现视频文案链路（publish_video）是同一条复制路径、
+        带着同一个 bug ⇒ 守卫不能只盯一个代码段，要扫全部调用点，
+        否则修一处漏一处（R615/R611 同族）。
         """
+        import re as _re
         src = open(m.__file__, encoding="utf-8").read()
-        seg_start = src.index("content = self._sanitize_content(content, max_chars=char_limit)")
-        seg = src[seg_start:seg_start + 1200]
-        self.assertIn("_weave_cashtags", seg, "正文链路必须织挂件")
-        self.assertIn("_pad_tight_cashtags", seg,
-                      "正文链路必须在织入后补空格（R772）")
-        self.assertLess(seg.index("_weave_cashtags"), seg.index("_pad_tight_cashtags"),
-                        "必须先织入再补空格，否则织出的挂件仍是紧贴形态（R772）")
+        sites = list(_re.finditer(
+            r"content = self\._weave_cashtags\(content, ensure_tokens\)", src))
+        self.assertGreaterEqual(len(sites), 2,
+                                 "应至少有两处正文织入（短讯 publish + 视频 publish_video）")
+        for mt in sites:
+            ln = src[:mt.start()].count(chr(10)) + 1
+            # 取该调用点之后、下一个 def 之前的代码段（不越界到别的函数）
+            after = src[mt.end():]
+            nxt = after.find(chr(10) + "    def ")
+            seg = after[:nxt] if nxt > 0 else after[:1500]
+            self.assertIn("_pad_tight_cashtags", seg,
+                          "第 %d 行的正文织入后没有补空格，织出的挂件紧贴中文、"
+                          "不可点击（R772：补空格跑在 weave 前会被绕回）" % ln)
+            self.assertLess(0, seg.find("_pad_tight_cashtags"),
+                            "第 %d 行：织入后必须补空格" % ln)
 
     def test_amount_tokens_not_padded(self):
         """**金额不是挂件**——$1000/$2000/$120K/$5B 不得被插空格。
