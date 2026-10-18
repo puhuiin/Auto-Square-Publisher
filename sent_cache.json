@@ -1,15 +1,5 @@
 [
   {
-    "id": "052a980e1a6406d0",
-    "title": "Ethereum Now Lets You Pay for AI Without Revealing Who You Are",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-03T18:04:03.450647+00:00",
-    "tokens": [
-      "USDC",
-      "ETH"
-    ]
-  },
-  {
     "id": "ea549ffa6f762473",
     "title": "QNT and NIGHT Continue to Defy Market Correction, BTC Settles After Wild Ride: Weekend Watch",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5125,6 +5115,16 @@
     "sent_at": "2026-10-18T10:05:28.897212+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a81c46397edd3834",
+    "title": "Cysic 跨鏈橋遭攻擊,BNB Chain 上被未經授權鑄造 1000 萬枚 CYS",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-18T11:02:04.829818+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-CN"
   }
