@@ -21033,6 +21033,33 @@ class TestR758CampaignCtaRotationPool(unittest.TestCase):
         self.assertTrue(hit,
                         "放宽正则都抓不到误报样本 ⇒ precision 判据是恒真的，无牙齿")
 
+    def test_menu_is_expectation_not_conditional(self):
+        """★★★ R760：菜单必须是**期望句**不是条件句——R758 首版"本条若要提这个
+        活动"与 guidance"可重点结合"叠加成双重许可，生产实测正文活动提及率从
+        ~93% 掉到 1/3（campaign_mention 遥测）：模型把"换说法"读成"可以不提"。
+        每帖提活动是刻意的 Write2Earn 互动打法（R741），轮换池解决"怎么说"
+        不解决"要不要说"。"""
+        import ast
+        import inspect
+        import textwrap
+        tree = ast.parse(textwrap.dedent(inspect.getsource(m)))
+        # 注入文本是**多个字符串常量**（f-string 框架行 + ★ 禁令行各自独立），
+        # 过滤条件要覆盖两段——只匹配第一段会漏掉禁令/逃生阀断言（R699：判据要
+        # 指向真实定义，别被常量的切分方式骗了）。
+        blob = chr(10).join(
+            n.value for n in ast.walk(tree)
+            if isinstance(n, ast.Constant) and isinstance(n.value, str)
+            and ("活动提法套路" in n.value or "别把活动提法写成同一句式" in n.value))
+        self.assertTrue(blob, "没找到活动提法菜单注入文本")
+        self.assertNotIn("若提这个活动", blob,
+                         "菜单又是条件句（若要提）⇒ 模型可跳过，提及率会掉 "
+                         "（R760 实测 93%→33%）")
+        self.assertIn("本帖照这个框架带一句活动提法", blob,
+                      "菜单必须是期望句：默认要提，只换说法")
+        self.assertIn("八竿子打不着", blob,
+                      "逃生阀要保留但收紧：确实无关的新闻才可不提"
+                      "（一刀切改成必须提会推回生硬植入）")
+
     def test_receipt_plumbs_new_fields(self):
         """★ 回执必须落 campaign_cta_tpl/campaign_cta_style（无消费面=没修，R619）"""
         import inspect
