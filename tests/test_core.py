@@ -21070,6 +21070,33 @@ class TestR746CampaignCtaPhrasingMenu(unittest.TestCase):
         self.assertIn("别再用「顺便提一嘴", blob,
                       "必须点名这个已复读的固定引入句（R741 数据）")
 
+    def test_r778b_no_contradictory_conditional_in_campaign_section(self):
+        """★★★ R778b：campaign 注入段不得有**与期望句矛盾的条件句**。
+        R760 把框架头改成期望句（"本帖照这个框架带一句"）后，R746 的例行菜单里
+        还留着「本条**若要**提这个活动」——两条指令并排，模型读到矛盾等于
+        两条都没有约束（生产实证：R778 首篇仍写完整模板「想練手抓短線的可以
+        去參加幣安現貨交易錦標賽」）。
+        判据=整段注入文本里不得出现「若要提」这类许可措辞（逃生阀只保留
+        guidance 自身那句"与新闻无关则切勿生硬提及"——那是 R619 的质量护栏，
+        由 guidance 注入侧统一加，不在菜单里重复）。
+        """
+        import ast
+        import inspect
+        import textwrap
+        tree = ast.parse(textwrap.dedent(inspect.getsource(m)))
+        # 取 campaign 注入相关的全部字符串常量（菜单 + 框架 + 禁令 + 逃逸阀）
+        blob = "\n".join(
+            n.value for n in ast.walk(tree)
+            if isinstance(n, ast.Constant) and isinstance(n.value, str)
+            and ("活动提法" in n.value or "顺便提一嘴" in n.value
+                 or "想练手/想试水" in n.value or "八竿子打不着" in n.value))
+        self.assertTrue(blob, "没找到 campaign 注入文本")
+        self.assertNotIn("若要提", blob,
+                         "菜单里还有「若要提」条件句 ⇒ 与 R760 期望句矛盾"
+                         "（R778b 生产实证：模型两条都不当回事）")
+        self.assertIn("本帖照这个框架带一句", blob,
+                      "期望句必须在位（R760）")
+
     def test_instruction_preserves_campaign_info_not_just_variety(self):
         """★ 返佣红线：只轮换**提法**，campaign 信息本身不得被要求弱化"""
         blob = self._intel_block()
