@@ -1,14 +1,5 @@
 [
   {
-    "id": "05c41c693788e0c7",
-    "title": "277 Billion Shiba Inu (SHIB) Added: No, It's Not Bearish Yet",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-04T13:24:02.442927+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "d5c66835f02a0911",
     "title": "3x Bitcoin and Ether futures funds clear SEC listing hurdle",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5129,6 +5120,16 @@
     "sent_at": "2026-10-18T14:29:03.421620+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6a95c731a3f0ced0",
+    "title": "Hackers move stolen funds from Ledger, Bitget into Zcash shielded pools: Is ZEC at risk?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-18T15:04:10.611488+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
