@@ -1,14 +1,5 @@
 [
   {
-    "id": "a51a296f95e4c4aa",
-    "title": "Zcash Drops 21% From Recent High—Here’s Why the Rally May Not Be Over",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-01T22:09:24.645716+00:00",
-    "tokens": [
-      "ZEC"
-    ]
-  },
-  {
     "id": "91e88b2ac06c2a47",
     "title": "比特幣突破8.5萬鎂、以太坊衝2715鎂!全網爆倉1.88億鎂,恐懼指數續回落",
     "source": "BlockTempo (动区动趋中文)",
@@ -5105,6 +5096,16 @@
     "tokens": [
       "TRUMP",
       "BTC",
+      "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "e25d133fb4509d67",
+    "title": "Solana官方宣布Yuga Labs旗下Mudwater卡牌游戏上线,包含120幅BAYC艺术作品",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-18T02:04:27.609270+00:00",
+    "tokens": [
       "SOL"
     ],
     "lang": "zh-TW"
