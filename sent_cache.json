@@ -1,14 +1,5 @@
 [
   {
-    "id": "8e31c9093bcbefbc",
-    "title": "Cardano Faces Bearish Signals as Futures Demand Cools and Whales Sell",
-    "source": "DailyHodl (山寨异动与百倍币叙事)",
-    "sent_at": "2026-10-03T17:29:35.150397+00:00",
-    "tokens": [
-      "ADA"
-    ]
-  },
-  {
     "id": "052a980e1a6406d0",
     "title": "Ethereum Now Lets You Pay for AI Without Revealing Who You Are",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5124,6 +5115,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "cb69e4ec6b320528",
+    "title": "Solana shows resilience, but some areas need continued observation, Fidelity says",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-10-18T10:05:28.897212+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
