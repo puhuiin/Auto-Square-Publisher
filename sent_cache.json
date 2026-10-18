@@ -1,16 +1,5 @@
 [
   {
-    "id": "seed::bitget-hack-2026-09::0",
-    "title": "Bitget 遭黑客攻击约 3.52 亿美元 用户保护基金 5,500 枚 $BTC 全额兜底 $ETH 用户零损失",
-    "source": "priority_seed:bitget-hack",
-    "sent_at": "2026-10-02T17:51:19.459220+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "XRP"
-    ]
-  },
-  {
     "id": "d9c01076e8fb7483",
     "title": "Shiba Inu's Long-Awaited Golden Cross Back for First Time in Two Years: What's Next?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5116,5 +5105,17 @@
       "LINK"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "10f2c8bf76d32d80",
+    "title": "Hyperliquid 一交易员 BTC、ZEC 空单遭清算,合计亏损约 4.79 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-18T05:24:28.320745+00:00",
+    "tokens": [
+      "BTC",
+      "ZEC",
+      "USDC"
+    ],
+    "lang": "zh-TW"
   }
 ]
