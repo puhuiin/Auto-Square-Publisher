@@ -1,14 +1,5 @@
 [
   {
-    "id": "f6d73b74224ec168",
-    "title": "Zcash Launches Four Rapid Zebra Updates in Weeks: What's Next Move?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-06T17:05:17.444539+00:00",
-    "tokens": [
-      "ZEC"
-    ]
-  },
-  {
     "id": "5fc489ac9f2dc833",
     "title": "Winklevoss 兄弟申請現貨 Zcash ETF(WINK)!主打 0.25% 破盤管理費、豪砸 1 億鎂護盤",
     "source": "BlockTempo (动区动趋中文)",
@@ -5149,6 +5140,17 @@
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-10-18T23:29:47.049835+00:00",
     "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "058a3463da5f0e28",
+    "title": "Ripple Prime上线RWA永续掉期,定价参考Hyperliquid永续合约",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-18T23:49:45.874156+00:00",
+    "tokens": [
+      "RLUSD",
       "XRP"
     ],
     "lang": "zh-TW"
