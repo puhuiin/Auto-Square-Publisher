@@ -21613,6 +21613,54 @@ class TestR770AuditPanelHonesty(unittest.TestCase):
         out = self._run_report(ap, pub, stats)
         self.assertIn("没有 lang 字段", out, "真没有 lang 时才这么说")
 
+class TestR774CampaignMentionEnglishForms(unittest.TestCase):
+    """R774：campaign_mention 判据补英文形态——英文帖用产品名/奖励机制指代
+    活动（tail_conflict 实录："prize pools are still live"、"zero-fee RWUSD
+    trading pairs are live to practice on"），不含 tournament/contest 字样
+    ⇒ 旧正则下英文帖 mention 恒 False（R766/R768 同族：判据只覆盖一种语种）。
+    """
+
+    TRUE_POSITIVES = (
+        "prize pools are still live for active traders.",
+        "new zero-fee RWUSD trading pairs are live to practice on.",
+        "Trading Tournament Season 6 FF for practice rewards.",
+        "the S6 season is on, join the official event.",
+        "Write2Earn rewards for active commenters.",
+        "想练手的去现货交易锦标赛S5/S6参与。",
+        "順便去 ACU Alpha 競賽練手。",
+    )
+    FALSE_POSITIVES = (
+        "BTC ETFs logged $228M in weekly outflows.",
+        "Peter Brandt's $2.16 $XRP target is all over crypto feeds.",
+        "$DOGE is barely down 0.05% in 24h while Musk posts.",
+        "DTCC just dropped a plan to tokenize 25 securities.",
+        "the network upgraded its consensus layer last week.",
+    )
+
+    def test_english_campaign_forms_matched(self):
+        for t in self.TRUE_POSITIVES:
+            self.assertIsNotNone(m._CAMPAIGN_MENTION_RE.search(t),
+                                 "英文战役提法漏检: %s" % t[:44])
+
+    def test_ordinary_content_not_matched(self):
+        for t in self.FALSE_POSITIVES:
+            self.assertIsNone(m._CAMPAIGN_MENTION_RE.search(t),
+                              "普通内容误报成战役提及: %s" % t[:44])
+
+    def test_injected_tag_is_not_a_body_mention(self):
+        """★★ R291 纪律：注入的 #TradingTournament 标签**不算正文提及**
+        （调用方先剥 #标签再判）——否则指标恒真、失去监护意义。"""
+        body_only_tag = ("盘面分析，多空分歧仍在。\n\n"
+                         "#Write2Earn #BinanceSquare #TradingTournament")
+        stripped = re.sub(r"#[^\s#]+", " ", body_only_tag)
+        self.assertIsNone(m._CAMPAIGN_MENTION_RE.search(stripped),
+                          "只带注入标签被判成正文提及 ⇒ 指标恒真（R291 同族）")
+        with_body = ("真想验证思路的，官方有正在进行的大赛可以验证。\n\n"
+                     "#Write2Earn #BinanceSquare #TradingTournament")
+        self.assertIsNotNone(m._CAMPAIGN_MENTION_RE.search(
+            re.sub(r"#[^\s#]+", " ", with_body)),
+            "正文真有提及必须能检出（剥标签不能把正文也剥掉）")
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 

@@ -4409,7 +4409,20 @@ _CAMPAIGN_CTA_BAG = ShuffleBag(CAMPAIGN_CTA_STYLE_POOL)
 # R291 同族：遥测 proxy 把保底标签当活动提及）。只作提及率度量，不判句式。
 _CAMPAIGN_MENTION_RE = re.compile(
     r"锦标赛|竞赛|競賽|錦標賽|交易大賽|交易大赛|交易賽事|交易赛事"
-    r"|交易赛|交易賽|大赛|大賽|contest|tournament",
+    r"|交易赛|交易賽|大赛|大賽|contest|tournament"
+    # R774：英文战役提法形态——实测英文帖不提 tournament/contest 这些词，
+    # 而是用**产品名/奖励机制**指代活动（tail_conflict 留存的结尾原文实录：
+    # "prize pools are still live for active traders"、"new zero-fee RWUSD
+    # trading pairs are live to practice on"、"Trading Tournament Season 6 FF
+    # for practice rewards"）⇒ 旧正则下英文帖 mention 恒为 False（R766/R768
+    # 同族：判据只覆盖一种语种的真实形态）。
+    # ⚠️ 精度取舍（已知）："154,000 USDD total reward pool" 这类**非本期活动**
+    # 的奖励池会误报——该字段是趋势度量不是门，误报率 ~1/12 可接受；
+    # 若未来要当门用，须改为「奖励池 + 币安/官方语境」的双条件。
+    r"|write\s*2\s*earn|write to earn|prize pool|reward pool"
+    r"|zero[- ]fee|season [0-9]|S[0-9](?:/S[0-9])?"
+    r"|bStocks|TraFi|P2P anniversary|LoL (?:worlds|championship)"
+    r"|trading (?:tournament|championship|competition|event)",
     re.IGNORECASE)
 
 # R758：campaign CTA 收敛模板检测（**全文**，不是 preview）。
