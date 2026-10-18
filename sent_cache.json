@@ -1,14 +1,5 @@
 [
   {
-    "id": "7d8639a5adf6bc7e",
-    "title": "Coinbase Business Chief: Big Banks Increasing BTC Exposure | Shan Aggarwal",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-05T22:04:36.946749+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "caef903f07d5150d",
     "title": "DeFi Development Corp Adds $3 Million in Solana as SOL Buys Slow",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5144,6 +5135,16 @@
     "sent_at": "2026-10-18T20:44:55.799981+00:00",
     "tokens": [
       "FIL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f737d3b8740becc4",
+    "title": "Grok AI Predicts a Modest Gain for XRP USD by 2027: Is Bullish Optimism Over?",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-18T21:03:26.635611+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
