@@ -1,14 +1,5 @@
 [
   {
-    "id": "8aabebd8bb658ff3",
-    "title": "Strategy buys just 334 Bitcoin as preferred-share buybacks reach $1.45 billion",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-05T18:44:01.064906+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "e8993b21314d6b7a",
     "title": "ETH Upgrade Countdown Begins: 24 Hours Left for Glamsterdam Testnet Launch",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5142,6 +5133,16 @@
     "sent_at": "2026-10-18T20:04:11.353237+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ae172bb562dce89c",
+    "title": "Aptos Burns 174,000 APT In A Month, Yet Token Supply Keeps Rising",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-10-18T20:24:10.692373+00:00",
+    "tokens": [
+      "APT"
     ],
     "lang": "en"
   }

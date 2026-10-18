@@ -18,15 +18,15 @@
   "last_updated": "2026-10-18T18:54:24.689426Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "reset_at": "2026-10-18T20:03:28.636148+00:00",
+      "last_fail": "2026-10-18T18:43:30.696529+00:00",
       "parked_until": "2026-10-18T16:56:46.572292+00:00",
       "fails": 3,
-      "last_fail": "2026-10-18T18:43:30.696529+00:00"
+      "reset_at": "2026-10-18T20:23:32.536007+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-18",
