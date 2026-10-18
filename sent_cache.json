@@ -1,14 +1,5 @@
 [
   {
-    "id": "5e987d69a442fbf6",
-    "title": "Travala’s Crypto Loyalty Program Passes 170,000 Members, Sets Long-Term Goal of 30% of AVA Supply Locked",
-    "source": "DailyHodl (山寨异动与百倍币叙事)",
-    "sent_at": "2026-10-02T21:43:56.740746+00:00",
-    "tokens": [
-      "AVA"
-    ]
-  },
-  {
     "id": "9e6b7f55c6d6b6cb",
     "title": "North Dakota’s Roughrider Coin Goes Live on Fiserv and Solana",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5118,6 +5109,16 @@
       "BTC",
       "ETH",
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "8baafc0f2100e37d",
+    "title": "Ethereum Founder Vitalik Buterin Builds ‘Paranoid Mode’ to Hide Your AI Secrets",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-18T06:05:04.631025+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
