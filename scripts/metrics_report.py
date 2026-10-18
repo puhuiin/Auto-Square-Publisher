@@ -287,6 +287,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     （violation>0 即模型无视禁令，是执法升级的实证依据）。"""
     previews = []
     cv_rows = []         # ★ R747：(preview, ts, 是否可度量CV) ——与 previews 同窗口切片
+    mentions = []        # ★ R759：campaign_mention 遥测标记（与 previews 同窗口对齐）
     for r in rows:
         if not isinstance(r, dict) or r.get("dry_run") is True:
             continue
@@ -294,6 +295,11 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
             continue
         pv = (r.get("final_preview") or "").strip()
         if pv:
+            # R759：campaign_mention（正文是否提及当期活动，去标签后全文判）——
+            # **必须与 previews 同窗口同步追加**（放 if 外会与 previews 错位，
+            # 预览为空的行走不到这里——R712 家族：索引对齐错了症状离病因极远）。
+            _cm = r.get("campaign_mention")
+            mentions.append(_cm if isinstance(_cm, bool) else None)
             # R758：第 4 元素 = `campaign_cta_tpl` 遥测标记（**全文**判的收敛
             # 模板，main.py 在发布前对 final_content 计算）。preview 只有前
             # 200 字而 campaign CTA 在文尾（用户第七批实测 93% 收敛且在预览
@@ -315,6 +321,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     previews = previews[-window:]
     cv_rows = cv_rows[-window:]          # ★ R747：CV 样本与 scanned **同窗口**（首版漏了
                                           # 这条，覆盖率算出 680% 的荒唐数）
+    mentions = mentions[-window:]        # ★ R759：mention 样本与 scanned 同窗口切片
     cv_full = [p for p, _t, ok in cv_rows if ok and _is_cv_eligible(p)]
     cv_truncated = sum(1 for _p, _t, ok in cv_rows if not ok)
     out = {"scanned": len(previews), "fng_anchor": 0, "banned_device": 0,
@@ -355,6 +362,11 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
            # 否则新旧帖混合窗口里百分比被无遥测的旧帖稀释（R610：同一判据要在
            # 所有消费面一起落地，改一处漏一处等于没改）。
            "campaign_cta_tpl_cov_recent": 0, "campaign_cta_tpl_cov_older": 0,
+           # R759：正文活动提及率（campaign_mention 遥测，去标签后全文判）。
+           # 与 campaign_cta_tpl 同一套覆盖纪律：历史行无字段 ⇒ None 不计分子分母。
+           "campaign_mention": 0, "campaign_mention_recent": 0,
+           "campaign_mention_older": 0, "campaign_mention_cov": 0,
+           "campaign_mention_cov_recent": 0, "campaign_mention_cov_older": 0,
            # R610：近半的时间跨度（最早/最晚 ts）——判读近半的前提。R629 更正：
            # 原注释写"发布速率约 4~6 篇/天，一次加固上线 1 天后近半仍可能含 4 篇
            # 加固前旧稿"，**该数字是错的**。生产实测自 09-10 起稳定 **12 篇/天**
@@ -453,6 +465,19 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
                 out["campaign_cta_tpl"] += 1
                 out["campaign_cta_tpl_recent" if _is_recent
                     else "campaign_cta_tpl_older"] += 1
+        # R759：正文活动提及率——同 _ctpl 覆盖纪律（None 不计分子分母）。
+        # 与 cta_tpl 的读法差异：这是**率**不是收敛——cta_tpl 是"坏模板命中"，
+        # 这是"活动还提不提"（R758 条件句菜单可能把正文提及压没，而标签注入
+        # 只保归因不保互动——两个口径必须分列，R619 无消费面=没修）。
+        _cm = mentions[_idx] if _idx < len(mentions) else None
+        if _cm is not None:
+            out["campaign_mention_cov"] += 1
+            out["campaign_mention_cov_recent" if _is_recent
+                else "campaign_mention_cov_older"] += 1
+            if _cm:
+                out["campaign_mention"] += 1
+                out["campaign_mention_recent" if _is_recent
+                    else "campaign_mention_older"] += 1
     out["offenders"] = dict(out["offenders"])
     return out
 
@@ -3739,6 +3764,33 @@ def render_text(s, rows=None):
                 lines.append("  🎁 活动CTA结尾模板收敛: 无遥测数据"
                              "（窗口内帖子均早于 R758 上线，campaign_cta_tpl "
                              "字段不存在——不是 0 命中）")
+        # R759：正文活动提及率（campaign_mention 遥测，覆盖数分母）。
+        # 这不是收敛指标是**红线监护**：R758 提法菜单是条件句，若模型从此不在
+        # 正文提活动（只靠注入标签保归因），互动驱动器就丢了（R741：KGST 提及
+        # 1%→17% 靠正文提及）。判据=提及率是否维持在战役期应有水位；无遥测
+        # 时明说，不并进"未检出"（R747）。
+        _cmv = q.get("campaign_mention", 0)
+        _cmcov = q.get("campaign_mention_cov", 0)
+        if _cmcov > 0:
+            _cmp = 100 * _cmv / _cmcov
+            _cmr = q.get("campaign_mention_recent", 0)
+            _cmo = q.get("campaign_mention_older", 0)
+            _cmrc = q.get("campaign_mention_cov_recent", 0)
+            _cmoc = q.get("campaign_mention_cov_older", 0)
+            if _cmrc >= 3 and _cmoc >= 3:
+                _cmrpct = 100 * _cmr / _cmrc
+                _cmopct = 100 * _cmo / _cmoc
+                lines.append(f"  🎁 正文活动提及率: 近半 {_cmr}/{_cmrc}"
+                             f"（{_cmrpct:.0f}%）· 远半对照 {_cmo}/{_cmoc}"
+                             f"（{_cmopct:.0f}%）· 整窗 {_cmv}/{_cmcov}"
+                             f"（{_cmp:.0f}%）")
+            else:
+                lines.append(f"  🎁 正文活动提及率: {_cmv}/{_cmcov} 篇"
+                             f"（{_cmp:.0f}%，仅计有全文遥测的帖）")
+        elif q.get("campaign_mention_cov") == 0 and _cmv == 0:
+            lines.append("  🎁 正文活动提及率: 无遥测数据"
+                         "（窗口内帖子均早于 R759 上线，campaign_mention "
+                         "字段不存在——不是 0 提及）")
         # R289：FNG 三件套收口——滞回驱动量直方图 + 武装未剥离一致性告警。
         # hook_count 是近窗引入次数（武装条件 ≥2，故 1 = 距武装一步之遥的压力面）；
         # armed 但 market_stripped=False = R101 互补剥离疑似失效（禁令与盘面行

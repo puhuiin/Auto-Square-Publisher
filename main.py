@@ -4397,6 +4397,14 @@ CAMPAIGN_CTA_STYLE_POOL = [
 ]
 _CAMPAIGN_CTA_BAG = ShuffleBag(CAMPAIGN_CTA_STYLE_POOL)
 
+# R759：**正文是否提及当期活动**（调用方须先去 `#标签`——注入的活动标签
+# #TradingTournament 自带 contest/tournament 字样，不去标签会每帖恒真，
+# R291 同族：遥测 proxy 把保底标签当活动提及）。只作提及率度量，不判句式。
+_CAMPAIGN_MENTION_RE = re.compile(
+    r"锦标赛|竞赛|競賽|錦標賽|交易大賽|交易大赛|交易賽事|交易赛事"
+    r"|交易赛|交易賽|大赛|大賽|contest|tournament",
+    re.IGNORECASE)
+
 # R758：campaign CTA 收敛模板检测（**全文**，不是 preview）。
 # 判据 = 「想练手/试水/磨盘感」类意图短语与「竞赛/锦标赛」类活动名词**同句**
 # 共现（句读符截断，避免一篇里两处各自出现被误判）。这是用户第七批粘贴实测
@@ -12144,6 +12152,19 @@ def _run_main():
                     if isinstance(final_content, str) and final_content.strip():
                         _campaign_cta_tpl = bool(
                             _CAMPAIGN_CTA_TPL_RE.search(final_content))
+                    # R759：**正文是否提及当期活动**（全文判，去标签后）。
+                    # ★ 为什么必须全文且必须去标签：R758 的提法菜单是**条件句**
+                    #   （"本条若要提这个活动"），模型可能从此少在正文提活动——
+                    #   而正文提法是互动驱动器（R741 实测 KGST 提及 1%→17% 靠的
+                    #   就是正文提及），`campaign_tag_count` 只证明标签注入
+                    #   （归因保底），证明不了正文还提不提。`#TradingTournament`
+                    #   这类注入标签含 contest/tournament 字样 ⇒ 先去标签再判，
+                    #   否则每帖恒真（R291 同族：遥测 proxy 把保底标签当活动提及）。
+                    # None = Mock/异常态（未知不是 False，纪律 12）。
+                    _campaign_mention = None
+                    if isinstance(final_content, str) and final_content.strip():
+                        _cm_body = re.sub(r"#[^\s#]+", " ", final_content)
+                        _campaign_mention = bool(_CAMPAIGN_MENTION_RE.search(_cm_body))
                     # R663：**异常优先留存**的结尾原文。
                     # ★ 为什么只留"不一致"的那种（R647 守卫明确禁止全量存尾段，
                     # 理由是 metrics.jsonl 膨胀：323 篇 × 120 字 = **+60%**）：
@@ -12386,6 +12407,11 @@ def _run_main():
                         # None=Mock/异常态/历史帖（未知不是 False，纪律 12）。
                         "campaign_cta_style": campaign_cta_style_used,
                         "campaign_cta_tpl": _campaign_cta_tpl,
+                        # R759：正文是否提及当期活动（去标签后全文判）。
+                        # 与 campaign_tag_count（标签注入）分列：标签是归因保底、
+                        # 正文提及是互动驱动器，R758 菜单是条件句 ⇒ 必须单独量，
+                        # 否则"菜单让模型不提了"这件事无观测面（R619）。
+                        "campaign_mention": _campaign_mention,
                         "ending_style": ending_style_used,
                         "opening_hook": opening_hook_used,
                         "trade_cta_style": trade_cta_style_used,

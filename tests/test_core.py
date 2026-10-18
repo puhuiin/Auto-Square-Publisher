@@ -21045,6 +21045,64 @@ class TestR758CampaignCtaRotationPool(unittest.TestCase):
                       "style 读取未走 getattr ⇒ Mock 替身会炸")
 
 
+class TestR759CampaignMentionTelemetry(unittest.TestCase):
+    """R759：正文活动提及遥测（campaign_mention）——盯 R758 条件句菜单有没有
+    把正文活动提及压没（标签注入只保归因，正文提及才是互动驱动器）。
+
+    ★ 精度核心：判据必须**先去 #标签**再匹配——注入的活动标签
+      #TradingTournament 自带 contest/tournament 字样，不去标签每帖恒真
+      （R291 同族：遥测 proxy 把保底标签当活动提及）。
+    """
+
+    def test_regex_matches_body_mention(self):
+        """正文提及活动名词必须命中（中英+简繁）"""
+        for s in ["想验证判断的,官方大赛可以实地检验。",
+                  "现货交易锦标赛 S5/S6 还有奖池。",
+                  "今天 ACU Alpha 交易竞赛最后一天。",
+                  "The Binance Alpha Trading Contest is live.",
+                  "現貨交易錦標賽獎池不錯。"]:
+            self.assertIsNotNone(m._CAMPAIGN_MENTION_RE.search(s),
+                                 "正文活动提及漏检: %s" % s[:22])
+
+    def test_regex_ignores_plain_text(self):
+        """无活动名词不得命中"""
+        for s in ["ETH 跌破 2400,短线别追。", "这波是主力借利好出货的剧本。",
+                  "扣1守,扣2跑。"]:
+            self.assertIsNone(m._CAMPAIGN_MENTION_RE.search(s),
+                              "无活动名词误报: %s" % s[:22])
+
+    def test_flag_strips_tags_before_matching(self):
+        """★★★ 只有注入标签（#TradingTournament）时不得判为正文提及——
+        R291 教训：proxy 把保底标签当活动提及会让指标恒真、失去监护力"""
+        import re as _re
+        tag_only = ("分析文本,多空分歧仍在,后续略。\n\n"
+                    "#Write2Earn #BinanceSquare #TradingTournament")
+        stripped = _re.sub(r"#[^\s#]+", " ", tag_only)
+        self.assertIsNone(m._CAMPAIGN_MENTION_RE.search(stripped),
+                          "只带注入标签被判成正文提及 ⇒ 指标恒真（R291 同族）")
+        self.assertIsNotNone(m._CAMPAIGN_MENTION_RE.search(tag_only),
+                             "不去标签时正则本身该命中——证明上面的 None 是"
+                             "去标签的功劳而不是正则没写对")
+
+    def test_body_mention_with_tag_still_counts(self):
+        """正文真有提及 + 尾部有标签 ⇒ 去标签后仍命中"""
+        import re as _re
+        both = ("真想按思路操作的,官方有正在进行的大赛可以验证。\n\n"
+                "#Write2Earn #BinanceSquare #TradingTournament")
+        stripped = _re.sub(r"#[^\s#]+", " ", both)
+        self.assertIsNotNone(m._CAMPAIGN_MENTION_RE.search(stripped),
+                             "正文有提及却被标签遮蔽 ⇒ 漏判")
+
+    def test_receipt_plumbs_mention_field(self):
+        """回执必须落 campaign_mention（无消费面=没修，R619）"""
+        import inspect
+        src = inspect.getsource(m)
+        self.assertGreater(src.find('"campaign_mention": _campaign_mention'), 0,
+                           "回执缺 campaign_mention 字段")
+        self.assertIn(r'_cm_body = re.sub(r"#[^\s#]+", " ", final_content)', src,
+                      "提及判据未先去标签 ⇒ 注入标签会让指标恒真")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 

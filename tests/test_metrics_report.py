@@ -6559,6 +6559,139 @@ class TestR758DailyReportTailTemplateHonesty(unittest.TestCase):
 
 
 
+class TestR759CampaignMentionRadar(unittest.TestCase):
+    """R759：正文活动提及率雷达（campaign_mention 遥测，覆盖数分母）
+
+    ★ 与 cta_tpl 的分工：cta_tpl 量"坏模板命中"（收敛），mention 量"活动还
+      提不提"（红线监护）——R758 菜单是条件句，模型可能少提，而标签注入只保
+      归因不保互动（R741：KGST 提及 1%→17% 靠正文提及）。
+    ★ 覆盖纪律同 R758：历史行无字段 ⇒ None 不计分子分母；无遥测时明说。
+    """
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r759",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _rows(n, mention_values):
+        rows = []
+        for i in range(n):
+            rows.append({
+                "outcome": "binance_published",
+                "final_preview": "盘面分析第%d段,多空分歧仍在,后续略。" % i,
+                "ts": "2026-10-18T%02d:00:00+00:00" % (i % 24),
+                "campaign_mention": (mention_values[i]
+                                     if i < len(mention_values) else None),
+            })
+        return rows
+
+    def test_counts_mention_flag(self):
+        """★ 提及率按遥测标记计数（不扫 preview——提法在文尾）"""
+        mr = self._mr()
+        rows = self._rows(10, [True] * 6 + [False] * 4)
+        q = mr.quality_scan(rows, window=20)
+        self.assertEqual(q["campaign_mention"], 6)
+        self.assertEqual(q["campaign_mention_cov"], 10)
+
+    def test_missing_flag_excluded_from_both_sides(self):
+        """★★ 历史行无字段（None）⇒ 不计分子也不计分母"""
+        mr = self._mr()
+        rows = self._rows(10, [True] * 2 + [None] * 8)
+        q = mr.quality_scan(rows, window=20)
+        self.assertEqual(q["campaign_mention"], 2)
+        self.assertEqual(q["campaign_mention_cov"], 2)
+
+    def test_render_shows_rate_with_coverage(self):
+        """★ 有遥测时出行，分母是覆盖数"""
+        mr = self._mr()
+        rows = self._rows(16, [True] * 4 + [None] * 12)
+        s = mr.summarize(rows)
+        out = mr.render_text(s, rows)
+        line = [ln for ln in out.split(chr(10)) if "正文活动提及率" in ln]
+        self.assertEqual(len(line), 1)
+        self.assertIn("4/4", line[0], "分母必须是覆盖数 4")
+        self.assertIn("仅计有全文遥测的帖", line[0])
+
+    def test_render_no_telemetry_says_so(self):
+        """★★ 无遥测时明说，不显示 0 提及"""
+        mr = self._mr()
+        rows = self._rows(8, [None] * 8)
+        s = mr.summarize(rows)
+        out = mr.render_text(s, rows)
+        line = [ln for ln in out.split(chr(10)) if "正文活动提及率" in ln]
+        self.assertEqual(len(line), 1)
+        self.assertIn("无遥测数据", line[0])
+        self.assertIn("不是 0 提及", line[0])
+
+    def test_mentions_align_with_previews(self):
+        """★★ 索引对齐：mention 与 previews 同窗口同步追加（放 if 外会错位，
+        症状=提及率对不上帖——R712 家族：对齐错了症状离病因极远）"""
+        mr = self._mr()
+        rows = []
+        for i in range(12):
+            r = {"outcome": "binance_published",
+                 "ts": "2026-10-18T%02d:00:00+00:00" % (i % 24),
+                 "campaign_mention": (i % 2 == 0)}
+            if i != 5:            # 第 6 行故意无 preview（走不到 append）
+                r["final_preview"] = "盘面分析第%d段。" % i
+            rows.append(r)
+        q = mr.quality_scan(rows, window=20)
+        # 11 篇有 preview；其中 mention=True 的是偶数 i 且 i≠5 ⇒ 0,2,4,6,8,10 = 6 篇
+        self.assertEqual(q["scanned"], 11)
+        self.assertEqual(q["campaign_mention_cov"], 11)
+        self.assertEqual(q["campaign_mention"], 6,
+                         "mention 与 previews 错位 ⇒ 计数会错")
+
+
+
+class TestR759DailyReportMentionLine(unittest.TestCase):
+    """R759：日报必须带正文活动提及率（红线监护），分母=覆盖数"""
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r759b",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_report_shows_mention_rate_with_coverage(self):
+        """有遥测时出行, 分母是覆盖数(不是 scanned)"""
+        dr = self._dr()
+        rows = [{"outcome": "binance_published",
+                 "ts": "2026-10-18T%02d:00:00+00:00" % (i % 24),
+                 "final_preview": "盘面分析第%d段。" % i,
+                 "content_chars": 20, "content_cjk": 10,
+                 "lang": "zh-CN", "tokens": ["BTC"],
+                 "campaign_mention": (i < 6)} for i in range(16)]
+        text = dr.build_report(rows, 24)
+        line = [ln for ln in text.split(chr(10)) if "正文活动提及" in ln]
+        self.assertEqual(len(line), 1)
+        self.assertIn("6/16", line[0], "分母必须是覆盖数 16")
+
+    def test_report_omits_mention_when_no_telemetry(self):
+        """无遥测时不硬凑一行(旧帖窗口不该出现 0% 提及)"""
+        dr = self._dr()
+        rows = [{"outcome": "binance_published",
+                 "ts": "2026-10-14T%02d:00:00+00:00" % (i % 24),
+                 "final_preview": "盘面分析第%d段。" % i,
+                 "content_chars": 20, "content_cjk": 10,
+                 "lang": "zh-CN", "tokens": ["BTC"]} for i in range(16)]
+        text = dr.build_report(rows, 24)
+        self.assertNotIn("正文活动提及", text,
+                         "无遥测却显示提及率 ⇒ 0% 会被读成'模型不提了'")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
