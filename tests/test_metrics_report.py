@@ -2337,6 +2337,51 @@ class TestPersonaAndImpactDistribution(unittest.TestCase):
         self.assertIn("P90 40", text)
         self.assertIn("≥30 放行档 3/10 篇", text)
 
+    def test_bypass_threshold_follows_production_not_hardcode(self):
+        """★★★ R763：放行门槛必须跟生产常量走——写死 30 是 R731 家族
+        （报告自算生产口径：env 一改报告就静默失真）。判据=注入一棵
+        "常量=35"的假 AST 树，报表行必须跟着变成 ≥35。"""
+        import ast
+        self.assertEqual(mr._bypass_impact_from_main(), 30,
+                         "默认应解析出生产默认值 30")
+        fake = ast.parse(
+            'TOKEN_LIMIT_BYPASS_IMPACT = _env_int("TOKEN_LIMIT_BYPASS_IMPACT", 35)')
+        # 必须 patch _parse_main_ast 本身：缓存键由真实文件的 (path,mtime,size)
+        # 重算，直接塞缓存会被真文件覆盖（R712 家族：绕过判据的注入会静默失效）
+        _orig_parse = mr._parse_main_ast
+        mr._parse_main_ast = lambda *a, **k: fake
+        try:
+            self.assertEqual(mr._bypass_impact_from_main(), 35,
+                             "改了生产常量报表必须跟着变 ⇒ 证明不是写死的 30")
+            _write(self.path, [self._row("毒舌老韭菜", v) for v in
+                               [10, 20, 30, 34, 36, 40]])
+            loaded, _ = mr.load_rows(self.path)
+            text = mr.render_text(mr.summarize(loaded), loaded)
+            line = [ln for ln in text.split(chr(10)) if "热度分" in ln][0]
+            self.assertIn("≥35 放行档 2/6 篇", line,
+                          "门槛 35 时应只数 ≥35 的 2 篇: %s" % line)
+            self.assertNotIn("≥30", line, "写死的 30 又出现了")
+        finally:
+            mr._parse_main_ast = _orig_parse
+
+    def test_render_shows_question_mark_when_threshold_unparsable(self):
+        """★ 解析失败时该列显示 ? 并声明不可信——绝不退回写死的 30
+        （R617：沉默不是通过；算错的报告比没有报告更糟）"""
+        orig = mr._bypass_impact_from_main
+        mr._bypass_impact_from_main = lambda *a, **k: None
+        try:
+            _write(self.path, [self._row("毒舌老韭菜", v) for v in
+                               [10, 20, 30, 40]])
+            loaded, _ = mr.load_rows(self.path)
+            text = mr.render_text(mr.summarize(loaded), loaded)
+            line = [ln for ln in text.split(chr(10)) if "热度分" in ln][0]
+            self.assertIn("放行档门槛 **?**", line)
+            self.assertIn("不可信", line)
+            self.assertNotIn("≥30 放行档", line,
+                             "解析失败还印具体档位 ⇒ 静默用了写死值")
+        finally:
+            mr._bypass_impact_from_main = orig
+
     def test_legacy_rows_without_fields_silent(self):
         """旧 schema 无 persona/impact_score：两块都不渲染"""
         _write(self.path, [{"platforms": ["binance"],

@@ -2593,6 +2593,41 @@ def _parse_main_ast(main_path=None):
     return tree
 
 
+def _bypass_impact_from_main(main_path=None):
+    """★★ R763：AST 解析 main.py 的 `TOKEN_LIMIT_BYPASS_IMPACT`（放行门槛）。
+
+    ★ 为什么不写死 30：**R731 家族——报告不得自算生产口径**。该门槛是 env
+      可配的（`_env_int("TOKEN_LIMIT_BYPASS_IMPACT", 30)`），写死会让"改了
+      env 之后报告静默失真"——R719 三处错档位同根（脚本自己算了一遍生产
+      逻辑：喂错参数、用错基线、默认值过期），修法就是口径只留一份实现。
+    ★ 为什么不 import main：模块级副作用（读环境、写状态文件），报表必须纯
+      只读（R623 同款判据）⇒ 走 AST（R657 缓存，零重复解析）。
+    ★ 解析失败/形态变更返回 None ⇒ 调用方把该列显示 `?` 并说明，**绝不退回
+      写死的 30**（R617：沉默不是通过；R718：静默降级让缺陷完全隐身；
+      "算错的报告比没有报告更糟"）。
+    """
+    import ast
+    tree = _parse_main_ast(main_path)
+    if tree is None:
+        return None
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        for tgt in node.targets:
+            if (isinstance(tgt, ast.Name)
+                    and tgt.id == "TOKEN_LIMIT_BYPASS_IMPACT"):
+                v = node.value
+                # 形态1：纯字面量（TOKEN_LIMIT_BYPASS_IMPACT = 30）
+                if isinstance(v, ast.Constant) and isinstance(v.value, int):
+                    return v.value
+                # 形态2：_env_int("...", 30) ⇒ 取默认值（第二参）
+                if (isinstance(v, ast.Call) and len(v.args) >= 2
+                        and isinstance(v.args[1], ast.Constant)
+                        and isinstance(v.args[1].value, int)):
+                    return v.args[1].value
+    return None
+
+
 def _natural_score_gaps(rows):
     """R665：自然候选 `impact_score` 的**相邻唯一值间距**（排序分差的中位）。
 
@@ -4498,9 +4533,16 @@ def render_text(s, rows=None):
             _imps = sorted(s["impact_scores"])
             _med = _imps[len(_imps) // 2]
             _p90 = _imps[int(len(_imps) * 0.9)]
-            _hi = sum(1 for i in _imps if i >= 30)
-            lines.append(f"  🔥 热度分: 中位 {_med} · P90 {_p90} · "
-                         f"≥30 放行档 {_hi}/{len(_imps)} 篇")
+            # ★ R763：门槛只认生产常量（AST 取，不写死）——R731 家族。
+            _bypass = _bypass_impact_from_main()
+            if _bypass is None:
+                lines.append(f"  🔥 热度分: 中位 {_med} · P90 {_p90} · "
+                             f"放行档门槛 **?**（main.py 常量解析失败 ⇒ 本列"
+                             f"不可信，勿据它判断放行率；修好 main.py 路径即恢复）")
+            else:
+                _hi = sum(1 for i in _imps if i >= _bypass)
+                lines.append(f"  🔥 热度分: 中位 {_med} · P90 {_p90} · "
+                             f"≥{_bypass} 放行档 {_hi}/{len(_imps)} 篇")
         # R292：篇幅分布——prompt 宣称"140~200 字"（短讯，R294 对齐后）/500~800（长文）而
         # 质量门实际只卡 60~1200，两者差 20 倍；按体裁分桶报中位/P90/区间命中率，
         # 回答"模型到底写多长"（有字段的行才统计，旧 schema 行不渲染）
