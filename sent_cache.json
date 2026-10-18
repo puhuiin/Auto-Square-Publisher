@@ -1,15 +1,5 @@
 [
   {
-    "id": "1e22f693a83d1f83",
-    "title": "Stellar Unlocks New DeFi Milestone at Over $273 Million",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-03T21:46:14.714757+00:00",
-    "tokens": [
-      "XRP",
-      "XLM"
-    ]
-  },
-  {
     "id": "763cc46aa58cb394",
     "title": "88 Trillion SHIB Threshold Back in Play as Shiba Inu Loses New Price Target",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5126,5 +5116,15 @@
       "BNB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "7f4a8442a19a1b9a",
+    "title": "ChatGPT AI Predicts Million-Dollar Bitcoin by 2027",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-18T12:04:44.305380+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
