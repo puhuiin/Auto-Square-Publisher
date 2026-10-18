@@ -1,14 +1,5 @@
 [
   {
-    "id": "3f16b2ada643a177",
-    "title": "EIP-8363 Authors Pull Ethereum Staking Reward Burn From Hegotá Upgrade",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-02T13:07:39.401779+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "fb14cc312ac317b5",
     "title": "Shiba Inu Coin Locks in 'Bull Combo': Why October SHIB Chart Is Primed to Delete a Zero",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5109,6 +5100,16 @@
     "sent_at": "2026-10-18T03:45:03.497541+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1611a778a9633cbc",
+    "title": "Papertrade永续合约或将上线,Paragon以约4.5万美元拍下PAPER代码",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-18T04:05:03.341969+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
