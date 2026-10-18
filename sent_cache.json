@@ -1,14 +1,5 @@
 [
   {
-    "id": "01de6ad48e3e2fde",
-    "title": "'Only' 20 Billion Shiba Inu (SHIB) Burned in 24 Hours: Main Implications for the Market",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-03T05:43:50.800074+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "69d93573f47d262c",
     "title": "Bitcoin’s $87K Rally Was a Trap: Could $82.5K Be the Real Buying Opportunity?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5121,5 +5112,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ad62154161fa5bf6",
+    "title": "Cardano Founder Developing New Programming Language",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-18T07:44:26.743445+00:00",
+    "tokens": [
+      "ADA"
+    ],
+    "lang": "zh-TW"
   }
 ]
