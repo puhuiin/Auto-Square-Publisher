@@ -1003,6 +1003,13 @@ def intel_state_get(key: str, default=None):
     return default
 
 
+def _now_iso() -> str:
+    """R765：UTC ISO 时间戳（单调，max-wins 合并安全的状态值专用）。
+    与 `datetime.now(timezone.utc).isoformat()` 同格式——字典序即时间序，
+    正是 git_state_merge `_pick_scalar=max` 的设计前提。"""
+    return datetime.now(timezone.utc).isoformat()
+
+
 def intel_state_set(key: str, value) -> None:
     try:
         if not _intel_writes_enabled():
@@ -7314,6 +7321,10 @@ class CampaignScanner:
 
     # 全空拉取连续计数键：3 个分类连续多轮全空≈ catalogId 失效（偶发抖动不断全空）
     _EMPTY_STREAK_KEY = "_intel_empty_streak"
+    # R765：连续段的两个边界时间戳（单调，max-wins 合并安全）——计数会被合并
+    # 吞掉清零，连续与否改由「上次成功 vs 上次空」派生（R751 reset_at 同款）。
+    _EMPTY_AT_KEY = "_intel_empty_at"
+    _EMPTY_OK_AT_KEY = "_intel_empty_ok_at"
     EMPTY_STREAK_ALERT_THRESHOLD = 3  # 连续 3 轮（约 1 小时）全空即报警
 
     # AI 分析不可用时的静态兜底情报（仅作为返回值兜底，绝不覆写本地 intel 文件）
@@ -7548,14 +7559,34 @@ class CampaignScanner:
 
     @classmethod
     def _note_empty_catalog(cls) -> int:
-        """记录一次全空拉取并返回连续次数；达阈值时发 12h 节流报警（Notifier 自带节流）"""
+        """记录一次全空拉取并返回连续次数；达阈值时发 12h 节流报警（Notifier 自带节流）
+
+        ★★ R765：连续数**从时间戳派生**，不信文件里的旧计数值。
+        根因（R751 同族）：`_` 前缀状态键跨进程经 git_state_merge 的 max-wins
+        合并（标量取较大者）⇒ 「成功时把计数清零」这一写会被远端的旧值吞掉
+        （local 写 0、remote 是 3 ⇒ max(0,3)=3，清零永不生效）。实证后果：
+        首次 3 连空报警后，**之后每一次孤立的空拉取都会再报警**（12h 节流下
+        用户每 12h 收一条假警报），"连续"语义永久损坏。
+        修法（R751 `_feed_health` 的 reset_at 同款）：成功时写**单调时间戳**
+        `_intel_empty_ok_at`，空拉取时写 `_intel_empty_at`；两者都可被 max-wins
+        安全合并。计数仅作展示，其基数由「上次成功是否晚于上次空」派生。
+        ⚠️ 时间戳必须在 `intel_state_update` 回调**外**读：该 API 全程持
+        `_INTEL_STATE_LOCK`，回调里再 get 会死锁。
+        """
+        _ok_at = str(intel_state_get(cls._EMPTY_OK_AT_KEY, "") or "")
+        _empty_at = str(intel_state_get(cls._EMPTY_AT_KEY, "") or "")
+        # 上次成功晚于（或等于）上次空 ⇒ 此前的连续段已断，从 1 起算
+        _broken = bool(_ok_at and _empty_at and _ok_at >= _empty_at)
+
         def _inc(s):
             try:
-                return int(s or 0) + 1
+                base = 0 if _broken else int(s or 0)
+                return base + 1
             except (TypeError, ValueError):
                 return 1  # 脏状态自愈为 1，不断连但也不炸
 
         streak = intel_state_update(cls._EMPTY_STREAK_KEY, _inc, default=0) or 0
+        intel_state_set(cls._EMPTY_AT_KEY, _now_iso())
         if streak >= cls.EMPTY_STREAK_ALERT_THRESHOLD:
             Notifier.send_notification(
                 "币安活动目录持续拉取为空",
@@ -7568,8 +7599,18 @@ class CampaignScanner:
 
     @classmethod
     def _clear_empty_streak(cls) -> None:
-        # 只在非零时写盘：每轮都写会制造无意义的 git 变更噪音
-        if intel_state_get(cls._EMPTY_STREAK_KEY, 0):
+        """R765：成功拉取时改写**单调时间戳**（计数也尝试清零，但会被 max-wins
+        合并吞掉——无害，_note_empty_catalog 会从 ok_at/empty_at 派生正确基数）。
+        ⚠️ 不能只写计数 0：那是 R751 已验证的死路（标量 max-wins 下清零永不生效）。
+        ⚠️ 不能删键：merge_state 的「None 让位非 None」会把删除复活（R751 同族）。
+        ⚠️ 写盘条件：**streak 非零**才写。streak=0 且 ok_at 缺失时不必写——
+           下次空拉取读不到 ok_at ⇒ broken=False ⇒ 基数取文件里的 0 ⇒ 一样
+           从 1 起算（语义等价），少一次写盘少一点 git 噪音。
+        """
+        _streak = intel_state_get(cls._EMPTY_STREAK_KEY, 0)
+        if _streak:
+            intel_state_set(cls._EMPTY_OK_AT_KEY, _now_iso())
+            intel_state_set(cls._EMPTY_STREAK_KEY, 0)
             intel_state_set(cls._EMPTY_STREAK_KEY, 0)
 
     @staticmethod
@@ -8299,34 +8340,42 @@ class ImageManager:
         判据同`_tg_delivered` 的 200 条上限（那个有自愈）：**状态要自愈**，
         不能"读的时候当它不存在，却让它一直占着位置"。
         """
-        cached = intel_state_get(cls._FALLBACK_CACHE_KEY, {})
-        if not isinstance(cached, dict) or not cached:
-            # 畸形值（手改/旧版本遗留）：**同样清掉**——第一版只清"过期 dict"，
-            # 非 dict 会在这里直接 return，死数据留着。实测抓到。
-            if cached:
-                try:
-                    intel_state_set(cls._FALLBACK_CACHE_KEY, {})
-                except Exception as e:
-                    logger.debug(f"清理畸形兜底图缓存失败（不影响配图）: {e}")
+        cached = intel_state_get(cls._FALLBACK_CACHE_KEY, "")
+        # R765：值从 dict{url,date} 改为**单串 "date|url"**（date 在前）。
+        # ⚠️ 为什么：`_` 前缀状态键跨进程经 merge_state 逐键 max-wins，而 URL
+        #   是**任意字符串**——字典序大小与新旧无关！旧形态下新 URL 若字典序
+        #   更小，合并后**旧 URL 配新 date** 存活 ⇒ 复用一张可能已被 CDN 清理
+        #   的旧图，还以为它是今天托管的。把 date 放前面后，字典序 max 天然
+        #   等于"最新日期胜出"，URL 随日期一起走。
+        # ⚠️ 旧 dict 形态兼容：手改/历史遗留的 dict 一律当过期清理（不清则会
+        #   被合并复活，但 date 校验本就过不了——清不掉也只是死数据）。
+        if isinstance(cached, dict):
+            try:
+                intel_state_set(cls._FALLBACK_CACHE_KEY, "")
+            except Exception as e:
+                logger.debug(f"清理旧形态兜底图缓存失败（不影响配图）: {e}")
             return None
+        stamp = str(cached or "")
         _today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        if cached.get("date") == _today and cached.get("url"):
-            logger.info(f"兜底图当日已托管，直接复用: {cached['url']}")
-            return cached["url"]
+        if stamp.startswith(_today + "|") and "|" in stamp:
+            _url = stamp.split("|", 1)[1]
+            if _url:
+                logger.info(f"兜底图当日已托管，直接复用: {_url}")
+                return _url
         # 过期（或畸形）：清掉再返回 None，避免死数据长期占位
-        try:
-            intel_state_set(cls._FALLBACK_CACHE_KEY, {})
-        except Exception as e:
-            # 清理失败不阻塞配图主流程（旁路原则），但要留痕
-            logger.debug(f"清理过期兜底图缓存失败（不影响配图）: {e}")
+        if stamp:
+            try:
+                intel_state_set(cls._FALLBACK_CACHE_KEY, "")
+            except Exception as e:
+                # 清理失败不阻塞配图主流程（旁路原则），但要留痕
+                logger.debug(f"清理过期兜底图缓存失败（不影响配图）: {e}")
         return None
 
     @classmethod
     def _write_fallback_cache(cls, url: str):
-        intel_state_set(cls._FALLBACK_CACHE_KEY, {
-            "url": url,
-            "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-        })
+        # R765：单串 "date|url"——字典序 max = 最新日期胜出（见读取处注释）
+        intel_state_set(cls._FALLBACK_CACHE_KEY,
+                        datetime.now(timezone.utc).strftime("%Y-%m-%d") + "|" + str(url))
 
     # 图片管线失败原因细分（遥测：image_fail_reason 字段），用于定位
     # 下载失败/SSRF 拒绝/S3 上传失败/渲染失败各占多少——配图是账号观感核心
@@ -11028,8 +11077,17 @@ def _maybe_post_daily_video(publisher: "SquarePublisher",
         logger.info("📹 视频库无合格（加密主题且齐备）视频，本轮不投。")
         return False
 
-    sent = intel_state_get("_video_sent", []) or []
-    sent_set = set(sent) if isinstance(sent, list) else set()
+    # R765：库存去重从 **dict{slug: 投递时间戳}** 读（旧值是 list，兼容两种形态）。
+    # ⚠️ 为什么必须是 dict 而不是 list：`_` 前缀状态键跨进程经 git_state_merge
+    #   合并，而 list 的合并语义是「取更长的那个」——本地 append 后确实更长
+    #   （能活），但一旦触到 200 上限被截断成等长，合并就取远端版本 ⇒
+    #   **本地这条 append 被静默丢弃** ⇒ 同一个视频会重复定投（浪费配额+
+    #   观感刷屏）。dict 的合并是逐键递归（并集）⇒ 每个 slug 各自存活，
+    #   截断/老化删除键也不会丢新键（删除只是被复活，无害）。
+    sent = intel_state_get("_video_sent", {}) or {}
+    if isinstance(sent, list):        # 旧形态迁移：list → dict（值用空串占位）
+        sent = {str(s): "" for s in sent if s}
+    sent_set = {str(k) for k in sent} if isinstance(sent, dict) else set()
     pending = [m for m in library if m["slug"] not in sent_set]
     if not pending:
         logger.info("📹 视频库中的合格视频均已投过，本轮不投。")
@@ -11091,9 +11149,14 @@ def _maybe_post_daily_video(publisher: "SquarePublisher",
     if ok:
         # 去重落盘：当日封顶 + 已投 slug 列表（cap 200 防膨胀）。DRY 下 intel_state_set 自静默
         intel_state_set("_video_sent_date", today_utc)
-        new_sent = list(sent_set) + [slug]
+        # R765：写 dict{slug: 投递时间戳}（替代旧 list+截断）。逐键合并 ⇒ 本条
+        # append 永不因"等长被远端胜出"而丢；截断改为「删最旧的键」——删除即使
+        # 被合并复活也只是让旧 slug 多留一会儿（去重方向安全：宁可少发不重发）。
+        new_sent = dict(sent) if isinstance(sent, dict) else {}
+        new_sent[str(slug)] = _now_iso()
         if len(new_sent) > 200:
-            new_sent = new_sent[-200:]
+            _keep = sorted(new_sent.items(), key=lambda kv: str(kv[1] or ""))[-200:]
+            new_sent = dict(_keep)
         intel_state_set("_video_sent", new_sent)
         append_metrics({
             "outcome": "video_published", "video_slug": slug, "platform": "binance",

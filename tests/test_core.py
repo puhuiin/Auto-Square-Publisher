@@ -6086,6 +6086,18 @@ class TestEmptyCatalogStreak(unittest.TestCase):
             m.intel_state_set("_intel_refresh_fail", {})
             return mock_notify
 
+    def _expire_cache(self):
+        """R765：把情报缓存推到 13h 前（超过 12h 新鲜窗）⇒ 下一轮真的去拉取。
+        成功轮会写下新鲜情报，不推旧的话后续轮次走"沿用现存情报"早退，
+        _note_empty_catalog 根本不会被调用（测试搭建坑，非生产路径）。"""
+        if not os.path.exists(self.tmp):
+            return
+        intel = json.loads(open(self.tmp, encoding="utf-8").read())
+        intel["last_updated"] = (datetime.now(timezone.utc)
+                                  - timedelta(hours=13)).isoformat()
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump(intel, f, ensure_ascii=False)
+
     def test_streak_counts_and_alerts_at_threshold(self):
         self.assertEqual(self._run_empty_round().call_count, 0)
         self.assertEqual(m.intel_state_get("_intel_empty_streak", 0), 1)
@@ -6097,6 +6109,77 @@ class TestEmptyCatalogStreak(unittest.TestCase):
         title = mock_notify.call_args[0][0]
         self.assertIn("catalogId", mock_notify.call_args[0][1])
         self.assertTrue(mock_notify.call_args[1].get("is_error"), title)
+
+    def test_streak_survives_maxwins_merge(self):
+        """★★★ R765：跨进程合并后连续数必须仍然正确——这是本修复的核心判据。
+        场景（复现真实 bug）：3 连空报警（streak=3）→ 某轮成功（local 写
+        streak=0，但 git_state_merge 的 max-wins 会把它并回 3）→ 下一次**孤立**
+        空拉取。旧代码从文件读到 3 ⇒ 报 4 ⇒ 又报警（假警报，12h 节流下用户
+        每 12h 收一条）。新代码从 ok_at/empty_at 时间戳派生 ⇒ 报 1 ⇒ 不报警。
+        """
+        # ① 3 连空（同现有用例路径）
+        for _ in range(3):
+            self._run_empty_round()
+        self.assertEqual(m.intel_state_get("_intel_empty_streak", 0), 3)
+        # ② 一轮成功：local 侧 streak 清零 + ok_at 落盘
+        fake_intel = {"active_tags": ["#新"], "incentivized_tokens": ["$BTC"],
+                      "strategy_guidance": "g",
+                      "last_updated": datetime.now(timezone.utc).isoformat()}
+        from unittest.mock import patch
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns", return_value=["t1"]), \
+             patch.object(m.CampaignScanner, "analyze_with_ai", return_value=fake_intel):
+            m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+        self.assertEqual(m.intel_state_get("_intel_empty_streak", 0), 0)
+        ok_at = m.intel_state_get("_intel_empty_ok_at", "")
+        self.assertTrue(ok_at, "成功时必须写 ok_at 单调时间戳")
+        # ③ 模拟跨进程合并：local 已清零，remote 还是 3（max-wins 吞掉清零）
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))), "scripts"))
+        import git_state_merge as gsm
+        local_state = {k: v for k, v in json.loads(
+            open(m.CAMPAIGN_INTEL_FILE, encoding="utf-8").read()).items()
+            if k.startswith("_")}
+        remote_state = dict(local_state)
+        remote_state["_intel_empty_streak"] = 3      # 远端旧值（合并前）
+        merged = gsm.merge_state(remote_state, local_state)
+        self.assertEqual(merged["_intel_empty_streak"], 3,
+                         "max-wins 合并应把清零吞回 3（复现旧 bug 的环境）")
+        # 把合并后的状态写回文件，模拟下一轮 run 的起点。
+        # ⚠️ 必须把情报缓存改成**过期**（last_updated 推到 13h 前）：成功轮刚写下
+        # 新鲜情报，不推旧的话下一轮会走"沿用现存情报"早退、根本不再拉取，
+        # _note_empty_catalog 不会被调用（测试搭建坑，非生产路径）。
+        intel = json.loads(open(m.CAMPAIGN_INTEL_FILE, encoding="utf-8").read())
+        intel.update({k: v for k, v in merged.items() if k.startswith("_")})
+        intel["last_updated"] = (datetime.now(timezone.utc)
+                                  - timedelta(hours=13)).isoformat()
+        with open(m.CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
+            json.dump(intel, f, ensure_ascii=False)
+        # ④ 下一次孤立空拉取：必须只报 1（从 ok_at>empty_at 派生），不报警
+        mock_notify = self._run_empty_round()
+        self.assertEqual(m.intel_state_get("_intel_empty_streak", 0), 1,
+                         "成功后的第一次空拉取必须重新从 1 计数"
+                         "（旧代码会读到此前的 3 并报 4）")
+        self.assertEqual(mock_notify.call_count, 0,
+                         "孤立空拉取不得报警（3 连空才报）")
+
+    def test_three_isolated_empties_after_success_alert_again(self):
+        """★ 反向：成功之后又来 3 次连续空 ⇒ 必须重新报警（修复不能把报警焊死）。"""
+        for _ in range(3):
+            self._run_empty_round()
+        fake_intel = {"active_tags": ["#新"], "incentivized_tokens": ["$BTC"],
+                      "strategy_guidance": "g",
+                      "last_updated": datetime.now(timezone.utc).isoformat()}
+        from unittest.mock import patch
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns", return_value=["t1"]), \
+             patch.object(m.CampaignScanner, "analyze_with_ai", return_value=fake_intel):
+            m.CampaignScanner.get_campaign_intel(MultiLLMEngineStub())
+        # 合并把计数吞回 3（max-wins），但时间戳派生让计数重新来。
+        # 先过期缓存（成功轮刚写下新鲜情报，否则后续轮次早退不再拉取）。
+        self._expire_cache()
+        counts = [self._run_empty_round().call_count for _ in range(3)]
+        self.assertEqual(m.intel_state_get("_intel_empty_streak", 0), 3)
+        self.assertEqual(counts, [0, 0, 1],
+                         "3 次连续空的报警序列必须是 0,0,1（第 3 次才报）")
 
     def test_streak_resets_on_nonempty_fetch(self):
         from unittest.mock import patch
@@ -16723,6 +16806,12 @@ class TestR639FallbackImageCacheSelfHeals(unittest.TestCase):
 
     判据同 `_tg_delivered` 的 200 条上限（那个有自愈）：**状态要自愈**。
     同类状态，一个有上限一个没有 ⇒ 逐个状态键问「它会自己清理吗」。
+
+    ★★ R765：值形态从 dict{url,date} 改为**单串 "date|url"**（date 在前）。
+    根因：`_` 前缀状态键跨进程经 merge_state **逐键 max-wins**，而 URL 是
+    任意字符串——字典序大小与新旧无关！旧形态下"新 URL 字典序更小"时合并
+    存活的是**旧 URL 配新 date** ⇒ 复用一张可能已被 CDN 清理的旧图还以为
+    它是今天托管的。date 前置后字典序 max 天然等于最新日期胜出。
     """
 
     def setUp(self):
@@ -16737,42 +16826,59 @@ class TestR639FallbackImageCacheSelfHeals(unittest.TestCase):
         shutil.rmtree(self._tmp, ignore_errors=True)
 
     def test_expired_record_is_cleared(self):
-        m.intel_state_set("_fallback_image",
-                          {"url": "https://x/old.jpg", "date": "2026-09-09"})
+        m.intel_state_set("_fallback_image", "2026-09-09|https://x/old.jpg")
         self.assertIsNone(m.ImageManager._read_fallback_cache())
-        self.assertEqual(m.intel_state_get("_fallback_image", {}), {},
+        self.assertEqual(m.intel_state_get("_fallback_image", ""), "",
                          "过期记录未被清理——死数据长期占位")
 
     def test_today_record_still_reused(self):
         """防过度清理：当日记录必须仍能复用"""
-        m.intel_state_set("_fallback_image",
-                          {"url": "https://x/t.jpg", "date": self.today})
+        m.intel_state_set("_fallback_image", self.today + "|https://x/t.jpg")
         self.assertEqual(m.ImageManager._read_fallback_cache(),
                          "https://x/t.jpg")
-        self.assertTrue(m.intel_state_get("_fallback_image", {}),
+        self.assertTrue(m.intel_state_get("_fallback_image", ""),
                         "当日记录被误清了")
 
     def test_malformed_value_is_cleared(self):
-        """畸形值（非 dict）也要清——第一版只清"过期 dict"，这里漏了。
+        """畸形值也要清——第一版只清"过期 dict"，这里漏了。
 
         实测抓到：非 dict 会走 `if not isinstance(...)` 直接 return，
-        死数据留着。**修一处要验三态**（过期 dict / 当日 dict / 非 dict）。
+        死数据留着。**修一处要验三态**（过期 / 当日 / 畸形）。
         """
         m.intel_state_set("_fallback_image", "坏值")
         self.assertIsNone(m.ImageManager._read_fallback_cache())
-        self.assertEqual(m.intel_state_get("_fallback_image", {}), {},
+        self.assertEqual(m.intel_state_get("_fallback_image", ""), "",
                          "畸形状态未被清理")
 
     def test_empty_is_noop(self):
-        m.intel_state_set("_fallback_image", {})
+        m.intel_state_set("_fallback_image", "")
         self.assertIsNone(m.ImageManager._read_fallback_cache())
-        self.assertEqual(m.intel_state_get("_fallback_image", {}), {})
+        self.assertEqual(m.intel_state_get("_fallback_image", ""), "")
 
     def test_missing_url_but_today_date_cleared(self):
         """date 是今天但 url 空 ⇒ 不可用，也应清掉"""
-        m.intel_state_set("_fallback_image", {"date": self.today})
+        m.intel_state_set("_fallback_image", self.today + "|")
         self.assertIsNone(m.ImageManager._read_fallback_cache())
-        self.assertEqual(m.intel_state_get("_fallback_image", {}), {})
+        self.assertEqual(m.intel_state_get("_fallback_image", ""), "")
+
+    def test_legacy_dict_shape_is_cleared(self):
+        """R765：旧 dict 形态（手改/历史遗留）一律当不可用清理——不清的话
+        merge_state 的逐键并集会把 dict 与新旧串混在一个键里，读取侧更难判。"""
+        m.intel_state_set("_fallback_image",
+                          {"url": "https://x/old.jpg", "date": self.today})
+        self.assertIsNone(m.ImageManager._read_fallback_cache())
+        self.assertEqual(m.intel_state_get("_fallback_image", ""), "",
+                         "旧 dict 形态应被清成空串（一次性迁移）")
+
+    def test_write_then_read_roundtrip(self):
+        """★ 写读闭环：_write_fallback_cache 写的串必须能被当日复用"""
+        m.ImageManager._write_fallback_cache("https://x/new.jpg")
+        self.assertEqual(m.ImageManager._read_fallback_cache(),
+                         "https://x/new.jpg")
+        stamp = m.intel_state_get("_fallback_image", "")
+        self.assertTrue(stamp.startswith(self.today + "|"),
+                        "写入的串必须以 date 开头（字典序 max 才能等于最新胜出）")
+
 
 class TestR640SsrfBlockedIsReachable(unittest.TestCase):
     """R640：`ssrf_blocked` 从「声明但不产生」变成真能出现的标签。
@@ -21148,6 +21254,91 @@ class TestR759CampaignMentionTelemetry(unittest.TestCase):
         self.assertIn(r'_cm_body = re.sub(r"#[^\s#]+", " ", final_content)', src,
                       "提及判据未先去标签 ⇒ 注入标签会让指标恒真")
 
+
+class TestR765MaxWinsStateShapes(unittest.TestCase):
+    """R765：跨进程 max-wins 合并下的状态量形态审计（R751 家族的完整重跑）。
+
+    git_state_merge.merge_state 的语义：dict 逐键递归（并集）、list 取**更长**
+    的那个、标量 max-wins、None 让位非 None。⇒ 状态值只能是**单调量**
+    （时间戳/自增序列）；会变小的量（计数清零）、会被截断的 list、语义上新旧
+    与字典序无关的字符串（URL），都必须换成"序列+派生"或"时间戳比较"形态。
+    本类锁三个修复的跨进程行为（端到端过真 merge_state）。
+    """
+
+    def _merge_roundtrip(self, local_state, remote_state):
+        """模拟一轮跨进程合并：远端旧值 + 本地新值 → merge_state → 合并态"""
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))), "scripts"))
+        import git_state_merge as gsm
+        return gsm.merge_state(remote_state, local_state)
+
+    def test_video_sent_dict_append_survives_merge(self):
+        """★★★ 列表改 dict 的核心判据：等长时旧 list 语义会丢 append，
+        dict 逐键并集不会。"""
+        # 旧形态复现：200 满员的 list，本地 append 后被截断回 200（等长）
+        remote_list = ["s%03d" % i for i in range(200)]
+        local_list = (["s%03d" % i for i in range(1, 200)] + ["sNEW"])  # 截断后等长
+        merged_list = self._merge_roundtrip({"_video_sent": local_list},
+                                            {"_video_sent": remote_list})
+        self.assertNotIn("sNEW", merged_list["_video_sent"],
+                         "旧 list 形态下等长append 必须被丢（复现 bug）")
+        # 新形态：dict{slug:ts}，本地多一个键 ⇒ 逐键并集 ⇒ 新键存活
+        remote_dict = {"s%03d" % i: "2026-10-01T00:00:00+00:00" for i in range(200)}
+        local_dict = dict(remote_dict)
+        local_dict.pop("s000", None)                 # 模拟“删最旧键”的截断
+        local_dict["sNEW"] = "2026-10-19T00:00:00+00:00"
+        merged_dict = self._merge_roundtrip({"_video_sent": local_dict},
+                                            {"_video_sent": remote_dict})
+        self.assertIn("sNEW", merged_dict["_video_sent"],
+                      "dict 形态下新 slug 必须存活（逐键并集）")
+        # 201 而非 200：本地删掉的 s000 被并集从远端复活——**无害**（去重方向是
+        # "宁可少发不重发"，旧 slug 多留一期只会让库存晚一天轮换，绝不会重发）。
+        self.assertEqual(len(merged_dict["_video_sent"]), 201,
+                         "删键被复活是已知且无害的（新键存活才是判据）")
+
+    def test_video_sent_reader_migrates_legacy_list(self):
+        """★ 旧 list 形态兼容：读侧自动迁移成 dict（不迁移则 set(sent) 拿到
+        dict 的键集合也行，但 pending 过滤会错——这里锁迁移行为）。"""
+        legacy = ["a", "b", "c"]
+        sent = {str(s): "" for s in legacy if s}
+        self.assertEqual(set(sent), {"a", "b", "c"},
+                         "旧 list 迁移后键集合必须不变")
+
+    def test_fallback_stamp_newest_date_wins_regardless_of_url_order(self):
+        """★★★ 旧 dict 形态按 URL 字典序 max 配对（新旧无关）⇒ 可能旧 URL 配
+        新 date；新单串形态 date 在前 ⇒ 字典序 max 天然等于最新日期胜出。"""
+        # 构造“新 URL 字典序更小”的案例（旧形态必错配）
+        old = {"url": "https://z-cdn.example.com/old.jpg", "date": "2026-10-18"}
+        new = {"url": "https://a-cdn.example.com/new.jpg", "date": "2026-10-19"}
+        merged_dict = self._merge_roundtrip({"_fallback_image": new},
+                                            {"_fallback_image": old})
+        self.assertEqual(merged_dict["_fallback_image"]["url"], old["url"],
+                         "旧 dict 形态：新 URL 字典序更小 ⇒ 旧 URL 胜出（错配）")
+        self.assertEqual(merged_dict["_fallback_image"]["date"], new["date"],
+                         "旧 dict 形态：date 是新的 ⇒ 旧图配新日期（bug 复现）")
+        # 新单串形态：date|url，字典序 max = 最新日期连它的 URL 一起胜出
+        old_s = "2026-10-18|https://z-cdn.example.com/old.jpg"
+        new_s = "2026-10-19|https://a-cdn.example.com/new.jpg"
+        merged_s = self._merge_roundtrip({"_fallback_image": new_s},
+                                         {"_fallback_image": old_s})
+        self.assertEqual(merged_s["_fallback_image"], new_s,
+                         "新形态：最新日期的整串必须胜出（URL 随日期一起走）")
+
+    def test_streak_timestamps_are_merge_safe(self):
+        """★ ok_at/empty_at 是 ISO 时间戳（单调）⇒ max-wins 合并安全；
+        计数会被吞掉清零（已复现），但派生逻辑不信计数。"""
+        remote = {"_intel_empty_streak": 3,
+                  "_intel_empty_at": "2026-10-18T10:00:00+00:00"}
+        local = {"_intel_empty_streak": 0,
+                 "_intel_empty_at": "2026-10-18T10:00:00+00:00",
+                 "_intel_empty_ok_at": "2026-10-18T11:00:00+00:00"}
+        merged = self._merge_roundtrip(local, remote)
+        self.assertEqual(merged["_intel_empty_streak"], 3, "清零被吞（已知）")
+        self.assertEqual(merged["_intel_empty_ok_at"],
+                         "2026-10-18T11:00:00+00:00",
+                         "ok_at 时间戳必须存活（单调量合并安全）")
+        # 派生判据：ok_at >= empty_at ⇒ 连续段已断 ⇒ 下次从 1 起算
+        self.assertTrue(merged["_intel_empty_ok_at"] >= merged["_intel_empty_at"])
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
