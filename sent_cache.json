@@ -1,15 +1,5 @@
 [
   {
-    "id": "91e88b2ac06c2a47",
-    "title": "比特幣突破8.5萬鎂、以太坊衝2715鎂!全網爆倉1.88億鎂,恐懼指數續回落",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-10-02T01:44:02.618501+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ]
-  },
-  {
     "id": "d9707e62e163ddc8",
     "title": "以太坊基金會推出 zkAPI!付 AI 費用不需暴露身份,Vitalik 二月提案終於上線",
     "source": "BlockTempo (动区动趋中文)",
@@ -5107,6 +5097,16 @@
     "sent_at": "2026-10-18T02:04:27.609270+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "a80882049885a956",
+    "title": "Vitalik Buterin’s ‘Paranoid Mode’ puts Ethereum’s AI security push under institutional lens",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-18T02:24:43.171273+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-TW"
   }
