@@ -1,15 +1,5 @@
 [
   {
-    "id": "3baca0321ec6554a",
-    "title": "Shiba Inu (SHIB) Goes Live on Solana",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-04T19:04:39.118756+00:00",
-    "tokens": [
-      "SHIB",
-      "SOL"
-    ]
-  },
-  {
     "id": "35ec23b034f82f0c",
     "title": "Bitcoin’s $85,000 recovery awaits proof that ETF investors kept buying after payrolls",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5133,6 +5123,16 @@
     "sent_at": "2026-10-18T16:24:42.458232+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0ced4a3d66cadfcc",
+    "title": "SEC approves Coinbase earnings bets that stay settled when the numbers change",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-18T16:41:42.922572+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
