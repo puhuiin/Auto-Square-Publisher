@@ -1,15 +1,5 @@
 [
   {
-    "id": "c91c808639330f2c",
-    "title": "Bitcoin and Ethereum ETF Weekly Flows: The Good, the Bad, and the Concerning",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-04T18:25:29.399595+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ]
-  },
-  {
     "id": "3baca0321ec6554a",
     "title": "Shiba Inu (SHIB) Goes Live on Solana",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5133,6 +5123,16 @@
     "sent_at": "2026-10-18T16:05:09.325588+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c26ea888d7a18a9b",
+    "title": "Claude unpicks an NSA mystery behind Ethereum passkey security",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-18T16:24:42.458232+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
