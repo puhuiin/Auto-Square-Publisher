@@ -1,14 +1,5 @@
 [
   {
-    "id": "f3defa17a51b4f0d",
-    "title": "Cardano (ADA) Hits Deepest Rally Since May, Founder Hoskinson Drops Major Teaser",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-05T17:46:56.624444+00:00",
-    "tokens": [
-      "ADA"
-    ]
-  },
-  {
     "id": "8aabebd8bb658ff3",
     "title": "Strategy buys just 334 Bitcoin as preferred-share buybacks reach $1.45 billion",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5141,6 +5132,16 @@
     "sent_at": "2026-10-18T19:43:03.596473+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2b364ff1b2f686f5",
+    "title": "价值9787万美元比特币多单面临清算,Hyperliquid杠杆达40倍",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-18T20:04:11.353237+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
