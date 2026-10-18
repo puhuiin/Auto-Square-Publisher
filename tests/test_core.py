@@ -21661,6 +21661,81 @@ class TestR774CampaignMentionEnglishForms(unittest.TestCase):
             re.sub(r"#[^\s#]+", " ", with_body)),
             "正文真有提及必须能检出（剥标签不能把正文也剥掉）")
 
+class TestR775EnglishBranchCampaignMention(unittest.TestCase):
+    """R775：英文分支的规则摘要必须**显式包含活动提及**（R615/R611 同族：
+    规则写在一个分支、另一个分支的摘要里没有）。
+
+    生产实证：18:54 guidance 刷新后英文帖 campaign_mention 0/8（刷新前同窗口
+    3/3）。逐层排查——注入的菜单经复现完全正常（框架在抽、禁令在、期望句在），
+    根因是英文分支那段「最高优先级/不要出现任何中文句子」让模型把中文的
+    campaign 菜单**连带丢掉**，而该分支的规则摘要只列了挂件/标签/不喊单/数字，
+    没有活动提及。
+    """
+
+    @staticmethod
+    def _english_block():
+        """AST 定位拼 system_prompt 的 out_lang=='en' 块（同 R743 判据）。
+        ⚠️ main.py 里有多处 `if out_lang == \"en\"`，必须挑含「输出语种/English」
+        的那处，否则锁错块（R694：名字≠含义）。"""
+        import ast
+        import inspect
+        import textwrap
+        src = textwrap.dedent(inspect.getsource(m))
+        tree = ast.parse(src)
+        candidates = []
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.If):
+                continue
+            t = ast.dump(node.test)
+            if "out_lang" not in t or "'en'" not in t:
+                continue
+            chunks = []
+            for stmt in node.body:
+                for sub in ast.walk(stmt):
+                    if isinstance(sub, ast.Constant) and isinstance(sub.value, str):
+                        chunks.append(sub.value)
+            blob = "\n".join(chunks)
+            if "English" in blob or "输出语种" in blob:
+                candidates.append(blob)
+        return candidates[0] if candidates else None
+
+    def test_english_branch_requires_campaign_mention(self):
+        """★★★ 英文规则摘要必须包含活动提及要求"""
+        block = self._english_block()
+        self.assertIsNotNone(block, "没定位到英文指令块 ⇒ 判据失效")
+        self.assertIn("活动", block,
+                      "英文分支摘要没有活动提及 ⇒ 模型把中文 campaign 菜单连带丢弃"
+                      "（生产实证：刷新后英文 mention 0/8）")
+        self.assertIn("提法", block,
+                      "必须指向「活动提法套路」这个已有菜单（不是另起一套说法）")
+
+    def test_summary_references_menu_not_duplicates_it(self):
+        """★ 摘要只能**引用**菜单（"按上面给出的…"），不得把菜单内容复制一份
+        ——两处各写一遍必然漂移（R731/R622 同族：口径只留一份实现）。"""
+        block = self._english_block()
+        self.assertIn("按上面给出的", block,
+                      "摘要必须引用上方菜单，而非自帶一份活动说法（防漂移）")
+        # 不得出现具体框架名（那在池里，复制会绕开 draw_fresh 轮换）
+        for frame in ("验证判断框架", "成本对照框架", "提问带出", "清单融入"):
+            self.assertNotIn(frame, block,
+                             "摘要里出现具体框架名 %s ⇒ 绕过了轮换池（R592 纪律）" % frame)
+
+    def test_english_block_keeps_other_rules(self):
+        """★ 反向：既有规则（挂件/标签/不喊单/数字/节奏/篇幅）不得被补活动提及时删掉"""
+        block = self._english_block()
+        for kw in ("$TOKEN", "不喊单", "数字必须来自素材", "句长节奏", "110~170"):
+            self.assertIn(kw, block, "英文分支既有规则 %s 被误删" % kw)
+
+    def test_guard_has_teeth(self):
+        """★★ 假阳性演练：把活动提及句从英文块里抹掉，判据必须能失败
+        （否则只是恒真断言，R712 家族纪律）。"""
+        block = self._english_block()
+        # 模拟"回归"：删掉含活动提及的那句
+        stripped = "\n".join(
+            ln for ln in block.split("\n") if "活动" not in ln)
+        self.assertNotIn("活动", stripped,
+                         "连抹掉活动句都还能检出 ⇒ 判据是恒真的（无牙齿）")
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
