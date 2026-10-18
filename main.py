@@ -4504,10 +4504,23 @@ _INTEL_RETURN_PROMISE_WORDS = ("锁定收益", "稳赚", "保本", "包赚", "�
 # 于是"市场情绪偏谨慎，BTC 24 小时涨了 3%"这类**正常行情句**也会命中（实测确认），
 # 后果是：误武装情绪锚点禁令 → 盘面情绪行被剥离、prompt 注入"严禁提及"，
 # 报表还把合规内容记成违规。收紧为"间隙只允许中文/空格，且数字紧跟"，实测真阳性全保留。
+# R768：英文编号式站队 CTA（ending_question 判据的英文分支）。
+# 实测英文帖的互动抓手是「1. He's just talking his book: 2.」「2 = 50/50
+# coin flip, 3 = it's dumping lower」「3 if you think it's a quick pump」
+# 这类**数字选项形态**——不含问号、也不含中文「扣1扣2」⇒ 旧判据下英文帖
+# ending_question 只有 40%（中文 83-88%），dashboard「结尾站队提问」被拖到
+# ⚠️：**测量伪影，不是内容缺陷**（R747 家族：判据必须覆盖全部语种的真实形态）。
+# ⚠️ 精度约束（实测零误报）：只认「数字+[=:]」「[=:]+数字」「数字+if you」
+# 「drop/comment/reply/post+数字」「1 or 2」；「3 straight days」
+# 「1.5 million」「up 2x」「top 3 reasons」等普通数字用法不命中。
+_EN_ENDING_CTA_RE = re.compile(
+    r"\b[123]\s*[=:]\s*|[=:]\s*[123]\b|\b[123]\s+if you\b"
+    r"|\b(?:drop|comment|reply|post|type)\s+[123]\b|\b[12]\s+or\s+[12]\b",
+    re.IGNORECASE)
+
 _FNG_ANCHOR_RE = re.compile(
     r"(贪婪|恐惧|情绪)指数|贪婪区|恐惧区|(?:贪婪|恐惧|情绪)[^\s。！？，、；：\nA-Za-z0-9]{0,4}\s?\d{2}"
     # R766：英文分支——实测英文帖 37%（61/165）引用情绪指数、且按天爬升
-    # （早半 39%→近半 52%），而中文正则对英文侧**完全失明**（只算到 2/165）
     # ⇒ ① 仪表盘「FNG 锚点压力」只报中文侧，读者会以为英文帖不用这个装置；
     # ② R101/R176 的禁令武装计数（_recent_fng_hook_count）数不到英文帖，
     # 英文侧可以无限增长（R710 夜间全是英文帖 ⇒ 夜间窗口恒不武装）。
@@ -12275,7 +12288,20 @@ def _run_main():
                             [ln for ln in final_content.split("\n") if ln.strip()][-2:])
                         _hit = ("？" in _tail or "?" in _tail
                                 or re.search(r"扣\s*[12]|你信|你觉得|怎么看|agree|看多|看空",
-                                             _tail))
+                                             _tail)
+                                # R768：英文编号式站队 CTA——实测英文帖的互动抓手
+                                # 是「1. …: 2.」「2 = 50/50 coin flip, 3 = …」
+                                # 「3 if you think …」这类**数字选项形态**，不含
+                                # 问号也不含中文扣1扣2 ⇒ 旧判据下英文帖
+                                # ending_question 只有 40%（中文 83-88%），
+                                # dashboard「结尾站队提问」被拖到 ⚠️——
+                                # **是测量伪影不是内容缺陷**（R747 家族：
+                                # 判据必须覆盖全部语种的真实形态）。
+                                # 精度约束：只认「数字+[=:]」「数字+if you」
+                                # 「drop/comment/reply + 数字」「1 or 2」，
+                                # 「3 straight days」「1.5 million」「up 2x」
+                                # 等普通数字用法不命中（实测零误报）。
+                                or _EN_ENDING_CTA_RE.search(_tail))
                         _tail_q = bool(_hit)
                         # 末 120 字够覆盖"最后 1-2 行"（本判据的取样范围）
                         _sample = final_content[-120:]
@@ -12286,7 +12312,11 @@ def _run_main():
                             [ln for ln in _sample.split("\n") if ln.strip()][-2:])
                         _s_hit = ("？" in _s_tail or "?" in _s_tail
                                   or re.search(r"扣\s*[12]|你信|你觉得|怎么看|agree|看多|看空",
-                                               _s_tail))
+                                               _s_tail)
+                                  # R768：与上方全量判据**同口径**（同一关键词表）——
+                                  # 只加一边会产生大量假冲突、把 tail_conflict 撑爆
+                                  # （R663 注释明令的两处同口径）。
+                                  or _EN_ENDING_CTA_RE.search(_s_tail))
                         if bool(_s_hit) != _tail_q:
                             _tail_text = _sample
                     # R649：**prompt 硬性条款的发布后合规遥测**（全量扫，非只看末尾）。

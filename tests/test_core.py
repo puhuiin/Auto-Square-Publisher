@@ -21380,6 +21380,58 @@ class TestR765MaxWinsStateShapes(unittest.TestCase):
         # 派生判据：ok_at >= empty_at ⇒ 连续段已断 ⇒ 下次从 1 起算
         self.assertTrue(merged["_intel_empty_ok_at"] >= merged["_intel_empty_at"])
 
+class TestR768EnglishEndingCtaJudgment(unittest.TestCase):
+    """R768：ending_question 判据的英文编号 CTA 分支。
+
+    实证（读 tail_conflict 留存的结尾原文）：英文帖的互动抓手是
+    「1. He's just talking his book: 2.」「2 = 50/50 coin flip, 3 = …」
+    「3 if you think …」这类**数字选项形态**——不含问号、也不含中文扣1扣2
+    ⇒ 旧判据下英文帖 ending_question 只有 40%（中文 83-88%），
+    dashboard「结尾站队提问」被拖到 ⚠️：**测量伪影，不是内容缺陷**。
+    """
+
+    TRUE_POSITIVES = (
+        "1. He's just talking his book: 2.",
+        "2 = 50/50 coin flip, 3 = it's dumping lower.",
+        "3 if you think it's a quick pump and dump.",
+        "Drop 1 if bullish, 2 if bearish.",
+        "Comment 1 or 2 below.",
+        "reply 1 for yes, 2 for no",
+        "…confirmation, 3 if you think it's a quick pump and dump.",
+    )
+    FALSE_POSITIVES = (
+        "for 3 straight days before you touch any $SHIB positions.",
+        "1.5 million tokens unlocked next week.",
+        "up 2x this week on heavy volume.",
+        "top 3 reasons to watch this trade.",
+        "wait 2 minutes for the confirmation.",
+        "the 24h volume is 1.2B and rising.",
+    )
+
+    def test_english_cta_forms_matched(self):
+        for t in self.TRUE_POSITIVES:
+            self.assertIsNotNone(m._EN_ENDING_CTA_RE.search(t),
+                                 "英文编号 CTA 漏检: %s" % t[:40])
+
+    def test_ordinary_numbers_not_matched(self):
+        for t in self.FALSE_POSITIVES:
+            self.assertIsNone(m._EN_ENDING_CTA_RE.search(t),
+                              "普通数字用法误报: %s" % t[:40])
+
+    def test_both_judgment_sites_use_same_caliber(self):
+        """★★★ R663 纪律：全量判据与自一致性判据必须同口径（同一关键词表）——
+        只加一边会产生大量假冲突、把 tail_conflict 撑爆。结构守卫=两处都引用
+        同一个正则对象。"""
+        import inspect
+        src = inspect.getsource(m)
+        n = src.count("_EN_ENDING_CTA_RE.search(")
+        self.assertGreaterEqual(n, 2,
+                                "ending_question 的两处判据（全量 + 自一致性）"
+                                "必须都引用英文 CTA 正则，否则假冲突暴涨")
+        # 且中文判据仍在两处（不能为加英文分支把中文分支弄丢）
+        self.assertEqual(src.count("扣\\s*[12]|你信|你觉得|怎么看|agree|看多|看空"), 2,
+                         "中文判据也必须在两处各一份（同口径纪律）")
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
