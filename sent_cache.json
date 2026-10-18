@@ -1,14 +1,5 @@
 [
   {
-    "id": "11f41c116785e9d3",
-    "title": "Ethereum Creator Vitalik Buterin Reveals Privacy-Focused AI Experiment",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-04T16:47:27.306807+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "84267cd8f3925c4d",
     "title": "Trump Taps Jay Clayton, the SEC Chair Who Sued Ripple, to Lead AI Push",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5131,6 +5122,16 @@
     "sent_at": "2026-10-18T15:24:10.362983+00:00",
     "tokens": [
       "PEPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7b1577ad71b69f5c",
+    "title": "Analyst Maps Out 3 Reasons to Be Bullish on Dogecoin (DOGE): But Should You Really Be?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-18T15:44:16.384498+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
