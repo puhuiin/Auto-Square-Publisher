@@ -1,14 +1,5 @@
 [
   {
-    "id": "69d93573f47d262c",
-    "title": "Bitcoin’s $87K Rally Was a Trap: Could $82.5K Be the Real Buying Opportunity?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-03T12:44:19.941487+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "1f3aea852c0676ef",
     "title": "Arbitrum pauses new Stylus activations over AI-assisted attack risks",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5122,5 +5113,15 @@
       "ADA"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ba3aeaefac764409",
+    "title": "Can $299M in app revenue, positive Q3 releases push SOL’s price higher?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-18T08:24:09.168676+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
