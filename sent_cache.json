@@ -1,14 +1,5 @@
 [
   {
-    "id": "d68c0ed13e18250c",
-    "title": "Analyst Explains What Can Trigger DOGE’s Next Double-Digit Surge",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-04T12:51:36.195985+00:00",
-    "tokens": [
-      "DOGE"
-    ]
-  },
-  {
     "id": "05c41c693788e0c7",
     "title": "277 Billion Shiba Inu (SHIB) Added: No, It's Not Bearish Yet",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5130,5 +5121,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0efbb0eb7791709c",
+    "title": "比特幣年底能否突破 10 萬美元引發分歧,通脹與美聯儲政策成關鍵變量",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-18T14:29:03.421620+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
   }
 ]
