@@ -9414,6 +9414,17 @@ class SquarePublisher(BasePublisher):
         content = self._sanitize_content(content, max_chars=char_limit)
         content = self._weave_cashtags(content, ensure_tokens)
         content = self._ensure_token_widget(content, ensure_tokens)
+        # ★★ R772：**织入之后必须再补一次空格**。R643 的 _pad_tight_cashtags 在
+        #   _sanitize_content 第 1c 步——那是**织挂件之前**。而 _weave_cashtags
+        #   把裸代币名（"5500枚BTC全额兜底"里的 BTC）织成 $BTC 时，新挂件**原样
+        #   继承两侧的汉字** ⇒ 补过的空格被绕回、紧贴形态复活。
+        #   生产实证（dashboard 警报）：正文紧贴 292/1629=18%、标题侧新稿 26%——
+        #   R643 修复后本应归零。标题侧不受影响（_sanitize_title 在 weave **之后**
+        #   跑，顺序正确）；只有正文这条路顺序反了（R615/R611 同族：修了一侧，
+        #   另一侧的调用顺序没对齐）。
+        #   _ensure_token_widget 插的是 "\n\n$TOKEN "（空白边界）本就不紧贴，
+        #   放它之后一次覆盖两个织入来源。
+        content = self._pad_tight_cashtags(content)
         # R367：把最终唯一挂件数压到 MAX_TOKENS_PER_POST 以内（多余 $ 降格纯名），
         # 否则清单式行情帖 4+ 币对触发币安 220095「Coin pair count exceeds limit」整帖拒稿。
         # 必在 _count_valid_widgets 之前——last_widget_count 记的须是降格后的真实挂件数。

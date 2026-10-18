@@ -17104,6 +17104,44 @@ class TestR643CashtagSpacing(unittest.TestCase):
         self.assertEqual(self._clean("现在$BTC 刚过完"),
                          "现在 $BTC 刚过完")
 
+    def test_woven_widget_gets_padded_after_weave(self):
+        """★★★ R772：**织入之后补的空格才作数**——R643 的补空格在
+        _sanitize_content 第 1c 步（织挂件**之前**），而 publish() 里
+        _weave_cashtags 在 sanitize **之后**跑：裸代币名被织成 $TOKEN 时
+        原样继承两侧汉字 ⇒ 补过的空格被绕回、紧贴形态复活。
+        生产实证：正文紧贴 292/1629=18%、标题侧新稿 26%（R643 后本应 0）。
+        本例锁死 publish() 的真实三步顺序：sanitize → weave → pad。
+        """
+        raw = "黑客偷的是用户资产，5500枚BTC全额兜底，5500枚ETH也已锁死。"
+        after_sanitize = self.SP(raw).replace(" #Write2Earn #BinanceSquare", "")
+        # 织入前没有 $（模型写的是纯名）⇒ 旧 bug 形态由 weave 产生
+        self.assertNotIn("$BTC", after_sanitize)
+        woven = m.SquarePublisher._weave_cashtags(after_sanitize, ["BTC", "ETH"])
+        self.assertIn("5500枚$BTC全额兜底", woven,
+                      "weave 织出的挂件紧贴中文（R772 前的真实形态）")
+        # R772 修复：weave 之后再补一次
+        fixed = m.SquarePublisher._pad_tight_cashtags(woven)
+        self.assertIn("5500枚 $BTC 全额兜底", fixed)
+        for w in ("$BTC", "$ETH"):
+            i = fixed.find(w)
+            nxt = fixed[i + len(w)] if i + len(w) < len(fixed) else " "
+            prev = fixed[i - 1] if i > 0 else " "
+            self.assertFalse("\u4e00" <= nxt <= "\u9fff" or "\u4e00" <= prev <= "\u9fff",
+                             "%s 仍紧贴中文 ⇒ 币安不渲染可点击标签（返佣入口失效）" % w)
+
+    def test_publish_body_wiring_pads_after_weave(self):
+        """★★ 源码级接线守卫：publish() 正文链路必须 **weave 之后再 pad**。
+        顺序反了（pad 在 weave 前）就是 R772 的 bug——补的空格被织入绕回。
+        """
+        src = open(m.__file__, encoding="utf-8").read()
+        seg_start = src.index("content = self._sanitize_content(content, max_chars=char_limit)")
+        seg = src[seg_start:seg_start + 1200]
+        self.assertIn("_weave_cashtags", seg, "正文链路必须织挂件")
+        self.assertIn("_pad_tight_cashtags", seg,
+                      "正文链路必须在织入后补空格（R772）")
+        self.assertLess(seg.index("_weave_cashtags"), seg.index("_pad_tight_cashtags"),
+                        "必须先织入再补空格，否则织出的挂件仍是紧贴形态（R772）")
+
     def test_amount_tokens_not_padded(self):
         """**金额不是挂件**——$1000/$2000/$120K/$5B 不得被插空格。
 
