@@ -1,14 +1,5 @@
 [
   {
-    "id": "3ff33604b67d1348",
-    "title": "Evernorth's XRP ETF Nasdaq Listing Scheduled for October Date",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-02T16:10:12.291649+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "dbfc05e929e06c5d",
     "title": "Former SEC Boss Who Sued Ripple to Be Named AI Czar",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5114,5 +5105,15 @@
       "CAKE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "61f978624abf280a",
+    "title": "Zcash price prediction — Assessing the risk of a breakdown below $1,000 for ZEC",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-18T04:47:15.370755+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
