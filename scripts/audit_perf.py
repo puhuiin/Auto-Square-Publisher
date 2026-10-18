@@ -195,8 +195,12 @@ def report(rows, hours, since_iso=None, quota=None, prod=None):
               % (min(nxt), _median(nxt),
                  "**已打满**" if min(nxt) > 30 else "仍有余量"))
 
-    # ② 时段 × 浏览
-    print("\n② 时段 × 浏览（中位）")
+    # ② 时段 × 发布量
+    # ★★ R770：标题原写「时段 × 浏览（中位）」但**浏览不在回执里**（见 ⑥½：
+    #   浏览只能从 content_stats 按 content_id join，而导出常常滞后）⇒ 标题
+    #   承诺一个本面板从不显示的列 = R747「雷达必须量它所称的东西」的显示侧
+    #   违例。改成如实标题；时段×浏览归因看 ⑥½/⑥¾（那两面真做 join）。
+    print("\n② 时段 × 发布量（浏览归因见 ⑥½/⑥¾）")
     buck = defaultdict(list)
     for r in pub:
         buck[_cst(r["ts"]).hour // 3 * 3].append(
@@ -439,8 +443,27 @@ def report(rows, hours, since_iso=None, quota=None, prod=None):
             print("   ⚠️ 本面板为整窗口径：市场级事件（如崩盘）会**整体**压低并可能反转"
                   "语种对比 ⇒ 结构性判读前先看 ⑥½ 的近半/整窗是否一致（R756）")
         else:
-            print("   ⚠️ 遥测里没有 lang 字段（R712 上线于 10-10 10:59），"
-                  "或 content_id 未命中 ⇒ 本轮无法按语种归因")
+            # ★★ R770：告警必须说**真实的**原因。旧文案只有一种猜测
+            # （"遥测里没有 lang 字段"），而实测最常见的原因是另外两种：
+            # ① content_stats 导出滞后（用户还没导最近几天的数据）⇒ 窗口内
+            #    帖子全部 join 不上；
+            # ② content_id 未命中（历史行无该字段）。
+            # 把三种原因分别探测、各自给对应文案——误报原因会让人去修不存在
+            # 的问题（R731 家族：报告说错话比不说话更糟）。
+            _n_lang = sum(1 for r in pub if r.get("lang"))
+            _n_cid = sum(1 for r in pub if r.get("content_id"))
+            _cs_newest = max((str(v) for v in cid2snap.values() if v), default="无")
+            if _n_lang == 0:
+                print("   ⚠️ 遥测里没有 lang 字段（R712 上线于 10-10 10:59）"
+                      "⇒ 本轮无法按语种归因（换更晚的窗口重跑）")
+            elif _cs_newest == "无" or _cs_newest < (pub[-1].get("ts") or "")[:10]:
+                print("   ⚠️ content_stats 最新快照 %s **早于本窗口** ⇒ 浏览导出滞后"
+                      "（需从创作者中心导出最近数据后重跑；lang 字段有 %d 篇、"
+                      "content_id 有 %d 篇，都不是问题）" % (_cs_newest, _n_lang, _n_cid))
+            else:
+                print("   ⚠️ content_id 未命中（有 lang %d 篇 / 有 content_id %d 篇，"
+                      "但 join 不上）⇒ 检查 content_stats 的 content_id 是否同源"
+                      % (_n_lang, _n_cid))
     else:
         print("\n⑥½ 按语种 × 浏览：**缺 content_stats.jsonl** ⇒ 无法归因"
               "（需从创作者中心导出后重跑）")

@@ -21489,6 +21489,80 @@ class TestR769ExemplarsObeyInjectedRules(unittest.TestCase):
             self.assertTrue(140 <= cjk <= 200,
                             "范文 CJK %d 超出宣称区间 140~200" % cjk)
 
+class TestR770AuditPanelHonesty(unittest.TestCase):
+    """R770：audit_perf 两个面板的显示失信（R747 家族：必须量它所称的东西）。
+
+    ① ② 面板标题原写「时段 × 浏览（中位）」，但浏览不在回执里、本面板只输出
+       篇数 ⇒ 标题承诺一个从不显示的表头。修=如实标题 + 指向真做 join 的 ⑥½/⑥¾。
+    ② ⑥½ 零命中时的告警旧文案只有一种猜测（"没有 lang 字段"），而实测最常见
+       的原因是 content_stats **导出滞后**（用户还没导最近几天）⇒ 误报原因会
+       让人去修不存在的问题（R731 家族：报告说错话比不说话更糟）。修=三种
+       原因分别探测、各自给对应文案。
+    """
+
+    @staticmethod
+    def _ap():
+        import importlib.util
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "scripts", "audit_perf.py")
+        spec = importlib.util.spec_from_file_location("audit_perf_r770", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _run_report(self, ap, pub, stats):
+        import contextlib
+        import io
+        import tempfile
+        orig_root = ap.ROOT
+        tmp = tempfile.mkdtemp()
+        with open(os.path.join(tmp, "content_stats.jsonl"), "w", encoding="utf-8") as f:
+            for d in stats:
+                f.write(json.dumps(d) + "\n")
+        ap.ROOT = tmp
+        try:
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                ap.report(pub, 240, None, None, None)
+            return buf.getvalue()
+        finally:
+            ap.ROOT = orig_root
+
+    def test_hour_panel_title_does_not_promise_views(self):
+        """★★ ② 面板不得在标题里承诺它不显示的内容（浏览归因在 ⑥½/⑥¾）"""
+        ap = self._ap()
+        pub = [{"outcome": "binance_published", "ts": "2026-10-18T0%d:00:00+00:00" % i,
+                "lang": "zh-CN", "content_id": "c%d" % i} for i in range(4)]
+        out = self._run_report(ap, pub, [])
+        self.assertIn("时段 × 发布量", out, "标题必须如实（只发布量）")
+        self.assertNotIn("时段 × 浏览", out,
+                         "标题又承诺浏览了——本面板从不显示浏览（R747）")
+
+    def test_stale_export_warning_not_misreported_as_missing_lang(self):
+        """★★★ 回归判据：content_stats 导出滞后时，告警必须说「导出滞后」，
+        而**不是**「没有 lang 字段」（旧文案的唯一猜测，把人引去修不存在的问题）。"""
+        ap = self._ap()
+        pub = [{"outcome": "binance_published", "ts": "2026-10-18T0%d:00:00+00:00" % i,
+                "lang": "en", "content_id": "c%d" % i} for i in range(4)]
+        # content_stats 只有一列**过期**快照（窗口帖全部 join 不上）
+        stats = [{"content_id": "old", "ts": "2026-10-01T00:00:00Z", "views": 10}]
+        out = self._run_report(ap, pub, stats)
+        self.assertIn("导出滞后", out,
+                      "导出滞后必须被点名（这是实测最常见的原因）")
+        self.assertNotIn("没有 lang 字段", out,
+                         "lang 字段明明有（4 篇）却说没有 ⇒ 误报原因（R770 修复点）")
+        self.assertIn("都不是问题", out,
+                      "必须明说 lang/content_id 都没问题，避免人去修不存在的问题")
+
+    def test_missing_lang_warning_when_truly_absent(self):
+        """★ 真没有 lang 字段时（R712 前的窗口）才说「没有 lang 字段」"""
+        ap = self._ap()
+        pub = [{"outcome": "binance_published", "ts": "2026-10-01T0%d:00:00+00:00" % i,
+                "content_id": "c%d" % i} for i in range(4)]
+        stats = [{"content_id": "c0", "ts": "2026-10-05T00:00:00Z", "views": 10}]
+        out = self._run_report(ap, pub, stats)
+        self.assertIn("没有 lang 字段", out, "真没有 lang 时才这么说")
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
