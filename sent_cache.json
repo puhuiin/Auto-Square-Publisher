@@ -1,14 +1,5 @@
 [
   {
-    "id": "9e6b7f55c6d6b6cb",
-    "title": "North Dakota’s Roughrider Coin Goes Live on Fiserv and Solana",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-02T22:24:17.509610+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "938084a0ac75530f",
     "title": "Dogecoin (DOGE), Cardano (ADA), Aave (AAVE) and Bonk (BONK) Price Analysis for October 3: Can Market Recapture Volatility?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5121,5 +5112,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4b95f149edf4c2e7",
+    "title": "PUMP’s pullback presents a buying opportunity at $0.00413 – Here’s why",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-18T06:24:59.423322+00:00",
+    "tokens": [
+      "PUMP"
+    ],
+    "lang": "zh-TW"
   }
 ]
