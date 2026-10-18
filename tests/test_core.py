@@ -21173,8 +21173,46 @@ class TestR758CampaignCtaRotationPool(unittest.TestCase):
                            and "想练手/想试水" in n.value)
         self.assertTrue(blob, "注入指令没点名收敛模板 ⇒ 模型不知道哪个句式被禁")
         self.assertIn("93%", blob, "禁令要带实测占比（无数据支撑的禁令会被当耳旁风）")
-        self.assertIn("去参加某竞赛/锦标赛", blob,
-                      "模板描述须含「去参加…竞赛」收尾结构（结构描述，非范句）")
+        self.assertIn("出现在同一句", blob,
+                      "模板描述须覆盖同句共现（R778：句中变体绕过旧的头尾描述）")
+
+    def test_r778_ban_covers_midsentence_variant(self):
+        """★★★ R778：禁令结构描述必须覆盖「同句共现」而非只有完整头尾模板。
+        生产实证（R777 验证窗口 n=4 中 1 篇=25%）：R760 期望句把 mention 拉回
+        100% 后，模板以**句中变体**回流——「想练手的,去现货交易锦标赛S6用模拟盘
+        试试水」（意图词在句首、活动名词在句中）绕过旧描述「以…开头、以…收尾」。
+        判据与 campaign_cta_tpl 雷达的检测口径（同句共现）对齐。
+        """
+        import ast
+        import inspect
+        import textwrap
+        tree = ast.parse(textwrap.dedent(inspect.getsource(m)))
+        blob = "\n".join(
+            n.value for n in ast.walk(tree)
+            if isinstance(n, ast.Constant) and isinstance(n.value, str)
+            and "想练手/想试水" in n.value)
+        self.assertTrue(blob, "没找到 campaign 模板禁令文本")
+        self.assertIn("出现在同一句", blob,
+                      "禁令还停留在「以…开头、以…收尾」的完整形态 ⇒ 句中变体绕过"
+                      "（R778 生产实证：25% 模板回流全是变体）")
+        self.assertNotIn("开头、", blob,
+                         "旧的头尾描述又回来了 ⇒ 覆盖收窄")
+
+    def test_r778_ban_still_names_the_frame_alternative(self):
+        """★ 拓宽禁令不得丢掉「按框架另起说法」的替代指引（只禁不给替代会推回
+        空话/或直接不提——R619/R733/R760 同族：禁令必须配替代）"""
+        import ast
+        import inspect
+        import textwrap
+        tree = ast.parse(textwrap.dedent(inspect.getsource(m)))
+        blob = "\n".join(
+            n.value for n in ast.walk(tree)
+            if isinstance(n, ast.Constant) and isinstance(n.value, str)
+            and "想练手/想试水" in n.value)
+        self.assertIn("按上面给的框架另起说法", blob,
+                      "禁令必须指向轮换池的替代框架（只禁不给替代）")
+        self.assertIn("返佣红线", blob,
+                      "活动信息说准的要求（返佣红线）不得被拓宽时删掉")
 
     def test_hint_preserves_campaign_info_redline(self):
         """★ 返佣红线：只轮换提法，活动名称/奖励/截止必须说准"""
@@ -21264,7 +21302,11 @@ class TestR758CampaignCtaRotationPool(unittest.TestCase):
         blob = chr(10).join(
             n.value for n in ast.walk(tree)
             if isinstance(n, ast.Constant) and isinstance(n.value, str)
-            and ("活动提法套路" in n.value or "别把活动提法写成同一句式" in n.value))
+            and ("活动提法套路" in n.value or "别把活动提法写成" in n.value)
+            # R778：必须排除英文分支块——R775 往英文摘要里加了「本篇活动提法
+            # 套路」字样，不过滤会把英文块混进 blob、让中文菜单断言误失败
+            # （R699 同族：过滤条件变了要回头修依赖它的判据）。
+            and "English" not in n.value and "输出语种" not in n.value)
         self.assertTrue(blob, "没找到活动提法菜单注入文本")
         self.assertNotIn("若提这个活动", blob,
                          "菜单又是条件句（若要提）⇒ 模型可跳过，提及率会掉 "
