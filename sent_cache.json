@@ -1,14 +1,5 @@
 [
   {
-    "id": "79791f5e81e3b729",
-    "title": "Ethereum’s proposed 3x ETF could reach CME’s futures threshold with just $362 million",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-06T13:09:20.870166+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "d9f614f9a81bc629",
     "title": "Capital starting to rotate back to crypto from AI: Raoul Pal",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5150,5 +5141,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "b409654ae069b899",
+    "title": "Uniswap reserves drop to 72.9M as Grayscale maintains exposure – Can UNI rebound?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-18T22:43:23.574473+00:00",
+    "tokens": [
+      "UNI"
+    ],
+    "lang": "zh-CN"
   }
 ]
