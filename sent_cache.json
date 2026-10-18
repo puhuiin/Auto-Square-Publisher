@@ -1,14 +1,5 @@
 [
   {
-    "id": "9760cd2d0562ccdc",
-    "title": "XRP Ledger Takes Big Step Toward Smart Escrow Launch",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-06T02:44:02.263420+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "747627165d4496cc",
     "title": "Solana Debuts Institutional Settlement Standard With J.P. Morgan Input",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5147,5 +5138,15 @@
       "ETH"
     ],
     "lang": "en"
+  },
+  {
+    "id": "2625502b017b2f8c",
+    "title": "Cardano Eyes Insanely Bullish Cup-And-Handle Breakout As Hoskinson Teases New Programming Language For ADA",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-18T22:04:56.798411+00:00",
+    "tokens": [
+      "ADA"
+    ],
+    "lang": "zh-CN"
   }
 ]
