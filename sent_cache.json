@@ -1,14 +1,5 @@
 [
   {
-    "id": "35ec23b034f82f0c",
-    "title": "Bitcoin’s $85,000 recovery awaits proof that ETF investors kept buying after payrolls",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-04T21:48:37.149785+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "42328f5f855372f1",
     "title": "Dogecoin (DOGE) Ten-Cent Dream Needs Just One Breakout Level",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5133,6 +5124,17 @@
     "sent_at": "2026-10-18T16:41:42.922572+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "938767fa91feb0a9",
+    "title": "BitTorrent Ushers in Next-Gen Web3 Infrastructure with Strategic Rebrand and Inaugural BTT Burn",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-18T17:05:27.272223+00:00",
+    "tokens": [
+      "JST",
+      "TRX"
     ],
     "lang": "en"
   }
