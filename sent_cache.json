@@ -1,14 +1,5 @@
 [
   {
-    "id": "ab05186f9309b75e",
-    "title": "BitMine Lifts ETH Treasury to 6.02 Million With Smallest Buy Since Mid-August",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-05T16:53:09.795992+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "f3defa17a51b4f0d",
     "title": "Cardano (ADA) Hits Deepest Rally Since May, Founder Hoskinson Drops Major Teaser",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5140,6 +5131,16 @@
     "sent_at": "2026-10-18T19:24:27.649597+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7f03f4d836431dc6",
+    "title": "Just 659? Shiba Inu L2 Transaction Hits Monthly Low as Activity Drops",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-18T19:43:03.596473+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
