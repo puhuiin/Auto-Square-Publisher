@@ -1,14 +1,5 @@
 [
   {
-    "id": "2e9c3d8324642bd3",
-    "title": "Zcash 隱私交易要衝 5 萬 TPS!Tachyon 程式碼 Udon 先上線",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-10-01T21:28:31.909631+00:00",
-    "tokens": [
-      "ZEC"
-    ]
-  },
-  {
     "id": "a51a296f95e4c4aa",
     "title": "Zcash Drops 21% From Recent High—Here’s Why the Rally May Not Be Over",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5105,5 +5096,17 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "b191575fdecaa3f7",
+    "title": "星球早讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-18T01:44:03.489741+00:00",
+    "tokens": [
+      "TRUMP",
+      "BTC",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
