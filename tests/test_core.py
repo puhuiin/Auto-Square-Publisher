@@ -21432,6 +21432,63 @@ class TestR768EnglishEndingCtaJudgment(unittest.TestCase):
         self.assertEqual(src.count("扣\\s*[12]|你信|你觉得|怎么看|agree|看多|看空"), 2,
                          "中文判据也必须在两处各一份（同口径纪律）")
 
+class TestR769ExemplarsObeyInjectedRules(unittest.TestCase):
+    """R769：范文必须遵守**全部**注入规则——范文是模型最强的模仿对象，
+    prompt 说一套、范文示范另一套时，范文赢（R294 长度、R752 裸 ticker
+    两次实证后立的两面守卫；本轮把守卫从"两条具体规则"推广到"禁词表"）。
+
+    本轮抓到的两处实例（人工重读范文发现）：
+    ① 范文一结尾段以「你觉得」打头——R613 明禁的结尾 opener（实测近 30 篇
+       27% 这么起，fp_p4 遥测 23 篇、近 40 篇 1 篇仍在），范文却在示范它；
+    ② 范文二首句「$DOGE、$PEPE、$SHIB 都在蠢蠢欲动」无数字无疑问——违反
+       R537 钩子硬规则（首句必含真实数字或未闭合问题，"空泛开场直接废稿"）。
+    ⚠️ R537 合规率实测 ~100%（模型遵守注入规则、未照抄范文的首句），
+       ⇒ 这两处是"范文违背自家规则"的隐患（R615 同族），不是已发生的回归；
+       但范文与规则矛盾会稀释规则的权重，且每篇 prompt 都在重发这个矛盾。
+    """
+
+    @staticmethod
+    def _exemplars():
+        import re as _re
+        sp = m.MultiLLMEngine.SYSTEM_PROMPT
+        i = sp.find("【真人实战范文对照")
+        assert i > 0, "SYSTEM_PROMPT 必须包含范文对照块"
+        return [seg for seg in _re.split(r"---", sp[i:])
+                if seg.strip().startswith("范文")]
+
+    def test_no_paragraph_starts_with_banned_openers(self):
+        """★★ R613/R616/R733：段首禁词（你觉得/现在/别急着）不得出现在范文任何段首"""
+        for seg in self._exemplars():
+            for para in seg.split("\n\n"):
+                p = para.strip()
+                if not p or p.startswith("#") or p.startswith("范文"):
+                    continue
+                for banned in ("你觉得", "现在", "别急着"):
+                    self.assertFalse(
+                        p.startswith(banned),
+                        "范文段首出现禁词「%s」⇒ 示范被禁模式（R613/R616/R733）: %s"
+                        % (banned, p[:40]))
+
+    def test_first_sentence_has_number_or_question(self):
+        """★★ R537：每篇范文的首句必须含数字或未闭合问句（空泛开场直接废稿）"""
+        import re as _re
+        for seg in self._exemplars():
+            lines = [l.strip() for l in seg.split("\n") if l.strip()]
+            body = [l for l in lines if not l.startswith("范文") and not l.startswith("#")]
+            self.assertTrue(body, "范文不应为空")
+            first = body[0]
+            self.assertTrue(
+                _re.search(r"\d", first) or _re.search(r"[?？]", first),
+                "范文首句无数字无疑问 ⇒ 违反 R537 钩子硬规则: %s" % first[:40])
+
+    def test_exemplars_still_within_length_window(self):
+        """R294（既有守卫的回归面）：两篇范文的 CJK 数仍落在 140~200"""
+        import re as _re
+        for seg in self._exemplars():
+            cjk = len(_re.findall(r"[一-鿿]", seg))
+            self.assertTrue(140 <= cjk <= 200,
+                            "范文 CJK %d 超出宣称区间 140~200" % cjk)
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
