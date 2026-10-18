@@ -6441,6 +6441,37 @@ class TestR670WidgetCapGuardrail(unittest.TestCase):
         self.assertEqual(s["widget_hist"][0], 0,
                          "稳定币-only 不应计入使用率分布")
 
+    def test_widget_usage_percent_matches_its_label(self):
+        """★★★ R762：百分比必须与标签同口径——旧代码算 `k <= _WIDGET_CAP`
+        （=全部，恒 100%）却把标签写死「≤2 个占」：36 篇用满 3 个时也显示
+        100%，一个恒真的"使用率"没有任何信息量（R747 家族：雷达行必须量
+        它自称的东西）。判据=标签说"未用满（<上限）"，数字就必须是
+        「挂件数 < 上限」的占比。"""
+        cap = mr._WIDGET_CAP
+        # 首行超限（wc=9）⇒ 推导出降格上线时刻，其后才进 widget_hist_new
+        rows = [self._p("2026-10-06T02:00:00+00:00", 9),
+                self._p("2026-10-06T03:00:00+00:00", 1),
+                self._p("2026-10-06T04:00:00+00:00", 2),
+                self._p("2026-10-06T05:00:00+00:00", cap - 1)]
+        s = mr.summarize(rows)
+        # cap=3 时 cap-1=2 与 wc=2 那篇合并 ⇒ {1:1, 2:2}（行为正确）
+        self.assertEqual(dict(s["widget_hist_new"]), {1: 1, 2: 2},
+                         "分层后应只含降格后的 3 篇（cap-1 与 2 合并）")
+        text = mr.render_text(s, rows)
+        line = [ln for ln in text.split(chr(10)) if "挂件额度使用" in ln][0]
+        self.assertIn("未用满（<%d 个）占 **100%%**" % cap, line,
+                      "全部未用满时必须显示 100%%: %s" % line)
+        # 再混一篇用满 ⇒ 未用满 = 3/4 = 75%（旧代码恒显示 100%）
+        rows.append(self._p("2026-10-06T06:00:00+00:00", cap))
+        s2 = mr.summarize(rows)
+        text2 = mr.render_text(s2, rows)
+        line2 = [ln for ln in text2.split(chr(10)) if "挂件额度使用" in ln][0]
+        self.assertIn("未用满（<%d 个）占 **75%%**" % cap, line2,
+                      "4 篇里 1 篇用满 ⇒ 未用满必须显示 75%%（旧口径恒 100%%）: %s"
+                      % line2)
+        self.assertNotIn("≤2 个占", text2,
+                         "写死的「≤2 个占」又回来了 ⇒ 标签与计算脱钩")
+
     def test_does_not_reference_main_constant(self):
         """★ 不得引用 main 的常量（不import main⇒ NameError 而编译仍过）"""
         src = open(mr.__file__, encoding="utf-8").read()

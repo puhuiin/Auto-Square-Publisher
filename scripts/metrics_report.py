@@ -3992,24 +3992,25 @@ def render_text(s, rows=None):
         #   ① 超限降格 R367 **已生效**（09-21 后 157 篇 max=3，无超限）
         #   ② 未用满**不是缺陷**——抽样 6 篇零漏挂，源文只提 1~2 个币
         #   ③ 唯一零挂件是 R316 契约（USDC 稳定币不做挂件）⇒ 已单列
-        # R670：**挂件额度使用率**——零挂件告警的**互补面**。
-        # ★ 为什么要这一行：R123 只答"有没有失守"，**不答"额度用满了吗"**。
-        #   绝大多数帖只用 1~2 个（上限 3）——单看零挂件=0 一切正常，
-        #   读者**无法判断**这是"源文只提一个币"（正常）还是"漏织"（缺陷）。
         # ⚠️ **分母按「降格上线时刻」分层**（R659/R665 纪律）：
         #   降格前的老稿 `widget_count` 可达 12（**当时逻辑还不存在**），
         #   混进分布 ⇒ 护栏显示"4/8/12 个"⇒ **读者误以为降格没生效**。
         _whn = s.get("widget_hist_new") or {}
         if _whn:
             _nn = sum(_whn.values())
-            _nle2 = sum(v for k, v in _whn.items() if k <= _WIDGET_CAP)
+            # R762：**「未用满」= 挂件数 < 上限**（源文常只提 1~2 个币，
+            #   未用满是常态非缺陷）。旧代码用 `k <= _WIDGET_CAP`（等于全部）
+            #   却把标签写死「≤2 个占」⇒ 有 36 篇用满 3 个时也显示 100%，
+            #   **显示与计算不符**（R747 家族：雷达行必须量它自称的东西，
+            #   一个恒为 100% 的"使用率"没有任何信息量）。
+            _nnotfull = sum(v for k, v in _whn.items() if k < _WIDGET_CAP)
             _nmax = max(_whn)
             _nflag = "✅" if _nmax <= _WIDGET_CAP else "❌"
             lines.append(
                 f"  📊 挂件额度使用（降格后 {_nn} 篇，**上限 {_WIDGET_CAP}**"
                 f"← main.py `MAX_TOKENS_PER_POST`）: "
                 + " · ".join(f"{k}个 {v}" for k, v in sorted(_whn.items()))
-                + f"　⇒ ≤2 个占 **{_nle2/_nn*100:.0f}%**")
+                + f"　⇒ 未用满（<{_WIDGET_CAP} 个）占 **{_nnotfull/_nn*100:.0f}%**")
             lines.append(
                 f"     ↳ {_nflag} 近窗最大 **{_nmax}** 个"
                 + ("" if _nmax <= _WIDGET_CAP else "（**超限 ⇒ 降格失效**）")
