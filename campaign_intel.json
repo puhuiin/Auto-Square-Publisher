@@ -18,7 +18,12 @@
   ],
   "strategy_guidance": "当前可重点结合未过期的Spot Trading Tournament Season 6 FF奖励赛、S16 LoL冠军赛预测活动、新上线RWUSD零手续费交易及新增bStocks交易对、Futures新合约等核心热点产出内容，引导读者参与活动互动、关注新交易对交易。可通过引导用户参与评论互动获取Write2Earn奖励，同时通过合规交易导流获取对应返佣。",
   "last_updated": "2026-10-18T06:44:17.307095Z",
-  "_feed_health": {},
+  "_feed_health": {
+    "CoinJournal (山寨异动)": {
+      "fails": 1,
+      "last_fail": "2026-10-18T10:23:26.931339+00:00"
+    }
+  },
   "_fallback_image": {
     "date": "2026-10-18",
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
