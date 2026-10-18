@@ -1466,6 +1466,29 @@ class TestMetricsReport(unittest.TestCase):
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("利好不涨描述复读: 3/4 篇", text)
 
+    def test_r776_migrated_variants_covered(self):
+        """★★★ R776：fresh-look 扫到该族已迁移出五种变体（近40篇×5），旧正则
+        只覆盖后两种（2/5）——「连点水花都没有」「消息连水花都没砸」
+        「连水花都没砸出来」全部漏报。雷达抓不住迁移 = 把词形迁移读成
+        "修复生效"（R596/R603 同族：修的是词形不是框架，雷达必须跟着词形走）。"""
+        for v in ("MEME板块连点水花都没有", "消息连水花都没砸", "连个水花都没溅起来",
+                  "连水花都没砸出来", "连个水花都没有"):
+            self.assertIsNotNone(mr._FLAT_DESC_RE.search(v),
+                                 "水花族变体漏报: %s" % v)
+
+    def test_r776_absorb_weak_phrase_covered(self):
+        """★★ R607 注释点名的迁移词「量能接不住」（近40篇×3 三种变体）"""
+        for v in ("量能接不住拋壓", "量能接不住", "量能接不住是實打實的盤面現狀"):
+            self.assertIsNotNone(mr._FLAT_DESC_RE.search(v),
+                                 "量能接不住漏报: %s" % v)
+
+    def test_r776_no_false_positive_on_ordinary_water_volume(self):
+        """★ 普通「水花/量能」用法不得误报（R601：误报率决定雷达可不可信）"""
+        for v in ("水花四溅的狂欢", "量能充足，承接有力", "接不住的姻缘",
+                  "这盘面真没啥可说的"):
+            self.assertIsNone(mr._FLAT_DESC_RE.search(v),
+                              "普通用法误报: %s" % v)
+
     def test_r614_stock_advice_repetition_tracked(self):
         """R614：实操段套话复读——R592 明令「不要每帖都写回踩、拿稳、插针或降杠杆」、
         R613 修掉「别急着」67%，但**两处修复此前都没有度量面**：拿稳全史22%/回踩32%/
