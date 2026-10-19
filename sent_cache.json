@@ -1,14 +1,5 @@
 [
   {
-    "id": "4a59d84fa6960295",
-    "title": "Bitcoin rally delivers $4.1 billion tax windfall for Strategy",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-06T22:46:33.252893+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "d77bad42b2eb9bf6",
     "title": "OKX Adds Circle, Ripple, QRT, and SC Ventures as Investors at $25B Valuation",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5157,6 +5148,18 @@
     "sent_at": "2026-10-19T01:57:47.951574+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "53c2d1e649f9f8f2",
+    "title": "加密板块涨跌互现,PayFi板块涨超1%,RWA及DePIN板块小幅下跌",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-19T02:24:07.271547+00:00",
+    "tokens": [
+      "ZEC",
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-TW"
   }
