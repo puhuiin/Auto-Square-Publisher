@@ -18,53 +18,56 @@
   "last_updated": "2026-10-19T19:24:17.087955Z",
   "_feed_health": {
     "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-10-19T23:23:34.240360+00:00",
+      "reset_at": "2026-10-19T23:43:27.318583+00:00",
       "last_fail": "2026-10-19T19:03:35.434258+00:00",
       "fails": 1
     },
     "CryptoPotato (山寨币/Meme热点)": {
-      "reset_at": "2026-10-19T23:23:34.507954+00:00",
+      "reset_at": "2026-10-19T23:43:27.343575+00:00",
       "last_fail": "2026-10-19T19:24:17.471633+00:00",
       "fails": 1
-    },
-    "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-19T23:43:33.847299+00:00",
-      "last_fail": "2026-10-19T17:43:33.847299+00:00",
-      "fails": 3
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {
-    "Preset-stepfun": {
-      "cooldown_until": "2026-10-20T12:56:41.608157+00:00",
-      "permanent": true,
-      "fails": 4
-    },
-    "Preset-stepfun-flash": {
-      "cooldown_until": "2026-10-20T12:56:36.239765+00:00",
-      "permanent": true,
-      "fails": 4
-    },
     "Preset-openrouter": {
       "cooldown_until": "2026-10-20T02:07:31.410332+00:00",
       "fails": 5
     },
+    "Preset-stepfun": {
+      "permanent": true,
+      "cooldown_until": "2026-10-20T12:56:41.608157+00:00",
+      "fails": 4
+    },
     "Preset-google": {
       "cooldown_until": "2026-10-20T06:59:51.432570+00:00",
       "fails": 0
+    },
+    "Preset-stepfun-flash": {
+      "permanent": true,
+      "cooldown_until": "2026-10-20T12:56:36.239765+00:00",
+      "fails": 4
     }
   },
   "_article_sent_date": "2026-10-19",
   "_publish_park": {
+    "9898819e49572479": {
+      "last_fail": "2026-10-19T20:25:12.908495+00:00",
+      "fails": 1
+    },
+    "54afa0bfbc460f35": {
+      "fails": 1,
+      "last_fail": "2026-10-19T23:43:36.991688+00:00"
+    },
     "b98d53c0f51b2b9f": {
       "last_fail": "2026-10-19T18:06:38.190954+00:00",
       "fails": 1
     },
-    "9898819e49572479": {
-      "last_fail": "2026-10-19T20:25:12.908495+00:00",
+    "dfbace7fef89d75c": {
+      "last_fail": "2026-10-19T21:05:24.218023+00:00",
       "fails": 1
     },
     "c800dfc066b2f0a7": {
@@ -72,33 +75,29 @@
       "fails": 1
     },
     "b5a7f475521e56d4": {
-      "fails": 1,
-      "last_fail": "2026-10-19T23:25:38.183318+00:00"
+      "last_fail": "2026-10-19T23:25:38.183318+00:00",
+      "fails": 1
     },
-    "22890c5e893dbb89": {
-      "fails": 1,
-      "last_fail": "2026-10-19T23:27:32.412059+00:00"
+    "64c636a0bf2bf394": {
+      "last_fail": "2026-10-19T23:23:49.496555+00:00",
+      "fails": 1
+    },
+    "0bbf1182c484801f": {
+      "last_fail": "2026-10-19T22:05:36.188571+00:00",
+      "fails": 1
     },
     "235c354e91ad830e": {
       "parked_until": "2026-10-20T05:05:14.175147+00:00",
       "last_fail": "2026-10-19T23:05:14.175147+00:00",
       "fails": 2
     },
-    "64c636a0bf2bf394": {
-      "fails": 1,
-      "last_fail": "2026-10-19T23:23:49.496555+00:00"
-    },
-    "dfbace7fef89d75c": {
-      "last_fail": "2026-10-19T21:05:24.218023+00:00",
-      "fails": 1
-    },
-    "0bbf1182c484801f": {
-      "last_fail": "2026-10-19T22:05:36.188571+00:00",
+    "22890c5e893dbb89": {
+      "last_fail": "2026-10-19T23:27:32.412059+00:00",
       "fails": 1
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 152,
+  "_img_rot": 153,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

@@ -1,15 +1,5 @@
 [
   {
-    "id": "2ede684acec9526b",
-    "title": "HYPE Whale’s $902K Bet Grows to $23M as On-Chain Data Shows Staged Selling",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-10T07:24:32.019151+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e90bbbb644089f76",
     "title": "星球晚讯",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5197,5 +5187,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "1790f70f3fbc65db",
+    "title": "Long-Awaited XRP Twitter Account Finally Goes Live",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-19T23:44:59.764183+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
