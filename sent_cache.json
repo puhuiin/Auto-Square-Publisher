@@ -1,14 +1,5 @@
 [
   {
-    "id": "968faf0c3c824e9a",
-    "title": "Vitalik Buterin backs crypto ‘bunker mode’ amid rapid AI math advances",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-08T06:28:42.218240+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "c3c536e0fd14a261",
     "title": "Travala Launches Native AI Travel Agent with BNB Chain & Binance Pay",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5177,5 +5168,15 @@
       "ONDO"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ce50253034040daa",
+    "title": "Zcash 開發團隊出手了!Zakura 提出量子防護方案,每筆跨鏈交易獨立金鑰",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-10-19T07:47:02.065987+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
