@@ -12798,8 +12798,12 @@ def _run_main():
                         # 让任何雷达/fresh-look 扫描（R738）不再受 preview 截断限制。
                         # ⚠️ 只增字段不改任何门禁行为；历史行无该字段 ⇒ None（未知
                         #    不是空串，与 campaign_mention 同纪律）。
-                        # ⚠️ 体积代价已量：发布行中位 2165B → ~3.1KB（+40%），
-                        #    metrics.jsonl 6.2MB → ~8MB（轮转 keep=5000 行封顶）。
+                        # ⚠️ 体积代价已量（R787 复核，origin/main metrics 实查）：
+                        #    发布行中位 2183B → 3704B（+1522B/行；final_text 中位 288
+                        #    字符）；metrics.jsonl 当前 6.22MB，稳态（轮转窗内 712 个
+                        #    发布行全部带全文）预计 7.30MB（+17%）；轮转 keep=5000 行
+                        #    封顶 ⇒ 不会无界增长。（R784 首版注释估的「+40%/→8MB」
+                        #    偏大，按实测改正——数字注释也要讲依据。）
                         "final_text": final_content if isinstance(final_content, str) else None,
                         # R162：禁令状态三件套——违反时（ban 武装+仍引用锚点）
                         # 报表合规巡检可直接点名，执法升级（拒稿重写）待违规实证再议
