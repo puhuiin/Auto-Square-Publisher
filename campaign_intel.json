@@ -20,32 +20,28 @@
   "last_updated": "2026-10-19T07:04:05.812009Z",
   "_feed_health": {},
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {
-    "Preset-stepfun-flash": {
-      "fails": 2,
-      "cooldown_until": "2026-10-19T11:48:13.681926+00:00"
-    },
-    "Preset-openrouter": {
-      "fails": 1,
-      "cooldown_until": "2026-10-19T11:40:48.338074+00:00"
-    },
     "Preset-stepfun": {
-      "fails": 2,
-      "cooldown_until": "2026-10-19T11:48:15.638531+00:00"
+      "cooldown_until": "2026-10-19T11:48:15.638531+00:00",
+      "fails": 2
+    },
+    "Preset-stepfun-flash": {
+      "cooldown_until": "2026-10-19T11:48:13.681926+00:00",
+      "fails": 2
     }
   },
   "_article_sent_date": "2026-10-19",
   "_publish_park": {
-    "9850f2d08e9e6a2e": {
-      "fails": 1,
-      "last_fail": "2026-10-19T11:30:48.339260+00:00"
-    },
     "25d8f2ed1b138c71": {
       "fails": 1,
       "last_fail": "2026-10-19T10:10:55.826313+00:00"
+    },
+    "9850f2d08e9e6a2e": {
+      "fails": 1,
+      "last_fail": "2026-10-19T11:30:48.339260+00:00"
     }
   },
   "_intel_refresh_fail": {},
