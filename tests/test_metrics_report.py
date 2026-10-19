@@ -18,6 +18,20 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import main as m  # noqa: E402  R106：模式同步守卫需要对照防线本体
 
+
+def _ago(hours_ago):
+    """★ R799：窗口型报告器（窗口 = now-hours ~ now）的输入时间戳用它。
+
+    写死绝对日期只在该时刻之后 hours 内成立；超时后两种下场：
+      ① 到点变红 ⇒ 每天固定把 CI 染红（R780b 同族）；
+      ② 行老化出窗**仍通过** ⇒ 用例不再走到它声称的分支（不红，静默丢守护）。
+    本文件里 R796 的 0 发布用例是 ①：ts 写 2026-10-19T00:00，次日窗口滑过即
+    整组变红。quality_scan(window=N) 按**行数**取尾部、与时间无关，不在其列。
+    """
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    return (_dt.now(_tz.utc) - _td(hours=hours_ago)).isoformat()
+
+
 _spec = importlib.util.spec_from_file_location(
     "metrics_report",
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -6733,8 +6747,12 @@ class TestR758DailyReportTailTemplateHonesty(unittest.TestCase):
 
     @staticmethod
     def _rows(n, tpl):
+        # ★ R799：ts 必须相对当前时刻（原为写死 2026-10-18T%02d）——面板数值走
+        #   quality_scan(window=20) 是**按行**取的，写死日期不会让断言失败，但
+        #   报告里的窗口面（① 发帖数等）会随日期老化滑成空窗，与断言口径脱节；
+        #   到点还会把 CI 染红（R780b 同族）。一律用 _ago。
         return [{"outcome": "binance_published",
-                 "ts": "2026-10-18T%02d:00:00+00:00" % (i % 24),
+                 "ts": _ago(2 + (15 - i) * 0.5),
                  "final_preview": "盘面分析第%d段,多空分歧仍在。" % i,
                  "content_chars": 20, "content_cjk": 10,
                  "lang": "zh-CN", "tokens": ["BTC"],
@@ -6871,7 +6889,7 @@ class TestR759DailyReportMentionLine(unittest.TestCase):
         """有遥测时出行, 分母是覆盖数(不是 scanned)"""
         dr = self._dr()
         rows = [{"outcome": "binance_published",
-                 "ts": "2026-10-18T%02d:00:00+00:00" % (i % 24),
+                 "ts": _ago(2 + (15 - i) * 0.5),
                  "final_preview": "盘面分析第%d段。" % i,
                  "content_chars": 20, "content_cjk": 10,
                  "lang": "zh-CN", "tokens": ["BTC"],
@@ -6884,8 +6902,12 @@ class TestR759DailyReportMentionLine(unittest.TestCase):
     def test_report_omits_mention_when_no_telemetry(self):
         """无遥测时不硬凑一行(旧帖窗口不该出现 0% 提及)"""
         dr = self._dr()
+        # ★ R799：ts 相对当前时刻（原写死 2026-10-14T%02d）。取证时发现这条用例
+        #   名里说的"无遥测"其实由**缺 campaign_mention 字段**触发（quality_scan
+        #   按行取尾、不看窗口，旧 ts 根本不参与断言）——把 ts 改成窗外 30h 只是
+        #   保留作者"旧帖窗口"的模拟意图，不改被测路径。
         rows = [{"outcome": "binance_published",
-                 "ts": "2026-10-14T%02d:00:00+00:00" % (i % 24),
+                 "ts": _ago(30 + i),
                  "final_preview": "盘面分析第%d段。" % i,
                  "content_chars": 20, "content_cjk": 10,
                  "lang": "zh-CN", "tokens": ["BTC"]} for i in range(16)]
@@ -7075,6 +7097,100 @@ class TestR781DailyReportSendLoudly(unittest.TestCase):
         self.assertEqual(code, 1, "全失败必须 exit 1（否则 workflow 全绿而用户没收到）")
         self.assertIn("主通道", out, "要说明主通道失败了")
         self.assertIn("兜底", out, "要说明试过兜底")
+
+
+class TestR798FallbackHonesty(unittest.TestCase):
+    """R798：**没试过的通道不许说它失败了**。
+
+    生产实证（10-18 12:39Z Daily Report 日志）：只有一次发送、一行 errcode
+    300005；因为 daily_report.yml 没透传 WEBHOOK_URL，兜底从未执行，而收尾句
+    仍断言"主通道与兜底通道均失败"。修法：按 fallback 是否真的可用分三种收尾
+    文案，并让"同址兜底"也被如实说出（同址 = 没有独立兜底能力）。
+    """
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r798",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _run_main(self, env):
+        """在给定 env 下跑 main()，返回 (exit_code, stdout+stderr)。
+
+        ★ 收尾文案是 sys.exit("…") 抛的 ⇒ 走 **stderr**。只抓 stdout 会看到
+          "主通道失败" 就以为够了，却看不见（也不测）最后那句结论——
+          与本轮修的 bug 同型：只观测了过程，没观测要断言的那一句。
+        """
+        import urllib.request
+        import tempfile
+        import io
+        import contextlib
+        dr = self._dr()
+        tmp = tempfile.mktemp(suffix=".jsonl")
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(json.dumps({"outcome": "run_summary", "sent_24h": 3,
+                                "max_daily_posts": 60, "candidates": 10,
+                                "published": 1}) + "\n")
+
+        class R:
+            def read(self):
+                return b'{"errcode":300005,"errmsg":"token is not exist"}'
+        orig = urllib.request.urlopen
+        urllib.request.urlopen = lambda *a, **k: R()
+        old_env = dict(os.environ)
+        code, out = 0, ""
+        try:
+            for k in ("DINGTALK_WEBHOOK_URL", "WEBHOOK_URL"):
+                os.environ.pop(k, None)
+            os.environ.update(env)
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+                try:
+                    sys.argv = ["daily_report.py", "--metrics", tmp]
+                    dr.main()
+                except SystemExit as e:
+                    code = e.code if isinstance(e.code, int) else 1
+                    if isinstance(e.code, str):
+                        buf.write(e.code)
+            out = buf.getvalue()
+        finally:
+            urllib.request.urlopen = orig
+            os.environ.clear()
+            os.environ.update(old_env)
+            os.remove(tmp)
+        return code, out
+
+    def test_missing_fallback_says_not_attempted(self):
+        """★★★ 无 WEBHOOK_URL 时：exit 1，且**不得**声称兜底失败过"""
+        code, out = self._run_main(
+            {"DINGTALK_WEBHOOK_URL": "https://main.invalid/hook"})
+        self.assertEqual(code, 1, "主通道失败必须 exit 1")
+        self.assertNotIn("主通道与兜底通道均失败", out,
+                         "兜底根本没跑，不许下这个结论")
+        self.assertIn("兜底通道根本未尝试", out)
+
+    def test_same_url_fallback_is_disclosed(self):
+        """★ 兜底与主通道同址 ⇒ 如实说"无法独立兜底"，不假装试过两次"""
+        code, out = self._run_main(
+            {"DINGTALK_WEBHOOK_URL": "https://same.invalid/hook",
+             "WEBHOOK_URL": "https://same.invalid/hook"})
+        self.assertEqual(code, 1)
+        self.assertNotIn("重试", out, "同址不该真发第二遍")
+        self.assertIn("同一个地址", out)
+
+    def test_distinct_fallback_really_retries(self):
+        """★ 两地址不同 ⇒ 必须真的重试一次（R781 设计的链要活着）"""
+        code, out = self._run_main(
+            {"DINGTALK_WEBHOOK_URL": "https://main.invalid/hook",
+             "WEBHOOK_URL": "https://fb.invalid/hook"})
+        self.assertEqual(code, 1)
+        self.assertIn("兜底通道（WEBHOOK_URL）重试", out)
+        self.assertIn("主通道与兜底通道均失败", out)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
@@ -7554,7 +7670,7 @@ class TestR750DailyReportQualitySection(unittest.TestCase):
         rows = []
         for i, b in enumerate(bodies * 4):               # 20 篇
             rows.append({"outcome": "binance_published",
-                         "ts": "2026-10-14T%02d:00:00+00:00" % (i % 24),
+                         "ts": _ago(3 + (i % 24) * 0.25),
                          "final_preview": b + " 第%d篇" % i,
                          "content_chars": 20, "content_cjk": 10,
                          "lang": "zh-CN", "tokens": ["BTC"]})
@@ -7597,7 +7713,7 @@ class TestR750DailyReportQualitySection(unittest.TestCase):
         """★ 全零时明说"未检出"——不静默跳过（看不到差异会被读成没差异，R704）"""
         dr = self._dr()
         rows = [{"outcome": "binance_published",
-                 "ts": "2026-10-14T10:00:00+00:00",
+                 "ts": _ago(3),
                  "final_preview": "ETH 跌破 2500，短线别追。第%d篇" % i,
                  "content_chars": 20, "content_cjk": 10,
                  "lang": "zh-CN", "tokens": ["ETH"]} for i in range(20)]
@@ -7625,7 +7741,7 @@ class TestR796ZeroPublishNamesDominantCause(unittest.TestCase):
         return mod
 
     def _zero_rows(self, no_token, token_limit, unprocessed=0):
-        return [{"outcome": "run_summary", "ts": "2026-10-19T0%d:00:00+00:00" % i,
+        return [{"outcome": "run_summary", "ts": _ago(9 - i),
                  "feeds_ok": 25, "candidates": no_token + token_limit + unprocessed,
                  "unprocessed": unprocessed, "published": 0,
                  "skipped_no_token": no_token, "skipped_token_limit": token_limit,
@@ -7650,7 +7766,7 @@ class TestR796ZeroPublishNamesDominantCause(unittest.TestCase):
     def test_normal_day_conclusion_unchanged(self):
         """③ 反向：有发布的正常日结论不变（不得把正常态也改成带原因）"""
         dr = self._dr()
-        rows = [{"outcome": "binance_published", "ts": "2026-10-19T01:00:00+00:00",
+        rows = [{"outcome": "binance_published", "ts": _ago(5),
                  "final_preview": "ETH 跌破 2500，短线别追。", "content_chars": 20,
                  "content_cjk": 10, "lang": "zh-CN", "tokens": ["ETH"]}]
         rows += self._zero_rows(0, 0)

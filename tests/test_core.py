@@ -33,6 +33,22 @@ TEST_SYMBOL_UNIVERSE = {"BTC", "ETH", "XRP", "PEPE", "SOL", "DOGE", "BNB"}
 _ORIG_SYMBOL_CACHE = None
 
 
+def _ago(hours_ago):
+    """★ R799：喂给**窗口型**报告器的时间戳一律用它（相对当前时刻）。
+
+    audit_perf.report(rows, hours, …) 与 daily_report.build_report(rows, hours)
+    的窗口是 `now - hours ~ now` 反推的；写死绝对日期（如 "2026-10-18T10:00Z"）
+    的用例只在该时刻之后的 hours 内是绿的。R783 面板的 3 条用例就是这样在
+    2026-10-19T11:00Z（写就满 24h 的那一刻）集体变红。
+    ⚠️ 两种后果，第二种更隐蔽：
+      ① 到点变红 ⇒ 每天固定把 CI 染红，真信号被噪音淹没（R780b 同族）；
+      ② **行老化出窗后仍通过** ⇒ 用例不再走到它声称的分支，却继续绿。
+         R770 的"真没有 lang 字段"用例即如此（实测输出与空窗口逐字相同）。
+    纯函数用例（如 _exposure_days 显式传两个 ts）不受影响，不必改。
+    """
+    return (datetime.now(timezone.utc) - timedelta(hours=hours_ago)).isoformat()
+
+
 _ORIG_METRICS_FILE: list = []
 # 优先种子隔离兜底：仓库根真实 priority_seed.json（生产已启用、含 Bitget 事件种子）
 # 会被默认 PRIORITY_SEED_FILE 自动加载——凡走 fetch_candidates 的用例都会被注入 3 条
@@ -20161,12 +20177,12 @@ class TestR792FeedKeyTransitionHonesty(unittest.TestCase):
     def _mixed_rows(self):
         """同一批源在新旧两种键规约下各留一行（历史 + 当天）。"""
         return [
-            {"outcome": "run_summary", "ts": "2026-10-19T00:00:00+00:00",
+            {"outcome": "run_summary", "ts": _ago(6),
              "per_feed_yield": {"The": {"entries": 60, "kept": 12}}},
-            {"outcome": "run_summary", "ts": "2026-10-19T01:00:00+00:00",
+            {"outcome": "run_summary", "ts": _ago(5),
              "per_feed_yield": {"The Block": {"entries": 5, "kept": 2},
                                 "The Defiant": {"entries": 6, "kept": 3}}},
-            {"outcome": "binance_published", "ts": "2026-10-19T01:30:00+00:00",
+            {"outcome": "binance_published", "ts": _ago(4),
              "source": "The Block (机构与政策)"},
         ]
 
@@ -20197,13 +20213,13 @@ class TestR792FeedKeyTransitionHonesty(unittest.TestCase):
         """③ 假阳性演练：窗口里只有完整名（或单词名不互为主词）时不得提示"""
         mr = self._mr()
         rows = [
-            {"outcome": "run_summary", "ts": "2026-10-19T00:00:00+00:00",
+            {"outcome": "run_summary", "ts": _ago(6),
              "per_feed_yield": {"The Block": {"entries": 5, "kept": 2}}},
             # CryptoNews 是完整名且不以 "Crypto " 开头 ⇒ 不得把 Crypto 误判成旧键
-            {"outcome": "run_summary", "ts": "2026-10-19T01:00:00+00:00",
+            {"outcome": "run_summary", "ts": _ago(5),
              "per_feed_yield": {"CryptoNews": {"entries": 5, "kept": 1},
                                 "CryptoSlate": {"entries": 5, "kept": 1}}},
-            {"outcome": "binance_published", "ts": "2026-10-19T01:30:00+00:00",
+            {"outcome": "binance_published", "ts": _ago(4),
              "source": "The Block (机构与政策)"},
         ]
         out = mr.render_text(mr.summarize(rows), rows)
@@ -21031,11 +21047,11 @@ class TestR735ExposureNormalizedLangViews(unittest.TestCase):
         import os as _os
         import tempfile
         ap = self._ap()
-        stats = [{"content_id": "c1", "ts": "2026-10-11T00:00:00Z", "views": 50},
-                 {"content_id": "c2", "ts": "2026-10-11T00:00:00Z", "views": 50}]
-        pub = [{"outcome": "binance_published", "ts": "2026-10-03T00:00:00+00:00",
+        stats = [{"content_id": "c1", "ts": _ago(2), "views": 50},
+                 {"content_id": "c2", "ts": _ago(2), "views": 50}]
+        pub = [{"outcome": "binance_published", "ts": _ago(9 * 24),
                 "lang": "en", "content_id": "c1"},
-               {"outcome": "binance_published", "ts": "2026-10-10T18:00:00+00:00",
+               {"outcome": "binance_published", "ts": _ago(3),
                 "lang": "en", "content_id": "c2"}]
         orig_root = ap.ROOT
         tmp = tempfile.mkdtemp()
@@ -22210,7 +22226,7 @@ class TestR770AuditPanelHonesty(unittest.TestCase):
     def test_hour_panel_title_does_not_promise_views(self):
         """★★ ② 面板不得在标题里承诺它不显示的内容（浏览归因在 ⑥½/⑥¾）"""
         ap = self._ap()
-        pub = [{"outcome": "binance_published", "ts": "2026-10-18T0%d:00:00+00:00" % i,
+        pub = [{"outcome": "binance_published", "ts": _ago(4 + i),
                 "lang": "zh-CN", "content_id": "c%d" % i} for i in range(4)]
         out = self._run_report(ap, pub, [])
         self.assertIn("时段 × 发布量", out, "标题必须如实（只发布量）")
@@ -22221,10 +22237,10 @@ class TestR770AuditPanelHonesty(unittest.TestCase):
         """★★★ 回归判据：content_stats 导出滞后时，告警必须说「导出滞后」，
         而**不是**「没有 lang 字段」（旧文案的唯一猜测，把人引去修不存在的问题）。"""
         ap = self._ap()
-        pub = [{"outcome": "binance_published", "ts": "2026-10-18T0%d:00:00+00:00" % i,
+        pub = [{"outcome": "binance_published", "ts": _ago(4 + i),
                 "lang": "en", "content_id": "c%d" % i} for i in range(4)]
         # content_stats 只有一列**过期**快照（窗口帖全部 join 不上）
-        stats = [{"content_id": "old", "ts": "2026-10-01T00:00:00Z", "views": 10}]
+        stats = [{"content_id": "old", "ts": _ago(240 * 2), "views": 10}]
         out = self._run_report(ap, pub, stats)
         self.assertIn("导出滞后", out,
                       "导出滞后必须被点名（这是实测最常见的原因）")
@@ -22234,13 +22250,34 @@ class TestR770AuditPanelHonesty(unittest.TestCase):
                       "必须明说 lang/content_id 都没问题，避免人去修不存在的问题")
 
     def test_missing_lang_warning_when_truly_absent(self):
-        """★ 真没有 lang 字段时（R712 前的窗口）才说「没有 lang 字段」"""
+        """★ 真没有 lang 字段时（R712 前的窗口）才说「没有 lang 字段」
+
+        ⚠️ R799：本用例的行原写 2026-10-01，早已老化出 240h 窗口 ⇒ 实测输出
+        与"空窗口"**逐字相同**，即它一直在空窗路径上通过，从未走到 _n_lang==0
+        这个分支（不红、但守护已丢）。现改为窗口内 + 过期快照，让它真的断言
+        它声称的那条分支；空窗口另立一条用例。
+        """
         ap = self._ap()
-        pub = [{"outcome": "binance_published", "ts": "2026-10-01T0%d:00:00+00:00" % i,
+        pub = [{"outcome": "binance_published", "ts": _ago(4 + i),
                 "content_id": "c%d" % i} for i in range(4)]
-        stats = [{"content_id": "c0", "ts": "2026-10-05T00:00:00Z", "views": 10}]
+        stats = [{"content_id": "c0", "ts": _ago(240 * 2), "views": 10}]
         out = self._run_report(ap, pub, stats)
         self.assertIn("没有 lang 字段", out, "真没有 lang 时才这么说")
+
+    def test_empty_window_says_no_posts_not_missing_lang(self):
+        """★★★ R799：**空窗口**不得被说成"没有 lang 字段"。
+
+        取证：旧代码下"窗口 0 篇"与"窗口 4 篇但无 lang"输出逐字相同 ⇒ 面板
+        对空窗口断言了一个字段级事实，而真相是窗口里没有帖子可归因。
+        这是 R770 自己要修的"误报原因"漏掉的第四种（最朴素的一种），
+        而它恰好是**每天都会遇到**的那种（夜里/低产窗口）。
+        """
+        ap = self._ap()
+        stats = [{"content_id": "c0", "ts": _ago(4), "views": 10}]
+        out = self._run_report(ap, [], stats)
+        self.assertIn("0 篇发布", out, "空窗口必须如实说没有帖子")
+        self.assertNotIn("没有 lang 字段", out,
+                         "窗口里一篇都没有，谈不上 lang 字段缺失（误报原因）")
 
 
 class TestR783BudgetCapPanel(unittest.TestCase):
@@ -22282,10 +22319,10 @@ class TestR783BudgetCapPanel(unittest.TestCase):
         """① 通道级 llm_rejected 撞顶必须进面板（`rej`=llm_failed 会漏掉它们）"""
         ap = self._ap()
         rows = [
-            self._hit("2026-10-18T10:00:00+00:00", 6000, empty=True),
-            self._hit("2026-10-18T11:00:00+00:00", 6000, empty=False, frag=212),
+            self._hit(_ago(3), 6000, empty=True),
+            self._hit(_ago(2), 6000, empty=False, frag=212),
             # 对照：故事级 llm_failed 同因一行（R696 双行落盘，**同一 ts**）——必须去重成 1 次
-            {"outcome": "llm_failed", "ts": "2026-10-18T10:00:00+00:00",
+            {"outcome": "llm_failed", "ts": _ago(3),
              "reason": "预算 6000（封顶 6000）到顶仍 finish=length 吐空（耗 10972 token）",
              "provider": "Preset-stepfun-flash"},
         ]
@@ -22300,9 +22337,9 @@ class TestR783BudgetCapPanel(unittest.TestCase):
         """② 救回量下界（成功稿 completion>6000）必须显示，且带遥测样本基数"""
         ap = self._ap()
         rows = [
-            {"outcome": "binance_published", "ts": "2026-10-18T10:00:00+00:00",
+            {"outcome": "binance_published", "ts": _ago(3),
              "completion_tokens": 6500},
-            {"outcome": "binance_published", "ts": "2026-10-18T11:00:00+00:00",
+            {"outcome": "binance_published", "ts": _ago(2),
              "completion_tokens": 2700},
         ]
         out = self._run(ap, rows)
@@ -22312,7 +22349,7 @@ class TestR783BudgetCapPanel(unittest.TestCase):
     def test_no_telemetry_says_unmeasurable_not_zero(self):
         """③ 无 completion 遥测时必须说"无法度量"，不得显示成 0 命中"""
         ap = self._ap()
-        rows = [{"outcome": "binance_published", "ts": "2026-10-18T10:00:00+00:00"}]
+        rows = [{"outcome": "binance_published", "ts": _ago(3)}]
         out = self._run(ap, rows)
         self.assertIn("无法度量", out)
         self.assertNotIn(">6000：0 篇", out, "无遥测≠0 命中（R747 诚实性）")
@@ -22322,9 +22359,9 @@ class TestR783BudgetCapPanel(unittest.TestCase):
         恰好有"封顶"二字）不得计入撞顶——判据是 封顶+finish=length 两个条件。"""
         ap = self._ap()
         rows = [
-            {"outcome": "llm_rejected", "ts": "2026-10-18T10:00:00+00:00",
+            {"outcome": "llm_rejected", "ts": _ago(3),
              "reason": "请求超时（timeout 封顶 25s）", "finish_reason": ""},
-            {"outcome": "llm_rejected", "ts": "2026-10-18T11:00:00+00:00",
+            {"outcome": "llm_rejected", "ts": _ago(2),
              "reason": "预算 6000（封顶 6000）到顶仍 finish=length 吐空",
              "finish_reason": "length", "budget_cap": 6000},
         ]
@@ -22334,7 +22371,7 @@ class TestR783BudgetCapPanel(unittest.TestCase):
     def test_zero_cap_hits_reported_plainly(self):
         """零撞顶是**期望状态**（R783 后），面板必须如实报 0 而不渲染判读行"""
         ap = self._ap()
-        rows = [{"outcome": "binance_published", "ts": "2026-10-18T10:00:00+00:00",
+        rows = [{"outcome": "binance_published", "ts": _ago(3),
                  "completion_tokens": 3000}]
         out = self._run(ap, rows)
         self.assertIn("撞顶拒稿 0 次", out)

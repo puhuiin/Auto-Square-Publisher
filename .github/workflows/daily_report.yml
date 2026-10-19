@@ -22,9 +22,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      # ★ R798：本文件是 R723 新建的，此前两个 action 写成 @v4/@v5 浮标
+      #   ——仓库其它工作流全部 SHA 锁定且 tests/test_workflows.py 有强制
+      #   契约测试，但当时该测试的文件白名单没含本文件 ⇒ 唯一一条漏网的
+      #   浮标引用静默存活（浮标可被上游改指向 ⇒ 供应链投毒面）。现补齐
+      #   锁定并把本文件纳入白名单，让契约测试此后覆盖它。
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1（SHA 锁定防投毒，dependabot 负责跟进）
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0（同上锁定）
         with:
           python-version: '3.12'
 
@@ -43,6 +48,14 @@ jobs:
         env:
           # ★ 不写仓库、不写明文：token 走 secret（R619 教训）
           DINGTALK_WEBHOOK_URL: ${{ secrets.DINGTALK_WEBHOOK_URL }}
+          # ★★ R798：R781 在 daily_report.py 里设计了「主通道失败 → 试
+          #   WEBHOOK_URL 兜底」的链，但本步骤只导出了 DINGTALK_WEBHOOK_URL
+          #   ⇒ `if fallback` 恒假 ⇒ **兜底通道在生产上是死代码**，且收尾那句
+          #   「主通道与兜底通道均失败」是它从未验证过的结论（10-18 生产日志
+          #   实证：只打了一次发送、只出现一行 errcode 300005 就走完）。
+          #   透传后兜底才真的存在（两个 secret 若指向同一 URL，
+          #   daily_report.py 会识别并如实说明"无法独立兜底"）。
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
         run: |
           if [ -z "$DINGTALK_WEBHOOK_URL" ]; then
             echo "::warning::未配置 DINGTALK_WEBHOOK_URL，跳过发送（报告已打印在日志）"

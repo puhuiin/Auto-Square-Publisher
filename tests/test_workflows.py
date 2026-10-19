@@ -12,10 +12,19 @@ import unittest
 from unittest.mock import patch
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# ★★ R799：时钟窗口型报告器 —— 窗口是 `now - hours ~ now` 反推出来的。
+#   audit_perf.report(rows, hours, …) 与 daily_report.build_report(rows, hours)
+#   都属此类。喂给它们的行**不得**用硬编码绝对日期（见 TestNoWallClockWindowedTests）。
+#   ⚠️ metrics_report.quality_scan(rows, window=N) 不在此列：它按**行数**取尾部。
+CLOCK_WINDOWED_CALLS = ("report", "build_report")
 WORKFLOWS = [
     os.path.join(REPO_ROOT, ".github", "workflows", "auto_post.yml"),
     os.path.join(REPO_ROOT, ".github", "workflows", "ci.yml"),
     os.path.join(REPO_ROOT, ".github", "workflows", "video_publish.yml"),
+    # ★ R798：R723 新建的 daily_report.yml 此前不在白名单 ⇒ 它是全仓**唯一**
+    #   还在用 @v4/@v5 浮标的工作流，而钉在靶上的契约测试看不见它。
+    os.path.join(REPO_ROOT, ".github", "workflows", "daily_report.yml"),
 ]
 PIN_RE = re.compile(r"@[0-9a-f]{40}\b")
 # R161：读写 sent_cache 等运行状态的"运行时"工作流（ci.yml 是回归测试用途，检出
@@ -520,6 +529,177 @@ class TestFailureNotifyWiring(unittest.TestCase):
             self.assertIn(k, env, f"兜底步骤缺环境变量 {k}")
         self.assertIn("steps.poster.conclusion", env["POSTER_RESULT"])
         self.assertIn("steps.install.conclusion", env["INSTALL_RESULT"])
+
+
+class TestNoWallClockWindowedTests(unittest.TestCase):
+    """★★ R799：喂给时钟窗口型报告器的用例**不得**写死绝对日期。
+
+    ★ 为什么需要这条守卫（取证全过程写在 tests/test_core.py 的 `_ago` 与
+      scripts/audit_perf.py ⑥½ 的注释里）：
+      · 2026-10-19T11:00Z，R783 面板的 3 条用例集体变红——它们的行 ts 写死
+        2026-10-18T10:00/11:00，正好满 24h 被窗口滑出去。写就时是绿的，
+        到点自己变红：**每天固定把 CI 染红**，真信号被噪音淹没。
+      · 更隐蔽的一半：R770 的"真没有 lang 字段"用例的行早已老化出 240h 窗口，
+        它此刻是在**空窗口**路径上通过的（实测输出与空窗逐字相同）——不红，
+        但不再走到它声称的分支，守护静默失效。它连带把面板对空窗口的误报
+        （"遥测里没有 lang 字段"）也一起盖住了。
+
+    ★ 判据为什么是 AST 可达性而不是全仓扫时间戳字面量：
+      R750 的 ⑥ 段走 quality_scan(window=20)，是**按行数**取尾部、与时间无关
+      ⇒ 它对输入日期不敏感，全仓扫描会误报。故：只从**真的调用了窗口型报告器
+      的函数**出发，沿 `self.<方法>()` 递归收集该用例触及的代码，再查其中有无
+      绝对 ISO 日期字面量。这样 R735 里纯函数 `_exposure_days("2026-10-01", …)`
+      这类合法用法不会被牵连（那两个 ts 是显式入参、不经过 now）。
+    """
+
+    # 允许清单：理由必须写清，否则守卫会退化成"看到就关"的装饰品
+    ALLOW = {
+        # key = "<文件>:<类名>.<测试方法名>"（模块级函数写 "<文件>:<函数名>"）：
+        #       允许存在的绝对日期调用路径及原因。空 = 当前无豁免。
+    }
+
+    # ⚠️ 只要求"以完整日期开头"，不要求后面的时分是**数字**：取证时踩到过——
+    #   宽松前的模式要求 `T\d\d:\d\d`，于是 `"2026-10-19T0%d:00:00+00:00" % i`
+    #   这种**格式化**写死的日期被漏掉（守卫生效但咬不住，比没有更危险）。
+    ISO_LITERAL = re.compile(r"^20\d\d-\d\d-\d\dT")
+
+    @staticmethod
+    def _sources(path):
+        """把测试文件切成 {(类名|None, 函数名): [源码片段, ...]}。
+
+        ⚠️ 必须按**类**限定，不能只按函数名建表：本仓多个测试类各有同名辅助方法
+           （`_rows` / `_dr` / `_ap` …），只按函数名做 dict 会被后一个定义**覆盖**
+           前一个 ⇒ 解析某用例的闭包时挂到别人家的辅助函数上：既把无关字面量算
+           进来（假阳性），又把真正的字面量顶掉（假阴性）。R799 放宽 ISO 正则后
+           首次跑就撞上这个**自身**缺陷——4 条用例被误报，真凶是它们的
+           `self._rows` 被 TestR758 那个写死日期的 `_rows` 顶了。
+        ★ 值用 list 是因为**类名本身也可能重复**（本文件里
+           TestR672ParagraphLengthGuardrail / TestGuardrailInsertionSafety 各定义
+           了两次）；有歧义就把候选**全收**（保守并集），宁可多收也不漏——
+           漏报比误报危险得多。
+        """
+        import ast
+        src = open(path, encoding="utf-8").read()
+        tree = ast.parse(src)
+        lines = src.splitlines()
+        out = {}
+
+        def add(cls, node):
+            seg = "\n".join(lines[node.lineno - 1:node.end_lineno])
+            out.setdefault((cls, node.name), []).append(seg)
+
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                add(None, node)
+            elif isinstance(node, ast.ClassDef):
+                # ast.walk ⇒ 方法内的嵌套函数同样归到该类名下（它们也可能持有
+                # 喂给窗口报告器的字面量，漏掉即假阴性）。
+                for sub in ast.walk(node):
+                    if isinstance(sub, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        add(node.name, sub)
+        return out
+
+    @classmethod
+    def _windowed_and_iso(cls, seg):
+        """返回 (是否触及窗口型调用, 是否有绝对 ISO 字面量)。"""
+        win = bool(re.search(r"\b(?:%s)\s*\(" % "|".join(CLOCK_WINDOWED_CALLS), seg))
+        iso = False
+        for line in seg.splitlines():
+            for lit in re.findall(r'"([^"]*)"', line) + re.findall(r"'([^']*)'", line):
+                if cls.ISO_LITERAL.match(lit):
+                    iso = True
+        return win, iso
+
+    def test_windowed_tests_use_relative_timestamps(self):
+        offenders = []
+        n_windowed = 0
+        for fname in ("test_core.py", "test_metrics_report.py"):
+            path = os.path.join(REPO_ROOT, "tests", fname)
+            funcs = self._sources(path)
+            for key in list(funcs):
+                cls, leaf = key
+                if not leaf.startswith("test_"):
+                    continue
+                # 沿 self.<helper>() 递归收集闭包（R783 的窗口调用在 _run 里、
+                # 字面量在测试函数里；只看单函数会漏）。解析**限定在同类内**，
+                # 同类没有才退回模块级；同名歧义时并集（见 _sources 说明）。
+                seen, stack = set(), [key]
+                win = iso = False
+                while stack:
+                    k = stack.pop()
+                    if k in seen:
+                        continue
+                    seen.add(k)
+                    for segn in funcs.get(k, []):
+                        _w, _i = self._windowed_and_iso(segn)
+                        win = win or _w
+                        iso = iso or _i
+                        for callee in re.findall(r"self\.(\w+)\s*\(", segn):
+                            if (cls, callee) in funcs:
+                                stack.append((cls, callee))
+                            if (None, callee) in funcs:
+                                stack.append((None, callee))
+                if win:
+                    n_windowed += 1
+                    label = "%s:%s.%s" % (fname, cls, leaf) if cls else \
+                            "%s:%s" % (fname, leaf)
+                    if iso and label not in self.ALLOW:
+                        offenders.append(label)
+        self.assertEqual(
+            offenders, [],
+            "以下用例把硬编码绝对日期喂给了时钟窗口型报告器（窗口=now-hours~now），"
+            "两种后果都必须避免：① 窗口滑走 ⇒ CI 到点自己变红（R780b）；"
+            "② 若断言撞巧走的是按行口径（quality_scan），则不红，但报告里的窗口面"
+            "已滑成空窗、与断言口径脱节（R770 实测就是这样静默失效的）。"
+            "一律改用模块级 _ago(小时数)：%r"
+            % (offenders,))
+        # 哨兵：若正则/遍历失效，n_windowed 会掉到 0，守卫静默变成空转
+        #（R712 家族：守卫失效而不报警，比没有守卫更糟）。此处断言的是
+        #「识别到的**窗口型用例数**」而非「违规数」——全部修好后违规数本就该是 0。
+        self.assertGreater(n_windowed, 3,
+                           "只识别到 %d 条窗口型用例 ⇒ 判据本身已失效" % n_windowed)
+
+
+class TestDailyReportSecretWiring(unittest.TestCase):
+    """R798：R781 的兜底通道必须在部署侧真的接上，否则是死代码。
+
+    ★ 发现路径（读生产产物，不是读代码）：10-18 12:39Z 的 Daily Report 运行
+      日志里只有**一次**发送、只出现一行 `{"errcode":300005,...}`，且
+      conclusion=success。对照 daily_report.yml 才看出：步骤只导出
+      DINGTALK_WEBHOOK_URL ⇒ daily_report.py 的 `if fallback` 恒假 ⇒ 兜底从未
+      执行，收尾那句"主通道与兜底通道均失败"是它没测过的结论。
+    本测试把"部署侧接线"钉死：契约测试此前只验脚本逻辑
+    （test_metrics_report 的 R781 用例自己塞了 WEBHOOK_URL 环境变量），
+    验不出生产没透传——**用例能给能力，部署不给**，这类缺口只有查 workflow
+    文本才能封。
+    """
+
+    def _send_step(self):
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("未安装 pyyaml（仅 CI 校验需要）")
+        path = os.path.join(REPO_ROOT, ".github", "workflows", "daily_report.yml")
+        with open(path, encoding="utf-8") as f:
+            doc = yaml.safe_load(f)
+        steps = doc["jobs"]["report"]["steps"]
+        cands = [s for s in steps if isinstance(s, dict)
+                 and "daily_report.py --hours" in (s.get("run") or "")]
+        self.assertEqual(len(cands), 1, "应恰有一个实发步骤")
+        return cands[0]
+
+    def test_send_step_exports_both_channels(self):
+        env = self._send_step().get("env", {}) or {}
+        self.assertIn("DINGTALK_WEBHOOK_URL", env, "主通道 secret 必须透传")
+        self.assertIn("WEBHOOK_URL", env,
+                      "★ 不给 WEBHOOK_URL ⇒ R781 的兜底通道在生产上是死代码")
+
+    def test_fallback_secret_is_a_secret_not_a_literal(self):
+        env = self._send_step().get("env", {}) or {}
+        for k in ("DINGTALK_WEBHOOK_URL", "WEBHOOK_URL"):
+            v = str(env.get(k, ""))
+            self.assertIn("secrets.", v, f"{k} 必须走 secret（R619 教训）")
+            self.assertNotIn("http", v, f"{k} 不得写明文 URL")
 
 
 class TestReadmeEnvCoverage(unittest.TestCase):

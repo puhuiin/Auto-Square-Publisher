@@ -367,15 +367,27 @@ def main():
     except Exception as e:
         print("主通道（DINGTALK_WEBHOOK_URL）发送失败: %s" % e)
     fallback = (os.environ.get("WEBHOOK_URL", "") or "").strip()
-    if fallback and fallback != a.url:
+    # ★ R798：兜底是否**真的试过**要如实区分。旧收尾句无条件说
+    #   "主通道与兜底通道均失败"——在 daily_report.yml 未透传 WEBHOOK_URL
+    #   的生产里，兜底压根没跑，这句是**它没测过的结论**（报了个它没收集的
+    #   数据；与项目里"探针在跑、答案被丢弃"同族，只是这次是"答案没采"）。
+    tried_fallback = bool(fallback) and fallback != a.url
+    if tried_fallback:
         try:
             print("兜底通道（WEBHOOK_URL）重试...")
             print(send_dingtalk(fallback, text))
             return
         except Exception as e2:
             print("兜底通道也失败: %s" % e2)
-    sys.exit("日报发送失败（主通道与兜底通道均失败）——请检查 "
-             "DINGTALK_WEBHOOK_URL / WEBHOOK_URL 配置")
+    if tried_fallback:
+        sys.exit("日报发送失败（主通道与兜底通道均失败）——请检查 "
+                 "DINGTALK_WEBHOOK_URL / WEBHOOK_URL 配置")
+    if not fallback:
+        sys.exit("日报发送失败（主通道失败；环境里没有 WEBHOOK_URL，"
+                 "兜底通道根本未尝试）——请检查 DINGTALK_WEBHOOK_URL 配置，"
+                 "或在仓库 secret 补一个独立的 WEBHOOK_URL 以获得兜底能力")
+    sys.exit("日报发送失败（主通道失败；WEBHOOK_URL 与主通道是同一个地址，"
+             "无法独立兜底）——请检查 DINGTALK_WEBHOOK_URL 配置")
 
 
 if __name__ == "__main__":

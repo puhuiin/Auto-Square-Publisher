@@ -529,7 +529,18 @@ def report(rows, hours, since_iso=None, quota=None, prod=None):
             _n_lang = sum(1 for r in pub if r.get("lang"))
             _n_cid = sum(1 for r in pub if r.get("content_id"))
             _cs_newest = max((str(v) for v in cid2snap.values() if v), default="无")
-            if _n_lang == 0:
+            # ★★ R799：**空窗口**必须自成一类，不能被 `_n_lang == 0` 吸收。
+            #   取证：窗口内 0 篇的输入喂进旧代码，输出与"有 4 篇但无 lang
+            #   字段"**逐字相同** ⇒ 面板对空窗口断言"遥测里没有 lang 字段"，
+            #   而真相是"窗口里没有帖子可归因"。这正是 R770 要修的"误报原因"
+            #   本身（R731 家族），只是漏了最朴素的那一种。
+            #   同一取证还带出测试侧后果：R770 那条用例的行早已老化出 240h
+            #   窗口 ⇒ 它此刻是在空窗路径上**通过**的（不红，但已不测它声称
+            #   的分支），并在面板里替空窗路径盖了章。
+            if not pub:
+                print("   ⚠️ 窗口内 **0 篇发布** ⇒ 无从按语种归因"
+                      "（不是 lang 字段的问题；本窗口发布情况见 ①/②）")
+            elif _n_lang == 0:
                 print("   ⚠️ 遥测里没有 lang 字段（R712 上线于 10-10 10:59）"
                       "⇒ 本轮无法按语种归因（换更晚的窗口重跑）")
             elif _cs_newest == "无" or _cs_newest < (pub[-1].get("ts") or "")[:10]:
