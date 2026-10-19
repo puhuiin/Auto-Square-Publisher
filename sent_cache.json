@@ -1,14 +1,5 @@
 [
   {
-    "id": "8d80df83e12bd005",
-    "title": "Solana DeFi Firms Orca and Loopscale Merge Under New Formation Brand",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-09T02:47:56.608907+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "88be0d45fe81ad75",
     "title": "AI may be keeping Bitcoin’s biggest macro headwind alive after the Fed stops hiking",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5186,6 +5177,17 @@
     "sent_at": "2026-10-19T12:31:06.024969+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "225e898f6998740d",
+    "title": "Cysic Bridge Exploit Creates 10 Million Tokens Before $727,000 Moves To Ethereum",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-10-19T12:57:35.218574+00:00",
+    "tokens": [
+      "BNB",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
