@@ -1,15 +1,5 @@
 [
   {
-    "id": "921afaac475fb682",
-    "title": "富兰克林邓普顿与 SEC 会面探讨代币化基金及 ETF 链上交易豁免",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-10T02:44:41.858948+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8d4c1ea9c265d47d",
     "title": "主要 Meme 市场 24 小时成交约 2.40 亿美元,环比下降 24.5%",
     "source": "吴说区块链 (中文深度)",
@@ -5192,6 +5182,16 @@
     "tokens": [
       "USDC",
       "RLUSD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "928d9be9bfbcfd4f",
+    "title": "Brave retools its search engine for AI agents and plans a BAT overhaul",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-19T19:46:44.911021+00:00",
+    "tokens": [
+      "BAT"
     ],
     "lang": "en"
   }

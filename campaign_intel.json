@@ -17,24 +17,25 @@
   "strategy_guidance": "优先追贴 Spot Trading Tournament Season 6 与 Binance Pick 排行榜活动，将日常币安快讯与 $FF 代币券竞赛、RWUSD 新上线及 TradFi 永续合约背景结合。在 Binance Square 发布活动解析与参与指南，引导读者参与 Word of the Day、Community Voice 等评论互动获取 USDC 奖励。文中切忌暗示交易或参加活动会带来稳赚收益。",
   "last_updated": "2026-10-19T19:24:17.087955Z",
   "_feed_health": {
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "last_fail": "2026-10-19T19:03:35.434258+00:00",
-      "reset_at": "2026-10-19T19:24:17.576705+00:00"
-    },
-    "Bitcoinist (比特币向)": {
-      "fails": 3,
-      "last_fail": "2026-10-19T17:43:33.847299+00:00",
-      "parked_until": "2026-10-19T23:43:33.847299+00:00"
-    },
     "CryptoPotato (山寨币/Meme热点)": {
       "fails": 1,
-      "last_fail": "2026-10-19T19:24:17.471633+00:00"
+      "last_fail": "2026-10-19T19:24:17.471633+00:00",
+      "reset_at": "2026-10-19T19:43:28.896572+00:00"
     },
     "深潮TechFlow (中文/繁体)": {
       "fails": 1,
       "last_fail": "2026-10-19T13:46:59.635252+00:00",
-      "reset_at": "2026-10-19T19:24:19.984766+00:00"
+      "reset_at": "2026-10-19T19:43:33.862069+00:00"
+    },
+    "Bitcoinist (比特币向)": {
+      "parked_until": "2026-10-19T23:43:33.847299+00:00",
+      "fails": 3,
+      "last_fail": "2026-10-19T17:43:33.847299+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "fails": 1,
+      "last_fail": "2026-10-19T19:03:35.434258+00:00",
+      "reset_at": "2026-10-19T19:43:28.798637+00:00"
     }
   },
   "_fallback_image": {
@@ -42,14 +43,14 @@
     "date": "2026-10-18"
   },
   "_llm_breaker": {
+    "Preset-google": {
+      "cooldown_until": "2026-10-20T06:06:53.768418+00:00",
+      "fails": 0
+    },
     "Preset-stepfun": {
       "permanent": true,
       "fails": 4,
       "cooldown_until": "2026-10-20T12:56:41.608157+00:00"
-    },
-    "Preset-google": {
-      "cooldown_until": "2026-10-20T06:06:53.768418+00:00",
-      "fails": 0
     },
     "Preset-stepfun-flash": {
       "permanent": true,
@@ -59,17 +60,17 @@
   },
   "_article_sent_date": "2026-10-19",
   "_publish_park": {
-    "fb5ee5a71713bf96": {
+    "b98d53c0f51b2b9f": {
       "fails": 1,
-      "last_fail": "2026-10-19T15:06:25.560116+00:00"
+      "last_fail": "2026-10-19T18:06:38.190954+00:00"
     },
     "0508939f93619b41": {
       "fails": 1,
       "last_fail": "2026-10-19T16:14:55.802886+00:00"
     },
-    "b98d53c0f51b2b9f": {
+    "fb5ee5a71713bf96": {
       "fails": 1,
-      "last_fail": "2026-10-19T18:06:38.190954+00:00"
+      "last_fail": "2026-10-19T15:06:25.560116+00:00"
     }
   },
   "_intel_refresh_fail": {},
