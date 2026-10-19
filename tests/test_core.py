@@ -19212,15 +19212,86 @@ class TestR700PriceCueNoVerbalFiller(unittest.TestCase):
         """★ 守卫必须锁住**修复本体**，而不只是行为
 
         行为测试可能被"换一种实现同样对"绕过 ⇒ 另加一条源码判据：
-        `_CUE_GAP` 里必须含负向断言 `(?<![打喊挂])`。
+        `_CUE_GAP` 里必须含负向断言（R700 的打/喊/挂 + R786 补的扣/评/留）。
         """
         import inspect
         src = inspect.getsource(m.MultiLLMEngine._verify_numbers)
         i = src.find("_CUE_GAP = ")
         self.assertGreater(i, 0)
-        seg = src[i:i + 90]
-        self.assertIn("(?<![打喊挂])", seg,
-                      "修复本体（禁止口语动词的负向断言）丢失了")
+        seg = src[i:i + 100]
+        self.assertIn("(?<![打喊挂扣评留])", seg,
+                      "修复本体（禁止互动动词的负向断言）丢失了或被缩小")
+
+
+class TestR786PriceGateFalsePositiveFamily(unittest.TestCase):
+    """★★ R786：价位门误捕三连修（生产 65 条价位类拒稿的复盘）。
+
+    复盘（origin/main metrics，stage=numbers 且 reason 含「价位」共 65 条：
+    10-10 起稳定 5~7 条/天）：**门本身没坏**——53 条是模型自写分析价位
+    （「跌破 2500」「站上 9万」），按 R585 设计就该拦，且 57/65 换通道后
+    成功发出、仅 8 条丢稿。真正的问题是**误捕家族**：
+
+    ① 互动 CTA 编号（8 条）：R700 禁了「打/喊/挂」，模型 7 天内迁到「扣」
+       ——「跌破确认的扣2」「跌破新高的扣 2」里的评论编号被当成 2 美元价位
+       （R733 同族：tic 被禁某位置会换词复发）。修=禁词表补扣/评/留 +
+       正则外的正前方豁免（处理「扣 2」带空格形态——lookbehind 只看一个
+       字符，空格会让它失效）。
+    ② 英文单位后缀（内容侧一直没补，源侧 R232/R233 早补了——R615/R611
+       「修了一侧另一侧没对齐」同族）：「突破$90K」被抓成裸 90 ⇒ 与源文
+       9e4 永不相等 ⇒ 忠实转写被当编造。修=内容侧换算 K/M/B/T + 全拼
+       （与源侧同一张量表）。同族收益：「砸到 72.9M」（Uniswap 储备金额）
+       换算后能与源文 72.9M 对上。
+    ⚠️ 两条都不是放宽容差：编造价位（$95K 源文没有）仍必须拦——
+    R589 的生产设计（2% 严格匹配）完好无损。
+    """
+
+    SRC = "Bitwise 押注 ETF 持续流入，年底看 $90K；CoinShares 认为能到 $100K。"
+
+    def _check(self, text, src=None):
+        return m.MultiLLMEngine._verify_numbers(text, src or self.SRC, label="正文")
+
+    def test_cta_number_variants_no_longer_extracted(self):
+        """① 生产实录的 8 条互动 CTA 原文必须全部放行（打/扣、带不带空格）"""
+        for text in ("突破的打1就回落，消息面没跟上",
+                     "站上打1的扣2都行",
+                     "跌破确认的扣2，$SOL 弱势",
+                     "回踩的扣2，$XRP 拿稳",
+                     "回踩扣2，$DOGE 观望",
+                     "跌破新高的扣 2，$ADA 冷静",
+                     "回踩确认的扣 2，$ZEC 等信号"):
+            ok, reason = self._check(text)
+            self.assertTrue(ok, f"互动 CTA「{text}」被误当价位拒稿：{reason}")
+
+    def test_english_suffix_converted_not_dropped(self):
+        """② 内容侧英文单位必须换算（与源侧对称）：$90K 源文有 ⇒ 放行"""
+        ok, reason = self._check("年底突破$90K 就看新高，Bitwise 已经押注。")
+        self.assertTrue(ok, f"源文有 $90K 却被拦（内容侧丢了 K 后缀）：{reason}")
+
+    def test_english_amount_suffix_matches_source_amount(self):
+        """② 同族：「砸到 72.9M」是金额不是价位，换算后与源文金额对上 ⇒ 放行"""
+        src = "Uniswap reserves drop to 72.9M as Grayscale maintains exposure."
+        ok, reason = self._check("Uniswap 储备直接砸到 72.9M，Grayscale 却还攥着仓位。", src)
+        self.assertTrue(ok, f"源文有 72.9M 却被拦：{reason}")
+
+    def test_fabricated_price_with_suffix_still_rejected(self):
+        """③ 反向守卫（红线完好）：源文没有的价位，换算后仍然拦"""
+        ok, reason = self._check("年底突破$95K 就看新高。")
+        self.assertFalse(ok, "编造的 $95K 必须仍被拦（换算不是放行）")
+        self.assertIn("来源未证实", reason)
+
+    def test_plain_fabricated_prices_still_rejected(self):
+        """③ R589 生产设计完好：无后缀的编造价位一个都不能漏"""
+        for text in ("$ETH 站上 2750 才算转强", "跌破 0.09 就别碰了",
+                     "站上 9万才有戏", "跌破2500 就得认栽"):
+            ok, reason = self._check(text, "$ETH 报价 2569.25，24 小时砸 4.45%。")
+            self.assertFalse(ok, f"编造价位「{text}」未被拦（门失效了）")
+            self.assertIn("来源未证实", reason)
+
+    def test_verbal_filler_exemption_is_narrow(self):
+        """⚠️ 边界：豁免只看编号**正前方**一个字符，不扫整个 gap——
+        「跌破打破 2400」这类合法填充词后的真实价位仍要拦（防漏检方向）。"""
+        ok, reason = self._check("跌破打破 2400 就得认栽", "$ETH 报价 2569.25。")
+        self.assertFalse(ok, "填充词后的真实价位不得被顺带豁免（漏检=红线洞）")
 
 
 class TestR705NoClicheSellTheNews(unittest.TestCase):

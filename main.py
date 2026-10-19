@@ -6033,15 +6033,33 @@ class MultiLLMEngine:
         #   全部照常提取；`日线站上均线` / `突破 3 倍` 照常不提取。
         # ⚠️ 不扩大成"禁止一切汉字"——那会误杀「目标价 62,000刀」等
         #   cue 与数字之间本就允许填充词的正常写法。
-        _CUE_GAP = r"[^。！？\n]{0,12}?(?<![打喊挂])"
+        # ★★ R786：禁词表补 **扣/评/留**——R700 只禁了打/喊/挂，生产随即迁移：
+        #   结尾互动 CTA「回踩确认的**扣2**」「跌破新高的**扣 2**」里的编号被当成
+        #   2 美元价位，10-12~10-17 六天 6 条误杀（R733 同族：一个 tic 被禁在某
+        #   位置会换位置/换词复发——打→扣 只用了 7 天）。三条都是互动动词、
+        #   后面跟的必是评论编号不是点位，禁掉不伤任何合法价位写法。
+        _CUE_GAP = r"[^。！？\n]{0,12}?(?<![打喊挂扣评留])"
+        # ★★ R786：内容侧价位规则补**英文单位后缀**（K/M/B/T + million/billion/
+        #   trillion 全拼）并换算——与源侧对称（R232/R233 早为源文补了同样的
+        #   形态，内容侧一直没补，R615/R611「修了一侧另一侧没对齐」同族）。
+        #   生产实证：10-18 14:24「比特幣年底能否突破 10 萬美元」帖写「突破$90K」
+        #   （源文本就有 $90K/$100K 量级），内容侧抓成裸 90 ⇒ 与源文 9e4 永不
+        #   相等 ⇒ 忠实转写被当编造拒稿。同族收益：「砸到 72.9M」（Uniswap 储备
+        #   金额）换算成 7.29e7 后能与源文的 72.9M 对上（否则 72.9 当价位查无此数）。
+        #   ⚠️ 换算而非排除：排除会让「突破$90K」完全逃过校验（红线洞），换算后
+        #   仍要求数字在源文/实时盘面 2% 内有落点——与中文侧 R595 同设计。
+        _EN_PRICE_SUFFIX = (r"\s*(?:([KkMmBbTt])(?![A-Za-z])"
+                            r"|(millions?|billions?|trillions?)\b)?")
         price_patterns = (
             r"(?:支撑(?:位)?|阻力(?:位)?|目标价|公允价|回踩(?:到)?|跌到|砸到|涨到|现价|报价|报"
             r"|突破|跌破|跌穿|站上|冲上|看至|上看|反弹到|回落至|回调至|挑战|逼近)"
             + _CUE_GAP +
             r"([+-]?\d[\d,]*(?:\.\d+)?)\s*(万亿|萬億|万億|萬亿|亿|億|万|萬)?"
+            + _EN_PRICE_SUFFIX +
             r"\s*(?:美元|美金|美刀|刀|usd|usdt)?" + _NON_PRICE_UNIT,
             # 顺序补位：「回踩 240 支撑」主方向价位在 cue 前，避免被常见「支撑 240」漏过。
             r"([+-]?\d[\d,]*(?:\.\d+)?)\s*(万亿|萬億|万億|萬亿|亿|億|万|萬)?"
+            + _EN_PRICE_SUFFIX +
             r"\s*(?:美元|美金|美刀|刀|usd|usdt)?" + _NON_PRICE_UNIT
             + r"[^。！？\n]{0,8}(?:支撑(?:位)?|阻力(?:位)?|目标价)",
         )
@@ -6062,6 +6080,17 @@ class MultiLLMEngine:
         for pattern in price_patterns:
             for m in re.finditer(pattern, content, re.IGNORECASE):
                 raw = m.group(1).replace(",", "")
+                # ★★ R786：互动 CTA 编号豁免（正则 lookbehind 的补位，处理"扣 2"
+                #   带空格形态——lookbehind 只看紧邻一个字符，空格会让它失效）。
+                #   生产实录 8 条误杀全是结尾互动句：「跌破确认的扣2」「跌破新高的
+                #   扣 2」「回踩确认的扣 2」——编号前的互动动词（打/喊/挂/扣/评/留）
+                #   说明这是评论编号不是点位。与 R700 同族：禁了打/喊/挂之后模型
+                #   7 天内迁到「扣」（R733：tic 被禁会换词复发）。
+                #   ⚠️ 只看编号**正前方**（rstrip 后一个字符），不扫整个 gap——
+                #   扫整个 gap 会把「跌破打破 2400」这类合法填充词也豁免掉（漏检方向）。
+                _before = content[:m.start(1)].rstrip(" \u3000")
+                if _before and _before[-1] in "打喊挂扣评留":
+                    continue
                 try:
                     val = abs(float(raw))
                 except ValueError:
@@ -6071,6 +6100,14 @@ class MultiLLMEngine:
                 unit = m.group(2) if m.lastindex and m.lastindex >= 2 else None
                 if unit:
                     val *= MultiLLMEngine._cjk_amount_scale(unit)
+                # ★★ R786：英文单位后缀同权换算（K/M/B/T + million/billion/trillion）。
+                #   与源侧提取（R232/R233）用同一张量表，两侧不对称就会「同数异形互查
+                #   无果」——内容侧写 $90K、源侧有 9e4，不换算永远判不出相等。
+                en_unit = m.group(3) if m.lastindex and m.lastindex >= 3 else None
+                if en_unit:
+                    _e = en_unit.lower()
+                    val *= (1e3 if _e == "k" else 1e6 if _e in ("m", "million") else
+                            1e9 if _e in ("b", "billion") else 1e12)
                 if not _price_in_source(val):
                     return False, f"{label}给出来源未证实的价位 {m.group(0)}（源文/实时盘面中找不到）"
 
