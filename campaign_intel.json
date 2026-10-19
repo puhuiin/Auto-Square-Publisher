@@ -17,15 +17,15 @@
   "strategy_guidance": "优先追贴 Spot Trading Tournament Season 6 与 Binance Pick 排行榜活动，将日常币安快讯与 $FF 代币券竞赛、RWUSD 新上线及 TradFi 永续合约背景结合。在 Binance Square 发布活动解析与参与指南，引导读者参与 Word of the Day、Community Voice 等评论互动获取 USDC 奖励。文中切忌暗示交易或参加活动会带来稳赚收益。",
   "last_updated": "2026-10-19T19:24:17.087955Z",
   "_feed_health": {
-    "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-10-19T23:43:27.318583+00:00",
-      "last_fail": "2026-10-19T19:03:35.434258+00:00",
-      "fails": 1
-    },
     "CryptoPotato (山寨币/Meme热点)": {
-      "reset_at": "2026-10-19T23:43:27.343575+00:00",
       "last_fail": "2026-10-19T19:24:17.471633+00:00",
-      "fails": 1
+      "fails": 1,
+      "reset_at": "2026-10-19T23:43:27.343575+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "last_fail": "2026-10-19T19:03:35.434258+00:00",
+      "fails": 1,
+      "reset_at": "2026-10-19T23:43:27.318583+00:00"
     }
   },
   "_fallback_image": {
@@ -33,23 +33,23 @@
     "date": "2026-10-18"
   },
   "_llm_breaker": {
-    "Preset-openrouter": {
-      "cooldown_until": "2026-10-20T02:07:31.410332+00:00",
-      "fails": 5
-    },
-    "Preset-stepfun": {
-      "permanent": true,
-      "cooldown_until": "2026-10-20T12:56:41.608157+00:00",
-      "fails": 4
+    "Preset-stepfun-flash": {
+      "fails": 4,
+      "cooldown_until": "2026-10-20T12:56:36.239765+00:00",
+      "permanent": true
     },
     "Preset-google": {
-      "cooldown_until": "2026-10-20T06:59:51.432570+00:00",
-      "fails": 0
+      "fails": 0,
+      "cooldown_until": "2026-10-20T06:59:51.432570+00:00"
     },
-    "Preset-stepfun-flash": {
-      "permanent": true,
-      "cooldown_until": "2026-10-20T12:56:36.239765+00:00",
-      "fails": 4
+    "Preset-stepfun": {
+      "fails": 4,
+      "cooldown_until": "2026-10-20T12:56:41.608157+00:00",
+      "permanent": true
+    },
+    "Preset-openrouter": {
+      "fails": 5,
+      "cooldown_until": "2026-10-20T02:07:31.410332+00:00"
     }
   },
   "_article_sent_date": "2026-10-19",
@@ -58,16 +58,29 @@
       "last_fail": "2026-10-19T20:25:12.908495+00:00",
       "fails": 1
     },
-    "54afa0bfbc460f35": {
-      "fails": 1,
-      "last_fail": "2026-10-19T23:43:36.991688+00:00"
-    },
     "b98d53c0f51b2b9f": {
       "last_fail": "2026-10-19T18:06:38.190954+00:00",
       "fails": 1
     },
     "dfbace7fef89d75c": {
       "last_fail": "2026-10-19T21:05:24.218023+00:00",
+      "fails": 1
+    },
+    "0bbf1182c484801f": {
+      "last_fail": "2026-10-19T22:05:36.188571+00:00",
+      "fails": 1
+    },
+    "235c354e91ad830e": {
+      "last_fail": "2026-10-19T23:05:14.175147+00:00",
+      "fails": 2,
+      "parked_until": "2026-10-20T05:05:14.175147+00:00"
+    },
+    "54afa0bfbc460f35": {
+      "last_fail": "2026-10-19T23:43:36.991688+00:00",
+      "fails": 1
+    },
+    "22890c5e893dbb89": {
+      "last_fail": "2026-10-19T23:27:32.412059+00:00",
       "fails": 1
     },
     "c800dfc066b2f0a7": {
@@ -80,19 +93,6 @@
     },
     "64c636a0bf2bf394": {
       "last_fail": "2026-10-19T23:23:49.496555+00:00",
-      "fails": 1
-    },
-    "0bbf1182c484801f": {
-      "last_fail": "2026-10-19T22:05:36.188571+00:00",
-      "fails": 1
-    },
-    "235c354e91ad830e": {
-      "parked_until": "2026-10-20T05:05:14.175147+00:00",
-      "last_fail": "2026-10-19T23:05:14.175147+00:00",
-      "fails": 2
-    },
-    "22890c5e893dbb89": {
-      "last_fail": "2026-10-19T23:27:32.412059+00:00",
       "fails": 1
     }
   },
