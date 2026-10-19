@@ -223,7 +223,6 @@ def build_report(rows, hours: int) -> str:
                 _pct = 100 * _v / max(1, _scanned)
                 _warn = " ⚠️" if _pct >= _thr else ""
                 _lines.append("%s %d/%d=%d%%%s" % (_label, _v, _scanned, _pct, _warn))
-        _six_clean = not _lines
         # R759：正文活动提及率（红线监护）——R758 提法菜单是条件句，若模型从此
         # 不在正文提活动（只靠注入标签保归因），互动驱动器就忘了（R741：KGST
         # 提及 1%→17% 靠正文提及）。同覆盖纪律：分母=有遥测帖数。
@@ -251,14 +250,31 @@ def build_report(rows, hours: int) -> str:
             #   读成"没问题"（R747：指标的量测口径要先自证）。
             _tpl_note = ("🎁活动CTA结尾模板暂无全文遥测"
                          "（R758上线后新帖才计数，不是0命中）")
+        _six_clean = not _lines
+        # ★★ R784：雷达扫描口径诚实化。quality_scan 现在优先扫 final_text
+        #   （发布全文）——实测 711 篇发布帖 100% content_chars>200 ⇒ 旧
+        #   preview 口径对每一篇都只覆盖开头 ~66%。R784 部署后新帖才有全文
+        #   遥测 ⇒ 混合窗口里"命中数跳升"很可能只是**口径升级**（旧口径
+        #   系统性漏掉段2~3/结尾的复读），不是真的恶化。把覆盖率写进日报，
+        #   否则用户看到跳升会以为质量崩了（R736：报告说错话比不说话更糟）。
+        _fcov = _q.get("full_cov") or 0
+        _cov_note = None
+        if _fcov == 0:
+            _cov_note = "（雷达按200字preview口径扫描，段2~3/结尾不可见）"
+        elif _fcov < _scanned:
+            _cov_note = ("（全文遥测覆盖%d/%d篇，混合口径：与更早的日报"
+                         "不可直接比较）" % (_fcov, _scanned))
         if _lines:
             if _tpl_note:
                 _lines.append(_tpl_note)
+            if _cov_note:
+                _lines.append(_cov_note)
             L.append("")
             L.append("⑥ 内容质量（近20篇）：%s" % " ｜ ".join(_lines))
         elif _six_clean:
             L.append("")
-            L.append("⑥ 内容质量（近20篇）：✅ 未检出收敛复读（另：%s）" % _tpl_note)
+            L.append("⑥ 内容质量（近20篇）：✅ 未检出收敛复读（另：%s）"
+                     % "；".join(x for x in (_tpl_note, _cov_note) if x))
         else:
             L.append("")
             L.append("⑥ 内容质量（近20篇）：✅ 未检出收敛复读")

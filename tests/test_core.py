@@ -12436,6 +12436,80 @@ class TestR783BudgetCalibration(unittest.TestCase):
                          "长文：起点 3500 → 空回直跳长文封顶")
 
 
+class TestR784FullTextTelemetry(unittest.TestCase):
+    """★★ R784：发布全文遥测（final_text）——填 R647 盲区的全景版。
+
+    实测（origin/main metrics，711 篇发布帖）：**100% content_chars>200**
+    （中位 304 / max 1214）⇒ final_preview（200 字）对**每一篇**都是截断
+    样本，而 📊放量/🧰套话/📋先看/🎭操纵/📻热搜 等短语雷达扫的正是 preview
+    ⇒ 全部雷达都只在开头 ~66% 上工作，段2~3 与结尾（campaign CTA 落点）
+    结构性不可见。R758/R780 给**已知短语**补过专用布尔遥测；本轮落全文，
+    让任何雷达/fresh-look 扫描（R738）不再受 preview 截断限制。
+    """
+
+    def setUp(self):
+        self._orig = m.SymbolValidator._valid_symbols_cache
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH"}
+
+    def tearDown(self):
+        m.SymbolValidator._valid_symbols_cache = self._orig
+
+    @staticmethod
+    def _ok_resp():
+        r = MagicMock()
+        r.status_code = 200
+        r.json.return_value = {"code": "000000", "success": True,
+                               "data": {"contentId": "cid-784"}}
+        r.text = "{}"
+        return r
+
+    def test_publisher_last_final_content_is_full_text(self):
+        """行为锁：last_final_content 必须是**发布全文**（不是 200 字预览）——
+        它是 final_text 的唯一数据源，若被截断则整条遥测链失去意义。"""
+        pub = m.SquarePublisher(api_key="k")
+        long_body = ("BTC 放量突破关键位，短线情绪转多。" + "后续段落继续分析盘面结构。"
+                     * 30 + "\n\n#Write2Earn #BinanceSquare #BTC")
+        self.assertGreater(len(long_body), 400, "夹具必须真的超过 200 字 preview")
+        with patch.object(m, "_HTTP_SESSION") as sess, \
+             patch.object(m.SymbolValidator, "get_valid_symbols", return_value={"BTC"}):
+            sess.post.side_effect = [self._ok_resp()]
+            ok = pub.publish(long_body, image_url=None, ensure_tokens=["BTC"])
+        self.assertTrue(ok)
+        # ★ final_text 是**净化+织挂件之后的实发全文**（不是 LLM 原稿、
+        #   也不是 200 字预览）——原稿会被 _sanitize_content 替换标点、
+        #   _weave_cashtags 把 BTC 织成 $BTC。雷达要量的正是实发文本。
+        self.assertGreater(len(pub.last_final_content), 200,
+                           "last_final_content 必须是发布全文（截断=遥测失去意义）")
+        self.assertIn("$BTC", pub.last_final_content, "必须是织挂件后的实发文本")
+        self.assertIn("#BTC", pub.last_final_content, "尾部标签必须在 ⇒ 未被 200 字截断")
+        self.assertIn("后续段落继续分析盘面结构。", pub.last_final_content,
+                      "200 字之外的正文必须在 ⇒ 证明不是 preview")
+
+    def test_receipt_plumbs_final_text_field(self):
+        """回执必须落 final_text（无消费面=没修，R619 纪律）——
+        图文发布行与视频发布行两处出海口都要落（R645/R611 同族：
+        修了一处漏了另一处）。"""
+        import inspect
+        src = inspect.getsource(m)
+        self.assertGreater(src.find('"final_text": final_content if isinstance(final_content, str) else None'), 0,
+                           "图文发布回执缺 final_text 字段")
+        self.assertGreater(src.find('"final_text": publisher.last_final_content'), 0,
+                           "视频发布回执缺 final_text 字段")
+
+    def test_final_text_field_uses_same_source_as_preview(self):
+        """final_text 与 final_preview 必须同源（final_content）——
+        两处取不同变量就会一个截断一个完整，雷达读到的是拼接怪。"""
+        import inspect
+        src = inspect.getsource(m)
+        i_prev = src.find('final_preview = final_content[:200]')
+        i_full = src.find('"final_text": final_content if isinstance(final_content, str) else None')
+        self.assertGreater(i_prev, 0, "preview 行不存在（被测代码被改动？）")
+        self.assertGreater(i_full, 0)
+        # final_text 落点必须在 preview 派生之后（同一函数作用域内、行号更大）
+        self.assertGreater(i_full, i_prev,
+                           "final_text 必须在 preview 派生之后落（同源 final_content）")
+
+
 class TestRouterRerollOnQualityReject(unittest.TestCase):
     """R264：聚合路由通道的质量门拒稿后，链尾补一次重抽（独立随机样本）。
 
@@ -21217,15 +21291,21 @@ class TestR745CjkDedupChannel(unittest.TestCase):
 
 
 class TestR747CvRadarHonesty(unittest.TestCase):
-    """★★★ R747：CV 雷达必须只量「preview 未截断且 ≥3 句」的帖，否则诚实报不可度量
+    """★★★ R747：CV 雷达必须只量「有发布全文且 ≥3 句」的帖，否则诚实报不可度量
 
-    ★ 实测缺陷：`final_preview` 是 200 字截断字段（R615 早明示），73% 的发布帖
-      content_chars>200 ⇒ 在这些帖上算"全文句长 CV"实际只算开头 2~3 句；而 2 个
-      句长的 CV 要么 0 要么极大（纯噪声）。R605 的人/AI 基线（0.449/0.376）是
-      **全文**统计量，与片段 CV 不可比。曾据片段 CV 得出"英文 0.312 退化"并驱动
-      R743——复查那是片段噪声 + 长文占比变化的**组成假象**（R651 代理变量同族）。
-    ⇒ 本类锁两件事：① 截断帖不计入 CV ② 样本不足时行必须说"不可度量"，
-      并带覆盖率与截断数（防止再拿子集中位数当全站结论）。
+    ★ 实测缺陷：`final_preview` 是 200 字截断字段（R615 早明示），在这些帖上
+      算"全文句长 CV"实际只算开头 2~3 句；而 2 个句长的 CV 要么 0 要么极大
+      （纯噪声）。R605 的人/AI 基线（0.449/0.376）是**全文**统计量，与片段
+      CV 不可比。曾据片段 CV 得出"英文 0.312 退化"并驱动 R743——复查那是
+      片段噪声 + 长文占比变化的**组成假象**（R651 代理变量同族）。
+    ⇒ 本类锁两件事：① 无全文的帖不计入 CV ② 样本不足时行必须说"不可度量"，
+      并带覆盖率与不可度量篇数（防止再拿子集中位数当全站结论）。
+    ★★ R784 口径升级：门控从"preview 未截断"（content_chars ≤ len(preview)）
+      改为"**有 final_text 全文遥测**"——实测 711 篇发布帖 **100%
+      content_chars>200** ⇒ 旧门控下窗口内可度量样本恒 0（R747 早已如实报
+      不可度量，但那是"永远不可度量"）。本类的**保护语义不变**（片段 CV 不得
+      冒充全文 CV、不可度量要明说），只是判据换成更强的条件；旧测试按新口径
+      更新（R751 纪律：先分清"破坏了保护的东西"还是"替换了被保护的行为"）。
     """
 
     @staticmethod
@@ -21239,45 +21319,51 @@ class TestR747CvRadarHonesty(unittest.TestCase):
         spec.loader.exec_module(mod)
         return mod
 
-    def _row(self, text, chars):
-        return {"outcome": "binance_published", "final_preview": text,
-                "content_chars": chars, "ts": "2026-10-14T10:00:00+00:00"}
+    def _row(self, text, chars=None, full=None):
+        """chars 保留仅为兼容旧签名（R784 起门控不再看它）；
+        full=发布全文（None=历史行无遥测 ⇒ 不可度量 CV）。"""
+        r = {"outcome": "binance_published", "final_preview": text,
+             "content_chars": chars if chars is not None else len(text),
+             "ts": "2026-10-14T10:00:00+00:00"}
+        if full is not None:
+            r["final_text"] = full
+        return r
 
     def test_truncated_preview_excluded_from_cv(self):
-        """★★★ content_chars > preview 长度（被 200 字截断）⇒ 不计入 CV
+        """★★★ 只有 preview、无 final_text（历史行）⇒ 不计入 CV
 
-        ⚠️ 样本必须让「无门控时能算出 CV」——preview 里放 ≥3 句。否则 _sentence_cv
+        ⚠️ 样本必须让「无门控时能算出 CV」——文本里放 ≥3 句。否则 _sentence_cv
         本身返回 None，破坏门控也测不出来（假通过，R712/R726 家族）。
         """
         mr = self._mr()
         pv = ("第一句在这里。第二句跟着来了。第三句也到了。" + "补" * 170)[:200]
         q = mr.quality_scan([self._row(pv, 794)], window=1)
-        self.assertEqual(q["cv_truncated"], 1, "截断帖必须被计数")
-        self.assertEqual(q["cv_eligible"], 0, "截断帖不得进 CV 样本")
+        self.assertEqual(q["cv_truncated"], 1, "无全文遥测的帖必须被计数")
+        self.assertEqual(q["cv_eligible"], 0, "无全文的帖不得进 CV 样本")
         self.assertEqual(len(q["burstiness_cvs"]), 0,
-                         "截断帖不得产生 CV 值（无门控时这里会有值 ⇒ 门控失效）")
-        # 反证：同文本若未被截断，必须能算出 CV（证明样本本身有信号）
-        q2 = mr.quality_scan([self._row(pv, len(pv))], window=1)
+                         "无全文帖不得产生 CV 值（无门控时这里会有值 ⇒ 门控失效）")
+        # 反证：同文本若作为 final_text 提供，必须能算出 CV（证明样本本身有信号）
+        q2 = mr.quality_scan([self._row(pv, 794, full=pv)], window=1)
         self.assertGreaterEqual(len(q2["burstiness_cvs"]), 1,
-                                "未截断的同文本应可度量 ⇒ 证明上一条的空 CV 是门控起的作用")
+                                "有全文的同文本应可度量 ⇒ 证明上一条的空 CV 是门控起的作用")
 
     def test_untruncated_multi_sentence_included(self):
-        """★ 未截断且 ≥3 句 ⇒ 正常计入（反向前提：门控没把可度量的也杀掉）"""
+        """★ 有全文且 ≥3 句 ⇒ 正常计入（反向前提：门控没把可度量的也杀掉）"""
         mr = self._mr()
         pv = "短句一。长一点的第二句话在这里拖着看。短三。第四句也短。"
-        q = mr.quality_scan([self._row(pv, len(pv))], window=1)
-        self.assertEqual(q["cv_eligible"], 1, "未截断帖应可度量")
+        q = mr.quality_scan([self._row(pv, full=pv)], window=1)
+        self.assertEqual(q["cv_eligible"], 1, "有全文帖应可度量")
         self.assertEqual(len(q["burstiness_cvs"]), 1, "应产生 1 个 CV 值")
 
     def test_two_sentence_fragment_not_measurable(self):
-        """★ 未截断但仅 2 句 ⇒ 不可度量（2 个数的 CV 是噪声）"""
+        """★ 有全文但仅 2 句 ⇒ 不可度量（2 个数的 CV 是噪声）"""
         mr = self._mr()
         pv = "第一句话。第二句话。"
-        q = mr.quality_scan([self._row(pv, len(pv))], window=1)
+        q = mr.quality_scan([self._row(pv, full=pv)], window=1)
         self.assertEqual(len(q["burstiness_cvs"]), 0, "2 句片段不得产生 CV")
 
     def test_report_says_unmeasurable_when_all_truncated(self):
-        """★★ 全窗皆截断时，🎵 行必须说「不可度量」而不是报一个子集中位数"""
+        """★★ 全窗都无全文遥测时，🎵 行必须说「不可度量」而不是报一个子集中位数"""
         import contextlib
         import io
         mr = self._mr()
@@ -21286,21 +21372,21 @@ class TestR747CvRadarHonesty(unittest.TestCase):
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             out = mr.render_text(s, rows)
-        self.assertIn("不可度量", out, "全截断窗口必须明说不可度量，不得拿片段 CV 冒充全文 CV")
+        self.assertIn("不可度量", out, "无全文窗口必须明说不可度量，不得拿片段 CV 冒充全文 CV")
 
     def test_coverage_line_reports_sample_base(self):
-        """★ 可度量时必须同时给覆盖率 + 截断数（R731/R729：分布必带样本基数）"""
+        """★ 可度量时必须同时给覆盖率 + 不可度量篇数（R731/R729：分布必带样本基数）"""
         import contextlib
         import io
         mr = self._mr()
         pv = "短句一。长一点的第二句话在这里拖着看。短三。第四句也短。"
-        rows = [self._row(pv, len(pv)) for _ in range(4)]
+        rows = [self._row(pv, full=pv) for _ in range(4)]
         s = mr.summarize(rows)
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             out = mr.render_text(s, rows)
         self.assertIn("覆盖率", out, "CV 行必须给覆盖率")
-        self.assertIn("截断", out, "必须报告被截断、不可度量的篇数")
+        self.assertIn("不可度量", out, "必须报告无全文、不可度量的篇数")
 
 
 class TestR746CampaignCtaPhrasingMenu(unittest.TestCase):

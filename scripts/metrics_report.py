@@ -395,7 +395,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     R162：fng_ban_active 直录后，"禁令武装 → 新帖避开"的咬合从推断变事实
     （violation>0 即模型无视禁令，是执法升级的实证依据）。"""
     previews = []
-    cv_rows = []         # ★ R747：(preview, ts, 是否可度量CV) ——与 previews 同窗口切片
+    cv_rows = []         # ★ R747/R784：(扫描文本, ts, 是否有全文遥测) ——与 previews 同窗口切片
     mentions = []        # ★ R759：campaign_mention 遥测标记（与 previews 同窗口对齐）
     for r in rows:
         if not isinstance(r, dict) or r.get("dry_run") is True:
@@ -403,7 +403,17 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
         if not _is_delivery_outcome(r.get("outcome")):
             continue
         pv = (r.get("final_preview") or "").strip()
-        if pv:
+        # ★★ R784：**雷达扫描文本优先用发布全文**（final_text，main.py 在发布
+        #   前对 final_content 原样落盘）。实测 711 篇发布帖 **100%
+        #   content_chars>200**（中位 304）⇒ preview 对每一篇都是截断样本，
+        #   短语雷达扫 preview = 只看开头 66%，段2~3 与结尾（campaign CTA
+        #   落点、R613 定位的段首 tic）结构性不可见。历史行无该字段 ⇒ 回退
+        #   preview（未知不是空串；覆盖率由 full_cov 如实报出，混合窗口的
+        #   占比不可跨部署边界直接比较——见渲染层告警）。
+        _ft = r.get("final_text")
+        _scan = _ft.strip() if isinstance(_ft, str) and _ft.strip() else pv
+        _is_full = bool(isinstance(_ft, str) and _ft.strip())
+        if pv or _scan:
             # R759：campaign_mention（正文是否提及当期活动，去标签后全文判）——
             # **必须与 previews 同窗口同步追加**（放 if 外会与 previews 错位，
             # 预览为空的行走不到这里——R712 家族：索引对齐错了症状离病因极远）。
@@ -415,24 +425,25 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
             # 外）⇒ 不带这个标记，雷达对尾部模板结构性失明（R647 盲区）。
             # 历史行无该字段 ⇒ None（未知不是 False，与 fng_ban_active 同纪律）。
             _tpl = r.get("campaign_cta_tpl")
-            previews.append((pv, r.get("fng_ban_active"), r.get("ts"),
+            previews.append((_scan, r.get("fng_ban_active"), r.get("ts"),
                              _tpl if isinstance(_tpl, bool) else None))
-            # ★★ R747：`final_preview` 是 **200 字截断字段**（R615 已明示：
-            #   正文统计必须用 content_cjk）。实测 73% 的发布帖 content_chars > 200
-            #   ⇒ 在这些帖上算"全文句长 CV"实际只算开头 2~3 句——而 2 个数的 CV
-            #   要么 0 要么极大，纯噪声；R605 的人类/AI 基线（0.449/0.376）是**全文**
-            #   统计量，与片段 CV 不可比。曾据片段 CV 得出"英文 CV 0.312 退化"并驱动
-            #   R743（R747 复查：那是片段噪声 + 长文占比变化的组成假象）。
-            #   ⇒ 只有 preview 未截断（content_chars ≤ preview 长度）才可度量 CV。
-            cc = r.get("content_chars")
-            cv_rows.append((pv, r.get("ts"),
-                            not (isinstance(cc, int) and cc > len(pv))))
+            # ★★ R747/R784：CV 可度量条件 = **有全文遥测**（R784 起）。
+            #   旧条件是"preview 未截断"（content_chars ≤ len(preview)），而实测
+            #   100% 的帖 content_chars>200 ⇒ 旧条件下窗口内可度量样本恒 0
+            #   （R747 已如实报"不可度量"）。R605 的人/AI 基线（0.449/0.376）是
+            #   **全文**统计量，只有全文样本才与它可比；片段 CV 要么 0 要么极大，
+            #   是噪声（R747 亲自证伪过驱动 R743 的那个 0.312）。
+            cv_rows.append((_scan, r.get("ts"), _is_full))
     previews = previews[-window:]
     cv_rows = cv_rows[-window:]          # ★ R747：CV 样本与 scanned **同窗口**（首版漏了
                                           # 这条，覆盖率算出 680% 的荒唐数）
     mentions = mentions[-window:]        # ★ R759：mention 样本与 scanned 同窗口切片
     cv_full = [p for p, _t, ok in cv_rows if ok and _is_cv_eligible(p)]
     cv_truncated = sum(1 for _p, _t, ok in cv_rows if not ok)
+    # ★ R784：全文遥测覆盖率（窗口内）。雷达扫描文本已优先取全文 ⇒ 覆盖率
+    #   <100% 时，占比是"全文+preview 混合口径"，跨 R784 部署边界不可直接
+    #   比较（近半新帖全文、远半旧帖 preview ⇒ 近半命中天然更高）。
+    full_cov = sum(1 for _p, _t, ok in cv_rows if ok)
     out = {"scanned": len(previews), "fng_anchor": 0, "banned_device": 0,
            "ai_flavor": 0, "offenders": collections.Counter(),
            "fng_ban_armed": 0, "fng_violation": 0, "fng_avoided": 0,
@@ -485,11 +496,15 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
            # 而非 4~5 天）。把这个跨度显性化，读者才能自己判断近半是否已完全
            # 落在修复之后，而不是被一个无信息的百分比误导。
            "recent_span": (None, None),
-           # R747：CV 样本的诚实性计数——被 200 字截断、不可度量的帖数。
+           # R747：CV 样本的诚实性计数——无全文遥测、不可度量的帖数。
            # 若 burstiness_cvs 远小于 scanned，说明"全文节奏"这一指标当前基本不可度量
            # （正文不在遥测里），此时🎵行必须明说，不得拿片段 CV 冒充全文 CV。
+           # ★ R784：口径从"preview 被 200 字截断"改为"无 final_text 全文遥测"
+           #   （实测 100% 发布帖 content_chars>200 ⇒ 旧口径下恒 0 可度量）。
            "cv_truncated": cv_truncated,
-           "cv_eligible": len(cv_full)}
+           "cv_eligible": len(cv_full),
+           # ★ R784：窗口内全文遥测覆盖率（雷达扫描文本的口径诚实化）。
+           "full_cov": full_cov}
     # 近/远切分点：窗口后一半为「近」（时间上更近=修复后），前一半为「远」（对照）。
     # 奇数窗时近半多 1 篇；窗口 <2 时不切分（两半都留 0，由渲染层不显示对照）。
     _split = (len(previews) + 1) // 2
@@ -3624,6 +3639,20 @@ def render_text(s, rows=None):
             status = "全部通过" if not violations else f"{violations} 处命中"
             lines.append(f"- 内容合规巡检（最近 {q['scanned']} 篇回执文本）: {status}"
                          + (f" {q['offenders']}" if q["offenders"] else ""))
+            # ★★ R784：**雷达扫描口径诚实化**。R784 起雷达优先扫 final_text
+            #   （发布全文）；实测 711 篇发布帖 100% content_chars>200 ⇒ 旧
+            #   preview 口径对每一篇都只覆盖开头 ~66%，段2~3 与结尾不可见。
+            #   覆盖率 <100% 时是"全文+preview 混合口径"⇒ 跨 R784 部署边界
+            #   的近/远对比会混入口径差（近半新帖全文 ⇒ 命中天然更高），
+            #   必须把覆盖率打在节标题旁边，否则读者会把口径升级读成复读复发。
+            _fcov = q.get("full_cov") or 0
+            if 0 < _fcov < q["scanned"]:
+                lines.append(f"  ⓘ 全文遥测覆盖 {_fcov}/{q['scanned']} 篇"
+                             f"（R784 起落 final_text；未覆盖的旧帖按 200 字 preview"
+                             f" 口径扫描 ⇒ 混合口径，跨部署边界的涨跌含口径差）")
+            elif _fcov == 0:
+                lines.append(f"  ⓘ 全文遥测覆盖 0/{q['scanned']} 篇 ⇒ 本轮全部按 200 字"
+                             f" preview 口径扫描（段2~3/结尾不可见，R647 盲区）")
             # R162：FNG 禁令咬合度量——armed 篇中避开 vs 违反（历史帖无状态字段不进分母）
             if q["fng_ban_armed"]:
                 flag = " ⚠️" if q["fng_violation"] else ""
@@ -3697,12 +3726,12 @@ def render_text(s, rows=None):
                 #   "全站节奏"——把覆盖率与截断数打出来，防止又一次拿片段噪声下结论。
                 _cover = 100 * _elig // max(1, q["scanned"])
                 lines.append(f"     ↳ 覆盖率 {_elig}/{q['scanned']} 篇（{_cover}%；"
-                             f"{_trunc} 篇正文被 200 字 preview 截断、不可度量）"
+                             f"{_trunc} 篇无 final_text 全文遥测、不可度量）"
                              + (" ⚠️ 覆盖率过低 ⇒ 该中位数只代表短帖子集" if _cover < 40 else ""))
             elif q["scanned"] >= 3:
                 lines.append(f"  🎵 句长节奏 CV: **不可度量**（窗口内 {q['scanned']} 篇仅 "
-                             f"{len(_cvs)} 篇 preview 未截断且 ≥3 句；{_trunc} 篇被截断）"
-                             "⇒ 正文不在遥测里，勿据片段 CV 下结论（R747）")
+                             f"{len(_cvs)} 篇有 final_text 全文遥测且 ≥3 句；{_trunc} 篇无全文）"
+                             "⇒ 勿据 200 字片段 CV 下结论（R747/R784）")
             # R607：「利好不涨」描述复读——加密新闻最常见场景被收敛到固定描述句
             # （连个像样的反弹都没有/盘面不买账/连个水花都没溅）。句中短语、前缀雷达
             # 看不见。只追踪：≥40% 才提示（且可能是话题驱动而非风格退化，需读样本甄别）。

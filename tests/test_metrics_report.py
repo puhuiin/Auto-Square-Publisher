@@ -1433,14 +1433,22 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIsNone(mr._sentence_cv("只有一句话没有句末标点"), "句数<2 返 None")
         self.assertLess(mr._sentence_cv(flat), 0.35, "均匀句长应判偏平(<0.35)")
         # 渲染：≥3 篇才出行
+        # ★ R784：CV 门控改为"有 final_text 全文遥测"（实测 100% 发布帖
+        #   content_chars>200 ⇒ 旧"preview 未截断"门控下窗口恒 0 可度量）。
+        #   本测试量的是 _sentence_cv 的**数学性质**（起伏大>均匀），样本必须
+        #   带 final_text 才能过门控（否则测的是门控不是数学）。
         _write(self.path, [
-            {"platforms": ["binance"], "outcome": "binance_published", "final_preview": flat},
-            {"platforms": ["binance"], "outcome": "binance_published", "final_preview": flat},
-            {"platforms": ["binance"], "outcome": "binance_published", "final_preview": bursty},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": flat, "final_text": flat},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": flat, "final_text": flat},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "final_preview": bursty, "final_text": bursty},
         ])
         rows, _ = mr.load_rows(self.path)
         q = mr.quality_scan(rows)
-        self.assertEqual(len(q["burstiness_cvs"]), 3, "三篇均有≥2句，都计入")
+        self.assertEqual(len(q["burstiness_cvs"]), 3, "三篇均有全文且≥2句，都计入")
+        self.assertEqual(q["cv_eligible"], 3)
         text = mr.render_text(mr.summarize(rows), rows)
         self.assertIn("句长节奏 CV 中位", text)
 
@@ -7859,6 +7867,104 @@ class TestR758CampaignCtaTailTemplateRadar(unittest.TestCase):
         self.assertEqual(len(line), 1)
         self.assertIn("4/4", line[0], "分母必须是覆盖数 4，不是 scanned 16")
         self.assertIn("仅计有全文遥测的帖", line[0])
+
+
+class TestR784FullTextCaliber(unittest.TestCase):
+    """★★ R784：雷达扫描口径从 preview（200 字）升级为发布全文（final_text）。
+
+    实测（origin/main metrics，711 篇发布帖）：**100% content_chars>200**
+    （中位 304 / max 1214）⇒ preview 对每一篇都是截断样本。真实数据上注入
+    尾部短语做对照：📋先看 2→20、🧰套话 2→20、📻热搜 0→20——旧口径把
+    段2~3/结尾的复读**全部**漏掉（R647 盲区的全景版，不是个别长帖超长）。
+    本类锁四件事：① 雷达优先读 final_text ② 覆盖率如实报（混合窗口不可跨
+    部署边界比较）③ CV 只认全文样本（片段 CV 是噪声，R747 证伪过）
+    ④ 空/空白 final_text 回退 preview 且不计覆盖。
+    """
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r784",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _row(full=None, ts="2026-10-19T00:00:00+00:00"):
+        """发布行：preview 只有开头 200 字；full=发布全文（None=历史行无遥测）。"""
+        pv = "开头段落分析盘面，多空分歧仍在，后续看资金承接。" * 6
+        r = {"outcome": "binance_published", "platforms": ["binance"],
+             "final_preview": pv, "ts": ts}
+        if full is not None:
+            r["final_text"] = full
+        return r
+
+    # 200 字之外的三个复读短语（各雷达的真实判据形态）
+    _TAIL = ("后面段落里藏着它：先看量能能不能顶住，别急着抄底，"
+             "全网热搜前十连它的影子都没有。")
+
+    def test_radars_scan_full_text_past_preview_cutoff(self):
+        """① 落在 200 字之外的复读短语，全文口径必须抓到、preview 口径抓不到。"""
+        mr = self._mr()
+        rows_preview = [self._row(full=None) for _ in range(6)]
+        rows_full = [self._row(full=self._row()["final_preview"] + "x" * 260 + self._TAIL)
+                     for _ in range(6)]
+        qp = mr.quality_scan(rows_preview)
+        qf = mr.quality_scan(rows_full)
+        for key in ("watch_lead", "stock_advice", "hotlist_absent"):
+            self.assertEqual(qp[key], 0, "preview 口径下 200 字外的短语必须抓不到"
+                                        "（否则本测试证明不了盲区存在）: %s" % key)
+            self.assertEqual(qf[key], 6, "全文口径必须抓到 200 字外的短语: %s" % key)
+        self.assertEqual(qf["full_cov"], 6, "覆盖数必须=全文遥测帖数")
+        self.assertEqual(qp["full_cov"], 0, "历史行无遥测 ⇒ 覆盖 0")
+
+    def test_coverage_line_distinguishes_three_states(self):
+        """② 渲染层必须区分三态：全覆盖（无告警）/ 部分覆盖（混合口径告警）/
+        零覆盖（preview 口径告警）——跨部署边界的涨跌含口径差，不说就是误导。"""
+        mr = self._mr()
+        full = [self._row(full=self._row()["final_preview"] + self._TAIL) for _ in range(4)]
+        partial = full + [self._row(full=None) for _ in range(4)]
+        none = [self._row(full=None) for _ in range(4)]
+        out_full = mr.render_text(mr.summarize(full), full)
+        out_part = mr.render_text(mr.summarize(partial), partial)
+        out_none = mr.render_text(mr.summarize(none), none)
+        self.assertNotIn("全文遥测覆盖", out_full, "全覆盖时不需要覆盖率告警行")
+        self.assertIn("全文遥测覆盖 4/8", out_part)
+        self.assertIn("混合口径", out_part, "部分覆盖必须警告口径不纯")
+        self.assertIn("全文遥测覆盖 0/4", out_none)
+        self.assertIn("R647 盲区", out_none, "零覆盖必须点名盲区")
+
+    def test_cv_only_on_full_text_rows(self):
+        """③ CV 只认全文样本：无 final_text ⇒ 明确报不可度量，不拿片段 CV 冒充
+        （R747 亲自证伪过驱动 R743 的片段 CV 0.312）。"""
+        mr = self._mr()
+        body = "短句一个。再来一个长一点的句子把节奏拉开。第三句收尾。"
+        rows = [self._row(full=body) for _ in range(4)]
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["cv_eligible"], 4, "有全文且 ≥3 句 ⇒ 可度量")
+        self.assertEqual(q["cv_truncated"], 0)
+        rows_old = [self._row(full=None) for _ in range(4)]
+        q2 = mr.quality_scan(rows_old)
+        self.assertEqual(q2["cv_eligible"], 0, "无全文遥测 ⇒ 不可度量")
+        out = mr.render_text(mr.summarize(rows_old), rows_old)
+        line = [ln for ln in out.split(chr(10)) if "🎵" in ln]
+        self.assertTrue(line and "不可度量" in line[0],
+                        "无全文时必须明说不可度量: %s" % (line or ["<无🎵行>"]))
+
+    def test_blank_final_text_falls_back_to_preview(self):
+        """④ 假阳性演练：final_text 为空串/空白 ⇒ 回退 preview 且**不计覆盖**
+        （空串是"没有"不是"有空的全文"，覆盖率高估会让混合口径判断失效）。"""
+        mr = self._mr()
+        rows = [self._row(full="") for _ in range(2)]
+        rows += [self._row(full="   \n ") for _ in range(2)]
+        rows += [self._row(full="真的全文，先看量能能不能顶住。") for _ in range(2)]
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["scanned"], 6, "空串行仍是发布帖，要进 scanned")
+        self.assertEqual(q["full_cov"], 2, "只有非空全文计覆盖")
+        self.assertEqual(q["watch_lead"], 2, "回退 preview 的行不因空串丢扫描")
 
 
 if __name__ == "__main__":

@@ -11379,6 +11379,11 @@ def _maybe_post_daily_video(publisher: "SquarePublisher",
             "outcome": "video_published", "video_slug": slug, "platform": "binance",
             "content_id": publisher.last_content_id,
             "video_seconds": video_seconds,
+            # ★ R784：视频帖同落发布全文（caption 即正文）——视频帖也进
+            #   quality_scan 的 delivery 口径（R572），不落全文则它对雷达
+            #   永远只是 200 字截断样本。
+            "final_text": publisher.last_final_content
+                          if isinstance(publisher.last_final_content, str) else None,
         })
         logger.info(f"🎬 视频 [{slug}] 定投成功。")
     else:
@@ -12736,6 +12741,21 @@ def _run_main():
                         "opening_hook": opening_hook_used,
                         "trade_cta_style": trade_cta_style_used,
                         "cta_dedupes": cta_dedupes_used if cta_dedupes_used else None,
+                        # ★★ R784：**发布全文遥测**（final_content 原样）。
+                        # 为什么必须落：实测 711 篇发布帖 **100% content_chars>200**
+                        # （中位 304 / max 1214）⇒ final_preview（200 字）对每一篇
+                        # 都是截断样本，而 📊放量/🧰套话/📋先看/🎭操纵/📻热搜 等
+                        # 短语雷达扫的正是 preview ⇒ 全部雷达都在"开头 66%"上
+                        # 工作，段2~3 与结尾（campaign CTA 的落点）结构性不可见
+                        # （R647 盲区的全景版：不是个别帖子超长，是**每一篇**都超）。
+                        # R758/R780 用"发布前算布尔标记"补过两个点（campaign_cta_tpl/
+                        # cashtag_tight），那是**已知短语**的专用遥测；本轮落全文，
+                        # 让任何雷达/fresh-look 扫描（R738）不再受 preview 截断限制。
+                        # ⚠️ 只增字段不改任何门禁行为；历史行无该字段 ⇒ None（未知
+                        #    不是空串，与 campaign_mention 同纪律）。
+                        # ⚠️ 体积代价已量：发布行中位 2165B → ~3.1KB（+40%），
+                        #    metrics.jsonl 6.2MB → ~8MB（轮转 keep=5000 行封顶）。
+                        "final_text": final_content if isinstance(final_content, str) else None,
                         # R162：禁令状态三件套——违反时（ban 武装+仍引用锚点）
                         # 报表合规巡检可直接点名，执法升级（拒稿重写）待违规实证再议
                         "fng_ban_active": fng_ban_used,
