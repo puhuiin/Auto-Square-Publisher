@@ -18,36 +18,38 @@
   ],
   "strategy_guidance": "优先围绕现货交易赛S6、新上线的$RWUSD及新增bStocks交易对、S16英雄联盟世界赛预测等仍在进行中的官方活动产出内容，引导用户参与评论互动获取Write2Earn奖励，同时可关联对应交易标的的返佣活动引导用户参与交易。若追时效热点，可结合当日市场波动解读新增bStocks TradFi标的及新上线的U本位永续合约，匹配官方话题获取更多曝光。",
   "last_updated": "2026-10-19T07:04:05.812009Z",
-  "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "parked_until": "2026-10-19T11:23:59.866132+00:00",
-      "fails": 3,
-      "last_fail": "2026-10-19T05:23:59.866132+00:00"
-    }
-  },
+  "_feed_health": {},
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
-    "Preset-stepfun": {
-      "fails": 1,
-      "cooldown_until": "2026-10-19T11:14:55.389084+00:00"
-    },
     "Preset-stepfun-flash": {
+      "fails": 2,
+      "cooldown_until": "2026-10-19T11:48:13.681926+00:00"
+    },
+    "Preset-openrouter": {
       "fails": 1,
-      "cooldown_until": "2026-10-19T11:14:53.400534+00:00"
+      "cooldown_until": "2026-10-19T11:40:48.338074+00:00"
+    },
+    "Preset-stepfun": {
+      "fails": 2,
+      "cooldown_until": "2026-10-19T11:48:15.638531+00:00"
     }
   },
   "_article_sent_date": "2026-10-19",
   "_publish_park": {
+    "9850f2d08e9e6a2e": {
+      "fails": 1,
+      "last_fail": "2026-10-19T11:30:48.339260+00:00"
+    },
     "25d8f2ed1b138c71": {
       "fails": 1,
       "last_fail": "2026-10-19T10:10:55.826313+00:00"
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 141,
+  "_img_rot": 142,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
