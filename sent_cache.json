@@ -1,15 +1,5 @@
 [
   {
-    "id": "8beea7b634bc347c",
-    "title": "川普家族加密項目 WLFI 要把 USD1 推到各大電商!Q4 上線,自己發幣離信託銀行牌照又近一步",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-10-07T13:49:43.125320+00:00",
-    "tokens": [
-      "WLFI",
-      "USD1"
-    ]
-  },
-  {
     "id": "90a791132830eb89",
     "title": "Solana Records 33% Spike in New Addresses",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5164,6 +5154,16 @@
       "BCH",
       "UNI",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ea08ba5df0473c11",
+    "title": "价值3892万美元,某巨鲸过去1日再质押约50万枚HYPE",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-19T04:24:58.015057+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
