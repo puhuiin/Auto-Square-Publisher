@@ -22253,6 +22253,25 @@ class TestR774CampaignMentionEnglishForms(unittest.TestCase):
             re.sub(r"#[^\s#]+", " ", with_body)),
             "正文真有提及必须能检出（剥标签不能把正文也剥掉）")
 
+    def test_r787_chinese_write2earn_form_matched(self):
+        """★★ R787：**中文写法的 Write2Earn**（写2赚/寫2賺）必须算正文提及。
+
+        R774 补英文形态（prize pool/zero-fee/S6…）时漏了中文形态——生产实证
+        （R784 全文遥测首篇复盘，10-19 04:24 帖）：「想边看边练手的，去**写2赚**
+        评论区互动拿奖励就行」通篇讲当期活动机制，campaign_mention 却判 False
+        （该帖无锦标赛/竞赛字样，唯一活动指代就是写2赚）。中文帖占产出 ~70%，
+        漏检让「正文活动提及率」对一类真实提及系统性低估。
+        """
+        for t in ("想边看边练手的,去写2赚评论区互动拿奖励就行。",
+                  "想邊看邊練手的,去寫2賺評論區互動拿獎勵就行。",
+                  "Write2Earn 评论区互动拿奖励。"):
+            self.assertIsNotNone(m._CAMPAIGN_MENTION_RE.search(t),
+                                 "中文 Write2Earn 形态漏检: %s" % t[:30])
+        # 反向：普通行情内容不得因新分支误报
+        for t in ("ETH 跌破 2400,短线别追。", "这笔交易写了两笔就赚到了。"):
+            self.assertIsNone(m._CAMPAIGN_MENTION_RE.search(t),
+                              "普通内容误报成活动提及: %s" % t[:24])
+
 class TestR775EnglishBranchCampaignMention(unittest.TestCase):
     """R775：英文分支的规则摘要必须**显式包含活动提及**（R615/R611 同族：
     规则写在一个分支、另一个分支的摘要里没有）。

@@ -4453,7 +4453,15 @@ _CAMPAIGN_MENTION_RE = re.compile(
     r"|write\s*2\s*earn|write to earn|prize pool|reward pool"
     r"|zero[- ]fee|season [0-9]|S[0-9](?:/S[0-9])?"
     r"|bStocks|TraFi|P2P anniversary|LoL (?:worlds|championship)"
-    r"|trading (?:tournament|championship|competition|event)",
+    r"|trading (?:tournament|championship|competition|event)"
+    # ★★ R787：**中文写法的 Write2Earn**（写2赚/寫2賺）——R774 补英文形态时
+    #   漏了中文形态（R615/R611 同族：一侧修了另一侧没对齐，只不过这次是
+    #   「英中两侧」而非「两个分支」）。生产实证（R784 全文遥测首篇复盘）：
+    #   10-19 04:24 帖正文「想边看边练手的，去**写2赚**评论区互动拿奖励就行」
+    #   ——通篇在讲当期活动机制，campaign_mention 却判 False（该帖无锦标赛/
+    #   竞赛字样，唯一的活动指代就是写2赚）。中文帖占产出 ~70%，这个漏检
+    #   让「正文活动提及率」对一类真实提及系统性低估。
+    r"|写\s*2\s*[赚賺]|寫\s*2\s*[赚賺]",
     re.IGNORECASE)
 
 # R758：campaign CTA 收敛模板检测（**全文**，不是 preview）。
