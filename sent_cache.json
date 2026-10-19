@@ -1,14 +1,5 @@
 [
   {
-    "id": "31c8dab70410e255",
-    "title": "Ethereum Test Network Raises Block Limit to Over 3x Its Current Capacity",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-08T22:24:17.499969+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "cd4bbafbb34bb6cc",
     "title": "AI Coding Agents Drive Surge in Bitcoin Integration Requests: Breez",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5186,5 +5177,15 @@
       "GLM"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "cdc65d8ef5f56a0e",
+    "title": "以太坊研究者提出新型隐私池方案:支持抗量子与递归聚合,显著提升证明生成速度",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-19T12:07:30.545569+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
