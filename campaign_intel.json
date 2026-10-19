@@ -21,12 +21,7 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
     "date": "2026-10-18"
   },
-  "_llm_breaker": {
-    "Preset-stepfun-flash": {
-      "fails": 1,
-      "cooldown_until": "2026-10-19T02:54:34.800534+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-10-19",
   "_publish_park": {},
   "_intel_refresh_fail": {},
