@@ -19,27 +19,36 @@
   "strategy_guidance": "优先围绕现货交易赛S6、新上线的$RWUSD及新增bStocks交易对、S16英雄联盟世界赛预测等仍在进行中的官方活动产出内容，引导用户参与评论互动获取Write2Earn奖励，同时可关联对应交易标的的返佣活动引导用户参与交易。若追时效热点，可结合当日市场波动解读新增bStocks TradFi标的及新上线的U本位永续合约，匹配官方话题获取更多曝光。",
   "last_updated": "2026-10-19T07:04:05.812009Z",
   "_feed_health": {
-    "深潮TechFlow (中文/简体)": {
-      "fails": 1,
-      "last_fail": "2026-10-19T04:23:44.049111+00:00",
-      "reset_at": "2026-10-19T07:46:01.102616+00:00"
+    "ZyCrypto (新币与空投)": {
+      "last_fail": "2026-10-19T05:03:23.312217+00:00",
+      "reset_at": "2026-10-19T08:26:04.206515+00:00",
+      "fails": 1
     },
     "CoinJournal (山寨异动)": {
-      "fails": 3,
+      "last_fail": "2026-10-19T05:23:59.866132+00:00",
       "parked_until": "2026-10-19T11:23:59.866132+00:00",
-      "last_fail": "2026-10-19T05:23:59.866132+00:00"
+      "fails": 3
     },
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "last_fail": "2026-10-19T05:03:23.312217+00:00",
-      "reset_at": "2026-10-19T07:45:58.783573+00:00"
+    "深潮TechFlow (中文/简体)": {
+      "last_fail": "2026-10-19T04:23:44.049111+00:00",
+      "reset_at": "2026-10-19T08:26:09.914578+00:00",
+      "fails": 1
     }
   },
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
     "date": "2026-10-18"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun": {
+      "fails": 1,
+      "cooldown_until": "2026-10-19T08:36:18.901946+00:00"
+    },
+    "Preset-stepfun-flash": {
+      "fails": 1,
+      "cooldown_until": "2026-10-19T08:36:16.794187+00:00"
+    }
+  },
   "_article_sent_date": "2026-10-19",
   "_publish_park": {},
   "_intel_refresh_fail": {},

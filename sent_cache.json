@@ -1,15 +1,5 @@
 [
   {
-    "id": "c3c536e0fd14a261",
-    "title": "Travala Launches Native AI Travel Agent with BNB Chain & Binance Pay",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-08T13:28:30.821210+00:00",
-    "tokens": [
-      "BNB",
-      "TRUMP"
-    ]
-  },
-  {
     "id": "59b7ed2d762aadf7",
     "title": "Solana Network Growth Jumps 124%: Here’s Why It Could Matter for SOL",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5178,5 +5168,15 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "788ab81c57b851d7",
+    "title": "Aster 过去两周回购并销毁超 272 万枚 ASTER,累计销毁总量超 2.1 亿枚",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-19T08:27:13.075886+00:00",
+    "tokens": [
+      "ASTER"
+    ],
+    "lang": "zh-CN"
   }
 ]
