@@ -1,16 +1,5 @@
 [
   {
-    "id": "dc17dd94e8ba746d",
-    "title": "Fidelity Adds $438 Million of Bitcoin, Ethereum and Solana to Its Holdings",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-09T13:44:38.864701+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "SOL"
-    ]
-  },
-  {
     "id": "856e4ebdf369713c",
     "title": "Bitcoin Core developer responds to AI & Quantum Risk",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5192,5 +5181,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "9f42f574527baef4",
+    "title": "Echo Protocol 宣布逐步关停协议,提现及还款流程已开启",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-19T14:44:44.533829+00:00",
+    "tokens": [
+      "APT"
+    ],
+    "lang": "en"
   }
 ]
