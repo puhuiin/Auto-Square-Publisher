@@ -1,15 +1,5 @@
 [
   {
-    "id": "0341d188a84b908a",
-    "title": "Is Bitcoin’s price rally losing steam after realized profits hit $1.03B?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-10T05:25:45.481535+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "04780d490cc3d85d",
     "title": "XRP Ledger 修复存在约十年的严重漏洞,攻击者可凭空增发 XRP",
     "source": "吴说区块链 (中文深度)",
@@ -5194,6 +5184,16 @@
     "sent_at": "2026-10-19T21:25:08.378129+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f68260d84775a238",
+    "title": "BlackRock files for iShares Bitcoin Managed Protection ETF",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-19T21:44:11.964624+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }

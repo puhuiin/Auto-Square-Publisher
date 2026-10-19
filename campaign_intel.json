@@ -17,20 +17,20 @@
   "strategy_guidance": "优先追贴 Spot Trading Tournament Season 6 与 Binance Pick 排行榜活动，将日常币安快讯与 $FF 代币券竞赛、RWUSD 新上线及 TradFi 永续合约背景结合。在 Binance Square 发布活动解析与参与指南，引导读者参与 Word of the Day、Community Voice 等评论互动获取 USDC 奖励。文中切忌暗示交易或参加活动会带来稳赚收益。",
   "last_updated": "2026-10-19T19:24:17.087955Z",
   "_feed_health": {
-    "CryptoPotato (山寨币/Meme热点)": {
+    "ZyCrypto (新币与空投)": {
+      "last_fail": "2026-10-19T19:03:35.434258+00:00",
       "fails": 1,
+      "reset_at": "2026-10-19T21:43:28.718672+00:00"
+    },
+    "CryptoPotato (山寨币/Meme热点)": {
       "last_fail": "2026-10-19T19:24:17.471633+00:00",
-      "reset_at": "2026-10-19T21:23:26.857981+00:00"
+      "fails": 1,
+      "reset_at": "2026-10-19T21:43:29.212949+00:00"
     },
     "Bitcoinist (比特币向)": {
-      "fails": 3,
       "last_fail": "2026-10-19T17:43:33.847299+00:00",
+      "fails": 3,
       "parked_until": "2026-10-19T23:43:33.847299+00:00"
-    },
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "last_fail": "2026-10-19T19:03:35.434258+00:00",
-      "reset_at": "2026-10-19T21:23:27.116065+00:00"
     }
   },
   "_fallback_image": {
@@ -39,18 +39,18 @@
   },
   "_llm_breaker": {
     "Preset-stepfun": {
-      "fails": 4,
       "cooldown_until": "2026-10-20T12:56:41.608157+00:00",
+      "fails": 4,
+      "permanent": true
+    },
+    "Preset-stepfun-flash": {
+      "cooldown_until": "2026-10-20T12:56:36.239765+00:00",
+      "fails": 4,
       "permanent": true
     },
     "Preset-google": {
       "fails": 0,
       "cooldown_until": "2026-10-20T06:59:38.977235+00:00"
-    },
-    "Preset-stepfun-flash": {
-      "fails": 4,
-      "cooldown_until": "2026-10-20T12:56:36.239765+00:00",
-      "permanent": true
     }
   },
   "_article_sent_date": "2026-10-19",
@@ -63,13 +63,13 @@
       "fails": 1,
       "last_fail": "2026-10-19T21:05:24.218023+00:00"
     },
-    "0508939f93619b41": {
-      "fails": 1,
-      "last_fail": "2026-10-19T16:14:55.802886+00:00"
-    },
     "9898819e49572479": {
       "fails": 1,
       "last_fail": "2026-10-19T20:25:12.908495+00:00"
+    },
+    "0508939f93619b41": {
+      "fails": 1,
+      "last_fail": "2026-10-19T16:14:55.802886+00:00"
     }
   },
   "_intel_refresh_fail": {},
