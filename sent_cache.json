@@ -1,15 +1,5 @@
 [
   {
-    "id": "1b6eee0a7e5db309",
-    "title": "ETH fee burns cover just 2% of new coins printed in 2026",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-10T07:04:43.775077+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2ede684acec9526b",
     "title": "HYPE Whale’s $902K Bet Grows to $23M as On-Chain Data Shows Staged Selling",
     "source": "ZyCrypto (新币与空投)",
@@ -5196,5 +5186,16 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "14c777df869f1a16",
+    "title": "XRP’s transaction volume explodes to $49.66B overnight – Will price follow?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-19T23:05:28.179164+00:00",
+    "tokens": [
+      "XRP",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
