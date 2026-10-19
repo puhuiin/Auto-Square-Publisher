@@ -1,15 +1,5 @@
 [
   {
-    "id": "d994fe831063ddb5",
-    "title": "Aero Sets Oct. 21 Merger Launch and Token Conversion Terms",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-10T01:27:29.404505+00:00",
-    "tokens": [
-      "AERO"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "88a27c33846c6f40",
     "title": "Justin Sun Shares AI and Quantum Vision at TOKEN2049 Singapore and Blockworks DAS Asia",
     "source": "BeInCrypto (山寨与行情)",
@@ -5191,6 +5181,16 @@
     "tokens": [
       "ID",
       "WLD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "972a4e3070a7009a",
+    "title": "Trump-associated ALT5 Sigma down 96% since WLFI deal",
+    "source": "Protos (隐私与合规)",
+    "sent_at": "2026-10-19T19:05:21.946375+00:00",
+    "tokens": [
+      "WLFI"
     ],
     "lang": "en"
   }
