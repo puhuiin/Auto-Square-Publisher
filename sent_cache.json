@@ -1,14 +1,5 @@
 [
   {
-    "id": "24bd94350be5cfe5",
-    "title": "Shiba Inu (SHIB) Rare 'Golden Cross' Breakout Meets Immediate Reality Check",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-07T13:25:36.318500+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "8beea7b634bc347c",
     "title": "川普家族加密項目 WLFI 要把 USD1 推到各大電商!Q4 上線,自己發幣離信託銀行牌照又近一步",
     "source": "BlockTempo (动区动趋中文)",
@@ -5161,6 +5152,18 @@
     "sent_at": "2026-10-19T03:44:29.841883+00:00",
     "tokens": [
       "ALGO"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "f5ffbdf1d9cb5713",
+    "title": "单资产加密期货增至11个,芝商所将上线比特币现金与Uniswap期货",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-19T04:04:47.216855+00:00",
+    "tokens": [
+      "BCH",
+      "UNI",
+      "BTC"
     ],
     "lang": "zh-CN"
   }
