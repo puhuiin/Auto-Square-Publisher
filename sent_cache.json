@@ -1,15 +1,5 @@
 [
   {
-    "id": "15481db7ba74ad2e",
-    "title": "Hyperliquid surpasses $1B revenue, $1B used for HYPE buybacks",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-10T04:24:52.725610+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "31aafa9f74c2f826",
     "title": "PYTH crypto could extend its 11% rally toward $0.089 – Here’s why",
     "source": "AMBCrypto (技术与链上)",
@@ -5193,6 +5183,17 @@
     "sent_at": "2026-10-19T20:44:37.874837+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0f2838430a1e5849",
+    "title": "XRP Ledger Repairs Its Lending Protocol Before It Goes Live",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-10-19T21:06:37.650895+00:00",
+    "tokens": [
+      "XRP",
+      "FF"
     ],
     "lang": "en"
   }

@@ -19,57 +19,57 @@
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
       "fails": 1,
-      "reset_at": "2026-10-19T20:43:32.488572+00:00",
+      "reset_at": "2026-10-19T21:03:33.571417+00:00",
       "last_fail": "2026-10-19T19:24:17.471633+00:00"
-    },
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "reset_at": "2026-10-19T20:43:32.259566+00:00",
-      "last_fail": "2026-10-19T19:03:35.434258+00:00"
     },
     "Bitcoinist (比特币向)": {
       "parked_until": "2026-10-19T23:43:33.847299+00:00",
       "fails": 3,
       "last_fail": "2026-10-19T17:43:33.847299+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "fails": 1,
+      "reset_at": "2026-10-19T21:03:33.250638+00:00",
+      "last_fail": "2026-10-19T19:03:35.434258+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
-    "Preset-stepfun": {
-      "cooldown_until": "2026-10-20T12:56:41.608157+00:00",
+    "Preset-stepfun-flash": {
+      "permanent": true,
       "fails": 4,
-      "permanent": true
+      "cooldown_until": "2026-10-20T12:56:36.239765+00:00"
+    },
+    "Preset-stepfun": {
+      "permanent": true,
+      "fails": 4,
+      "cooldown_until": "2026-10-20T12:56:41.608157+00:00"
     },
     "Preset-google": {
-      "cooldown_until": "2026-10-20T06:06:53.768418+00:00",
-      "fails": 0
-    },
-    "Preset-stepfun-flash": {
-      "cooldown_until": "2026-10-20T12:56:36.239765+00:00",
-      "fails": 4,
-      "permanent": true
+      "fails": 0,
+      "cooldown_until": "2026-10-20T06:59:38.977235+00:00"
     }
   },
   "_article_sent_date": "2026-10-19",
   "_publish_park": {
-    "fb5ee5a71713bf96": {
+    "9898819e49572479": {
       "fails": 1,
-      "last_fail": "2026-10-19T15:06:25.560116+00:00"
+      "last_fail": "2026-10-19T20:25:12.908495+00:00"
     },
-    "b98d53c0f51b2b9f": {
+    "dfbace7fef89d75c": {
       "fails": 1,
-      "last_fail": "2026-10-19T18:06:38.190954+00:00"
+      "last_fail": "2026-10-19T21:05:24.218023+00:00"
     },
     "0508939f93619b41": {
       "fails": 1,
       "last_fail": "2026-10-19T16:14:55.802886+00:00"
     },
-    "9898819e49572479": {
+    "b98d53c0f51b2b9f": {
       "fails": 1,
-      "last_fail": "2026-10-19T20:25:12.908495+00:00"
+      "last_fail": "2026-10-19T18:06:38.190954+00:00"
     }
   },
   "_intel_refresh_fail": {},
