@@ -1,15 +1,5 @@
 [
   {
-    "id": "88a27c33846c6f40",
-    "title": "Justin Sun Shares AI and Quantum Vision at TOKEN2049 Singapore and Blockworks DAS Asia",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-10T02:05:39.671935+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "921afaac475fb682",
     "title": "富兰克林邓普顿与 SEC 会面探讨代币化基金及 ETF 链上交易豁免",
     "source": "吴说区块链 (中文深度)",
@@ -5191,6 +5181,17 @@
     "sent_at": "2026-10-19T19:05:21.946375+00:00",
     "tokens": [
       "WLFI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c296174389a93034",
+    "title": "Tether loses nearly $5 billion across crypto exchanges as USDC and RLUSD rivals pay to win liquidity",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-19T19:26:04.419145+00:00",
+    "tokens": [
+      "USDC",
+      "RLUSD"
     ],
     "lang": "en"
   }
