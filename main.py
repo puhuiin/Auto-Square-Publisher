@@ -4305,15 +4305,26 @@ def _is_router_model(model: str) -> bool:
 _CREDIT_EXHAUSTED_RE = re.compile(
     r"insufficient[\s_]*(balance|credit|fund|quota)"
     r"|(balance|credit|fund|quota)[\s_]*insufficient"
+    # R800：stepfun 的账户耗尽措辞是 "you have no left credit for step plan"
+    # ——不含 insufficient，旧正则不命中 ⇒ 落进 _rate_limit_cooldown_sec 当限流
+    # 短冷却，每轮重撞空账户（生产实证 10-19 08:26Z 起 14 次 / 8 轮，间隔
+    # 20~40 分钟＝限流冷却到期）。按"无钱"语义补全；普通 429（rate limit /
+    # exceeded your current quota）仍不命中——那是节奏/日配额问题，会自愈。
+    r"|no[\s_]+left[\s_]+credit"
+    r"|no[\s_]+credit[\s_]+left"
+    r"|out[\s_]+of[\s_]+credit"
+    r"|credit[\s_]+(?:has[\s_]+been[\s_]+)?exhausted"
     r"|余额不足|额度不足|欠费",
     re.IGNORECASE)
 
 
 def _is_credit_exhausted(exc: BaseException) -> bool:
     """账户余额/额度耗尽判定：命中即按 permanent 24h 冷却，当天不再撞空账户空烧。
-    只认「insufficient + balance/credit/fund/quota」（含 insufficient_quota 下划线形态）
-    与中文余额不足/额度不足/欠费；普通 429「exceeded your rate limit」不命中（那是节奏
-    问题，走既有 Retry-After 冷却）。"""
+    只认「insufficient + balance/credit/fund/quota」（含 insufficient_quota 下划线形态）、
+    R800 补的「no left credit / no credit left / out of credit / credit exhausted」
+    与中文余额不足/额度不足/欠费；普通 429「exceeded your rate limit」与
+    「exceeded your current quota」（日配额，会自愈）不命中——那是节奏问题，
+    走既有 Retry-After 冷却。"""
     return bool(_CREDIT_EXHAUSTED_RE.search(str(exc or "")))
 
 

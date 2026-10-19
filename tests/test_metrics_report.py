@@ -8157,5 +8157,70 @@ class TestR784FullTextCaliber(unittest.TestCase):
         self.assertEqual(q["watch_lead"], 2, "回退 preview 的行不因空串丢扫描")
 
 
+class TestR800DailyReportPoolHealth(unittest.TestCase):
+    """★★ R800：传输层 failover 拒稿必须进尝试口径；账户余额耗尽必须改变结论。
+
+    生产实证（10-19 08:26Z 起）：stepfun 双通道 429 "no left credit"，
+    旧日报只数 llm_failed（2 条），把 24 条 transport 拒稿漏在分母外
+    （写"调用约 61 次"，实际 92 次），且结论仍"✅ 运行正常…无需处理"。
+    """
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r800",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _rows(self, recovered=False):
+        rows = []
+        for i in range(8):
+            rows.append({"outcome": "binance_published", "stage": "summarize",
+                         "ts": _ago(5 - i * 0.1), "provider": "Preset-google",
+                         "final_preview": "ETH 跌破 2500，短线别追。第%d篇" % i,
+                         "content_chars": 20, "content_cjk": 10,
+                         "lang": "zh-CN", "tokens": ["ETH"]})
+        for i in range(6):
+            rows.append({"outcome": "llm_rejected", "stage": "transport",
+                         "ts": _ago(6 - i * 0.1), "provider": "Preset-stepfun-flash",
+                         "reason": "[credit 24h] Error code: 429 - no left credit"})
+        if recovered:
+            rows.append({"outcome": "binance_published", "stage": "summarize",
+                         "ts": _ago(0.5), "provider": "Preset-stepfun-flash",
+                         "final_preview": "恢复出稿", "content_chars": 20,
+                         "content_cjk": 10, "lang": "zh-CN", "tokens": ["ETH"]})
+        rows.append({"outcome": "run_summary", "ts": _ago(1),
+                     "sent_24h": 60, "max_daily_posts": 60, "feeds_ok": 20,
+                     "candidates": 80, "unprocessed": 0,
+                     "skipped_no_token": 5, "skipped_token_limit": 3})
+        return rows
+
+    def test_transport_rejections_counted_in_attempts(self):
+        text = self._dr().build_report(self._rows(), 24)
+        self.assertIn("尝试 14 次", text, "8 发布 + 6 传输失败 = 14 次尝试")
+        self.assertIn("失败构成：transport 6", text)
+        self.assertNotIn("调用约", text, "旧的漏计口径必须消失")
+
+    def test_account_exhaustion_changes_conclusion(self):
+        text = self._dr().build_report(self._rows(), 24)
+        concl = [l for l in text.split("\n") if l.startswith("结论")][0]
+        self.assertIn("⚠️", concl)
+        self.assertIn("余额", concl)
+        self.assertIn("Preset-stepfun-flash", concl)
+        self.assertIn("Preset-google", concl)
+        self.assertNotIn("运行正常", concl, "主池余额耗尽时不得报运行正常")
+
+    def test_recovered_provider_does_not_alarm(self):
+        """反向：标签存在但此后已恢复出稿 ⇒ 不得把已自愈的故障报成当前告警。"""
+        text = self._dr().build_report(self._rows(recovered=True), 24)
+        concl = [l for l in text.split("\n") if l.startswith("结论")][0]
+        self.assertIn("运行正常", concl)
+        self.assertIn("账户级故障", text, "历史故障仍要留痕，只是不升级结论")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

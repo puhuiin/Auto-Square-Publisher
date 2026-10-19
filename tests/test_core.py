@@ -22769,5 +22769,34 @@ class TestR782NotifierWebhookErrcode(unittest.TestCase):
         finally:
             os.environ.clear()
             os.environ.update(old_env)
+class TestR800CreditWordingStepfun(unittest.TestCase):
+    """★★ R800：stepfun 的账户耗尽措辞 "you have no left credit for step plan"
+    不含 insufficient，R300 的正则不命中 ⇒ 落进 _rate_limit_cooldown_sec 当限流
+    短冷却，每轮重撞空账户（生产实证 10-19 08:26Z 起 14 次 / 8 轮，间隔
+    20~40 分钟＝限流冷却到期）。
+    """
+
+    def test_stepfun_no_left_credit_is_account_exhausted(self):
+        for msg in [
+            "Error code: 429 - {'error': {'message': 'you have no left credit for step plan'}}",
+            "no left credit",
+            "no credit left on this account",
+            "you are out of credit",
+            "credit exhausted",
+        ]:
+            self.assertTrue(m._is_credit_exhausted(RuntimeError(msg)), msg)
+
+    def test_generic_429_not_account_exhausted(self):
+        """反向：普通限流/日配额不得被误判成账户耗尽（否则健康通道被 24h 报废）。"""
+        for msg in [
+            "Error code: 429 - rate limit exceeded",
+            "you have exceeded your rate limit",
+            "Error code: 429 - [{'error': {'code': 429, 'message': 'You exceeded your current quota'}}]",
+            "Request timed out.",
+            "service unavailable",
+        ]:
+            self.assertFalse(m._is_credit_exhausted(RuntimeError(msg)), msg)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

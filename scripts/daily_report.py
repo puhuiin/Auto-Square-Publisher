@@ -65,8 +65,6 @@ def build_report(rows, hours: int) -> str:
     cut = (now - dt.timedelta(hours=hours)).isoformat()
     pub = [r for r in rows if str(r.get("outcome", "")).startswith("binance_published")
            and (r.get("ts") or "") >= cut]
-    rej = [r for r in rows if str(r.get("outcome", "")).startswith("llm_failed")
-           and (r.get("ts") or "") >= cut]
     sums = [r for r in rows if r.get("outcome") == "run_summary"
             and (r.get("ts") or "") >= cut]
     fails = [r for r in rows if r.get("outcome") == "publish_failed"
@@ -135,23 +133,42 @@ def build_report(rows, hours: int) -> str:
             if parked:
                 L.append("   ⏸️ 上轮停放源：%s" % parked)
 
-    # ③ LLM 与拒稿
-    if pub or rej:
-        rate = 100 * len(rej) / max(1, len(pub) + len(rej))
+    # ③ LLM 与尝试
+    # ★★ R800：**尝试口径**。旧实现只把 `llm_failed` 当拒稿，漏掉了 transport 层
+    #   failover 拒稿（llm_rejected）与 numbers/quality 门拒稿——生产实证 10-19
+    #   窗口：59 篇发布 + 33 条失败尝试（transport 24 / numbers 7 / quality 2），
+    #   日报却写"调用约 61 次（拒稿 2）"，少报 35%；其中 14 次「账户余额耗尽」
+    #   完全不可见（R731 同族：报告与生产口径必须同源）。
+    #   ⚠️ 情报路径（campaign_intel）是独立的辅助调用，不计入故事尝试。
+    att = [r for r in rows
+           if r.get("stage") != "campaign_intel"
+           and str(r.get("outcome", "")) in ("llm_rejected", "llm_failed")
+           and (r.get("ts") or "") >= cut]
+    # ★ 账户级故障只认生产打的 `[credit 24h]` 标签（main._is_credit_exhausted 的
+    #   唯一实现），报告不复制正则——两处分类必然漂移（R731 纪律）。
+    cred = [r for r in rows
+            if str(r.get("reason") or "").startswith("[credit 24h]")
+            and (r.get("ts") or "") >= cut]
+    if pub or att:
+        rate = 100 * len(att) / max(1, len(pub) + len(att))
         L.append("")
-        L.append("③ LLM：调用约 %d 次（成功 %d / 拒稿 %d，拒稿率 %.0f%%）"
-                 % (len(pub) + len(rej), len(pub), len(rej), rate))
-        rc = Counter((r.get("reason") or "")[:30] for r in rej)
+        L.append("③ LLM：尝试 %d 次（成功 %d ｜ 失败 %d，失败率 %.0f%%）"
+                 % (len(pub) + len(att), len(pub), len(att), rate))
+        sc = Counter(r.get("stage") or "?" for r in att)
+        if sc:
+            L.append("   失败构成：%s"
+                     % " ｜ ".join("%s %d" % (k, v) for k, v in sc.most_common(4)))
+        rc = Counter((r.get("reason") or "")[:30] for r in att)
         for k, v in rc.most_common(3):
             L.append("   %2d  %s" % (v, k))
-        # ★ 近 12 小时单独算一次：修 bug 前后的拒稿率会天差地别，
+        # ★ 近 12 小时单独算一次：修 bug 前后的失败率会天差地别，
         #   混在 24h 窗口里会让人以为" bug 没修好"（R713 踩过同款）。
         recent_cut = (now - dt.timedelta(hours=12)).isoformat()
-        r12 = [r for r in rej if (r.get("ts") or "") >= recent_cut]
+        a12 = [r for r in att if (r.get("ts") or "") >= recent_cut]
         p12 = [r for r in pub if (r.get("ts") or "") >= recent_cut]
-        if p12 or r12:
-            L.append("   近 12h：成功 %d / 拒稿 %d（拒稿率 %.0f%%）← 以此为准"
-                     % (len(p12), len(r12), 100 * len(r12) / max(1, len(p12) + len(r12))))
+        if p12 or a12:
+            L.append("   近 12h：成功 %d / 失败 %d（失败率 %.0f%%）← 以此为准"
+                     % (len(p12), len(a12), 100 * len(a12) / max(1, len(p12) + len(a12))))
         else:
             # ⚠️ 静默缺失会被读成"近 12h 没问题"，实际是**遥测没覆盖到窗口末端**
             #   （本地跑历史数据时必然如此）⇒ 必须明说。
@@ -160,6 +177,24 @@ def build_report(rows, hours: int) -> str:
     prov = Counter(r.get("provider") for r in pub if r.get("provider"))
     if prov:
         L.append("   通道：%s" % dict(prov.most_common(4)))
+    # ★★ R800：传输层失败按通道点名。账户级故障被永久冷却后这些行会消失，
+    #   但 `cred` 行仍在 24h 窗口里 ⇒ 面板不会因为"不再重试"而装作没发生
+    #   （R617：熔断跳过与从未尝试在报表上不可区分）。
+    tr_fail = [r for r in att if r.get("stage") == "transport"]
+    if tr_fail:
+        fc = Counter(r.get("provider") or "?" for r in tr_fail)
+        L.append("   传输失败：%s"
+                 % " ｜ ".join("%s ×%d" % (p, n) for p, n in fc.most_common(4)))
+    if cred:
+        cp = Counter(r.get("provider") or "?" for r in cred)
+        first = min(cred, key=lambda r: r.get("ts") or "")
+        L.append("   ⚠️ 账户级故障：%s 余额/额度耗尽（自 %s 起 %d 次）"
+                 % ("、".join(cp), _cst(first["ts"]).strftime("%m-%d %H:%M"), len(cred)))
+        _after = [r for r in pub if (r.get("ts") or "") >= (first.get("ts") or "")]
+        _ap = Counter(r.get("provider") for r in _after if r.get("provider"))
+        if _after and len(_ap) == 1:
+            _p0, _n0 = next(iter(_ap.items()))
+            L.append("   　⇒ 此后 %d 篇 100%% 由 %s 出稿（其余通道零成功）" % (_n0, _p0))
 
     # ④ 发布失败（真实故障，要显眼）
     if fails:
@@ -281,8 +316,34 @@ def build_report(rows, hours: int) -> str:
 
     # ⑦ 结论
     L.append("")
+    # ★★ R800：账户级故障必须改变结论。旧逻辑只要配额打满就 ✅「运行正常…无需
+    #   处理」——生产实证 10-19：stepfun 双通道 08:26Z 起余额耗尽、此后 8 篇
+    #   100% 由 Preset-google 出稿，日报仍写"无需处理" ⇒ 用户不知道该充值
+    #   （R798 同族：报告说了它没验证过的话）。
+    #   已恢复出稿（末次成功晚于末次 credit）则不升级结论，避免误报。
+    _cred_live = False
+    if cred:
+        _cp = set(r.get("provider") for r in cred if r.get("provider"))
+        _last_cred = max((r.get("ts") or "") for r in cred)
+        _cred_live = not any(
+            r.get("provider") in _cp and (r.get("ts") or "") > _last_cred for r in pub)
     if fails:
         L.append("结论：⚠️ 有发布失败 %d 次，请查看上方明细" % len(fails))
+    elif _cred_live:
+        _cp = Counter(r.get("provider") or "?" for r in cred)
+        _first = min(cred, key=lambda r: r.get("ts") or "")
+        _after = [r for r in pub if (r.get("ts") or "") >= (_first.get("ts") or "")]
+        _ap = Counter(r.get("provider") for r in _after if r.get("provider"))
+        _tail = ""
+        if _after and len(_ap) == 1:
+            _p0, _n0 = next(iter(_ap.items()))
+            _tail = "；此后 %d 篇 100%% 由 %s 出稿（其余通道零成功）" % (_n0, _p0)
+        L.append("结论：⚠️ 通道账户余额/额度耗尽（%s，自 %s 起 %d 次）%s"
+                 " ⇒ 请充值或更换 Key" % ("、".join(_cp),
+                                          _cst(_first["ts"]).strftime("%m-%d %H:%M"),
+                                          len(cred), _tail))
+        if isinstance(sent24, int) and isinstance(cap, int) and cap > 0 and sent24 >= cap:
+            L.append("       配额 %d/%d 已打满（正常行为）" % (sent24, cap))
     elif isinstance(sent24, int) and isinstance(cap, int) and cap > 0 and sent24 >= cap:
         # ★ 配额打满是**预期结果**（配额就是上限），不是异常。
         #   此前写"⚠️ 窗口内 0 篇发布" ⇒ 在配额打满的日子**每天都误报警**。
