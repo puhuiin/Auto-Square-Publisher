@@ -1,14 +1,5 @@
 [
   {
-    "id": "f0e80b9e641d0fc8",
-    "title": "Decrypt Money Accounts on Solana to Power The Information Exchange",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-08T16:28:43.850339+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "474897475a46c19f",
     "title": "New ATH for Cardano as Single-Block TPS Hits Milestone",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5179,5 +5170,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "2663bb599c99d5f4",
+    "title": "摩根大通面向機構客戶在以太坊網絡推出 JPM Coin",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-19T09:26:22.182223+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
