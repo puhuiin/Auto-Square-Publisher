@@ -1,15 +1,5 @@
 [
   {
-    "id": "27f52bd7a108c6ec",
-    "title": "US Government Moves $103 Million in Seized Bitcoin and BNB, But Hasn't Said Why",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-07T19:07:57.519573+00:00",
-    "tokens": [
-      "BNB",
-      "BTC"
-    ]
-  },
-  {
     "id": "b3eb404befca59be",
     "title": "'Bunker Mode': Top Ethereum Researcher Sounds Alarm Over AI Crypto Threat",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5169,5 +5159,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e4a1fafab71f983e",
+    "title": "韩国代币化资产和稳定币市场展望:2030 年规模或达 2530 亿美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-19T05:44:53.486380+00:00",
+    "tokens": [
+      "STO",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
