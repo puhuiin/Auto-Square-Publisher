@@ -35,6 +35,28 @@ def _check(status, body, want=None):
         raise RuntimeError(f"业务码异常: {body[:120]}")
 
 
+def _check_webhook(status, body):
+    """★★ R797：Webhook 通道也要验**钉钉形态的业务码**（R781/R782 同款 bug）。
+
+    旧实现「通用 Webhook 各家成功语义不一，只验 HTTP 2xx」在生产上等于
+    **最后一道通报也静默失效**：用户的 WEBHOOK_URL 就是钉钉机器人（两个
+    secret 相隔 12s 设置），token 失效时 HTTP 200 + {"errcode":300005}
+    ⇒ 兜底通报报告"已发"而用户什么都没收到——而这条路径只在主流程已经
+    挂掉时才会走（R9：状态推送 4 连败/主脚本崩溃），恰是最不能瞎的时候。
+    判据（与 R781/R782 逐字同构）：**只对含 errcode 键的（钉钉形态）校验**；
+    飞书/企微/Discord 的成功语义（code:0/204/无 JSON）不受影响，非 JSON
+    响应不误判。
+    """
+    if status // 100 != 2:
+        raise RuntimeError(f"HTTP {status}: {body[:120]}")
+    try:
+        payload = json.loads(body)
+    except ValueError:
+        return                      # 非 JSON（代理页等）——原样放行
+    if isinstance(payload, dict) and payload.get("errcode") not in (0, None):
+        raise RuntimeError(f"钉钉业务错误: {body[:120]}")
+
+
 def send_fallback(title, message, env=None):
     """经所有已配置渠道各发一次；返回 {channel: bool}，绝不抛异常。
     R107：异常文本遮蔽——urllib 的部分异常 str 含请求 URL，而 Server酱/Bark/
@@ -77,8 +99,10 @@ def send_fallback(title, message, env=None):
             {"chat_id": _cid, "text": f"{title}\n\n{message}"}), '"ok":true'),
             secrets=(bt,))
     if (k := get("WEBHOOK_URL")):
-        # 通用 Webhook 各家成功语义不一，只验 HTTP 2xx
-        _try("Webhook", lambda _k=k: _check(*_post(
+        # 通用 Webhook 各家成功语义不一 ⇒ 只验 HTTP 2xx；但**钉钉形态
+        # （响应含 errcode 键）必须验码**——生产 WEBHOOK_URL 就是钉钉，
+        # token 失效时 200+errcode300005 会被当成已发（R781/R782 同款）。
+        _try("Webhook", lambda _k=k: _check_webhook(*_post(
             _k, {"msgtype": "text",
                  "text": {"content": f"{title}\n\n{message}"}})), secrets=(k,))
     return results

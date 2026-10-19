@@ -358,6 +358,29 @@ class TestFallbackNotifier(unittest.TestCase):
             results = mod.send_fallback("t", "m", env={"SERVERCHAN_KEY": "k"})
         self.assertEqual(results, {"Server酱": False})
 
+    def test_r797_webhook_dingtalk_errcode_counts_as_failure(self):
+        """★★ R797：Webhook 通道必须验钉钉 errcode（R781/R782 同款 bug 的最后一道）。
+
+        生产实证：WEBHOOK_URL 就是钉钉机器人，token 失效已 6 天
+        （{"errcode":300005}）。旧实现只验 HTTP 2xx ⇒ 兜底通报在**主流程
+        已挂掉**的最糟时刻报告"已发"而用户什么都没收到。
+        """
+        mod = _load_fallback()
+        dead = _FakeResp(200, b'{"errcode":300005,"errmsg":"token is not exist"}')
+        with patch("urllib.request.urlopen", return_value=dead):
+            results = mod.send_fallback("t", "m", env={"WEBHOOK_URL": "https://oapi.dingtalk.com/x"})
+        self.assertEqual(results, {"Webhook": False},
+                         "钉钉 token 失效被判成已发 ⇒ 最后一道通报也静默失效")
+
+    def test_r797_webhook_other_shapes_still_pass(self):
+        """★ 边界：非钉钉形态（飞书 code:0 / 非 JSON / 空体）不得被新判据误杀"""
+        mod = _load_fallback()
+        for body in (b'{"code":0}', b"OK", b""):
+            with patch("urllib.request.urlopen", return_value=_FakeResp(200, body)):
+                results = mod.send_fallback("t", "m", env={"WEBHOOK_URL": "https://x.example/hook"})
+            self.assertEqual(results, {"Webhook": True},
+                             f"非钉钉形态 {body!r} 被误判成失败")
+
     def test_no_channels_configured(self):
         mod = _load_fallback()
         with patch("urllib.request.urlopen") as mock_open:
