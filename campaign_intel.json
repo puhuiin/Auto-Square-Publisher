@@ -20,9 +20,9 @@
   "last_updated": "2026-10-19T07:04:05.812009Z",
   "_feed_health": {
     "深潮TechFlow (中文/繁体)": {
-      "reset_at": "2026-10-19T16:07:03.842795+00:00",
       "last_fail": "2026-10-19T13:46:59.635252+00:00",
-      "fails": 1
+      "fails": 1,
+      "reset_at": "2026-10-19T16:07:03.842795+00:00"
     }
   },
   "_fallback_image": {
@@ -30,23 +30,19 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
-    "Preset-stepfun": {
-      "cooldown_until": "2026-10-20T12:56:41.608157+00:00",
+    "Preset-stepfun-flash": {
       "fails": 4,
+      "cooldown_until": "2026-10-20T12:56:36.239765+00:00",
       "permanent": true
     },
-    "Preset-openrouter": {
-      "fails": 1,
-      "cooldown_until": "2026-10-19T16:24:55.802003+00:00"
+    "Preset-stepfun": {
+      "fails": 4,
+      "cooldown_until": "2026-10-20T12:56:41.608157+00:00",
+      "permanent": true
     },
     "Preset-google": {
       "fails": 0,
       "cooldown_until": "2026-10-20T03:06:25.975654+00:00"
-    },
-    "Preset-stepfun-flash": {
-      "cooldown_until": "2026-10-20T12:56:36.239765+00:00",
-      "fails": 4,
-      "permanent": true
     }
   },
   "_article_sent_date": "2026-10-19",
@@ -55,13 +51,13 @@
       "fails": 1,
       "last_fail": "2026-10-19T11:30:48.339260+00:00"
     },
-    "fb5ee5a71713bf96": {
-      "fails": 1,
-      "last_fail": "2026-10-19T15:06:25.560116+00:00"
-    },
     "0508939f93619b41": {
       "fails": 1,
       "last_fail": "2026-10-19T16:14:55.802886+00:00"
+    },
+    "fb5ee5a71713bf96": {
+      "fails": 1,
+      "last_fail": "2026-10-19T15:06:25.560116+00:00"
     }
   },
   "_intel_refresh_fail": {},
