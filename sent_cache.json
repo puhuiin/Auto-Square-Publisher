@@ -1,14 +1,5 @@
 [
   {
-    "id": "46df222add43d1a0",
-    "title": "Litecoin Hits 15-Year Milestone: Grayscale's Pandl Backs 'OG Altcoin' Amid Push for NYSE Listing",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-07T17:09:47.075576+00:00",
-    "tokens": [
-      "LTC"
-    ]
-  },
-  {
     "id": "e3cd4bfcb92d14fe",
     "title": "Crypto Long & Short: Zcash and the case for privacy in the age of AI",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5167,5 +5158,15 @@
       "WLD"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "8f535b98502d31ec",
+    "title": "Tokenized Stocks Reach $262 Million In DeFi, But The Growth Is Not All On Base",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-19T05:05:10.765393+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
