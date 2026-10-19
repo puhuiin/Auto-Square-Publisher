@@ -1,15 +1,5 @@
 [
   {
-    "id": "6d901ddca3ab3f81",
-    "title": "Tether freezes $1.4M in TRON vaults and THORChain stalls",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-10T00:04:31.571353+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "bdc4d4a04a206d28",
     "title": "Unichain 宣布升级至 OP Enterprise,测试网 10 月 13 日迁移,主网 10 月 29 日迁移",
     "source": "吴说区块链 (中文深度)",
@@ -5188,6 +5178,16 @@
     "title": "Ethereum Sets October 26 Hoodi Test For Glamsterdam Upgrade As 200M Gas Limit Nears",
     "source": "NewsBTC (比特币与山寨)",
     "sent_at": "2026-10-19T18:07:33.656266+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b98d53c0f51b2b9f",
+    "title": "BitMine Adds 12,535 ETH to Treasury as Tom Lee Cites Macro and Tech Headwinds",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-19T18:23:45.192120+00:00",
     "tokens": [
       "ETH"
     ],
