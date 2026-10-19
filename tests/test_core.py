@@ -4445,15 +4445,16 @@ class TestGoogleProviderR615(unittest.TestCase):
 
     def test_google_gets_reasoning_budget(self):
         """Gemini 3 Flash 带 thinking_level 思考档，必须与 step-5/b.ai 同级
-        配 1500 预算 + 90s 超时。按非推理配 600 会复刻 R218 的形状：思考链
-        吃满预算 → content 系统性 None → 表现为"Google 通道质量差"，实则
-        预算配错。误升无成本（预算是上限非下限），漏升有系统性代价。
+        配推理预算（R783 起 3000）+ 90s 超时。按非推理配 600 会复刻 R218 的
+        形状：思考链吃满预算 → content 系统性 None → 表现为"Google 通道质量差"，
+        实则预算配错。误升无成本（预算是上限非下限），漏升有系统性代价。
+        ★ R783：1500 → 3000（现役主力通道成功稿 p50=2705/3878，99% >1500）。
         """
         chain = self._build({"GOOGLE_API_KEY": "gk"})
         g = next(p for p in chain if p.name == "Preset-google")
         self.assertEqual(g.timeout, 90.0, "思考型通道应与推理通道同级 90s")
-        self.assertEqual(m._summarize_max_tokens("Preset-google", g.model), 1500,
-                         "思考型通道应拿 1500 预算，而非 600")
+        self.assertEqual(m._summarize_max_tokens("Preset-google", g.model), 3000,
+                         "思考型通道应拿推理预算（3000），而非 600")
 
 
 class TestReasonixGateway(unittest.TestCase):
@@ -7286,7 +7287,7 @@ class TestReasoningChannel(unittest.TestCase):
         openrouter/free 按非推理配 25s 超时+600/900 预算系统性掐死（生产 7 天
         failover 8 拒/1 救，空回全带"思考链疑似吃满预算"；R172 情报双通道
         2800 顶仍空回的另一半）。预算是上限非下限、超时是上界非目标。"""
-        # 生产默认路由别名 → 推理配给（1500 预算 + 90s 超时）
+        # 生产默认路由别名 → 推理配给（R783 起 3000 预算 + 90s 超时）
         self.assertTrue(m._is_reasoning_channel("Preset-openrouter", "openrouter/free"))
         self.assertTrue(m._is_reasoning_channel("Preset-x", "auto/best-fast"))
         self.assertTrue(m._is_reasoning_channel("Preset-x", "omni/auto/best-free"))
@@ -7294,11 +7295,11 @@ class TestReasoningChannel(unittest.TestCase):
         self.assertFalse(m._is_reasoning_channel("Preset-x", "minimax/minimax-m3:free"))
         self.assertFalse(m._is_reasoning_channel("Preset-tokenrouter", "qwen/qwen3.8-max-free"))
         # 预算函数必须与谓词一致（改谓词即全局生效，不断链）
-        self.assertEqual(m._summarize_max_tokens("Preset-openrouter", "openrouter/free"), 1500)
+        self.assertEqual(m._summarize_max_tokens("Preset-openrouter", "openrouter/free"), 3000)
 
     def test_budget_helpers_share_predicate(self):
         # 预算函数必须与谓词一致（改谓词即全局生效，不断链）
-        self.assertEqual(m._summarize_max_tokens("Reasonix-GW-9"), 1500)
+        self.assertEqual(m._summarize_max_tokens("Reasonix-GW-9"), 3000)
         self.assertEqual(m._summarize_max_tokens("Preset-x"), 600)
 
 
@@ -7949,19 +7950,33 @@ class TestCostObservability(unittest.TestCase):
 
 
 class TestSummarizeTokenBudget(unittest.TestCase):
-    """提炼预算：网关备份通道（-GW-1/-GW-2）同为推理模型，必须同等 1500 预算"""
+    """提炼预算：网关备份通道（-GW-1/-GW-2）同为推理模型，必须同等预算。
+    ★ R783：推理通道起点 1500 → 3000（现役主力 stepfun 系成功稿 p50=2705/3878，
+    99% 天然长度 >1500 ⇒ 固定 1500 等于几乎每条稿先白烧一次被掐的调用）。"""
 
     def test_gateway_family_gets_reasoning_budget(self):
-        self.assertEqual(m._summarize_max_tokens("Reasonix-GW"), 1500)
-        self.assertEqual(m._summarize_max_tokens("Reasonix-GW-1"), 1500)
-        self.assertEqual(m._summarize_max_tokens("Reasonix-GW-2"), 1500)
+        self.assertEqual(m._summarize_max_tokens("Reasonix-GW"), 3000)
+        self.assertEqual(m._summarize_max_tokens("Reasonix-GW-1"), 3000)
+        self.assertEqual(m._summarize_max_tokens("Reasonix-GW-2"), 3000)
 
     def test_external_providers_keep_small_budget(self):
         self.assertEqual(m._summarize_max_tokens("Primary-LLM"), 600)
+        # 无 model 入参时 openrouter 不构成路由别名 ⇒ 仍是非推理 600
         self.assertEqual(m._summarize_max_tokens("Preset-openrouter"), 600)
 
     def test_thinking_channel_gets_reasoning_budget(self):
-        self.assertEqual(m._summarize_max_tokens("Preset-b.ai", "glm-5.3-flash"), 1500)
+        self.assertEqual(m._summarize_max_tokens("Preset-b.ai", "glm-5.3-flash"), 3000)
+
+    def test_r783_reasoning_start_covers_empirical_median(self):
+        """★ R783 守卫：推理起点必须 ≥ 现役主力通道成功稿的 p50（2705/3878），
+        且不得高到越过 p90（4229/4821）——那是把"逐级试"改成"预付"。
+        3000 = 两通道 p50 之上、p90 之下的唯一 1500 对齐档位。"""
+        start = m._summarize_max_tokens("Preset-stepfun-flash", "step-3.7-flash")
+        self.assertGreaterEqual(start, 2705, "起点低于 stepfun-flash p50 ⇒ 过半稿件仍要白烧一次")
+        self.assertLessEqual(start, 4229, "起点高于 p90 ⇒ 变成预付成本")
+        self.assertEqual(m._summarize_max_tokens("Preset-stepfun", "step-3"), 3000)
+        # 路由别名通道同样抬（R218：免费池以思考型为主）
+        self.assertEqual(m._summarize_max_tokens("Preset-openrouter", "openrouter/free"), 3000)
 
 
 class TestDownloadImageGate(unittest.TestCase):
@@ -11820,7 +11835,14 @@ class TestEmptyContentRetry(unittest.TestCase):
 
     def test_finish_length_empty_dynamic_budget_expansion(self):
         """思考链吃满预算（finish=length + 空 content）→ 预算动态扩容重试而非放弃。
-        生产实证 glm-5.3-flash 空包耗用最高 2264 token > 固定 1500 预算。"""
+        生产实证 glm-5.3-flash 空包耗用最高 2264 token > 固定 1500 预算。
+
+        ★★ R783：空回 length 改为**直跳封顶**（不再 600→2100→3600 逐级重付
+        思考链）。判据：33 条撞顶拒稿里 22 条 completion 恒=6000，其中 18 条
+        吐空——空回+length 的语义是"思考链独自吃满当前预算"，缺口从当前值
+        不可观测，逐级试探只是把同一条思考链反复重付。预算是上界非下限 +
+        模型非预算感知（直方图实证）⇒ 直跳与逐级探到同一落点成本相同或更低。
+        stub 是非推理通道（起点 600）：600 → 直跳 9000 → 出稿。"""
         eng = self._engine()
         client = MagicMock()
 
@@ -11829,20 +11851,82 @@ class TestEmptyContentRetry(unittest.TestCase):
             r.choices[0].finish_reason = finish
             return r
 
-        # 第 1 次：finish=length 空包（思考链吃满）→ 应扩容重试；第 2 次：length 空包继续扩容；
-        # 第 3 次：正常出稿
+        # 第 1 次：finish=length 空包（思考链吃满）→ 直跳封顶；第 2 次：正常出稿
         client.chat.completions.create.side_effect = [
-            _mk(None, "length"), _mk(None, "length"), _mk(self._good_body(), "stop"),
+            _mk(None, "length"), _mk(self._good_body(), "stop"),
         ]
         with patch.object(eng, "_get_client", return_value=client):
             out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
         self.assertIsNotNone(out)
-        self.assertEqual(client.chat.completions.create.call_count, 3)
+        self.assertEqual(client.chat.completions.create.call_count, 2,
+                         "空回 length 必须一次跳到封顶，不得逐级试探")
         budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
-        # 初始 1500（推理通道 stub 命中 model 无关键词？stub 非 Reasonix 名——验证非推理基线也扩容）
         self.assertEqual(budgets[0], 600)
-        self.assertGreater(budgets[1], budgets[0], "finish=length 空包后预算必须扩容")
-        self.assertGreaterEqual(budgets[2], budgets[1], "再次 length 空包应继续扩容或保持")
+        self.assertEqual(budgets[1], m._SHORT_NOTE_BUDGET_CAP,
+                         "★ 空回 length 的第二跳必须是封顶（R783 直跳）")
+
+    def test_r783_empty_at_cap_no_same_budget_retry(self):
+        """★ R783：直跳封顶后仍吐空 ⇒ **不得再用同一预算调一次**。
+
+        R349 的原话是"同预算重试必现同款截断"——旧实现却只在最后一级遵守：
+        扩容链走完到顶后，max_attempts=2 还会用同一封顶再调一次（生产 22 条
+        撞顶稿每条多烧一次封顶级调用）。本测试锁：空回 length 从起点到拒稿
+        **总共只有 2 次调用**（起点 + 封顶），且拒稿原因/断路器行为不变。
+        """
+        eng = self._engine()
+        client = MagicMock()
+
+        def _mk(content, finish):
+            r = self._resp(content)
+            r.choices[0].finish_reason = finish
+            return r
+
+        client.chat.completions.create.side_effect = [
+            _mk(None, "length"), _mk(None, "length"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch.object(m, "append_metrics") as mock_metrics:
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out, "到顶吐空必须拒稿")
+        self.assertEqual(client.chat.completions.create.call_count, 2,
+                         "★ 同预算重试必现同款截断（R349）⇒ 到顶即出循环，不得补调")
+        budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
+        self.assertEqual(budgets, [600, m._SHORT_NOTE_BUDGET_CAP])
+        # 断路器与拒稿原因语义不变（R349 的回归本体）
+        self.assertIn("stub", eng._breaker_state(),
+                      "空回到顶 finish=length 是确定性耗尽，必须首挂进断路器")
+        reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
+                   if c.args and isinstance(c.args[0], dict)]
+        self.assertTrue(any("finish=length 吐空" in r for r in reasons),
+                        f"拒稿原因必须标注确定性预算耗尽，实得 {reasons}")
+
+    def test_r783_fragment_at_length_still_steps_by_1500(self):
+        """★ R783 假阳性演练：直跳封顶**只适用于空回**。
+
+        残句（content 非空）说明模型已经在吐正文、缺口通常不大，且 R350 的
+        失控啰嗦要靠逐级扩容在下一级被过长门抓住 ⇒ 残句必须仍走 +1500 阶梯。
+        若把直跳滥用到残句上，R350 的"立即拒稿不白烧"保护会被跳过。
+        """
+        eng = self._engine()
+        client = MagicMock()
+
+        def _mk(content, finish):
+            r = self._resp(content)
+            r.choices[0].finish_reason = finish
+            return r
+
+        fragment = "盘面信号明确，$BTC 还在冲，想博波"  # 句中截断（非空）
+        client.chat.completions.create.side_effect = [
+            _mk(fragment, "length"), _mk(self._good_body(), "stop"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
+        self.assertEqual(budgets, [600, 2100],
+                         "残句 length 必须逐级 +1500，不得直跳封顶（R350 保护依赖阶梯）")
 
     def test_finish_stop_empty_does_not_expand(self):
         """finish=stop 的空包是上游抽风而非预算问题 → 不扩容，走原即时重试路径"""
@@ -11898,10 +11982,11 @@ class TestEmptyContentRetry(unittest.TestCase):
             return r
 
         partial = "残句开头" + "盘面信号明确。" * 30
-        # 非推理基线 600 起步。★ R694：短讯封顶 4000 → 6000 ⇒ 序列延长到
-        # 600→2100→3600→5100→6000 五次调用，第 5 次后到顶拒稿。
-        # （原来只给 4 个 side_effect，抬封顶后会不够用而 StopIteration。）
+        # 非推理基线 600 起步。★ R783：短讯封顶 6000 → 9000 ⇒ 残句逐级 +1500
+        # 序列延长到 600→2100→3600→5100→6600→8100→9000 七次调用，第 7 次
+        # 到顶即出循环拒稿（不再像旧实现那样补一次同预算调用）。
         client.chat.completions.create.side_effect = [
+            _mk(partial, "length"), _mk(partial, "length"),
             _mk(partial, "length"), _mk(partial, "length"),
             _mk(partial, "length"), _mk(partial, "length"),
             _mk(partial, "length"),
@@ -11912,14 +11997,16 @@ class TestEmptyContentRetry(unittest.TestCase):
             out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
         self.assertIsNone(out, "到顶截断必须拒稿")
         budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
-        self.assertEqual(budgets, [600, 2100, 3600, 5100, 6000],
-                         "扩容序列必须精确，到 6000 封顶即停（R694）")
-        self.assertEqual(client.chat.completions.create.call_count, 5)
+        self.assertEqual(budgets, [600, 2100, 3600, 5100, 6600, 8100, m._SHORT_NOTE_BUDGET_CAP],
+                         "扩容序列必须精确，到 9000 封顶即停（R783）")
+        self.assertEqual(client.chat.completions.create.call_count, 7,
+                         "到顶即 break：不得再用同一预算补调（R349）")
 
-    def test_article_budget_cap_6000_allows_third_expansion(self):
+    def test_article_budget_cap_9000_allows_full_ladder(self):
         """R80 生产实录 00:25Z：长文一次扩容本应到 5000 却被全局 4000 卡死，
-        残句 362 字符拒稿。长文封顶抬到 6000 后，扩容链必须能越过 4000。
-        stub 引擎是非推理通道：长文起点 1800 → 3300 → 4800 → 6000。"""
+        残句 362 字符拒稿。长文封顶 R694 抬到 6000、R783 再抬到 9000 后，
+        扩容链必须能一路越过 4000 走到 9000。
+        stub 引擎是非推理通道：长文起点 1800 → 3300 → 4800 → 6300 → 7800 → 9000。"""
         eng = self._engine()
         client = MagicMock()
 
@@ -11933,6 +12020,7 @@ class TestEmptyContentRetry(unittest.TestCase):
         client.chat.completions.create.side_effect = [
             _mk(partial, "length"), _mk(partial, "length"),
             _mk(partial, "length"), _mk(partial, "length"),
+            _mk(partial, "length"), _mk(partial, "length"),
         ]
         with patch.object(eng, "_get_client", return_value=client), \
              patch.object(eng, "_ordered_providers", return_value=eng.providers), \
@@ -11941,29 +12029,29 @@ class TestEmptyContentRetry(unittest.TestCase):
                                 article=True)
         self.assertIsNone(out)
         budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
-        # 非推理长文 1800 起步 → 3300 → 4800 → 6000（关键：越过旧 4000 封顶）→ 到顶拒稿
-        self.assertEqual(budgets, [1800, 3300, 4800, 6000],
-                         "长文扩容必须越过 4000 直到 6000 封顶")
-        self.assertTrue(any(b > 4000 for b in budgets), "扩容链必须能突破旧全局封顶 4000")
+        # 非推理长文 1800 起步 → 3300 → 4800 → 6300 → 7800 → 9000（关键：越过旧 4000/6000 封顶）
+        self.assertEqual(budgets, [1800, 3300, 4800, 6300, 7800, m._ARTICLE_BUDGET_CAP],
+                         "长文扩容必须越过 4000/6000 直到 9000 封顶（R783）")
+        self.assertTrue(any(b > 6000 for b in budgets), "扩容链必须能突破 R694 的 6000 封顶")
+        self.assertEqual(client.chat.completions.create.call_count, 6,
+                         "到顶即 break，不得同预算补调（R349/R783）")
 
-    def test_short_post_budget_cap_raised_to_6000(self):
-        """★★ R694：短讯封顶 4000 → 6000（R80 的前提已不成立，见下）。
+    def test_short_post_budget_cap_raised_to_9000(self):
+        """★★ R783：短讯封顶 6000 → 9000（R694b 遥测落地后第一次能用 completion 说话）。
 
-        R80 当年只抬长文、短讯留在 4000，理由是「思考链 1000~2300 + 短讯正文
-        只有 140~200 字 ⇒ 够用」。**该前提在 2026-10 已失效**（推理模型成本翻倍）：
+        R694 抬到 6000 的依据是"9 条撞顶计数"；R783 的依据强得多：
+        - 33 条撞顶拒稿里带遥测的 22 条 **completion 恒等于 6000**（18 吐空 /
+          4 残句），近 14 天仍 ~3 条/天
+        - 成功稿 completion 分布（n=498）：stepfun-flash max=5977、
+          stepfun max=5997 ⇒ 尾巴已贴封顶，6000 是在截断真实工作量
+        - 残句 212 字符 ≈ 150~250 content token ⇒ 那 4 条自然长度就在
+          6000~6500，9000 确定能救回
+        - 代价可忽略：扩容懒加载，自然长度 ≤6000 的稿（99%+）永不到新封顶；
+          且空回直跳封顶后，救不回的稿反而少烧 2~3 次调用
 
-        - `binance_published & article=False` 293 条里 **204 条（70%）tokens>4000**，
-          中位 4535 / p90 5606 / max 17614 ⇒ **全都真实发布到币安广场了**
-        - 10-05「Strategy buys 334 BTC」在四通道上依次撞 4000 被拒（耗 8053~8942），
-          **下一轮 18:44 同一故事成功发布，article=False / tokens=6194**
-          ⇒ 成功路径实测需要 6194，4000 够不到
-        - 延迟代价：每 1000 token 仅 +9s（分档中位 13/22/31/42/48s），
-          而短讯延迟 p90 本就 82s ⇒ 代价被抖动淹没；workflow 限额 30 分钟、
-          历史最坏真发稿轮 6m45s ⇒ 超时风险为零
-
-        ⇒ 扩容链必须能走到 6000，且**到 6000 后不再继续**。
-        ⚠️ 起点仍是 1500（`_summarize_max_tokens`），**不预付**——
-        绝大多数稿在 4000 以内就写完，抬封顶不改变它们的成本。
+        ⇒ 扩容链必须能走到 9000，且**到 9000 后不再继续**。
+        ⚠️ 起点是 3000（推理）/600（非推理 stub），**不预付**——抬起点的依据是
+        成功稿 p50（2705/3878），与封顶是两个独立校准（R783）。
         """
         eng = self._engine()
         client = MagicMock()
@@ -11986,33 +12074,35 @@ class TestEmptyContentRetry(unittest.TestCase):
             out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
         self.assertIsNone(out)
         budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
-        self.assertEqual(budgets[-1], 6000,
-                         "★ 短讯封顶必须能到 6000（R694；4000 会丢 70% 的成功稿）")
+        self.assertEqual(budgets[-1], m._SHORT_NOTE_BUDGET_CAP,
+                         "★ 短讯封顶必须能走到位（R783：9000；6000 会丢撞顶稿）")
         self.assertTrue(any(b > 4000 for b in budgets),
                         "短讯扩容链必须能突破 R80 的旧封顶 4000")
-        self.assertTrue(all(b <= 6000 for b in budgets),
-                        "★ 护栏自身必须可达：不得越过 6000 无限扩容"
+        self.assertTrue(all(b <= m._SHORT_NOTE_BUDGET_CAP for b in budgets),
+                        "★ 护栏自身必须可达：不得越过封顶无限扩容"
                         "（否则失控啰嗦的稿会被无限续命）")
-        # ⚠️ 起点不得被顺带抬高（抬的是封顶不是起点）。
-        # ⚠️ `_engine()` 的 stub 是**非推理**通道（起点 600），不是生产实况的
-        #    1500 —— 我第一版按注释里的"短讯 1500"写断言，结果 600 != 1500 全挂
+        # ⚠️ `_engine()` 的 stub 是**非推理**通道（起点 600），不是生产推理通道的
+        #    3000 —— 早期版本按注释里的"短讯 1500"写断言，结果 600 != 1500 全挂
         #    （纪律 12「名字≠含义」：先量真实值再写断言，纪律 10）。
-        #    生产的 1500 起点由下一个测试用推理通道单独锁。
+        #    生产的推理起点由下一个测试单独锁。
         self.assertEqual(budgets[0], 600,
-                         "stub 为非推理通道，短讯起点应仍是 600（抬的是封顶）")
+                         "stub 为非推理通道，短讯起点应仍是 600（起点校准与封顶独立）")
 
-    def test_short_post_start_budget_unchanged_for_reasoning_channel(self):
-        """★ 抬封顶**不得顺带抬高起点**（生产推理通道实况 = 1500）。
+    def test_reasoning_start_is_empirical_median_not_prepaid(self):
+        """★ R783：推理通道起点 = 3000（成功稿 p50 校准），且**不得**被顺手
+        抬成预付值（≥p90 就是把"逐级试"改成"每条都按最贵的付"）。
 
-        上一条锁的是 stub（非推理 600）。这条用推理通道锁生产的真实起点，
-        防止将来有人把"抬封顶"写成"抬起点" ⇒ 变成预付成本、白烧 token。
+        上一条锁的是 stub（非推理 600）。这条用推理通道锁生产的真实起点。
+        R694 时代"抬封顶不得抬起点的前提"是"绝大多数稿在 1500 内写完"——
+        该前提已被数据推翻（99% 的成功稿 >1500），所以起点**应该**抬，
+        但只能抬到 p50 一档、不能抬到 p90。
         """
         self.assertEqual(
-            m._summarize_max_tokens("Preset-stepfun-flash", "step-3.7-flash"), 1500,
-            "网关推理通道短讯起点必须仍是 1500（R694 只抬封顶）")
+            m._summarize_max_tokens("Preset-stepfun-flash", "step-3.7-flash"), 3000,
+            "stepfun-flash 成功稿 p50=2705 ⇒ 起点 3000（1% 的稿 ≤1500，旧 1500 是全量白烧）")
         self.assertEqual(
-            m._summarize_max_tokens("Preset-openrouter", "openrouter/free"), 1500,
-            "openrouter 同为推理通道，起点 1500")
+            m._summarize_max_tokens("Preset-openrouter", "openrouter/free"), 3000,
+            "openrouter 路由别名同为推理通道，起点 3000")
 
 
     def test_short_post_cap_is_reachable_not_dead(self):
@@ -12020,15 +12110,23 @@ class TestEmptyContentRetry(unittest.TestCase):
 
         R643 教训：第一版护栏设 100× 而实测 52× ⇒ **从不触发 = 没有护栏**。
         同族风险：若哪天封顶被设成天文数字而模型从不超过它，护栏又变回摆设。
-        ⇒ 断言封顶落在「实测短讯 p90（5606）~ max（17614）」这个真实区间内，
-        既不是够不到的保守值，也不是永不触发的宽松值。
+        ★★ R783 换据：本测试原来引用的是 R694 的 tokens_used 分位
+        （p90 5606 / max 17614）——而那正是 R694b 自己判过死刑的字段
+        （prompt+completion 混合，prompt 本身几千）⇒ 旧依据是错的。
+        改用 completion 口径（R694b 遥测，n=498 成功稿 + 22 条撞顶）：
+          成功稿 max=5977/5997（两通道），22 条撞顶 completion 恒=6000
+        ⇒ 下界 6000（低于它撞顶稿必死）、上界 12000（再高则失控啰嗦的稿
+          在封顶层白烧的预算超过过长门能兜住的意义）。
         """
         cap = m._SHORT_NOTE_BUDGET_CAP
         self.assertGreaterEqual(cap, 6000,
-                                "封顶低于 6000 会丢 70% 的短讯成功稿（实测 R694）")
+                                "封顶低于 6000 ⇒ 22 条实测撞顶稿（completion 恒=6000）必死")
         self.assertLessEqual(cap, 12000,
                              "封顶过高则失控啰嗦的稿被无限续命"
                              "（过长门 1200 字符仍会兜住，但预算白烧）")
+        # 长文封顶同族约束（独立 env，可分别回滚）
+        self.assertGreaterEqual(m._ARTICLE_BUDGET_CAP, 6000)
+        self.assertLessEqual(m._ARTICLE_BUDGET_CAP, 12000)
 
     def test_empty_at_budget_cap_length_enters_breaker(self):
         """R349：空回 + finish=length 顶到封顶 = 确定性预算耗尽（思考链吃满整个封顶
@@ -12043,11 +12141,11 @@ class TestEmptyContentRetry(unittest.TestCase):
             r.choices[0].finish_reason = finish
             return r
 
-        # 非推理短讯 600→2100→3600→5100→6000（★ R694 封顶），全 length 空包；
-        # 到顶吐空后偶发原谅配额（max_attempts=2）再补一次同预算空回 → 共 6 次调用
+        # ★★ R783：空回 length 直跳封顶 ⇒ 600 → 9000 两次调用即拒稿。
+        # （旧实现：600→2100→3600→5100→6000 五次扩容 + 同预算补调一次 = 6 次，
+        #   其中每一次都是把同一条思考链从头重付——R349 的"同预算重试必现
+        #   同款截断"其实适用于整条梯子，旧代码只在最后一级遵守。）
         client.chat.completions.create.side_effect = [
-            _mk(None, "length"), _mk(None, "length"),
-            _mk(None, "length"), _mk(None, "length"),
             _mk(None, "length"), _mk(None, "length"),
         ]
         with patch.object(eng, "_get_client", return_value=client), \
@@ -12059,8 +12157,10 @@ class TestEmptyContentRetry(unittest.TestCase):
         self.assertIn("stub", eng._breaker_state(),
                       "空回到顶 finish=length 是确定性耗尽，必须首挂进断路器")
         budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
-        self.assertEqual(budgets, [600, 2100, 3600, 5100, 6000, 6000],
-                         "扩容序列必须精确，到 6000 封顶即停（R694）")
+        self.assertEqual(budgets, [600, m._SHORT_NOTE_BUDGET_CAP],
+                         "★ 空回 length：起点 → 直跳封顶，两次调用即拒稿（R783）")
+        self.assertEqual(client.chat.completions.create.call_count, 2,
+                         "不得逐级试探、不得同预算补调（R349+R783）")
         reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
                    if c.args and isinstance(c.args[0], dict)]
         self.assertTrue(any("finish=length 吐空" in r for r in reasons),
@@ -12193,6 +12293,147 @@ class TestEmptyContentRetry(unittest.TestCase):
             out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
         self.assertIsNone(out)
         self.assertIn("stub", eng._breaker_state())
+
+
+class TestR783BudgetCalibration(unittest.TestCase):
+    """★★ R783：预算校准三件套在**生产推理通道**上的端到端行为。
+
+    背景（origin/main metrics，R694b 遥测）：
+      ① 22 条撞顶稿 completion 恒=6000（18 吐空 / 4 残句），近 14 天 ~3 条/天
+      ② 成功稿 completion：stepfun-flash n=417 p50=2705 max=5977；
+         stepfun n=76 p50=3878 max=5997 ⇒ 99% 天然长度 >1500，尾巴已贴 6000
+      ③ 扩容是**从头重跑** ⇒ 固定 1500 起点让 99% 的稿先白烧一次被掐的调用
+         （实测放大 1.97×/2.24×）
+    改动：起点 1500→3000（p50 校准）、空回 length 直跳封顶（R349 的同预算
+    重试必现适用于整条梯子）、到顶即 break、封顶 6000→9000（懒加载，只有
+    原本 100% 浪费的撞顶稿会碰到新封顶）。
+    """
+
+    def setUp(self):
+        self._orig = m.SymbolValidator._valid_symbols_cache
+        m.SymbolValidator._valid_symbols_cache = {"BTC", "ETH"}
+        import tempfile
+        self.intel_tmp = tempfile.mktemp(suffix=".json")
+        with open(self.intel_tmp, "w", encoding="utf-8") as f:
+            f.write("{}")
+        self._orig_intel = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.intel_tmp
+
+    def tearDown(self):
+        m.SymbolValidator._valid_symbols_cache = self._orig
+        m.CAMPAIGN_INTEL_FILE = self._orig_intel
+        if os.path.exists(self.intel_tmp):
+            os.remove(self.intel_tmp)
+
+    def _engine(self):
+        """生产主力通道配置（stepfun-flash，推理通道）。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng._clients = {}
+        eng.providers = [m.LLMProviderConfig("Preset-stepfun-flash", "https://x", "k",
+                                             "step-3.7-flash")]
+        return eng
+
+    def _resp(self, content):
+        return MagicMock(choices=[MagicMock(message=MagicMock(content=content))])
+
+    def _mk(self, content, finish):
+        r = self._resp(content)
+        r.choices[0].finish_reason = finish
+        return r
+
+    def _good_body(self):
+        return ("比特币放量突破关键位，$BTC 短线情绪转多，"
+                "回调就是上车机会，但别追高，等回踩确认支撑再进，"
+                "仓位控制好，止损放在前低下方。")
+
+    def _item(self):
+        return {"title": "BTC news", "summary": "Bitcoin surged", "source": "U.Today"}
+
+    def test_reasoning_start_3000_single_call_when_natural_length_fits(self):
+        """懒加载/不预付：起点 3000 只是上界，一次出稿的稿仍然只调一次。"""
+        eng = self._engine()
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [self._mk(self._good_body(), "stop")]
+        with patch.object(eng, "_get_client", return_value=client):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        self.assertEqual(client.chat.completions.create.call_count, 1)
+        budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
+        self.assertEqual(budgets, [3000], "起点 3000 是上界非下限：出稿即止，不预付")
+
+    def test_empty_at_3000_jumps_to_9000_and_succeeds(self):
+        """生产主形态：思考链吃满 3000 吐空 → 直跳 9000 → 出稿（2 次调用）。
+        旧行为：3000→4500→6000 逐级重付，撞顶稿要 4~6 次。"""
+        eng = self._engine()
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            self._mk(None, "length"), self._mk(self._good_body(), "stop"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out, "自然长度在 6000~9000 的稿必须被新封顶救回")
+        budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
+        self.assertEqual(budgets, [3000, 9000], "空回 length：起点 → 直跳封顶")
+
+    def test_empty_at_9000_rejects_in_two_calls(self):
+        """ runaway 思考链（自然长度 >9000）：两次调用即拒稿 + 首挂进断路器。
+        旧行为要 6 次调用（1500→3000→4500→6000→6000 补调→…）。"""
+        eng = self._engine()
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            self._mk(None, "length"), self._mk(None, "length"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch.object(m, "append_metrics") as mock_metrics:
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNone(out)
+        self.assertEqual(client.chat.completions.create.call_count, 2,
+                         "到顶即 break：不得同预算补调（R349 同预算重试必现）")
+        self.assertIn("Preset-stepfun-flash", eng._breaker_state(),
+                      "确定性预算耗尽必须首挂进断路器")
+        reasons = [c.args[0].get("reason", "") for c in mock_metrics.call_args_list
+                   if c.args and isinstance(c.args[0], dict)]
+        self.assertTrue(any("finish=length 吐空" in r for r in reasons), reasons)
+        # 遥测必须带上新封顶（下轮回答"9000 救回了多少"的唯一依据）
+        caps = [c.args[0].get("budget_cap") for c in mock_metrics.call_args_list
+                if c.args and isinstance(c.args[0], dict)]
+        self.assertIn(9000, caps, "拒稿行必须落 budget_cap=9000（rescue 率的度量面）")
+
+    def test_fragment_at_3000_steps_to_4500_not_cap(self):
+        """假阳性演练：残句（非空）不得直跳——R350 的失控啰嗦要靠阶梯在下一级
+        被过长门抓住。推理通道上残句阶梯 = 3000 → 4500。"""
+        eng = self._engine()
+        client = MagicMock()
+        fragment = "盘面信号明确，$BTC 还在冲，想博波"
+        client.chat.completions.create.side_effect = [
+            self._mk(fragment, "length"), self._mk(self._good_body(), "stop"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out)
+        budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
+        self.assertEqual(budgets, [3000, 4500], "残句 length 必须逐级 +1500，不得直跳封顶")
+
+    def test_article_path_uses_article_cap(self):
+        """长文封顶独立可调（_ARTICLE_BUDGET_CAP）：空回直跳的是长文封顶。"""
+        eng = self._engine()
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            self._mk(None, "length"), self._mk(None, "length"),
+        ]
+        with patch.object(eng, "_get_client", return_value=client), \
+             patch.object(eng, "_ordered_providers", return_value=eng.providers), \
+             patch.object(m, "append_metrics"):
+            out = eng.summarize(self._item(), None, market_context="", token_hints=["BTC"],
+                                article=True)
+        self.assertIsNone(out)
+        budgets = [c.kwargs.get("max_tokens") for c in client.chat.completions.create.call_args_list]
+        # 推理通道长文起点 3500（article 专属），空回直跳长文封顶
+        self.assertEqual(budgets, [3500, m._ARTICLE_BUDGET_CAP],
+                         "长文：起点 3500 → 空回直跳长文封顶")
 
 
 class TestRouterRerollOnQualityReject(unittest.TestCase):
@@ -12717,13 +12958,15 @@ class TestEmptyPolicyV2(unittest.TestCase):
             return r
 
         partial = "残句开头" + "盘面信号明确。" * 30
-        # 非推理短讯扩容链 600→2100→3600→5100→6000 到顶（R694 抬封顶后是 5 次）；
-        # 到顶那次必须首挂进断路器。
-        # ⚠️ 刻意多备一个 side_effect 兜住封顶变化：side_effect 用尽会抛
+        # 非推理短讯扩容链 600→2100→3600→5100→6600→8100→9000 到顶（R783 抬封顶后
+        # 是 7 次；R694 时代是 5 次）；到顶那次必须首挂进断路器。
+        # ⚠️ 刻意多备 side_effect 兜住封顶变化：side_effect 用尽会抛
         #    StopIteration，被外层 `except Exception` 吞成「请求失败」⇒ reason 变空
         #    ⇒ 下面按"残句"/"预算" 断言的用例**假失败**，且报的是错误的原因。
-        #    （R694 实测踩到：封顶 4000→6000 后此处 4 个不够，改 6 个留余量。）
+        #    （R694 实测踩到：封顶 4000→6000 后 4 个不够；R783 再抬到 9000 后
+        #     6 个也不够——留 2 个余量，封顶再抬也不假失败。）
         client.chat.completions.create.side_effect = [
+            _mk(partial, "length"), _mk(partial, "length"),
             _mk(partial, "length"), _mk(partial, "length"),
             _mk(partial, "length"), _mk(partial, "length"),
             _mk(partial, "length"), _mk(partial, "length"),
@@ -14078,7 +14321,7 @@ class TestStepfunPreset(unittest.TestCase):
        按量计费的普通 API 通道（另一套计费体系），属于"看起来修好了其实在
        花另一笔钱"的陷阱，写死防手滑；
     2. 默认模型 = step-5-preview，STEPFUN_MODEL 可覆盖；
-    3. 按推理通道配给 90s/1500（reasoning_effort 思考档，见
+    3. 按推理通道配给 90s/3000（R783 起点校准，reasoning_effort 思考档，见
        test_stepfun_preset_gets_long_timeout 与谓词测试）；
     4. 无 Key 零痕迹（不占链位、不污染其他 preset）。
     """
@@ -14104,7 +14347,8 @@ class TestStepfunPreset(unittest.TestCase):
                          "/step_plan 前缀丢失会静默落入按量计费通道，勿删")
         self.assertEqual(sf.model, "step-5-preview")
         self.assertEqual(sf.timeout, 90.0)
-        self.assertEqual(m._summarize_max_tokens("Preset-stepfun", "step-5-preview"), 1500)
+        # ★ R783：1500 → 3000（stepfun 成功稿 p50=3878，99% >1500）
+        self.assertEqual(m._summarize_max_tokens("Preset-stepfun", "step-5-preview"), 3000)
 
     def test_model_env_override(self):
         sf = next(p for p in self._build({"STEPFUN_MODEL": "step-3.7-flash"})
@@ -14137,7 +14381,8 @@ class TestStepfunPreset(unittest.TestCase):
         self.assertEqual(flash.model, "step-3.7-flash")
         # flash 同属订阅通道 → 推理配给（startswith 覆盖，误升无成本）
         self.assertEqual(flash.timeout, 90.0)
-        self.assertEqual(m._summarize_max_tokens("Preset-stepfun-flash", "step-3.7-flash"), 1500)
+        # ★ R783：1500 → 3000（stepfun-flash 成功稿 p50=2705，99% >1500）
+        self.assertEqual(m._summarize_max_tokens("Preset-stepfun-flash", "step-3.7-flash"), 3000)
 
     def test_flash_model_env_override(self):
         flash = next(p for p in self._build({"STEPFUN_FLASH_MODEL": "step-3.7-turbo"})
@@ -21702,6 +21947,106 @@ class TestR770AuditPanelHonesty(unittest.TestCase):
         stats = [{"content_id": "c0", "ts": "2026-10-05T00:00:00Z", "views": 10}]
         out = self._run_report(ap, pub, stats)
         self.assertIn("没有 lang 字段", out, "真没有 lang 时才这么说")
+
+
+class TestR783BudgetCapPanel(unittest.TestCase):
+    """R783：audit_perf ⑤¾「LLM 预算封顶」面板——抬封顶 6000→9000 的度量面。
+
+    三个改动（起点 1500→3000 / 空回直跳封顶 / 封顶 6000→9000）的收益全落在
+    撞顶稿上，而撞顶稿在总拒稿里只占 ~1% ⇒ 不单列面板就永远看不到它。
+    本类锁三件事：①通道级撞顶必须被数到（`rej` 只收 llm_failed 会漏 20/22）；
+    ②救回量下界（成功稿 completion>6000）必须显示且带样本基数；③无遥测时
+    必须说"无法度量"而不是 0（R731/R747 诚实性家族）。
+    """
+
+    @staticmethod
+    def _ap():
+        import importlib.util
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "scripts", "audit_perf.py")
+        spec = importlib.util.spec_from_file_location("audit_perf_r783", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _run(self, ap, rows):
+        import contextlib
+        import io
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            ap.report(rows, 24, None, None, None)
+        return buf.getvalue()
+
+    def _hit(self, ts, cap, empty=True, frag=0):
+        reason = ("预算 %s（封顶 %s）到顶仍 finish=length %s"
+                  % (cap, cap, "吐空（耗 10972 token）" if empty else "截断（残句 %d 字符）" % frag))
+        return {"outcome": "llm_rejected", "ts": ts, "reason": reason,
+                "finish_reason": "length", "budget_cap": cap,
+                "completion_tokens": cap, "provider": "Preset-stepfun-flash"}
+
+    def test_channel_level_cap_hits_counted(self):
+        """① 通道级 llm_rejected 撞顶必须进面板（`rej`=llm_failed 会漏掉它们）"""
+        ap = self._ap()
+        rows = [
+            self._hit("2026-10-18T10:00:00+00:00", 6000, empty=True),
+            self._hit("2026-10-18T11:00:00+00:00", 6000, empty=False, frag=212),
+            # 对照：故事级 llm_failed 同因一行（R696 双行落盘，**同一 ts**）——必须去重成 1 次
+            {"outcome": "llm_failed", "ts": "2026-10-18T10:00:00+00:00",
+             "reason": "预算 6000（封顶 6000）到顶仍 finish=length 吐空（耗 10972 token）",
+             "provider": "Preset-stepfun-flash"},
+        ]
+        out = self._run(ap, rows)
+        self.assertIn("撞顶拒稿 2 次", out, "同一次失败的双行落盘必须去重（R696）")
+        self.assertIn("6000×2", out)
+        self.assertIn("吐空 1", out)
+        self.assertIn("残句 1", out)
+        self.assertIn("212", out, "残句字符必须可读（缺口估算的唯一依据）")
+
+    def test_rescued_lower_bound_displayed_with_base(self):
+        """② 救回量下界（成功稿 completion>6000）必须显示，且带遥测样本基数"""
+        ap = self._ap()
+        rows = [
+            {"outcome": "binance_published", "ts": "2026-10-18T10:00:00+00:00",
+             "completion_tokens": 6500},
+            {"outcome": "binance_published", "ts": "2026-10-18T11:00:00+00:00",
+             "completion_tokens": 2700},
+        ]
+        out = self._run(ap, rows)
+        self.assertIn("completion >6000：1 篇 / 2 篇带遥测", out)
+        self.assertIn("下界", out, "必须标明这是下界（failover 救回的不带印记）")
+
+    def test_no_telemetry_says_unmeasurable_not_zero(self):
+        """③ 无 completion 遥测时必须说"无法度量"，不得显示成 0 命中"""
+        ap = self._ap()
+        rows = [{"outcome": "binance_published", "ts": "2026-10-18T10:00:00+00:00"}]
+        out = self._run(ap, rows)
+        self.assertIn("无法度量", out)
+        self.assertNotIn(">6000：0 篇", out, "无遥测≠0 命中（R747 诚实性）")
+
+    def test_cap_hit_judgment_not_fooled_by_reason_substring(self):
+        """假阳性演练：reason 含"封顶"但 finish≠length（如普通超时文案里
+        恰好有"封顶"二字）不得计入撞顶——判据是 封顶+finish=length 两个条件。"""
+        ap = self._ap()
+        rows = [
+            {"outcome": "llm_rejected", "ts": "2026-10-18T10:00:00+00:00",
+             "reason": "请求超时（timeout 封顶 25s）", "finish_reason": ""},
+            {"outcome": "llm_rejected", "ts": "2026-10-18T11:00:00+00:00",
+             "reason": "预算 6000（封顶 6000）到顶仍 finish=length 吐空",
+             "finish_reason": "length", "budget_cap": 6000},
+        ]
+        out = self._run(ap, rows)
+        self.assertIn("撞顶拒稿 1 次", out, "只有 finish=length 的那条算撞顶")
+
+    def test_zero_cap_hits_reported_plainly(self):
+        """零撞顶是**期望状态**（R783 后），面板必须如实报 0 而不渲染判读行"""
+        ap = self._ap()
+        rows = [{"outcome": "binance_published", "ts": "2026-10-18T10:00:00+00:00",
+                 "completion_tokens": 3000}]
+        out = self._run(ap, rows)
+        self.assertIn("撞顶拒稿 0 次", out)
+        self.assertNotIn("9000 档仍在撞", out,
+                         "零撞顶时不得渲染『仍在撞』的判读行（会把健康态读成故障）")
+
 
 class TestR774CampaignMentionEnglishForms(unittest.TestCase):
     """R774：campaign_mention 判据补英文形态——英文帖用产品名/奖励机制指代

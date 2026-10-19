@@ -378,12 +378,43 @@ _SHORT_NOTE_MAX_PARA_CJK = _env_int("SHORT_NOTE_MAX_PARA_CJK", 120)
 #   completion，而封顶只管 completion，prompt(RSS 全文+素材) 本身就能到几千。
 #   详见 `budget_cap =` 处的完整注释。
 #   延迟代价：每 1000 token 仅 +9s，短讯延迟 p90 本就 82s ⇒ 可忽略。
-#   ⚠️ 这是**封顶**不是起点：起点仍由 `_summarize_max_tokens` 决定（推理通道 1500、
-#   非推理 stub 600），扩容链 `min(cur + 1500, 封顶)` 逐级试，**不预付**——
-#   绝大多数稿在 4000 以内就写完了，抬封顶不改变它们的成本。
-#   实测两条链：推理 1500→3000→4500→6000；stub 600→2100→3600→5100→6000。
+#   ⚠️ 这是**封顶**不是起点：起点仍由 `_summarize_max_tokens` 决定（推理通道 3000、
+#   非推理 stub 600），扩容链见 `finish == "length"` 处——**残句**逐级 +1500、
+#   **空回直跳封顶**（R783：空回意味着思考链独自吃满了当前预算，缺口大小
+#   从当前值不可观测，逐级试探只是把同一条思考链反复重付）。
 #   设 0 = 回退到 R80 的 4000（运营逃生口，不建议：会重新开始丢稿）。
-_SHORT_NOTE_BUDGET_CAP = _env_int("SHORT_NOTE_BUDGET_CAP", 6000) or 4000
+#
+# ── ★★ R783（2026-10-18）：封顶 6000 → **9000**。依据是 R694b 遥测落地后
+#    第一次能"用 completion 说话"（此前只能数撞顶条数，见下）。──────────
+# ① 撞顶面：全历史 33 条撞顶拒稿里，带 completion 遥测的 22 条 **completion
+#    恒等于 6000**（一条不差）= 模型把整个封顶吃完仍没吐完。按形态分：
+#    18 条吐空（思考链吃满 6000，一个字都没写）、4 条残句（111/212/415/756
+#    字符）。近 14 天仍有 ~3 条/天（10-16:3、10-17:2、10-18:3）。
+# ② 成功面（同通道成功稿 completion 分布，n=498，origin/main metrics）：
+#      stepfun-flash n=417  p50=2705 p90=4229 max=5977（11 篇 >5500）
+#      stepfun       n= 76  p50=3878 p90=4821 max=5997（ 4 篇 >5500）
+#    ⇒ 成功稿的尾巴**已经顶到封顶脸上**（max 距封顶只差 3~23 token），
+#      6000 不是宽裕的上界，而是正在截断真实工作量的临界值。
+# ③ 残句缺口可算：残句 212 字符 ≈ 150~250 content token ⇒ 那 4 条的自然
+#    长度就在 6000~6500，**9000 封顶确定能救回**；吐空的 18 条自然长度
+#    ≥6000 但上界不可观测（封顶的定义就是看不见外面）⇒ 抬顶后的 rescue
+#    率由 `budget_cap` 遥测（每行落盘）在下轮直接回答，不再靠推断。
+# ④ 代价为何可忽略：扩容是**懒加载**的——自然长度 ≤6000 的稿（成功稿
+#    99%+）永远碰不到新封顶，成本零变化；只有原本就 100% 浪费的撞顶稿
+#    会多在最后一跳上探到 9000。且 R783 起空回 length **直跳封顶**
+#    （不再逐级重付思考链）⇒ 救不回的吐空稿反而比现在**少烧 2~3 次调用**。
+#    延迟：最坏单链 +1 次 ~80s 调用；实测 run_elapsed_sec max=1226s
+#    （20 分钟）vs workflow 30 分钟限额，余量充足。
+# ⑤ 逃生口：env `SHORT_NOTE_BUDGET_CAP` 可单数字回滚（设 6000 即回 R694）。
+_SHORT_NOTE_BUDGET_CAP = _env_int("SHORT_NOTE_BUDGET_CAP", 9000) or 4000
+
+# ★★ R783：长文封顶同步 6000 → 9000（与短讯同族同据，独立 env 便于分别回滚）。
+#   长文撞顶 6 条（10-12 ×2、10-16 ×2、10-17 ×1）同为 completion 恒=6000；
+#   长文成功稿 n=11（stepfun-flash p50=4015 / stepfun p50=4699 / max=5581）
+#   样本比短讯薄得多 ⇒ 这一抬是**与短讯同据的外推**、不是独立实证，
+#   注释写清楚防止下轮当"已验证"用。长文有 500~800 字结构门 + 2500 字符
+#   过长门兜底，救回的长文仍要过门 ⇒ 质量风险比短讯更小。
+_ARTICLE_BUDGET_CAP = _env_int("ARTICLE_BUDGET_CAP", 9000) or 6000
 
 # R578：发帖最小间隔（分钟）——生产实录 253 篇里 99 个间隔<30min（最快 2min 连发）
 # 与 60 个>180min 空窗并存，节奏像刷屏不像人。0=关闭；默认 20 对齐 cron 心跳。
@@ -4667,8 +4698,31 @@ def _is_reasoning_channel(provider_name: str, model: str = "") -> bool:
 def _summarize_max_tokens(provider_name: str, model: str = "") -> int:
     """提炼预算：Reasonix 网关全系（含 -GW-1/-GW-2 备份）皆为推理模型，
     前几百 token 全消耗在思考链里，预算不足则 content 直接 None。
-    此前 summarize 用 == 精确匹配，仅首选通道拿到 1500，备份链名存实亡。"""
-    return 1500 if _is_reasoning_channel(provider_name, model) else 600
+    此前 summarize 用 == 精确匹配，仅首选通道拿到 1500，备份链名存实亡。
+
+    ★★ R783（2026-10-18）：推理通道起点 1500 → **3000**。
+    旧值 1500 的校准对象是 glm-5.3-flash（思考链 1035~2264 token，
+    见 `_is_reasoning_channel` 注释），而现役主力通道已换成 stepfun 系，
+    **1500 对它们系统性偏低**——origin/main metrics 成功稿（n=498，
+    outcome=binance_published 且带 completion 遥测）：
+        stepfun-flash n=417：≤1500 仅 4 篇（1%）、p50=2705、p90=4229
+        stepfun       n= 76：≤1500 仅 1 篇（1%）、p50=3878、p90=4821
+        openrouter    n=  5：p50=174（低用量通道，3000 只是上界）
+        google        n= 10：p50=227（thinking_level 控思考，与 max_tokens 无关）
+    ⇒ 99% 的推理通道成功稿天然长度 >1500，固定 1500 起点 = 几乎每条稿都
+      先白烧一次被掐断的调用，再整链重跑（扩容是**从头重跑**不是续写）。
+      实测放大倍数（自然消耗 vs 实际支付）：stepfun-flash 1.97×、
+      stepfun 2.24×；调用次数 2.41 次/稿。
+    ⚠️ 为什么抬起点不等于"预付成本"（R694 的疑虑在此被数据解除）：
+      预算是**上界不是下限**，且直方图证明这些通道**非预算感知**——
+      1501-3000 档里 51 篇在 1500-2000 就自然结束（最终调用预算是 3000）、
+      3001-4500 档在三个子档均匀分布（43/43/32）而不贴 4500 边界聚集
+      ⇒ 模型输出长度由输入决定、不随 max_tokens 涨。抬起点只让"本来
+      一次就能写完的稿"真的只写一次，不改变任何稿的 token 消耗。
+    ⚠️ 通道换模型时须重导：本常量是**按现役模型的实证中位数**校准的，
+      不是永恒值。重导方法 = 按 provider 聚合 completion 取 p50。
+    """
+    return 3000 if _is_reasoning_channel(provider_name, model) else 600
 
 
 # ★★ R696：最后一次拒稿的完整上下文（通道级明细 → 故事级汇总的唯一桥梁）。
@@ -6730,8 +6784,13 @@ class MultiLLMEngine:
                 # 证明 4000 不够"。这个区别很重要：别把它当成已验证的收益。
                 #
                 # 代价（已量，可忽略）：每 1000 token 约 +9s（上游抖动远大于此，
-                # 短讯延迟 p90 本就 82s）；workflow `timeout-minutes: 30`，
-                # 历史最坏的真发稿轮 6m45s ⇒ failover 走满也远不会超时。
+                # 短讯延迟 p90 本就 82s）；workflow `timeout-minutes: 30`。
+                # ⚠️ R783 修正：此处原文写"历史最坏的真发稿轮 6m45s"，按
+                # origin/main metrics 实查 **全部 927 轮 / 705 个有发布轮**的
+                # `run_elapsed_sec` max = **1226s（20.4 分钟）**，p95=437s ⇒
+                # 6m45s 这个数字没有依据（疑似早期小样本），按 20.4 分钟算
+                # 距 30 分钟限额仍有 ~10 分钟余量；R783 的直跳封顶让撞顶稿
+                # 少走 2~3 次调用，净延迟方向为**下降**。
                 #
                 # ⚠️ 观测补强（R694b，本次一并做）：此前**遥测没有单独的
                 #   completion / max_tokens 字段** ⇒ "短讯成功稿到底吃掉多少
@@ -6739,11 +6798,15 @@ class MultiLLMEngine:
                 #   现在 `_extract_completion_tokens` + `budget_cap` 已随
                 #   成功稿与拒稿一起落盘 ⇒ **下轮可以直接用成功稿的 completion
                 #   分布回答"6000 够不够、要不要再抬"**，不再靠推断。
+                # ★★ R783：那个"下轮"就是本轮——33 条撞顶里 22 条 completion
+                #   恒=6000、成功稿 max=5977/5997 已贴封顶 ⇒ 封顶 6000→9000
+                #   （判据全文见 `_SHORT_NOTE_BUDGET_CAP` 处注释）。R694b 当时
+                #   预留的这个问题，两年内……准确说两周内就被自己的遥测回答了。
                 #
                 # ⚠️ 为什么此前一直没人发现：撞顶被记成 `stage=transport`，
                 #   混在"超时/503/连接错误"里，而那些是真故障 ⇒ 掩盖了这条
                 #   **纯参数问题**（R673 同族：口径混在一处时，参数漂移不可见）。
-                budget_cap = 6000 if article else _SHORT_NOTE_BUDGET_CAP
+                budget_cap = _ARTICLE_BUDGET_CAP if article else _SHORT_NOTE_BUDGET_CAP
                 # 空回政策 v2（生产 01:15 窗口实证：b.ai 系统性吐空，重试零救回还翻倍延迟）：
                 # 同运行内该提供商已有失败记录 = 连挂窗口，直接认失败走 failover；
                 # 否则（首挂，偶发可能性大）即时重试一次。
@@ -6824,9 +6887,9 @@ class MultiLLMEngine:
                         content = (response.choices[0].message.content or "").strip()
                         # 思考链吃满预算的特征：finish_reason=length 且 content 为空。
                         # 生产实证 glm-5.3-flash 空包耗用 1035~2264 token，固定 1500 仍可能不够。
-                        # 命中即动态扩容重试（+1500，封顶 4000）：比 failover 换提供商便宜，
-                        # 也不污染健康度计数；扩容后若下次空回 finish 不为 length，
-                        # 则是上游抽风而非预算问题，走原有空回路径。
+                        # 命中即动态扩容重试：比 failover 换提供商便宜，也不污染健康度计数；
+                        # 扩容后若下次空回 finish 不为 length，则是上游抽风而非预算问题，
+                        # 走原有空回路径。
                         finish = getattr(response.choices[0], "finish_reason", "") or ""
                         final_finish = finish
                         # R68 实弹验证抓到第二种截断：content 非空但 finish=length——
@@ -6840,7 +6903,7 @@ class MultiLLMEngine:
                             # 每级白烧一次封顶级调用后照样撞「过长」拒稿（生产 L1333 9202字耗
                             # 7302 / L1495 长文14100字耗9176 / L1531 12340字耗7358 token 均如此）。
                             # 立即拒稿走 failover：换别家比同一啰嗦模型在更高预算上重掷更省、
-                            # 更可能救回。（空回 len=0 不命中此支，仍走下方扩容→4306 空回路径。）
+                            # 更可能救回。（空回 len=0 不命中此支，仍走下方扩容路径。）
                             _content_len_cap = 2500 if article else 1200
                             if len(content) >= _content_len_cap:
                                 raise _BudgetExhaustedError(
@@ -6849,12 +6912,39 @@ class MultiLLMEngine:
                                     f"{tokens_used or '?'} token），失控啰嗦扩容无益，拒稿换提供商")
                             if effective_max_tokens < budget_cap:
                                 expansions += 1
-                                effective_max_tokens = min(effective_max_tokens + 1500, budget_cap)
-                                logger.warning(f"提供商 [{provider.name}] finish=length 截断"
-                                               f"（{'空回' if not content else f'残句 {len(content)} 字符'}，"
-                                               f"耗 {tokens_used or '?'} token），预算动态扩容至 {effective_max_tokens} 重试"
-                                               f"（第 {expansions} 次扩容，不占重试配额）")
+                                if not content:
+                                    # ★★ R783：**空回直跳封顶**，不再逐级 +1500。
+                                    # 判据（origin/main metrics，33 条撞顶拒稿）：带遥测的
+                                    # 22 条 completion **恒等于 6000**，其中 18 条吐空——
+                                    # 空回+length 的语义是"思考链独自吃满了当前预算"，
+                                    # 而缺口大小从当前值**不可观测**（可能是 +500 也可能是
+                                    # +5000）。逐级试探等于把同一条思考链按 1500 的步长
+                                    # 反复重付（实测吐空稿要白烧 4~5 次调用才到顶），
+                                    # 而预算是上界非下限、模型非预算感知（直方图实证，
+                                    # 见 `_summarize_max_tokens` 注释）⇒ 一次跳到封顶
+                                    # 试到底，成本与逐级探到同一落点完全相同或更低。
+                                    effective_max_tokens = budget_cap
+                                    logger.warning(
+                                        f"提供商 [{provider.name}] finish=length 空回"
+                                        f"（思考链独自吃满预算，耗 {tokens_used or '?'} token），"
+                                        f"直跳封顶 {budget_cap} 重试"
+                                        f"（第 {expansions} 次扩容，不占重试配额）")
+                                else:
+                                    # 残句（content 非空）保持逐级 +1500：模型已经在吐正文，
+                                    # 缺口通常不大，且 R350 的失控啰嗦多半会在下一级被过长门
+                                    # 抓住——留给它一级的机会，比直接跳到封顶更早暴露。
+                                    effective_max_tokens = min(effective_max_tokens + 1500, budget_cap)
+                                    logger.warning(f"提供商 [{provider.name}] finish=length 截断"
+                                                   f"（残句 {len(content)} 字符，"
+                                                   f"耗 {tokens_used or '?'} token），预算动态扩容至 {effective_max_tokens} 重试"
+                                                   f"（第 {expansions} 次扩容，不占重试配额）")
                                 continue
+                            # ★★ R783：已到封顶仍 length ⇒ **同预算重试必现同款截断**
+                            # （R349 的原话），直接出循环走下方拒稿路径。旧实现在这里
+                            # 会 attempt+=1 再用同一预算调一次（max_attempts=2 时），
+                            # 那次调用是**被 R349 自己的论证判了死刑的纯浪费**——
+                            # 生产 22 条撞顶稿每条多烧一次封顶级调用。
+                            break
                     if content:
                         break
                     attempt += 1
@@ -6865,10 +6955,12 @@ class MultiLLMEngine:
                     # R349：空回 + finish=length = 思考链吃满整个封顶预算仍吐空。
                     # 与 R331 残句到顶同根因（同预算重试必现同款截断），是确定性
                     # 预算耗尽而非「上游偶发空包」——能走到这里 finish 仍是 length，
-                    # 就意味着 4292 的扩容链已把 effective 顶到 budget_cap（否则早已
-                    # continue 扩容）。必须首挂即进断路器，勿与偶发空包共用「首挂原谅」，
-                    # 否则同款吐空的提供商每条故事白烧一次封顶级调用（生产 L1259 耗
-                    # 7973 / L1413 耗 6810 token，均被误判为可原谅偶发空回）。
+                    # 就意味着扩容已把 effective 顶到 budget_cap（空回直跳封顶 /
+                    # 残句逐级 +1500，两者到头都会 continue 到这里）。必须首挂即进
+                    # 断路器，勿与偶发空包共用「首挂原谅」，否则同款吐空的提供商
+                    # 每条故事白烧一次封顶级调用（生产 L1259 耗 7973 / L1413 耗
+                    # 6810 token，均被误判为可原谅偶发空包）。
+                    # ★ R783：直跳封顶后这条路径的调用次数从 5~6 次降到 2 次。
                     if final_finish == "length":
                         raise _BudgetExhaustedError(
                             f"预算 {effective_max_tokens}（封顶 {budget_cap}）到顶仍 "

@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -327,6 +328,69 @@ def report(rows, hours, since_iso=None, quota=None, prod=None):
     else:
         print("   ⚠️ 窗口内无逐币拦截记录 ⇒ **无法归因**（该字段 R728 上线于 "
               "10-10 19:30；且只在真正评估到候选的轮次才会产生）")
+
+    # ⑤¾ LLM 预算封顶（R783 度量面：抬封顶 6000→9000 后必须能回答"救回了多少"）
+    #   ★ 为什么必须进报告：R783 的三个改动（起点 1500→3000 / 空回直跳封顶 /
+    #     封顶 6000→9000）的收益全部落在"原本 100% 浪费的撞顶稿"上，而撞顶稿
+    #     在总拒稿里只占 ~1% ⇒ 不单列面板就永远看不到它（R728/R731 同族：
+    #     混在大类里的参数问题不可见）。
+    #   ★ 数据源用**全部行**而不是 `rej`：`rej` 只收 llm_failed（故事级），
+    #     而撞顶拒稿是**通道级** llm_rejected（同一次失败在故事级还有一行汇总，
+    #     见 R696）⇒ 用 rej 会漏掉 22 条里的 20 条（实测：rej 口径只看到 2 条）。
+    #   ★ 判据（R694b 遥测）：撞顶 = reason 含"封顶"+finish=length；
+    #     completion 恒等于 budget_cap 是它的遥测特征。
+    #   ★ 救回量的**下界** = 成功稿 completion >6000 的篇数——R783 前封顶 6000
+    #     使该带在物理上恒为 0，所以任何 >0 都是新封顶救回来的（上界不可知：
+    #     被 failover 到别家救回的故事不带这个印记）。
+    cap_hits = [r for r in rows
+                if (r.get("ts") or "") >= cut
+                and "封顶" in str(r.get("reason") or "")
+                and "finish=length" in str(r.get("reason") or "")]
+    # ★ R696：同一次失败落**两行**——通道级 llm_rejected（全字段、秒级 ts）+
+    #   故事级 llm_failed（汇总、字段残缺、**微秒级 ts**）⇒ 直接数行会把一次
+    #   撞顶算成两次。按 (秒级 ts, provider) 去重数**事件**，并优先保留字段全的
+    #   那行（有 completion/budget_cap 的通道级行）。
+    _ev = {}
+    for r in cap_hits:
+        k = (str(r.get("ts") or "")[:19], r.get("provider"))
+        prev = _ev.get(k)
+        if prev is None or (prev.get("completion_tokens") is None
+                            and r.get("completion_tokens") is not None):
+            _ev[k] = r
+    cap_events = sorted(_ev.values(), key=lambda r: r.get("ts") or "")
+    rescued_lb = [r for r in pub if (r.get("completion_tokens") or 0) > 6000]
+    with_ct = [r for r in pub if r.get("completion_tokens")]
+    print("\n⑤¾ LLM 预算封顶（R783：起点3000/空回直跳/封顶9000）")
+    if cap_events:
+        by_cap = Counter(str(r.get("budget_cap")) for r in cap_events)
+        empty_n = sum(1 for r in cap_events if "吐空" in str(r.get("reason") or ""))
+        frag_lens = []
+        for r in cap_events:
+            mm = re.search(r"残句 (\d+) 字符", str(r.get("reason") or ""))
+            if mm:
+                frag_lens.append(int(mm.group(1)))
+        print("   撞顶拒稿 %d 次（按封顶档：%s）｜吐空 %d · 残句 %d%s"
+              % (len(cap_events),
+                 " / ".join("%s×%d" % (k, v) for k, v in sorted(by_cap.items())),
+                 empty_n, len(frag_lens),
+                 ("（残句字符中位 %d）" % sorted(frag_lens)[len(frag_lens) // 2]) if frag_lens else ""))
+        if len(cap_hits) != len(cap_events):
+            print("   （原始行 %d 条 = 通道级+故事级双行落盘（R696），此处按事件去重）"
+                  % len(cap_hits))
+        if "None" in by_cap:
+            print("   （None 档 = R694b 遥测上线前（10-07）的旧行，无 budget_cap 字段，"
+                  "不是数据缺失）")
+        print("   ★ 判读：9000 档仍在撞 ⇒ 封顶还不够或 runaway 思考链（思考链独自"
+              "吃满 9000 一个字不吐）；降到 0 次且 rescued 稳定 >0 ⇒ 抬顶有效")
+    else:
+        print("   撞顶拒稿 0 次（窗口内无「封顶+finish=length」拒稿）")
+    if with_ct:
+        print("   成功稿 completion >6000：%d 篇 / %d 篇带遥测（%.0f%%）"
+              " ⇒ R783 新封顶救回量**下界**（R783 前该带物理恒 0）"
+              % (len(rescued_lb), len(with_ct), 100 * len(rescued_lb) / len(with_ct)))
+    else:
+        print("   ⚠️ 窗口内成功稿无 completion 遥测 ⇒ **无法度量救回量**"
+              "（该字段 R694b 上线于 10-07；不是 0 命中）")
 
     # ⑥ 语种（R712）
     langs = Counter(r.get("lang") for r in pub if r.get("lang"))
