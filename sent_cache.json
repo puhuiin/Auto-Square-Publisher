@@ -1,15 +1,5 @@
 [
   {
-    "id": "04780d490cc3d85d",
-    "title": "XRP Ledger 修复存在约十年的严重漏洞,攻击者可凭空增发 XRP",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-10T05:46:11.738287+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "97c6f939967b418c",
     "title": "Solana doubles block production speed to 200ms as network prepares for Alpenglow upgrade",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5196,5 +5186,15 @@
       "BTC"
     ],
     "lang": "en"
+  },
+  {
+    "id": "040be2a52e75eb90",
+    "title": "Ethereum Price Prediction: JPMorgan Brings Wall Street Closer to ETH",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-19T22:11:54.221854+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
