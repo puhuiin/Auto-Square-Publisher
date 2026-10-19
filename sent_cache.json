@@ -1,16 +1,5 @@
 [
   {
-    "id": "8d4c1ea9c265d47d",
-    "title": "主要 Meme 市场 24 小时成交约 2.40 亿美元,环比下降 24.5%",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-10T03:26:55.658809+00:00",
-    "tokens": [
-      "BNB",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "92bc897c5726b595",
     "title": "+1.34 Billion Shiba Inu (SHIB) in 24 Hours: What's Behind the Fresh Volume?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5192,6 +5181,18 @@
     "sent_at": "2026-10-19T19:46:44.911021+00:00",
     "tokens": [
       "BAT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c2678d91066a2aaf",
+    "title": "CME Targets October 19 Start For Bitcoin Cash And Uniswap Futures",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-19T20:04:50.776322+00:00",
+    "tokens": [
+      "BCH",
+      "UNI",
+      "BTC"
     ],
     "lang": "en"
   }
