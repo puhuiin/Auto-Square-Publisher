@@ -1,14 +1,5 @@
 [
   {
-    "id": "90a791132830eb89",
-    "title": "Solana Records 33% Spike in New Addresses",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-07T16:26:52.532178+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "46df222add43d1a0",
     "title": "Litecoin Hits 15-Year Milestone: Grayscale's Pandl Backs 'OG Altcoin' Amid Push for NYSE Listing",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5166,5 +5157,15 @@
       "HYPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "2c32ed93dc016ead",
+    "title": "Worldcoin’s October slide: AI hype isn’t enough to hold $0.50",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-19T04:44:44.718224+00:00",
+    "tokens": [
+      "WLD"
+    ],
+    "lang": "zh-TW"
   }
 ]
