@@ -1,14 +1,5 @@
 [
   {
-    "id": "5fc489ac9f2dc833",
-    "title": "Winklevoss 兄弟申請現貨 Zcash ETF(WINK)!主打 0.25% 破盤管理費、豪砸 1 億鎂護盤",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-10-06T17:48:42.183534+00:00",
-    "tokens": [
-      "ZEC"
-    ]
-  },
-  {
     "id": "f64b9ed6af9fdf07",
     "title": "DOJ presses Tornado Cash prosecution as Treasury drops mixer reporting plan",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5154,5 +5145,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f2eee89cc33185bc",
+    "title": "Cysic suspends bridge after attacker mints tokens and moves $727,000 to Ethereum",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-19T00:11:14.220206+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
