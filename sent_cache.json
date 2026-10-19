@@ -1,15 +1,5 @@
 [
   {
-    "id": "b668c0a4f3af71d3",
-    "title": "Zcash developers set January target for quantum-resistant payments after ‘bunker mode’ scare",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-10-09T21:06:28.444848+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2b207a519add52bb",
     "title": "Solana token holder net income tops $400K for two weeks straight",
     "source": "Crypto Briefing (深度与研报)",
@@ -5193,6 +5183,16 @@
     "sent_at": "2026-10-19T16:44:00.514367+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "dd027c28c8fc8607",
+    "title": "Abandoned Bitcoin? Wallet Targeted by Noah Doe Lawsuit Moves $33 Million",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-10-19T17:03:59.003654+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
