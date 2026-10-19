@@ -19,23 +19,23 @@
   "_feed_health": {
     "CoinJournal (山寨异动)": {
       "fails": 3,
-      "parked_until": "2026-10-19T11:23:59.866132+00:00",
-      "last_fail": "2026-10-19T05:23:59.866132+00:00"
-    },
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "last_fail": "2026-10-19T05:03:23.312217+00:00",
-      "reset_at": "2026-10-19T06:23:33.204838+00:00"
+      "last_fail": "2026-10-19T05:23:59.866132+00:00",
+      "parked_until": "2026-10-19T11:23:59.866132+00:00"
     },
     "深潮TechFlow (中文/简体)": {
+      "reset_at": "2026-10-19T06:43:36.168541+00:00",
       "fails": 1,
-      "last_fail": "2026-10-19T04:23:44.049111+00:00",
-      "reset_at": "2026-10-19T06:23:34.334095+00:00"
+      "last_fail": "2026-10-19T04:23:44.049111+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-10-19T06:43:30.471300+00:00",
+      "fails": 1,
+      "last_fail": "2026-10-19T05:03:23.312217+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-19",
