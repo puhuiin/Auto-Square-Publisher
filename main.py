@@ -10482,6 +10482,19 @@ class Notifier:
             def _send_webhook():
                 r = requests.post(webhook_url, json=payload, timeout=8)
                 r.raise_for_status()
+                # ★★ R782：**必须验钉钉业务码**。生产实证：webhook token 失效
+                # （{"errcode":300005,"errmsg":"token is not exist"}）已连续 6 天，
+                # 而这里只验 HTTP 2xx ⇒ 报警被标记"已送达"、用户一条都没收到
+                # （R781 同款：workflow 全绿 ≠ 功能正常；探针在跑、答案被丢弃）。
+                # 只对**钉钉形态响应**（含 errcode 键）校验；飞书/企微/Discord
+                # 的成功语义不一（code:0 / errcode:0 / 204），不武断改写。
+                try:
+                    body = r.json()
+                except ValueError:
+                    return          # 非 JSON 响应（代理页等）不误判
+                if isinstance(body, dict) and "errcode" in body \
+                        and body.get("errcode") not in (0, None):
+                    raise ValueError(f"钉钉返回业务错误: {r.text[:150]}")
 
             if Notifier._deliver("Webhook", _send_webhook, secrets=(webhook_url,)):
                 logger.info("已发送 Webhook 状态通知。")

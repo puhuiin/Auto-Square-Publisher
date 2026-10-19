@@ -21825,7 +21825,6 @@ class TestR775EnglishBranchCampaignMention(unittest.TestCase):
             ln for ln in block.split("\n") if "活动" not in ln)
         self.assertNotIn("活动", stripped,
                          "连抹掉活动句都还能检出 ⇒ 判据是恒真的（无牙齿）")
-
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
@@ -22003,5 +22002,77 @@ class TestR751FeedStreakSurvivesMerge(unittest.TestCase):
                         "降级必须留痕（静默降级会藏缺陷）")
 
 
+
+class TestR782NotifierWebhookErrcode(unittest.TestCase):
+    """R782：主 Notifier 的 Webhook 通道必须验钉钉业务码（详见方法 docstring）"""
+
+    def test_r782_webhook_channel_checks_dingtalk_errcode(self):
+        """★★★ R782：主 Notifier 的 Webhook 通道必须验钉钉业务码。
+        生产实证：token 失效（errcode 300005）连续 6 天，而旧实现只
+        raise_for_status() ⇒ HTTP 200 + 错误业务码被当成"已送达"，
+        错误报警全部静默丢失（R781 同款：workflow 全绿 ≠ 功能正常）。
+        ⚠️ 不能 patch 掉 _deliver——那会把真正的发送函数一起替掉、
+        测不到 errcode 校验（第一版就犯了这个错：断言 post 被调用却恒假）。
+        """
+        import unittest.mock as mock
+        import os
+
+        class FakeResp:
+            status_code = 200
+            text = '{"errcode":300005,"errmsg":"token is not exist"}'
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {"errcode": 300005, "errmsg": "token is not exist"}
+
+        old_env = dict(os.environ)
+        try:
+            os.environ["WEBHOOK_URL"] = ("https://oapi.dingtalk.example.invalid"
+                                         "/robot/send?access_token=FAKE")
+            for k in ("SERVERCHAN_KEY", "PUSHPLUS_TOKEN", "BARK_KEY",
+                      "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
+                os.environ.pop(k, None)
+            with mock.patch.object(m.requests, "post", return_value=FakeResp()):
+                with self.assertLogs(m.logger, level="WARNING") as cm:
+                    m.Notifier.send_notification("测试报警", "内容", is_error=False)
+            joined = "\n".join(cm.output)
+            self.assertIn("钉钉返回业务错误", joined,
+                          "errcode 300005 必须被判失败并留痕（静默=用户收不到报警）")
+        finally:
+            os.environ.clear()
+            os.environ.update(old_env)
+
+    def test_r782_webhook_ok_response_still_passes(self):
+        """★ errcode=0 不得误报（不能把正常发送判失败而徒增重试噪音）"""
+        import unittest.mock as mock
+        import os
+
+        class FakeResp:
+            status_code = 200
+            text = '{"errcode":0,"errmsg":"ok"}'
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {"errcode": 0, "errmsg": "ok"}
+
+        old_env = dict(os.environ)
+        try:
+            os.environ["WEBHOOK_URL"] = ("https://oapi.dingtalk.example.invalid"
+                                         "/robot/send?access_token=FAKE")
+            for k in ("SERVERCHAN_KEY", "PUSHPLUS_TOKEN", "BARK_KEY",
+                      "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
+                os.environ.pop(k, None)
+            with mock.patch.object(m.requests, "post", return_value=FakeResp()):
+                with mock.patch.object(m.logger, "warning") as lw:
+                    m.Notifier.send_notification("测试", "内容", is_error=False)
+            warned = any("钉钉返回业务错误" in str(c) for c in lw.call_args_list)
+            self.assertFalse(warned, "errcode=0 被误判成失败")
+        finally:
+            os.environ.clear()
+            os.environ.update(old_env)
 if __name__ == "__main__":
     unittest.main(verbosity=2)
