@@ -319,6 +319,8 @@ python scripts/metrics_report.py --days 1
 
 > 若后续核实到币安 Square OpenAPI 提供内容统计查询接口，只需替换第 2 步的数据来源，`content_stats.jsonl` 的形状与消费面不变。
 
+> ★★ R790 已探过（2026-10-19，结论=**没有**，别再重复探）：Square OpenAPI Key 下 8 个候选路径（`content/list`、`content/query`、`content/statistics`、`author/statistics`、`content/detail`，v1/v2 × GET/POST）**全部 404** ⇒ 浏览量只能继续走上面的 CSV 导出路径。探针脚本 `scripts/probe_square_stats.py` 与 workflow 里的门控步骤（`vars.PROBE_SQUARE_STATS=1` 才跑，只读、独立 step、失败不影响发帖）保留着：币安若扩容 OpenAPI，设个 var 手动触发一次即可重问，**不要在没设 var 的情况下改脚本路径列表以外的任何东西**。engagement loop 因此仍是「用户导出 → import_content_stats.py → rebuild token_engagement」的人工节拍（R740）。
+
 ## ⚙️ 定制与优化建议
 
 - **调整执行频率**：外部 cron（repository_dispatch，20 分钟一次，当前生产形态）或 `.github/workflows/auto_post.yml` 的 `schedule` 兜底。GitHub 自带 schedule 有静默吞投递的风险（看门狗会报警），生产建议保持外部回调。
