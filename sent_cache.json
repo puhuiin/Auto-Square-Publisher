@@ -1,15 +1,5 @@
 [
   {
-    "id": "92bc897c5726b595",
-    "title": "+1.34 Billion Shiba Inu (SHIB) in 24 Hours: What's Behind the Fresh Volume?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-10T03:47:51.770718+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ed0138153e9b9914",
     "title": "Castle Labs 报告:Hyperliquid 累计协议收入超 14 亿美元,占链上永续合约份额超 56%",
     "source": "吴说区块链 (中文深度)",
@@ -5193,6 +5183,16 @@
       "BCH",
       "UNI",
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "52128bee8057cd05",
+    "title": "BNB Chain’s tokenized stock market cap grows by $239.3M in a week",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-19T20:25:26.485647+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
