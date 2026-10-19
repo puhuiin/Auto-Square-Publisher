@@ -281,13 +281,28 @@ def build_report(rows, hours: int) -> str:
 
 
 def send_dingtalk(url: str, text: str) -> str:
+    """发送日报到钉钉机器人，返回响应体。
+
+    ★★ R781：**必须校验 errcode**。生产实证：webhook token 失效
+    （{"errcode":300005,"errmsg":"token is not exist"}）已连续 6 天发生，
+    而旧实现把响应体 print 出来就 return——workflow 全绿、用户一条日报都没
+    收到（"探针在跑、答案被丢弃"的运维侧变体：发送失败被当成发送成功）。
+    DingTalk 约定 errcode==0 才是成功；非 0 抛异常让调用方走兜底/报警。
+    """
     body = json.dumps({"msgtype": "text",
                        "text": {"content": text},
                        "at": {"isAtAll": False}}).encode("utf-8")
     req = urllib.request.Request(url, data=body,
                                  headers={"Content-Type": "application/json"})
     r = urllib.request.urlopen(req, timeout=20)
-    return r.read().decode("utf-8", "replace")
+    resp = r.read().decode("utf-8", "replace")
+    try:
+        payload = json.loads(resp)
+    except ValueError:
+        return resp          # 非 JSON 响应（代理页等）——原样返回，由调用方判断
+    if isinstance(payload, dict) and payload.get("errcode") not in (0, None):
+        raise RuntimeError("钉钉返回业务错误: %s" % resp[:200])
+    return resp
 
 
 def main():
@@ -308,7 +323,25 @@ def main():
     if not a.url:
         sys.exit("未配置 webhook（--url 或环境变量 DINGTALK_WEBHOOK_URL / WEBHOOK_URL）")
     print("\n--- 发送 ---")
-    print(send_dingtalk(a.url, text))
+    # ★★ R781：主通道（DINGTALK_WEBHOOK_URL）失败必须**兜底 + 响**。
+    # 生产实证：钉钉 token 失效连续 6 天，旧实现 print  errcode 300005 但
+    # exit 0 ⇒ workflow 全绿而用户零日报。现：主通道失败 → 试 WEBHOOK_URL
+    # （同 payload，generic webhook 通道）→ 仍失败则 exit 1 让 workflow 红。
+    try:
+        print(send_dingtalk(a.url, text))
+        return
+    except Exception as e:
+        print("主通道（DINGTALK_WEBHOOK_URL）发送失败: %s" % e)
+    fallback = (os.environ.get("WEBHOOK_URL", "") or "").strip()
+    if fallback and fallback != a.url:
+        try:
+            print("兜底通道（WEBHOOK_URL）重试...")
+            print(send_dingtalk(fallback, text))
+            return
+        except Exception as e2:
+            print("兜底通道也失败: %s" % e2)
+    sys.exit("日报发送失败（主通道与兜底通道均失败）——请检查 "
+             "DINGTALK_WEBHOOK_URL / WEBHOOK_URL 配置")
 
 
 if __name__ == "__main__":

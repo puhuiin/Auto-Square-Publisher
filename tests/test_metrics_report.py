@@ -6959,6 +6959,115 @@ class TestR780CashtagTightFullTextTelemetry(unittest.TestCase):
         # 前贴+后贴都算
         self.assertEqual(pub._count_tight_cashtags("网$ETH后"), 1)
 
+class TestR781DailyReportSendLoudly(unittest.TestCase):
+    """R781：日报发送失败必须**响**——生产实证钉钉 token 失效连续 6 天，
+    旧实现 print errcode 300005 但 exit 0 ⇒ workflow 全绿而用户零日报
+    （"探针在跑、答案被丢弃"的运维侧变体）。
+    """
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r781",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_errcode_nonzero_raises(self):
+        """★★★ errcode!=0 必须抛异常（DingTalk 约定 0 才成功）"""
+        import urllib.request
+        dr = self._dr()
+
+        class R:
+            def read(self):
+                return b'{"errcode":300005,"errmsg":"token is not exist"}'
+        orig = urllib.request.urlopen
+        urllib.request.urlopen = lambda *a, **k: R()
+        try:
+            with self.assertRaises(RuntimeError):
+                dr.send_dingtalk("https://example.invalid/hook", "报告")
+        finally:
+            urllib.request.urlopen = orig
+
+    def test_errcode_zero_passes(self):
+        """★ errcode=0 正常返回（不得误报）"""
+        import urllib.request
+        dr = self._dr()
+
+        class R:
+            def read(self):
+                return b'{"errcode":0,"errmsg":"ok"}'
+        orig = urllib.request.urlopen
+        urllib.request.urlopen = lambda *a, **k: R()
+        try:
+            out = dr.send_dingtalk("https://example.invalid/hook", "报告")
+        finally:
+            urllib.request.urlopen = orig
+        self.assertIn("errcode\":0", out)
+
+    def test_non_json_response_does_not_raise(self):
+        """★ 非 JSON 响应（代理页/空 200）不抛——交给调用方判断，
+        不能把"响应异常"升级成"业务失败"误走兜底"""
+        import urllib.request
+        dr = self._dr()
+
+        class R:
+            def read(self):
+                return b"<html>gateway</html>"
+        orig = urllib.request.urlopen
+        urllib.request.urlopen = lambda *a, **k: R()
+        try:
+            out = dr.send_dingtalk("https://example.invalid/hook", "报告")
+        finally:
+            urllib.request.urlopen = orig
+        self.assertIn("html", out)
+
+    def test_main_falls_back_then_exits_nonzero(self):
+        """★★★ 端到端：主通道失败→兜底尝试→全失败 exit 1（workflow 必须红）"""
+        import urllib.request
+        import subprocess
+        import tempfile
+        dr = self._dr()
+        # 造一个最小 metrics 文件
+        tmp = tempfile.mktemp(suffix=".jsonl")
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(json.dumps({"outcome": "run_summary", "sent_24h": 3,
+                                "max_daily_posts": 60, "candidates": 10,
+                                "published": 1}) + "\n")
+        # 主通道与兜底都返回 token 失效
+        class R:
+            def read(self):
+                return b'{"errcode":300005,\"errmsg\":\"token is not exist\"}'
+        orig = urllib.request.urlopen
+        urllib.request.urlopen = lambda *a, **k: R()
+        old_env = dict(os.environ)
+        try:
+            os.environ["DINGTALK_WEBHOOK_URL"] = "https://main.invalid/hook"
+            os.environ["WEBHOOK_URL"] = "https://fallback.invalid/hook"
+            import io
+            import contextlib
+            buf = io.StringIO()
+            code = 0
+            with contextlib.redirect_stdout(buf):
+                try:
+                    dr.main.__wrapped__ if hasattr(dr.main, "__wrapped__") else None
+                    sys.argv = ["daily_report.py", "--metrics", tmp]
+                    dr.main()
+                except SystemExit as e:
+                    code = e.code if isinstance(e.code, int) else 1
+            out = buf.getvalue()
+        finally:
+            urllib.request.urlopen = orig
+            os.environ.clear()
+            os.environ.update(old_env)
+            os.remove(tmp)
+        self.assertEqual(code, 1, "全失败必须 exit 1（否则 workflow 全绿而用户没收到）")
+        self.assertIn("主通道", out, "要说明主通道失败了")
+        self.assertIn("兜底", out, "要说明试过兜底")
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
