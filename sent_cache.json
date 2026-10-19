@@ -1,15 +1,5 @@
 [
   {
-    "id": "ac0f4d0adb52b889",
-    "title": "XRP tests the $1.32 support level as ETF demand slows",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-10-09T19:38:10.967784+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b668c0a4f3af71d3",
     "title": "Zcash developers set January target for quantum-resistant payments after ‘bunker mode’ scare",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5193,6 +5183,16 @@
     "sent_at": "2026-10-19T16:15:09.303793+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "89184b29129e2956",
+    "title": "Solana (SOL) Hits 1.4 Million Tokenized Stock Holders in Historic Retail Surge",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-19T16:44:00.514367+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
