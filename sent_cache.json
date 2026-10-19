@@ -1,15 +1,5 @@
 [
   {
-    "id": "97c6f939967b418c",
-    "title": "Solana doubles block production speed to 200ms as network prepares for Alpenglow upgrade",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-10T06:45:50.768980+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1b6eee0a7e5db309",
     "title": "ETH fee burns cover just 2% of new coins printed in 2026",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5196,5 +5186,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c0c0867d64844572",
+    "title": "entropy 以 574.98 枚 HYPE 买下 HIP-3 代码 MOONSHOT",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-19T22:45:18.874490+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
