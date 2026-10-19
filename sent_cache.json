@@ -1,14 +1,5 @@
 [
   {
-    "id": "b3eb404befca59be",
-    "title": "'Bunker Mode': Top Ethereum Researcher Sounds Alarm Over AI Crypto Threat",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-07T19:50:26.406815+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "83a73000bd1d5f04",
     "title": "Ethereum Researcher Says AI May Break Encryption Before Quantum Does",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5170,5 +5161,17 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "a5a6764ef18d3dd4",
+    "title": "市場走向成熟:2026 Q4 流動性加密資產思考",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-19T06:07:07.641564+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
