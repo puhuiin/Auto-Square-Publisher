@@ -17,19 +17,19 @@
   "strategy_guidance": "当前无明确截止日期的核心活跃活动包括现货交易锦标赛S6、新上线的RWUSD与bStocks代币化证券交易对、币安期货新TraFi永续合约系列，发帖时可围绕这些官方动态结合Write2Earn规则，引导用户参与评论互动获取奖励。可同步联动S16英雄联盟世界冠军赛预测、7周年P2P活动、社区AI反馈征集等泛娱乐向无截止日活动，拓展内容触达的圈层。发帖时需严格规避交易收益相关承诺表述，仅聚焦活动规则、参与方式等客观信息，符合平台内容规范。",
   "last_updated": "2026-10-18T18:54:24.689426Z",
   "_feed_health": {
-    "深潮TechFlow (中文/简体)": {
-      "fails": 1,
-      "last_fail": "2026-10-19T04:23:44.049111+00:00",
-      "reset_at": "2026-10-19T04:43:38.133710+00:00"
-    },
     "CoinJournal (山寨异动)": {
       "fails": 1,
       "last_fail": "2026-10-19T04:43:59.549170+00:00"
+    },
+    "深潮TechFlow (中文/简体)": {
+      "fails": 1,
+      "reset_at": "2026-10-19T04:43:38.133710+00:00",
+      "last_fail": "2026-10-19T04:23:44.049111+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-19",
