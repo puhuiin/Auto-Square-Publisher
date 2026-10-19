@@ -1,15 +1,5 @@
 [
   {
-    "id": "2b207a519add52bb",
-    "title": "Solana token holder net income tops $400K for two weeks straight",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-09T22:04:59.445849+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "53e56948e3946068",
     "title": "Assessing whether ONDO crypto could reclaim $0.50 despite $4.4M whale sale",
     "source": "AMBCrypto (技术与链上)",
@@ -5193,6 +5183,16 @@
     "sent_at": "2026-10-19T17:03:59.003654+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "832f1990437fbba5",
+    "title": "STRK Sinks 38% in a Week as Starknet Rally Reverses",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-19T17:23:57.481244+00:00",
+    "tokens": [
+      "STRK"
     ],
     "lang": "en"
   }
