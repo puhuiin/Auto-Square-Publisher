@@ -1,14 +1,5 @@
 [
   {
-    "id": "83a73000bd1d5f04",
-    "title": "Ethereum Researcher Says AI May Break Encryption Before Quantum Does",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-07T22:13:09.798097+00:00",
-    "tokens": [
-      "ETH"
-    ]
-  },
-  {
     "id": "8ec3a4ce023a2d17",
     "title": "Bitcoin Struggles to Break Higher as ETF Demand Weakens: Bitfinex Alpha",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5171,6 +5162,17 @@
       "BTC",
       "ETH",
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "10944424669a5521",
+    "title": "总多头敞口达约2963万美元,ZEC最大多头加仓720万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-19T06:25:50.095482+00:00",
+    "tokens": [
+      "ZEC",
+      "PUMP"
     ],
     "lang": "zh-CN"
   }
