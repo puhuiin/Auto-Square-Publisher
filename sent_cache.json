@@ -1,16 +1,5 @@
 [
   {
-    "id": "53e56948e3946068",
-    "title": "Assessing whether ONDO crypto could reclaim $0.50 despite $4.4M whale sale",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-09T22:44:18.706937+00:00",
-    "tokens": [
-      "ONDO",
-      "UNI"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "abaaac76f76a6ec4",
     "title": "Stellar (XLM) Outpaces Ethereum in Tokenized Fund Inflows Amid $4 Billion RWA Surge",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5193,6 +5182,16 @@
     "sent_at": "2026-10-19T17:23:57.481244+00:00",
     "tokens": [
       "STRK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9850f2d08e9e6a2e",
+    "title": "Under 1,000 Shiba Inu (SHIB) Users Actually Withdraw Tokens From Exchanges",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-19T17:44:31.867623+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
