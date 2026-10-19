@@ -1,14 +1,5 @@
 [
   {
-    "id": "cd4bbafbb34bb6cc",
-    "title": "AI Coding Agents Drive Surge in Bitcoin Integration Requests: Breez",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-08T23:04:04.716503+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "8d80df83e12bd005",
     "title": "Solana DeFi Firms Orca and Loopscale Merge Under New Formation Brand",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5185,6 +5176,16 @@
     "sent_at": "2026-10-19T12:07:30.545569+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e754e8c7e034580f",
+    "title": "StakerX’s AI Agent Surpasses Passes $40M Staked Assets on Solana Within Three Months of Launch",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-19T12:31:06.024969+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }

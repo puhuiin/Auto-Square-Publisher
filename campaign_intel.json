@@ -25,12 +25,12 @@
   },
   "_llm_breaker": {
     "Preset-stepfun": {
-      "cooldown_until": "2026-10-19T12:46:49.797690+00:00",
-      "fails": 3
+      "fails": 3,
+      "cooldown_until": "2026-10-19T12:46:49.797690+00:00"
     },
     "Preset-stepfun-flash": {
-      "cooldown_until": "2026-10-19T12:46:47.818847+00:00",
-      "fails": 3
+      "fails": 3,
+      "cooldown_until": "2026-10-19T12:46:47.818847+00:00"
     }
   },
   "_article_sent_date": "2026-10-19",
