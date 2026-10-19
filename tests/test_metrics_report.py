@@ -7605,6 +7605,60 @@ class TestR750DailyReportQualitySection(unittest.TestCase):
         self.assertIn("未检出", text, "全零时未明说 ⇒ 读者无法区分'干净'与'没测'")
 
 
+class TestR796ZeroPublishNamesDominantCause(unittest.TestCase):
+    """★★ R796：0 发布且配额未满时，结论必须点名**实测的主导拦截原因**。
+
+    旧结论只说「可能命中间隔门/无候选/风控拦截」——生产实证（10-18 的 11 个
+    0 发布轮）：候选 99~104 条全死于「无有效代币 63~69 + 单币限流 35~36」，
+    漏斗里写得清清楚楚，结论却把人指向三个错地方（R704：说错方向比不说更糟）。
+    """
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r796",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _zero_rows(self, no_token, token_limit, unprocessed=0):
+        return [{"outcome": "run_summary", "ts": "2026-10-19T0%d:00:00+00:00" % i,
+                 "feeds_ok": 25, "candidates": no_token + token_limit + unprocessed,
+                 "unprocessed": unprocessed, "published": 0,
+                 "skipped_no_token": no_token, "skipped_token_limit": token_limit,
+                 "sent_24h": 30, "max_daily_posts": 60} for i in range(4)]
+
+    def test_conclusion_names_dominant_skip(self):
+        """① 主导原因必须出现在结论里（无有效代币/单币限流两种实证形态）"""
+        dr = self._dr()
+        for no_token, limit, want in ((65, 35, "无有效代币"),
+                                      (10, 90, "单币限流")):
+            text = dr.build_report(self._zero_rows(no_token, limit), 24)
+            concl = [l for l in text.split("\n") if l.startswith("结论")][0]
+            self.assertIn(want, concl, "结论未点名主导拦截 %s：%s" % (want, concl))
+
+    def test_conclusion_no_longer_lists_three_guesses(self):
+        """② 旧的三猜措辞必须消失（"可能命中 A/B/C" 是指向错误的方向）"""
+        dr = self._dr()
+        text = dr.build_report(self._zero_rows(65, 35), 24)
+        self.assertNotIn("可能命中间隔门", text,
+                         "三猜措辞还在 ⇒ 读者仍会先去看错地方")
+
+    def test_normal_day_conclusion_unchanged(self):
+        """③ 反向：有发布的正常日结论不变（不得把正常态也改成带原因）"""
+        dr = self._dr()
+        rows = [{"outcome": "binance_published", "ts": "2026-10-19T01:00:00+00:00",
+                 "final_preview": "ETH 跌破 2500，短线别追。", "content_chars": 20,
+                 "content_cjk": 10, "lang": "zh-CN", "tokens": ["ETH"]}]
+        rows += self._zero_rows(0, 0)
+        text = dr.build_report(rows, 24)
+        concl = [l for l in text.split("\n") if l.startswith("结论")][0]
+        self.assertIn("运行正常", concl, "有发布的日期不得被改成告警结论")
+
+
 class TestR755CampaignCtaRadarNarrowing(unittest.TestCase):
     """★★ R755：活动CTA雷达只量「引入句逐字复读」，不提活动内容词
 

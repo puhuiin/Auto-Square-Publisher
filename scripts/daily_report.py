@@ -289,8 +289,26 @@ def build_report(rows, hours: int) -> str:
         L.append("结论：✅ 运行正常。配额已打满 %d/%d，"
                  "配额门按设计拦截（省掉整轮抓取），无需处理" % (sent24, cap))
     elif not pub:
-        L.append("结论：⚠️ 窗口内 0 篇发布，且配额未满"
-                 " ⇒ 可能命中间隔门/无候选/风控拦截，请查看上方明细")
+        # ★★ R796：结论要点名**实测的主导拦截原因**，不再是"可能命中 A/B/C"
+        #   让人自己去翻。生产实证（10-18 的 11 个 0 发布轮）：候选 99~104 条
+        #   全部死于「无有效代币 63~69 + 单币限流 35~36」——漏斗里写得清清楚楚，
+        #   结论却只说"可能命中间隔门/无候选/风控拦截"，读者先去看三个错地方
+        #   （R704：看不到差异会被读成没差异；这里是说错方向比不说更糟）。
+        _dom = None
+        if sums:
+            _act = [r for r in sums if (r.get("feeds_ok") or 0) > 0] or sums
+            _causes = (
+                (sum(r.get("skipped_no_token") or 0 for r in _act), "无有效代币"),
+                (sum(r.get("skipped_token_limit") or 0 for r in _act), "单币限流"),
+                (sum(r.get("unprocessed") or 0 for r in _act), "配额满未处理"),
+                (sum(r.get("skipped_risk_blocked") or 0 for r in _act), "风控拦截"),
+                (sum(r.get("skipped_batch_dup") or 0 for r in _act), "批内重复"),
+            )
+            _n, _dom = max(_causes)
+            if _n <= 0:
+                _dom = None
+        L.append("结论：⚠️ 窗口内 0 篇发布，且配额未满%s"
+                 " ⇒ 请查看上方②漏斗明细" % (f"（主导拦截：{_dom}）" if _dom else ""))
     else:
         L.append("结论：✅ 运行正常，无发布失败")
     return "\n".join(L)
