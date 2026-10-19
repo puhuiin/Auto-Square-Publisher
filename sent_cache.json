@@ -1,14 +1,5 @@
 [
   {
-    "id": "19c634f7f1b1268e",
-    "title": "Ripple Legend Schwartz Set for Surprise Main Stage Return With Keynote Speech on XRP Future",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-08T18:07:00.865121+00:00",
-    "tokens": [
-      "XRP"
-    ]
-  },
-  {
     "id": "d1c6c52594f4a2f0",
     "title": "Former Engineer Gets 32 Months Prison for Hacking Employer and Demanding Bitcoin (BTC) Ransom",
     "source": "DailyHodl (山寨异动与百倍币叙事)",
@@ -5180,6 +5171,17 @@
     "tokens": [
       "ETH",
       "UNI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "73ac4bc7c659934e",
+    "title": "Circle mints approximately 3.75 billion USDC on Solana in the last week",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-19T10:11:30.761530+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
