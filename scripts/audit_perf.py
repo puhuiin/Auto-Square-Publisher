@@ -249,12 +249,24 @@ def report(rows, hours, since_iso=None, quota=None, prod=None):
     fin = Counter()
     for r in sums:
         for name, v in (r.get("per_feed_yield") or {}).items():
+            # ★ R791：键规约与发布侧同一条「去括号段」；此处再 split 一次是
+            #   兼容 R791 之前的历史行（首词键，如 "The"——它没有括号段可切，
+            #   原样保留，由下方过渡提示解释）。
             fin[name.split(" (")[0]] += v.get("kept") or 0
     pubsrc = Counter((r.get("source") or "?").split(" (")[0] for r in pub)
     for name, kept in fin.most_common(10):
         print("   %-26s 入选 %4d  发布 %3d  转化 %4.1f%%"
               % (name[:26], kept, pubsrc.get(name, 0),
                  100 * pubsrc.get(name, 0) / max(1, kept)))
+    # ★★ R792：键规约切换过渡提示（R791 首词→去括号段，两种规约并存约 1 天）。
+    #   历史行聚成 "The"/"Bitcoin" 等首词键，发布侧只有完整名 ⇒ 短名行的
+    #   「发布 0 / 转化 0%」是 join 不上的历史残留，不是源真的零转化。
+    _short_old = sorted(k for k in fin
+                        if any(k2 != k and k2.startswith(k + " ") for k2 in fin))
+    if _short_old:
+        print("   ℹ️ 源名键规约切换中（R791）：%s 等短名是旧「首词」规约的历史残留"
+              "（发布侧只有完整名 ⇒ 它们的 0%% 是 join 不上，不是零转化）；"
+              "窗口滚过约 1 天后只剩完整名" % "、".join(_short_old[:4]))
     if fin:
         print("   —— 累计：入选 %d → 发布 %d（%.1f%%），源数 %d"
               % (sum(fin.values()), sum(pubsrc.values()),

@@ -20111,6 +20111,86 @@ class TestR718TokenLimitTiering(unittest.TestCase):
                                 "基线不可用时未留日志 ⇒ 缺陷会隐身（R659 反面）")
 
 
+class TestR792FeedKeyTransitionHonesty(unittest.TestCase):
+    """★★ R792：源名键规约切换（R791）的过渡期，两个报告面板必须自证。
+
+    R791 把 per_feed_yield 的键从「首词」改成「去括号段」后，5000 行轮转窗里
+    两种规约会并存约 1 天：历史行聚成 "The"/"Bitcoin"，新行是 "The Block"/
+    "The Defiant"。不说明的话，读者会把短名行读成另一个源——audit_perf ④ 里
+    短名行的「发布 0 / 转化 0%」尤其像那么回事（其实是 join 不上）。
+    """
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        path = os.path.join(os.path.dirname(m.__file__), "scripts", "metrics_report.py")
+        spec = importlib.util.spec_from_file_location("metrics_report_r792", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _ap():
+        import importlib.util
+        path = os.path.join(os.path.dirname(m.__file__), "scripts", "audit_perf.py")
+        spec = importlib.util.spec_from_file_location("audit_perf_r792", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _mixed_rows(self):
+        """同一批源在新旧两种键规约下各留一行（历史 + 当天）。"""
+        return [
+            {"outcome": "run_summary", "ts": "2026-10-19T00:00:00+00:00",
+             "per_feed_yield": {"The": {"entries": 60, "kept": 12}}},
+            {"outcome": "run_summary", "ts": "2026-10-19T01:00:00+00:00",
+             "per_feed_yield": {"The Block": {"entries": 5, "kept": 2},
+                                "The Defiant": {"entries": 6, "kept": 3}}},
+            {"outcome": "binance_published", "ts": "2026-10-19T01:30:00+00:00",
+             "source": "The Block (机构与政策)"},
+        ]
+
+    def test_metrics_report_flags_transition(self):
+        """① dashboard 📡 面板必须说明短名行是历史残留"""
+        mr = self._mr()
+        rows = self._mixed_rows()
+        out = mr.render_text(mr.summarize(rows), rows)
+        line = [ln for ln in out.split("\n") if "键规约切换" in ln]
+        self.assertTrue(line, "混合窗口未提示键规约切换 ⇒ 短名行会被误读成另一个源")
+        self.assertIn("The", line[0])
+        self.assertIn("历史残留", line[0])
+
+    def test_audit_perf_flags_transition(self):
+        """② audit_perf ④ 必须说明短名行的 0% 是 join 不上、不是零转化"""
+        import contextlib
+        import io
+        ap = self._ap()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            ap.report(self._mixed_rows(), 48, None, None, None)
+        out = buf.getvalue()
+        self.assertIn("键规约切换", out)
+        self.assertIn("不是零转化", out,
+                      "必须点名 0% 是 join 不上的残留——否则运营会去撤掉健康源")
+
+    def test_no_note_when_keys_are_unambiguous(self):
+        """③ 假阳性演练：窗口里只有完整名（或单词名不互为主词）时不得提示"""
+        mr = self._mr()
+        rows = [
+            {"outcome": "run_summary", "ts": "2026-10-19T00:00:00+00:00",
+             "per_feed_yield": {"The Block": {"entries": 5, "kept": 2}}},
+            # CryptoNews 是完整名且不以 "Crypto " 开头 ⇒ 不得把 Crypto 误判成旧键
+            {"outcome": "run_summary", "ts": "2026-10-19T01:00:00+00:00",
+             "per_feed_yield": {"CryptoNews": {"entries": 5, "kept": 1},
+                                "CryptoSlate": {"entries": 5, "kept": 1}}},
+            {"outcome": "binance_published", "ts": "2026-10-19T01:30:00+00:00",
+             "source": "The Block (机构与政策)"},
+        ]
+        out = mr.render_text(mr.summarize(rows), rows)
+        self.assertNotIn("键规约切换", out,
+                         "无旧规约键时提示切换 ⇒ 误报（R601：误报率决定提示会不会被读）")
+
+
 class TestR719AuditScriptMatchesProduction(unittest.TestCase):
     """★★ R719：巡检脚本的浏览基线口径必须与**生产加载器逐字一致**
 

@@ -3495,6 +3495,20 @@ def render_text(s, rows=None):
                                   and (_dom > 0 and not _tied and _domn != "跨源同题")) else ""
                 parts.append(f"{_fname} {_kept}/{_ents}{_why}{flag}")
             lines.append(f"  📡 源入选率(入选/扫描): {' · '.join(parts)}")
+            # ★★ R792：键规约切换过渡提示。R791 把 per_feed_yield 的键从「源名
+            #   首词」改成「去括号段」，窗口内两种规约会并存约 1 天（5000 行轮转）：
+            #   历史行聚成 "The"/"Bitcoin"，新行是 "The Block"/"The Defiant" ⇒
+            #   同一批源显示成两行，短名行的转化率/入选率会被误读成另一个源。
+            #   检测=某键是另一键的「首词+空格」前缀（故 CryptoNews 不会把 Crypto
+            #   误判——它不以 "Crypto " 开头）。
+            _short_old = sorted(k for k in runs["feed_yield"]
+                                if any(k2 != k and k2.startswith(k + " ")
+                                       for k2 in runs["feed_yield"]))
+            if _short_old:
+                lines.append("     ℹ️ 源名键规约切换中（R791）：%s 等短名是旧「首词」规约的"
+                             "历史残留，与完整名行是同一批源；窗口滚过约 1 天后只剩完整名，"
+                             "短名行的数字勿与完整名行重复解读"
+                             % "、".join(_short_old[:4]))
             if not _has_attr:
                 # R621：归因全缺= 窗口内全是R621 上线前的历史行。此时**不能**
                 # 读成"这些源一条都没被丢"，那会把未知显示成通过（R617纪律：
