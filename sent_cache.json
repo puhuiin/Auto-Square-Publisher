@@ -1,14 +1,5 @@
 [
   {
-    "id": "59b7ed2d762aadf7",
-    "title": "Solana Network Growth Jumps 124%: Here’s Why It Could Matter for SOL",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-08T14:08:44.528646+00:00",
-    "tokens": [
-      "SOL"
-    ]
-  },
-  {
     "id": "f0e80b9e641d0fc8",
     "title": "Decrypt Money Accounts on Solana to Power The Information Exchange",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5176,6 +5167,16 @@
     "sent_at": "2026-10-19T08:27:13.075886+00:00",
     "tokens": [
       "ASTER"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "fa6210a21a72ab36",
+    "title": "JPMorgan expands ‘JPM Coin’ deposit token to Ethereum for institutional clients",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-19T09:07:06.832083+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
