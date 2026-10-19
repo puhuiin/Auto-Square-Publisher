@@ -19330,6 +19330,26 @@ class TestR786PriceGateFalsePositiveFamily(unittest.TestCase):
         ok, reason = self._check("跌破打破 2400 就得认栽", "$ETH 报价 2569.25。")
         self.assertFalse(ok, "填充词后的真实价位不得被顺带豁免（漏检=红线洞）")
 
+    def test_r793_percent_after_cue_not_a_price(self):
+        """★★ R793：数字后紧跟 %/％ 不是点位（生产实录 06:23 误杀）。
+
+        「距离前高还有近30%」：cue「现价/距离」+ 填充「还有近」+ 数字 30，
+        旧排除表有「个百分点」却没有 plain「%」⇒ 30 被当成 30 美元查无此数。
+        同族单位漏一个（R595b 家族）；排除 % 不可能放过编造价位——编造的
+        点位不会写成「站上 2750%」。
+        """
+        src = ("某巨鲸砸 720 万美元加仓 $ZEC，总多头敞口近 3000 万。"
+               "现在 $ZEC 报 1159 美元，24 小时涨 2.29%，距离前高还有近 30%。")
+        for t in ("现在$ZEC报1159美元，距离前高还有近30%。",
+                  "现价还有近30%空间。",
+                  "离历史高点还差近２５％。"):     # 全角％
+            ok, reason = self._check(t, src)
+            self.assertTrue(ok, f"「{t}」被误当价位拒稿：{reason}")
+        # 反向：真价位仍拦（排除 % 不是放容差）
+        for t in ("$ETH 站上 2750 才算转强", "跌破 0.09 就别碰了", "站上 9万才有戏"):
+            ok, reason = self._check(t, "$ETH 报价 2569.25。")
+            self.assertFalse(ok, f"编造价位「{t}」未被拦（门失效了）")
+
 
 class TestR705NoClicheSellTheNews(unittest.TestCase):
     """★★ R705：禁止把「利好出尽/卖事实」当解释裸套（**有实测数据支撑**）。
