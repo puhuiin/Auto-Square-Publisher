@@ -1,15 +1,5 @@
 [
   {
-    "id": "7eb24e99d4624d79",
-    "title": "Cardano Founder Slams Vitalik Buterin Over Crypto Security",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-09T06:44:08.442782+00:00",
-    "tokens": [
-      "ADA",
-      "ETH"
-    ]
-  },
-  {
     "id": "dc17dd94e8ba746d",
     "title": "Fidelity Adds $438 Million of Bitcoin, Ethereum and Solana to Its Holdings",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5192,5 +5182,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "0867caa4d42791af",
+    "title": "吴说每日精选加密新闻 - Layer 1 网络 Qubic 遭攻击致 1,404 个钱包被盗约 2.94 万亿枚 QU,87.1% 被盗资金被冻结",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-19T13:47:35.632557+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
