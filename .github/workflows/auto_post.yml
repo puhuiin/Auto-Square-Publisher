@@ -130,6 +130,19 @@ jobs:
         continue-on-error: true
         run: python scripts/schedule_watchdog.py
 
+      # ★★ R790：币安广场 OpenApi 内容统计端点探针（默认关，var 门控）。
+      # 立项：engagement loop（R608-R611「按真实浏览调」）的数据源一直是用户
+      # 手工导出 CSV，第七批后断档数周 ⇒ 排序加权停在 10-11 快照。若 OpenApi
+      # 暴露内容统计/列表端点，机器人可自刷新 ⇒ loop 从「等人工导出」变持续闭环。
+      # 纪律：只读探针、独立 step、continue-on-error，**任何情况下不影响发帖**；
+      # 用完即把 var 设回空（与 R739 实验变量同套路）。
+      - name: R790 探针：OpenApi 内容统计端点（var 门控，只读）
+        if: vars.PROBE_SQUARE_STATS == '1'
+        continue-on-error: true
+        env:
+          SQUARE_API_KEY: ${{ secrets.SQUARE_API_KEY }}
+        run: python scripts/probe_square_stats.py
+
       - name: 执行自动化发帖脚本 (支持多模型故障转移)
         id: poster
         env:
