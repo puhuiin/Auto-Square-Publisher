@@ -1,14 +1,5 @@
 [
   {
-    "id": "266a050753a323f5",
-    "title": "Rare $0 Shiba Inu Burn in 24 Hours as Burn Rate Collapses 100%",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-09T16:44:19.663841+00:00",
-    "tokens": [
-      "SHIB"
-    ]
-  },
-  {
     "id": "93029cb3dd769cc5",
     "title": "Tether 一度冻结 THORChain 在 TRON 上 4 个地址约 145 万 USDT,3 小时后解除",
     "source": "吴说区块链 (中文深度)",
@@ -5190,6 +5181,16 @@
     "sent_at": "2026-10-19T15:07:07.450010+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fb5ee5a71713bf96",
+    "title": "Binance Completes 37th BNB Chain Burn: This Is How Many Tokens Were Burned",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-19T15:27:44.192213+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
