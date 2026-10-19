@@ -1,15 +1,5 @@
 [
   {
-    "id": "bdc4d4a04a206d28",
-    "title": "Unichain 宣布升级至 OP Enterprise,测试网 10 月 13 日迁移,主网 10 月 29 日迁移",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-10T00:44:28.191519+00:00",
-    "tokens": [
-      "OP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d994fe831063ddb5",
     "title": "Aero Sets Oct. 21 Merger Launch and Token Conversion Terms",
     "source": "The Defiant (DeFi 深度)",
@@ -5190,6 +5180,17 @@
     "sent_at": "2026-10-19T18:23:45.192120+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0508939f93619b41",
+    "title": "Worldcoin goes Wall Street: World ID suite rolls out for banks and financial firms",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-19T18:43:50.126808+00:00",
+    "tokens": [
+      "ID",
+      "WLD"
     ],
     "lang": "en"
   }
