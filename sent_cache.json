@@ -1,15 +1,5 @@
 [
   {
-    "id": "31aafa9f74c2f826",
-    "title": "PYTH crypto could extend its 11% rally toward $0.089 – Here’s why",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-10T04:49:59.799912+00:00",
-    "tokens": [
-      "PYTH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "0341d188a84b908a",
     "title": "Is Bitcoin’s price rally losing steam after realized profits hit $1.03B?",
     "source": "AMBCrypto (技术与链上)",
@@ -5194,6 +5184,16 @@
     "tokens": [
       "XRP",
       "FF"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "373d9a3245280243",
+    "title": "Hoskinson reveals new code for Cardano, but $63M TVL exposes a gap",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-19T21:25:08.378129+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
