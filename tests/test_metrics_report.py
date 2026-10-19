@@ -7646,6 +7646,26 @@ class TestR755CampaignCtaRadarNarrowing(unittest.TestCase):
             self.assertIsNotNone(mr._CAMPAIGN_CTA_RE.search(s),
                                  "引入句复读漏检 ⇒ R741 的使命被削弱: %s" % s[:20])
 
+    def test_r793_bianqu_go_family_detected(self):
+        """★★ R793：「顺便+去+引述动词」族必须抓到（生产实录漏报）。
+
+        10-19 05:44 全文帖：「順便去報名幣安現貨交易錦標賽 S6 練手」——
+        旧表只有 顺便提一嘴/顺便提醒，模型换成「顺便去报名」就漏报
+        （R733/R786 同族：禁了一种写法模型换写法，雷达只认字面就跟着瞎）。
+        ⚠️ 同时不能误报正常行文（R601：误报率决定雷达会不会被信任）。
+        """
+        mr = self._mr()
+        for s in ["順便去報名幣安現貨交易錦標賽 S6 練手,等行情確認了再實盤上也不遲。",
+                  "顺便去报名现货锦标赛S6练手。",
+                  "顺便去提一句 Write2Earn 的事。"]:
+            self.assertIsNotNone(mr._CAMPAIGN_CTA_RE.search(s),
+                                 "顺便去X 族漏检 ⇒ R741 的使命被削弱: %s" % s[:24])
+        for s in ["顺便看看这波资金费率。",
+                  "盘面顺便说一下,$BTC 站稳了。",
+                  "ETH 跌破 2400,短线别追。"]:
+            self.assertIsNone(mr._CAMPAIGN_CTA_RE.search(s),
+                              "正常行文被误判成引入句复读: %s" % s[:22])
+
     def test_regex_excludes_campaign_content_tokens(self):
         """★★ 正则源码不得含活动内容词（防将来有人"补全"把误报加回来）"""
         # ⚠️ 用 .pattern 而非 getsource：源码含上方注释，注释里点名这些词
