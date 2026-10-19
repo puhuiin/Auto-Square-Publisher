@@ -1,14 +1,5 @@
 [
   {
-    "id": "856e4ebdf369713c",
-    "title": "Bitcoin Core developer responds to AI & Quantum Risk",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-09T14:13:28.053141+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "266a050753a323f5",
     "title": "Rare $0 Shiba Inu Burn in 24 Hours as Burn Rate Collapses 100%",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5189,6 +5180,16 @@
     "sent_at": "2026-10-19T14:44:44.533829+00:00",
     "tokens": [
       "APT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8e62ca4b01a7eecc",
+    "title": "ZEC 與 NEAR 深度綁定?Zakura 量子防護方案揭露跨鏈隱私的真實代價",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-10-19T15:07:07.450010+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
