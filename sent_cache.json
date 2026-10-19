@@ -1,15 +1,5 @@
 [
   {
-    "id": "787b2f52ac842003",
-    "title": "Ripple Backs OKX",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-07T02:51:33.738497+00:00",
-    "tokens": [
-      "SC",
-      "XRP"
-    ]
-  },
-  {
     "id": "d8f94312bc695e26",
     "title": "Solana DvP settlement requires 100% upfront cash for every trade",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5160,6 +5150,16 @@
     "tokens": [
       "BNB",
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b47f36fc6f5b60f8",
+    "title": "SUI has rewards, buybacks, and a new CEO – What’s still missing is...",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-19T03:10:43.769831+00:00",
+    "tokens": [
+      "SUI"
     ],
     "lang": "zh-TW"
   }
