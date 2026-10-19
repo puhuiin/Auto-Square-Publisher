@@ -1,15 +1,5 @@
 [
   {
-    "id": "fc7ef1be216839c6",
-    "title": "Solana 協議 Orca 跟 Loopscale 合併!新公司 Formation 要把 DeFi 帶進 AI 跟國防融資",
-    "source": "BlockTempo (动区动趋中文)",
-    "sent_at": "2026-10-08T02:32:46.442392+00:00",
-    "tokens": [
-      "SOL",
-      "ORCA"
-    ]
-  },
-  {
     "id": "28cc6086597b6412",
     "title": "US government moves $470 million in seized crypto to Coinbase wallets, raising Bitcoin sale questions",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5174,6 +5164,16 @@
     "sent_at": "2026-10-19T06:44:45.695074+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b0724eb3a061776d",
+    "title": "韩国未来资产证券计划 2027 年一季度推出代币化产品,首批含代币化货币市场基金与私募债券",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-19T07:05:32.797534+00:00",
+    "tokens": [
+      "STO"
     ],
     "lang": "zh-TW"
   }
