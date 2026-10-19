@@ -1,14 +1,5 @@
 [
   {
-    "id": "88be0d45fe81ad75",
-    "title": "AI may be keeping Bitcoin’s biggest macro headwind alive after the Fed stops hiking",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-09T03:24:56.960136+00:00",
-    "tokens": [
-      "BTC"
-    ]
-  },
-  {
     "id": "7eb24e99d4624d79",
     "title": "Cardano Founder Slams Vitalik Buterin Over Crypto Security",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5190,5 +5181,16 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "9513c4b1109844ca",
+    "title": "優先股撬動 259 萬持倉:DFDV 的 SOL 財庫飛輪",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-19T13:24:52.668487+00:00",
+    "tokens": [
+      "SOL",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
