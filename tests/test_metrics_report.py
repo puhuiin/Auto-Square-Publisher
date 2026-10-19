@@ -6886,6 +6886,79 @@ class TestR759DailyReportMentionLine(unittest.TestCase):
                          "无遥测却显示提及率 ⇒ 0% 会被读成'模型不提了'")
 
 
+class TestR780CashtagTightFullTextTelemetry(unittest.TestCase):
+    """R780：全文紧贴挂件遥测——R772（weave 后补空格）的验证面。
+
+    生产实证：新帖挂件全在 200 字预览外 ⇒ dashboard 的 preview 口径行
+    （cashtag_tight/cashtag_total）对新帖恒 0/0，修没修好**看不见**
+    （R647 盲区同族：度量只覆盖半条链路）。修=main.py 发布前对
+    final_content 算 `cashtag_tight`（全文处数）落回执，报表聚合时
+    _full 记**有紧贴的帖数**（分子分母都是帖，R622 量纲对齐）、
+    _widgets 记处数合计（展示绝对值）。
+    """
+
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r780",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _row(tight, pv="分析段落，多空分歧仍在。"):
+        return {"outcome": "binance_published", "platforms": ["binance"],
+                "final_preview": pv, "ts": "2026-10-19T00:00:00+00:00",
+                "cashtag_tight": tight}
+
+    def test_pct_uses_post_count_not_widget_count(self):
+        """★★★ 占比分子分母都必须是**帖**（挂件数/帖数会算出 133% 这种鬼数，
+        R622 量纲对齐纪律；第一版就犯了这个错，测试锁住）"""
+        mr = self._mr()
+        rows = [self._row(2), self._row(2), self._row(0)]   # 2/3 篇有紧贴、共4处
+        s = mr.summarize(rows)
+        self.assertEqual(s["cashtag_tight_full"], 2, "有紧贴的帖数")
+        self.assertEqual(s["cashtag_tight_widgets"], 4, "紧贴处数合计")
+        self.assertEqual(s["cashtag_tight_full_n"], 3, "覆盖帖数")
+        out = mr.render_text(s, rows)
+        line = [ln for ln in out.split(chr(10)) if "紧贴中文" in ln][0]
+        self.assertIn("2/3 篇（67%", line, "占比必须按帖算: %s" % line)
+        self.assertIn("共 4 处", line, "处数绝对值要展示")
+
+    def test_all_clean_renders_green(self):
+        """★ 全干净 ⇒ ✅ 行（含覆盖帖数，R731：分布必带样本基数）"""
+        mr = self._mr()
+        rows = [self._row(0) for _ in range(3)]
+        s = mr.summarize(rows)
+        out = mr.render_text(s, rows)
+        line = [ln for ln in out.split(chr(10)) if "挂件间距" in ln][0]
+        self.assertIn("✅", line)
+        self.assertIn("全文遥测 3 篇", line)
+
+    def test_line_renders_even_when_preview_has_no_widget(self):
+        """★★★ 门条件必须含全文遥测——新帖挂件在预览外 ⇒ preview 口径
+        cashtag_total 恒 0，只按它开门等于验证面对新帖静默（和要修的盲区同型）"""
+        mr = self._mr()
+        rows = [self._row(3)]
+        s = mr.summarize(rows)
+        self.assertEqual(s["cashtag_total"], 0, "预览里确实没有挂件")
+        out = mr.render_text(s, rows)
+        self.assertTrue(any("紧贴中文" in ln for ln in out.split(chr(10))),
+                        "预览无挂件时紧贴行也不渲染 ⇒ R772 的验证面继续失明")
+
+    def test_main_side_counts_tight_on_full_text(self):
+        """★ main.py 侧：_count_tight_cashtags 判定与 _pad_tight_cashtags 对偶"""
+        pub = m.SquarePublisher(api_key="k")
+        self.assertEqual(pub._count_tight_cashtags("5500枚$BTC全额兜底"), 1)
+        self.assertEqual(pub._count_tight_cashtags("5500枚 $BTC 全额兜底"), 0)
+        self.assertEqual(pub._count_tight_cashtags(""), 0)
+        # 前贴+后贴都算
+        self.assertEqual(pub._count_tight_cashtags("网$ETH后"), 1)
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 

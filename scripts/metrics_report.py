@@ -1276,6 +1276,11 @@ def summarize(rows):
         # 分母 cashtag_total = 全部 $ 挂件数，与分子同源。
         "cashtag_tight": 0,
         "cashtag_total": 0,
+        # R780：全文遥测口径的紧贴挂件（main.py 发布前对 final_content 计算）。
+        # _full = 有紧贴的**帖数**、_full_n = 有该字段的行数（历史行无 ⇒ 不计）、
+        # _widgets = 紧贴**处数**合计（展示用绝对值；占比分子分母都用帖，R622）。
+        "cashtag_tight_full": 0, "cashtag_tight_full_n": 0,
+        "cashtag_tight_widgets": 0,
         # R646：标题侧独立计数 + 两个不同失败原因各自的出口（R611）。
         # 实测修复前标题紧贴率 75%（9/12）远高于正文 31%；纯名 6/25（24%）。
         "title_cashtag_tight": 0,
@@ -1757,6 +1762,18 @@ def summarize(rows):
                             s["cashtag_tight"] += 1
                 s["layout_paragraphs"].append(
                     len(re.findall(r"\n\s*\n", _pv)))
+            # R780：全文遥测口径（main.py 发布前对 final_content 算的紧贴处数）。
+            # 历史行无该字段 ⇒ 不计入 _full_n（覆盖数）；预览口径的 cashtag_tight
+            # 是新帖的下界（挂件多在 200 字外），两者并存、渲染时全文优先。
+            # ⚠️ _full 记**有紧贴的帖数**（不是挂件总数）——占比的分母是帖，
+            #    分子也必须是帖（R622 量纲对齐：挂件数/帖数会算出 133% 这种鬼数）；
+            #    挂件总数另记 _widgets，供「N 处」的绝对值展示。
+            _cst_full = r.get("cashtag_tight")
+            if isinstance(_cst_full, int):
+                s["cashtag_tight_widgets"] += max(_cst_full, 0)
+                s["cashtag_tight_full_n"] += 1
+                if _cst_full > 0:
+                    s["cashtag_tight_full"] += 1
             # R286：长文标题眼钩普查（article_title 仅长文帖非空）——标题是信息流
             # 第一触点，数字/$挂件/疑问三类眼钩元素的覆盖率要有基线可查
             _at = r.get("article_title")
@@ -4339,13 +4356,38 @@ def render_text(s, rows=None):
         # 那是错的耦合：可读性与"有没有 CSV 导出"毫无关系，而内容库覆盖率
         # 只有 20%（R628）⇒ 八成情况下这条护栏会静默消失。**指标不该被
         # 另一个不相干数据集的存在与否门控**（R612「沉默不是通过」）。
-        if s.get("cashtag_total"):
+        # ★★ R780：门条件加全文遥测——新帖挂件多在 200 字预览外 ⇒ preview 口径
+        # 的 cashtag_total 恒 0，只按它开门等于 R772 修复的验证面对新帖静默
+        # （和它要修的盲区同型：度量只覆盖半条链路）。
+        if s.get("cashtag_total") or s.get("cashtag_tight_full_n"):
             _tight = s["cashtag_tight"]
             _tot = s["cashtag_total"]
-            _pct = _tight / _tot * 100
-            if _tight:
+            # ⚠️ _tot 可能为 0（新帖挂件全在预览外）⇒ 预览分支自己防零，
+            #    不能在这里无条件除（R712：Mock/边界态让整行崩掉比不显示更坏）。
+            _pct = (_tight / _tot * 100) if _tot else 0.0
+            # ★★ R780：preview 口径对新帖恒 0（挂件都在 200 字外）⇒ 优先用
+            # 全文遥测 cashtag_tight_full；有遥测的行才算，没有则退回 preview
+            # 口径并注明是下界。R772（weave 后补空格）的修没修好，只能靠这个
+            # 全文值说话（R647 盲区同族：度量只覆盖半条链路）。
+            _ft = s.get("cashtag_tight_full")
+            _fn = s.get("cashtag_tight_full_n") or 0
+            _fw = s.get("cashtag_tight_widgets") or 0
+            if _fn:
+                _fp = 100 * _ft / _fn
+                if _ft:
+                    lines.append(
+                        f"  ⚠️ 正文$挂件紧贴中文 {_ft}/{_fn} 篇（{_fp:.0f}%，"
+                        f"共 {_fw} 处；全文遥测口径）：这些位置币安**不会**渲染成"
+                        f"可点击行情标签（R643/R772 修复后应为 0，非 0 说明有"
+                        f"出海口绕过补空格）")
+                else:
+                    lines.append(
+                        f"  ✅ 正文$挂件间距正常（全文遥测 {_fn} 篇全部为独立"
+                        f"token，可渲染为可点击行情标签）")
+            elif _tight:
                 lines.append(
-                    f"  ⚠️ 正文$挂件紧贴中文 {_tight}/{_tot}（{_pct:.0f}%）："
+                    f"  ⚠️ 正文$挂件紧贴中文 {_tight}/{_tot}（{_pct:.0f}%，"
+                    f"preview 口径=下界）："
                     f"这些位置币安**不会**渲染成可点击行情标签"
                     f"（R643 修复后应为 0，非 0 说明有出海口绕过净化层）")
             else:

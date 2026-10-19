@@ -9273,6 +9273,26 @@ class SquarePublisher(BasePublisher):
         return len(seen)
 
     @staticmethod
+    def _count_tight_cashtags(content: str) -> int:
+        """R780：数**紧贴中文**的 $ 挂件个数（补空格后仍贴边的）。
+
+        判定与 `_pad_tight_cashtags` 的对偶条件一致：挂件前后任一字符是汉字
+        即算紧贴（那种形态币安不渲染成可点击行情标签=返佣入口失效）。
+        口径与 metrics_report 的 cashtag_tight（扫 preview）同名不同源：
+        那边是**下界**（只看见前 200 字），这边是**全文真实值**。
+        """
+        if not content:
+            return 0
+        tight = 0
+        for m in re.finditer(r"\$[A-Za-z0-9]{2,10}(?![A-Za-z0-9])", content):
+            e, i = m.end(), m.start()
+            nxt = content[e] if e < len(content) else ""
+            prev = content[i - 1] if i > 0 else ""
+            if ("\u4e00" <= nxt <= "\u9fff") or ("\u4e00" <= prev <= "\u9fff"):
+                tight += 1
+        return tight
+
+    @staticmethod
     def _ensure_token_widget(content: str, ensure_tokens: Optional[List[str]]) -> str:
         """
         交易挂件保底：若正文没有任何有效 $TOKEN，自动把首个有效代币插到标签区之前，
@@ -9428,6 +9448,8 @@ class SquarePublisher(BasePublisher):
         self.last_content_id: Optional[str] = None
         self.last_final_content: Optional[str] = None
         self.last_widget_count: Optional[int] = None
+        # R780：全文紧贴中文的挂件数（None=未观测；R772 修复的验证面）
+        self.last_cashtag_tight: Optional[int] = None
         # R669：长文标题织入 $ 挂件**前后**的有效挂件数（None=未观测，非 0）。
         # ⚠️ 与 `widget_count`（正文侧）**分列**：标题是独立出海口（R645），
         #   混进同一分母会把"标题有、正文没有"读成"整体达标"（R646 分侧）。
@@ -9470,6 +9492,12 @@ class SquarePublisher(BasePublisher):
         # final_preview 只存前 200 字钩子区——模型把挂件写在正文尾部时预览区
         # 看不到 $，不记全文计数就无法区分"截断伪影"与"真实丢挂件"。
         self.last_widget_count = self._count_valid_widgets(content)
+        # ★★ R780：**全文紧贴挂件计数**（补空格后仍贴中文的 $ 挂件数）。
+        # R772 修了 weave 后不补空格的 bug，但**验证面是 preview**——实测新帖
+        # 挂件全在 200 字预览外 ⇒ dashboard「紧贴中文」行对新帖恒 0，修没修好
+        # 看不见（R647 盲区同族：度量只覆盖半条链路）。在全文可得处算一个数，
+        # 与 widget_count 同款口径（唯一有效标的、紧贴判定同 _pad 的对偶条件）。
+        self.last_cashtag_tight = self._count_tight_cashtags(content)
         _before_ct = content
         content = self._inject_campaign_tag(content, campaign_intel)
         # R291：显式记录注入的活动标签原文——旧 proxy（campaign_tag_count 计
@@ -9644,6 +9672,8 @@ class SquarePublisher(BasePublisher):
         self.last_content_id: Optional[str] = None
         self.last_final_content: Optional[str] = None
         self.last_widget_count: Optional[int] = None
+        # R780：全文紧贴中文的挂件数（None=未观测；R772 修复的验证面）
+        self.last_cashtag_tight: Optional[int] = None
         # R669：长文标题织入 $ 挂件**前后**的有效挂件数（None=未观测，非 0）。
         # ⚠️ 与 `widget_count`（正文侧）**分列**：标题是独立出海口（R645），
         #   混进同一分母会把"标题有、正文没有"读成"整体达标"（R646 分侧）。
@@ -9674,6 +9704,8 @@ class SquarePublisher(BasePublisher):
         # 一旦拒稿视频与文案一并丢失，更须在提交前把挂件数守住）。
         content = self._cap_cashtag_widgets(content, MAX_TOKENS_PER_POST)
         self.last_widget_count = self._count_valid_widgets(content)
+        # R780：视频路同补全文紧贴计数（视频无降级路径，挂件不可点击代价更高）
+        self.last_cashtag_tight = self._count_tight_cashtags(content)
         _before_ct = content
         content = self._inject_campaign_tag(content, campaign_intel)
         self.last_campaign_tag = None if content == _before_ct else content[len(_before_ct):].strip()
@@ -12222,6 +12254,9 @@ def _run_main():
                     # 整条遥测失败被吞（与 error_code 的 str() 同款模式）
                     _wc = getattr(publisher, "last_widget_count", None)
                     widget_count = _wc if isinstance(_wc, int) else None
+                    # R780：全文紧贴挂件数（同款防御性降级；None=未观测非 0）
+                    _cst_v = getattr(publisher, "last_cashtag_tight", None)
+                    _cst_v = _cst_v if isinstance(_cst_v, int) else None
                     # R669：标题侧挂件（Mock/异常态⇒ None，**不是 0**）
                     _twb_v = getattr(publisher, "last_title_widget_before", None)
                     _twa_v = getattr(publisher, "last_title_widget_after", None)
@@ -12564,6 +12599,11 @@ def _run_main():
                         "hype_ok": _hype_ok,
                         "conspiracy_ok": _consp_ok,
                         "widget_count": widget_count,
+                        # R780：全文紧贴中文的挂件数（R772 weave 后补空格的验证面；
+                        # dashboard 的 preview 口径对新帖恒 0，只能靠这个全文值）。
+                        # 与 widget_count 的关系：tight>0 ⇒ 有挂件不可点击=返佣入口
+                        # 在那些位置失效；tight=0 且 count≥1 ⇒ 全部挂件可点击。
+                        "cashtag_tight": _cst_v,
                         # R669：**标题侧**挂件（织入前→织入后）。
                         # ★ 标题是信息流**第一触点**，挂件缺失= 读者点不到交易页
                         #   = Write to Earn 返佣入口在最显眼处失效（R645）。

@@ -17494,13 +17494,34 @@ class TestLowHourCapQuota(unittest.TestCase):
         return m.CacheManager(path)
 
     def _at_bj_hour(self, bj_hour, hours_ago=1):
-        """构造一个"北京时某小时发布"的记录（自动换算成 UTC ISO）。"""
+        """构造一个"北京时某小时发布"的记录（自动换算成 UTC ISO）。
+
+        ★★ R780b：旧实现以 `now - hours_ago` 为锚再对齐到目标小时，当目标
+        北京小时落在"当前北京小时之后"时，对齐结果会被 `if t > now` 推到
+        **两天前** ⇒ 掉出 24h 窗口 ⇒ 依赖 `count_since_in_window(24, ...)`
+        的用例在每天北京 0~7 点之间**必然假红**（生产实录：北京 00:58 运行时
+        `test_pref_window_is_bj_0600_1200` 报 5 != 6；stash 掉全部改动仍红
+        ⇒ 既有 flaky，不是哪一轮改坏的）。
+        改为以 `now - 12h`（窗口正中）为锚：对齐偏移最多把 t 推到
+        [now-24h, now] 两端之内——12h 锚 ± 对齐（delta∈[1,23]，>12 时取
+        +24-delta 的未来侧）永不越界，构造结果恒在 24h 窗口内。
+        `hours_ago` 参数保留（签名兼容），语义已由"几天前"变为"窗口内"。
+        """
         now = datetime.now(timezone.utc)
-        ts = now - timedelta(hours=hours_ago)
+        # ★ R780b：锚点取 now-11h（不是 12h）——对齐后 t 最远在 now-23h，
+        # 再被截断到整点（最多再早 59 分钟）也仍在 24h 窗口内；取 12h 时
+        # 边界组合（delta=12 + 分钟截断）会冲出到 24.6h（实测 24/576 组合）。
+        anchor = now - timedelta(hours=11)
         # 让记录的北京小时 == bj_hour
         target_utc_hour = (bj_hour - 8) % 24
-        delta = (ts.hour - target_utc_hour) % 24
-        t = ts.replace(hour=(ts.hour - delta) % 24, minute=0, second=0)
+        delta = (anchor.hour - target_utc_hour) % 24
+        # ★ R780b：对齐方向**取近**——delta>12 时改为向前（anchor+(24-delta)），
+        # 否则一律向后最多 23h 会冲出 24h 窗口（第一版锚点修复就错在这：
+        # replace(hour=) 只会后跳）。修正后 t ∈ [now-24h, now-1h] 恒在窗内。
+        if delta > 12:
+            delta -= 24
+        t = (anchor - timedelta(hours=delta)).replace(
+            minute=0, second=0, microsecond=0)
         if t > now:
             t -= timedelta(days=1)
         return t
