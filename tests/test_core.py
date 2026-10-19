@@ -9058,9 +9058,46 @@ class TestR621FeedYieldAttribution(unittest.TestCase):
         self.assertIs(m.feedparser.parse, before, "feedparser.parse 被永久改写了")
 
     def test_helper_drops_zero_entry_sources(self):
-        """entries==0 的源不落（该源本轮没被抓到，区别于"抓到但空"）"""
+        """entries==0 的源不落（本轮该源没被抓到，区别于"抓到但空"）"""
         stats = {"per_feed": {"A": {"entries": 0, "kept": 0}, "B": {"entries": 3}}}
         self.assertEqual(list(m.per_feed_yield_telemetry(stats)), ["B"])
+
+    def test_r791_multiword_feed_names_do_not_collide(self):
+        """★★ R791：多词源名不得再按「首词」撞键。
+
+        R220 定「首词」规约时只有 9 个源；现在 25 个源，多词源名互相撞：
+        「The Block」+「The Defiant」→ 都变 "The"（两源归因合并），
+        「Bitcoin Magazine」→ "Bitcoin"、「Crypto Briefing」→ "Crypto"。
+        更要紧的是 audit_perf ④ 用 `published.source.split(" (")[0]` 做 join
+        ⇒ "The" 桶的发布数恒 0，面板把两源转化率显示成 0%（口径分叉）。
+        修=键改为「去括号注释段」，与发布侧同一条规约。
+        """
+        stats = {"per_feed": {
+            "The Block (机构与政策)": {"entries": 5, "kept": 2},
+            "The Defiant (DeFi 深度)": {"entries": 6, "kept": 3},
+            "Bitcoin Magazine (比特币核心)": {"entries": 4, "kept": 1},
+            "Crypto Briefing (深度与研报)": {"entries": 3, "kept": 0},
+            # 简繁两个 feed 仍合并（发布侧同样按 split(" (")[0] 合并，两侧一致）
+            "深潮TechFlow (中文/简体)": {"entries": 5, "kept": 2},
+            "深潮TechFlow (中文/繁体)": {"entries": 4, "kept": 1},
+        }}
+        out = m.per_feed_yield_telemetry(stats)
+        self.assertEqual(sorted(out), ["Bitcoin Magazine", "Crypto Briefing",
+                                       "The Block", "The Defiant", "深潮TechFlow"],
+                         "多词源名必须各自成键（首词规约会把 The Block/The Defiant 合并）")
+        self.assertEqual(out["The Block"]["kept"], 2)
+        self.assertEqual(out["The Defiant"]["kept"], 3)
+        self.assertEqual(out["深潮TechFlow"]["entries"], 9, "简繁两源按发布侧同规约合并")
+
+    def test_r791_key_matches_published_source_convention(self):
+        """★★ R791：遥测键必须与 audit_perf ④ 的 join 键同构——
+        否则「入选→发布转化率」对不上（该桶发布数恒 0，面板显示 0%）。"""
+        stats = {"per_feed": {"The Block (机构与政策)": {"entries": 5, "kept": 2}}}
+        key = list(m.per_feed_yield_telemetry(stats))[0]
+        # audit_perf ④ 的发布侧键：published.source.split(" (")[0]
+        published_source = "The Block (机构与政策)"
+        self.assertEqual(key, published_source.split(" (")[0],
+                         "遥测键与发布侧 join 键不一致 ⇒ 转化率恒 0%（R731 口径分叉）")
 
 
 class TestMergeScriptAtomic(unittest.TestCase):

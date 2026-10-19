@@ -683,23 +683,36 @@ def per_feed_yield_telemetry(stats: Dict[str, Any]) -> Dict[str, Dict[str, int]]
     单点定义，供成功路径与零候选早退路径共用——R621 补零候选路径的 per_feed_yield
     时，两处各写一份字面量，加字段就得改两处（本次即先写了一处、差点漏另一处）。
     口径：
-    - 键取源名首词（R220 规约，与 Step Summary 渲染一致，9 源首词互不冲突）
+    - ★★ R791：键取源名**去掉括号注释段**（`name.split(" (")[0]`），不再是
+      R220 的「首词」（`split(" ")[0]`）。原因：R220 定规约时只有 9 个源、
+      首词互不冲突；现在 25 个源，多词源名互相撞键——
+        「The Block」与「The Defiant」→ 都变 "The"（两个源的 entries/kept
+        被合并成一个桶，归因丢失）、「Bitcoin Magazine」→ "Bitcoin"、
+        「Crypto Briefing」→ "Crypto"（与 CryptoNews/CryptoSlate 视觉混淆）。
+      而 audit_perf ④ 的入选→发布转化用 `published.source.split(" (")[0]`
+      做 join 键 ⇒ 首词规约让 "The" 桶的发布数恒 0，面板把 The Block/
+      The Defiant 的转化率显示成 0%（**报告与生产口径分叉**，R731 家族）。
+      改成同一条「去括号段」规约后两侧一致，转化率才对得上。
+      （深潮简/繁两个 feed 仍会合并成 "深潮TechFlow"——发布侧同样按
+      `split(" (")[0]` 合并，两侧一致即正确，且它们本就是同一出版方。）
     - entries==0 的源不落（本轮该源没被抓到，区别于"抓到但空"——后者走
       feeds_empty_sources）
     - 缺失键补 0（R621 原则 4：遥测字段必须"可缺失"，但写侧永远给齐，
       这样报表侧不必区分"缺键"与"值为 0"）
     """
-    return {
-        name.split(" ")[0]: {
-            "entries": int(d.get("entries") or 0),
-            "kept": int(d.get("kept") or 0),
-            "discarded_stale": int(d.get("discarded_stale") or 0),
-            "discarded_cached": int(d.get("discarded_cached") or 0),
-            "discarded_dup": int(d.get("discarded_dup") or 0),
-        }
-        for name, d in (stats.get("per_feed") or {}).items()
-        if isinstance(d, dict) and (d.get("entries") or 0) > 0
-    }
+    out: Dict[str, Dict[str, int]] = {}
+    for name, d in (stats.get("per_feed") or {}).items():
+        if not isinstance(d, dict) or (d.get("entries") or 0) <= 0:
+            continue
+        # ★★ R791：同键**累加**而非覆盖——深潮简/繁两个 feed 去括号段后同名，
+        #    dict 推导的后者覆盖前者会让简体源的 yield 凭空消失（遥测少算一半），
+        #    而 audit_perf ④ 的发布侧是按同规约**合并**的 ⇒ 转化率被 inflation。
+        bucket = out.setdefault(name.split(" (")[0],
+                                {"entries": 0, "kept": 0, "discarded_stale": 0,
+                                 "discarded_cached": 0, "discarded_dup": 0})
+        for k in bucket:
+            bucket[k] += int(d.get(k) or 0)
+    return out
 
 
 def append_run_summary(**overrides) -> None:
