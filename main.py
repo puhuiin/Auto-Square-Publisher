@@ -4477,7 +4477,7 @@ _CAMPAIGN_MENTION_RE = re.compile(
     r"|write\s*2\s*earn|write to earn|prize pool|reward pool"
     r"|zero[- ]fee|season [0-9]|S[0-9](?:/S[0-9])?"
     r"|bStocks|TraFi|P2P anniversary|LoL (?:worlds|championship)"
-    r"|trading (?:tournament|championship|competition|event)"
+    r"|trading (?:tournament|championship|competition|event|race)"
     # ★★ R787：**中文写法的 Write2Earn**（写2赚/寫2賺）——R774 补英文形态时
     #   漏了中文形态（R615/R611 同族：一侧修了另一侧没对齐，只不过这次是
     #   「英中两侧」而非「两个分支」）。生产实证（R784 全文遥测首篇复盘）：

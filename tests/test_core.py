@@ -22391,6 +22391,9 @@ class TestR774CampaignMentionEnglishForms(unittest.TestCase):
         "new zero-fee RWUSD trading pairs are live to practice on.",
         "Trading Tournament Season 6 FF for practice rewards.",
         "the S6 season is on, join the official event.",
+        # R801 生产实录（10-19 14:44Z 首篇英文全文遥测）：模型把「锦标赛」
+        # 意译成 trading race，旧词表漏检 ⇒ campaign_mention 假阴性。
+        "the Binance Square trading race lets you try with virtual funds.",
         "Write2Earn rewards for active commenters.",
         "想练手的去现货交易锦标赛S5/S6参与。",
         "順便去 ACU Alpha 競賽練手。",
@@ -22796,6 +22799,34 @@ class TestR800CreditWordingStepfun(unittest.TestCase):
             "service unavailable",
         ]:
             self.assertFalse(m._is_credit_exhausted(RuntimeError(msg)), msg)
+
+
+class TestR801TradingRaceMention(unittest.TestCase):
+    """★★ R801：英文活动提及的又一个真实变体 "trading race"。
+
+    生产实证（10-19 14:44Z 首篇带全文的英文帖，R784 遥测）：
+    正文写 "the Binance Square trading race lets you try with virtual funds"，
+    而 campaign_mention 判 False —— R774 的词表有 trading tournament/
+    championship/competition/event，唯独没有模型这次用的 race。
+    R775 的英文指令其实生效了（正文确实提了活动），是**雷达假阴性**。
+    """
+
+    def test_production_sentence_matched(self):
+        import re as _re
+        body = ("If you want to test a tactic without paying real exchange fees, "
+                "the Binance Square trading race lets you try with virtual funds "
+                "- the cost is just time, not slippage or funding rates.")
+        stripped = _re.sub(r"#[^\s#]+", " ", body)
+        self.assertIsNotNone(m._CAMPAIGN_MENTION_RE.search(stripped),
+                             "trading race 漏检 ⇒ 英文提及率系统性低估")
+
+    def test_race_alone_not_matched(self):
+        """反向：race 单独出现（arms race / rate race）不得误报成活动。"""
+        for t in ("the AI arms race is heating up.",
+                  "this is a race for liquidity, not a campaign.",
+                  "trading at $0.76 with thin liquidity."):
+            self.assertIsNone(m._CAMPAIGN_MENTION_RE.search(t),
+                              "普通内容误报成活动提及: %s" % t[:36])
 
 
 if __name__ == "__main__":
