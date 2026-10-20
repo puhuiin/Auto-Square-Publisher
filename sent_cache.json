@@ -1,15 +1,5 @@
 [
   {
-    "id": "f0c099a5b4b55f2f",
-    "title": "代币化大宗商品市场扩展,借贷与原油开辟新赛道",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-10T12:24:39.139497+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0775e5edf34fa705",
     "title": "代幣化大宗商品市場擴展,借貸與原油開闢新賽道",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5199,5 +5189,15 @@
       "TAO"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "75a2c85cbb067e47",
+    "title": "Cardano: Hoskinson reveals new programming language as ADA slips below $0.22",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-20T02:16:21.278424+00:00",
+    "tokens": [
+      "ADA"
+    ],
+    "lang": "zh-TW"
   }
 ]
