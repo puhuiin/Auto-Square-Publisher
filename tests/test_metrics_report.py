@@ -5153,6 +5153,52 @@ class TestR649ContentRedlineObservable(unittest.TestCase):
             self.assertIn(w, words.group(1), f"{w} 是真喊单，须保留")
 
 
+class TestR823HourWindowLogMatchesCode(unittest.TestCase):
+    """★★ R823：时段偏置的**日志文案**必须与**实际窗口**一致。
+
+    ★ 缺口现场：R706 把高浏览窗从"北京 06-12"收窄到"北京 09-12"
+      （代码 `1 <= now_utc.hour < 4`），但 `logger.info` 的文案一直写着
+      "北京06-12 窗为高浏览窗"。运维读日志会以为 06-09 仍受保护，
+      而实测那正是**全时段最低**（中位 53，比 03-06 的 67 还低）。
+      这是 R731 家族（报告说错话）的又一例：代码改了、面向人的那句话没改。
+
+    ★ 判据为什么用"从源码取窗口边界"而不是"断言含某字符串"：
+      写死断言 `"09-12" in log` 会在下次调窗口时变成假红（测试成了变更阻力）。
+      正确做法是**从代码里解析出真实边界**，再断言文案与它一致。
+    """
+
+    def _src(self):
+        import io
+        return io.open("main.py", encoding="utf-8").read()
+
+    def test_log_window_matches_actual_condition(self):
+        import re
+        src = self._src()
+        # 取实际判定条件
+        m = re.search(r"in_pref\s*=\s*(\d+)\s*<=\s*now_utc\.hour\s*<\s*(\d+)", src)
+        self.assertIsNotNone(m, "找不到 in_pref 的窗口判定（R706 的实现形态变了？）")
+        lo_utc, hi_utc = int(m.group(1)), int(m.group(2))
+        # UTC → 北京（+8）
+        lo_bj, hi_bj = (lo_utc + 8) % 24, (hi_utc + 8) % 24
+        # 取日志文案里的窗口描述
+        log = re.search(r"高浏览窗=([^〕，]+)", src)
+        self.assertIsNotNone(log, "找不到时段偏置的日志文案")
+        text = log.group(1)
+        self.assertIn("%02d-%02d" % (lo_bj, hi_bj), text,
+                      "日志文案的窗口（%s）必须等于代码实际窗口（北京 %02d-%02d）"
+                      "——R706 改代码时漏改文案，导致日志说 06-12 而代码是 09-12"
+                      % (text, lo_bj, hi_bj))
+
+    def test_log_no_longer_claims_06_12(self):
+        """★ 回归守卫：文案不得再出现"北京06-12"（R706 之前的旧口径）。"""
+        import re
+        src = self._src()
+        # 只看 logger.info 那几行，避免误伤注释里的历史说明
+        for m in re.finditer(r'logger\.info\([^)]*时段偏置[^)]*\)', src, re.S):
+            self.assertNotIn("06-12", m.group(0),
+                             "日志文案仍写着旧的 06-12 窗口（R706 已收窄到 09-12）")
+
+
 class TestR650HourPrefGuardrail(unittest.TestCase):
     """R650：时段偏置**必须有出口**，且必须渲染"天花板提示"。
 

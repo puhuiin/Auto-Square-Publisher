@@ -12178,8 +12178,14 @@ def _run_main():
     if hour_shifted:
         candidates.sort(key=lambda x: (-x["impact_score"],
                                        x["age_hours"] if x.get("age_hours") is not None else float("inf")))
+    # ★★ R823：日志文案必须与**实际窗口**一致。
+    #   R706 把高窗从"北京 06-12"收窄到"北京 09-12"（`1 <= hour < 4`），
+    #   但这里的文案一直写着"06-12"⇒ 运维读日志会以为 06-09 仍受保护，
+    #   而实际那正是**全时段最低**（中位 53，比 03-06 的 67 还低）。
+    #   这是 R731 家族（报告说错话）的第 N 例：代码改了、面向人的那句话没改。
     logger.info(f"🕐 时段偏置: -{TIME_PREF_PENALTY}×{hour_shifted} "
-                f"（北京06-12 窗为高浏览窗，p=0.0097；仅排序，不筛除）")
+                f"（高浏览窗=北京 09-12〔UTC 1-4〕，R706 收窄后；"
+                f"p=0.0097；仅排序，不筛除）")
 
     # 6. 执行发帖循环
     posted_count = 0
