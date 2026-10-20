@@ -11606,6 +11606,8 @@ class TestAlertThrottleAfterDelivery(unittest.TestCase):
         m.CAMPAIGN_INTEL_FILE = self.tmp
         self._orig_hook = os.environ.get("WEBHOOK_URL")
         os.environ["WEBHOOK_URL"] = "http://example.invalid/hook"
+        # ★ R821：进程内去重集合是类属性 ⇒ 跨用例会残留，必须隔离
+        m.Notifier._alert_seen_in_process.clear()
 
     def tearDown(self):
         m.CAMPAIGN_INTEL_FILE = self._orig
@@ -11613,6 +11615,7 @@ class TestAlertThrottleAfterDelivery(unittest.TestCase):
             os.environ.pop("WEBHOOK_URL", None)
         else:
             os.environ["WEBHOOK_URL"] = self._orig_hook
+        m.Notifier._alert_seen_in_process.clear()
         if os.path.exists(self.tmp):
             os.remove(self.tmp)
 
@@ -11635,6 +11638,94 @@ class TestAlertThrottleAfterDelivery(unittest.TestCase):
     def test_legacy_throttled_api_preserved(self):
         self.assertFalse(m.Notifier._alert_throttled("旧接口报警"))
         self.assertTrue(m.Notifier._alert_throttled("旧接口报警"))
+
+
+class TestR821AlertStormInProcessDedup(unittest.TestCase):
+    """★★ R821：**投递失败时**同一条告警在一轮内不得重复尝试。
+
+    生产实证（10-20 04:05~12:28Z，全通道长冷却 3.3 小时）：
+      · `_pool_alert` 在 `_ordered_providers()` 里，而后者在 generate_content 中
+        **逐候选**调用 ⇒ 一轮 3 条候选 = 3 次告警尝试，每次 `_deliver` 还带 1 次重试
+      · 13 轮合计 **37 次尝试（本应只发 14 次）**，约 74 个 HTTP 请求全打向死 token
+    根因：`_alert_mark` 只在 `delivered_any=True` 时调用（这是 Round 5 的正确设计，
+    投递失败不该占掉 12h 额度）⇒ 全部渠道失败时"不记账"退化成"每条候选都重试"。
+    修法：加**进程内** seen 集合，一轮内同题只试一次。跨轮语义不变（新进程仍会重试）。
+    """
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        self._orig_hook = os.environ.get("WEBHOOK_URL")
+        os.environ["WEBHOOK_URL"] = "http://example.invalid/hook"
+        m.Notifier._alert_seen_in_process.clear()
+
+    def tearDown(self):
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        if self._orig_hook is None:
+            os.environ.pop("WEBHOOK_URL", None)
+        else:
+            os.environ["WEBHOOK_URL"] = self._orig_hook
+        m.Notifier._alert_seen_in_process.clear()
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _send_n(self, title, n, deliver_ok=False):
+        with patch.object(m.Notifier, "_any_channel_configured", return_value=True), \
+             patch.object(m.Notifier, "_deliver", return_value=deliver_ok) as d:
+            for _ in range(n):
+                m.Notifier.send_notification(title, "msg", is_error=True)
+        return d
+
+    def test_failed_delivery_tried_once_per_process(self):
+        """★ 核心断言：投递失败时，同一轮 3 次调用只应产生 **1 次**投递尝试。
+
+        修前是 3 次（生产实测每轮 3 次 × 13 轮 = 37 次）。
+        """
+        d = self._send_n("⏸️ 全通道长冷却：本轮跳过", 3, deliver_ok=False)
+        self.assertEqual(d.call_count, 1,
+                         "同一进程内同题告警只应尝试一次；"
+                         "投递失败不构成'再试一次'的理由（重试已在 _deliver 内做过）")
+
+    def test_still_does_not_consume_12h_quota_on_failure(self):
+        """★ 不能因为加了去重就顺手把失败也记账——那会吞掉 12h 内的真报警。
+
+        Round 5 的教训仍必须成立：投递失败 ⇒ 不写 `_alert_state` ⇒ 下一轮
+        （新进程）仍会重试。
+        """
+        self._send_n("⏸️ 全通道长冷却：本轮跳过", 3, deliver_ok=False)
+        self.assertFalse(m.Notifier._alert_in_cooldown("⏸️ 全通道长冷却：本轮跳过"),
+                         "投递失败不得占用 12h 节流额度（Round 5）")
+
+    def test_different_titles_are_not_suppressed(self):
+        """★ 去重必须按标题，不能把不同告警一起吞掉。"""
+        with patch.object(m.Notifier, "_any_channel_configured", return_value=True), \
+             patch.object(m.Notifier, "_deliver", return_value=False) as d:
+            m.Notifier.send_notification("告警A", "m", is_error=True)
+            m.Notifier.send_notification("告警B", "m", is_error=True)
+            m.Notifier.send_notification("告警A", "m", is_error=True)
+        self.assertEqual(d.call_count, 2, "A 一次 + B 一次；A 的第二次应被抑制")
+
+    def test_non_error_notifications_never_deduped(self):
+        """★ 成功通知不去重（每条成功都有价值）——去重只针对 is_error。"""
+        with patch.object(m.Notifier, "_any_channel_configured", return_value=True), \
+             patch.object(m.Notifier, "_deliver", return_value=True) as d:
+            for _ in range(3):
+                m.Notifier.send_notification("发帖成功", "m", is_error=False)
+        self.assertEqual(d.call_count, 3, "非错误通知不得去重")
+
+    def test_seen_set_cleared_each_round(self):
+        """★ 每轮必须清空，否则同进程第二轮会永久抑制第一轮的告警。
+
+        断言方式是直接模拟 `_run_main` 的清空点（`main()` 里那行），
+        而不是断言"集合永远为空"——那会把正确行为也判死。
+        """
+        self._send_n("跨轮测试", 1, deliver_ok=False)
+        self.assertTrue(m.Notifier._alert_seen_in_process, "首次应登记")
+        m.Notifier._alert_seen_in_process.clear()      # 等价于每轮开局那行
+        d = self._send_n("跨轮测试", 1, deliver_ok=False)
+        self.assertEqual(d.call_count, 1, "清空后必须重新尝试（跨轮语义不变）")
 
 
 class TestFullwidthNormalization(unittest.TestCase):

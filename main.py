@@ -10652,6 +10652,40 @@ class Notifier:
 
         intel_state_update("_alert_state", _mark, default={})
 
+    # ★★ R821：**进程内**同题去重（与上面的持久化冷却互补，不是替代）。
+    #
+    # 生产实证（10-20 04:05~12:28Z，全通道长冷却 3.3 小时）：同一轮里
+    # `_pool_alert` 被调了 **3 次**（每条候选新闻各一次，因为 `_ordered_providers()`
+    # 在 generate_content 里逐候选调用），每次 `_deliver` 还带一次重试 ⇒
+    # 单轮最多 6 个 HTTP 请求。13 轮合计 **37 次告警尝试（本应只发 14 次）**，
+    # 约 74 个请求全部打向已死的钉钉 token。
+    #
+    # 根因不是"节流失效"，而是**节流的记账点选错了**：`_alert_mark` 只在
+    # `delivered_any=True` 时调用（Round 5 的教训，那一半是对的——投递失败
+    # 不该占掉 12h 内的额度，否则真故障时报警会被永久吞掉）。但当**所有渠道
+    # 都不可用**时，"不记账"就退化成"每轮每条候选都重试一遍"。
+    #
+    # 修法：加一层**进程内** seen 集合——同一进程内同一标题只尝试一次。
+    # 它不影响跨运行语义（下一轮是新进程，仍会重试，这正是我们要的：
+    # 持续故障应持续尝试，但**一轮只试一次**）。与持久化 `_alert_state`
+    # 分工明确：前者防"一轮内风暴"，后者防"跨轮轰炸"。
+    _alert_seen_in_process: set = set()
+
+    @classmethod
+    def _alert_seen_this_run(cls, title: str) -> bool:
+        """本轮（本进程）是否已尝试过该标题的告警。首次调用返回 False 并登记。
+
+        ⚠️ 与 `_alert_in_cooldown` 的区别：那个查**跨轮**持久化状态且只在
+           投递成功后才有记录；这个只查**本进程**、无论投递成败都登记。
+           R821 的风暴正是两者之间的空档：投递失败 ⇒ 持久化无记录 ⇒
+           同一进程内反复重试。
+        """
+        key = hashlib.sha256(title.encode("utf-8")).hexdigest()[:16]
+        if key in Notifier._alert_seen_in_process:
+            return True
+        Notifier._alert_seen_in_process.add(key)
+        return False
+
     @classmethod
     def _alert_throttled(cls, title: str) -> bool:
         """返回 True 表示该报警在冷却期内，应跳过发送（未冷却则顺带登记为已发）"""
@@ -10744,6 +10778,14 @@ class Notifier:
         # 错误报警 12h 同题节流（成功通知不去重，每条成功都有价值）。
         # 只判断不登记：登记推迟到确认至少一个渠道投递成功之后。
         if is_error and Notifier._alert_in_cooldown(title):
+            return
+
+        # ★★ R821：**本轮已尝试过**就不再试（无论上次投递成败）。
+        #   与上面的持久化冷却互补：那个防跨轮轰炸、只在成功后才登记；
+        #   这个防**一轮内**风暴（同一轮每条候选都会触发一次 _pool_alert）。
+        #   生产实证：13 轮 × 3 候选 = 37 次尝试（本应 14 次）。
+        if is_error and Notifier._alert_seen_this_run(title):
+            logger.info(f"[本轮已尝试过该报警，跳过重复投递] {title}")
             return
 
         delivered_any = False
@@ -11652,6 +11694,9 @@ def _run_main():
     # 每轮开局清空上轮/上次调用的丢警缓存，保证 step summary 只反映当前轮次
     # （生产上每轮是新进程本就为空；此处防御同进程内重复调用 main 的累积）。
     Notifier._dropped_error_titles.clear()
+    # ★ R821：进程内告警去重集合同理必须每轮清空——否则同一进程跑第二轮时，
+    #   第一轮发过的告警会被永久抑制（那是跨轮语义，归 _alert_state 管）。
+    Notifier._alert_seen_in_process.clear()
     # R184：配额边界追赶的等待时长单列——R177 分段耗时上线后，生产 18:06/18:29
     # 两轮 run_elapsed 197.5s/361.0s 里各有 150.3s/270.3s 无法归因（分段合计只
     # 覆盖 LLM/配图/发布），实际是 R154 的 time.sleep 追赶等待；不分段会被误读成
