@@ -1,16 +1,5 @@
 [
   {
-    "id": "a39ca17ed7b7c864",
-    "title": "10/10 一周年:比特币以太坊流动性回补,山寨币深度仍在失血",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-10T14:04:45.531631+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ed69b8fe89696c65",
     "title": "Over $51 Million in Solana Returned to Coinbase: Who's Selling?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5201,6 +5190,18 @@
       "XRP",
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "5455dac48943ef47",
+    "title": "SUI计划接入三星Wallet,支持USDC转账并预计10月最后一周在美国上线",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-20T07:24:47.885032+00:00",
+    "tokens": [
+      "SUI",
+      "USDC",
+      "BTC"
     ],
     "lang": "zh-CN"
   }
