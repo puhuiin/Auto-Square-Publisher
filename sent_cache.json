@@ -1,15 +1,5 @@
 [
   {
-    "id": "622578e86e623513",
-    "title": "Cardano (ADA) Signals Caution as Price Confirms Death Cross, Short-Term Sell Ahead?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-11T15:05:49.780075+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "824bde8e0835ccfe",
     "title": "Liquid Network赎回冻结35天,攻击者仍持有价值4969万美元比特币,协议支持率降至86%",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5208,6 +5198,16 @@
     "sent_at": "2026-10-20T21:04:33.228334+00:00",
     "tokens": [
       "INJ"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "14cb82db8eb78271",
+    "title": "XRP Treasury Stock XRPN Now Available on Uphold",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-20T21:24:21.204564+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
