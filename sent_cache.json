@@ -1,15 +1,5 @@
 [
   {
-    "id": "6962c2e23f85196c",
-    "title": "RippleX:XRPL 已修复存在约十年的 XRP 增发漏洞,将加强 AI 辅助安全检测",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-11T00:47:51.904118+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "91d12f5a0786cfcb",
     "title": "或受a16z联创关注影响,SOL生态Meme币CLAUDIA市值短时突破900万美元,日内涨超580%",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5207,6 +5197,18 @@
     "source": "深潮TechFlow (中文/简体)",
     "sent_at": "2026-10-20T13:04:05.266156+00:00",
     "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e15cc748eb498bd2",
+    "title": "芝加哥商品交易所上线 BCH 和 UNI 期货,FalconX 与 GSR 完成首笔大宗交易",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-20T13:24:41.651818+00:00",
+    "tokens": [
+      "BCH",
+      "UNI",
       "BTC"
     ],
     "lang": "zh-CN"
