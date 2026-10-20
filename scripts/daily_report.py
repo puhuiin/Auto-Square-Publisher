@@ -60,6 +60,26 @@ def baseline() -> dict:
     return {"strong": strong, "weak": weak}
 
 
+_MR_MODULE = None
+
+
+def _load_metrics_report():
+    """R804：加载 metrics_report（daily_report 不能 import main）。
+
+    R750 起 ⑥ 已用它做 quality_scan；R804 的故事级漏斗复用同一实例，
+    避免两次 exec 326KB 脚本，也避免两条口径各加载一份。
+    """
+    global _MR_MODULE
+    if _MR_MODULE is None:
+        import importlib.util as _ilu
+        _spec = _ilu.spec_from_file_location(
+            "metrics_report_r750", os.path.join(ROOT, "scripts", "metrics_report.py"))
+        _mr = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_mr)
+        _MR_MODULE = _mr
+    return _MR_MODULE
+
+
 def build_report(rows, hours: int) -> str:
     now = dt.datetime.now(dt.timezone.utc).replace(tzinfo=None)
     cut = (now - dt.timedelta(hours=hours)).isoformat()
@@ -70,6 +90,7 @@ def build_report(rows, hours: int) -> str:
     fails = [r for r in rows if r.get("outcome") == "publish_failed"
              and (r.get("ts") or "") >= cut]
     be = baseline()
+    _fn = None
 
     L = []
     L.append("【币安广场发帖机器人 · 每日状态】")
@@ -174,6 +195,29 @@ def build_report(rows, hours: int) -> str:
             #   （本地跑历史数据时必然如此）⇒ 必须明说。
             L.append("   近 12h：**遥测未覆盖到窗口末端**（本地跑历史数据时的正常现象），"
                      "上面的 24h 数字含更早时段，勿直接当作当前状态")
+    # ★★ R804：**故事级**漏斗。③ 的尝试口径回答"调用了多少次"，但不回答
+    #   "丢了几篇稿"——生产实证（10-19 24h）：尝试 68 篇 / 交付 58 篇，
+    #   10 篇未交付（8 篇 openrouter 失控啰嗦：9,868 字符残句 / 耗 14k~16k
+    #   token 吐空；2 篇 429 限额），而日报只写"失败率 38~59%"，读者会以为
+    #   只是重试、没丢稿。故事口径复用 metrics_report.funnel（R119 单一实现），
+    #   不在这里重算 key。
+    try:
+        _fn = _load_metrics_report().funnel(
+            [r for r in rows if (r.get("ts") or "") >= cut])
+    except Exception as _e:
+        L.append("   故事级：⚠️ 漏斗不可用（%s: %s）——不静默跳过（R704）"
+                 % (type(_e).__name__, _e))
+    if _fn and _fn.get("attempted"):
+        _lost = _fn.get("lost", _fn["attempted"] - _fn["delivered"])
+        L.append("   故事级：交付 %d / 尝试 %d（成功率 %.0f%%；failover 救回 %d 篇；未交付 %d 篇）"
+                 % (_fn["delivered"], _fn["attempted"],
+                    100 * _fn["delivered"] / _fn["attempted"],
+                    _fn.get("failover_rescued") or 0, _lost))
+        _lc = _fn.get("lost_causes") or {}
+        if _lost and _lc:
+            L.append("   未交付主因：%s"
+                     % " ｜ ".join("%s %d" % (k, v)
+                                   for k, v in sorted(_lc.items(), key=lambda x: -x[1])[:3]))
     prov = Counter(r.get("provider") for r in pub if r.get("provider"))
     if prov:
         L.append("   通道：%s" % dict(prov.most_common(4)))
@@ -229,13 +273,7 @@ def build_report(rows, hours: int) -> str:
     #     并由守卫锁「日报数值 == quality_scan 数值」。
     #   ⚠️ 只列**非零**行：日报要短，全零的雷达不占版面；全零时明说"未检出"。
     try:
-        import importlib.util as _ilu
-        _spec = _ilu.spec_from_file_location(
-            "metrics_report_r750",
-            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                         "scripts", "metrics_report.py"))
-        _mr = _ilu.module_from_spec(_spec)
-        _spec.loader.exec_module(_mr)
+        _mr = _load_metrics_report()
         _q = _mr.quality_scan(rows, window=20)
     except Exception as _e:
         _q = None
@@ -355,12 +393,23 @@ def build_report(rows, hours: int) -> str:
         if _after and len(_ap) == 1:
             _p0, _n0 = next(iter(_ap.items()))
             _tail = "；此后 %d 篇 100%% 由 %s 出稿（其余通道零成功）" % (_n0, _p0)
+        _lost_n = (_fn or {}).get("lost") or 0
+        if _lost_n:
+            _tail += "；近 24h 未交付 %d 篇" % _lost_n
         L.append("结论：⚠️ 通道账户余额/额度耗尽（%s，自 %s 起 %d 次）%s"
                  " ⇒ 请充值或更换 Key" % ("、".join(_cp),
                                           _cst(_first["ts"]).strftime("%m-%d %H:%M"),
                                           len(cred), _tail))
         if isinstance(sent24, int) and isinstance(cap, int) and cap > 0 and sent24 >= cap:
             L.append("       配额 %d/%d 已打满（正常行为）" % (sent24, cap))
+    elif _fn and (_fn.get("lost") or 0) > 0:
+        # ★★ R804：有丢稿就不能说"运行正常"（哪怕配额打满）。
+        #   生产实证：10 篇未交付时，旧结论仍是"✅ 运行正常…无需处理"。
+        _lc = _fn.get("lost_causes") or {}
+        _top = "、".join("%s %d" % (k, v)
+                         for k, v in sorted(_lc.items(), key=lambda x: -x[1])[:2])
+        L.append("结论：⚠️ 近 24h 有 %d 篇故事未交付%s ⇒ 查看上方③故事级明细"
+                 % (_fn["lost"], ("（主因：%s）" % _top) if _top else ""))
     elif isinstance(sent24, int) and isinstance(cap, int) and cap > 0 and sent24 >= cap:
         # ★ 配额打满是**预期结果**（配额就是上限），不是异常。
         #   此前写"⚠️ 窗口内 0 篇发布" ⇒ 在配额打满的日子**每天都误报警**。

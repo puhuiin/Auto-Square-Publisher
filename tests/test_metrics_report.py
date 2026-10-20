@@ -8181,16 +8181,19 @@ class TestR800DailyReportPoolHealth(unittest.TestCase):
         for i in range(8):
             rows.append({"outcome": "binance_published", "stage": "summarize",
                          "ts": _ago(5 - i * 0.1), "provider": "Preset-google",
+                         "title": "story %d" % i, "platforms": ["binance"],
                          "final_preview": "ETH 跌破 2500，短线别追。第%d篇" % i,
                          "content_chars": 20, "content_cjk": 10,
                          "lang": "zh-CN", "tokens": ["ETH"]})
         for i in range(6):
             rows.append({"outcome": "llm_rejected", "stage": "transport",
                          "ts": _ago(6 - i * 0.1), "provider": "Preset-stepfun-flash",
+                         "title": "story %d" % i,
                          "reason": "[credit 24h] Error code: 429 - no left credit"})
         if recovered:
             rows.append({"outcome": "binance_published", "stage": "summarize",
                          "ts": _ago(0.5), "provider": "Preset-stepfun-flash",
+                         "title": "recovered", "platforms": ["binance"],
                          "final_preview": "恢复出稿", "content_chars": 20,
                          "content_cjk": 10, "lang": "zh-CN", "tokens": ["ETH"]})
         rows.append({"outcome": "run_summary", "ts": _ago(1),
@@ -8286,6 +8289,100 @@ class TestR803MentionByLang(unittest.TestCase):
         text = self._dr().build_report(rows, 24)
         self.assertNotIn("提及按语种", text,
                          "只有一种语种时不应多占一行")
+
+
+class TestR804StoryLevelLoss(unittest.TestCase):
+    """★★ R804：日报必须同时报「尝试级失败率」与「故事级丢稿数」。
+
+    生产实证（10-19 24h）：尝试 67 篇 / 交付 57 篇，10 篇未交付
+    （8 篇 openrouter 失控啰嗦：9,868 字符残句 / 耗 14k~16k token 吐空；
+    2 篇 429 限额）。旧日报只写「失败率 56%」，读者会以为只是重试、没丢稿。
+    """
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r804",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r804",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _rows(self, lost=True):
+        rows = [
+            # A：一次过
+            {"outcome": "binance_published", "stage": "summarize", "title": "A",
+             "platforms": ["binance"], "ts": _ago(8), "provider": "Preset-google",
+             "lang": "zh-CN", "campaign_mention": True, "campaign_cta_tpl": False,
+             "final_text": "A " + "word " * 30, "final_preview": "A",
+             "content_chars": 120, "content_cjk": 10},
+            # B：先 429 后交付（救回）
+            {"outcome": "llm_rejected", "stage": "transport", "title": "B",
+             "ts": _ago(7.5), "provider": "Preset-google",
+             "reason": "[rate-limit 60s] Error code: 429"},
+            {"outcome": "binance_published", "stage": "summarize", "title": "B",
+             "platforms": ["binance"], "ts": _ago(7), "provider": "Preset-openrouter",
+             "lang": "zh-CN", "campaign_mention": True, "campaign_cta_tpl": False,
+             "final_text": "B " + "word " * 30, "final_preview": "B",
+             "content_chars": 120, "content_cjk": 10},
+        ]
+        if lost:
+            rows += [
+                # C：只有预算/失控拒稿 → 丢
+                {"outcome": "llm_rejected", "stage": "transport", "title": "C",
+                 "ts": _ago(6), "provider": "Preset-openrouter",
+                 "reason": "预算 9000（封顶 9000）到顶仍 finish=length 吐空（耗 15000 token）"},
+                # D：只有 429 拒稿 → 丢
+                {"outcome": "llm_failed", "stage": "transport", "title": "D",
+                 "ts": _ago(5), "provider": "Preset-google",
+                 "reason": "Error code: 429 - rate limit exceeded"},
+            ]
+        rows.append({"outcome": "run_summary", "ts": _ago(1), "feeds_ok": 20,
+                     "candidates": 50, "unprocessed": 0, "published": 2,
+                     "skipped_no_token": 1, "skipped_token_limit": 1,
+                     "sent_24h": 30, "max_daily_posts": 60})
+        return rows
+
+    def test_funnel_reports_lost_and_causes(self):
+        f = self._mr().funnel(self._rows())
+        self.assertEqual(f["attempted"], 4)
+        self.assertEqual(f["delivered"], 2)
+        self.assertEqual(f["failover_rescued"], 1)
+        self.assertEqual(f["lost"], 2)
+        self.assertEqual(f["lost_causes"].get("通道预算/失控"), 1)
+        self.assertEqual(f["lost_causes"].get("429 限额"), 1)
+
+    def test_daily_report_renders_story_line(self):
+        text = self._dr().build_report(self._rows(), 24)
+        self.assertIn("故事级：交付 2 / 尝试 4", text)
+        self.assertIn("failover 救回 1 篇", text)
+        self.assertIn("未交付 2 篇", text)
+        self.assertIn("未交付主因", text)
+
+    def test_conclusion_warns_on_lost(self):
+        text = self._dr().build_report(self._rows(), 24)
+        concl = [l for l in text.split("\n") if l.startswith("结论")][0]
+        self.assertIn("⚠️", concl)
+        self.assertIn("未交付", concl)
+        self.assertNotIn("运行正常", concl, "有丢稿时不得报运行正常")
+
+    def test_no_loss_keeps_normal_conclusion(self):
+        text = self._dr().build_report(self._rows(lost=False), 24)
+        concl = [l for l in text.split("\n") if l.startswith("结论")][0]
+        self.assertIn("运行正常", concl, "无丢稿的正常日不得被新分支改成告警")
 
 
 if __name__ == "__main__":

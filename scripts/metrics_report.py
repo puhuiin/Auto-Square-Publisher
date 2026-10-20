@@ -2609,6 +2609,26 @@ def summarize(rows):
     return s
 
 
+def _reject_cause(reason) -> str:
+    """R804：未交付故事的**末次拒因**归类（用于日报点名"为什么丢"）。
+
+    只做粗粒度归因，不替代 main.py 的失败分类：这里回答的是运营问题
+    "丢的稿主要死在通道失控还是限额"，不是"哪条通道永久死"。
+    顺序敏感：生产 reason 常同时含"预算/finish=length/吐空"，
+    必须先判预算失控，否则会被"吐空"抢走。
+    """
+    s = str(reason or "")
+    if "finish=length" in s or "残句" in s or "预算" in s:
+        return "通道预算/失控"
+    if "429" in s or "rate-limit" in s or "Rate limit" in s:
+        return "429 限额"
+    if "timed out" in s.lower() or "timeout" in s.lower():
+        return "超时"
+    if "空回" in s or "吐空" in s or "empty" in s.lower():
+        return "空回"
+    return "其他"
+
+
 def funnel(rows):
     """发布成功率漏斗（R119 改故事口径）：分母 = "真正进入 LLM 尝试的故事"。
     此前按行计数，但 failover 让一个故事落多行（生产实证 13:03Z：b.ai 429 拒一行
@@ -2622,6 +2642,7 @@ def funnel(rows):
     delivered_stories: set = set()
     rejected_stories: set = set()
     attempted_stories: set = set()
+    last_rej: dict = {}          # ★ R804：(date,title) -> 末次拒稿行（按 ts 取最新）
     orphan_attempted = 0
     orphan_delivered = 0
     for r in rows:
@@ -2645,11 +2666,23 @@ def funnel(rows):
             attempted_stories.add(key)
             if outcome in ("llm_rejected", "llm_failed", "publish_failed"):
                 rejected_stories.add(key)
+                _prev = last_rej.get(key)
+                if _prev is None or str(r.get("ts") or "") >= str(_prev.get("ts") or ""):
+                    last_rej[key] = r
     delivered = len(delivered_stories) + orphan_delivered
     attempted = len(attempted_stories) + orphan_attempted + orphan_delivered
+    # ★★ R804：未交付故事的末次拒因归类。生产实证（10-19 24h）：
+    #   attempted 68 / delivered 58 ⇒ 10 篇未交付，日报只报"尝试失败率 38~59%"，
+    #   读者会误以为没丢稿；实际 7 篇死于 openrouter 失控啰嗦（9,868 字符残句 /
+    #   耗 14k~16k token 吐空）、3 篇死于 Google 429（Retry-After 7~9h）。
+    lost_keys = rejected_stories - delivered_stories
+    _causes = collections.Counter(_reject_cause((last_rej.get(k) or {}).get("reason"))
+                      for k in lost_keys)
     return {"attempted": attempted, "delivered": delivered,
             "rate": round(delivered / attempted, 3) if attempted else None,
-            "failover_rescued": len(rejected_stories & delivered_stories)}
+            "failover_rescued": len(rejected_stories & delivered_stories),
+            "lost": attempted - delivered,
+            "lost_causes": dict(_causes)}
 
 
 def _top(counter, n=TOP_N):
