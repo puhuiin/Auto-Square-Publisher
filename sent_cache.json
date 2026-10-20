@@ -1,15 +1,5 @@
 [
   {
-    "id": "94176b67174bb7dc",
-    "title": "Worldcoin rises 7% – Mapping WLD’s recovery from $0.466 toward $0.723 June high",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-11T12:11:15.956158+00:00",
-    "tokens": [
-      "WLD"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "29d5b776b6090675",
     "title": "TechFlow 情报局:英伟达洽谈收购 Reflection AI,Meta 个人 Agent 下载量超 ChatGPT 和 Gemini",
     "source": "深潮TechFlow (中文/简体)",
@@ -5207,6 +5197,16 @@
     "sent_at": "2026-10-20T18:44:27.666350+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d4f8613f8959d0f9",
+    "title": "ZENDEX Private EVM ZK-Privacy DEX Testnet Goes Live",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-20T19:04:26.885422+00:00",
+    "tokens": [
+      "ZK"
     ],
     "lang": "en"
   }
