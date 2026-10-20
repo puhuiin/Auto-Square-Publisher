@@ -5443,12 +5443,39 @@ class MultiLLMEngine:
                 return isinstance(info, dict) and bool(info.get("permanent"))
 
             transient = [p for p in self.providers if not _is_permanent(p.name)]
+            # ★★ R807：**池耗尽必须主动告警**（Notifier 12h 节流，按标题去重）。
+            #   生产实证（10-20 01:50Z）：openrouter 冷却至 04:43Z、google 至
+            #   07:47Z、stepfun 永久（余额耗尽）⇒ 三个通道全不可用，但代码只打
+            #   一行 INFO/WARNING 日志；用户不翻 Actions 页面根本看不见，
+            #   而这段时间每轮都在撞 429/空回，故事持续丢失（R804 已量化）。
+            #   这是 R617「熔断跳过与从未尝试在报表上不可区分」的同族：
+            #   **全通道冷却与正常运行在通知面上也不可区分**。
+            def _pool_alert(title: str, msg: str) -> None:
+                try:
+                    Notifier.send_notification(title, msg, is_error=True)
+                except Exception as _e:  # 通知失败不得影响主流程
+                    logger.warning(f"通道告警发送失败（不影响主流程）: {_e}")
+
             if transient:
                 logger.warning(f"所有提供商均在冷却期，仅重启非永久失败提供商: {[p.name for p in transient]}")
+                _cool = "、".join(
+                    "%s 至 %s" % (
+                        p.name,
+                        str((state.get(p.name) or {}).get("cooldown_until") or "?")[:16].replace("T", " "))
+                    for p in cooled)
+                _pool_alert(
+                    "⚠️ 全通道冷却：本轮强制重启非永久通道",
+                    "所有提供商均在冷却期（%s）。本轮仅重启非永久失败通道：%s。"
+                    "出稿可能连续失败，请检查账户余额/额度或补充通道。"
+                    % (_cool, "、".join(p.name for p in transient)))
                 active = transient
             else:
                 logger.error("所有提供商均在冷却期且带 permanent 标记（模型下架/404），"
                              "本轮不再试错，空链快速失败。")
+                _pool_alert(
+                    "🛑 全通道永久失效：本轮空链",
+                    "所有提供商均在冷却期且带 permanent 标记，本轮不会尝试任何通道。"
+                    "请立即检查 Key/余额。")
                 active = []
         # 排序键三层，优先级从高到低：
         #   ① 运行内失败数（健康优先，失败过的让位）

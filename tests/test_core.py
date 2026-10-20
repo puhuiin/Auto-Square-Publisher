@@ -22948,5 +22948,60 @@ class TestR806NumbersGateDecimalBacktracking(unittest.TestCase):
         self.assertTrue(ok)
 
 
+class TestR807PoolExhaustedAlert(unittest.TestCase):
+    """★★ R807：全通道冷却必须主动告警，不能只在日志里留一行。
+
+    生产实证（10-20 01:50Z）：openrouter 冷却至 04:43Z、google 至 07:47Z、
+    stepfun 永久（余额耗尽）⇒ 三个通道全不可用，但代码只打 INFO/WARNING；
+    用户不翻 Actions 根本看不见，而这段时间每轮都在撞 429/空回，故事持续丢失。
+    """
+
+    def _eng(self, names):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng.providers = [m.LLMProviderConfig(n, "https://x", "k", "m") for n in names]
+        return eng
+
+    def _future(self):
+        return (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
+
+    def test_all_transient_cooled_alerts(self):
+        eng = self._eng(["a", "b"])
+        fut = self._future()
+        state = {"a": {"cooldown_until": fut, "fails": 1},
+                 "b": {"cooldown_until": fut, "fails": 1}}
+        with patch.object(m.MultiLLMEngine, "_breaker_state", return_value=state), \
+             patch.object(m.MultiLLMEngine, "_provider_cost_latency_scores", return_value={}), \
+             patch.object(m.Notifier, "send_notification") as sn:
+            active = eng._ordered_providers()
+        self.assertEqual([p.name for p in active], ["a", "b"],
+                         "全通道冷却时应强制重启非永久通道")
+        self.assertTrue(sn.called, "全通道冷却必须主动告警")
+        self.assertIn("全通道冷却", sn.call_args[0][0])
+
+    def test_all_permanent_cooled_alerts_and_empty(self):
+        eng = self._eng(["a", "b"])
+        fut = self._future()
+        state = {"a": {"cooldown_until": fut, "permanent": True},
+                 "b": {"cooldown_until": fut, "permanent": True}}
+        with patch.object(m.MultiLLMEngine, "_breaker_state", return_value=state), \
+             patch.object(m.MultiLLMEngine, "_provider_cost_latency_scores", return_value={}), \
+             patch.object(m.Notifier, "send_notification") as sn:
+            active = eng._ordered_providers()
+        self.assertEqual(active, [], "全员 permanent 时不得强制重启")
+        self.assertTrue(sn.called)
+        self.assertIn("全通道永久失效", sn.call_args[0][0])
+
+    def test_partial_cooled_does_not_alert(self):
+        eng = self._eng(["a", "b"])
+        state = {"a": {"cooldown_until": self._future(), "fails": 1}}
+        with patch.object(m.MultiLLMEngine, "_breaker_state", return_value=state), \
+             patch.object(m.MultiLLMEngine, "_provider_cost_latency_scores", return_value={}), \
+             patch.object(m.Notifier, "send_notification") as sn:
+            active = eng._ordered_providers()
+        self.assertEqual([p.name for p in active], ["b"])
+        self.assertFalse(sn.called, "只有部分通道冷却时不得发池耗尽告警")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
