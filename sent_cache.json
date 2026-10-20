@@ -1,15 +1,5 @@
 [
   {
-    "id": "c3e3b7242501fda8",
-    "title": "ZKsync eyes Japan expansion – Can bullish momentum carry ZK higher?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-11T07:07:30.734050+00:00",
-    "tokens": [
-      "ZK"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "06bacb78c118ffb9",
     "title": "IMX price prediction — Is $0.30 next on the cards?",
     "source": "AMBCrypto (技术与链上)",
@@ -5208,6 +5198,16 @@
     "sent_at": "2026-10-20T17:05:06.266350+00:00",
     "tokens": [
       "WLD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "125b683cee33973a",
+    "title": "XRP Millionaires Make Bold 5-Year-Low Move Amid Market Drop",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-20T17:26:16.150159+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
