@@ -19836,10 +19836,24 @@ class TestR711QualityGateByLang(unittest.TestCase):
         self.assertTrue(ok, "英文稿被质量门拒了：%s" % reason)
 
     def test_english_short_still_rejected_without_lang_flag(self):
-        """★ 反向：不给 out_lang 时仍按中文门判（保持 R710 前的默认行为）"""
+        """★ 反向：不给 out_lang 时仍按**中文门**判（保持 R710 前的默认行为）。
+
+        R824 后文案更精确：全英文稿会报「语种跑偏」而非笼统的「字符过少」。
+        但"默认走中文分支"这个契约没变——下面用**中文碎片**（CJK 太少、无拉丁
+        可判跑偏）证明默认分支确实是中文门，而不只是断言一句文案。
+        """
         ok, reason = m.MultiLLMEngine._passes_quality_gate(self.EN_SHORT)
-        self.assertFalse(ok)
-        self.assertIn("中文字符过少", reason)
+        self.assertFalse(ok, "不给 out_lang 时英文稿必须被中文门拒掉")
+        self.assertTrue("语种跑偏" in reason or "中文字符过少" in reason,
+                        "拒稿必须点名语种/字符问题：%s" % reason)
+        # 默认分支 = 中文门：中文碎片（拉丁太少、判不了跑偏）必须走「中文字符过少」
+        # ⚠️ 不能用短句：len<60 会先撞长度门，测不到语种门（实测踩到）。
+        _frag = ("$BTC 今天涨了 3.2%，$ETH 涨了 1.8%，$BNB 涨了 0.5%，"
+                 "$SOL 涨了 2.1%，整体还行吧，先看看再说。")
+        ok2, reason2 = m.MultiLLMEngine._passes_quality_gate(_frag)
+        self.assertFalse(ok2)
+        self.assertIn("中文字符过少", reason2,
+                      "默认分支必须是中文门（碎片稿应报中文字符过少）：%s" % reason2)
 
     def test_chinese_still_gated_by_cjk(self):
         """★ 中文门**未被放宽**（改语种分支不能顺带松掉中文质量门）"""
@@ -23020,6 +23034,120 @@ class TestR801TradingRaceMention(unittest.TestCase):
                   "trading at $0.76 with thin liquidity."):
             self.assertIsNone(m._CAMPAIGN_MENTION_RE.search(t),
                               "普通内容误报成活动提及: %s" % t[:36])
+
+
+class TestR824ChineseLanguageMismatch(unittest.TestCase):
+    """★★ R824：中文分支必须与英文分支**对偶**——区分"通道跑偏"与"内容太短"。
+
+    ★ 缺口现场（10-20 00:44，lang=zh-CN、北京 8 点白天中文时段）：
+      `content_cjk=0`、`completion_tokens=5793`（**没撞顶**）、
+      `provider=Preset-openrouter` / `model=openrouter/free`
+      ⇒ 模型输出了**全英文**，是通道无视语种指令，不是预算/质量问题。
+      但旧代码只报「中文字符过少 (0)，疑似跑偏英文输出」，并记 `stage=quality`
+      ⇒ 运维会去调 prompt，而真正该做的是**换通道**。
+
+    ★ R802 已经给英文侧加了 `_english_language_mismatch`（拦"标成 en 实为中文"），
+      中文侧却一直只有一句笼统文案——两个分支不对偶，就是这条缺口。
+    """
+
+    # 全英文（openrouter/free 无视目标中文的典型产出）
+    EN_ONLY = (
+        "Greed index at 55, $BNB up 0.58%. Forum opened, can it push $BNB? "
+        "Hold $BNB above the 600 level and watch volume. If funding flips "
+        "negative, the bounce likely fades fast."
+    )
+    # 短碎片：内容太少，不是语种问题
+    FRAGMENT = "嗯，$BNB 还行。"
+    # ★ 关键反例：**拉丁字符确实 ≥40，但仍是中文碎片**（ticker 堆砌）。
+    #   它必须不被判"语种跑偏"——判据是**占比**（拉丁 > CJK×3），
+    #   不是"拉丁够 40 就算跑偏"。没有这条，把阈值简化成 `_latin >= 40`
+    #   或把占比放宽到 `> cjk*1` 都能骗过测试（实测都漏过）。
+    #   构造：长 ticker 堆砌（拉丁 ~44）+ 一句话（CJK ~22）⇒ 44 < 22*3=66
+    FRAGMENT_WITH_TICKERS = (
+        "$MORPHO $AERO $WLDFI $PENDLE $EIGEN $JUPITER $CELESTIA "
+        "嗯，今天这些币我看着都还行，不过也没什么特别想说的，先看看再说吧。"
+    )
+    # 正常中文
+    ZH_OK = (
+        "$BNB 今天站上 600 关口，贪婪指数 55，多空分歧仍在。"
+        "链上活跃地址连续三天回升，但合约持仓没有同步放大，"
+        "说明这波更像现货推动而非杠杆狂欢。守住 590 一线可以继续看，"
+        "跌破则先撤，别在这里赌方向。"
+    )
+
+    def test_english_output_in_chinese_branch_named_as_drift(self):
+        """★ 核心：目标中文却输出英文 ⇒ 必须点名"语种跑偏"（而非笼统"字符过少"）。"""
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(
+            self.EN_ONLY, out_lang="zh-CN")
+        self.assertFalse(ok)
+        self.assertIn("语种跑偏", reason,
+                      "全英文稿必须点名语种跑偏（通道问题，换通道可解）；"
+                      "笼统的'字符过少'会让人去调 prompt")
+        self.assertIn("换通道", reason, "文案应指出可行动方向")
+
+    def test_short_fragment_not_mislabeled_as_drift(self):
+        """★ 短碎片不得被说成"语种跑偏"——那是内容质量问题，换通道无用。"""
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(
+            self.FRAGMENT, out_lang="zh-CN")
+        self.assertFalse(ok)
+        self.assertNotIn("语种跑偏", reason,
+                         "只有几个字的碎片不是语种问题，误标会让人换错通道")
+
+    def test_ticker_heavy_fragment_not_mislabeled_as_drift(self):
+        """★★ 判据必须是**占比**而非"拉丁字符够 40"。
+
+        反例：ticker 堆砌 + 一句中文（拉丁 ~40、CJK ~10）——这不是语种跑偏，
+        是内容碎片。若判据写成 `_latin >= 40` 就会误标成"通道跑偏"，
+        运维去换通道而问题其实是内容。
+        这条用例的存在意义：让"把判据简化成绝对阈值"的改动立刻变红。
+        """
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(
+            self.FRAGMENT_WITH_TICKERS, out_lang="zh-CN")
+        self.assertFalse(ok)
+        self.assertNotIn("语种跑偏", reason,
+                         "ticker 堆砌仍是中文碎片（CJK 占比不低），"
+                         "不得因为拉丁字符够 40 就判成通道跑偏")
+
+    def test_normal_chinese_still_passes(self):
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(
+            self.ZH_OK, out_lang="zh-CN")
+        self.assertTrue(ok, "正常中文稿被误杀：%s" % reason)
+
+    def test_threshold_is_ratio_not_absolute(self):
+        """★ 判据是**占比**（拉丁 > CJK×3 且拉丁≥40），不是 cjk==0。
+
+        混了少量中文的全英文稿仍应判跑偏；而中文为主、夹几个英文词的不算。
+        """
+        mostly_en = ("$BTC 突破 " + self.EN_ONLY)
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(
+            mostly_en, out_lang="zh-CN")
+        self.assertFalse(ok)
+        self.assertIn("语种跑偏", reason, "夹几个中文词的全英文稿仍属跑偏")
+        # 反向：中文为主 + 少量英文术语，不该判跑偏（会走长度门/其他门）
+        zh_main = ("$ETH 今天走势偏弱，成交量没有放大，说明多头信心不足。"
+                   "关注 ETF inflow 和 funding rate 两个指标，"
+                   "如果连续两天净流出，那就该考虑减仓了，别硬扛。")
+        ok2, reason2 = m.MultiLLMEngine._passes_quality_gate(
+            zh_main, out_lang="zh-CN")
+        self.assertTrue(ok2, "中文为主+少量英文术语被误判：%s" % reason2)
+
+    def test_moderate_english_share_still_counts_as_drift(self):
+        """★★ 边界：英文占比**明显高于中文**（但没到 10 倍）仍应判跑偏。
+
+        构造：拉丁 ~60、CJK ~20 ⇒ 比值 3 倍刚好越线（`> cjk*3` 成立）。
+        这条用例存在意义：把占比阈值从 ×3 收紧到 ×10 时，它立刻变红
+        （否则收紧会让一批真跑偏的稿子被误判成"内容碎片"）。
+        """
+        mixed = (
+            "$BTC is holding above the key level and funding looks neutral "
+            "for now, watch the next candle close before adding size. "
+            "今天先看着，别急着动手，等确认再说。"
+        )
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(
+            mixed, out_lang="zh-CN")
+        self.assertFalse(ok)
+        self.assertIn("语种跑偏", reason,
+                      "英文明显占多数的稿子必须判跑偏（收紧占比阈值会让它漏网）")
 
 
 class TestR802EnglishLanguageMismatch(unittest.TestCase):

@@ -5939,6 +5939,21 @@ class MultiLLMEngine:
                 return False, f"英文字符过少 ({en_count})，疑似跑偏非英文输出"
         else:
             if cjk_count < 40:
+                # ★★ R824：中文分支必须与英文分支**对偶**——R802 给 en 加了
+                #   "语种跑偏"判定，中文侧却只笼统报"中文字符过少"⇒ 两种完全
+                #   不同的故障被压成同一句话，运维无从判断该换通道还是该换 prompt：
+                #     ① 模型输出了**全英文**（通道不听话，换通道可解）
+                #     ② 模型输出了**很短的碎片**（内容质量差，换通道无用）
+                #   生产实证（10-20 00:44，lang=zh-CN 白天时段）：
+                #   `content_cjk=0` 而 `completion_tokens=5793`（**没撞顶**）
+                #   ⇒ 是 openrouter/free 通道无视目标语种，不是预算问题。
+                #   旧文案把它记成 `stage=quality` 的"质量差"，会让人去调 prompt。
+                #   判据用**拉丁字符占比**而非"cjk==0"：碎片里也可能混少量中文。
+                _latin = len(re.findall(r"[A-Za-z]", content))
+                if _latin >= 40 and _latin > cjk_count * 3:
+                    return False, (f"语种跑偏：目标中文但正文以英文为主"
+                                   f"（CJK {cjk_count} / 拉丁 {_latin}）"
+                                   f"——通道未遵守语种指令，换通道可解")
                 return False, f"中文字符过少 ({cjk_count})，疑似跑偏英文输出"
         return True, ""
 
