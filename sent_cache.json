@@ -1,15 +1,5 @@
 [
   {
-    "id": "6720a52c193fef74",
-    "title": "XRP price slips below $1.50 – Can ETF demand fuel a recovery?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-10T23:45:18.874732+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b580bd57c02a1eba",
     "title": "Ethereum sees $243M in stablecoin growth, yet ETH’s price falls – Why?",
     "source": "AMBCrypto (技术与链上)",
@@ -5211,5 +5201,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e30b413833b33e6f",
+    "title": "BNB’s 37th quarterly burn removes 1.64M tokens – Move toward $800 needs...",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-20T12:03:57.005556+00:00",
+    "tokens": [
+      "BNB"
+    ],
+    "lang": "zh-CN"
   }
 ]
