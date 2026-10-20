@@ -22,6 +22,10 @@ from collections import Counter, defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CST = dt.timezone(dt.timedelta(hours=8))
+# ★ R818：浏览加权数据文件（相对仓库根读，便于测试注入）。它的 `as_of` 由创作者
+#   后台**手工导出**决定——导出停更时文件内容一天天变旧，而读侧不看 as_of，
+#   所以"数据是哪天的"必须由日报明确报出来（只报事实，不判阈值）。
+_ENGAGEMENT_FILE = os.path.join(ROOT, "token_engagement.json")
 
 
 def _cst(ts: str) -> dt.datetime:
@@ -108,7 +112,22 @@ def build_report(rows, hours: int) -> str:
     #   （实测踩到：线上 quota_blocked=true / 槽位 192 分钟，日报说 1 分钟）。
     #   ⇒ 改用 `sent_24h / max_daily_posts` 判定是否打满（中位数取最近 8 轮）。
     quota_note = "无数据"
-    latest = sums[-1] if sums else {}
+
+    # ★★ R818：**不能取 `sums[-1]`**——那一行可能是「间隔门早退」的**残行**：
+    #   main.py 的 `append_run_summary(gap_early_exit=True, fetch_elapsed_sec=…,
+    #   run_elapsed_sec=…)` 只带三个计时键，**没有** sent_24h / max_daily_posts /
+    #   intel_* ⇒ 整条 ① 配额行与输入新鲜度行一起退化。
+    #   生产实证（10-20 23:25Z 本地跑线上件）：① 从「未打满 56/60」变成
+    #   「下一槽位 1 分钟后」、情报字段全变「未知」。间隔门早退 22/93 轮（24%）
+    #   ⇒ 这不是罕见路径，是"约每四天错一次"。
+    #   ⇒ 取**最后一个带该字段**的轮（找不到才回落 sums[-1]，且不静默）。
+    def _last_with(key):
+        for r in reversed(sums):
+            if r.get(key) is not None:
+                return r
+        return sums[-1] if sums else {}
+
+    latest = _last_with("sent_24h")
     sent24 = latest.get("sent_24h")
     cap = latest.get("max_daily_posts")
     nxt_recent = [r.get("next_slot_frees_min") for r in sums[-8:]
@@ -179,6 +198,51 @@ def build_report(rows, hours: int) -> str:
             parked = active[-1].get("feeds_parked_sources")
             if parked:
                 L.append("   ⏸️ 上轮停放源：%s" % parked)
+
+    # ★★ R818：**导入型输入的新鲜度**（此前对运营完全不可见）。
+    #   为什么必须显式渲染：`token_engagement.json` 由创作者后台**手工导出**，而读侧
+    #   （main._load_token_engagement）只按 `min_n` 过滤、**完全不看 as_of** ⇒ 导出停更
+    #   时陈旧触达数据一直静默驱动排序（实测 as_of 停在 10-16，已 4 天前），运行日志也
+    #   只说"N 币有基线"。R811 只给**盈利脚本**加了新鲜度判断，日报侧一直是盲的
+    #   （R612 家族：程序在用 ≠ 人在看）。
+    #   ⚠️ **只报事实、不判阈值**——"该不该停用"是运营决策，报表不拍期限（R670 教训：
+    #   拍出来的阈值第二版也错）。情报侧同理：读 run_summary 自带的
+    #   `campaign_guidance_usable`/`intel_age_hours`（生产已落盘），**不复制 12h 那个阈值**。
+    _fresh = []
+    _asof = None
+    try:
+        import json as _json
+        with open(_ENGAGEMENT_FILE, encoding="utf-8-sig") as _fh:
+            _asof = (_json.load(_fh) or {}).get("as_of")
+    except Exception:
+        _asof = None
+    if isinstance(_asof, str) and _asof.strip():
+        _s = _asof.strip()
+        _age = ""
+        try:
+            _d = dt.datetime.fromisoformat(_s.replace("Z", "+00:00"))
+            # ⚠️ 带**非 UTC 偏移**的 as_of 必须先换算到 UTC 再摘 tzinfo——直接
+            #    `replace(tzinfo=None)` 会静默错位（`+08:00` 的 13:39 会被当成
+            #    UTC 13:39，年龄凭空多 8 小时）。真实文件是 `…Z`（UTC），
+            #    但"读的人以为自己对"正是这类 bug 的温床。
+            if _d.tzinfo is not None:
+                _d = _d.astimezone(dt.timezone.utc)
+            _d = _d.replace(tzinfo=None)
+            _h = (now - _d).total_seconds() / 3600.0
+            _age = "（%.1f 天前）" % (_h / 24.0) if _h >= 48 else "（%.1f 小时前）" % _h
+        except Exception:
+            _age = ""
+        _fresh.append("浏览加权数据 as_of %s%s" % (_s[:16], _age))
+    else:
+        # 未知不是 0：文件缺失/无 as_of 时必须明说，别让读者以为"数据很新"
+        _fresh.append("浏览加权数据 as_of 未知")
+    if latest:
+        _intel = _last_with("intel_age_hours")
+        _gu = _intel.get("campaign_guidance_usable")
+        _ia = _intel.get("intel_age_hours")
+        _fresh.append("情报 guidance 可用 %s ｜ 情报 age %s h（取最近一次真正评估过情报的轮）" % (
+            _gu, ("%.1f" % _ia) if isinstance(_ia, (int, float)) else "未知"))
+    L.append("   📀 输入新鲜度：%s" % " ｜ ".join(_fresh))
 
     # ③ LLM 与尝试
     # ★★ R800：**尝试口径**。旧实现只把 `llm_failed` 当拒稿，漏掉了 transport 层

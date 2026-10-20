@@ -8645,5 +8645,95 @@ class TestR816MentionLangCoverage(unittest.TestCase):
                         "零样本语种必须跟在同一段尾，便于逐日对比")
 
 
+class TestR818InputFreshness(unittest.TestCase):
+    """★★ R818：① 日报补「📀 输入新鲜度」；② 修 `latest = sums[-1]` 的**残行退化**。
+
+    生产实证（10-20 23:25Z 本地跑线上件，原文）：
+        ① 发帖：56 篇 {'10-19': 2, '10-20': 54}
+           配额：下一槽位 1 分钟后                     ← 退化了
+    而同一份数据里最近一个**带字段**的轮写的是「未打满 56/60」。根因：main 的
+    `append_run_summary(gap_early_exit=True, fetch_elapsed_sec=…, run_elapsed_sec=…)`
+    只带三个计时键 ⇒ 间隔门早退的残行被当成"最新状态"，`sent_24h`/`max_daily_posts`/
+    `intel_*` 全部读不到。该残行占 **22/93 轮（24%）** ⇒ 约每四天错一次。
+
+    第二半的动机：`token_engagement.json` 由创作者后台**手工导出**，读侧只看
+    `min_n`、不看 `as_of` ⇒ 导出停更时陈旧触达数据静默驱动排序（实测 as_of 停在
+    10-16，已 4 天前）。日报只**报事实**（哪天 + 多久以前），不判阈值。
+    """
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r818",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _full(self, **over):
+        base = {"outcome": "run_summary", "ts": _ago(1), "sent_24h": 56,
+                "max_daily_posts": 60, "feeds_ok": 23, "candidates": 100,
+                "unprocessed": 79, "published": 1, "next_slot_frees_min": 1,
+                "campaign_guidance_usable": True, "intel_age_hours": 7.6}
+        base.update(over)
+        return base
+
+    @staticmethod
+    def _gap_exit(minutes_ago=0.1):
+        # 键集与 main.append_run_summary(gap_early_exit=True, …) 逐字对齐
+        return {"outcome": "run_summary", "ts": _ago(minutes_ago),
+                "gap_early_exit": True, "fetch_elapsed_sec": 0.0, "run_elapsed_sec": 3.2}
+
+    def _tmp_engagement(self, data):
+        import tempfile
+        fd, p = tempfile.mkstemp(suffix=".json")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(data, fh)
+        self.addCleanup(os.remove, p)
+        return p
+
+    def _line(self, text, needle):
+        return next(l for l in text.split("\n") if needle in l)
+
+    # ---- ① 残行退化（核心）----
+    #   ⚠️ 这两条只验 ①/情报行，**故意不喂 as_of**（指向不存在的路径）⇒ 夹具里
+    #   没有绝对日期字面量，符合 R799 的时钟窗纪律（喂了硬编码日期的话，
+    #   `TestNoWallClockWindowedTests` 会当场咬住——本轮就被咬了一次）。
+    def test_gap_exit_tail_row_does_not_degrade_quota(self):
+        mod = self._dr()
+        mod._ENGAGEMENT_FILE = os.path.join(os.path.dirname(__file__), "no_such_eng.json")
+        text = mod.build_report([self._full(), self._gap_exit()], 24)
+        self.assertIn("未打满 56/60", text)
+        self.assertNotIn("下一槽位 1 分钟后", text,
+                         "残行缺 sent_24h/max_daily_posts ⇒ 旧实现会退化成「下一槽位」")
+
+    def test_intel_freshness_skips_gap_exit_rows(self):
+        mod = self._dr()
+        mod._ENGAGEMENT_FILE = os.path.join(os.path.dirname(__file__), "no_such_eng.json")
+        line = self._line(mod.build_report([self._full(), self._gap_exit()], 24),
+                          "输入新鲜度")
+        self.assertIn("guidance 可用 True", line)
+        self.assertIn("7.6", line)
+
+    # ---- ② 导入型输入的新鲜度自证 ----
+    def test_freshness_line_reports_as_of_and_age(self):
+        """★ 用**相对**时间戳（`_ago(96)`）而非硬编码日期：断的是"年龄被说出来"
+        而不是某个具体日期——后者到点就会变红（R799/R780b）。"""
+        mod = self._dr()
+        mod._ENGAGEMENT_FILE = self._tmp_engagement({"as_of": _ago(96)})
+        line = self._line(mod.build_report([], 24), "输入新鲜度")
+        self.assertIn("浏览加权数据 as_of ", line)
+        self.assertIn("4.0 天前", line, "必须把「多久以前」说出来，否则读者不知道数据已旧")
+
+    def test_missing_input_says_unknown_not_silent(self):
+        """未知不是 0：文件缺失时行仍在，且明说"未知"（否则会被读成数据很新）。"""
+        mod = self._dr()
+        mod._ENGAGEMENT_FILE = os.path.join(os.path.dirname(__file__), "no_such_eng.json")
+        line = self._line(mod.build_report([], 24), "输入新鲜度")
+        self.assertIn("as_of 未知", line)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
