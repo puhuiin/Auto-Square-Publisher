@@ -1,15 +1,5 @@
 [
   {
-    "id": "ffacaf8391130821",
-    "title": "清算金额超190亿美元,10月10日成加密行业历史最大清算日",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-10T18:05:07.574109+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a4f1d86c2b5859bf",
     "title": "Uniswap v4 and v3 capture 47.2% of $161.4 billion in stablecoin DEX volume",
     "source": "Crypto Briefing (深度与研报)",
@@ -5208,6 +5198,16 @@
     "sent_at": "2026-10-20T10:06:12.568702+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6a466b0fa32bcff5",
+    "title": "Four.Meme推出OpenFour Boost,支持项目方快速搭建品牌专属Launchpad",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-20T10:23:50.688905+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-CN"
   }
