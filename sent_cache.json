@@ -1,15 +1,5 @@
 [
   {
-    "id": "ab33d8229db382aa",
-    "title": "GTA 6 Leak Takes Bizarre Crypto Twist",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-11T13:24:37.981150+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "cfa839fc572ea08b",
     "title": "How Zcash Plans to Hide Your Keys From AI and Quantum Attacks",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5206,6 +5196,17 @@
     "sent_at": "2026-10-20T19:43:59.525966+00:00",
     "tokens": [
       "ZK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ee76f8d06581c5eb",
+    "title": "5亿枚USDC在Solana链上5分钟内完成铸造,价值约5亿美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-20T20:06:29.539777+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
     ],
     "lang": "en"
   }
