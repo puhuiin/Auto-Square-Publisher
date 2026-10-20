@@ -1,15 +1,5 @@
 [
   {
-    "id": "039c80e3b004526f",
-    "title": "受影响设备数量有限,Ledger确认硬件钱包供应链攻击案例均涉及CryptoBilis",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-11T18:04:04.475896+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5516d91f90fc998e",
     "title": "PeckShield Traces $3.89 Million in Ledger Theft Funds to Binance Deposits",
     "source": "The Defiant (DeFi 深度)",
@@ -5210,5 +5200,15 @@
       "XLM"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "39d99350c5329677",
+    "title": "XRP Reserves Surge on Binance, Does It Signal Flash Sell-Offs?",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-20T22:44:26.781817+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
