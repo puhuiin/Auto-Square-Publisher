@@ -4603,6 +4603,44 @@ class TestGitStateMerge(unittest.TestCase):
         n = self.merger.merge_sent_cache(os.path.join(self.dir, "no_local.json"), remote_p)
         self.assertEqual(n, 500)
 
+    def test_merge_intel_clear_survives_remote_cooldown(self):
+        """R812：本地成功清除必须压过远端的未过期冷却（并集复活的修复）。"""
+        import json
+        now = datetime.now(timezone.utc)
+        remote = {"last_updated": (now - timedelta(minutes=30)).isoformat(),
+                  "_llm_breaker": {"Preset-openrouter": {
+                      "cooldown_until": (now + timedelta(hours=2)).isoformat(),
+                      "last_fail": (now - timedelta(minutes=35)).isoformat(),
+                      "fails": 11}}}
+        local = {"last_updated": (now - timedelta(minutes=5)).isoformat(),
+                 "_llm_breaker": {"Preset-openrouter": {
+                     "cleared_at": (now - timedelta(minutes=10)).isoformat(),
+                     "fails": 0}}}
+        rp = self._write("intel_remote.json", remote)
+        lp = self._write("intel_local.json", local)
+        self.assertTrue(self.merger.merge_intel(lp, rp))
+        with open(rp, encoding="utf-8") as f:
+            merged = json.load(f)
+        entry = (merged.get("_llm_breaker") or {}).get("Preset-openrouter")
+        self.assertTrue(
+            entry is None or str(entry.get("cleared_at") or "") >= str(entry.get("last_fail") or ""),
+            "成功清除不得被远端未过期冷却复活：%r" % (entry,))
+
+    def test_gc_expired_breaker_drops_cleared(self):
+        now = datetime.now(timezone.utc)
+        state = {
+            "cleared": {"cooldown_until": (now + timedelta(hours=2)).isoformat(),
+                        "last_fail": (now - timedelta(hours=3)).isoformat(),
+                        "cleared_at": (now - timedelta(minutes=10)).isoformat()},
+            "expired": {"cooldown_until": (now - timedelta(minutes=1)).isoformat()},
+            "active": {"cooldown_until": (now + timedelta(hours=1)).isoformat(),
+                       "last_fail": now.isoformat()},
+        }
+        out = self.merger._gc_expired_breaker(state, now=now)
+        self.assertNotIn("cleared", out, "已成功解除的墓碑应被丢弃（否则复活继续跳过）")
+        self.assertNotIn("expired", out)
+        self.assertIn("active", out)
+
     def test_intel_state_deep_merge(self):
         _recent = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
         _recent2 = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
@@ -23021,6 +23059,50 @@ class TestR807PoolExhaustedAlert(unittest.TestCase):
             active = eng._ordered_providers()
         self.assertEqual([p.name for p in active], ["b"])
         self.assertFalse(sn.called, "只有部分通道冷却时不得发池耗尽告警")
+
+
+class TestR812BreakerSuccessClear(unittest.TestCase):
+    """★★ R812：熔断「成功清除」必须能压过并集合并复活的未过期冷却。
+
+    生产实证（10-20）：openrouter 03:31Z 成功发布，但 04:03Z/04:15Z 两个运行
+    仍按 07:05Z 冷却跳过它（fails 停在 11）——`git_state_merge` 的并集语义
+    「本地删、远端未过期 ⇒ 远端胜」把 pop 复活了。改墓碑时间戳后可传播清除。
+    """
+
+    def test_is_cooled_false_when_cleared_after_fail(self):
+        now = datetime.now(timezone.utc)
+        state = {"P": {"cooldown_until": (now + timedelta(hours=2)).isoformat(),
+                       "last_fail": (now - timedelta(hours=3)).isoformat(),
+                       "cleared_at": (now - timedelta(minutes=10)).isoformat()}}
+        self.assertFalse(m.MultiLLMEngine._is_cooled(state, "P"),
+                         "成功晚于失败 ⇒ 不得算冷却（哪怕 cooldown_until 在未来）")
+
+    def test_is_cooled_true_when_fail_after_clear(self):
+        now = datetime.now(timezone.utc)
+        state = {"P": {"cooldown_until": (now + timedelta(hours=2)).isoformat(),
+                       "last_fail": now.isoformat(),
+                       "cleared_at": (now - timedelta(minutes=30)).isoformat()}}
+        self.assertTrue(m.MultiLLMEngine._is_cooled(state, "P"),
+                        "失败晚于成功 ⇒ 冷却有效")
+
+    def test_sanitizer_does_not_heal_cleared_entry(self):
+        now = datetime.now(timezone.utc)
+        state = {"P": {"cleared_at": now.isoformat(), "fails": 0}}
+        with patch.object(m, "intel_state_set"):
+            out = m.MultiLLMEngine._sanitize_breaker_state(state)
+        self.assertFalse(m.MultiLLMEngine._is_cooled(out, "P"),
+                         "无 cooldown_until 的已清除条目不得被自愈补成冷却")
+
+    def test_cleared_flag_helper(self):
+        self.assertTrue(m.MultiLLMEngine._cleared_after_fail(
+            {"cleared_at": "2026-10-20T04:00:00+00:00"}))
+        self.assertTrue(m.MultiLLMEngine._cleared_after_fail(
+            {"cleared_at": "2026-10-20T04:00:00+00:00",
+             "last_fail": "2026-10-20T03:00:00+00:00"}))
+        self.assertFalse(m.MultiLLMEngine._cleared_after_fail(
+            {"cleared_at": "2026-10-20T03:00:00+00:00",
+             "last_fail": "2026-10-20T04:00:00+00:00"}))
+        self.assertFalse(m.MultiLLMEngine._cleared_after_fail({"fails": 3}))
 
 
 if __name__ == "__main__":

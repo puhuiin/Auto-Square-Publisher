@@ -8186,8 +8186,13 @@ class TestR800DailyReportPoolHealth(unittest.TestCase):
                          "content_chars": 20, "content_cjk": 10,
                          "lang": "zh-CN", "tokens": ["ETH"]})
         for i in range(6):
+            # ⚠️ 时间戳必须与下面同序号的已发布行**完全一致**：故事级漏斗的键是
+            # (UTC 日期, title)，`_ago(6-…)` 与 `_ago(5-…)` 在跨 UTC 日界时
+            # （生产 05:2xZ 实证）会让同故事对不上 ⇒ 6 条合法 failover Recur
+            # 被判「未交付」，把本用例要验的「恢复后不告警」冲掉。同一次 failover
+            # 本就发生在同一运行内，同 ts 既真实又时钟无关。
             rows.append({"outcome": "llm_rejected", "stage": "transport",
-                         "ts": _ago(6 - i * 0.1), "provider": "Preset-stepfun-flash",
+                         "ts": _ago(5 - i * 0.1), "provider": "Preset-stepfun-flash",
                          "title": "story %d" % i,
                          "reason": "[credit 24h] Error code: 429 - no left credit"})
         if recovered:
@@ -8333,8 +8338,11 @@ class TestR804StoryLevelLoss(unittest.TestCase):
             {"outcome": "llm_rejected", "stage": "transport", "title": "B",
              "ts": _ago(7.5), "provider": "Preset-google",
              "reason": "[rate-limit 60s] Error code: 429"},
+            # B：先 429 后交付（救回）。⚠️ 交付行 ts 与拒稿行**完全一致**——
+            # 故事级漏斗键是 (UTC 日期, title)，任何间隔都会在跨 UTC 日界时
+            # 把「救回」误判成「未交付」（R800 夹具同款时钟炸弹，生产 05:2xZ 实证）。
             {"outcome": "binance_published", "stage": "summarize", "title": "B",
-             "platforms": ["binance"], "ts": _ago(7), "provider": "Preset-openrouter",
+             "platforms": ["binance"], "ts": _ago(7.5), "provider": "Preset-openrouter",
              "lang": "zh-CN", "campaign_mention": True, "campaign_cta_tpl": False,
              "final_text": "B " + "word " * 30, "final_preview": "B",
              "content_chars": 120, "content_cjk": 10},

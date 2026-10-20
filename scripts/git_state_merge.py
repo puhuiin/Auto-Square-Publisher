@@ -61,6 +61,15 @@ def _gc_expired_breaker(state: dict, now=None) -> dict:
         if not isinstance(info, dict):
             out[name] = info
             continue
+        # ★★ R812：**已成功解除的条目直接丢**（cleared_at 新于 last_fail）。
+        #   否则并集「本地删、远端未过期 ⇒ 远端胜」会把成功清除复活——生产实证：
+        #   10-20 03:31Z openrouter 成功发布，04:03Z/04:15Z 两个运行仍按 07:05Z
+        #   冷却跳过它，fails 也永远停在 11。丢掉的只是"已无调度语义"的墓碑，
+        #   未过期且未被清除的远端条目仍保留（并发运行的冷却不能丢）。
+        cleared = str(info.get("cleared_at") or "")
+        last_fail = str(info.get("last_fail") or "")
+        if cleared and (not last_fail or cleared >= last_fail):
+            continue
         try:
             until = datetime.fromisoformat(str(info.get("cooldown_until", "")))
         except Exception:

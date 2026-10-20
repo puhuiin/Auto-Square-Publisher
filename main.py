@@ -5041,6 +5041,11 @@ class MultiLLMEngine:
         prev = cls._parse_cooldown(info.get("cooldown_until"))
         if prev is None or until > prev:
             info["cooldown_until"] = until.isoformat()
+            # ★★ R812：记录"最后一次失败时刻"——供 `cleared_at > last_fail` 判定
+            #   "成功已解除"（R751 源健康 reset_at 同款）。只有**真正延长**冷却时
+            #   才写：不延长（服务端 Retry-After 更长）时 last_fail 保持旧值，
+            #   避免用一次轻微失败把更近的成功解除标记盖掉。
+            info["last_fail"] = datetime.now(timezone.utc).isoformat()
 
     @classmethod
     def _sanitize_breaker_state(cls, state: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
@@ -5057,6 +5062,16 @@ class MultiLLMEngine:
         for name, info in state.items():
             if not isinstance(info, dict):
                 dropped += 1
+                continue
+            # ★★ R812：已成功解除的条目（cleared_at 新于 last_fail）**没有冷却语义**，
+            #   不能走下面"缺 cooldown_until 即畸形，补一个有界冷却"的自愈——
+            #   那会把成功清除重新变成冷却。这里只清理残留的 cooldown/permanent。
+            if cls._cleared_after_fail(info):
+                info = dict(info)
+                info.pop("cooldown_until", None)
+                info.pop("permanent", None)
+                repaired[name] = info
+                healed += 1
                 continue
             if cls._parse_cooldown(info.get("cooldown_until")) is None:
                 info = dict(info)
@@ -5112,14 +5127,39 @@ class MultiLLMEngine:
         return self._sanitize_breaker_state(state)
 
     @classmethod
+    def _cleared_after_fail(cls, info: Dict[str, Any]) -> bool:
+        """★★ R812：该条目是否已被「成功」解除（cleared_at 新于 last_fail）。
+
+        为什么不能直接 pop：
+        `scripts/git_state_merge.py` 的并集语义是「本地删、远端未过期 ⇒ 远端胜」
+        （merge_state 里 `b is None → a`），所以 pop 会被远端旧值复活——生产实证：
+        10-20 03:31Z openrouter **成功发布**，04:03Z 仍按 07:05Z 冷却被跳过，
+        `fails` 也永远停在 11（下次失败继续从 240min 起算）。
+        改用可比较的时间戳（R751 源健康 `reset_at/last_fail` 同款）：
+        成功写 `cleared_at`，失败写 `last_fail`，谁新谁说话。
+        """
+        if not isinstance(info, dict):
+            return False
+        cleared = str(info.get("cleared_at") or "")
+        if not cleared:
+            return False
+        last_fail = str(info.get("last_fail") or "")
+        return (not last_fail) or (cleared >= last_fail)
+
+    @classmethod
     def _is_cooled(cls, state: Dict[str, Dict[str, Any]], name: str) -> bool:
         """快照版冷却判定（_ordered_providers 一次读盘后复用，避免逐提供商重复读文件）。
 
         不可信状态按"仍冷却"处理（fail-closed）：宁可少撞一次，也不要在 Key 失效/
         模型下架时每轮白烧故事。注意 `_breaker_state()` 已把畸形值修成有界冷却，
-        所以这里不会造成永久死锁。"""
+        所以这里不会造成永久死锁。
+
+        ★ R812：**cleared_at 新于 last_fail ⇒ 不算冷却**（成功已解除，哪怕
+        cooldown_until 还在未来——那是被并集合并复活的旧失败）。"""
         info = state.get(name)
         if not isinstance(info, dict):
+            return False
+        if cls._cleared_after_fail(info):
             return False
         until = cls._parse_cooldown(info.get("cooldown_until"))
         if until is None:
@@ -5289,13 +5329,26 @@ class MultiLLMEngine:
             )
 
     def _breaker_record_success(self, name: str):
-        had_entry = name in self._breaker_state()
-        if not had_entry:
-            return  # 本来就不在断路器里，避免无意义写盘
+        """★★ R812：**不再 pop，改写「墓碑时间戳」**。
+
+        旧实现 `state.pop(name)` 会被 `git_state_merge.merge_state` 的并集语义复活：
+        「本地键已删、远端未过期 ⇒ 远端胜」（b is None → a）。生产实证：
+        10-20 03:31Z openrouter 成功发布，04:03Z/04:15Z 两个运行仍按 07:05Z 冷却
+        跳过它；`fails` 也永远停在 11（下次失败继续按 240min 封顶起算）。
+        改写成 `cleared_at` 时间戳后：`_is_cooled` 与合并侧 GC 都能识别
+        「成功晚于最后一次失败 ⇒ 已解除」，清除可跨运行传播。
+        """
+        now_iso = datetime.now(timezone.utc).isoformat()
 
         def _clear(state):
             state = dict(state or {})
-            state.pop(name, None)
+            info = state.get(name)
+            base = dict(info) if isinstance(info, dict) else {}
+            base.pop("cooldown_until", None)
+            base.pop("permanent", None)
+            base["fails"] = 0
+            base["cleared_at"] = now_iso
+            state[name] = base
             return state
 
         intel_state_update(self._BREAKER_STATE_KEY, _clear, default={})
