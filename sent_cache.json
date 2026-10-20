@@ -1,16 +1,5 @@
 [
   {
-    "id": "33cc98772cc87fc9",
-    "title": "Zcash预计1月引入抗量子签名操作码,Vizor钱包上线私密查询功能",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-11T13:06:21.987776+00:00",
-    "tokens": [
-      "ZEC",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ab33d8229db382aa",
     "title": "GTA 6 Leak Takes Bizarre Crypto Twist",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5207,6 +5196,16 @@
     "sent_at": "2026-10-20T19:24:41.003168+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5c77a78f9eb5c24e",
+    "title": "GRVT Burns 1.1 Million Tokens as GRVT 2.0 Draws Closer",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-20T19:43:59.525966+00:00",
+    "tokens": [
+      "ZK"
     ],
     "lang": "en"
   }
