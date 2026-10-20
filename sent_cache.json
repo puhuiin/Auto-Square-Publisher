@@ -1,15 +1,5 @@
 [
   {
-    "id": "897fadcd2f356142",
-    "title": "Upbit listing propels KAIA to yearly highs, but is $0.10 the next price target?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-10T11:45:21.102312+00:00",
-    "tokens": [
-      "KAIA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5f6a3f4158cd09a6",
     "title": "“1011 暴跌”一周年:190 亿美元清算警钟犹存,分析师警示衍生品杠杆风险",
     "source": "深潮TechFlow (中文/简体)",
@@ -5194,6 +5184,18 @@
     "tokens": [
       "ETH",
       "USDC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b2a14dc980580509",
+    "title": "Aptos加密内存池功能已在主网上线,旨在防范抢先交易及三明治攻击",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-20T01:15:44.409044+00:00",
+    "tokens": [
+      "APT",
+      "ETH",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
