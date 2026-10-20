@@ -5751,6 +5751,24 @@ class MultiLLMEngine:
         return True, ""
 
     @classmethod
+    def _english_language_mismatch(cls, content: str) -> Optional[str]:
+        """R802：英文分支的**语种跑偏**判定（短讯/长文共用同一实现）。
+
+        生产实证（10-19 英文窗口，n=21 带全文遥测）：
+        - 17:03 帖正文 CJK=150、拉丁字符仅 20，却被标成 lang=en 并成功发布
+          —— 它靠模型自写的 `#Write2Earn #BinanceSquare …` 标签行把拉丁字符
+          补到 40+，而旧门 `en_count < 40` 只数拉丁字符；
+        - 20:04 帖 CJK=138，靠 CME/BCH/UNI/BTC 等 ticker 凑到 43 个拉丁字符过门。
+        ⇒ **字符数不是语种判据**：中文帖里的 ticker 与标签天然是拉丁字母。
+        改判 CJK 占比：出现 ≥20 个汉字即视为中文句（prompt 明令英文分支
+        "不要出现任何中文句子"；20 字≈一个短句，正常英文帖 CJK=0）。
+        """
+        cjk = len(re.findall(r"[一-鿿]", content or ""))
+        if cjk >= 20:
+            return f"英文本中出现中文（CJK {cjk}，语种跑偏）"
+        return None
+
+    @classmethod
     def _passes_quality_gate(cls, content: str,
                              out_lang: Optional[str] = None) -> Tuple[bool, str]:
         """
@@ -5777,6 +5795,11 @@ class MultiLLMEngine:
         # ⚠️ 长度门（60~1200）**不分语种**：英文同内容字符数更大，
         #    沿用同一区间可避免"为了过门而写短"。
         if out_lang == "en":
+            # ★★ R802：先判语种跑偏（CJK 占比），再判英文长度。
+            #   旧门只数拉丁字符 ⇒ 纯中文帖靠 ticker/标签行过门（生产 2/21）。
+            _mismatch = cls._english_language_mismatch(content)
+            if _mismatch:
+                return False, _mismatch
             en_count = len(re.findall(r"[A-Za-z]", content))
             if en_count < 40:
                 return False, f"英文字符过少 ({en_count})，疑似跑偏非英文输出"
@@ -5879,6 +5902,10 @@ class MultiLLMEngine:
                            else f"长文标题长度不当 ({len(title)} 字符，要求 8~40)"), "", content
         body = cls._ARTICLE_TITLE_RE.sub("", content, count=1).strip()
         if out_lang == "en":
+            # ★★ R802：长文同样要判语种（与短讯共用同一实现，避免两处漂移）
+            _mismatch = cls._english_language_mismatch(body)
+            if _mismatch:
+                return False, _mismatch, title, body
             # ★ R711：英文用**词数**（比字母数更贴近"字数"语义）
             # 下沿 250 词：模型按中文"字数"直觉写英文会偏短（实测 256 词），
             # 卡 280 会让长文反复被拒；250 仍足以挡住"三五句话的迷你长文"。

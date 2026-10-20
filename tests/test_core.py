@@ -22829,5 +22829,56 @@ class TestR801TradingRaceMention(unittest.TestCase):
                               "普通内容误报成活动提及: %s" % t[:36])
 
 
+class TestR802EnglishLanguageMismatch(unittest.TestCase):
+    """★★ R802：英文分支必须拦「标成 en、实际是中文」的稿子。
+
+    生产实证（10-19 英文窗口，n=21 带全文遥测）：
+    - 17:03 帖正文 CJK=150、拉丁字符仅 20，却成功发布并标 lang=en
+      —— 靠模型自写的 #Write2Earn/#BinanceSquare 标签行补足 40 字符过门；
+    - 20:04 帖 CJK=138，靠 CME/BCH/UNI/BTC 等 ticker 凑到 43 个拉丁字符。
+    旧门 `en_count < 40` 只数拉丁字符，**字符数不是语种判据**。
+    """
+
+    ZH_WITH_TICKERS = (
+        "$BTC 涨至 $82k 内 24h+, 而 411.45 $BTC 的 $33M 闲置钱包终于活跃起来。"
+        "Noah Doe 诉讼案将其列入,资金流动本该是爆发点,却沉寂多年。\n\n"
+        "该钱包自 2013 年沉睡,转移后 411.45 $BTC 价值约三十五亿美金,"
+        "这笔巨额资产本该在市场上发声,却始终保持沉默。\n\n"
+        "若不解释交易目的,该 $33M 可能是逃避监管或转移资金的筹码,"
+        "而非正常盘活过程。这一波是否值得等待进一步确认,还是要立即止损?\n\n"
+        "#Write2Earn #BinanceSquare #BTC MemeCoin #TradingTournament"
+    )
+    EN_OK = (
+        "BitMine just scooped up 12,535 $ETH - roughly $30M parked on the "
+        "balance sheet while Tom Lee warns AI is dragging risk appetite. "
+        "Spot $ETH sits at $2,396 with greed at 59. Watch the funding rate "
+        "and wait for a clean close above $2,500 before chasing the bounce."
+    )
+
+    def test_chinese_post_in_english_branch_rejected(self):
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(
+            self.ZH_WITH_TICKERS, out_lang="en")
+        self.assertFalse(ok, "纯中文帖被英文门放过 ⇒ 英文窗口发中文")
+        self.assertIn("语种跑偏", reason)
+
+    def test_english_post_still_passes(self):
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(
+            self.EN_OK, out_lang="en")
+        self.assertTrue(ok, "正常英文稿被误杀：%s" % reason)
+
+    def test_chinese_branch_unaffected(self):
+        ok, reason = m.MultiLLMEngine._passes_quality_gate(
+            self.ZH_WITH_TICKERS, out_lang="zh-CN")
+        self.assertTrue(ok, "中文门不得被 R802 顺带改坏：%s" % reason)
+
+    def test_english_long_article_with_chinese_body_rejected(self):
+        art = ("TITLE: Bitcoin ETF flows explained in three charts\n\n"
+               + "比特幣現貨 ETF 連續第四週淨流出，機構資金撤退，"
+                 "盤面卻仍在定價復甦。現貨持倉者可以等量能證明買盤再動。\n\n" * 12)
+        ok, reason, _, _ = m.MultiLLMEngine._parse_article(art, out_lang="en")
+        self.assertFalse(ok, "中文长文被英文长文门放过")
+        self.assertIn("语种跑偏", reason)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
