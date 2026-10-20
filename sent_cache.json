@@ -1,16 +1,5 @@
 [
   {
-    "id": "7d9c1a18138fc0c3",
-    "title": "建仓1489万美元ETH,某巨鲸20分钟从币安提取5965枚ETH",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-10T13:45:54.953948+00:00",
-    "tokens": [
-      "ETH",
-      "USDC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a39ca17ed7b7c864",
     "title": "10/10 一周年:比特币以太坊流动性回补,山寨币深度仍在失血",
     "source": "深潮TechFlow (中文/简体)",
@@ -5202,5 +5191,17 @@
       "NIGHT"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "0063d4c7f9f339b9",
+    "title": "German Savings Banks Begin Crypto Trading Rollout Inside Sparkassen App",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-20T07:05:15.452458+00:00",
+    "tokens": [
+      "XRP",
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
