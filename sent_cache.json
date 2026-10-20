@@ -1,16 +1,5 @@
 [
   {
-    "id": "0921935fcfbfd5af",
-    "title": "Ex-Ripple Exec on What's Next for XRP: Agentic Payments, RLUSD Surge Onchain",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-10T19:40:05.753482+00:00",
-    "tokens": [
-      "XRP",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "419729f27ae002c1",
     "title": "Can Midnight crypto target $0.055 after NIGHT’s 11% price rally?",
     "source": "AMBCrypto (技术与链上)",
@@ -5210,5 +5199,15 @@
       "SHIB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "37fffaa05f2e3da0",
+    "title": "BlackRock’s proposed Bitcoin ETF would hold no Bitcoin or spot ETF shares",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-20T11:04:02.569289+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
