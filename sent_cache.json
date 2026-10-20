@@ -1,15 +1,5 @@
 [
   {
-    "id": "d73dc7a4233fe273",
-    "title": "波場 TRON 亮相國際刑警組織新技術論壇,展示戀上安全與合規建設新進展",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-10-11T05:04:45.054417+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "57cbbe80c73fa791",
     "title": "神秘新钱包 Hyperliquid 开多 STRK,一天浮盈 85 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5209,6 +5199,16 @@
     "sent_at": "2026-10-20T15:44:03.636091+00:00",
     "tokens": [
       "TIA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c748de7b68ef273f",
+    "title": "蘋果最高 1 億美元押注美國鈦材!賓州 Perryman 供應 iPhone Duo 機身",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-10-20T16:04:18.145497+00:00",
+    "tokens": [
+      "AMP"
     ],
     "lang": "en"
   }
