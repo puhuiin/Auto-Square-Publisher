@@ -1,15 +1,5 @@
 [
   {
-    "id": "cf3c511414209e00",
-    "title": "Polkadot price rebounds 11% – Can DOT extend its rally to $1.75?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-10T15:04:44.667670+00:00",
-    "tokens": [
-      "DOT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "938a92868aa42be5",
     "title": "Cardano Just Delivered Two Bullish Signals at TOKEN2049 as ADA Rebounds",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5204,6 +5194,18 @@
     "sent_at": "2026-10-20T08:04:40.311495+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "6771cef7fd7c6957",
+    "title": "BlackRock files for third Bitcoin ETF, still no Solana or XRP",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-10-20T08:24:37.531245+00:00",
+    "tokens": [
+      "XRP",
+      "BTC",
+      "SOL"
     ],
     "lang": "zh-TW"
   }
