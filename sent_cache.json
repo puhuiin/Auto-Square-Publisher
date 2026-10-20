@@ -1,15 +1,5 @@
 [
   {
-    "id": "824bde8e0835ccfe",
-    "title": "Liquid Network赎回冻结35天,攻击者仍持有价值4969万美元比特币,协议支持率降至86%",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-11T16:04:19.224307+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "fbe89759b604963c",
     "title": "Conflux jumps 17% on China blockchain buzz – Will CFX’s breakout hold?",
     "source": "AMBCrypto (技术与链上)",
@@ -5208,6 +5198,16 @@
     "sent_at": "2026-10-20T21:24:21.204564+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "cfcba85b43501e85",
+    "title": "Sui crypto reclaims $1—Can buyers clear the $1.05 recovery hurdle?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-20T21:44:29.134637+00:00",
+    "tokens": [
+      "SUI"
     ],
     "lang": "en"
   }
