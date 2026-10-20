@@ -8735,5 +8735,153 @@ class TestR818InputFreshness(unittest.TestCase):
         self.assertIn("as_of 未知", line)
 
 
+class TestR819EnWindowPreregistration(unittest.TestCase):
+    """★★ R819：英文夜窗的**预注册判据**（先写死门槛，再跑数据）。
+
+    动机：夜窗提及率是下一个待验点，而"看到数字再决定算不算改善"在本项目是
+    明令禁止的——事后总能给任意结果编出解释。把口径与阈值写进
+    `scripts/en_window_audit.py`（git 留痕 + 本组测试逐条钉住）。
+
+    本轮**同时抓到两个我自己写的 bug**，都在这里留了守卫：
+      ① 浮点边界：`100.0*1/6 = 16.666666666666668` 而 `100.0*(3.0/18.0) =
+         16.666666666666664` ⇒ **恰好踩在红线上的窗口被判"回滚"**（1/6 与 3/18
+         本是同一个数）。判据已改为**整数交叉相乘**。
+      ② Fisher 检验参数传反（miss/hit 对调）⇒ p 值看起来"很正常"却完全不同
+         （两臂各 18 时 4/18→1/18 从 0.169 变成 0.798）。已加"效应越大 p 越小"的
+         单调性守卫——参数传反时单调性通常会破。
+    """
+
+    @staticmethod
+    def _ew():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "en_window_audit_r819",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "en_window_audit.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    CN_HIT = "交易大赛 值得看看"                    # 命中词表、汉字数 <20
+    EN_MISS = "no campaign here at all"             # 不命中词表
+    CN_LONG = "这是一篇很长的中文正文用来触发语种跑偏判据交易大赛"   # 25 个汉字
+
+    def _row(self, hour, text, tags=2):
+        return {"outcome": "binance_published",
+                "ts": "2026-10-20T%02d:05:00+00:00" % hour,
+                "final_text": text, "campaign_tag_count": tags}
+
+    def _stats(self, miss, normal, mention, n, date="2026-10-20"):
+        return {"date": date, "n": n, "normal": normal, "miss": miss, "mention": mention,
+                "mention_rate": 100.0 * mention / n,
+                "miss_rate": (100.0 * miss / normal) if normal else None, "langdev": 0}
+
+    # ---- 口径 ----
+    def test_night_window_boundaries(self):
+        mod = self._ew()
+        D = "2026-10-20"
+        self.assertFalse(mod.in_night_window("2026-10-20T13:59:59+00:00", D))
+        self.assertTrue(mod.in_night_window("2026-10-20T14:00:00+00:00", D))
+        self.assertTrue(mod.in_night_window("2026-10-20T21:59:59+00:00", D))
+        self.assertFalse(mod.in_night_window("2026-10-20T22:00:00+00:00", D))
+        self.assertFalse(mod.in_night_window("2026-10-19T15:00:00+00:00", D))
+        self.assertFalse(mod.in_night_window("garbage", D))
+
+    def test_window_stats_caliber(self):
+        """锁口径：语种跑偏帖（汉字≥20）与无活动标签帖都**不进**"配置正常"分母，
+        但都进"提及率"分母——两者是不同的率，混用会让缺口看起来更大或更小。"""
+        mod = self._ew()
+        rows = [self._row(14, self.CN_HIT),          # 正常 + 提及
+                self._row(15, self.CN_HIT),          # 正常 + 提及
+                self._row(16, self.EN_MISS),         # 正常 + **真漏**
+                self._row(17, self.CN_LONG),         # 语种跑偏（不进正常分母）
+                self._row(18, self.CN_HIT, tags=1),  # 无活动标签（不进正常分母）
+                self._row(23, self.CN_HIT)]          # 窗外
+        s = mod.window_stats(rows, "2026-10-20")
+        self.assertEqual((s["n"], s["mention"], s["normal"], s["miss"], s["langdev"]),
+                         (5, 4, 3, 1, 1))
+
+    # ---- 整数阈值（浮点边界守卫）----
+    def test_exact_red_line_does_not_revert(self):
+        """1/6 与 3/18 是同一个数 ⇒ 恰好踩线**不许**判回滚。"""
+        mod = self._ew()
+        status, why = mod.verdict([self._stats(4, 18, 14, 18)],
+                                  [self._stats(1, 6, 5, 6)])
+        self.assertNotEqual(status, "回滚", why)
+
+    def test_above_red_line_reverts(self):
+        mod = self._ew()
+        status, why = mod.verdict([self._stats(4, 18, 14, 18)],
+                                  [self._stats(2, 6, 4, 6)])   # 2/6 = 33% > 3/18
+        self.assertEqual(status, "回滚", why)
+
+    def test_mention_drop_reverts(self):
+        mod = self._ew()
+        status, _ = mod.verdict([self._stats(4, 18, 14, 18)],      # 77.8%
+                                [self._stats(0, 6, 4, 6)])         # 66.7% ≤ 77.8−10
+        self.assertEqual(status, "回滚")
+
+    # ---- 样本量 ----
+    def test_single_window_never_passes(self):
+        """单窗口哪怕 0/18 也只是"样本不足"——预注册就是为了挡住这种"看着很香"。"""
+        mod = self._ew()
+        self.assertEqual(
+            mod.verdict([self._stats(4, 18, 14, 18)],
+                        [self._stats(0, 18, 18, 18)])[0], "样本不足")
+
+    def test_two_windows_meeting_bar_passes(self):
+        mod = self._ew()
+        base = [self._stats(2, 18, 15, 19, "2026-10-19"),
+                self._stats(2, 18, 15, 19, "2026-10-20")]
+        treat = [self._stats(0, 18, 18, 18, "2026-10-21"),
+                 self._stats(0, 20, 20, 20, "2026-10-22")]
+        self.assertEqual(mod.verdict(base, treat)[0], "通过")
+
+    def test_two_windows_but_miss_above_bar_fails(self):
+        """要走到"通过/未通过"分支，合并「配置正常」必须 ≥ MIN_ARM_N(36)——
+        这正是样本门的作用。所以夹具用两个 18 篇窗口，合并 3/36 = 8.3% > 1/18=5.6%
+        ⇒ 未通过（且单窗口都没有超过 3/18 的回滚红线）。
+
+        ⚠️ 首版夹具是 [2/18]+[0/20]（合并 2/38=5.3% **低于**通过线 ⇒ 判"通过"是对的、
+        我的算术错了）；第二版是 [1/18]+[1/12]（合并 30 篇 < 36 ⇒ 掉进"样本不足"）。
+        """
+        mod = self._ew()
+        base = [self._stats(2, 18, 15, 19, "2026-10-19"),
+                self._stats(2, 18, 15, 19, "2026-10-20")]
+        treat = [self._stats(2, 18, 16, 18, "2026-10-21"),
+                 self._stats(1, 18, 17, 18, "2026-10-22")]
+        self.assertEqual(mod.verdict(base, treat)[0], "未通过")
+
+    # ---- 统计量 ----
+    def test_fisher_is_monotone_and_reference_value(self):
+        """效应越大 p 越小（单调，防参数传反）+ 参考值：两臂各 18 时 4/18→1/18 = 0.169。"""
+        mod = self._ew()
+        f = mod.fisher_improve_p
+        vals = [f(4, 14, k, 18 - k) for k in (0, 1, 2, 3, 4)]
+        self.assertEqual(vals, sorted(vals), "漏得越少 p 必须越小（否则参数传反了）")
+        self.assertAlmostEqual(f(4, 14, 1, 17), 0.169, places=3)
+
+    def test_thresholds_are_integers(self):
+        """阈值必须是整数分数——浮点百分比比较会在边界上"等价却不相等"。"""
+        mod = self._ew()
+        for name in ("REVERT_MISS_NUM", "REVERT_MISS_DEN", "PASS_MISS_NUM",
+                     "PASS_MISS_DEN", "MENTION_DROP_PP", "MIN_ARM_WINDOWS", "MIN_ARM_N"):
+            self.assertIsInstance(getattr(mod, name), int, name)
+
+    def test_insufficient_verdict_p_has_correct_polarity(self):
+        """★ 守卫缺口补丁：上面那条单调性测试是**直接调 `fisher_improve_p`** 的，
+        所以 `verdict()` 内部把参数传反时它抓不到（p 会从 0.169 变成 0.798，
+        两者都"看起来很正常"）。这里从**判定文案**里把 p 解析出来钉住极性：
+        两臂各 18、4/18 → 1/18 必须是 0.169 那一侧。"""
+        mod = self._ew()
+        status, why = mod.verdict([self._stats(4, 18, 14, 18)],
+                                  [self._stats(1, 18, 17, 18)])
+        self.assertEqual(status, "样本不足")
+        tok = [w for w in why.split() if w.startswith("p=")]
+        self.assertTrue(tok, why)
+        self.assertAlmostEqual(float(tok[0][2:]), 0.169, places=2,
+                               msg="p 极性反了（参数传反）—— 正确值 0.169，反的是 0.798")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -1,0 +1,238 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""英文夜窗体检 + **预注册判据**（R819）。
+
+★★ 为什么要有这个脚本（而不是每次临时写一段 py）
+  英文夜窗（UTC 14:00–22:00）的「正文活动提及率」是下一个待验点，而**"先看数字
+  再决定算不算改善"在本项目是明令禁止的**——必须先把判据写死、再跑数据，否则
+  事后总能给任意结果编出解释（R780b / R799 同族：**会变的门槛等于没有门槛**）。
+  所以把口径与阈值**写进代码**：随 git 历史留痕、有测试逐条钉住、只读不改。
+
+口径（写死；不得因结果而改）
+  · 窗口：同一 UTC 日、`14:00:00 ≤ ts < 22:00:00`（= 北京夜窗 22:00–06:00）。
+  · 样本：`outcome` 以 `binance_published` 开头**且 `final_text` 非空**的行。
+  · 提及：`campaign_vocab.mention_in_text(final_text)`（去标签 + 当前词表）。
+  · 「配置正常」帖：`campaign_tag_count ≥ 2`（活动标签已注入）且正文汉字数 < 20
+    （排除语种跑偏帖——那类帖中文正文会"顺带"命中，会虚高提及率）。
+  · 「真漏」：配置正常帖里**复算提及为 False**。
+  · 「提及率」：本窗口全部样本里的复算提及率（与 ⑥ 日报同源口径）。
+
+基线（10-19 夜窗，2026-10-19T14:44Z–21:44Z）：配置正常 18 篇，真漏 **4** 篇 = 22.2%。
+
+预注册阈值
+  · **单窗口不能判"通过"**：两臂各 18 篇时把 4/18 改善成 1/18，单侧 Fisher 精确
+    检验只有 **p=0.169**（本脚本**现算**它、不写死结论；→0/18 才 0.052）⇒ 达不到
+    任何常规显著水平。单窗口只允许出两种判定：`回滚`（触发下面的红线）或`样本不足`。
+  · **通过**（须**两臂各 ≥ 2 个窗口、合计 n ≥ 36**）：
+      合并真漏率 ≤ 1/18（5.6%）**且** 合并提及率 ≥ 基线提及率（不得下降）
+  · **回滚**（任一成立即回滚，不必等第二个窗口）：
+      · 单窗口真漏率 > 3/18（16.7%）
+      · 单窗口提及率比基线低 ≥ 10 个百分点
+  · **副作用守卫**（与主判据同时读，防止"提了活动但别的变差"）：
+      同期 `campaign_cta_tpl` 收敛率不得比基线上升；`quality` 类拒稿数不得增加。
+
+用法
+  # 只看基线（夜里读完当天窗口）
+  python scripts/en_window_audit.py --metrics .tmp_analysis/online_metrics.jsonl \\
+      --baseline 2026-10-19
+  # 两臂对照 + 出判定
+  python scripts/en_window_audit.py --metrics ... \\
+      --baseline 2026-10-19,2026-10-20 --treatment 2026-10-21,2026-10-22
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import math
+import os
+import re
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from campaign_vocab import mention_in_text  # noqa: E402  （唯一实现，R814 下沉）
+
+NIGHT_START_H, NIGHT_END_H = 14, 22          # UTC 夜窗 = 北京 22:00–06:00
+CJK_RE = re.compile(r"[\u4e00-\u9fff]")
+CJK_MAX_FOR_NORMAL = 20                      # ≥20 汉字视为语种跑偏帖
+
+# ---- 预注册基线（写死：改动必须同时改测试，见 TestR819Preregistration）----
+BASELINE_MISS, BASELINE_NORMAL = 4, 18       # 10-19 夜窗实测
+BASELINE_MENTION_RATE = None                 # 由调用方传入实测值；None=不设下沿
+
+# ---- 预注册阈值 ----
+MIN_ARM_WINDOWS = 2        # 每臂最少窗口数
+MIN_ARM_N = 36             # 每臂最少「配置正常」帖数
+
+
+def in_night_window(ts: str, date_utc: str) -> bool:
+    """ts 是否落在 date_utc 这一天的夜窗 [14:00Z, 22:00Z)。畸形 ts → False。"""
+    try:
+        d = dt.datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if d.tzinfo is not None:
+        d = d.astimezone(dt.timezone.utc)
+    return (d.strftime("%Y-%m-%d") == date_utc
+            and NIGHT_START_H <= d.hour < NIGHT_END_H)
+
+
+def window_stats(rows, date_utc: str) -> dict:
+    """单个夜窗的口径统计（纯函数，只读传入的 rows）。"""
+    cohort = [r for r in rows
+              if str(r.get("outcome", "")).startswith("binance_published")
+              and isinstance(r.get("final_text"), str) and r["final_text"].strip()
+              and in_night_window(r.get("ts"), date_utc)]
+    picked = [mention_in_text(r["final_text"]) for r in cohort]
+    normal = [r for r in cohort
+              if (r.get("campaign_tag_count") or 0) >= 2
+              and len(CJK_RE.findall(r["final_text"])) < CJK_MAX_FOR_NORMAL]
+    normal_hits = [mention_in_text(r["final_text"]) for r in normal]
+    return {
+        "date": date_utc,
+        "n": len(cohort),
+        "mention": sum(picked),
+        "mention_rate": (100.0 * sum(picked) / len(picked)) if picked else None,
+        "normal": len(normal),
+        "miss": sum(1 for h in normal_hits if not h),
+        "miss_rate": ((100.0 * sum(1 for h in normal_hits if not h) / len(normal_hits))
+                      if normal_hits else None),
+        "langdev": sum(1 for r in cohort
+                       if len(CJK_RE.findall(r["final_text"])) >= CJK_MAX_FOR_NORMAL),
+    }
+
+
+def fisher_improve_p(base_miss: int, base_hit: int,
+                     treat_miss: int, treat_hit: int) -> float:
+    """单侧 Fisher 精确检验：P(处置臂漏帖数 ≤ 观测值 | 边际固定)。
+
+    用于回答"这点改善到底算不算信号"。**纯整数组合数、无随机数** ⇒ 可复现、可测。
+    ⚠️ 首版把参数顺序写反（miss/hit 对调）且分母固定用 row_a——行数不等时分母就错了；
+    现在显式命名，并用 row_b 做抽样行。
+    """
+    def _c(n, k):
+        return math.comb(n, k) if 0 <= k <= n else 0
+    row_b = treat_miss + treat_hit
+    col_miss = base_miss + treat_miss
+    total = base_miss + base_hit + row_b
+    denom = _c(total, row_b)
+    if denom == 0:
+        return 1.0
+    p = sum(_c(col_miss, k) * _c(total - col_miss, row_b - k)
+            for k in range(0, treat_miss + 1))
+    return min(1.0, p / denom)
+
+
+def _pool(stats_list) -> dict:
+    n = sum(s["n"] for s in stats_list)
+    mention = sum(s["mention"] for s in stats_list)
+    normal = sum(s["normal"] for s in stats_list)
+    miss = sum(s["miss"] for s in stats_list)
+    return {"date": "合并(%d 窗口)" % len(stats_list),
+            "n": n, "mention": mention, "normal": normal, "miss": miss,
+            "langdev": sum(s["langdev"] for s in stats_list),
+            "mention_rate": (100.0 * mention / n) if n else None,
+            "miss_rate": (100.0 * miss / normal) if normal else None,
+            "windows": len(stats_list)}
+
+
+# ---- 阈值以**整数分数**给出，判定全程用整数交叉相乘（见 verdict 的注释）----
+REVERT_MISS_NUM, REVERT_MISS_DEN = 3, 18       # 单窗口红线：漏率 > 3/18
+PASS_MISS_NUM, PASS_MISS_DEN = 1, 18           # 合并通过线：漏率 ≤ 1/18
+MENTION_DROP_PP = 10                           # 单窗口提及率跌幅上限（百分点）
+
+
+def verdict(base_stats, treat_stats) -> tuple:
+    """预注册判定。返回 (状态, 说明)。
+
+    ⚠️★ **阈值比较必须走整数交叉相乘，不能比浮点百分比**：首版用
+    `s["miss_rate"] > 100.0 * REVERT_MISS_RATE` 判红线，而
+    `100.0*1/6 = 16.666666666666668`、`100.0*(3.0/18.0) = 16.666666666666664`
+    ⇒ **恰好等于红线的窗口被判成"回滚"**（1/6 与 3/18 明明是同一个数）。
+    浮点边界上的"等价"永远不会等价，所以判据只比较整数。
+    """
+    base = _pool(base_stats)
+    treat = _pool(treat_stats)
+    # ① 单窗口红线（不必等第二个窗口）——漏率 > NUM/DEN ⇔ miss*DEN > NUM*normal
+    for s in treat_stats:
+        if s["normal"] and s["miss"] * REVERT_MISS_DEN > REVERT_MISS_NUM * s["normal"]:
+            return ("回滚", "单窗口真漏率 %d/%d 超过红线 %d/%d（%s）"
+                    % (s["miss"], s["normal"], REVERT_MISS_NUM, REVERT_MISS_DEN, s["date"]))
+        # 提及率跌幅 ≥ 10 个百分点 ⇔ 100*(b_hit/b_n - s_hit/s_n) ≥ 10
+        if (base["n"] and s["n"]
+                and 100 * (base["mention"] * s["n"] - s["mention"] * base["n"])
+                >= MENTION_DROP_PP * base["n"] * s["n"]):
+            return ("回滚", "单窗口提及率 %d/%d 比基线 %d/%d 低 ≥%d 个百分点（%s）"
+                    % (s["mention"], s["n"], base["mention"], base["n"],
+                       MENTION_DROP_PP, s["date"]))
+    # ② 样本量不足（把 p 现算出来，而不是只说"样本小"）
+    #   ⚠️ 参数顺序是 (base_miss, base_hit, treat_miss, treat_hit)——**别传反**
+    #   （本轮已连踩两次：签名写错一次、调用传反一次，p 会给出完全不同、
+    #    看起来很"正常"的数字）。测试里有"效应越大 p 越小"的单调性守卫。
+    if len(treat_stats) < MIN_ARM_WINDOWS or treat["normal"] < MIN_ARM_N:
+        p = fisher_improve_p(base["miss"], base["normal"] - base["miss"],
+                             treat["miss"], treat["normal"] - treat["miss"])
+        return ("样本不足", "需每臂 ≥%d 窗口 / n≥%d；当前基线 %d 篇、处置 %d 篇；"
+                "单侧 Fisher p=%.3f ⇒ 这点改善不足以判定"
+                % (MIN_ARM_WINDOWS, MIN_ARM_N, base["normal"], treat["normal"], p))
+    # ③ 通过条件：漏率 ≤ PASS_NUM/PASS_DEN 且提及率不下降（整数比较）
+    if treat["normal"] and treat["miss"] * PASS_MISS_DEN > PASS_MISS_NUM * treat["normal"]:
+        return ("未通过", "合并真漏率 %d/%d 高于通过线 %d/%d"
+                % (treat["miss"], treat["normal"], PASS_MISS_NUM, PASS_MISS_DEN))
+    if base["n"] and treat["n"] and treat["mention"] * base["n"] < base["mention"] * treat["n"]:
+        return ("未通过", "提及率下降：处置 %d/%d < 基线 %d/%d"
+                % (treat["mention"], treat["n"], base["mention"], base["n"]))
+    return ("通过", "合并真漏率 %d/%d ≤ %d/%d 且提及率未下降"
+            % (treat["miss"], treat["normal"], PASS_MISS_NUM, PASS_MISS_DEN))
+
+
+def _fmt(s: dict) -> str:
+    return ("%s  n=%-3d 提及 %s/%d=%s ｜ 配置正常 %d 篇、真漏 %d=%s ｜ 语种跑偏 %d"
+            % (s["date"], s["n"], s["mention"], s["n"],
+               ("%.0f%%" % s["mention_rate"]) if s["mention_rate"] is not None else "—",
+               s["normal"], s["miss"],
+               ("%.0f%%" % s["miss_rate"]) if s["miss_rate"] is not None else "—",
+               s["langdev"]))
+
+
+def load_rows(path: str):
+    rows = []
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except ValueError:
+                continue
+    return rows
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description="英文夜窗体检 + 预注册判定（R819）")
+    ap.add_argument("--metrics", required=True)
+    ap.add_argument("--baseline", default="", help="逗号分隔的 UTC 日期")
+    ap.add_argument("--treatment", default="", help="逗号分隔的 UTC 日期")
+    args = ap.parse_args(argv)
+    rows = load_rows(args.metrics)
+    base = [window_stats(rows, d) for d in (args.baseline or "").split(",") if d]
+    treat = [window_stats(rows, d) for d in (args.treatment or "").split(",") if d]
+    print("【英文夜窗体检 · 预注册判据 R819】窗口 = UTC 14:00–22:00（北京夜窗）")
+    print("预注册基线：10-19 夜窗 %d/%d = %.1f%%"
+          % (BASELINE_MISS, BASELINE_NORMAL, 100.0 * BASELINE_MISS / BASELINE_NORMAL))
+    for label, stats in (("基线臂", base), ("处置臂", treat)):
+        if not stats:
+            continue
+        print("\n%s（%d 个窗口）" % (label, len(stats)))
+        for s in stats:
+            print("  " + _fmt(s))
+        print("  合并：" + _fmt(_pool(stats)))
+    if base and treat:
+        status, why = verdict(base, treat)
+        print("\n判定：%s —— %s" % (status, why))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
