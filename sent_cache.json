@@ -1,15 +1,5 @@
 [
   {
-    "id": "b580bd57c02a1eba",
-    "title": "Ethereum sees $243M in stablecoin growth, yet ETH’s price falls – Why?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-11T00:07:33.702437+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "29a9886f1bf8c8dc",
     "title": "“1011”暴跌一周年:加密市场单日爆仓超190亿美元,BTC曾半小时暴跌12.7%",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5209,6 +5199,16 @@
     "sent_at": "2026-10-20T12:03:57.005556+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4ed0dbf52a032e67",
+    "title": "ZachXBT 揭露 Hyperliquid 生态洗钱服务 FreedomXMR:87% 流入资金涉黑,金额超 2000 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-20T12:43:50.089278+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }

@@ -19,7 +19,7 @@
   "last_updated": "2026-10-20T07:43:49.575321Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-20T12:23:33.226620+00:00",
+      "last_fail": "2026-10-20T12:43:28.621024+00:00",
       "fails": 3,
       "parked_until": "2026-10-20T06:53:53.228743+00:00"
     },
@@ -30,61 +30,56 @@
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
     "Preset-stepfun": {
+      "cooldown_until": "2026-10-20T12:56:41.608157+00:00",
       "fails": 4,
-      "permanent": true,
-      "cooldown_until": "2026-10-20T12:56:41.608157+00:00"
-    },
-    "Preset-google": {
-      "last_fail": "2026-10-20T12:25:59.796473+00:00",
-      "fails": 0,
-      "cooldown_until": "2026-10-21T00:25:59.796456+00:00"
+      "permanent": true
     },
     "Preset-stepfun-flash": {
+      "cooldown_until": "2026-10-20T12:56:36.239765+00:00",
       "fails": 4,
-      "permanent": true,
-      "cooldown_until": "2026-10-20T12:56:36.239765+00:00"
+      "permanent": true
     },
     "Preset-openrouter": {
-      "fails": 2,
+      "last_fail": "2026-10-20T12:28:01.037812+00:00",
       "cooldown_until": "2026-10-20T12:48:01.037799+00:00",
-      "last_fail": "2026-10-20T12:28:01.037812+00:00"
+      "fails": 2
     }
   },
   "_article_sent_date": "2026-10-20",
   "_publish_park": {
-    "ffd254adc7c30594": {
-      "fails": 1,
-      "last_fail": "2026-10-20T06:44:30.918353+00:00"
+    "fbf5b767760b144c": {
+      "last_fail": "2026-10-20T12:28:06.169023+00:00",
+      "fails": 1
+    },
+    "278bd92fc88d7ef7": {
+      "last_fail": "2026-10-20T09:05:05.639375+00:00",
+      "fails": 1
     },
     "d5d41670f38a0364": {
-      "fails": 1,
-      "last_fail": "2026-10-20T12:25:55.760706+00:00"
+      "last_fail": "2026-10-20T12:25:55.760706+00:00",
+      "fails": 1
     },
-    "fbf5b767760b144c": {
-      "fails": 1,
-      "last_fail": "2026-10-20T12:28:06.169023+00:00"
+    "ffd254adc7c30594": {
+      "last_fail": "2026-10-20T06:44:30.918353+00:00",
+      "fails": 1
     },
     "b428dcbea78a196d": {
       "last_fail": "2026-10-20T06:44:23.930388+00:00",
       "fails": 2,
       "parked_until": "2026-10-20T12:44:23.930388+00:00"
     },
-    "278bd92fc88d7ef7": {
-      "fails": 1,
-      "last_fail": "2026-10-20T09:05:05.639375+00:00"
+    "a1a1271e2414d0e6": {
+      "last_fail": "2026-10-20T12:28:02.039267+00:00",
+      "fails": 1
     },
     "0063d4c7f9f339b9": {
-      "fails": 1,
-      "last_fail": "2026-10-20T06:44:27.468894+00:00"
-    },
-    "a1a1271e2414d0e6": {
-      "fails": 1,
-      "last_fail": "2026-10-20T12:28:02.039267+00:00"
+      "last_fail": "2026-10-20T06:44:27.468894+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
