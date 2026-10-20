@@ -1,17 +1,5 @@
 [
   {
-    "id": "3e722c73946ef8d8",
-    "title": "1011 暴跌一周年:BTC 较彼时高点累计回撤约 34%,ETH 近乎腰斩",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-11T04:44:58.281303+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d73dc7a4233fe273",
     "title": "波場 TRON 亮相國際刑警組織新技術論壇,展示戀上安全與合規建設新進展",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5211,6 +5199,16 @@
     "tokens": [
       "ZEC",
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "771598e7383899ab",
+    "title": "Celestia Activates Fibre, Opening Direct Validator Uploads for Rollups",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-20T15:44:03.636091+00:00",
+    "tokens": [
+      "TIA"
     ],
     "lang": "en"
   }
