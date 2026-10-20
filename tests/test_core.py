@@ -23714,5 +23714,86 @@ class TestR814CampaignVocabSingleSource(unittest.TestCase):
         self.assertIsNone(cv.mention_in_text(""), "空文本返回未知（None），不是 False")
 
 
+class TestR828TradingChallengeVocab(unittest.TestCase):
+    """★★ R828：第 5 次词表补漏——英文帖用 `trading challenge` 指代当期活动。
+
+    ★ 生产实证（10-20 19:43Z 英文夜窗，全文遥测原句）：
+      「If you're trading alts this week, join **Binance Square's current trading
+       challenge** for a shot at bonus rewards while you wait for confirmation.」
+    这是标准活动导流句，但旧词表只有 tournament/championship/competition/event/race
+    ⇒ 判 False，把一篇**真提了活动**的帖算进"真漏"，把英文夜窗真漏率从 9/23
+    抬到 10/23（43%）。
+
+    ★ 精度取舍：裸 `challenge` 会误伤「price challenge / technical challenge」
+    这类行情措辞，所以只收三种**活动语境**形态。
+    """
+
+    @staticmethod
+    def _vocab():
+        import importlib.util
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "campaign_vocab.py")
+        spec = importlib.util.spec_from_file_location("campaign_vocab_r828", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    PROD_LINE = (
+        "If you’re trading alts this week, join Binance Square’s current trading "
+        "challenge for a shot at bonus rewards while you wait for confirmation.")
+
+    def test_production_line_is_recognized(self):
+        """★ 核心：生产原句必须被认作活动提及。"""
+        cv = self._vocab()
+        self.assertTrue(cv.mention_in_text(self.PROD_LINE),
+                        "生产原句仍判 False ⇒ 真漏率被虚高")
+
+    def test_trading_challenge_form(self):
+        cv = self._vocab()
+        self.assertTrue(cv.mention_in_text("Join the trading challenge this week."))
+
+    def test_trading_challenge_alone_without_reward_words(self):
+        """★ 只靠 `trading challenge` 形态命中（句子**不含** reward/prize/bonus/earn）。
+
+        为什么需要这条：生产原句同时含 "trading challenge" 与 "bonus rewards"，
+        删掉 `trading challenge` 形态后它仍被 `challenge…reward` 兜住 ⇒ 变异漏过。
+        这条用例把三种形态**各自钉住**，任删一种都会红。
+        """
+        cv = self._vocab()
+        self.assertTrue(cv.mention_in_text(
+            "The Binance Square trading challenge is running all week."),
+            "`trading challenge` 形态被删 ⇒ 这类提及漏检")
+
+    def test_challenge_with_reward_context(self):
+        cv = self._vocab()
+        self.assertTrue(cv.mention_in_text("Take on this challenge and win a reward."))
+
+    def test_join_challenge_form(self):
+        cv = self._vocab()
+        self.assertTrue(cv.mention_in_text("Join the weekly challenge now."))
+
+    def test_price_challenge_not_matched(self):
+        """★ 精度：行情语境里的 `challenge` 不得误判成活动。"""
+        cv = self._vocab()
+        self.assertFalse(cv.mention_in_text(
+            "The price challenge at 82k remains the key resistance level."))
+        self.assertFalse(cv.mention_in_text(
+            "The technical challenge here is thin liquidity on the bid side."))
+
+    def test_bare_reward_and_activity_not_matched(self):
+        """★ 精度：裸 reward / activity 仍不得命中（R774 的已知误报面）。"""
+        cv = self._vocab()
+        self.assertFalse(cv.mention_in_text(
+            "The risk-reward is garbage right now, don't chase this drift."))
+        self.assertFalse(cv.mention_in_text(
+            "Only re-enter if on-chain data shows real user activity picking up."))
+
+    def test_tags_still_stripped(self):
+        """★ 去标签语义不变：只有 #TradingTournament 标签不得算提及。"""
+        cv = self._vocab()
+        self.assertFalse(cv.mention_in_text(
+            "纯行情播报，没有任何活动话术。 #Write2Earn #BinanceSquare #TradingTournament"))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

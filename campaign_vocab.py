@@ -51,7 +51,19 @@ CAMPAIGN_MENTION_RE = re.compile(
     r"|community\s*voice"
     r"|评论互动|評論互動"
     r"|(?:广场|廣場)[^。！？\n]{0,16}(?:投[^。！？\n]{0,3}票|评论|評論|互动|互動)"
-    r"[^。！？\n]{0,16}(?:奖励|獎勵)",
+    r"[^。！？\n]{0,16}(?:奖励|獎勵)"
+    # ★★ R828：**第 5 次词表补漏**——英文帖用 `trading challenge` 指代当期活动。
+    #   生产实证（10-20 19:43 英文夜窗，全文遥测）：正文原句
+    #   「If you're trading alts this week, join **Binance Square's current trading
+    #   challenge** for a shot at bonus rewards while you wait for confirmation.」
+    #   ——这是标准的活动导流句，但旧词表只有 tournament/championship/competition/
+    #   event/race，没有 challenge ⇒ 判 False，把一篇**真提了活动**的帖算进"真漏"，
+    #   直接把英文夜窗真漏率从 9/23 抬到 10/23。
+    #   ⚠️ 判据要窄：裸 `challenge` 会误伤「price challenge/technical challenge」
+    #   这类行情措辞，故只收 `trading challenge` 与 `challenge` 紧邻活动语境的形态。
+    r"|trading\s+challenge"
+    r"|challenge[^.!?\n]{0,24}(?:reward|prize|bonus|earn)"
+    r"|(?:join|enter|take part in)[^.!?\n]{0,20}challenge",
     re.IGNORECASE)
 
 # 标签形态：注入的 #TradingTournament / #Write2Earn 含 contest/tournament 字样，
