@@ -1,15 +1,5 @@
 [
   {
-    "id": "a4f1d86c2b5859bf",
-    "title": "Uniswap v4 and v3 capture 47.2% of $161.4 billion in stablecoin DEX volume",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-10T18:24:51.205201+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0921935fcfbfd5af",
     "title": "Ex-Ripple Exec on What's Next for XRP: Agentic Payments, RLUSD Surge Onchain",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5208,6 +5198,16 @@
     "sent_at": "2026-10-20T10:23:50.688905+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0771e79c73aa4915",
+    "title": "Shiba Inu (SHIB) Loses Most Importnat Support For Now",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-20T10:43:53.665281+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-CN"
   }
