@@ -1,15 +1,5 @@
 [
   {
-    "id": "d54d9a28029588cc",
-    "title": "Basic Attention Token rallies 20% as BAT’s trend turns bullish – What’s next?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-10T15:44:21.260494+00:00",
-    "tokens": [
-      "BAT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "07553dd97c68e88b",
     "title": "Shiba Inu's Shibarium Activity Up 151%: What's Fueling the Surge?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5207,6 +5197,16 @@
       "BONK",
       "FDUSD",
       "JUP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c8aa9ad8a0e62a1a",
+    "title": "BNB Chain splits asset power across 4 roles while admins hold the key",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-20T09:05:39.894476+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-CN"
   }
