@@ -1,15 +1,5 @@
 [
   {
-    "id": "07553dd97c68e88b",
-    "title": "Shiba Inu's Shibarium Activity Up 151%: What's Fueling the Surge?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-10T16:45:01.781614+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "e07440c94168afb2",
     "title": "BNB 跌破 750 美元,24 小时涨幅 1.19%",
     "source": "深潮TechFlow (中文/简体)",
@@ -5207,6 +5197,16 @@
     "sent_at": "2026-10-20T09:05:39.894476+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "41dd973ca94bcf52",
+    "title": "BlackRock Files for 'Buffer' Bitcoin ETF as IBIT Draws $665M in a Day",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-10-20T09:24:09.260103+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
