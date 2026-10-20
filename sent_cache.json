@@ -1,15 +1,5 @@
 [
   {
-    "id": "ed69b8fe89696c65",
-    "title": "Over $51 Million in Solana Returned to Coinbase: Who's Selling?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-10T14:24:28.077025+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f10f6a21f2dce384",
     "title": "Uniswap trader transfers $13M in UNI as losses hit $3M — Sign of more downside?",
     "source": "AMBCrypto (技术与链上)",
@@ -5202,6 +5192,18 @@
       "SUI",
       "USDC",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b34f0577cd67ee2e",
+    "title": "Bitcoin spot ETFs see $526.6 million inflows on October 19 as Ethereum and Solana funds bleed",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-20T07:45:07.811061+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
