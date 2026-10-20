@@ -22880,5 +22880,39 @@ class TestR802EnglishLanguageMismatch(unittest.TestCase):
         self.assertIn("语种跑偏", reason)
 
 
+class TestR805CommunityVoiceMention(unittest.TestCase):
+    """★★ R805：活动提及词表的第四次补漏——「Community Voice / 评论互动领奖励」。
+
+    R774（英文产品名/奖励机制）→ R787（中文写2赚）→ R801（trading race）→
+    本轮：模型又换成了「去广场评论互动领奖励 / Community Voice 投票」。
+    生产实证（10-20 中文窗口）：3 篇 campaign_mention=False 的帖正文其实都提了
+    活动 ⇒ 日报把「中文 100%」误报成 zh-TW 1/3（词表落后，不是模型没提）。
+    """
+
+    TRUE_CASES = (
+        "去廣場評論互動領獎勵比瞎操作穩。",
+        "順便去 Binance Square 參加 Community Voice 評論互動拿獎勵。",
+        "顺手去币安广场 Community Voice 投个票,领点奖励压压惊。",
+        "去广场投个票,领点奖励。",
+        "Community Voice voting is live for active commenters.",
+    )
+    FALSE_CASES = (
+        "评论区互动很热烈，但价格没动。",
+        "去广场看看行情，别急着动手。",
+        "BTC 24h 涨 3%，量能一般。",
+        "community leaders are voting on the proposal.",
+    )
+
+    def test_new_campaign_forms_matched(self):
+        for t in self.TRUE_CASES:
+            self.assertIsNotNone(m._CAMPAIGN_MENTION_RE.search(t),
+                                 "新话术漏检: %s" % t[:36])
+
+    def test_ordinary_content_not_matched(self):
+        for t in self.FALSE_CASES:
+            self.assertIsNone(m._CAMPAIGN_MENTION_RE.search(t),
+                              "普通内容误报成活动提及: %s" % t[:36])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
