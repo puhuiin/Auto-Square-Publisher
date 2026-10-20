@@ -354,8 +354,22 @@ def build_report(rows, hours: int) -> str:
                 _lhit = _d.get("hit") or 0
                 _cml_parts.append("%s %d/%d=%d%%"
                                   % (_lg, _lhit, _lcv, 100 * _lhit / _lcv))
-            if len(_cml_parts) >= 2:
-                _lines.append("🎁提及按语种 %s" % " / ".join(_cml_parts))
+            # ★★ R816：**没样本的语种必须显式列名**，不能从这一行里静默消失。
+            #   生产实证（10-20 13:40Z 日报）：⑥ 只打「zh-CN 12/14=85% /
+            #   zh-TW 6/6=100%」，**en 整段不见**——因为日报跑在 13:40Z 前后，
+            #   而英文窗口是**北京夜窗**（main.py LANG_DAY_START/END=06–22 ⇒
+            #   UTC 14:00–22:00），"近20篇"里常常一篇 en 都没有。
+            #   读者会把"没有这一行"读成"en 没问题"（R704：看不到差异会被读成
+            #   没差异；R784 同族：覆盖 0 必须明说，绝不并进"未检出"）。
+            #   ⚠️ 语种清单取自 ⑤ 的 **24h 实际发布语种**，**不硬编码语种名**
+            #   （纪律 5：口径只能有一份实现；报表不复制生产的 LANG_* 常量）。
+            _zero_parts = []
+            for _lg in sorted(k for k in (langs or {}) if k):
+                if _lg in _cml and ((_cml[_lg] or {}).get("cov") or 0):
+                    continue
+                _zero_parts.append("%s 0/0（本期无样本）" % _lg)
+            if len(_cml_parts) >= 2 or _zero_parts:
+                _lines.append("🎁提及按语种 %s" % " / ".join(_cml_parts + _zero_parts))
         # R758：活动CTA**结尾整句模板**收敛（用户第七批粘贴实测 93% 的那个模板）。
         # ★ 分母是**有全文遥测的帖数**（覆盖率）不是 scanned——混合窗口里旧帖
         #   无该字段，用 scanned 会稀释占比（R610：同一判据所有消费面一起落地）。

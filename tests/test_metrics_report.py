@@ -8564,5 +8564,86 @@ class TestR815DailyReportCaliber(unittest.TestCase):
         self.assertNotIn("间隔门早退", text, "无早退轮时零噪音")
 
 
+class TestR816MentionLangCoverage(unittest.TestCase):
+    """★★ R816：⑥「🎁提及按语种」里**没样本的语种必须显式列名**。
+
+    生产实证（10-20 13:40Z 日报原文）：
+        🎁提及按语种 zh-CN 12/14=85% / zh-TW 6/6=100%      ← en 整段不见
+    而 ⑤ 同一份报告写着「语种：{'zh-CN': 20, 'en': 21, 'zh-TW': 12}」。
+    原因不是 en 没问题，而是**窗口错位**：日报跑在 13:40Z 前后，英文窗口是
+    **北京夜窗**（main.py LANG_DAY_START/END = 06–22 ⇒ UTC 14:00–22:00），
+    "近20篇"里常常一篇 en 都没有 ⇒ 旧实现直接把它从这一行抹掉。
+    R704：看不到差异会被读成没差异；R784：覆盖 0 必须明说，绝不并进"未检出"。
+    """
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r816",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _pub(ts, lang):
+        t = "hello world " * 10
+        return {"outcome": "binance_published", "ts": ts, "lang": lang,
+                "campaign_mention": True, "final_text": t, "final_preview": t[:80],
+                "content_chars": len(t), "platforms": ["binance"], "stage": "summarize"}
+
+    def _rows(self, older_en=False, newer_en=False):
+        """默认：更早 1 篇 en（可选）+ 20 篇 zh-CN；扫描窗口 [-20:] 取最后 20 篇。"""
+        rows = []
+        if older_en:
+            rows.append(self._pub(_ago(10), "en"))
+        for i in range(20):
+            rows.append(self._pub(_ago(8 - i * 0.2), "zh-CN"))
+        if newer_en:
+            rows.append(self._pub(_ago(0.5), "en"))
+        return rows
+
+    def _line(self, text, needle):
+        return next((l for l in text.split("\n") if needle in l), None)
+
+    def test_zero_sample_language_is_named(self):
+        """en 在 24h 内发过（⑤ 认它），但落在扫描窗口外 ⇒ 必须点名"本期无样本"。"""
+        text = self._dr().build_report(self._rows(older_en=True), 24)
+        self.assertIn("'en': 1", text, "前提：⑤ 的 24h 语种里确实有 en")
+        line = self._line(text, "提及按语种")
+        self.assertIsNotNone(line, "有零样本语种时这一行必须渲染（否则读者看不到缺口）")
+        self.assertIn("en 0/0（本期无样本）", line)
+        self.assertIn("zh-CN 20/20=100%", line)
+
+    def test_covered_language_not_marked_sample_less(self):
+        """反向：语种在扫描窗口内有样本时，**不得**给它加"无样本"标记。"""
+        line = self._line(self._dr().build_report(self._rows(newer_en=True), 24),
+                          "提及按语种")
+        self.assertIsNotNone(line)
+        self.assertIn("en 1/1=100%", line)
+        self.assertNotIn("本期无样本", line)
+
+    def test_single_language_window_keeps_old_silence(self):
+        """反向：只有一个语种有样本、且没有零样本语种时，保持旧行为（不另起一行）。"""
+        text = self._dr().build_report(self._rows(), 24)
+        self.assertIsNone(self._line(text, "提及按语种"))
+        self.assertIn("🎁正文活动提及 20/20=100%", text, "聚合行不受影响")
+
+    def test_zero_parts_appended_after_sampled(self):
+        """格式契约：**同一段内**有样本语种在前、零样本语种在后。
+
+        ⚠️ 首版断言写成"整行以（本期无样本）结尾"——错：⑥ 是 `" ｜ ".join(_lines)`
+        拼出来的多段行，按语种只是其中一段，其后还有「活动CTA结尾模板」。
+        """
+        line = self._line(self._dr().build_report(self._rows(older_en=True), 24),
+                          "提及按语种")
+        seg = line.split("🎁提及按语种", 1)[1].split("｜", 1)[0]
+        self.assertLess(seg.index("zh-CN 20/20=100%"),
+                        seg.index("en 0/0（本期无样本）"),
+                        "零样本语种必须跟在同一段尾，便于逐日对比")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
