@@ -46,6 +46,24 @@ class TestProfitReport(unittest.TestCase):
         self.assertAlmostEqual(out[0]["age_days"], 2.0)
         self.assertAlmostEqual(out[0]["vpd"], 5.0)
 
+    def test_engagement_quality_flags_missing_columns(self):
+        """R811：95% 零互动 ⇒ 判「疑似缺列、不可测」，不是「互动为零」。"""
+        pr = _load()
+        recs = [{"likes": 0, "comments": 0} for _ in range(20)] + [{"likes": 1, "comments": 0}]
+        likes, comments, measurable = pr.engagement_quality(recs)
+        self.assertEqual((likes, comments), (1, 0))
+        self.assertFalse(measurable)
+
+    def test_engagement_quality_measurable(self):
+        pr = _load()
+        recs = [{"likes": 1, "comments": 0} for _ in range(5)] + [{"likes": 0, "comments": 0} for _ in range(5)]
+        _, _, measurable = pr.engagement_quality(recs)
+        self.assertTrue(measurable)
+
+    def test_engagement_quality_empty(self):
+        pr = _load()
+        self.assertEqual(pr.engagement_quality([]), (0, 0, False))
+
     def test_token_category(self):
         pr = _load()
         self.assertEqual(pr.token_category("btc"), "BTC/ETH")

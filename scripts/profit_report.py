@@ -113,6 +113,23 @@ def token_category(token):
     return "其他"
 
 
+def engagement_quality(records):
+    """R811：互动（赞+评）是否可判读。
+
+    生产实证（10-18 导出，378 行）：374 行 likes=0、377 行 comments=0——
+    但这极可能是创作者中心导出**没有点赞/评论列**，`import_content_stats.py`
+    缺列补 0 ⇒ **不可测**。若直接把 0 当结论，会做出完全错误的互动决策。
+    判据：非零互动占比 <5% 视为不可测（真实账号不可能 95% 的帖子零赞零评）。
+    """
+    n = len(records)
+    if n == 0:
+        return 0, 0, False
+    likes = sum(r.get("likes") or 0 for r in records)
+    comments = sum(r.get("comments") or 0 for r in records)
+    nonzero = sum(1 for r in records if (r.get("likes") or 0) or (r.get("comments") or 0))
+    return likes, comments, (nonzero / n) >= 0.05
+
+
 def first_line(rec):
     t = rec["meta"].get("final_text") or rec["meta"].get("final_preview") or ""
     return str(t).split("\n")[0]
@@ -148,8 +165,10 @@ def main(argv=None):
     joined = join_stats(stats, index_published(metrics), export)
     if args.days > 0:
         joined = [r for r in joined if r["age_days"] <= args.days]
-    print("stats=%d metrics=%d joined=%d 导出时间=%s" % (
-        len(stats), len(metrics), len(joined), export.date()))
+    _youngest = min((r["age_days"] for r in joined), default=None)
+    print("stats=%d metrics=%d joined=%d 导出时间=%s%s"
+          % (len(stats), len(metrics), len(joined), export.date(),
+             (" ｜ 最年轻 %.1f 天（偏旧的浏览数据别过度解读）" % _youngest) if _youngest is not None else ""))
     if not joined:
         return 0
 
@@ -171,6 +190,15 @@ def main(argv=None):
     _fmt(summarize(joined, lambda r: token_category((r["meta"].get("tokens") or ["?"])[0])))
     print("\n== 配图 ==")
     _fmt(summarize(joined, lambda r: str(r["meta"].get("image_tier") or "none")))
+    # ★★ R811：互动必须**先判可测性**再看数。
+    likes, comments, measurable = engagement_quality(joined)
+    if not measurable:
+        print("\n== 互动 ==⚠️ 不可测：%s 篇里 %s 篇赞/评均为 0，疑似导出缺点赞/评论列"
+              "（import_content_stats.py 缺列补 0）⇒ 不要基于互动率做任何内容决策。"
+              % (len(joined), sum(1 for r in joined if not (r.get('likes') or 0) and not (r.get('comments') or 0))))
+    else:
+        print("\n== 互动 ==\n  总赞 %d ｜ 总评 %d ｜ (赞+评)/浏览 合计 %.4f"
+              % (likes, comments, (likes + comments) / max(1, sum(r["views"] for r in joined))))
     print("\n== 首行特征（有/无 中位差）==")
     def feat(name, fn):
         a = [r["vpd"] for r in joined if fn(r)]
