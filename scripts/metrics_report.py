@@ -27,6 +27,14 @@ DEFAULT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__fi
                             "metrics.jsonl")
 TOP_N = 8
 
+# ★★ R814：repo 根进 sys.path ⇒ import 活动词表模块（与 main.py 同一份口径）。
+#   脚本被 `python scripts/metrics_report.py` 或测试 importlib 动态加载时都可用。
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+try:
+    from campaign_vocab import mention_in_text  # noqa: E402
+except Exception:  # pragma: no cover - 词表模块缺失时退回发布时标记
+    mention_in_text = None
+
 # R105：内容合规巡检模式（与 main.py 同步——脚本独立运行不 import 主模块）。
 # prompt 级禁令是软约束，模型可能不遵守——合规度此前零度量，全靠人工读帖。
 # 注意：final_preview 截断长度经历过 120→200（R106），巡检覆盖的是回执实际
@@ -426,6 +434,12 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
             # **必须与 previews 同窗口同步追加**（放 if 外会与 previews 错位，
             # 预览为空的行走不到这里——R712 家族：索引对齐错了症状离病因极远）。
             _cm = r.get("campaign_mention")
+            # ⚠️ R814 待办：这里**仍读发布时标记**，词表每次升级都会让雷达被旧行
+            #   压低 ~24h（R805 实证：真实 90% 被报成 70%）。尝试改成"有 final_text
+            #   就按当前词表重算"，但 R759/R803 等 11 处既有测试编码的正是
+            #   "面板 = 遥测标记" 的契约（含"标记 True/False 双向都按标记计"），
+            #   改面板语义必须连带改这 11 处 ⇒ 留作下一个窗口的**显式决策**，
+            #   不在此轮硬改。词表本身已下沉到 campaign_vocab.py（唯一实现）。
             mentions.append(_cm if isinstance(_cm, bool) else None)
             langs.append(r.get("lang"))
             # R758：第 4 元素 = `campaign_cta_tpl` 遥测标记（**全文**判的收敛

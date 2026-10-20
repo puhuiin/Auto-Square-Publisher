@@ -22026,8 +22026,11 @@ class TestR759CampaignMentionTelemetry(unittest.TestCase):
         src = inspect.getsource(m)
         self.assertGreater(src.find('"campaign_mention": _campaign_mention'), 0,
                            "回执缺 campaign_mention 字段")
-        self.assertIn(r'_cm_body = re.sub(r"#[^\s#]+", " ", final_content)', src,
-                      "提及判据未先去标签 ⇒ 注入标签会让指标恒真")
+        # R814：去标签 + 词表判定已下沉到 `campaign_vocab.mention_in_text`
+        # （main 与日报共用一份口径），守卫改为断言「发布侧调用该助手」；
+        # 「先去标签再判」的语义由 TestR814CampaignVocabSingleSource 守住。
+        self.assertIn("mention_in_text(final_content)", src,
+                      "提及判据必须走共享助手（先去标签再判，注入标签不得恒真）")
 
 
 class TestR765MaxWinsStateShapes(unittest.TestCase):
@@ -23103,6 +23106,45 @@ class TestR812BreakerSuccessClear(unittest.TestCase):
             {"cleared_at": "2026-10-20T03:00:00+00:00",
              "last_fail": "2026-10-20T04:00:00+00:00"}))
         self.assertFalse(m.MultiLLMEngine._cleared_after_fail({"fails": 3}))
+
+
+class TestR814CampaignVocabSingleSource(unittest.TestCase):
+    """★★ R814：活动提及词表全仓唯一一份实现。
+
+    main.py（发布时遥测）与 scripts/metrics_report.py（日报⑥雷达）此前各有一份
+    判据：报表只能读发布时写死的标记，词表每次升级（R774/R787/R801/R805）都让
+    雷达被旧行压低 ~24h（R805：70% vs 真实 90%）。现在两侧共用 campaign_vocab。
+    """
+
+    @staticmethod
+    def _vocab():
+        import importlib.util
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "campaign_vocab.py")
+        spec = importlib.util.spec_from_file_location("campaign_vocab_r814", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_main_uses_the_shared_module(self):
+        """⚠️ 不能用 `is` 判「是否共用」：`re.compile` 有模式缓存，两份逐字相同的
+        源码会拿到**同一对象**（本轮曾据此误判已生效、实际没写入）。
+        必须查源码：不得再内联 re.compile，且必须 import 共享模块。
+        """
+        import inspect
+        src = inspect.getsource(m)
+        self.assertIn("from campaign_vocab import", src,
+                      "main.py 必须 import 共享词表模块")
+        self.assertNotIn("_CAMPAIGN_MENTION_RE = re.compile(", src,
+                         "main.py 不得再内联一份词表（口径必须唯一）")
+
+    def test_mention_in_text_semantics(self):
+        cv = self._vocab()
+        # 注入的保底标签不得算活动提及（去标签是判据语义的一部分）
+        self.assertFalse(cv.mention_in_text("#Write2Earn #TradingTournament 纯行情播报"))
+        self.assertTrue(cv.mention_in_text("去广场评论互动领取奖励，比瞎操作稳"))
+        self.assertTrue(cv.mention_in_text("Trading Tournament Season 6 is live"))
+        self.assertIsNone(cv.mention_in_text(""), "空文本返回未知（None），不是 False")
 
 
 if __name__ == "__main__":

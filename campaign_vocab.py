@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""★★ R814：活动提及判据词表（**全仓唯一一份实现**）。
+
+为什么拆出独立模块：`main.py`（发布时计算 `campaign_mention` 遥测）与
+`scripts/metrics_report.py`（日报⑥雷达）原先各有一份判据——报表侧只能读发布时
+写死的标记，于是每次词表升级（R774/R787/R801/R805）都会让雷达被**旧行**压低约
+24h：R805 生产实证，真实提及率 ~90%，面板却报 70%（3 篇 False 是 R805 部署前
+的旧标记，用新词表复算全部命中）。`$cashtag`/活动提及是返佣生命线雷达，
+不能被词表升级拖累一天。
+
+口径只有一份实现（R731 纪律）：两侧都 `from campaign_vocab import ...`。
+本模块**零副作用**（只 import re），可被脚本/测试/主模块安全 import。
+"""
+import re
+
+# 判据词表：正文（去标签后）出现任一形态即算「提及当期活动」。
+# 形态全部来自生产实测（注释里的日期是实证出处），不 Provisions 未观测变体。
+CAMPAIGN_MENTION_RE = re.compile(
+    r"锦标赛|竞赛|競賽|錦標賽|交易大賽|交易大赛|交易賽事|交易赛事"
+    r"|交易赛|交易賽|大赛|大賽|contest|tournament"
+    # R774：英文战役提法形态——实测英文帖不提 tournament/contest 这些词，
+    # 而是用**产品名/奖励机制**指代活动（tail_conflict 留存的结尾原文实录：
+    # "prize pools are still live for active traders"、"new zero-fee RWUSD
+    # trading pairs are live to practice on"、"Trading Tournament Season 6 FF
+    # for practice rewards"）⇒ 旧正则下英文帖 mention 恒为 False（R766/R768
+    # 同族：判据只覆盖一种语种的真实形态）。
+    # ⚠️ 精度取舍（已知）："154,000 USDD total reward pool" 这类**非本期活动**
+    # 的奖励池会误报——该字段是趋势度量不是门，误报率 ~1/12 可接受；
+    # 若未来要当门用，须改为「奖励池 + 币安/官方语境」的双条件。
+    r"|write\s*2\s*earn|write to earn|prize pool|reward pool"
+    r"|zero[- ]fee|season [0-9]|S[0-9](?:/S[0-9])?"
+    r"|bStocks|TraFi|P2P anniversary|LoL (?:worlds|championship)"
+    r"|trading (?:tournament|championship|competition|event|race)"
+    # ★★ R787：**中文写法的 Write2Earn**（写2赚/寫2賺）——R774 补英文形态时
+    #   漏了中文形态（R615/R611 同族：一侧修了另一侧没对齐，只不过这次是
+    #   「英中两侧」而非「两个分支」）。生产实证（R784 全文遥测首篇复盘）：
+    #   10-19 04:24 帖正文「想边看边练手的，去**写2赚**评论区互动拿奖励就行」
+    #   ——通篇在讲当期活动机制，campaign_mention 却判 False（该帖无锦标赛/
+    #   竞赛字样，唯一的活动指代就是写2赚）。中文帖占产出 ~70%，这个漏检
+    #   让「正文活动提及率」对一类真实提及系统性低估。
+    r"|写\s*2\s*[赚賺]|寫\s*2\s*[赚賺]"
+    # ★★ R805：新话术「Community Voice / 评论互动领奖励」——R774/R787/R801 同族
+    #   第四次（判据词表总是落后模型的新提法）。生产实证（10-20 中文窗口）：
+    #   3 篇 campaign_mention=False 的帖正文其实都提了活动——
+    #     「去廣場評論互動領獎勵比瞎操作穩」
+    #     「參加 Community Voice 評論互動拿獎勵」
+    #     「去币安广场 Community Voice 投个票,领点奖励」
+    #   ⇒ 中文提及率被系统性低估，日报把「中文 100%」报成 zh-TW 1/3。
+    #   精度取舍同 R774：这是趋势度量不是门，个别误报可接受。
+    r"|community\s*voice"
+    r"|评论互动|評論互動"
+    r"|(?:广场|廣場)[^。！？\n]{0,16}(?:投[^。！？\n]{0,3}票|评论|評論|互动|互動)"
+    r"[^。！？\n]{0,16}(?:奖励|獎勵)",
+    re.IGNORECASE)
+
+# 标签形态：注入的 #TradingTournament / #Write2Earn 含 contest/tournament 字样，
+# 不先去标签再判会让「活动提及」每帖恒真（把保底标签当活动提及，R291 同族）。
+_TAG_RE = re.compile(r"#[^\s#]+")
+
+
+def strip_tags(text: str) -> str:
+    """去掉 #标签 再判正文（判据语义的一部分，两边必须同一份）。"""
+    return _TAG_RE.sub(" ", str(text or ""))
+
+
+def mention_in_text(text) -> "bool | None":
+    """正文是否提及当期活动。
+
+    返回 None = 空文本/非字符串（「未知」不是 False，遥测纪律 12）。
+    两边调用点必须一致：main.py 发布时写遥测、metrics_report 面板重算。
+    """
+    if not isinstance(text, str) or not text.strip():
+        return None
+    return bool(CAMPAIGN_MENTION_RE.search(strip_tags(text)))

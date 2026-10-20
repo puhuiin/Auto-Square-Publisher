@@ -1387,7 +1387,37 @@ class TestMetricsReport(unittest.TestCase):
         self.assertIn("NEAR×3", text)
         self.assertIn("BTC×2", text)
 
-    def test_quality_scan_counts_violations(self):
+    def test_mention_panel_uses_stored_flag_contract(self):
+        """R814：面板当前契约 = 读发布时的 `campaign_mention` 标记（不改语义）。
+
+        尝试过"有 final_text 就按当前词表重算"（修 R805 的 24h 低估），但
+        R759/R803 等 11 处既有测试编码的正是"面板 = 遥测标记"⇒ 属显式决策，
+        留给下一个窗口：要么改面板语义 + 连带改那 11 处，要么在写入侧补口径版本。
+        """
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "lang": "zh-CN", "ts": _ago(3), "campaign_mention": False,
+             "final_text": "去广场评论互动领取奖励，比瞎操作稳。$ETH 短线别追，先看承接。"},
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "lang": "zh-CN", "ts": _ago(3), "campaign_mention": True,
+             "final_text": "交易锦标赛 S6 开打，$BTC 回踩再看。"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["campaign_mention"], 1, "当前契约：按遥测标记计，不按全文重算")
+
+    def test_mention_panel_falls_back_to_flag_without_text(self):
+        """R814：无全文的旧行仍用发布时标记（未知不猜）。"""
+        _write(self.path, [
+            {"platforms": ["binance"], "outcome": "binance_published",
+             "lang": "zh-CN", "ts": _ago(3), "campaign_mention": False,
+             "final_preview": "去广场评论互动领取奖励"},
+        ])
+        rows, _ = mr.load_rows(self.path)
+        q = mr.quality_scan(rows)
+        self.assertEqual(q["campaign_mention"], 0, "无 final_text 不得重算，沿用旧标记")
+
+
         """R105：prompt 级禁令是软约束，合规度必须可度量——此前全靠人工读帖。
         巡检覆盖 final_preview 前 120 字（钩子区）。R101 前历史帖命中 FNG 属预期。"""
         _write(self.path, [

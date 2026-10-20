@@ -4462,43 +4462,14 @@ _CAMPAIGN_CTA_BAG = ShuffleBag(CAMPAIGN_CTA_STYLE_POOL)
 # R759：**正文是否提及当期活动**（调用方须先去 `#标签`——注入的活动标签
 # #TradingTournament 自带 contest/tournament 字样，不去标签会每帖恒真，
 # R291 同族：遥测 proxy 把保底标签当活动提及）。只作提及率度量，不判句式。
-_CAMPAIGN_MENTION_RE = re.compile(
-    r"锦标赛|竞赛|競賽|錦標賽|交易大賽|交易大赛|交易賽事|交易赛事"
-    r"|交易赛|交易賽|大赛|大賽|contest|tournament"
-    # R774：英文战役提法形态——实测英文帖不提 tournament/contest 这些词，
-    # 而是用**产品名/奖励机制**指代活动（tail_conflict 留存的结尾原文实录：
-    # "prize pools are still live for active traders"、"new zero-fee RWUSD
-    # trading pairs are live to practice on"、"Trading Tournament Season 6 FF
-    # for practice rewards"）⇒ 旧正则下英文帖 mention 恒为 False（R766/R768
-    # 同族：判据只覆盖一种语种的真实形态）。
-    # ⚠️ 精度取舍（已知）："154,000 USDD total reward pool" 这类**非本期活动**
-    # 的奖励池会误报——该字段是趋势度量不是门，误报率 ~1/12 可接受；
-    # 若未来要当门用，须改为「奖励池 + 币安/官方语境」的双条件。
-    r"|write\s*2\s*earn|write to earn|prize pool|reward pool"
-    r"|zero[- ]fee|season [0-9]|S[0-9](?:/S[0-9])?"
-    r"|bStocks|TraFi|P2P anniversary|LoL (?:worlds|championship)"
-    r"|trading (?:tournament|championship|competition|event|race)"
-    # ★★ R787：**中文写法的 Write2Earn**（写2赚/寫2賺）——R774 补英文形态时
-    #   漏了中文形态（R615/R611 同族：一侧修了另一侧没对齐，只不过这次是
-    #   「英中两侧」而非「两个分支」）。生产实证（R784 全文遥测首篇复盘）：
-    #   10-19 04:24 帖正文「想边看边练手的，去**写2赚**评论区互动拿奖励就行」
-    #   ——通篇在讲当期活动机制，campaign_mention 却判 False（该帖无锦标赛/
-    #   竞赛字样，唯一的活动指代就是写2赚）。中文帖占产出 ~70%，这个漏检
-    #   让「正文活动提及率」对一类真实提及系统性低估。
-    r"|写\s*2\s*[赚賺]|寫\s*2\s*[赚賺]"
-    # ★★ R805：新话术「Community Voice / 评论互动领奖励」——R774/R787/R801 同族
-    #   第四次（判据词表总是落后模型的新提法）。生产实证（10-20 中文窗口）：
-    #   3 篇 campaign_mention=False 的帖正文其实都提了活动——
-    #     「去廣場評論互動領獎勵比瞎操作穩」
-    #     「參加 Community Voice 評論互動拿獎勵」
-    #     「去币安广场 Community Voice 投个票,领点奖励」
-    #   ⇒ 中文提及率被系统性低估，日报把「中文 100%」报成 zh-TW 1/3。
-    #   精度取舍同 R774：这是趋势度量不是门，个别误报可接受。
-    r"|community\s*voice"
-    r"|评论互动|評論互動"
-    r"|(?:广场|廣場)[^。！？\n]{0,16}(?:投[^。！？\n]{0,3}票|评论|評論|互动|互動)"
-    r"[^。！？\n]{0,16}(?:奖励|獎勵)",
-    re.IGNORECASE)
+# ★★ R814：活动提及判据词表下沉到独立模块 `campaign_vocab.py`（本文件与
+#   scripts/metrics_report.py 共同 import ⇒ **口径只有一份实现**，R731 纪律）。
+#   背景：报表原先只能读发布时写死的 `campaign_mention` 标记，词表每次升级
+#   （R774/R787/R801/R805）都让日报⑥雷达被旧行压低约 24h——R805 生产实证
+#   真实提及 ~90%、面板报 70%。词表随模块一起逐字搬迁，语义不变。
+#   ⚠️ re.compile 有模式缓存，若两份源码逐字相同会拿到同一对象，别用 `is`
+#      判断"是否共用"（本轮曾据此误判已生效）。
+from campaign_vocab import CAMPAIGN_MENTION_RE as _CAMPAIGN_MENTION_RE, mention_in_text
 
 # R758：campaign CTA 收敛模板检测（**全文**，不是 preview）。
 # 判据 = 「想练手/试水/磨盘感」类意图短语与「竞赛/锦标赛」类活动名词**同句**
@@ -12698,10 +12669,9 @@ def _run_main():
                     #   这类注入标签含 contest/tournament 字样 ⇒ 先去标签再判，
                     #   否则每帖恒真（R291 同族：遥测 proxy 把保底标签当活动提及）。
                     # None = Mock/异常态（未知不是 False，纪律 12）。
-                    _campaign_mention = None
-                    if isinstance(final_content, str) and final_content.strip():
-                        _cm_body = re.sub(r"#[^\s#]+", " ", final_content)
-                        _campaign_mention = bool(_CAMPAIGN_MENTION_RE.search(_cm_body))
+                    # ★ R814：去标签 + 词表判定收进 campaign_vocab.mention_in_text
+                    #   （与日报⑥雷达同一份口径）。None = 空文本（未知不是 False）。
+                    _campaign_mention = mention_in_text(final_content)
                     # R663：**异常优先留存**的结尾原文。
                     # ★ 为什么只留"不一致"的那种（R647 守卫明确禁止全量存尾段，
                     # 理由是 metrics.jsonl 膨胀：323 篇 × 120 字 = **+60%**）：
