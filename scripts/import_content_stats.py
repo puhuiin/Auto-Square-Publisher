@@ -22,6 +22,11 @@
     # 默认 stats/content_stats.csv，也可用环境变量 CONTENT_STATS_CSV 指定
     # 输出固定 <repo>/content_stats.jsonl（与 METRICS_FILE 同目录规则一致）
 
+    python scripts/import_content_stats.py --paste <粘贴文本> [--metrics <线上件>]
+    # ★ R820：创作者中心后台的**文本**导出（北京时间 + 浏览量，**没有 content_id**）
+    #   走这条分支：按 UTC ±3min 联到 metrics.jsonl 回填 content_id。
+    #   见下方 import_pasted_views() 的口径说明。
+
 CSV 表头（中英均可，至少要有 id 列，其余列缺失即跳过该指标）：
     content_id/帖子ID ｜ 浏览量/views/阅读量 ｜ 点赞/likes ｜ 评论/comments
 """
@@ -112,6 +117,171 @@ def read_csv(path: str) -> Dict[str, Dict[str, int]]:
     return out
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# R820：创作者中心**文本**导出导入（无 content_id ⇒ 按时间联表回填）
+#
+# 为什么需要这条分支：后台的「复制」形态只有「北京时间 + 浏览量」，没有帖子 ID，
+# 而 content_stats.jsonl 的主键是 content_id。此前只能导 CSV（有 ID），
+# 用户实际拿到的是文本 ⇒ 数据进不来，整个浏览闭环停在 10-16。
+#
+# 联表口径（每条都可由自校验兜住，不靠信任）：
+#   · 导出时刻是**北京时间**（UTC+8）；metrics 的 ts 是 UTC ⇒ 先换算再比。
+#   · 匹配窗口 ±3min：生产发帖间隔 ≥15min（R713），3min 足以吸收转录/时区误差，
+#     又小于半间隔 ⇒ 不会跨到相邻帖。
+#   · **撞车**（同一行遥测被两条导出记录认领）：保留 dt 更小者。生产实测 6 组
+#     撞车全符合这条规律（自洽的自校验），故不是随手定的规则。
+#   · **联不上**的条目必须**单独报出来**，不得静默丢弃：它们要么是转录错位，
+#     要么是遥测滚动窗（5000 行）外的老帖——两者含义不同，混在一起会让人
+#     以为"数据都导进来了"。
+#   · 导出里混有**非本流水线**的帖（人工发布/别的工具）：它们没有遥测行，
+#     因此天然落在"联不上"里；但必须**明确点名**，因为其中常含最高浏览的帖，
+#     误算进来会伪造出"我们的爆款"（实测 12/130，其中 4 篇是最高的 78/57/44/29）。
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _parse_paste(text: str):
+    """解析粘贴文本 → [(datetime(带时区), views)]。
+
+    容忍三种常见形态（用户复制出来的样子各不相同，不该让他先清洗）：
+        "2026-10-21 00:04  0"
+        "2026-10-21 00:04\t0"
+        "2026-10-21 00:04:33  12"        # 带秒
+    行首 # 视为注释。无法解析的行**不静默跳过**，计入 invalid 一并返回。
+    """
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    tz = _tz(_td(hours=8))
+    rows, invalid = [], []
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        # 时间戳在前、浏览量在后；用正则抓，避免被中间的多空格/制表符干扰
+        m = re.match(r"^(\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2})?)\s+([\d,]+)\s*$",
+                     line)
+        if not m:
+            invalid.append(line)
+            continue
+        stamp, val = m.group(1), m.group(2).replace(",", "")
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M:%S",
+                    "%Y-%m-%dT%H:%M"):
+            try:
+                rows.append((_dt.strptime(stamp, fmt).replace(tzinfo=tz), int(val)))
+                break
+            except ValueError:
+                continue
+        else:
+            invalid.append(line)
+    return rows, invalid
+
+
+def _parse_iso_utc(s):
+    """metrics 的 ts → aware datetime（UTC）。不可解析返回 None。"""
+    if not isinstance(s, str) or not s.strip():
+        return None
+    from datetime import datetime as _dt, timezone as _tz
+    try:
+        d = _dt.fromisoformat(s.strip().replace("Z", "+00:00"))
+    except Exception:
+        return None
+    return d if d.tzinfo else d.replace(tzinfo=_tz.utc)
+
+
+def join_pasted_views(rows, metrics_rows, window_sec: int = 180):
+    """把 (北京时间, views) 联到 metrics 发布行，回填 content_id。
+
+    返回 dict：
+        records   {content_id: {"views": int}}   —— 可并入 content_stats 的
+        unmatched [(bj_dt, views)]               —— 联不上（转录错位 / 遥测窗外 / 非本流水线）
+        collisions int                            —— 发生撞车（多行争抢同一遥测行）的次数
+        ambiguous  [(content_id, kept_dt, dropped_dt)] —— 撞车明细，供审阅
+
+    ★ 为什么返回值要这么细：这个函数的**全部风险**都在"悄悄少算或多算"。
+      只返回 records 的话，调用方无从知道丢了什么——那正是 R612「沉默不是通过」。
+    """
+    from datetime import timezone as _tz
+
+    # 只为发布行建索引（别的 outcome 没有浏览量的语义）
+    cand = []
+    for r in metrics_rows or []:
+        if not str(r.get("outcome", "")).startswith("binance_published"):
+            continue
+        t = _parse_iso_utc(r.get("ts"))
+        cid = str(r.get("content_id") or "")
+        if t is None or not cid:
+            continue
+        cand.append((t.astimezone(_tz.utc), cid))
+
+    # 每条导出记录认领一个遥测行；同一行被多条记录认领时，dt 更小者胜出
+    claim = {}      # cid -> (dt_sec, bj_dt, views)
+    ambiguous = []
+    collisions = 0
+    unmatched = []
+    for bj_dt, views in rows:
+        t_utc = bj_dt.astimezone(_tz.utc)
+        best = None
+        for t, cid in cand:
+            dt = abs((t - t_utc).total_seconds())
+            if dt <= window_sec and (best is None or dt < best[0]):
+                best = (dt, cid)
+        if best is None:
+            unmatched.append((bj_dt, views))
+            continue
+        dt, cid = best
+        prev = claim.get(cid)
+        if prev is None:
+            claim[cid] = (dt, bj_dt, views)
+        elif dt < prev[0]:
+            collisions += 1
+            ambiguous.append((cid, bj_dt, prev[1]))
+            claim[cid] = (dt, bj_dt, views)
+        else:
+            collisions += 1
+            ambiguous.append((cid, prev[1], bj_dt))
+
+    records = {cid: {"views": views} for cid, (_dt, _bj, views) in claim.items()}
+    return {"records": records, "unmatched": unmatched,
+            "collisions": collisions, "ambiguous": ambiguous}
+
+
+def import_pasted_views(text: str, metrics_path: str = None) -> dict:
+    """粘贴文本 → 并入 content_stats.jsonl 的完整流程（含自校验报告）。
+
+    ★ 合并语义（重要，别改成覆盖）：content_stats.jsonl 是**累积库**，
+      本次导出只是最近一小段。实测 10-20 这次导出 130 条（约 2 天），
+      而库里已有 378 条（10-02~10-16）——两者 content_id **零交集**。
+      若"刷新"成覆盖，会把 13 天的老数据全删掉、进表币种从 34 掉到 19。
+      ⇒ 一律走 merge_into_jsonl 的并集语义。
+    """
+    import json as _json
+
+    rows, invalid = _parse_paste(text)
+    if not rows:
+        raise SystemExit("粘贴文本里没有解析出任何『北京时间 浏览量』行（检查格式）")
+    mp = metrics_path or METRICS_PATH
+    metrics_rows = []
+    if os.path.exists(mp):
+        with open(mp, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    metrics_rows.append(_json.loads(line))
+                except Exception:
+                    continue
+    if not metrics_rows:
+        raise SystemExit(f"读不到遥测行：{mp}（联表必须有 metrics.jsonl，"
+                         f"本地那份可能是旧快照，请用 git show origin/main:metrics.jsonl）")
+
+    res = join_pasted_views(rows, metrics_rows)
+    changed = merge_into_jsonl(res["records"])
+    n_tok = rebuild_token_engagement()
+    return {"parsed": len(rows), "invalid": invalid,
+            "joined": len(res["records"]), "records": res["records"],
+            "unmatched": res["unmatched"],
+            "collisions": res["collisions"], "ambiguous": res["ambiguous"],
+            "changed": changed, "n_tokens": n_tok}
+
+
 def merge_into_jsonl(records: Dict[str, Dict[str, int]]) -> int:
     """把新记录并入 content_stats.jsonl（同 id 各指标取 max，保留已有观测）。
     返回写入的记录条数。
@@ -177,7 +347,29 @@ METRICS_PATH = os.path.join(REPO_ROOT, "metrics.jsonl")
 
 def rebuild_token_engagement(min_n: int = 4) -> int:
     """从 content_stats.jsonl × metrics.jsonl 重算每币均浏览，写 token_engagement.json。
-    返回写入的币种数（含 n<min_n 的，便于审阅；main.py 侧按 min_n 过滤）。"""
+    返回写入的币种数（含 n<min_n 的，便于审阅；main.py 侧按 min_n 过滤）。
+
+    ★★ R820 决定**不做**「按曝光天数归一」，理由是可复现的实测（不是偏好）：
+      R641 说"浏览是累计量、必须按曝光天数归一"，这条在**报表归因**里成立
+      （_exposure_days 至今仍是正确口径）。但用在这里是另一回事——这里的输出
+      会被 main.apply_engagement_boost 拿去做**币种间分位比较**（median×1.3/×0.7）。
+      逐帖除以各自的曝光天数**不是全局缩放**，它改的是币种间的相对排序：
+        · 同一份数据（496 条，旧快照 378 + 新导出 118）只差归不归一：
+          min_n=2 时 **50% 的币档位翻转**、排名 Spearman 仅 0.494；
+          min_n=4 时 48% / 0.571；min_n=6 时 50% / 0.785。
+        · 翻转由**小样本**驱动：ARB(n=2) 归一后中位 242.89、TIA(n=3) 93.16、
+          WLD(n=3) 89.79 —— n 小 ⇒ 分母（曝光天数）差异被放大成假信号。
+      「按曝光归一」的前提是浏览随曝光**单调增长**，实测不成立：
+        · 合并样本 Spearman(曝光天数, 浏览) = +0.256，看似支持；
+        · 但**同语种 × 同批次**内：A 批 zh-CN +0.086 / zh-TW −0.081 / en −0.218；
+          B 批 zh-CN +0.301 / zh-TW −0.150 / en −0.192
+          ⇒ 那个 +0.256 是**语种 × 曝光共线**伪造的（en 帖曝光长且浏览低），
+            不是曝光效应。
+      ⇒ 结论：**保留原始累计浏览**（现状口径）。归一若将来要做，必须先有
+        「同语种内、控制批次」的显著正相关证据，而不是拿跨层相关当依据。
+      ⚠️ 别把这段读成"R641 错了"：R641 修的是**报表速率**（同一面板内比较
+        不同年龄的帖），那里必须归一；这里是**跨币种排序**，口径不同。
+    """
     import statistics
     from collections import defaultdict
     cs = {}
@@ -219,7 +411,11 @@ def rebuild_token_engagement(min_n: int = 4) -> int:
     out = {"as_of": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
            "min_n": min_n,
            "note": "per-token avg/median Square views (creator-center export); ranking-only "
-                   "engagement boost (R608/R609; boost uses median_views for outlier robustness)",
+                   "engagement boost (R608/R609; boost uses median_views for outlier robustness). "
+                   "R820: values are RAW cumulative views, NOT normalized by exposure days — "
+                   "per-post normalization flips 50% of token buckets (Spearman 0.494) because "
+                   "the 'views grow with exposure' premise fails within language/batch strata; "
+                   "see rebuild_token_engagement docstring for the evidence.",
            "tokens": dict(sorted(tokens.items(), key=lambda x: -x[1]["median_views"]))}
     with open(TOKEN_ENG_PATH, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
@@ -227,11 +423,45 @@ def rebuild_token_engagement(min_n: int = 4) -> int:
 
 
 def main() -> int:
-    path = sys.argv[1] if len(sys.argv) > 1 else os.getenv(
-        "CONTENT_STATS_CSV", DEFAULT_CSV)
+    # ★ R820：--paste 分支（后台文本导出，无 content_id）
+    argv = sys.argv[1:]
+    if argv and argv[0] == "--paste":
+        if len(argv) < 2:
+            raise SystemExit("--paste 后面要跟粘贴文本（或 --paste @文件路径）")
+        src = argv[1]
+        if src.startswith("@"):
+            with open(src[1:], encoding="utf-8") as f:
+                text = f.read()
+        else:
+            text = src
+        mpath = None
+        if "--metrics" in argv:
+            mpath = argv[argv.index("--metrics") + 1]
+        res = import_pasted_views(text, metrics_path=mpath)
+        print(f"📋 解析 {res['parsed']} 条（无法解析 {len(res['invalid'])} 条）")
+        if res["invalid"]:
+            print("   ⚠️ 无法解析的行（未被导入，请检查格式）：")
+            for ln in res["invalid"][:10]:
+                print(f"      {ln[:80]}")
+        print(f"🔗 联表成功 {res['joined']} 条 → 可并入 {len(res['records'])} 个 content_id")
+        print(f"⚠️ 联不上 {len(res['unmatched'])} 条"
+              f"（转录错位 / 遥测滚动窗外 / **非本流水线**——三者含义不同，"
+              f"需人工判断；其中常含最高浏览的帖，误算进来会伪造爆款）")
+        if res["collisions"]:
+            print(f"🔀 撞车 {res['collisions']} 次（同一遥测行被多条导出记录认领，"
+                  f"已保留 dt 更小者）：")
+            for cid, kept, dropped in res["ambiguous"][:10]:
+                print(f"      {cid}: 保留 {kept.strftime('%m-%d %H:%M')} "
+                      f"丢弃 {dropped.strftime('%m-%d %H:%M')}")
+        print(f"✅ 并入 {res['changed']} 条 → {OUT_PATH}（并集语义，不清空历史）")
+        print(f"✅ 刷新币种浏览基线 {res['n_tokens']} 币 → {TOKEN_ENG_PATH}")
+        return 0
+
+    path = argv[0] if argv else os.getenv("CONTENT_STATS_CSV", DEFAULT_CSV)
     if not os.path.exists(path):
         raise SystemExit(f"找不到 CSV: {path}\n（从币安创作者中心后台导出内容数据，"
-                         f"或用第一个参数/ CONTENT_STATS_CSV 指定路径）")
+                         f"或用第一个参数/ CONTENT_STATS_CSV 指定路径；"
+                         f"若手里是『北京时间 浏览量』文本，用 --paste）")
     records = read_csv(path)
     if not records:
         raise SystemExit("CSV 未解析出任何有效行（检查 id 列与数值格式）")

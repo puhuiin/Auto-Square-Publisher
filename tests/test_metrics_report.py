@@ -2886,6 +2886,192 @@ class TestContentStatsImport(unittest.TestCase):
         self.assertEqual(recs["333"]["likes"], 500)
 
 
+class TestR820PasteViewsImport(unittest.TestCase):
+    """R820：创作者中心**文本**导出（北京时间+浏览量，无 content_id）→ 联表回填。
+
+    ★ 这条分支的**全部风险**都在"悄悄少算/多算"，所以每条断言都盯一个
+      具体的失真来源，而不是只验"能导进来"：
+        ① 时区：导出是北京时间，metrics 是 UTC。换算错 ⇒ 全体错位 8 小时、
+           一条都联不上（或全联到错的帖）。
+        ② 撞车：同一遥测行被两条导出记录认领（相邻帖）。不处理 ⇒ 浏览被
+           覆盖或重复计入。规则=保留 dt 更小者（生产 6 组全符合）。
+        ③ 联不上：必须**逐条报出**，不能静默丢（R612：沉默不是通过）。
+        ④ 非本流水线：没有遥测行 ⇒ 天然落在"联不上"里，绝不能硬塞。
+        ⑤ 合并而非覆盖：导出只有最近几天，库里是十几天的累积。
+    """
+
+    @staticmethod
+    def _mod():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "ics_r820",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "import_content_stats.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _metrics(self, pairs):
+        """pairs = [(UTC iso, content_id)] → metrics 行（只需 outcome/ts/content_id）"""
+        return [{"outcome": "binance_published", "ts": ts, "content_id": cid}
+                for ts, cid in pairs]
+
+    def test_parse_paste_accepts_three_shapes_and_reports_garbage(self):
+        """① 容忍空格/制表符/带秒三种形态；坏行必须报出而非静默丢。"""
+        mod = self._mod()
+        rows, invalid = mod._parse_paste(
+            "# 注释\n"
+            "2026-10-21 00:04 0\n"
+            "2026-10-20 23:44\t3\n"
+            "2026-10-20 23:21:33  15\n"
+            "这一行不是数据\n")
+        self.assertEqual([v for _t, v in rows], [0, 3, 15])
+        self.assertEqual(len(rows), 3)
+        self.assertEqual(invalid, ["这一行不是数据"],
+                         "无法解析的行必须返回给调用方报出来")
+
+    def test_beijing_time_is_converted_to_utc_before_matching(self):
+        """① 时区：北京时间 20:00 = UTC 12:00，必须按 UTC 比对。
+
+        若忘了换算（或方向反了），下面这条就联不上/联到错的帖。
+        """
+        mod = self._mod()
+        rows, _ = mod._parse_paste("2026-10-20 20:00 42")
+        # 遥测里同一条帖记的是 UTC 12:00
+        res = mod.join_pasted_views(rows, self._metrics(
+            [("2026-10-20T12:00:00+00:00", "cid_ok")]))
+        self.assertEqual(res["records"], {"cid_ok": {"views": 42}},
+                         "北京时间必须先换成 UTC 才能联上")
+        # 反证：若把 20:00 当成 UTC（错误口径），12:00 那条不该被它认领
+        res_wrong = mod.join_pasted_views(
+            rows, self._metrics([("2026-10-20T20:30:00+00:00", "cid_wrong")]))
+        self.assertEqual(res_wrong["records"], {},
+                         "窗口是 ±3min，20:00 与 20:30 不该联上")
+
+    def test_collision_keeps_smaller_delta(self):
+        """② 撞车：两条导出记录争抢同一遥测行 ⇒ 保留 dt 更小者，并计入明细。
+
+        生产实测 6 组撞车全部符合"dt 更小者胜"（自洽的自校验），
+        所以这不是随手定的规则——改动它会让相邻帖的浏览互换。
+        """
+        mod = self._mod()
+        # 遥测行在 UTC 12:00:00；导出两条：12:01（dt=60s）与 12:02（dt=120s）
+        rows, _ = mod._parse_paste(
+            "2026-10-20 20:02 99\n"      # UTC 12:02，dt=120
+            "2026-10-20 20:01 11\n")     # UTC 12:01，dt=60  ⇒ 应胜出
+        res = mod.join_pasted_views(rows, self._metrics(
+            [("2026-10-20T12:00:00+00:00", "cid_x")]))
+        self.assertEqual(res["records"]["cid_x"]["views"], 11,
+                         "撞车必须保留 dt 更小者（更接近真实发布时刻）")
+        self.assertEqual(res["collisions"], 1, "撞车次数必须被计数")
+        self.assertEqual(len(res["ambiguous"]), 1)
+        self.assertEqual(res["ambiguous"][0][0], "cid_x")
+
+    def test_unmatched_rows_are_reported_not_dropped(self):
+        """③④ 联不上的必须逐条返回（含非本流水线的帖）。
+
+        实测导出 130 条里有 12 条不属本流水线（人工/别的工具），其中 4 篇
+        是最高浏览的（78/57/44/29）。静默塞进来会伪造"我们的爆款"；
+        静默丢掉则让人以为数据完整。
+        """
+        mod = self._mod()
+        rows, _ = mod._parse_paste(
+            "2026-10-20 20:00 42\n"
+            "2026-10-20 21:00 78\n")     # 遥测里没有 13:00 这条 ⇒ 联不上
+        res = mod.join_pasted_views(rows, self._metrics(
+            [("2026-10-20T12:00:00+00:00", "cid_ok")]))
+        self.assertEqual(len(res["records"]), 1)
+        self.assertEqual(len(res["unmatched"]), 1, "联不上的必须报出来")
+        self.assertEqual(res["unmatched"][0][1], 78)
+
+    def test_import_merges_never_overwrites_history(self):
+        """⑤ 合并而非覆盖：导出只有最近几天，库里是十几天的累积。
+
+        实测：新导出 118 条与旧库 378 条 content_id **零交集**。
+        若"刷新"成覆盖 ⇒ 进表币种从 34 掉到 19（-44%），是退化不是刷新。
+        """
+        import tempfile
+        mod = self._mod()
+        tmp = tempfile.mkdtemp()
+        try:
+            out = os.path.join(tmp, "content_stats.jsonl")
+            met = os.path.join(tmp, "metrics.jsonl")
+            te = os.path.join(tmp, "token_engagement.json")
+            # 旧库：一条 10-01 的老帖
+            with open(out, "w", encoding="utf-8") as f:
+                f.write(json.dumps({"content_id": "old_cid", "views": 500,
+                                    "ts": "2026-10-01T00:00:00Z"}) + "\n")
+            # 遥测：老帖 + 一条新帖
+            with open(met, "w", encoding="utf-8") as f:
+                f.write(json.dumps({"outcome": "binance_published",
+                                    "ts": "2026-10-01T00:00:00+00:00",
+                                    "content_id": "old_cid",
+                                    "tokens": ["AAA"]}) + "\n")
+                f.write(json.dumps({"outcome": "binance_published",
+                                    "ts": "2026-10-20T12:00:00+00:00",
+                                    "content_id": "new_cid",
+                                    "tokens": ["BBB"]}) + "\n")
+            mod.OUT_PATH, mod.METRICS_PATH, mod.TOKEN_ENG_PATH = out, met, te
+            res = mod.import_pasted_views("2026-10-20 20:00 7", metrics_path=met)
+            self.assertEqual(res["joined"], 1)
+            ids = {json.loads(l)["content_id"]
+                   for l in open(out, encoding="utf-8") if l.strip()}
+            self.assertIn("old_cid", ids, "历史记录不得被覆盖掉（并集语义）")
+            self.assertIn("new_cid", ids)
+            old = [json.loads(l) for l in open(out, encoding="utf-8")
+                   if l.strip() and json.loads(l)["content_id"] == "old_cid"][0]
+            self.assertEqual(old["views"], 500, "老帖的浏览必须原样保留")
+        finally:
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
+    def test_token_engagement_stays_raw_cumulative_not_normalized(self):
+        """★★ R820 口径守卫：token_engagement 必须存**原始累计浏览**，不得按曝光归一。
+
+        R641 的"浏览是累计量必须归一"只适用于**同一面板内跨年龄比较**（报表速率）。
+        这里（apply_engagement_boost 的币种分位比较）若逐帖除以曝光天数：
+          · 不是全局缩放 ⇒ 改的是币种间相对排序
+          · 实测同一份数据 50% 币档位翻转、排名 Spearman 0.494
+          · 翻转由小样本驱动（ARB n=2 → 归一后中位 242.89）
+        且"浏览随曝光增长"的前提在**同语种同批次**内不成立（rho≈0 甚至为负）。
+        ⇒ 本用例把口径钉住：两条同样浏览、不同发布时刻的帖，必须算出**相同**的
+          median_views。若有人加了归一，下面的断言立刻红。
+        """
+        import tempfile
+        mod = self._mod()
+        tmp = tempfile.mkdtemp()
+        try:
+            out = os.path.join(tmp, "content_stats.jsonl")
+            met = os.path.join(tmp, "metrics.jsonl")
+            te = os.path.join(tmp, "token_engagement.json")
+            # 两条同币、同浏览（100），但发布时刻相差 5 天
+            with open(out, "w", encoding="utf-8") as f:
+                f.write(json.dumps({"content_id": "c_old", "views": 100,
+                                    "ts": "2026-10-10T00:00:00Z"}) + "\n")
+                f.write(json.dumps({"content_id": "c_new", "views": 100,
+                                    "ts": "2026-10-10T00:00:00Z"}) + "\n")
+            with open(met, "w", encoding="utf-8") as f:
+                f.write(json.dumps({"outcome": "binance_published",
+                                    "ts": "2026-10-05T00:00:00+00:00",
+                                    "content_id": "c_old", "tokens": ["AAA"]}) + "\n")
+                f.write(json.dumps({"outcome": "binance_published",
+                                    "ts": "2026-10-10T00:00:00+00:00",
+                                    "content_id": "c_new", "tokens": ["AAA"]}) + "\n")
+            mod.OUT_PATH, mod.METRICS_PATH, mod.TOKEN_ENG_PATH = out, met, te
+            mod.rebuild_token_engagement(min_n=2)
+            d = json.load(open(te, encoding="utf-8"))
+            self.assertEqual(d["tokens"]["AAA"]["median_views"], 100,
+                             "同浏览的两条帖必须算出同一个 median_views；"
+                             "若变成不同值说明有人加了按曝光天数归一（R820 已证伪）")
+            self.assertEqual(d["tokens"]["AAA"]["n"], 2)
+            self.assertIn("NOT normalized", d["note"],
+                          "note 必须自述口径，否则读文件的人无从知道")
+        finally:
+            import shutil
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
 class TestContentStatsReportJoin(unittest.TestCase):
     """R285：报表侧 content_id × content_stats 的 join 与三维归因"""
 
