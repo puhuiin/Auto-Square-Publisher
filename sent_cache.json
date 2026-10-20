@@ -1,17 +1,5 @@
 [
   {
-    "id": "e90bbbb644089f76",
-    "title": "星球晚讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-10T11:00:54.194026+00:00",
-    "tokens": [
-      "SYN",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "fc770cb8cdfcbafa",
     "title": "Triple-A 攻击者将 4970 枚 ETH 转入 Tornado Cash 混币",
     "source": "吴说区块链 (中文深度)",
@@ -5195,6 +5183,16 @@
     "sent_at": "2026-10-19T23:44:59.764183+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b5a7f475521e56d4",
+    "title": "Hoskinson Hails Midnight as His Career’s “Magnum Opus,” Says Leios Will Complete Cardano",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-20T00:07:25.961767+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "zh-TW"
   }
