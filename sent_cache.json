@@ -1,15 +1,5 @@
 [
   {
-    "id": "f10f6a21f2dce384",
-    "title": "Uniswap trader transfers $13M in UNI as losses hit $3M — Sign of more downside?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-10T14:45:01.567987+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "cf3c511414209e00",
     "title": "Polkadot price rebounds 11% – Can DOT extend its rally to $1.75?",
     "source": "AMBCrypto (技术与链上)",
@@ -5206,5 +5196,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "5e739fe7dc9d72e2",
+    "title": "Monero (XMR) Rises 11% Weekly: 3 AIs Speculate Whether It Can Flip Zcash (ZEC) in 2026",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-20T08:04:40.311495+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
