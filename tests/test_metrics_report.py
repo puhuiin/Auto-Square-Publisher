@@ -8448,5 +8448,121 @@ class TestR804StoryLevelLoss(unittest.TestCase):
         self.assertNotIn("其他", f["lost_causes"])
 
 
+class TestR815DailyReportCaliber(unittest.TestCase):
+    """★★ R815：日报 ②/③ 三处**口径不自洽**修复。
+
+    生产实证（10-20 10:43Z 那条日报，raw 输出原文）：
+      ② 管线（66/91 轮真正抓取，均值/轮）
+         候选 99 ｜ 未处理(配额满) 79 ｜ 无有效代币 8.7 ｜ 单币限流 10.3
+         源健康：中位 24 个正常 / 共 22 源          ← 中位数比"总数"还大
+      ③ LLM：尝试 184 次（成功 52 ｜ 失败 132，失败率 72%）
+         失败构成：transport 88 ｜ ? 36 ｜ quality 7 ｜ numbers 1
+      ① 发帖：52 篇 … 配额：未打满 52/60            ← 与 ② 的"(配额满)"自相矛盾
+
+    三处都改的是**报告说了它没验证过的话**（纪律 6）：
+      a) 源健康两个数不同源（跨轮中位 vs 末轮 per_feed_yield 键数）⇒ 同轮同口径；
+      b) `unprocessed` 是残差（candidates − 已发 − 跳过 − 异常），不是"配额满"
+         的证据（main.py R713 注释自己就写着「瓶颈是本门，不是配额也不是供给」）；
+      c) `stage or "?"` 把 36 条故事级中止打成字面量 "?"。
+    另接上 R714 的 `gap_early_exit`（此前**只写不读**，设计意图从未闭环）。
+    """
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r815",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _line(self, text, *needles):
+        return next(l for l in text.split("\n") if all(n in l for n in needles))
+
+    def _rows(self, **over):
+        base = {"outcome": "run_summary", "ts": _ago(1), "feeds_ok": 23,
+                "feeds_failed": 1, "feeds_parked": 1,
+                "feeds_failed_sources": "Bitcoinist (比特币向)",
+                "feeds_parked_sources": "CoinJournal (山寨异动)",
+                # 生产实态：per_feed_yield 只收**过滤后仍有留存条目**的源（22 个），
+                # 而 feeds_ok=23 ⇒ 旧代码把这两个数并排就打出「24 / 22」。
+                "per_feed_yield": {("src%d" % i): {"entries": 1} for i in range(22)},
+                "candidates": 99, "unprocessed": 79, "published": 1,
+                "sent_24h": 52, "max_daily_posts": 60}
+        base.update(over)
+        return [base]
+
+    # ---- a) 源健康：两个数必须同轮同口径 ----
+    def test_source_health_numbers_are_same_run(self):
+        line = self._line(self._dr().build_report(self._rows(), 24), "源健康")
+        self.assertIn("本轮 23 正常", line, "必须报末轮自己的健康数")
+        self.assertIn("失败 1", line)
+        self.assertIn("停放 1", line)
+        self.assertNotIn("共 22 源", line,
+                         "旧实现把跨轮中位与末轮 yield 键数并排 ⇒ 出现「24 正常 / 共 22 源」")
+
+    def test_source_health_omits_zero_fail_park(self):
+        """零失败零停放时不得渲染「失败 0 / 停放 0」噪声（沿用源健康零噪音惯例）。"""
+        line = self._line(self._dr().build_report(
+            self._rows(feeds_failed=0, feeds_parked=0,
+                       feeds_failed_sources=None, feeds_parked_sources=None), 24),
+            "源健康")
+        self.assertIn("本轮 23 正常", line)
+        self.assertNotIn("失败", line)
+        self.assertNotIn("停放", line)
+
+    # ---- b) unprocessed 不得冒充「配额满」----
+    def test_unprocessed_is_not_labelled_quota(self):
+        text = self._dr().build_report(self._rows(), 24)
+        line = self._line(text, "候选", "未处理")
+        self.assertIn("未处理(本轮未评估)", line)
+        self.assertNotIn("配额满", line)
+        # 同报告自洽：① 明说未打满 ⇒ ② 不得说配额满（这正是被修掉的自相矛盾）。
+        self.assertIn("未打满 52/60", text)
+
+    def test_zero_publish_conclusion_names_real_blocker(self):
+        """0 发布分支的"主导拦截"同样不得把残差说成配额满。"""
+        rows = self._rows(published=0, unprocessed=88, sent_24h=30,
+                          skipped_no_token=2, skipped_token_limit=2)
+        concl = [l for l in self._dr().build_report(rows, 24).split("\n")
+                 if l.startswith("结论")][0]
+        self.assertIn("候选未评估", concl)
+        self.assertNotIn("配额满", concl)
+
+    # ---- c) 失败构成不得落到字面量 "?" ----
+    def test_stage_none_story_bucket_is_named(self):
+        rows = [
+            {"outcome": "llm_failed", "ts": _ago(3), "record_scope": "story",
+             "title": "X", "reason": "全部提供商处于冷却期，无可用通道"},
+            self._rows()[0],
+        ]
+        line = self._line(self._dr().build_report(rows, 24), "失败构成")
+        self.assertIn("整篇中止 1", line)
+        self.assertNotIn("?", line, "字面量 ? 兜底必须消失（读者看不懂 27% 的失败）")
+
+    def test_real_stage_still_uses_stage_name(self):
+        """有 stage 的（transport 等）仍按 stage 归类——修复不得吞掉原分类。"""
+        rows = [
+            {"outcome": "llm_rejected", "stage": "transport", "ts": _ago(3),
+             "title": "Y", "provider": "Preset-google", "reason": "Error code: 429"},
+            self._rows()[0],
+        ]
+        line = self._line(self._dr().build_report(rows, 24), "失败构成")
+        self.assertIn("transport 1", line)
+        self.assertNotIn("整篇中止", line)
+
+    # ---- d) R714 遥测闭环：gap_early_exit 必须被日报消费 ----
+    def test_gap_early_exit_is_consumed(self):
+        rows = [self._rows(gap_early_exit=True, feeds_ok=0)[0], self._rows()[0]]
+        text = self._dr().build_report(rows, 24)
+        self.assertIn("间隔门早退 1/2 轮", text)
+
+    def test_no_gap_exit_line_when_absent(self):
+        text = self._dr().build_report(self._rows(), 24)
+        self.assertNotIn("间隔门早退", text, "无早退轮时零噪音")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

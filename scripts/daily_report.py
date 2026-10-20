@@ -135,18 +135,44 @@ def build_report(rows, hours: int) -> str:
         #   只统计**真正抓过**的轮次（feeds_ok > 0），否则与①的"配额打满"看似矛盾。
         active = [r for r in sums if (r.get("feeds_ok") or 0) > 0] or sums
         L.append("② 管线（%d/%d 轮真正抓取，均值/轮）" % (len(active), len(sums)))
-        L.append("   候选 %.0f ｜ 未处理(配额满) %.0f ｜ 无有效代币 %.1f ｜ 单币限流 %.1f"
+        # ★★ R815：`unprocessed` 是**残差**（candidates − 已发 − 各类跳过 − 异常），
+        #   语义是"本轮没轮到评估的候选"，**不是"配额满"的证据**。
+        #   生产实证 10-20 10:43Z：同一条日报里 ① 写「配额未打满 52/60」、
+        #   ② 写「未处理(配额满) 79」——自己打自己。main.py R713 的注释也早写明
+        #   `unprocessed == candidates`（入口早退）时**瓶颈是本门（间隔门），
+        #   不是配额也不是供给**。⇒ 只报事实，不冒充成因。
+        L.append("   候选 %.0f ｜ 未处理(本轮未评估) %.0f ｜ 无有效代币 %.1f ｜ 单币限流 %.1f"
                  % (avg("candidates", active), avg("unprocessed", active),
                     avg("skipped_no_token", active), avg("skipped_token_limit", active)))
+        # ★ R815：接上 R714 的 `gap_early_exit` 遥测（此前**只写不读**——R714 的
+        #   设计意图"让报表能区分 配额满 / 间隔挡 / 真没稿"从未闭环）。这些轮
+        #   feeds_ok=0、不进 active，所以必须在 sums 上数。
+        _gap_exits = [r for r in sums if r.get("gap_early_exit")]
+        if _gap_exits:
+            L.append("   ⏱️ 间隔门早退 %d/%d 轮（距上篇 < MIN_POST_GAP_MIN，未抓取）"
+                     % (len(_gap_exits), len(sums)))
         oks = [r.get("feeds_ok") for r in active if isinstance(r.get("feeds_ok"), (int, float))]
         if oks:
-            # ⚠️ 源总数取 **per_feed_yield 的键数**（当轮实际抓到的源），
-            #    不是 `len(oks)`（那是**轮数**，会把"21 个源"显示成"51 个源"）。
-            last_pf = active[-1].get("per_feed_yield") or {}
-            n_src = len(last_pf) if last_pf else None
-            L.append("   源健康：中位 %d 个正常%s"
+            # ★★ R815：源健康的两个数必须**同轮同口径**。
+            #   旧实现把「各轮 feeds_ok 的**中位**」与「末轮 per_feed_yield 的**键数**」
+            #   并排 ⇒ 生产实证 10-20 10:43Z 打出「中位 24 个正常 / 共 22 源」：
+            #   中位数比"总数"还大，读者会以为源集体掉线（实测 feeds_ok=23、
+            #   failed=1、parked=1，而 per_feed_yield 只有 22 个键）。两个数不同源：
+            #     · feeds_ok          = 该轮 HTTP 拉取成功的源数（跨轮取中位）
+            #     · per_feed_yield 键 = 该轮**过滤后仍有留存条目**的源数（≤ feeds_ok）
+            #   ⇒ 改为「跨轮中位正常数」+「末轮三元结构」，两段各自自洽。
+            _last = active[-1]
+            _ok_l = _last.get("feeds_ok")
+            _parts = []
+            if isinstance(_ok_l, (int, float)):
+                _parts.append("本轮 %d 正常" % _ok_l)
+                for _k, _lab in (("feeds_failed", "失败"), ("feeds_parked", "停放")):
+                    _v = _last.get(_k)
+                    if isinstance(_v, (int, float)) and _v:
+                        _parts.append("%s %d" % (_lab, _v))
+            L.append("   源健康：24h 中位 %d 个正常%s"
                      % (sorted(oks)[len(oks) // 2],
-                        (" / 共 %d 源" % n_src) if n_src else ""))
+                        ("；" + " / ".join(_parts)) if _parts else ""))
             failed = active[-1].get("feeds_failed_sources")
             if failed:
                 L.append("   ⚠️ 上轮失败源：%s" % failed)
@@ -175,7 +201,13 @@ def build_report(rows, hours: int) -> str:
         L.append("")
         L.append("③ LLM：尝试 %d 次（成功 %d ｜ 失败 %d，失败率 %.0f%%）"
                  % (len(pub) + len(att), len(pub), len(att), rate))
-        sc = Counter(r.get("stage") or "?" for r in att)
+        # ★★ R815：旧实现 `stage or "?"` 把**故事级中止**（llm_failed 无 stage）
+        #   打成字面量 "?"——生产实证 10-20：132 条失败里有 36 条叫"?"（27%），
+        #   读者根本看不懂，而它们其实全是「全部提供商处于冷却期，无可用通道」
+        #   （由下一行的 reason 榜点名）。⇒ 按 record_scope 结构化命名，
+        #   不在这里猜成因（成因由 reason 榜负责）。
+        sc = Counter(r.get("stage") or ("整篇中止" if r.get("record_scope") == "story"
+                                        else "未标注阶段") for r in att)
         if sc:
             L.append("   失败构成：%s"
                      % " ｜ ".join("%s %d" % (k, v) for k, v in sc.most_common(4)))
@@ -427,7 +459,9 @@ def build_report(rows, hours: int) -> str:
             _causes = (
                 (sum(r.get("skipped_no_token") or 0 for r in _act), "无有效代币"),
                 (sum(r.get("skipped_token_limit") or 0 for r in _act), "单币限流"),
-                (sum(r.get("unprocessed") or 0 for r in _act), "配额满未处理"),
+                # ★ R815：同 ②——`unprocessed` 是"本轮未评估"的残差，不是"配额满"。
+                #   本分支的前提就是「配额未满」，标成"配额满未处理"直接自相矛盾。
+                (sum(r.get("unprocessed") or 0 for r in _act), "候选未评估"),
                 (sum(r.get("skipped_risk_blocked") or 0 for r in _act), "风控拦截"),
                 (sum(r.get("skipped_batch_dup") or 0 for r in _act), "批内重复"),
             )
