@@ -1,15 +1,5 @@
 [
   {
-    "id": "7334f63e4c298972",
-    "title": "How potential $94B XRP hack was stopped: ‘This was a serious vulnerability’",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-11T14:03:39.497383+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4b31400cce93facb",
     "title": "Ledger供应链攻击据报扩展至欧洲,官方经销商售出硬件钱包发现间谍植入装置",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5207,6 +5197,17 @@
     "sent_at": "2026-10-20T20:24:08.020912+00:00",
     "tokens": [
       "PENGU"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e757a5dad91db7ab",
+    "title": "XRP Ledger’s booming activity faces scrutiny as 110 bot wallets dominate RLUSD payments",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-20T20:43:57.306173+00:00",
+    "tokens": [
+      "XRP",
+      "RLUSD"
     ],
     "lang": "en"
   }
