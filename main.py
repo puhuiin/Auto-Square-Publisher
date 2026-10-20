@@ -5457,18 +5457,41 @@ class MultiLLMEngine:
                     logger.warning(f"通道告警发送失败（不影响主流程）: {_e}")
 
             if transient:
-                logger.warning(f"所有提供商均在冷却期，仅重启非永久失败提供商: {[p.name for p in transient]}")
+                # ★★ R810：**冷却太长就别强制重启**。生产实证（10-20 03:00Z）：
+                #   openrouter fails 已到 11、冷却 240min，Google 配额 429 冷却
+                #   12h；每轮"全量冷却→强制重启"都会失败，而失败又把 cooldown
+                #   继续往后推（fails+1 → 240min 封顶、Google 重撞 429 重置 12h）
+                #   ⇒ **自我锁死**：通道永远等不到冷却到期，还白烧免费配额。
+                #   策略：最早冷却 ≤15 分钟才重启（快到期，值得一试）；否则
+                #   本轮跳过、不发任何 LLM 调用，保留配额给冷却到期后的那一轮。
+                _now = datetime.now(timezone.utc)
+                _earliest = None
+                for _p in transient:
+                    _dt = self._parse_cooldown((state.get(_p.name) or {}).get("cooldown_until"))
+                    if _dt and (_earliest is None or _dt < _earliest):
+                        _earliest = _dt
                 _cool = "、".join(
                     "%s 至 %s" % (
                         p.name,
                         str((state.get(p.name) or {}).get("cooldown_until") or "?")[:16].replace("T", " "))
                     for p in cooled)
-                _pool_alert(
-                    "⚠️ 全通道冷却：本轮强制重启非永久通道",
-                    "所有提供商均在冷却期（%s）。本轮仅重启非永久失败通道：%s。"
-                    "出稿可能连续失败，请检查账户余额/额度或补充通道。"
-                    % (_cool, "、".join(p.name for p in transient)))
-                active = transient
+                if _earliest and (_earliest - _now) > timedelta(minutes=15):
+                    logger.warning(
+                        "所有提供商冷却均超过 15 分钟（最早 %s），本轮跳过："
+                        "强制重启只会烧配额并延长冷却" % _earliest.isoformat())
+                    _pool_alert(
+                        "⏸️ 全通道长冷却：本轮跳过",
+                        "所有提供商冷却均超过 15 分钟（%s）。本轮不发起任何 LLM 调用，"
+                        "避免烧配额/延长冷却；下一轮会重新检查。" % _cool)
+                    active = []
+                else:
+                    logger.warning(f"所有提供商均在冷却期，仅重启非永久失败提供商: {[p.name for p in transient]}")
+                    _pool_alert(
+                        "⚠️ 全通道冷却：本轮强制重启非永久通道",
+                        "所有提供商均在冷却期（%s）。本轮仅重启非永久失败通道：%s。"
+                        "出稿可能连续失败，请检查账户余额/额度或补充通道。"
+                        % (_cool, "、".join(p.name for p in transient)))
+                    active = transient
             else:
                 logger.error("所有提供商均在冷却期且带 permanent 标记（模型下架/404），"
                              "本轮不再试错，空链快速失败。")

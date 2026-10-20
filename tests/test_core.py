@@ -12978,7 +12978,9 @@ class TestPermanentFailure(unittest.TestCase):
         p_transient = m.LLMProviderConfig("P-transient", "https://x", "k", "m1")
         p_dead = m.LLMProviderConfig("P-dead", "https://x", "k", "m2")
         eng.providers = [p_transient, p_dead]
-        future = (datetime.now(timezone.utc) + timedelta(hours=5)).isoformat()
+        # R810：长冷却（>15min）会走「跳过」分支，测不到强制重启路径；
+        # 本用例要验的是「强制重启时 permanent 不被复活」，故用 5 分钟快到期。
+        future = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
         state = {
             "P-transient": {"fails": 1, "cooldown_until": future},
             "P-dead": {"fails": 3, "cooldown_until": future, "permanent": True},
@@ -22965,9 +22967,13 @@ class TestR807PoolExhaustedAlert(unittest.TestCase):
     def _future(self):
         return (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
 
+    def _future_minutes(self, minutes):
+        return (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
+
     def test_all_transient_cooled_alerts(self):
+        # R810：只有"最早冷却 ≤15 分钟"才强制重启；这里用 5 分钟模拟快到期。
         eng = self._eng(["a", "b"])
-        fut = self._future()
+        fut = self._future_minutes(5)
         state = {"a": {"cooldown_until": fut, "fails": 1},
                  "b": {"cooldown_until": fut, "fails": 1}}
         with patch.object(m.MultiLLMEngine, "_breaker_state", return_value=state), \
@@ -22991,6 +22997,20 @@ class TestR807PoolExhaustedAlert(unittest.TestCase):
         self.assertEqual(active, [], "全员 permanent 时不得强制重启")
         self.assertTrue(sn.called)
         self.assertIn("全通道永久失效", sn.call_args[0][0])
+
+    def test_all_transient_long_cooldown_skips(self):
+        """R810：冷却还很久时强制重启只会烧配额/延长冷却 ⇒ 本轮跳过。"""
+        eng = self._eng(["a", "b"])
+        fut = self._future_minutes(60)
+        state = {"a": {"cooldown_until": fut, "fails": 9},
+                 "b": {"cooldown_until": fut, "fails": 1}}
+        with patch.object(m.MultiLLMEngine, "_breaker_state", return_value=state), \
+             patch.object(m.MultiLLMEngine, "_provider_cost_latency_scores", return_value={}), \
+             patch.object(m.Notifier, "send_notification") as sn:
+            active = eng._ordered_providers()
+        self.assertEqual(active, [], "长冷却时不得强制重启（自我锁死）")
+        self.assertTrue(sn.called)
+        self.assertIn("长冷却", sn.call_args[0][0])
 
     def test_partial_cooled_does_not_alert(self):
         eng = self._eng(["a", "b"])
