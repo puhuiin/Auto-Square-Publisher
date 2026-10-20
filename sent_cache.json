@@ -1,17 +1,5 @@
 [
   {
-    "id": "87371b8a580a57bb",
-    "title": "星球晚讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-11T11:49:08.900879+00:00",
-    "tokens": [
-      "ETH",
-      "BTC",
-      "DOGE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "94176b67174bb7dc",
     "title": "Worldcoin rises 7% – Mapping WLD’s recovery from $0.466 toward $0.723 June high",
     "source": "AMBCrypto (技术与链上)",
@@ -5209,6 +5197,16 @@
     "sent_at": "2026-10-20T18:23:21.749747+00:00",
     "tokens": [
       "XLM"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b298ebc347a8d4fe",
+    "title": "XRP Price Prediction: Evernorth Teases Surprise Ahead of Ripple Swell",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-20T18:44:27.666350+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
