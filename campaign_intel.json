@@ -17,95 +17,95 @@
   "strategy_guidance": "优先追贴 Spot Trading Tournament Season 6 与 Binance Pick 排行榜活动，将日常币安快讯与 $FF 代币券竞赛、RWUSD 新上线及 TradFi 永续合约背景结合。在 Binance Square 发布活动解析与参与指南，引导读者参与 Word of the Day、Community Voice 等评论互动获取 USDC 奖励。文中切忌暗示交易或参加活动会带来稳赚收益。",
   "last_updated": "2026-10-19T19:24:17.087955Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "last_fail": "2026-10-20T02:04:11.028139+00:00",
-      "fails": 2
+    "Bitcoinist (比特币向)": {
+      "fails": 3,
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "last_fail": "2026-10-20T00:53:53.228743+00:00"
     },
     "ZyCrypto (新币与空投)": {
       "fails": 1,
       "last_fail": "2026-10-20T02:03:40.563895+00:00"
     },
+    "CoinJournal (山寨异动)": {
+      "fails": 2,
+      "last_fail": "2026-10-20T02:04:11.028139+00:00"
+    },
     "深潮TechFlow (中文/简体)": {
       "fails": 1,
       "last_fail": "2026-10-20T02:04:05.192915+00:00"
-    },
-    "Bitcoinist (比特币向)": {
-      "fails": 3,
-      "last_fail": "2026-10-20T00:53:53.228743+00:00",
-      "parked_until": "2026-10-20T06:53:53.228743+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
     "Preset-stepfun": {
+      "cooldown_until": "2026-10-20T12:56:41.608157+00:00",
       "fails": 4,
-      "permanent": true,
-      "cooldown_until": "2026-10-20T12:56:41.608157+00:00"
-    },
-    "Preset-google": {
-      "cooldown_until": "2026-10-20T08:15:52.098923+00:00",
-      "fails": 1
-    },
-    "Preset-stepfun-flash": {
-      "fails": 4,
-      "permanent": true,
-      "cooldown_until": "2026-10-20T12:56:36.239765+00:00"
+      "permanent": true
     },
     "Preset-openrouter": {
       "cooldown_until": "2026-10-20T04:43:05.092568+00:00",
       "fails": 8
+    },
+    "Preset-stepfun-flash": {
+      "cooldown_until": "2026-10-20T12:56:36.239765+00:00",
+      "fails": 4,
+      "permanent": true
+    },
+    "Preset-google": {
+      "cooldown_until": "2026-10-20T08:15:52.098923+00:00",
+      "fails": 1
     }
   },
   "_article_sent_date": "2026-10-19",
   "_publish_park": {
+    "0bbf1182c484801f": {
+      "fails": 1,
+      "last_fail": "2026-10-19T22:05:36.188571+00:00"
+    },
+    "22890c5e893dbb89": {
+      "fails": 1,
+      "last_fail": "2026-10-19T23:27:32.412059+00:00"
+    },
+    "dfbace7fef89d75c": {
+      "fails": 1,
+      "last_fail": "2026-10-19T21:05:24.218023+00:00"
+    },
+    "64c636a0bf2bf394": {
+      "fails": 2,
+      "parked_until": "2026-10-20T06:07:11.070432+00:00",
+      "last_fail": "2026-10-20T00:07:11.070432+00:00"
+    },
+    "c800dfc066b2f0a7": {
+      "fails": 1,
+      "last_fail": "2026-10-19T22:07:40.867895+00:00"
+    },
+    "54afa0bfbc460f35": {
+      "fails": 1,
+      "last_fail": "2026-10-19T23:43:36.991688+00:00"
+    },
+    "b39c159225e70724": {
+      "fails": 1,
+      "last_fail": "2026-10-20T00:43:05.093283+00:00"
+    },
+    "235c354e91ad830e": {
+      "fails": 2,
+      "parked_until": "2026-10-20T05:05:14.175147+00:00",
+      "last_fail": "2026-10-19T23:05:14.175147+00:00"
+    },
+    "b5a7f475521e56d4": {
+      "fails": 1,
+      "last_fail": "2026-10-19T23:25:38.183318+00:00"
+    },
     "fd071098ee222e6f": {
       "fails": 1,
       "last_fail": "2026-10-20T02:15:50.862360+00:00"
     },
-    "b5a7f475521e56d4": {
-      "last_fail": "2026-10-19T23:25:38.183318+00:00",
-      "fails": 1
-    },
-    "64c636a0bf2bf394": {
-      "fails": 2,
-      "last_fail": "2026-10-20T00:07:11.070432+00:00",
-      "parked_until": "2026-10-20T06:07:11.070432+00:00"
-    },
-    "b39c159225e70724": {
-      "last_fail": "2026-10-20T00:43:05.093283+00:00",
-      "fails": 1
-    },
-    "235c354e91ad830e": {
-      "fails": 2,
-      "last_fail": "2026-10-19T23:05:14.175147+00:00",
-      "parked_until": "2026-10-20T05:05:14.175147+00:00"
-    },
-    "54afa0bfbc460f35": {
-      "last_fail": "2026-10-19T23:43:36.991688+00:00",
-      "fails": 1
-    },
-    "22890c5e893dbb89": {
-      "last_fail": "2026-10-19T23:27:32.412059+00:00",
-      "fails": 1
-    },
-    "c800dfc066b2f0a7": {
-      "last_fail": "2026-10-19T22:07:40.867895+00:00",
-      "fails": 1
-    },
-    "dfbace7fef89d75c": {
-      "last_fail": "2026-10-19T21:05:24.218023+00:00",
-      "fails": 1
-    },
     "9898819e49572479": {
-      "last_fail": "2026-10-19T20:25:12.908495+00:00",
-      "fails": 1
-    },
-    "0bbf1182c484801f": {
-      "last_fail": "2026-10-19T22:05:36.188571+00:00",
-      "fails": 1
+      "fails": 1,
+      "last_fail": "2026-10-19T20:25:12.908495+00:00"
     }
   },
   "_intel_refresh_fail": {},
