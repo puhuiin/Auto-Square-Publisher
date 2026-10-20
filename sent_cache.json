@@ -1,15 +1,5 @@
 [
   {
-    "id": "fc770cb8cdfcbafa",
-    "title": "Triple-A 攻击者将 4970 枚 ETH 转入 Tornado Cash 混币",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-10T11:24:31.994823+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "897fadcd2f356142",
     "title": "Upbit listing propels KAIA to yearly highs, but is $0.10 the next price target?",
     "source": "AMBCrypto (技术与链上)",
@@ -5195,5 +5185,16 @@
       "ADA"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "b5d215dcb956820d",
+    "title": "某 ETH 巨鲸卖出 12,468 枚 ETH 获利 899 万美元,转向 Hyperliquid 做多原油",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-20T00:55:21.224580+00:00",
+    "tokens": [
+      "ETH",
+      "USDC"
+    ],
+    "lang": "zh-CN"
   }
 ]
