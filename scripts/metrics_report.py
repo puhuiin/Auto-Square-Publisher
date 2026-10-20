@@ -404,6 +404,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     previews = []
     cv_rows = []         # ★ R747/R784：(扫描文本, ts, 是否有全文遥测) ——与 previews 同窗口切片
     mentions = []        # ★ R759：campaign_mention 遥测标记（与 previews 同窗口对齐）
+    langs = []           # ★ R803：与 previews/mentions 同窗口对齐的语种（按语种拆提及率）
     for r in rows:
         if not isinstance(r, dict) or r.get("dry_run") is True:
             continue
@@ -426,6 +427,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
             # 预览为空的行走不到这里——R712 家族：索引对齐错了症状离病因极远）。
             _cm = r.get("campaign_mention")
             mentions.append(_cm if isinstance(_cm, bool) else None)
+            langs.append(r.get("lang"))
             # R758：第 4 元素 = `campaign_cta_tpl` 遥测标记（**全文**判的收敛
             # 模板，main.py 在发布前对 final_content 计算）。preview 只有前
             # 200 字而 campaign CTA 在文尾（用户第七批实测 93% 收敛且在预览
@@ -445,6 +447,7 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
     cv_rows = cv_rows[-window:]          # ★ R747：CV 样本与 scanned **同窗口**（首版漏了
                                           # 这条，覆盖率算出 680% 的荒唐数）
     mentions = mentions[-window:]        # ★ R759：mention 样本与 scanned 同窗口切片
+    langs = langs[-window:]              # ★ R803：语种与 mention 同窗口切片（错位即口径错）
     cv_full = [p for p, _t, ok in cv_rows if ok and _is_cv_eligible(p)]
     cv_truncated = sum(1 for _p, _t, ok in cv_rows if not ok)
     # ★ R784：全文遥测覆盖率（窗口内）。雷达扫描文本已优先取全文 ⇒ 覆盖率
@@ -494,6 +497,11 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
            "campaign_mention": 0, "campaign_mention_recent": 0,
            "campaign_mention_older": 0, "campaign_mention_cov": 0,
            "campaign_mention_cov_recent": 0, "campaign_mention_cov_older": 0,
+           # ★ R803：按语种拆分（lang -> {"hit","cov"}）。动机：英文窗口一开，
+           #   近 20 篇的语种构成从"全中文"变成"15 en / 5 zh"，聚合提及率从
+           #   95% 掉到 60%——读者无法判断是中文崩了还是英文天生低
+           #   （实测 zh-CN 2/2=100%、en 9/15=60%）。混合口径 = R731 家族。
+           "campaign_mention_by_lang": {},
            # R610：近半的时间跨度（最早/最晚 ts）——判读近半的前提。R629 更正：
            # 原注释写"发布速率约 4~6 篇/天，一次加固上线 1 天后近半仍可能含 4 篇
            # 加固前旧稿"，**该数字是错的**。生产实测自 09-10 起稳定 **12 篇/天**
@@ -609,6 +617,12 @@ def quality_scan(rows, window=QUALITY_SCAN_WINDOW):
                 out["campaign_mention"] += 1
                 out["campaign_mention_recent" if _is_recent
                     else "campaign_mention_older"] += 1
+            # ★ R803：同一窗口、同一 None 覆盖纪律下按语种分桶。
+            _lg = (langs[_idx] if _idx < len(langs) else None) or "?"
+            _b = out["campaign_mention_by_lang"].setdefault(_lg, {"hit": 0, "cov": 0})
+            _b["cov"] += 1
+            if _cm:
+                _b["hit"] += 1
     out["offenders"] = dict(out["offenders"])
     return out
 

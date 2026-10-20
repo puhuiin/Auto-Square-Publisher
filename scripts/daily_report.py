@@ -269,6 +269,23 @@ def build_report(rows, hours: int) -> str:
             _cmp = 100 * _cmv / _cmcov
             _lines.append("🎁正文活动提及 %d/%d=%d%%"
                           % (_cmv, _cmcov, _cmp))
+            # ★★ R803：按语种拆分。生产实证（10-19 英文窗口）：近 20 篇
+            #   构成 en 15 / zh-CN 2 / zh-TW 3，聚合提及率 12/20=60%，
+            #   拆开是 zh-CN 2/2=100%、en 9/15=60%、zh-TW 1/3=33%。
+            #   只看聚合会把"英文窗口拉低"误读成"中文也崩了"（R731 家族：
+            #   混合口径让报告说错话）。≥2 个语种有样本才显示。
+            _cml = _q.get("campaign_mention_by_lang") or {}
+            _cml_parts = []
+            for _lg, _d in sorted(_cml.items(),
+                                  key=lambda kv: (-(kv[1].get("cov") or 0), kv[0])):
+                _lcv = _d.get("cov") or 0
+                if not _lcv:
+                    continue
+                _lhit = _d.get("hit") or 0
+                _cml_parts.append("%s %d/%d=%d%%"
+                                  % (_lg, _lhit, _lcv, 100 * _lhit / _lcv))
+            if len(_cml_parts) >= 2:
+                _lines.append("🎁提及按语种 %s" % " / ".join(_cml_parts))
         # R758：活动CTA**结尾整句模板**收敛（用户第七批粘贴实测 93% 的那个模板）。
         # ★ 分母是**有全文遥测的帖数**（覆盖率）不是 scanned——混合窗口里旧帖
         #   无该字段，用 scanned 会稀释占比（R610：同一判据所有消费面一起落地）。

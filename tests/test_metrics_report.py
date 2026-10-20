@@ -8222,5 +8222,71 @@ class TestR800DailyReportPoolHealth(unittest.TestCase):
         self.assertIn("账户级故障", text, "历史故障仍要留痕，只是不升级结论")
 
 
+class TestR803MentionByLang(unittest.TestCase):
+    """★★ R803：活动提及率必须按语种拆分，否则英文窗口会污染聚合口径。
+
+    生产实证（10-19 英文窗口）：近 20 篇构成 en 15 / zh-CN 2 / zh-TW 3，
+    聚合 12/20=60%，拆开是 zh-CN 2/2=100%、en 9/15=60%、zh-TW 1/3=33%。
+    只看聚合会把"英文窗口拉低"误读成"中文也崩了"（R731 家族）。
+    """
+
+    @staticmethod
+    def _mr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "metrics_report_r803",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "metrics_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r803",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _rows(self):
+        rows = []
+        spec = [("zh-CN", True), ("zh-CN", True),
+                ("en", True), ("en", True), ("en", False), ("en", False),
+                ("zh-TW", False)]
+        for i, (lg, cm) in enumerate(spec):
+            rows.append({"outcome": "binance_published", "stage": "summarize",
+                         "ts": _ago(10 - i * 0.1), "lang": lg,
+                         "campaign_mention": cm, "campaign_cta_tpl": False,
+                         "final_text": "body %d " % i + "word " * 20,
+                         "final_preview": "body %d" % i,
+                         "content_chars": 120, "content_cjk": 10})
+        return rows
+
+    def test_quality_scan_splits_by_lang(self):
+        q = self._mr().quality_scan(self._rows(), window=20)
+        by = q["campaign_mention_by_lang"]
+        self.assertEqual(by["zh-CN"], {"hit": 2, "cov": 2})
+        self.assertEqual(by["en"], {"hit": 2, "cov": 4})
+        self.assertEqual(by["zh-TW"], {"hit": 0, "cov": 1})
+        self.assertEqual(q["campaign_mention"], 4)
+        self.assertEqual(q["campaign_mention_cov"], 7)
+
+    def test_daily_report_renders_split_line(self):
+        text = self._dr().build_report(self._rows(), 24)
+        self.assertIn("提及按语种", text)
+        self.assertIn("en 2/4=50%", text)
+        self.assertIn("zh-CN 2/2=100%", text)
+
+    def test_single_language_does_not_render_split(self):
+        rows = [r for r in self._rows() if r["lang"] == "zh-CN"]
+        text = self._dr().build_report(rows, 24)
+        self.assertNotIn("提及按语种", text,
+                         "只有一种语种时不应多占一行")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
