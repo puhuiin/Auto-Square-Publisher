@@ -1,15 +1,5 @@
 [
   {
-    "id": "89d8857ea59a8a15",
-    "title": "Injective gains 10% as leverage hits $164M – Can rising INJ bets sustain rally?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-11T17:05:14.060859+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "039c80e3b004526f",
     "title": "受影响设备数量有限,Ledger确认硬件钱包供应链攻击案例均涉及CryptoBilis",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5208,6 +5198,16 @@
     "sent_at": "2026-10-20T22:06:00.468559+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a10508d01090a451",
+    "title": "Stellar (XLM) Alert Issued by Japanese Crypto Exchange: Here's the Reason",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-20T22:24:28.404381+00:00",
+    "tokens": [
+      "XLM"
     ],
     "lang": "zh-CN"
   }
