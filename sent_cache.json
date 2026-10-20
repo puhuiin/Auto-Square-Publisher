@@ -1,15 +1,5 @@
 [
   {
-    "id": "6b3af28dd6306a75",
-    "title": "Filecoin nears the end of its six-year vesting schedule, cutting FIL issuance by about 75%",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-11T04:13:11.313492+00:00",
-    "tokens": [
-      "FIL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3e722c73946ef8d8",
     "title": "1011 暴跌一周年:BTC 较彼时高点累计回撤约 34%,ETH 近乎腰斩",
     "source": "深潮TechFlow (中文/简体)",
@@ -5210,6 +5200,17 @@
     "sent_at": "2026-10-20T15:03:59.576229+00:00",
     "tokens": [
       "BAT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "357010e041e24578",
+    "title": "Zcash (ZEC) vs Hyperliquid (HYPE): Battle for Crypto Market's Top 10",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-20T15:21:17.281306+00:00",
+    "tokens": [
+      "ZEC",
+      "HYPE"
     ],
     "lang": "en"
   }
