@@ -23541,6 +23541,140 @@ class TestR812BreakerSuccessClear(unittest.TestCase):
         self.assertFalse(m.MultiLLMEngine._cleared_after_fail({"fails": 3}))
 
 
+class TestR827WidgetDowngradeRetry(unittest.TestCase):
+    """★★ R827：220095 币对数超限 → 挂件上限降档后重发一次（不放弃返佣底线）。
+
+    ★ 证据链（全部来自生产 metrics.jsonl，不是推断）：
+      ① 09-24 `widget_count=4` 被 220095 拒 ⇒ 上限 ≤3；
+      ② 10-20 两次 `widget_count=3` **仍被拒** ⇒ 3 也不安全；
+      ③ 而 10-13 / 10-16 同样是 `widget_count=3` 却**成功发布**。
+    三次 wc=3 两败一成 ⇒ 币安数的**不只是 `$` 挂件**：`_cap_cashtag_widgets`
+    只把多余 `$X` 降成纯名 `X`，裸币名很可能仍被计入（清单体天然含几十个币名）。
+    ⇒ 挂件数不是充分判据，唯一可靠止损是**失败后降一档再试**。
+
+    ★ 红线：正常路径必须保持 3 个挂件（返佣生命线），只有被拒过的帖子才降档；
+      降档下限是 1（`_cap_cashtag_widgets` 的 max_widgets<1 会夹到 1），
+      `_ensure_token_widget` 已先跑 ⇒ 至少保 1 个挂件。
+    """
+
+    def _publisher(self):
+        pub = m.SquarePublisher.__new__(m.SquarePublisher)
+        pub.api_key = "test-key"
+        pub.last_error = None
+        pub.last_error_code = None
+        pub.last_content_id = None
+        pub.last_final_content = None
+        pub.last_widget_count = None
+        pub.last_cashtag_tight = None
+        pub.last_title_widget_before = None
+        pub.last_title_widget_after = None
+        pub.last_campaign_tag = None
+        pub.last_published_with_image = None
+        return pub
+
+    @staticmethod
+    def _resp(code, message="", status=200):
+        class R:
+            status_code = status
+            text = '{"code":"%s","message":"%s"}' % (code, message)
+
+            @staticmethod
+            def json():
+                return {"code": code, "success": code in ("000000", 0),
+                        "message": message, "data": {}}
+        return R()
+
+    def _run(self, responses, content, widget_cap_first=None):
+        """让 _post_with_transient_retry 依次返回给定响应，记录每次发出的正文。"""
+        pub = self._publisher()
+        sent = []
+
+        def fake_post(payload, headers):
+            sent.append(payload.get("bodyTextOnly") or payload.get("content") or "")
+            return responses[min(len(sent) - 1, len(responses) - 1)]
+
+        with patch.object(m.SquarePublisher, "_post_with_transient_retry",
+                          side_effect=lambda payload, headers: fake_post(payload, headers)), \
+             patch.object(m, "SymbolValidator") as SV:
+            SV.get_valid_symbols.return_value = {
+                "BTC", "ETH", "MORPHO", "AERO", "WLD", "SOL", "BNB"}
+            ok = pub.publish(content, ensure_tokens=None,
+                             _widget_cap=widget_cap_first)
+        return ok, sent, pub
+
+    def test_220095_triggers_downgrade_retry_and_succeeds(self):
+        """★ 核心：首过 220095 → 自动降档重发 → 第二次成功。"""
+        content = (
+            "$MORPHO 今天涨 6.2%，$AERO 跌 3.1%，$WLD 微涨 0.4%，$SOL 横盘。"
+            "整体看山寨在修复，但成交量还没跟上，先观察 590 一线能不能站住。"
+        )
+        ok, sent, pub = self._run(
+            [self._resp("220095", "Coin pair count exceeds the allowed limit"),
+             self._resp("000000")],
+            content)
+        self.assertTrue(ok, "降档重发成功但 publish 返回 False")
+        self.assertEqual(len(sent), 2, "220095 后必须重发一次（共 2 次请求）")
+        self.assertEqual(pub.last_widget_count, 1,
+                         "降档后应只剩 1 个 $ 挂件（返佣底线，不能降成 0）")
+
+    def test_downgrade_keeps_at_least_one_widget(self):
+        """★ 红线：降档后必须仍有 ≥1 个 $ 挂件（返佣生命线不得归零）。"""
+        content = ("$MORPHO 涨 6.2%，$AERO 跌 3.1%，$WLD 涨 0.4%。"
+                   "山寨在修复但量能不足，先看 590 能不能站住再说。")
+        ok, sent, pub = self._run(
+            [self._resp("220095"), self._resp("000000")], content)
+        self.assertTrue(ok)
+        self.assertGreaterEqual(pub.last_widget_count, 1,
+                                "降档把挂件降到 0 ⇒ 返佣生命线被击穿")
+        self.assertIn("$", sent[-1], "重发正文里必须仍有 $ 挂件")
+
+    def test_cap_function_floor_is_one(self):
+        """★★ 兜底防线：`_cap_cashtag_widgets` 自身必须把 max_widgets<1 夹到 1。
+
+        这条单独钉住"降档目标写成 0 也不会归零"的**实现依赖**——
+        没有它，把 `cap=1` 改成 `cap=0` 时全部用例仍然通过（实测漏过），
+        看起来"测试没抓到"，实际是防线在函数内部。显式断言让这层依赖可见：
+        若哪天有人把函数里的 `if max_widgets < 1: max_widgets = 1` 删掉，
+        这条会立刻变红，而不是等到生产上挂件归零才发现。
+        """
+        with patch.object(m, "SymbolValidator") as SV:
+            SV.get_valid_symbols.return_value = {"MORPHO", "AERO", "WLD"}
+            out0 = m.SquarePublisher._cap_cashtag_widgets(
+                "$MORPHO $AERO $WLD", 0)
+            out_neg = m.SquarePublisher._cap_cashtag_widgets(
+                "$MORPHO $AERO $WLD", -5)
+            # ⚠️ 断言必须在 with 内：`_count_valid_widgets` 同样查 SymbolValidator，
+            #    出块后 mock 还原，计数会变 0（实测踩到）。
+            n0 = m.SquarePublisher._count_valid_widgets(out0)
+            nneg = m.SquarePublisher._count_valid_widgets(out_neg)
+        self.assertEqual(n0, 1, "max_widgets=0 必须被夹到 1（返佣底线）")
+        self.assertEqual(nneg, 1, "负数上限同样必须夹到 1")
+
+    def test_downgrade_only_once(self):
+        """★ 降档后仍失败 ⇒ 不再反复降（cap=1 已是底线，再降等于放弃挂件）。"""
+        content = "$MORPHO 涨 6.2%，$AERO 跌 3.1%，$WLD 涨 0.4%，量能不足先观察。"
+        ok, sent, pub = self._run(
+            [self._resp("220095"), self._resp("220095"), self._resp("000000")],
+            content)
+        self.assertFalse(ok, "降档后仍 220095 应如实失败，不得无限重试")
+        self.assertEqual(len(sent), 2, "只能降档重发一次（首过 + 降档），不得更多")
+
+    def test_other_business_error_does_not_downgrade(self):
+        """★ 20022（风控）等其它业务码不得触发挂件降档——降档治不了风控。"""
+        content = "$MORPHO 涨 6.2%，$AERO 跌 3.1%，$WLD 涨 0.4%，量能不足先观察。"
+        ok, sent, pub = self._run([self._resp("20022", "risk blocked")], content)
+        self.assertFalse(ok)
+        self.assertEqual(len(sent), 1, "非 220095 不得重发")
+
+    def test_first_pass_still_uses_three_widgets(self):
+        """★★ 红线：正常路径（无 _widget_cap）必须仍保留 3 个挂件，不得预降。"""
+        content = ("$MORPHO 涨 6.2%，$AERO 跌 3.1%，$WLD 涨 0.4%，$SOL 横盘。"
+                   "山寨在修复但量能不足，先看 590 能不能站住再说吧。")
+        ok, sent, pub = self._run([self._resp("000000")], content)
+        self.assertTrue(ok)
+        self.assertEqual(pub.last_widget_count, 3,
+                         "正常路径的挂件数被改动 ⇒ 返佣被无谓削弱")
+
 class TestR814CampaignVocabSingleSource(unittest.TestCase):
     """★★ R814：活动提及词表全仓唯一一份实现。
 

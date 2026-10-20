@@ -9811,6 +9811,48 @@ class SquarePublisher(BasePublisher):
                 content = content.replace(f"${sym}", sym)
         return content
 
+    def _degrade_widget_retry(self, content: str, title: Optional[str],
+                              image_url: Optional[str],
+                              ensure_tokens: Optional[List[str]],
+                              campaign_intel: Optional[Dict[str, Any]],
+                              cap: int) -> bool:
+        """★★ R827：220095（币对数超限）→ 用更小的挂件上限**重发一次**。
+
+        为什么需要（证据链，全部来自 metrics.jsonl）：
+          ① 09-24 `widget_count=4` 被 220095 拒 ⇒ 上限 ≤3；
+          ② 10-20 两次 `widget_count=3` **仍被拒** ⇒ 3 也不安全；
+          ③ 而 10-13 / 10-16 同样是 `widget_count=3` 却**成功发布**。
+        三次 `wc=3` 两败一成，说明币安数的**不只是 `$` 挂件**：
+        `_cap_cashtag_widgets` 只把多余的 `$X` 降成纯名 `X`，币安很可能仍把
+        正文里的裸币名算作币对（清单式行情帖天然含几十个币名）。
+        ⇒ 挂件数不是充分判据，**唯一可靠的止损是失败后降低一档再试**。
+
+        为什么用"重发"而不是"预降"：
+        `$` 挂件是返佣生命线（用户红线）——正常路径必须保持 3 个，
+        只有**已经被拒过**的帖子才降档；降档后仍保留 ≥1 个挂件（`_cap_cashtag_widgets`
+        的下限是 1，`_ensure_token_widget` 已先跑），返佣底线不破。
+
+        幂等性：内容已由币安明确拒绝（220095），重发不会产生重复帖。
+        """
+        _outer_tag = self.last_campaign_tag
+        _outer_img = self.last_published_with_image
+        logger.warning(f"⤵️ 220095 币对数超限：挂件上限降至 {cap} 后重发一次"
+                       f"（原稿 wc={self.last_widget_count}；币安可能把裸币名也算作币对）")
+        ok = self.publish(content, image_url=image_url, ensure_tokens=ensure_tokens,
+                          campaign_intel=campaign_intel, title=title,
+                          _widget_cap=cap)
+        if ok:
+            # 同 _degrade_to_text_retry：递归会重置回执，成功时把活动标签/实发形态补回，
+            # 否则遥测的 campaign_tag 会谎报缺席（R291/R364 同族）。
+            if self.last_campaign_tag is None and _outer_tag \
+                    and isinstance(self.last_final_content, str) \
+                    and _outer_tag in self.last_final_content:
+                self.last_campaign_tag = _outer_tag
+            if _outer_img is not None and self.last_published_with_image is None:
+                self.last_published_with_image = _outer_img
+            logger.info(f"✅ 降档重发成功（挂件 {self.last_widget_count} 个）")
+        return ok
+
     def _degrade_to_text_retry(self, content: str, title: Optional[str]) -> bool:
         """R365：带图发布失败 → 纯文本降级重发（三条出海口共用）。
         降级递归复用已烘焙好的 content（活动标签早在首过注入进正文），但 image_url=None、
@@ -9864,7 +9906,8 @@ class SquarePublisher(BasePublisher):
     def publish(self, content: str, image_url: Optional[str] = None,
                 ensure_tokens: Optional[List[str]] = None,
                 campaign_intel: Optional[Dict[str, Any]] = None,
-                title: Optional[str] = None) -> bool:
+                title: Optional[str] = None,
+                _widget_cap: Optional[int] = None) -> bool:
         # 每次调用先清空上次残留的错误状态：本实例在整个发帖循环里复用，
         # 不清就会被下一条新闻读到（Round 5）。
         self.last_error = None
@@ -9914,7 +9957,10 @@ class SquarePublisher(BasePublisher):
         # R367：把最终唯一挂件数压到 MAX_TOKENS_PER_POST 以内（多余 $ 降格纯名），
         # 否则清单式行情帖 4+ 币对触发币安 220095「Coin pair count exceeds limit」整帖拒稿。
         # 必在 _count_valid_widgets 之前——last_widget_count 记的须是降格后的真实挂件数。
-        content = self._cap_cashtag_widgets(content, MAX_TOKENS_PER_POST)
+        # ★★ R827：`_widget_cap` 供 220095 降级重试用（见 `_degrade_widget_retry`）——
+        #   首过用模块默认值，只有被币安拒过才用更小的值重试，正常路径零变化。
+        content = self._cap_cashtag_widgets(
+            content, MAX_TOKENS_PER_POST if _widget_cap is None else _widget_cap)
         # 回执：全文有效挂件计数。挂件保底保证的是"全文 ≥1 个 $TOKEN"，而
         # final_preview 只存前 200 字钩子区——模型把挂件写在正文尾部时预览区
         # 看不到 $，不记全文计数就无法区分"截断伪影"与"真实丢挂件"。
@@ -10072,6 +10118,15 @@ class SquarePublisher(BasePublisher):
                 self.last_error = diagnosis
                 self.last_error_code = str(resp_json.get("code", "") or "")
                 logger.error(f"币安广场返回业务错误: {diagnosis} | 原始: {json.dumps(resp_json, ensure_ascii=False)[:300]}")
+                # ★★ R827：220095「币对数超限」→ 降档重发一次（挂件上限 3 → 1）。
+                #   证据：09-24 wc=4 被拒（上限 ≤3）；10-20 两次 wc=3 **仍被拒**；
+                #   而 10-13/10-16 的 wc=3 却成功 ⇒ 币安数的**不只是 $ 挂件**
+                #   （很可能含裸币名）。挂件数不是充分判据，只能失败后降档再试。
+                #   ⚠️ 只在**首过**降档（`_widget_cap is None`）——降档后仍失败就
+                #      不再反复降（cap=1 已是返佣底线，再降等于放弃挂件）。
+                if str(resp_json.get("code", "")) == "220095" and _widget_cap is None:
+                    return self._degrade_widget_retry(
+                        content, title, image_url, ensure_tokens, campaign_intel, cap=1)
                 # 内容被风控拦截（20002/20022）≠ 网络故障，不重置熔断，但值得提醒
                 if str(resp_json.get("code", "")) in ("20002", "20022"):
                     Notifier.send_notification("发帖内容被风控拦截", f"文案触发 20002/20022 审核拦截: {diagnosis}", is_error=True)
