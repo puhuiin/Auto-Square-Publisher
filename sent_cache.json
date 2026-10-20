@@ -1,15 +1,5 @@
 [
   {
-    "id": "561368c846640fae",
-    "title": "Cardano Midnight Scores Key Japan Exchange Listing",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-10T13:05:34.577641+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ad4180cb7e5066d7",
     "title": "Cardano Pushes .ada Internet Domain Ambitions as Whale Activity Hits 4-Month High",
     "source": "ZyCrypto (新币与空投)",
@@ -5197,6 +5187,17 @@
     "sent_at": "2026-10-20T02:33:49.580875+00:00",
     "tokens": [
       "BBB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "763ddb1440c62b4a",
+    "title": "SkyAI 清仓 SOL:当 DAT 模式走到「退出」这一步",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-20T03:07:17.109118+00:00",
+    "tokens": [
+      "SOL",
+      "BTC"
     ],
     "lang": "zh-TW"
   }
