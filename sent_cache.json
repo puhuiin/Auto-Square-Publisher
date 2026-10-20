@@ -1,15 +1,5 @@
 [
   {
-    "id": "419729f27ae002c1",
-    "title": "Can Midnight crypto target $0.055 after NIGHT’s 11% price rally?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-10T21:09:30.207435+00:00",
-    "tokens": [
-      "NIGHT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1a40c17bed361509",
     "title": "️Multicoin 联创 Kyle Samani:个人最大一笔天使投资已投向 Backpack",
     "source": "深潮TechFlow (中文/简体)",
@@ -5209,5 +5199,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e3a3310625ef127e",
+    "title": "股市疲软或将抑制比特币需求,分析师警告 8 万美元支撑位或面临考验",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-20T11:23:46.540739+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
