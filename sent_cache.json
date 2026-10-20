@@ -1,15 +1,5 @@
 [
   {
-    "id": "1a40c17bed361509",
-    "title": "️Multicoin 联创 Kyle Samani:个人最大一笔天使投资已投向 Backpack",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-10T22:08:03.471653+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6720a52c193fef74",
     "title": "XRP price slips below $1.50 – Can ETF demand fuel a recovery?",
     "source": "AMBCrypto (技术与链上)",
@@ -5210,5 +5200,16 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "b7152717d6a33fd5",
+    "title": "股市疲軟或將抑制比特幣需求,分析師警告 8 萬美元支撐位或面臨考驗",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-20T11:43:50.446044+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
