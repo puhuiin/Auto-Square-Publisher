@@ -23675,6 +23675,47 @@ class TestR827WidgetDowngradeRetry(unittest.TestCase):
         self.assertEqual(pub.last_widget_count, 3,
                          "正常路径的挂件数被改动 ⇒ 返佣被无谓削弱")
 
+class TestR829GuidanceUsableTelemetry(unittest.TestCase):
+    """★★ R829：发布行必须记录「活动菜单是否真的注入了」——解释"没提活动"的第一分叉。
+
+    ★ 缺口：10-20 英文夜窗 24 篇里 10 篇正文没提活动（真漏 43%），但**逐帖**没有
+      任何字段说明"那一轮到底给没给活动菜单"。`run_summary.campaign_guidance_usable`
+      是全轮粒度、且实测全程 True ⇒ 只能事后排除，不能逐帖归因。
+      链路：`campaign_intel_fresh=False` ⇒ `intel_section` 变成「缓存已过期…不得
+      提活动」⇒ 菜单整段不注入 ⇒ 模型不提是**正确行为**，不是内容缺陷。
+      把它落进发布行，才能把"模型不听话"与"我们没给菜单"分开（R780 同族：
+      指标建了不落盘 = 答案没采）。
+
+    ★ 纪律 12：None = 未知（Mock/异常态），**不是 False**——否则会把"没观测"
+      读成"情报降级"，反过来冤枉通道。
+    """
+
+    def test_publish_row_has_guidance_usable_field(self):
+        import inspect
+        src = inspect.getsource(m)
+        self.assertIn('"campaign_guidance_usable": _guidance_usable_for_row', src,
+                      "发布行缺少 campaign_guidance_usable 字段")
+        self.assertIn("_guidance_usable_for_row = getattr(", src,
+                      "字段值必须来自 llm_engine 的实发状态")
+
+    def test_non_bool_becomes_none_not_false(self):
+        """★ 未知必须是 None：非 bool（Mock/缺失）不得被落成 False。"""
+        import inspect
+        src = inspect.getsource(m)
+        idx = src.find("_guidance_usable_for_row = getattr(")
+        self.assertGreater(idx, 0)
+        seg = src[idx:idx + 400]
+        self.assertIn("if not isinstance(_guidance_usable_for_row, bool):", seg)
+        self.assertIn("_guidance_usable_for_row = None", seg,
+                      "非 bool 必须归 None（未知不是 False，纪律 12）")
+
+    def test_engine_flag_default_is_false_but_distinct(self):
+        """★ 引擎侧默认 False 表示"未确认可用"；与遥测的 None（未知）语义不同。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        self.assertFalse(getattr(eng, "last_campaign_guidance_usable", False),
+                         "引擎默认必须是 False（未确认可用时不得注入菜单）")
+
+
 class TestR814CampaignVocabSingleSource(unittest.TestCase):
     """★★ R814：活动提及词表全仓唯一一份实现。
 

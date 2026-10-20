@@ -12908,6 +12908,16 @@ def _run_main():
                     # ★ R814：去标签 + 词表判定收进 campaign_vocab.mention_in_text
                     #   （与日报⑥雷达同一份口径）。None = 空文本（未知不是 False）。
                     _campaign_mention = mention_in_text(final_content)
+                    # ★★ R829：活动菜单是否真的注入了（解释"为什么没提活动"的
+                    #   第一个分叉）。`campaign_intel_fresh=False` 时 intel_section
+                    #   变成「缓存已过期…不得提活动」⇒ 菜单整段不注入 ⇒ 模型不提
+                    #   是**正确行为**。逐帖落盘才能把它与"模型不听话"区分开
+                    #   （R780 同族：指标建了不落盘 = 答案没采）。
+                    #   None=Mock/异常态（未知不是 False，纪律 12）。
+                    _guidance_usable_for_row = getattr(
+                        llm_engine, "last_campaign_guidance_usable", None)
+                    if not isinstance(_guidance_usable_for_row, bool):
+                        _guidance_usable_for_row = None
                     # R663：**异常优先留存**的结尾原文。
                     # ★ 为什么只留"不一致"的那种（R647 守卫明确禁止全量存尾段，
                     # 理由是 metrics.jsonl 膨胀：323 篇 × 120 字 = **+60%**）：
@@ -13172,6 +13182,18 @@ def _run_main():
                         # None=Mock/异常态/历史帖（未知不是 False，纪律 12）。
                         "campaign_cta_style": campaign_cta_style_used,
                         "campaign_cta_tpl": _campaign_cta_tpl,
+                        # ★★ R829：**活动菜单是否真的注入了**——这是解释"为什么没提
+                        #   活动"的第一个分叉，此前完全没有观测面。
+                        #   链路：`campaign_intel_fresh=False` ⇒ `intel_section` 变成
+                        #   「缓存已过期…不得提活动」⇒ 活动菜单整段不注入 ⇒ 模型不提
+                        #   活动是**正确行为**，不是内容缺陷。
+                        #   生产实证（10-20 英文夜窗）：24 篇里 10 篇没提活动，而
+                        #   `run_summary.campaign_guidance_usable` 全程为 True ⇒ 那次
+                        #   不是情报降级；但**逐帖**没有这个字段，一旦某轮降级就
+                        #   无法把"模型不听话"与"我们没给菜单"区分开（R780 同族：
+                        #   指标建了不落盘 = 答案没采）。
+                        #   None=Mock/异常态（未知不是 False，纪律 12）。
+                        "campaign_guidance_usable": _guidance_usable_for_row,
                         # R759：正文是否提及当期活动（去标签后全文判）。
                         # 与 campaign_tag_count（标签注入）分列：标签是归因保底、
                         # 正文提及是互动驱动器，R758 菜单是条件句 ⇒ 必须单独量，
