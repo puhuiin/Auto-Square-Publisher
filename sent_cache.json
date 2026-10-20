@@ -1,15 +1,5 @@
 [
   {
-    "id": "c7b07e57b1c24d0f",
-    "title": "Aerodrome and Velodrome merger countdown lifts optimism – Is $1.30 next for AERO?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-11T20:24:11.233988+00:00",
-    "tokens": [
-      "AERO"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "26f64a76cae08a14",
     "title": "Can Celestia hold its 23% rally as altcoins weaken? TIA’s breakout needs...",
     "source": "AMBCrypto (技术与链上)",
@@ -5208,6 +5198,18 @@
     "sent_at": "2026-10-20T23:23:55.383814+00:00",
     "tokens": [
       "LINK"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9c4aba4f8c809f62",
+    "title": "NGRAVE遭钓鱼攻击,约70个钱包被盗256万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-20T23:44:38.182899+00:00",
+    "tokens": [
+      "XRP",
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
