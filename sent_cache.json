@@ -1,15 +1,5 @@
 [
   {
-    "id": "4b31400cce93facb",
-    "title": "Ledger供应链攻击据报扩展至欧洲,官方经销商售出硬件钱包发现间谍植入装置",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-11T14:44:15.081384+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "622578e86e623513",
     "title": "Cardano (ADA) Signals Caution as Price Confirms Death Cross, Short-Term Sell Ahead?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5208,6 +5198,16 @@
     "tokens": [
       "XRP",
       "RLUSD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2219a796e2afda3d",
+    "title": "Injective eyes $10B real estate tokenization – Will INJ demand rise?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-20T21:04:33.228334+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "en"
   }
