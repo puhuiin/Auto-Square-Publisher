@@ -1,15 +1,5 @@
 [
   {
-    "id": "5516d91f90fc998e",
-    "title": "PeckShield Traces $3.89 Million in Ledger Theft Funds to Binance Deposits",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-11T18:24:28.140974+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "49ea6546e72c77af",
     "title": "Some Aave loans sit near liquidation with collateral that can take hours to cash out",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5208,6 +5198,16 @@
     "sent_at": "2026-10-20T22:44:26.781817+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "96e958ebdc50576d",
+    "title": "BNB Chain burns $1.2B in October tokens, leaving real supply impact hidden",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-20T23:04:10.096002+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-TW"
   }
