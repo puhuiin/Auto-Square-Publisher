@@ -18,19 +18,22 @@
   "last_updated": "2026-10-19T19:24:17.087955Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
+      "fails": 3,
       "last_fail": "2026-10-20T00:53:53.228743+00:00",
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "fails": 3
+      "parked_until": "2026-10-20T06:53:53.228743+00:00"
     },
     "CoinJournal (山寨异动)": {
-      "fails": 2,
-      "last_fail": "2026-10-20T02:04:11.028139+00:00"
+      "fails": 3,
+      "last_fail": "2026-10-20T02:32:59.236404+00:00",
+      "parked_until": "2026-10-20T08:32:59.236404+00:00"
     },
     "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-10-20T02:32:28.955597+00:00",
       "fails": 1,
       "last_fail": "2026-10-20T02:03:40.563895+00:00"
     },
     "深潮TechFlow (中文/简体)": {
+      "reset_at": "2026-10-20T02:32:54.096530+00:00",
       "fails": 1,
       "last_fail": "2026-10-20T02:04:05.192915+00:00"
     }
@@ -40,76 +43,72 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
-    "Preset-stepfun-flash": {
-      "cooldown_until": "2026-10-20T12:56:36.239765+00:00",
-      "permanent": true,
-      "fails": 4
-    },
-    "Preset-openrouter": {
-      "cooldown_until": "2026-10-20T04:43:05.092568+00:00",
-      "fails": 8
-    },
     "Preset-stepfun": {
-      "cooldown_until": "2026-10-20T12:56:41.608157+00:00",
+      "fails": 4,
       "permanent": true,
-      "fails": 4
+      "cooldown_until": "2026-10-20T12:56:41.608157+00:00"
+    },
+    "Preset-stepfun-flash": {
+      "fails": 4,
+      "permanent": true,
+      "cooldown_until": "2026-10-20T12:56:36.239765+00:00"
     },
     "Preset-google": {
       "cooldown_until": "2026-10-20T08:15:52.098923+00:00",
       "fails": 1
+    },
+    "Preset-openrouter": {
+      "fails": 8,
+      "cooldown_until": "2026-10-20T04:43:05.092568+00:00"
     }
   },
-  "_article_sent_date": "2026-10-19",
+  "_article_sent_date": "2026-10-20",
   "_publish_park": {
-    "235c354e91ad830e": {
-      "last_fail": "2026-10-19T23:05:14.175147+00:00",
-      "parked_until": "2026-10-20T05:05:14.175147+00:00",
-      "fails": 2
-    },
-    "64c636a0bf2bf394": {
-      "last_fail": "2026-10-20T00:07:11.070432+00:00",
-      "parked_until": "2026-10-20T06:07:11.070432+00:00",
-      "fails": 2
-    },
-    "9898819e49572479": {
+    "22890c5e893dbb89": {
       "fails": 1,
-      "last_fail": "2026-10-19T20:25:12.908495+00:00"
-    },
-    "fd071098ee222e6f": {
-      "fails": 1,
-      "last_fail": "2026-10-20T02:15:50.862360+00:00"
-    },
-    "b39c159225e70724": {
-      "fails": 1,
-      "last_fail": "2026-10-20T00:43:05.093283+00:00"
+      "last_fail": "2026-10-19T23:27:32.412059+00:00"
     },
     "54afa0bfbc460f35": {
       "fails": 1,
       "last_fail": "2026-10-19T23:43:36.991688+00:00"
     },
+    "fd071098ee222e6f": {
+      "fails": 1,
+      "last_fail": "2026-10-20T02:15:50.862360+00:00"
+    },
+    "c800dfc066b2f0a7": {
+      "fails": 1,
+      "last_fail": "2026-10-19T22:07:40.867895+00:00"
+    },
     "0bbf1182c484801f": {
       "fails": 1,
       "last_fail": "2026-10-19T22:05:36.188571+00:00"
+    },
+    "235c354e91ad830e": {
+      "fails": 2,
+      "last_fail": "2026-10-19T23:05:14.175147+00:00",
+      "parked_until": "2026-10-20T05:05:14.175147+00:00"
     },
     "dfbace7fef89d75c": {
       "fails": 1,
       "last_fail": "2026-10-19T21:05:24.218023+00:00"
     },
+    "b39c159225e70724": {
+      "fails": 1,
+      "last_fail": "2026-10-20T00:43:05.093283+00:00"
+    },
     "b5a7f475521e56d4": {
       "fails": 1,
       "last_fail": "2026-10-19T23:25:38.183318+00:00"
     },
-    "22890c5e893dbb89": {
-      "fails": 1,
-      "last_fail": "2026-10-19T23:27:32.412059+00:00"
-    },
-    "c800dfc066b2f0a7": {
-      "fails": 1,
-      "last_fail": "2026-10-19T22:07:40.867895+00:00"
+    "64c636a0bf2bf394": {
+      "fails": 2,
+      "last_fail": "2026-10-20T00:07:11.070432+00:00",
+      "parked_until": "2026-10-20T06:07:11.070432+00:00"
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 157,
+  "_img_rot": 158,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

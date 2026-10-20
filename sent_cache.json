@@ -1,15 +1,5 @@
 [
   {
-    "id": "0775e5edf34fa705",
-    "title": "代幣化大宗商品市場擴展,借貸與原油開闢新賽道",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-10T12:45:57.922957+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "561368c846640fae",
     "title": "Cardano Midnight Scores Key Japan Exchange Listing",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5197,6 +5187,16 @@
     "sent_at": "2026-10-20T02:16:21.278424+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "a84cd86bbb74b4dd",
+    "title": "标普警告超大规模数据中心运营商 AI 债务或高于已知水平",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-20T02:33:49.580875+00:00",
+    "tokens": [
+      "BBB"
     ],
     "lang": "zh-TW"
   }
