@@ -2618,6 +2618,14 @@ def _reject_cause(reason) -> str:
     必须先判预算失控，否则会被"吐空"抢走。
     """
     s = str(reason or "")
+    # ★★ R813：**R810 的「全冷却跳过」必须单独归类**。它是主动止损（避免烧配额），
+    #   不是通道故障；生产实证（10-20 日报）24h 未交付 34 篇里 **20 篇**是这一类，
+    #   旧归类把它算进"其他" ⇒ 运营看到"其他 20"完全无法行动，而真实主因
+    #   （池枯竭主动跳过）反而被掩盖。同理补 R802 的语种跑偏。
+    if "冷却期" in s or "无可用通道" in s:
+        return "全冷却跳过"
+    if "语种跑偏" in s:
+        return "语种跑偏"
     if "finish=length" in s or "残句" in s or "预算" in s:
         return "通道预算/失控"
     if "429" in s or "rate-limit" in s or "Rate limit" in s:
@@ -2676,8 +2684,18 @@ def funnel(rows):
     #   读者会误以为没丢稿；实际 7 篇死于 openrouter 失控啰嗦（9,868 字符残句 /
     #   耗 14k~16k token 吐空）、3 篇死于 Google 429（Retry-After 7~9h）。
     lost_keys = rejected_stories - delivered_stories
-    _causes = collections.Counter(_reject_cause((last_rej.get(k) or {}).get("reason"))
-                      for k in lost_keys)
+
+    def _cause_of(_row) -> str:
+        # ★ R813：质量/数字门是**内容侧**拒因，与通道侧分开点名——否则运维会把
+        #   "内容被拦"和"通道挂了"混在一类里（R731 家族）。
+        _st = str((_row or {}).get("stage") or "")
+        if _st == "quality":
+            return "内容质量"
+        if _st == "numbers":
+            return "数字门"
+        return _reject_cause((_row or {}).get("reason"))
+
+    _causes = collections.Counter(_cause_of(last_rej.get(k) or {}) for k in lost_keys)
     return {"attempted": attempted, "delivered": delivered,
             "rate": round(delivered / attempted, 3) if attempted else None,
             "failover_rescued": len(rejected_stories & delivered_stories),

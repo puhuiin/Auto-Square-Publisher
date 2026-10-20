@@ -8393,5 +8393,30 @@ class TestR804StoryLevelLoss(unittest.TestCase):
         self.assertIn("运行正常", concl, "无丢稿的正常日不得被新分支改成告警")
 
 
+    def test_lost_causes_names_pool_cooling_skip(self):
+        """★★ R813：R810 的「全冷却跳过」与内容侧拒因必须单独归类。
+
+        生产实证（10-20 日报）：24h 未交付 34 篇里 **19 篇**是"全部提供商处于
+        冷却期，无可用通道"，旧归类把它算进「其他」⇒ 运营完全无法行动。
+        """
+        pr = self._mr()
+        rows = [
+            {"outcome": "binance_published", "stage": "summarize", "title": "A",
+             "platforms": ["binance"], "ts": _ago(8)},
+            {"outcome": "llm_failed", "stage": "transport", "title": "B",
+             "ts": _ago(7), "reason": "全部提供商处于冷却期，无可用通道"},
+            {"outcome": "llm_rejected", "stage": "quality", "title": "C",
+             "ts": _ago(6), "reason": "正文过短"},
+            {"outcome": "llm_rejected", "stage": "transport", "title": "D",
+             "ts": _ago(5), "reason": "中文输出却标英文（语种跑偏）"},
+        ]
+        f = pr.funnel(rows)
+        self.assertEqual(f["lost"], 3)
+        self.assertEqual(f["lost_causes"].get("全冷却跳过"), 1)
+        self.assertEqual(f["lost_causes"].get("内容质量"), 1)
+        self.assertEqual(f["lost_causes"].get("语种跑偏"), 1)
+        self.assertNotIn("其他", f["lost_causes"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
