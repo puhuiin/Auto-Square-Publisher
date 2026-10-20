@@ -16511,7 +16511,7 @@ class TestPrioritySeed(unittest.TestCase):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def _write_seed(self, enabled=True, max_posts=3, tag="bitget-hack",
-                    candidates=None):
+                    candidates=None, expires_at=None, include_expiry=False):
         import json as _json
         if candidates is None:
             candidates = [
@@ -16522,9 +16522,12 @@ class TestPrioritySeed(unittest.TestCase):
                 {"title": "Bitget 事件后行业驰援 受影响资产有望修复 $XRP $AVAX",
                  "summary": "Bybit CEO 主动伸援手，主流资产基本面未变。"},
             ]
+        data = {"enabled": enabled, "max_posts": max_posts, "tag": tag,
+                "candidates": candidates}
+        if include_expiry:                      # R817：只在显式要求时写该键（覆盖"缺失"分支）
+            data["expires_at"] = expires_at
         with open(self.seed_path, "w", encoding="utf-8") as fh:
-            _json.dump({"enabled": enabled, "max_posts": max_posts,
-                        "tag": tag, "candidates": candidates}, fh)
+            _json.dump(data, fh)
 
     # ---- 加载器 fail-closed ----
     def test_missing_file_returns_none(self):
@@ -16613,6 +16616,62 @@ class TestPrioritySeed(unittest.TestCase):
         self.assertEqual(self.mgr.cached_id_count("seed::bitget-hack::"), 2)
         self.assertEqual(self.mgr.cached_id_count("seed::none::"), 0)
         self.assertEqual(self.mgr.cached_id_count(""), 0)     # 空前缀→0，不误全计
+
+    # ---- ★ R817：声明式过期（滚动窗记账老化后唯一的护栏）----
+    #   生产实证：种子首轮 09-25/10-02 投完，10-16/10-18 又被重发一遍——因为
+    #   record_sent 落在 sent_cache 的**最新 500 条**滚动窗（实测跨度仅 9.5 天），
+    #   首轮记录早已滚出窗 ⇒ cached_id_count 归零 ⇒ 重新注入。
+    def test_expired_seed_is_not_injected(self):
+        """过期种子必须一条都不注入（只有声明式过期不依赖滚动窗）。"""
+        self._write_seed(expires_at="2020-01-01", include_expiry=True)
+        base = [{"id": "rss::1", "title": "常规新闻", "impact_score": 50,
+                 "base_impact_score": 50, "age_hours": 1.0}]
+        with self.assertLogs(m.logger.name, level="INFO") as cm:
+            out = self.f._inject_priority_seeds(list(base), self.mgr)
+        self.assertEqual(out, base)
+        self.assertTrue(any("过期" in x and "跳过注入" in x for x in cm.output),
+                        "过期必须留日志（静默停投无法归因）")
+
+    def test_future_expiry_still_injects(self):
+        """反向：未过期不得被误停（护栏只挡过期，不能顺手砍正常种子）。"""
+        self._write_seed(expires_at="2999-12-31", include_expiry=True)
+        out = self.f._inject_priority_seeds([], self.mgr)
+        self.assertEqual(len(out), 3)
+
+    def test_missing_expiry_injects_but_warns(self):
+        """向后兼容：老文件无 expires_at 仍照常注入，但必须 WARNING 点名"会复活"。"""
+        self._write_seed()
+        with self.assertLogs(m.logger.name, level="WARNING") as cm:
+            out = self.f._inject_priority_seeds([], self.mgr)
+        self.assertEqual(len(out), 3)
+        self.assertTrue(any("expires_at" in x for x in cm.output))
+
+    def test_expiry_parser_forms(self):
+        """解析契约：纯日期=当天 00:00 UTC（且必须 aware）；畸形 → None 不误停。"""
+        mk = m._seed_expires_at
+        self.assertIsNone(mk({}))
+        self.assertIsNone(mk({"expires_at": ""}))
+        self.assertIsNone(mk({"expires_at": "not-a-date"}))
+        d = mk({"expires_at": "2026-10-06"})
+        self.assertEqual((d.year, d.month, d.day, d.hour, d.minute), (2026, 10, 6, 0, 0))
+        self.assertIsNotNone(d.tzinfo, "必须补成 aware，否则与 now(tz) 比较抛 TypeError")
+        z = mk({"expires_at": "2026-10-06T12:34:56Z"})
+        self.assertEqual((z.hour, z.minute, z.utcoffset().total_seconds()), (12, 34, 0))
+
+    def test_docstring_records_rolling_window_caveat(self):
+        """说错话守卫：旧 docstring 声称「累计发够 max_posts 篇后彻底停投」，
+        而记账落在滚动窗（实测跨度 9.5 天）⇒ 那个断言是假的。
+        docstring 必须**留痕**（点名修正号 + 滚动窗事实 + expires_at 护栏），
+        否则下一轮会把它当"已验证"继续用。
+
+        ⚠️ 首版断言写成 `assertNotIn("篇后彻底停投", doc)`——错：docstring 里
+        为说明问题**引用了**那句旧话，字面量当然还在。守卫要断的是"有没有留下
+        修正记录"，不是"某个子串在不在"（断子串只会逼出绕开措辞的假绿）。
+        """
+        doc = m.NewsFetcher._inject_priority_seeds.__doc__ or ""
+        self.assertIn("R817", doc, "修正必须留痕（谁改的、为什么）")
+        self.assertIn("滚动窗", doc, "必须记录「记账会随窗口老化」这一事实")
+        self.assertIn("expires_at", doc, "必须给出护栏")
 
 
 class TestR627StepSummarySourceStarvation(unittest.TestCase):

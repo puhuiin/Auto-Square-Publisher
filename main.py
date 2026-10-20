@@ -4032,13 +4032,39 @@ class NewsFetcher:
     def _inject_priority_seeds(self, candidates: List[Dict[str, Any]],
                                cache_mgr: CacheManager) -> List[Dict[str, Any]]:
         """把优先种子以最高分注入候选池顶部（蹭热点）。自限：id=seed::{tag}::{idx}
-        经既有 record_sent→is_cached 记账——已发过的种子跳过、累计发够 max_posts
-        篇后彻底停投，机器人自动回落常规 RSS 发帖。种子不绕任何既有关卡：下游
-        MIN_IMPACT / 近似去重 / 数字门 / 质量门 / 挂件织入照常生效。"""
+        经既有 record_sent→is_cached 记账——已发过的种子跳过；发够 max_posts
+        篇后回落常规 RSS 发帖。种子不绕任何既有关卡：下游 MIN_IMPACT / 近似去重 /
+        数字门 / 质量门 / 挂件织入照常生效。
+
+        ⚠️⚠️ **R817 修正：那个「发够 max_posts 篇」的账不是永久的。**
+        旧注释写「累计发够 max_posts 篇后彻底停投」——**那是没验证过的话**：
+        记账落在 `sent_cache.json`，而它是**最新 500 条**的滚动窗
+        （`MAX_CACHE_SIZE`；生产实测跨度只有 **9.5 天** = 500 条 ÷ 53 条/天）。
+        窗口一老化，`cached_id_count` 归零 ⇒ 同一批种子被**重新注入、再发一遍**。
+        生产实证（origin metrics.jsonl 窗口内同源 6 篇）：
+            idx2 09-25 14:46 ｜ idx1 09-25 15:06 ｜ idx0 10-02 17:51   ← 首轮
+            idx2 10-16 19:44 ｜ idx1 10-16 20:04 ｜ idx0 10-18 05:46   ← 滚窗后复活
+        （第二轮的种子记账 sent_at 就是 10-16/10-18；而此刻窗口最老一条已是
+        10-11 ⇒ 首轮记录**确实早已不在窗内**。）
+        ⇒ 护栏是**声明式过期** `expires_at`（热点种子本就有热窗；日期人工写、
+        不猜阈值）。未声明时只 WARNING 不拦（老文件向后兼容）。
+        """
         cfg = self._load_priority_seed()
         if not cfg:
             return candidates
         tag = str(cfg.get("tag") or "seed").strip() or "seed"
+        # ★★ R817：过期即停投——**不依赖滚动窗**的唯一护栏（见 docstring 实证）。
+        _exp = _seed_expires_at(cfg)
+        if _exp is not None:
+            if _exp <= datetime.now(timezone.utc):
+                logger.info(f"⏹️ 优先种子[{tag}] 已于 {_exp.date().isoformat()} 过期，"
+                            f"跳过注入（热点种子过期即停投；滚动窗记账会老化，见 docstring）")
+                return candidates
+        else:
+            logger.warning(f"⚠️ 优先种子[{tag}] 未声明 expires_at：sent_cache 是**滚动窗**"
+                           f"（实测跨度仅约 9.5 天）⇒ 窗口老化后同一批种子会被重新注入并"
+                           f"再发一遍（生产实证 09-25→10-16 同内容重复投放）。"
+                           f"热点/长期种子请补 `expires_at`（ISO 日期）")
         try:
             max_posts = int(cfg.get("max_posts", 3))
         except (TypeError, ValueError):
@@ -4316,6 +4342,28 @@ _CREDIT_EXHAUSTED_RE = re.compile(
     r"|credit[\s_]+(?:has[\s_]+been[\s_]+)?exhausted"
     r"|余额不足|额度不足|欠费",
     re.IGNORECASE)
+
+
+def _seed_expires_at(cfg: Dict[str, Any]) -> Optional[datetime]:
+    """R817：优先种子的声明式过期时刻。
+
+    `expires_at` 支持 ISO 日期（`2026-10-05`）或带时区的时间戳（`...T00:00:00Z`）；
+    纯日期按**当天 00:00 UTC** 解释（种子语义是"到这天就别再发了"）。
+    缺失/空/畸形 → None（**向后兼容**：老文件行为不变，只由调用方打 WARNING，
+    绝不 fail-closed 把正常种子误停——那会静默丢热点）。
+    """
+    raw = cfg.get("expires_at")
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    s = raw.strip()
+    try:
+        d = datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except ValueError:
+        try:
+            d = datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except ValueError:
+            return None
+    return d if d.tzinfo is not None else d.replace(tzinfo=timezone.utc)
 
 
 def _is_credit_exhausted(exc: BaseException) -> bool:
