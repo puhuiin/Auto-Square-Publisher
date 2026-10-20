@@ -99,6 +99,20 @@ def summarize(records, keyfn, min_n=3):
     return rows
 
 
+BTC_ETH_TOKENS = {"BTC", "ETH"}
+LARGE_CAP_TOKENS = {"SOL", "XRP", "BNB", "DOGE", "ADA", "SHIB", "TRX", "LINK"}
+
+
+def token_category(token):
+    """R809：币种大类（BTC/ETH 浏览显著更高，见报告）。"""
+    t = str(token or "").upper()
+    if t in BTC_ETH_TOKENS:
+        return "BTC/ETH"
+    if t in LARGE_CAP_TOKENS:
+        return "大市值"
+    return "其他"
+
+
 def first_line(rec):
     t = rec["meta"].get("final_text") or rec["meta"].get("final_preview") or ""
     return str(t).split("\n")[0]
@@ -153,6 +167,10 @@ def main(argv=None):
         print("  %s  %s  %s  %s" % (h, cells[0], cells[1], cells[2]))
     print("\n== 币种 ==")
     _fmt(summarize(joined, lambda r: (r["meta"].get("tokens") or ["?"])[0]))
+    print("\n== 币种大类 ==")
+    _fmt(summarize(joined, lambda r: token_category((r["meta"].get("tokens") or ["?"])[0])))
+    print("\n== 配图 ==")
+    _fmt(summarize(joined, lambda r: str(r["meta"].get("image_tier") or "none")))
     print("\n== 首行特征（有/无 中位差）==")
     def feat(name, fn):
         a = [r["vpd"] for r in joined if fn(r)]

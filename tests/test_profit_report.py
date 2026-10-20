@@ -46,6 +46,14 @@ class TestProfitReport(unittest.TestCase):
         self.assertAlmostEqual(out[0]["age_days"], 2.0)
         self.assertAlmostEqual(out[0]["vpd"], 5.0)
 
+    def test_token_category(self):
+        pr = _load()
+        self.assertEqual(pr.token_category("btc"), "BTC/ETH")
+        self.assertEqual(pr.token_category("ETH"), "BTC/ETH")
+        self.assertEqual(pr.token_category("sol"), "大市值")
+        self.assertEqual(pr.token_category("XYZ"), "其他")
+        self.assertEqual(pr.token_category(None), "其他")
+
     def test_summarize_filters_min_n_and_sorts_by_median(self):
         pr = _load()
         recs = ([{"k": "a", "vpd": 1.0}, {"k": "a", "vpd": 2.0}, {"k": "a", "vpd": 3.0}]
