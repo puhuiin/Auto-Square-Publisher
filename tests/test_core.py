@@ -22914,5 +22914,39 @@ class TestR805CommunityVoiceMention(unittest.TestCase):
                               "普通内容误报成活动提及: %s" % t[:36])
 
 
+class TestR806NumbersGateDecimalBacktracking(unittest.TestCase):
+    """★★ R806：数字门的小数回退误杀。
+
+    生产实证（10-20 10:08，Google）：「可 $SOL 现价才涨 1.5%」被拒成
+    「价位 现价才涨 1」——数字组吃掉 1.5 后前瞻见 % 失败，正则**回退吐出
+    .5** 只留 1，而前瞻的 [0-9,] 字符集不认前导小数点 ⇒ 1 被当 1 美元价位。
+    同批：「现价还有近30 的上涨空间」没有 % 号，被当 30 美元价位。
+    """
+
+    SRC = "SOL 现价 120 美元，24 小时涨 1.5%。"
+
+    def test_decimal_percent_after_cue_not_price(self):
+        for body in ("可 $SOL 现价才涨 1.5%，量能一般。",
+                     "现价才涨 1.5%，别追。"):
+            ok, reason = m.MultiLLMEngine._verify_numbers(body, self.SRC)
+            self.assertTrue(ok, "小数百分比被回退成整数价位：%s" % reason)
+
+    def test_magnitude_phrase_not_price(self):
+        for body in ("现价还有近30 的上涨空间。",
+                     "现价还有近30%的上涨空间。"):
+            ok, reason = m.MultiLLMEngine._verify_numbers(body, self.SRC)
+            self.assertTrue(ok, "幅度短语被当价位：%s" % reason)
+
+    def test_invented_integer_price_still_blocked(self):
+        """反向：修小数回退不得放过编造的整数价位（红线）。"""
+        for body in ("回踩 460 支撑。", "站上 2750 美元。"):
+            ok, reason = m.MultiLLMEngine._verify_numbers(body, self.SRC)
+            self.assertFalse(ok, "编造整数价位被放过：%s" % body)
+
+    def test_non_price_units_still_excluded(self):
+        ok, _ = m.MultiLLMEngine._verify_numbers("突破 3 倍。", self.SRC)
+        self.assertTrue(ok)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
