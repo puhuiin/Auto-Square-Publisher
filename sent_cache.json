@@ -1,15 +1,5 @@
 [
   {
-    "id": "49ea6546e72c77af",
-    "title": "Some Aave loans sit near liquidation with collateral that can take hours to cash out",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-11T20:04:24.546644+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c7b07e57b1c24d0f",
     "title": "Aerodrome and Velodrome merger countdown lifts optimism – Is $1.30 next for AERO?",
     "source": "AMBCrypto (技术与链上)",
@@ -5210,5 +5200,15 @@
       "BNB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "fafd1d372bb607eb",
+    "title": "Google Gemini AI Predicts a Huge Run for Chainlink (LINK)",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-20T23:23:55.383814+00:00",
+    "tokens": [
+      "LINK"
+    ],
+    "lang": "zh-CN"
   }
 ]
