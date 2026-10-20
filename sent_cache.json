@@ -1,15 +1,5 @@
 [
   {
-    "id": "ad4180cb7e5066d7",
-    "title": "Cardano Pushes .ada Internet Domain Ambitions as Whale Activity Hits 4-Month High",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-10T13:24:50.632509+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7d9c1a18138fc0c3",
     "title": "建仓1489万美元ETH,某巨鲸20分钟从币安提取5965枚ETH",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5198,6 +5188,18 @@
     "tokens": [
       "SOL",
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "fd071098ee222e6f",
+    "title": "Starknet (STRK), Filecoin (FIL), Midnight (NIGHT) and Near Protocol (NEAR) Price Analysis for October 20: Worst Performers in October",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-20T03:31:31.546416+00:00",
+    "tokens": [
+      "STRK",
+      "FIL",
+      "NIGHT"
     ],
     "lang": "zh-TW"
   }
