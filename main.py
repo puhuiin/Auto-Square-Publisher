@@ -13188,6 +13188,21 @@ def _run_main():
                         "image": bool(uploaded_image_url), "age_hours": item.get("age_hours"),
                         "image_fail_reason": image_fail_reason, "image_tier": image_tier,
                         "has_raw_image": has_raw_image,
+                        # ★★ R822：失败分支必须留**全文**，否则 220095 这类
+                        #   "正文里币对太多"的拒稿永远无法事后诊断。
+                        #   生产实证（10-20 16:03 / 17:04 同一篇清单体连挂两次）：
+                        #   `widget_count=3`（只数带 $ 的挂件）却触发 220095
+                        #   「Coin pair count exceeds the allowed limit」⇒ 强烈
+                        #   怀疑币安数的是**所有可识别币对**（含降格后的纯名
+                        #   MORPHO/AERO/WLD），而 R367 的降格只把 `$X` 变成 `X`、
+                        #   并不减少币安眼里的币对数（**既没解决问题、又削弱了
+                        #   挂件可点击性**）。但这个假设当时**无法验证**——因为
+                        #   失败行不存 final_text，正文内容随进程消失。
+                        #   ⇒ 先补度量面（只加字段、不改行为），让下一次失败
+                        #     能直接拿全文核对；核实币安口径前不动降格逻辑
+                        #     （不写未核实的投机代码）。
+                        #   与 R780 同族：指标建了不落盘 = 答案没采。
+                        "final_text": (llm_result.get("content") or "")[:4000] or None,
                         "outcome": "publish_failed", "error": detail[:200],
                         # 必须转成 str：非字符串类型会让 json.dumps 整条遥测失败被吞掉
                         "error_code": str(code_hint) if code_hint else None,

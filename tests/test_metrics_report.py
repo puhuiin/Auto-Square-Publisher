@@ -8275,6 +8275,58 @@ class TestR758CampaignCtaTailTemplateRadar(unittest.TestCase):
         self.assertIn("仅计有全文遥测的帖", line[0])
 
 
+class TestR822PublishFailedKeepsFullText(unittest.TestCase):
+    """★★ R822：`publish_failed` 行必须落 `final_text`，否则 220095 永远查不清。
+
+    ★ 缺口现场（10-20 16:03 / 17:04，同一篇清单体连挂两次）：
+      `widget_count=3`（只数带 `$` 的挂件）却触发
+      `220095 Coin pair count exceeds the allowed limit`。
+      强烈怀疑币安数的是**所有可识别币对**（含 R367 降格后的纯名
+      MORPHO/AERO/WLD），而降格只把 `$X` 变 `X`、**并不减少币安眼里的币对数**
+      （既没解决问题、又削弱了挂件可点击性=返佣生命线）。
+      ⇒ 但这个假设**当时无法验证**：`publish_failed` 分支不存 final_text，
+        正文随进程消失，事后只能看标题猜。
+    ⇒ 修法：先补度量面（只加字段、不改行为）。核实币安口径前**不动**降格逻辑
+      （不写未核实的投机代码）。
+    与 R780 同族：**指标建了不落盘 = 答案没采**。
+    """
+
+    def _src(self):
+        import io
+        return io.open("main.py", encoding="utf-8").read()
+
+    def test_publish_failed_branch_records_final_text(self):
+        """★ 源码守卫：publish_failed 的 append_metrics 必须含 final_text。
+
+        用源码断言而非跑全流程，是因为该分支埋在 3000 行的发帖主循环里，
+        构造一次真实失败的成本远高于"钉住字段存在"这个契约。
+        """
+        import re
+        src = self._src()
+        m = re.search(r'"outcome":\s*"publish_failed"', src)
+        self.assertIsNotNone(m, "找不到 publish_failed 落盘点")
+        # 向前 60 行内必须出现 final_text（同一次 append_metrics 调用里）
+        start = max(0, m.start() - 6000)
+        seg = src[start:m.start()]
+        self.assertIn('"final_text"', seg,
+                      "★ publish_failed 行必须带 final_text，否则 220095 类拒稿"
+                      "无法事后诊断（正文随进程消失，只能看标题猜）")
+
+    def test_full_text_is_capped_and_none_when_empty(self):
+        """★ 落盘形态：截断到 4000 字；空内容必须是 None 而不是空串。
+
+        空串会被 `has final_text` 类判据误算成"有全文"（R784 的 CV 门就靠
+        `final_text` 是否存在来定覆盖率）⇒ 用 None 明确表达"无"。
+        """
+        import re
+        src = self._src()
+        m = re.search(r'"final_text":\s*\(llm_result\.get\("content"\)[^\n]*', src)
+        self.assertIsNotNone(m, "找不到 publish_failed 的 final_text 赋值")
+        line = m.group(0)
+        self.assertIn("[:4000]", line, "必须截断，避免遥测行无限膨胀")
+        self.assertIn("or None", line, "空内容必须落 None，不能是空串")
+
+
 class TestR784FullTextCaliber(unittest.TestCase):
     """★★ R784：雷达扫描口径从 preview（200 字）升级为发布全文（final_text）。
 
