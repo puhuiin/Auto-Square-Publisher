@@ -20087,9 +20087,10 @@ class TestR715QuotaCooldownFromBody(unittest.TestCase):
       —— 重试时长在 **JSON 正文**，`headers` 里**没有** `Retry-After`
       ⇒ 旧实现回落指数退避（10min→20→…→封顶 4h），
         而实际需要 2h11m ⇒ **每 20 分钟一轮就重撞一次必然失败的 429**。
-    ★ 配额耗尽 ≠ 限流：前者按**天**重置（Gemini 免费 20 次/天），
-      几小时后重试必然再撞 ⇒ 需要**独立的长上限**（12h），
-      复用限流的 4h 上限等于"每 4 小时浪费一次 failover"。
+    ★★ R826 修正了本类的一半前提：R715 当年按"Gemini 免费 20 次/**天**、按天重置"
+      推断出"配额必须封 6~12h"，但生产实测（Preset-google 全部 29 次配额 429）
+      显示中位 **42 分钟**就恢复（97% 在 4h 内）⇒ 封禁改为自适应探测。
+      本类保留的契约是**解析**：服务端说多久就解析多久，不再私自加下限。
     """
 
     GEMINI_429 = (
@@ -20118,12 +20119,20 @@ class TestR715QuotaCooldownFromBody(unittest.TestCase):
             "Error code: 429 - rate limit exceeded. Please retry in 30s.")
         self.assertEqual(sec, 30)
 
-    def test_quota_exhaustion_gets_long_cooldown(self):
-        """★★ 配额耗尽 ⇒ 冷却 ≥ 6 小时（**不复用限流的 4h 上限**）"""
+    def test_quota_exhaustion_parsed_not_floor_capped(self):
+        """★★ R826：解析层**不再**把配额样本抬到 6h（策略已移到记录层）。
+
+        旧断言是 `≥6h`，其前提"Gemini 20 次/天、按天重置"被生产数据推翻：
+        Preset-google 全部 29 次配额 429 之后**全部**恢复成功，中位 **42 分钟**
+        （≤30min 38%、≤60min 66%、≤120min 83%、≤240min 97%）。
+        解析层只负责把服务端说的时长读出来，并按普通限流上限钳制；
+        "配额该冷却多久"由 `_breaker_record_rate_limit(quota=True)` 自适应决定。
+        """
         sec = m.MultiLLMEngine._quota_retry_sec_from_text(self.GEMINI_429)
-        self.assertGreaterEqual(sec, 6 * 3600,
-                                "配额耗尽只冷却 %d 秒 ⇒ 会反复重撞" % sec)
-        self.assertLessEqual(sec, m.MultiLLMEngine._QUOTA_COOLDOWN_MAX_SEC)
+        self.assertIsNotNone(sec)
+        self.assertEqual(sec, 2 * 3600 + 11 * 60,
+                         "解析层必须如实返回服务端时长（2h11m=7860s），不得私自抬到 6h")
+        self.assertLessEqual(sec, m.MultiLLMEngine._RATE_LIMIT_MAX_SEC)
 
     def test_plain_rate_limit_not_inflated(self):
         """★★ 反向：普通 429（30s）**不得**被抬到配额档（防过度冷却）"""
@@ -20140,26 +20149,106 @@ class TestR715QuotaCooldownFromBody(unittest.TestCase):
             m.MultiLLMEngine._quota_retry_sec_from_text("429 slow down"))
         self.assertIsNone(m.MultiLLMEngine._quota_retry_sec_from_text(""))
 
-    def test_quota_and_rate_limit_have_separate_caps(self):
-        """★★ 两类问题必须有**不同上限**（否则配额的长冷却会被限流上限截断）
+    def test_quota_cap_is_two_hours_not_twelve(self):
+        """★★ R826：配额冷却封顶从 12h 收到 2h（由实测恢复分布决定）。
 
-        ⚠️ 这条是 R715 的核心：实现里若只写 `max(sec, 6h)` 而不换上限，
-        结果会被 `_RATE_LIMIT_MAX_SEC=4h` 静默压回 4h —— 实测踩过。
+        29 次配额 429 的恢复间隔：p25=18min / 中位 42min / p75=80min / p97≈4h。
+        12h 封顶意味着"恢复后最多再闲置 10 小时"，且当时只能靠整组重启侥幸兜住。
         """
-        self.assertGreater(m.MultiLLMEngine._QUOTA_COOLDOWN_MAX_SEC,
-                           m.MultiLLMEngine._RATE_LIMIT_MAX_SEC,
-                           "配额上限未高于限流上限 ⇒ 长冷却不生效")
-        # 用真实样本证明没有被打折
-        sec = m.MultiLLMEngine._quota_retry_sec_from_text(self.GEMINI_429)
-        self.assertGreater(sec, m.MultiLLMEngine._RATE_LIMIT_MAX_SEC,
-                           "真实样本被限流上限截断了 ⇒ 长冷却未生效")
+        self.assertEqual(m.MultiLLMEngine._QUOTA_COOLDOWN_MAX_SEC, 2 * 3600)
+        self.assertEqual(m.MultiLLMEngine._QUOTA_COOLDOWN_BASE_SEC, 45 * 60)
+        self.assertLess(m.MultiLLMEngine._QUOTA_COOLDOWN_MAX_SEC,
+                        12 * 3600, "封顶退回 12h ⇒ 恢复后仍会长时间不可用")
 
     def test_retry_delay_field_form(self):
-        """★ 另一形态：`'retryDelay': '7863s'` 也要能解析"""
+        """★ 另一形态：`'retryDelay': '7863s'` 也要能解析（2h11m ⇒ 7863s）"""
         sec = m.MultiLLMEngine._quota_retry_sec_from_text(
             "{'error': {'status': 'RESOURCE_EXHAUSTED', 'retryDelay': '7863s'}}")
         self.assertIsNotNone(sec, "retryDelay 字段形态未覆盖")
-        self.assertGreaterEqual(sec, 6 * 3600)
+        self.assertEqual(sec, 7863,
+                         "解析层应如实返回 retryDelay（R826 后不再抬到 6h）")
+
+
+class TestR826AdaptiveQuotaCooldown(unittest.TestCase):
+    """★★ R826：配额 429 的冷却改为**自适应探测**（45min 起、逐次翻倍、封顶 2h）。
+
+    ★ 推翻 R715 的前提所需的证据（全部来自 metrics.jsonl，不是推断）：
+      Preset-google 在 10-19~10-20 共 **29 次**配额 429（`quotaValue: 20`,
+      `retryDelay: 66840s`），**每一次**之后都有成功发布：
+        恢复间隔 p25=18min / 中位 **42min** / p75=80min；
+        ≤30min 38% / ≤60min 66% / ≤120min 83% / ≤240min 97% / max 1579min。
+      而旧的 6~12h 封禁期内仍产出了 21/27 篇 Google 帖——靠"全通道冷却整组重启"
+      侥幸拉回。R825 堵上这个漏洞后，必须同时把封禁时长校准，否则等于主动砍掉
+      一个日产 ~20 篇的主通道半天。
+    """
+
+    def _apply(self, state, sec, quota=True):
+        """调用记录函数并返回更新后的断路器状态（模拟 intel_state_update）。"""
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        box = {}
+
+        def fake_update(key, fn, default=None):
+            box["state"] = fn(state if state is not None else default)
+
+        with patch.object(m, "intel_state_update", side_effect=fake_update):
+            eng._breaker_record_rate_limit("P", sec, quota=quota)
+        return box["state"]
+
+    def _left_min(self, info):
+        until = m.MultiLLMEngine._parse_cooldown(info.get("cooldown_until"))
+        return (until - datetime.now(timezone.utc)).total_seconds() / 60
+
+    def test_first_quota_429_cools_45_minutes(self):
+        st = self._apply({}, 43200)
+        self.assertAlmostEqual(self._left_min(st["P"]), 45, delta=1.5,
+                               msg="首个配额 429 应冷却 45 分钟（实测中位恢复 42min）")
+
+    def test_repeated_quota_429_doubles_then_caps(self):
+        st = {}
+        for streak in (1, 2, 3, 4):
+            st = self._apply(st, 43200)
+            expected = min(45 * 2 ** (streak - 1), 120)
+            self.assertAlmostEqual(self._left_min(st["P"]), expected, delta=2,
+                                   msg="第 %d 次连续配额 429 冷却不对" % streak)
+
+    def test_normal_rate_limit_uses_retry_after_and_resets_streak(self):
+        st = self._apply({}, 43200, quota=True)
+        self.assertIn("quota_streak", st["P"])
+        st = self._apply(st, 30, quota=False)
+        self.assertNotIn("quota_streak", st["P"], "普通限流说明通道能用，必须重置配额连击")
+        # R6：冷却只延长不缩短 ⇒ 30s 的普通限流不得把已在走的 45min 压缩回去。
+        # 这在本场景里是对的：配额刚耗尽时立刻回退 30 秒会让每轮都重撞。
+        self.assertAlmostEqual(self._left_min(st["P"]), 45, delta=1.5,
+                               msg="普通限流不得缩短既有冷却（R6 只延长不缩短）")
+        # 从零开始（无既有冷却）时，普通限流按 Retry-After 生效
+        st2 = self._apply({}, 30, quota=False)
+        self.assertAlmostEqual(self._left_min(st2["P"]), 0.5, delta=0.3,
+                               msg="无既有冷却时普通限流应按 Retry-After（30s）")
+
+    def test_success_resets_quota_streak(self):
+        st = self._apply({}, 43200, quota=True)
+        st = self._apply(st, 43200, quota=True)
+        self.assertEqual(st["P"]["quota_streak"], 2)
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        box = {}
+
+        def fake_update(key, fn, default=None):
+            box["state"] = fn(st)
+
+        with patch.object(m, "intel_state_update", side_effect=fake_update):
+            eng._breaker_record_success("P")
+        self.assertNotIn("quota_streak", box["state"]["P"],
+                         "成功之后必须清零连击，否则下次偶发 429 直接从 2h 起算")
+        # 恢复后再遇到配额 429，应重新从 45 分钟起算
+        st2 = self._apply(box["state"], 43200)
+        self.assertAlmostEqual(self._left_min(st2["P"]), 45, delta=2)
+
+    def test_quota_detection_matches_server_text(self):
+        self.assertTrue(m.MultiLLMEngine._is_quota_429(
+            "Error code: 429 - You exceeded your current quota, status: RESOURCE_EXHAUSTED"))
+        self.assertFalse(m.MultiLLMEngine._is_quota_429(
+            "Error code: 429 - Rate limit exceeded: free-models-per-day"))
+        self.assertFalse(m.MultiLLMEngine._is_quota_429(""))
 
 
 class TestR716DedupEntityChannel(unittest.TestCase):
@@ -23340,6 +23429,72 @@ class TestR807PoolExhaustedAlert(unittest.TestCase):
             active = eng._ordered_providers()
         self.assertEqual([p.name for p in active], ["b"])
         self.assertFalse(sn.called, "只有部分通道冷却时不得发池耗尽告警")
+
+
+class TestR825NearExpiryOnlyRestart(unittest.TestCase):
+    """★★ R825：全通道冷却时的强制重启必须**逐通道**判定，不能"最早那个快到期 ⇒ 全组重启"。
+
+    生产实证（10-20 12:43Z 日志）：
+      `⚡ 断路器跳过冷却中提供商: ['Preset-openrouter', 'Preset-google', ...]`
+      `所有提供商均在冷却期，仅重启非永久失败提供商: ['Preset-openrouter', 'Preset-google']`
+    openrouter 冷却到 12:48（5 分钟后到期），Google 因**日配额耗尽**冷却到次日 00:25
+    （还有 11h47m）。旧逻辑只看最早的那个 12:48，就把 Google 一起拉起来重撞——
+    10-19 14:43Z ~ 10-20 12:25Z 累计 **25 次** 429（每次还把 12h 冷却重新推后）。
+    正确语义（R810 的原意）：只有**本身**冷却快到期/已过期的通道才值得一试。
+    """
+
+    def _eng(self, names):
+        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        eng._fail_counts = {}
+        eng.providers = [m.LLMProviderConfig(n, "https://x", "k", "m") for n in names]
+        return eng
+
+    def _at(self, **minutes_by_name):
+        return {k: {"cooldown_until":
+                    (datetime.now(timezone.utc) + timedelta(minutes=v)).isoformat(),
+                    "fails": 1}
+                for k, v in minutes_by_name.items()}
+
+    def _run(self, state):
+        eng = self._eng(list(state.keys()))
+        with patch.object(m.MultiLLMEngine, "_breaker_state", return_value=state), \
+             patch.object(m.MultiLLMEngine, "_provider_cost_latency_scores", return_value={}), \
+             patch.object(m.Notifier, "send_notification") as sn:
+            active = eng._ordered_providers()
+        return [p.name for p in active], sn
+
+    def test_long_cooled_not_dragged_by_near_expiry(self):
+        """★ 核心：5 分钟后到期的 openrouter 只能带上自己，不能带上 11h 后的 Google。"""
+        active, sn = self._run(self._at(near=5, long=11 * 60))
+        self.assertEqual(active, ["near"],
+                         "长冷却通道被临近到期的通道拖起来重撞（R825 的事故形态）")
+        self.assertTrue(sn.called)
+        body = sn.call_args[0][1]
+        self.assertIn("继续跳过", body, "告警必须说明长冷却通道仍在跳过，否则运维以为全组都重启了")
+
+    def test_all_near_expiry_restarts_all(self):
+        """全员都快到期 ⇒ 全员重启（保留 R810 的原有行为）。"""
+        active, _ = self._run(self._at(a=5, b=9))
+        self.assertEqual(active, ["a", "b"])
+
+    def test_all_long_skips(self):
+        """全员都还很久 ⇒ 本轮空链跳过（R810 的自我锁死防护不得被削弱）。"""
+        active, sn = self._run(self._at(a=11 * 60, b=12 * 60))
+        self.assertEqual(active, [])
+        self.assertIn("长冷却", sn.call_args[0][0])
+
+    def test_permanent_near_expiry_never_restarted(self):
+        """permanent（模型下架/余额耗尽）即使临近到期也不得重启。"""
+        state = self._at(perm=5, long=11 * 60)
+        state["perm"]["permanent"] = True
+        active, _ = self._run(state)
+        self.assertEqual(active, [], "permanent 通道被强制重启 ⇒ 白烧 404/余额请求")
+
+    def test_unparseable_cooldown_still_restartable(self):
+        """时间戳不可解析时保守重启（不制造死锁）——fail-closed 只用于"跳过"，不用于"永久封死"。"""
+        state = {"bad": {"cooldown_until": "not-a-time", "fails": 1}}
+        active, _ = self._run(state)
+        self.assertEqual(active, ["bad"])
 
 
 class TestR812BreakerSuccessClear(unittest.TestCase):

@@ -5210,12 +5210,15 @@ class MultiLLMEngine:
 
     _RATE_LIMIT_MIN_SEC = 30        # Retry-After 缺失/畸形时的默认限流冷却
     _RATE_LIMIT_MAX_SEC = 4 * 3600  # 服务端可要求更长，但不能无限信任
-    # ★ R715：**配额耗尽与限流是两种问题**，不能共用上限。
-    #   限流（Retry-After=30s）是"别打太快"，几分钟后就该重试；
-    #   配额耗尽（Gemini 免费 20 次/**天**）是"今天的额度用完了"，
-    #   几小时后重试**必然再撞** ⇒ 复用 4h 上限会变成"每 4 小时 wasted 一次"。
-    #   12h 覆盖"当天剩余时间"的大多数情况，且跨过 UTC 日切。
-    _QUOTA_COOLDOWN_MAX_SEC = 12 * 3600
+    # ★★ R826：配额 429 的冷却改为**自适应探测**（推翻 R715 的 6~12h 封禁）。
+    #   生产实测（10-19~10-20，Preset-google 全部 29 次配额 429）：
+    #     29 次之后**全部**在 1579 分钟内恢复成功；中位 **42 分钟**
+    #     （p25=18 / p75=80；≤30min 38%、≤60min 66%、≤120min 83%、≤240min 97%）。
+    #   而 6~12h 封禁期内实际仍产出了 21/27 篇 Google 帖——靠"全通道冷却时整组
+    #   重启"拉回来，属侥幸而非设计。⇒ 首个 429 冷却 45 分钟，连续 429 翻倍，
+    #   封顶 2 小时；成功或普通限流（非配额）重置连击。
+    _QUOTA_COOLDOWN_BASE_SEC = 45 * 60
+    _QUOTA_COOLDOWN_MAX_SEC = 2 * 3600
 
     @classmethod
     def _rate_limit_cooldown_sec(cls, exc: BaseException) -> Optional[int]:
@@ -5279,30 +5282,66 @@ class MultiLLMEngine:
                 sec = int(float(m2.group(1)))
             except ValueError:
                 return None
-        is_quota = any(w in text.lower() for w in cls._QUOTA_WORDS)
-        if is_quota:
-            # 配额按天重置 ⇒ 冷却下限 6h，且用**配额专属上限**（12h），
-            # 不用限流的 4h（否则 4h 后必然再撞，白白浪费一次 failover）
-            floor = 6 * 3600
-            sec = max(sec, floor)
-            return max(cls._RATE_LIMIT_MIN_SEC,
-                       min(sec, cls._QUOTA_COOLDOWN_MAX_SEC))
+        # ★★ R826：这里**只做解析**，冷却策略统一由
+        #   `_breaker_record_rate_limit(quota=...)` 决定（见其 docstring 的生产实测）。
+        #   旧实现在这里写死"配额 ≥6h、上限 12h"——实测中位恢复仅 42 分钟，
+        #   等于每轮都在为一条不可靠的服务端自述白白封禁半天。
         return max(cls._RATE_LIMIT_MIN_SEC, min(sec, cls._RATE_LIMIT_MAX_SEC))
 
-    def _breaker_record_rate_limit(self, name: str, cooldown_sec: int):
+    @classmethod
+    def _is_quota_429(cls, text: str) -> bool:
+        """★★ R826：这条 429 是否是"配额耗尽"型（判据与 R715 共用 `_QUOTA_WORDS`）。
+
+        为什么要与普通限流分开：普通限流按服务端 Retry-After 冷却即可；
+        配额型的自述时长（实测 `retryDelay=66840s`）**不可信**——按它封禁会导致
+        通道半天不可用，而生产实测中位 42 分钟就恢复。
+        """
+        return any(w in str(text or "").lower() for w in cls._QUOTA_WORDS)
+
+    def _breaker_record_rate_limit(self, name: str, cooldown_sec: int,
+                                   quota: bool = False):
         """限流专用冷却：按服务端 Retry-After 跳到指定时刻，不计 fails——
-        限流是"别打太快"不是"通道坏了"，不应驱动指数升级。"""
+        限流是"别打太快"不是"通道坏了"，不应驱动指数升级。
+
+        ★★ R826：**配额型 429 用自适应探测，不再按服务端自述封禁 6~12 小时**。
+        R715 的前提是"Gemini 免费 20 次/天，按天重置"，但生产实测（Preset-google
+        全部 29 次配额 429）推翻了它：
+          · 29 次之后**全部**恢复成功，中位 **42 分钟**（p25=18 / p75=80；
+            ≤30min 38%、≤60min 66%、≤120min 83%、≤240min 97%）；
+          · 6~12h 封禁期内实际仍产出 21/27 篇 Google 帖——靠"全通道冷却时整组
+            重启"拉回来，属侥幸（R825 已把那个漏洞堵上，所以这里必须同时改）。
+        ⇒ 首个配额 429 冷却 45 分钟，连续 429 逐次翻倍，封顶 2 小时；
+          成功（`_breaker_record_success`）或普通限流（非配额）重置连击。
+          代价是最多多探测几次；收益是恢复后 ≤2h 回到排班，而不是等 12 小时。
+        """
+        _applied = []
+
         def _record(state):
             state = dict(state or {})
             info = dict(state.get(name, {"fails": 0}))
+            if quota:
+                streak = int(info.get("quota_streak", 0) or 0) + 1
+                info["quota_streak"] = streak
+                sec = min(self._QUOTA_COOLDOWN_BASE_SEC * (2 ** min(streak - 1, 8)),
+                          self._QUOTA_COOLDOWN_MAX_SEC)
+                _applied.append((sec, streak))
+            else:
+                info.pop("quota_streak", None)   # 普通限流说明通道能用，重置配额连击
+                sec = cooldown_sec
+                _applied.append((sec, 0))
             self._extend_cooldown(info, datetime.now(timezone.utc)
-                                  + timedelta(seconds=cooldown_sec))
+                                  + timedelta(seconds=sec))
             state[name] = info
             return state
 
         intel_state_update(self._BREAKER_STATE_KEY, _record, default={})
-        logger.warning(f"提供商 [{name}] 触发限流 429，按服务端 Retry-After 冷却 "
-                       f"{cooldown_sec} 秒（不升级指数退避）")
+        sec, streak = _applied[-1] if _applied else (cooldown_sec, 0)
+        if quota:
+            logger.warning(f"提供商 [{name}] 配额耗尽 429，自适应冷却 {sec} 秒"
+                           f"（连续第 {streak} 次；成功即重置）")
+        else:
+            logger.warning(f"提供商 [{name}] 触发限流 429，按服务端 Retry-After 冷却 "
+                           f"{sec} 秒（不升级指数退避）")
 
     def _breaker_record_permanent(self, name: str, reason: str = "模型下架/404"):
         """永久失败长冷却（模型下架/404/余额耗尽）：直接冷却 24 小时，当天不再拿故事试错。
@@ -5365,6 +5404,9 @@ class MultiLLMEngine:
             base = dict(info) if isinstance(info, dict) else {}
             base.pop("cooldown_until", None)
             base.pop("permanent", None)
+            # ★ R826：配额连击必须清零——成功说明额度已恢复，
+            #   否则下一次配额 429 会直接从 2h 封顶起算（把"恢复后偶发一次"放大成半天）。
+            base.pop("quota_streak", None)
             base["fails"] = 0
             base["cleared_at"] = now_iso
             state[name] = base
@@ -5547,23 +5589,47 @@ class MultiLLMEngine:
                         p.name,
                         str((state.get(p.name) or {}).get("cooldown_until") or "?")[:16].replace("T", " "))
                     for p in cooled)
-                if _earliest and (_earliest - _now) > timedelta(minutes=15):
+                # ★★ R825：**逐通道**判定"值得重启"，不能"最早那个快到期 ⇒ 全组重启"。
+                #   生产实证（10-20 12:43Z）：openrouter 冷却到 12:48（5 分钟后到期），
+                #   Google 因日配额耗尽冷却到次日 00:25（还有 11h47m）——
+                #   旧逻辑只看**最早**的 12:48 ⇒ 把 Google 一起拉起来重撞。
+                #   10-19 14:43Z ~ 10-20 12:25Z 这类"陪跑"累计触发 **25 次 429**，
+                #   每次还把 Google 的 12h 冷却重新推后（R810 想防的自我锁死不完整）。
+                #   判据：冷却已过或 ≤15 分钟 ⇒ 值得一试；否则继续跳过。
+                #   `_dt is None`（时间戳不可解析）按可重启处理：保守不锁死，
+                #   且 `_sanitize_breaker_state` 本就会把畸形值修成有界冷却。
+                _restart = []
+                for _p in transient:
+                    _dt = self._parse_cooldown((state.get(_p.name) or {}).get("cooldown_until"))
+                    if _dt is None or _dt <= _now + timedelta(minutes=15):
+                        _restart.append(_p)
+                _restart_names = {p.name for p in _restart}
+                _still = [p.name for p in transient if p.name not in _restart_names]
+                if _restart:
                     logger.warning(
-                        "所有提供商冷却均超过 15 分钟（最早 %s），本轮跳过："
-                        "强制重启只会烧配额并延长冷却" % _earliest.isoformat())
+                        "所有提供商均在冷却期，仅重启冷却≤15分钟的通道: %s%s"
+                        % ("、".join(p.name for p in _restart),
+                           ("；冷却仍长的继续跳过: " + "、".join(_still)) if _still else ""))
+                    _pool_alert(
+                        "⚠️ 全通道冷却：本轮强制重启临近到期的通道",
+                        "所有提供商均在冷却期（%s）。本轮仅重启冷却≤15分钟的通道：%s%s。"
+                        "出稿可能连续失败，请检查账户余额/额度或补充通道。"
+                        % (_cool, "、".join(p.name for p in _restart),
+                           ("；冷却仍长的继续跳过：" + "、".join(_still)) if _still else ""))
+                    active = _restart
+                else:
+                    if _earliest:
+                        _skip_msg = ("所有提供商冷却均超过 15 分钟（最早 %s），本轮跳过："
+                                     "强制重启只会烧配额并延长冷却" % _earliest.isoformat())
+                    else:
+                        _skip_msg = ("所有提供商均在冷却期且无可用到期时间，本轮跳过："
+                                     "强制重启只会烧配额并延长冷却")
+                    logger.warning(_skip_msg)
                     _pool_alert(
                         "⏸️ 全通道长冷却：本轮跳过",
                         "所有提供商冷却均超过 15 分钟（%s）。本轮不发起任何 LLM 调用，"
                         "避免烧配额/延长冷却；下一轮会重新检查。" % _cool)
                     active = []
-                else:
-                    logger.warning(f"所有提供商均在冷却期，仅重启非永久失败提供商: {[p.name for p in transient]}")
-                    _pool_alert(
-                        "⚠️ 全通道冷却：本轮强制重启非永久通道",
-                        "所有提供商均在冷却期（%s）。本轮仅重启非永久失败通道：%s。"
-                        "出稿可能连续失败，请检查账户余额/额度或补充通道。"
-                        % (_cool, "、".join(p.name for p in transient)))
-                    active = transient
             else:
                 logger.error("所有提供商均在冷却期且带 permanent 标记（模型下架/404），"
                              "本轮不再试错，空链快速失败。")
@@ -7581,7 +7647,8 @@ class MultiLLMEngine:
                 elif (rl_sec := self._rate_limit_cooldown_sec(e)) is not None:
                     # R96 限流专项：429 按服务端 Retry-After 精确冷却（30s~4h 钳制），
                     # 不计 fails——限流是节奏问题不是健康问题，不驱动指数升级
-                    self._breaker_record_rate_limit(provider.name, rl_sec)
+                    self._breaker_record_rate_limit(provider.name, rl_sec,
+                                                    quota=self._is_quota_429(err_msg))
                     fail_reason = f"[rate-limit {rl_sec}s] {err_msg}"
                 else:
                     self._breaker_record_failure(provider.name)
