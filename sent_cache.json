@@ -1,15 +1,5 @@
 [
   {
-    "id": "fbe89759b604963c",
-    "title": "Conflux jumps 17% on China blockchain buzz – Will CFX’s breakout hold?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-11T16:24:10.149769+00:00",
-    "tokens": [
-      "CFX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "89d8857ea59a8a15",
     "title": "Injective gains 10% as leverage hits $164M – Can rising INJ bets sustain rally?",
     "source": "AMBCrypto (技术与链上)",
@@ -5210,5 +5200,15 @@
       "SUI"
     ],
     "lang": "en"
+  },
+  {
+    "id": "9c10600b8576cff7",
+    "title": "XRP Price Warning: Leverage Resets as $11.8B in Reserves Loom",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-20T22:06:00.468559+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
