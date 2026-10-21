@@ -1,15 +1,5 @@
 [
   {
-    "id": "a6029849522994e6",
-    "title": "SOL生态Meme币BATON市值突破2000万美元创历史新高,日内涨超53%",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-12T07:07:47.334747+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f3fa06f28673025a",
     "title": "Arbitrum looks to $0.285 after gaining 21% – But THIS level comes first",
     "source": "AMBCrypto (技术与链上)",
@@ -5211,6 +5201,16 @@
     "tokens": [
       "PUMP",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "bad39dd3915d396d",
+    "title": "Crypto rises with Asian tech stocks, zcash extends gain after setting upgrade date",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-10-21T10:45:54.832310+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
