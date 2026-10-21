@@ -1,15 +1,5 @@
 [
   {
-    "id": "9a44e150d9fb215a",
-    "title": "EigenCloud gains 10% – Can EIGEN reach THIS liquidation zone?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-12T03:24:36.823026+00:00",
-    "tokens": [
-      "EIGEN"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a55b5e76e11a0232",
     "title": "Bitget UEX 日报|沙特机场遇袭加剧中东风险;美股三大指数反弹;BTC回升至8.4万美元附近",
     "source": "深潮TechFlow (中文/简体)",
@@ -5213,5 +5203,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "187845777a1825e8",
+    "title": "Shiba Inu (SHIB) Burn Rate Explodes Nearly 500% in a Day, But There Is a Catch",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-21T07:09:07.706013+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-CN"
   }
 ]
