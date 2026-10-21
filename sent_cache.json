@@ -1,17 +1,5 @@
 [
   {
-    "id": "934d97a01686678a",
-    "title": "Shiba Inu (SHIB), Zcash (ZEC), Stellar (XLM) and Solana (SOL) Price Analysis for October 13: Are Bulls Aiming Higher?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-13T01:07:07.086596+00:00",
-    "tokens": [
-      "SHIB",
-      "ZEC",
-      "XLM"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f2a079cc23c3fac1",
     "title": "Is Sui’s record $80M USDsui stablecoin supply a sign of wider adoption?",
     "source": "AMBCrypto (技术与链上)",
@@ -5207,6 +5195,17 @@
     "sent_at": "2026-10-21T18:24:23.352031+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "871bf1ad90894b77",
+    "title": "Chainlink, Cardano, other blockchain groups push SEC for clearer crypto rules",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-10-21T18:43:55.987228+00:00",
+    "tokens": [
+      "LINK",
+      "ADA"
     ],
     "lang": "en"
   }
