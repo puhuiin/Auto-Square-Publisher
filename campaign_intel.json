@@ -3,39 +3,39 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Qafila2026",
-    "#BinanceAlpha"
+    "#Futures",
+    "#bStocks"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$USDC",
-    "$USDT",
-    "$DNA",
     "$FF",
-    "$KGST",
-    "$RWUSD",
-    "$BBB"
+    "$BTC",
+    "$BRKBB",
+    "$BOTB",
+    "$KSTRB",
+    "$VSTB"
   ],
-  "strategy_guidance": "优先结合当日启动的Alpha DNA交易竞赛、Spot交易赛S6、Qafila 2026百万USDC奖励活动、新上线的RWUSD零手续费交易及新增bStocks交易对等当期热点产出内容，引导用户参与官方活动互动与合规交易，获取Write to Earn相关互动奖励；若追踪S16 LoL赛事预测、7年P2P福利等长线活动，可从赛事前瞻、福利规则复盘角度切入，提醒用户关注官方渠道获取最新活动信息。",
-  "last_updated": "2026-10-20T20:04:14.698955Z",
+  "strategy_guidance": "今日币安新上线5只bStocks代币化证券交易对及多组TradFi USDⓈ-Margined永续合约，可引导创作者围绕新资产、新合约的交易规则、玩法解读发帖，关联#Write2Earn活动引导读者参与评论互动拿奖励；同时可结合仍在进行的Spot Trading Tournament S6、Qafila 2026、Binance Pick、Binance Blockchain Week Starter Pack Challenge等热门活动的参与攻略、进度追踪内容追当期活动热度，引导用户参与活动互动。",
+  "last_updated": "2026-10-21T08:24:25.850620Z",
   "_feed_health": {
-    "深潮TechFlow (中文/简体)": {
-      "fails": 1,
-      "last_fail": "2026-10-21T08:06:33.187196+00:00"
-    },
-    "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-21T08:06:08.349657+00:00",
-      "fails": 3,
-      "parked_until": "2026-10-20T06:53:53.228743+00:00"
-    },
     "深潮TechFlow (中文/繁体)": {
       "fails": 1,
       "last_fail": "2026-10-21T08:06:24.541485+00:00"
+    },
+    "Bitcoinist (比特币向)": {
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "fails": 3,
+      "last_fail": "2026-10-21T08:06:08.349657+00:00"
+    },
+    "深潮TechFlow (中文/简体)": {
+      "fails": 1,
+      "last_fail": "2026-10-21T08:06:33.187196+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-21",
