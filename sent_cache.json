@@ -1,15 +1,5 @@
 [
   {
-    "id": "c25accf78311f210",
-    "title": "Fake Shiba Inu (SHIB) Alert: Viral Airdrop Exposed as 'Wallet Drainer' by Veteran",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-12T12:52:29.425437+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "588b93b66e109c75",
     "title": "TechFlow 情报局:SpaceX 拟筹 400 亿美元抢购英伟达 AI 芯片,霍尔木兹海峡三艘油轮接连触雷",
     "source": "深潮TechFlow (中文/简体)",
@@ -5212,6 +5202,16 @@
     "sent_at": "2026-10-21T12:44:54.428137+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "65b3a866c46161d2",
+    "title": "Shiba Inu (SHIB) Moves Rapidly Through 87 Trillion Threshold: What to Expect?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-21T13:04:37.234423+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-CN"
   }
