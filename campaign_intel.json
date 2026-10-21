@@ -25,8 +25,8 @@
       "last_fail": "2026-10-21T16:04:13.653073+00:00"
     },
     "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-10-21T16:04:12.949988+00:00",
       "fails": 1,
+      "reset_at": "2026-10-21T16:04:12.949988+00:00",
       "last_fail": "2026-10-21T14:43:34.953416+00:00"
     }
   },
@@ -35,20 +35,20 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
-    "Preset-stepfun-flash": {
-      "fails": 1,
-      "cooldown_until": "2026-10-21T16:15:53.431617+00:00",
-      "last_fail": "2026-10-21T16:05:53.431640+00:00"
-    },
     "Preset-google": {
       "fails": 1,
-      "cooldown_until": "2026-10-21T16:17:26.881608+00:00",
-      "last_fail": "2026-10-21T16:07:26.881622+00:00"
+      "last_fail": "2026-10-21T16:07:26.881622+00:00",
+      "cooldown_until": "2026-10-21T16:17:26.881608+00:00"
+    },
+    "Preset-stepfun-flash": {
+      "fails": 1,
+      "last_fail": "2026-10-21T16:05:53.431640+00:00",
+      "cooldown_until": "2026-10-21T16:15:53.431617+00:00"
     },
     "Preset-stepfun": {
       "fails": 1,
-      "cooldown_until": "2026-10-21T16:17:24.999426+00:00",
-      "last_fail": "2026-10-21T16:07:24.999447+00:00"
+      "last_fail": "2026-10-21T16:07:24.999447+00:00",
+      "cooldown_until": "2026-10-21T16:17:24.999426+00:00"
     }
   },
   "_article_sent_date": "2026-10-21",
