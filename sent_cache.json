@@ -1,15 +1,5 @@
 [
   {
-    "id": "26c0e24c38a4be8a",
-    "title": "Cardano (ADA) Network Marks Biggest Transaction Day Since 2021",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-12T22:10:42.480636+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "bb3774600289153f",
     "title": "Stellar’s $3.5 Billion RWA Surge Leaves XRP Ledger, Solana and Avalanche Playing Catch-Up",
     "source": "ZyCrypto (新币与空投)",
@@ -5209,6 +5199,16 @@
     "sent_at": "2026-10-21T17:44:43.581378+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "61d0c8b2c52efc3f",
+    "title": "Beyond HODLing: How Bitcoin-Backed Loans Can Unlock New Financial Opportunities",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-10-21T18:04:08.272256+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
