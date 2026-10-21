@@ -1,15 +1,5 @@
 [
   {
-    "id": "c209600ebe891100",
-    "title": "Chainlink eyes $13.50 breakout as ETF inflows hit yearly high",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-10-12T15:07:50.510683+00:00",
-    "tokens": [
-      "LINK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "aaca14f6f1daa798",
     "title": "Zhibao 科技与 Bedrock 签署战略合作协议,探索 ZBAO 股票链上代币化及比特币国库收益",
     "source": "深潮TechFlow (中文/简体)",
@@ -5207,6 +5197,16 @@
     "title": "Claude AI Predicts a Huge Move for Bitcoin by 2027",
     "source": "CryptoNews (全球快讯)",
     "sent_at": "2026-10-21T14:44:04.115675+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a1f858b87208d57f",
+    "title": "分析:比特币或在美联储决议前维持8.13万至8.44万美元震荡",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-21T15:05:28.804850+00:00",
     "tokens": [
       "BTC"
     ],
