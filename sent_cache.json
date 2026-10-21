@@ -1,15 +1,5 @@
 [
   {
-    "id": "fe963c0ac57e4fa4",
-    "title": "Blur 宣佈 11 月關閉前端:BLUR 下跌 16%,這場“軟退場”意味著什麼?",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-13T03:08:31.650941+00:00",
-    "tokens": [
-      "BLUR"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "63dfbf3701d32fc3",
     "title": "Rome拟推出代币ROME,已完成900万美元融资",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5203,6 +5193,17 @@
     "tokens": [
       "PUMP",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "221bee3b8e3a9b42",
+    "title": "XRP and DOGE Look Undervalued by MVRV Measures, but Will Traders Take Notice?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-21T20:45:09.909427+00:00",
+    "tokens": [
+      "XRP",
+      "DOGE"
     ],
     "lang": "en"
   }
