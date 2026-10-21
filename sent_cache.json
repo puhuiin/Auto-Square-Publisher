@@ -1,16 +1,5 @@
 [
   {
-    "id": "9659380d670821f9",
-    "title": "Can Hong Kong’s new Solana ETF reverse October’s weak fund demand?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-13T04:06:50.353987+00:00",
-    "tokens": [
-      "USDC",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "598c3a6210569ee6",
     "title": "Sui crypto gets $30M AI boost, but SUI slips toward $1",
     "source": "AMBCrypto (技术与链上)",
@@ -5204,6 +5193,16 @@
     "sent_at": "2026-10-21T21:23:59.012873+00:00",
     "tokens": [
       "XLM"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d00af025116be778",
+    "title": "Grok AI Predicts Something Big Is Brewing for XRP by Jan 1, 2027",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-21T21:44:28.768334+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
