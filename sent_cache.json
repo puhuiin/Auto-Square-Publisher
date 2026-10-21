@@ -1,15 +1,5 @@
 [
   {
-    "id": "196fc3d6f66beed9",
-    "title": "「广撒网」策略正在失效:加密进入价值投资时代",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-13T05:26:10.418458+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "464bebdba87a41c7",
     "title": "「廣撒網」策略正在失效:加密進入價值投資時代",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5201,6 +5191,16 @@
     "sent_at": "2026-10-21T22:25:46.707339+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "30ef5ab2c963458a",
+    "title": "Dataline raises $10.6 million for decentralized data network for AI agents, plans ICO",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-21T22:44:04.872390+00:00",
+    "tokens": [
+      "UNI"
     ],
     "lang": "zh-CN"
   }
