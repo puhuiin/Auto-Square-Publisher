@@ -1,15 +1,5 @@
 [
   {
-    "id": "9434f8863593c721",
-    "title": "Uniswap Burn Rate Plummets to Zero as Robinhood Chain Struggles With Activity",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-12T14:46:40.724870+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c209600ebe891100",
     "title": "Chainlink eyes $13.50 breakout as ETF inflows hit yearly high",
     "source": "CoinJournal (山寨异动)",
@@ -5209,6 +5199,16 @@
     "sent_at": "2026-10-21T14:24:38.233364+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3f8ae113e6191e96",
+    "title": "Claude AI Predicts a Huge Move for Bitcoin by 2027",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-21T14:44:04.115675+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
