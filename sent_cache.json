@@ -1,15 +1,5 @@
 [
   {
-    "id": "80d52d216781c433",
-    "title": "Internet Computer (ICP) Pumps 14% Daily: More Gains Ahead?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-12T21:07:40.211060+00:00",
-    "tokens": [
-      "ICP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "26c0e24c38a4be8a",
     "title": "Cardano (ADA) Network Marks Biggest Transaction Day Since 2021",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5209,6 +5199,16 @@
     "sent_at": "2026-10-21T17:24:14.717117+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c1e01555cf82b534",
+    "title": "Birdeye Launches Institutional Terminal as Bots Dominate Crypto",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-21T17:44:43.581378+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
