@@ -1,15 +1,5 @@
 [
   {
-    "id": "16413f8cf1da8303",
-    "title": "Bitget UEX 日报|油价升至近一个月高位;纳指回落、Meta 逆势大涨;Strategy 增持 250 枚 BTC",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-13T02:48:06.678517+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "fe963c0ac57e4fa4",
     "title": "Blur 宣佈 11 月關閉前端:BLUR 下跌 16%,這場“軟退場”意味著什麼?",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5202,6 +5192,17 @@
     "sent_at": "2026-10-21T20:04:40.320826+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "07ad68d460ac64cf",
+    "title": "PUMP FUN向Kraken转入12.98万枚SOL,价值1406万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-21T20:24:22.397529+00:00",
+    "tokens": [
+      "PUMP",
+      "SOL"
     ],
     "lang": "en"
   }
