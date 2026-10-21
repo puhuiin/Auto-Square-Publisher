@@ -1,16 +1,5 @@
 [
   {
-    "id": "899d8e70ed6f7c28",
-    "title": "星球早讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-12T01:44:35.591105+00:00",
-    "tokens": [
-      "XRP",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "0c4de856df31ab54",
     "title": "Pudgy Penguins: Airdrop farmers want PENGU compensation after Abstract L2 shutdown",
     "source": "AMBCrypto (技术与链上)",
@@ -5208,6 +5197,19 @@
     "sent_at": "2026-10-21T01:44:06.761143+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "f68693ba7f590bd8",
+    "title": "XRP, Shiba Inu (SHIB), Tron (TRX) and Solana (SOL) Price Analysis For October 21: When Do Headliners Pick Up Bullish Pace?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-21T02:04:27.696936+00:00",
+    "tokens": [
+      "XRP",
+      "SHIB",
+      "TRX",
+      "SUI"
     ],
     "lang": "zh-CN"
   }
