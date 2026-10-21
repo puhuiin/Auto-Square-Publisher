@@ -1,15 +1,5 @@
 [
   {
-    "id": "92ca3ef2aa3bda7e",
-    "title": "Aave’s USDG rollover plan has a yield below most quoted borrowing rates",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-12T02:24:57.956898+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "123e484dbda649bf",
     "title": "加密市场涨跌互现,Layer2及DePIN板块均涨超6%,NFT板块等小幅下跌",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5212,6 +5202,17 @@
       "BTC",
       "CVX",
       "COMP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "96f9f5818c75ae3c",
+    "title": "主要 Meme 市场 24 小时成交约 2.72 亿美元,环比增长 20.2%",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-21T02:44:32.827355+00:00",
+    "tokens": [
+      "BNB",
+      "SOL"
     ],
     "lang": "zh-TW"
   }
