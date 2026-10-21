@@ -1,15 +1,5 @@
 [
   {
-    "id": "26f64a76cae08a14",
-    "title": "Can Celestia hold its 23% rally as altcoins weaken? TIA’s breakout needs...",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-11T21:04:33.819348+00:00",
-    "tokens": [
-      "TIA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a26de75e3b9d097f",
     "title": "Crypto market’s weekly winners and losers – STRK, PORKU, RAIN, MINA",
     "source": "AMBCrypto (技术与链上)",
@@ -5212,5 +5202,16 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "2adbf81e84d4ad50",
+    "title": "拆解 Abraxas:巨鲸如何在 Hyperliquid 上开展中性策略?",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-21T00:08:41.405971+00:00",
+    "tokens": [
+      "USDC",
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
