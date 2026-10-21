@@ -1,17 +1,5 @@
 [
   {
-    "id": "3e929879188d3351",
-    "title": "加密早报:Strategy 上周增持 250 枚比特币,OneKey 终止 CryptoBilis 授权",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-13T01:49:32.242710+00:00",
-    "tokens": [
-      "ETH",
-      "XRP",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "56c3575035019267",
     "title": "全線回調:加密市場和美股同時下殺,山寨幣血流成河",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5206,6 +5194,16 @@
     "sent_at": "2026-10-21T19:04:29.576044+00:00",
     "tokens": [
       "PENGU"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ac3483ba0d21ab57",
+    "title": "XRP to Power New 'Ultimate' AI Stack From Ripple Founder's Venture",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-21T19:24:06.668527+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
