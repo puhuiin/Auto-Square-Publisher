@@ -19,31 +19,31 @@
   "strategy_guidance": "今日币安新上线5只bStocks代币化证券交易对及多组TradFi USDⓈ-Margined永续合约，可引导创作者围绕新资产、新合约的交易规则、玩法解读发帖，关联#Write2Earn活动引导读者参与评论互动拿奖励；同时可结合仍在进行的Spot Trading Tournament S6、Qafila 2026、Binance Pick、Binance Blockchain Week Starter Pack Challenge等热门活动的参与攻略、进度追踪内容追当期活动热度，引导用户参与活动互动。",
   "last_updated": "2026-10-21T08:24:25.850620Z",
   "_feed_health": {
+    "ZyCrypto (新币与空投)": {
+      "fails": 1,
+      "reset_at": "2026-10-21T19:03:29.642287+00:00",
+      "last_fail": "2026-10-21T14:43:34.953416+00:00"
+    },
     "NewsBTC (比特币与山寨)": {
       "fails": 1,
-      "reset_at": "2026-10-21T18:43:28.079911+00:00",
+      "reset_at": "2026-10-21T19:03:29.524516+00:00",
       "last_fail": "2026-10-21T18:03:41.502458+00:00"
     },
     "Bitcoinist (比特币向)": {
       "fails": 3,
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-21T18:43:28.751338+00:00"
-    },
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "reset_at": "2026-10-21T18:43:27.975593+00:00",
-      "last_fail": "2026-10-21T14:43:34.953416+00:00"
+      "last_fail": "2026-10-21T19:03:30.142663+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-21",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 211,
+  "_img_rot": 212,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
