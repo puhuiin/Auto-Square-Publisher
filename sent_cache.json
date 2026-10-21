@@ -1,15 +1,5 @@
 [
   {
-    "id": "89527c4fbb5dbac4",
-    "title": "Decoding Ethereum’s stalled rebound as Bitfinex longs defy $542M ETF outflows",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-12T00:30:32.763392+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2220333d24e54f9e",
     "title": "加密早报:Strive CEO 发布 BTC Tracker 信息,虚假 Ledger 网站登上谷歌搜索前列",
     "source": "深潮TechFlow (中文/简体)",
@@ -5212,5 +5202,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e3acd2ca5d07b0ca",
+    "title": "Solana Price Faces New Risk Despite Growing On-Chain Adoption",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-21T01:02:35.963694+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
