@@ -1,15 +1,5 @@
 [
   {
-    "id": "47969dfb0d32d269",
-    "title": "Anthropic’s Claude AI Predicts a Wild Price for Chainlink (LINK)",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-13T06:04:35.721249+00:00",
-    "tokens": [
-      "LINK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7ada3219517e995e",
     "title": "Pearl 用比特币算力跑 AI 推理,矿工收入翻倍的故事才刚刚开始",
     "source": "深潮TechFlow (中文/简体)",
@@ -5201,6 +5191,16 @@
     "sent_at": "2026-10-21T23:04:32.042454+00:00",
     "tokens": [
       "CVX"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "41cc49816349e720",
+    "title": "Why earning XRP yield through this wallet could actually cost you money",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-21T23:24:54.781243+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
