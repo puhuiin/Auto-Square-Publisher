@@ -1,15 +1,5 @@
 [
   {
-    "id": "a55b5e76e11a0232",
-    "title": "Bitget UEX 日报|沙特机场遇袭加剧中东风险;美股三大指数反弹;BTC回升至8.4万美元附近",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-12T03:44:02.676702+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "56f64560f10d5066",
     "title": "HYPE现货ETF上周净流出942.69万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5211,6 +5201,16 @@
     "sent_at": "2026-10-21T07:09:07.706013+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "38022bcc1e05def3",
+    "title": "Ripple Backs SEC’s Proposed Crypto Regulation, Calls for End to Case-by-Case Enforcement",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-21T07:29:33.206098+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
