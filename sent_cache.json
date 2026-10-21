@@ -1,16 +1,5 @@
 [
   {
-    "id": "aaca14f6f1daa798",
-    "title": "Zhibao 科技与 Bedrock 签署战略合作协议,探索 ZBAO 股票链上代币化及比特币国库收益",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-12T16:06:42.612091+00:00",
-    "tokens": [
-      "BTC",
-      "LINK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c37233b9763cce26",
     "title": "Pando Sets Oct. 13 Hong Kong Listing for Spot Solana ETF",
     "source": "The Defiant (DeFi 深度)",
@@ -5209,6 +5198,16 @@
     "sent_at": "2026-10-21T15:05:28.804850+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f6d1e5cbc6a5430a",
+    "title": "Polkadot 社区基金会:Fearless 钱包浏览器扩展存在私钥泄露风险,已有用户报告损失 17,286 枚 DOT",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-21T15:24:37.940810+00:00",
+    "tokens": [
+      "DOT"
     ],
     "lang": "en"
   }
