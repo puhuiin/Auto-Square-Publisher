@@ -1,16 +1,5 @@
 [
   {
-    "id": "2a7899a2d98a46ae",
-    "title": "Standard Chartered brings Ripple’s RLUSD into banking custody after $765 million quarterly surge",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-12T20:06:38.439498+00:00",
-    "tokens": [
-      "RLUSD",
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6ec4b3c9ffb72335",
     "title": "Top 3 Altcoins to Watch For the Second Week of October 2026",
     "source": "BeInCrypto (山寨与行情)",
@@ -5211,6 +5200,16 @@
     "sent_at": "2026-10-21T16:44:34.014077+00:00",
     "tokens": [
       "LTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2652a9989478047b",
+    "title": "Zcash (ZEC) Rises to a 9-Day High as Whales Bet on Further Gains: Details",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-21T17:04:37.833348+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
