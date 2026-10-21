@@ -1,16 +1,5 @@
 [
   {
-    "id": "46a542c7890c420e",
-    "title": "Thailand wants a piece of the $120 billion Bitcoin and Ethereum ETF market, but on its own terms",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-12T12:04:45.986857+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6af336e42c8b65f8",
     "title": "Another Spot Solana ETF Set to Launch This Month",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5215,5 +5204,15 @@
       "AAVE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "a20db29854e95cf0",
+    "title": "Dogecoin Labs正式成立,推动DOGE拓展支付与DeFi应用",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-21T12:24:53.224385+00:00",
+    "tokens": [
+      "DOGE"
+    ],
+    "lang": "zh-CN"
   }
 ]
