@@ -1,15 +1,5 @@
 [
   {
-    "id": "464bebdba87a41c7",
-    "title": "「廣撒網」策略正在失效:加密進入價值投資時代",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-13T05:46:12.647806+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "47969dfb0d32d269",
     "title": "Anthropic’s Claude AI Predicts a Wild Price for Chainlink (LINK)",
     "source": "CryptoNews (全球快讯)",
@@ -5203,5 +5193,15 @@
       "UNI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "8f98f2e0a4c82a6d",
+    "title": "Convex Finance is up 22% – THIS data says CVX’s rally is not done",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-21T23:04:32.042454+00:00",
+    "tokens": [
+      "CVX"
+    ],
+    "lang": "zh-TW"
   }
 ]
