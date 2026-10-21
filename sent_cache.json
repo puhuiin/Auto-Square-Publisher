@@ -1,17 +1,5 @@
 [
   {
-    "id": "adff51c532ef9ef0",
-    "title": "吴说每日精选加密新闻 - 宜信相关公司涉嫌违法犯罪被立案侦查,旗下投资曾涉及 Circle、Matrixport 等加密项目",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-12T13:50:46.915229+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "52b48c697582137b",
     "title": "Binance Research:实际收益率创 2008 年新高,加密与股市领涨板块高度集中",
     "source": "深潮TechFlow (中文/简体)",
@@ -5214,5 +5202,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "b4afb074610c8a15",
+    "title": "Bitcoin volatility nears 2026 lows as traders brace for Fed decision and US midterms",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-21T14:06:16.563157+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
   }
 ]
