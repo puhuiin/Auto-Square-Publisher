@@ -1,17 +1,5 @@
 [
   {
-    "id": "bb3774600289153f",
-    "title": "Stellar’s $3.5 Billion RWA Surge Leaves XRP Ledger, Solana and Avalanche Playing Catch-Up",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-13T00:44:27.035811+00:00",
-    "tokens": [
-      "XRP",
-      "XLM",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "934d97a01686678a",
     "title": "Shiba Inu (SHIB), Zcash (ZEC), Stellar (XLM) and Solana (SOL) Price Analysis for October 13: Are Bulls Aiming Higher?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5209,6 +5197,16 @@
     "sent_at": "2026-10-21T18:04:08.272256+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "538a2222a4ac89f4",
+    "title": "三家公司拟在SEC创新豁免下运营代币化证券交易场所",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-21T18:24:23.352031+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
