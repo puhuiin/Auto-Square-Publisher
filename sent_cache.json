@@ -1,15 +1,5 @@
 [
   {
-    "id": "6af336e42c8b65f8",
-    "title": "Another Spot Solana ETF Set to Launch This Month",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-12T12:26:43.936647+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "c25accf78311f210",
     "title": "Fake Shiba Inu (SHIB) Alert: Viral Airdrop Exposed as 'Wallet Drainer' by Veteran",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5210,6 +5200,16 @@
     "title": "Dogecoin Labs正式成立,推动DOGE拓展支付与DeFi应用",
     "source": "Odaily星球日报 (中文快讯)",
     "sent_at": "2026-10-21T12:24:53.224385+00:00",
+    "tokens": [
+      "DOGE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "aa9aa4dc0cd5baa6",
+    "title": "Dogecoin Labs launches as DOGE ecosystem seeks growth beyond meme-driven demand",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-21T12:44:54.428137+00:00",
     "tokens": [
       "DOGE"
     ],
