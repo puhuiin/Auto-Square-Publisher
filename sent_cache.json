@@ -1,16 +1,5 @@
 [
   {
-    "id": "a26de75e3b9d097f",
-    "title": "Crypto market’s weekly winners and losers – STRK, PORKU, RAIN, MINA",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-11T22:05:10.287330+00:00",
-    "tokens": [
-      "STRK",
-      "MINA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "89527c4fbb5dbac4",
     "title": "Decoding Ethereum’s stalled rebound as Bitfinex longs defy $542M ETF outflows",
     "source": "AMBCrypto (技术与链上)",
@@ -5211,6 +5200,16 @@
     "tokens": [
       "USDC",
       "HYPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "6a7a44967833b931",
+    "title": "上线1小时市值达4000万美元,Solana链上Meme币Kimchi成交额达2370万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-21T00:44:56.932763+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
