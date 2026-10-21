@@ -1,15 +1,5 @@
 [
   {
-    "id": "c53664fa4e6200d8",
-    "title": "Aptos introduces AI tools for conversational development on Move",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-12T04:44:39.159660+00:00",
-    "tokens": [
-      "APT"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "fc08beefeb32b1ac",
     "title": "RSR一度涨超0.0028 USDT,15分钟内涨超66%",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5211,6 +5201,16 @@
     "sent_at": "2026-10-21T08:09:04.015230+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "7d5ebef748597f70",
+    "title": "Delphi Digital:將 HOOD、HYPE 和 LIT 列為投機交易主題投資標的",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-21T08:49:43.778137+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-TW"
   }
