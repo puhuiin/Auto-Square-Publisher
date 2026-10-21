@@ -1,15 +1,5 @@
 [
   {
-    "id": "38325d43b79b1b0a",
-    "title": "Pando Solana ETF 预计 10 月 13 日在港交所上市",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-12T04:24:36.664335+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c53664fa4e6200d8",
     "title": "Aptos introduces AI tools for conversational development on Move",
     "source": "Crypto Briefing (深度与研报)",
@@ -5213,5 +5203,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "61996f740dc7cd9b",
+    "title": "Ripple Backs SEC's Crypto Regulation Proposal",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-21T08:09:04.015230+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
