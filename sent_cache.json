@@ -1,16 +1,5 @@
 [
   {
-    "id": "6ec4b3c9ffb72335",
-    "title": "Top 3 Altcoins to Watch For the Second Week of October 2026",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-12T20:27:07.201471+00:00",
-    "tokens": [
-      "STRK",
-      "ZRO"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "80d52d216781c433",
     "title": "Internet Computer (ICP) Pumps 14% Daily: More Gains Ahead?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5210,6 +5199,16 @@
     "sent_at": "2026-10-21T17:04:37.833348+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9abd21553f2495e9",
+    "title": "Dogecoin Gets a Dedicated Company to Build Out Its Ecosystem",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-10-21T17:24:14.717117+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
