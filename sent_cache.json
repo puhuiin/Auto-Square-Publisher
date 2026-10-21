@@ -1,15 +1,5 @@
 [
   {
-    "id": "f3fa06f28673025a",
-    "title": "Arbitrum looks to $0.285 after gaining 21% – But THIS level comes first",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-12T07:24:33.675770+00:00",
-    "tokens": [
-      "ARB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3e13d5d5e8b45553",
     "title": "币安推出自动订单路由功能",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5209,6 +5199,16 @@
     "title": "Crypto rises with Asian tech stocks, zcash extends gain after setting upgrade date",
     "source": "CoinDesk (权威宏观与机构)",
     "sent_at": "2026-10-21T10:45:54.832310+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "d5a1f9ec810ed4b0",
+    "title": "Zcash has one shot at $1,350 as ETF inflows return – Or it’s back to $1,040",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-21T11:04:13.646178+00:00",
     "tokens": [
       "ZEC"
     ],
