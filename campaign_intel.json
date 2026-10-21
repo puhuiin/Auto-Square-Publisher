@@ -22,29 +22,36 @@
     "Bitcoinist (比特币向)": {
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3,
-      "last_fail": "2026-10-21T22:03:41.617259+00:00"
-    },
-    "ZyCrypto (新币与空投)": {
-      "fails": 2,
-      "last_fail": "2026-10-21T20:44:22.213465+00:00",
-      "reset_at": "2026-10-21T22:03:41.361037+00:00"
+      "last_fail": "2026-10-21T22:23:28.740890+00:00"
     },
     "NewsBTC (比特币与山寨)": {
       "fails": 3,
-      "last_fail": "2026-10-21T20:44:38.757814+00:00",
       "parked_until": "2026-10-22T02:44:38.757814+00:00",
-      "reset_at": "2026-10-21T19:43:34.579552+00:00"
+      "reset_at": "2026-10-21T19:43:34.579552+00:00",
+      "last_fail": "2026-10-21T20:44:38.757814+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-10-21T22:23:28.510121+00:00",
+      "fails": 2,
+      "last_fail": "2026-10-21T20:44:22.213465+00:00"
     },
     "CoinJournal (山寨异动)": {
-      "last_fail": "2026-10-21T22:04:11.539993+00:00",
-      "fails": 2
+      "parked_until": "2026-10-22T04:23:58.562927+00:00",
+      "fails": 3,
+      "last_fail": "2026-10-21T22:23:58.562927+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun": {
+      "fails": 1,
+      "cooldown_until": "2026-10-21T22:35:28.368211+00:00",
+      "last_fail": "2026-10-21T22:25:28.368224+00:00"
+    }
+  },
   "_article_sent_date": "2026-10-21",
   "_publish_park": {},
   "_intel_refresh_fail": {},

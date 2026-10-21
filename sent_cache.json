@@ -1,17 +1,5 @@
 [
   {
-    "id": "15da5ca0a9be988f",
-    "title": "山寨季指数创一年新高,26 个分类里 20 个在跌",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-13T04:50:08.061511+00:00",
-    "tokens": [
-      "DOGE",
-      "SHIB",
-      "PEPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "196fc3d6f66beed9",
     "title": "「广撒网」策略正在失效:加密进入价值投资时代",
     "source": "深潮TechFlow (中文/简体)",
@@ -5205,5 +5193,15 @@
       "ADA"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "0d360bdf5d8eaef5",
+    "title": "XRP Whale Outflows Hit 5-Year Low; Here’s What’s Happening",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-21T22:25:46.707339+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
