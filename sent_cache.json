@@ -1,15 +1,5 @@
 [
   {
-    "id": "7ada3219517e995e",
-    "title": "Pearl 用比特币算力跑 AI 推理,矿工收入翻倍的故事才刚刚开始",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-13T06:25:19.609133+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "28d2d2ab9e6695a1",
     "title": "LayerZero jumps 22% – Can ZRO beat THIS before its $62M unlock?",
     "source": "AMBCrypto (技术与链上)",
@@ -5203,5 +5193,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "5defa3a26658651e",
+    "title": "Cardano Hits Major Milestone With 100,000 Indian Farms",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-21T23:44:34.486241+00:00",
+    "tokens": [
+      "ADA"
+    ],
+    "lang": "zh-CN"
   }
 ]
