@@ -1,15 +1,5 @@
 [
   {
-    "id": "b6ec00212921eca6",
-    "title": "Pando Finance’s Solana ETF set to debut on HKEX October 13",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-12T05:26:43.572307+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d7853d40b3c03a3b",
     "title": "播客笔记|对话 Papertrade 联合构建者 Jez:市场整体还会涨 10 倍,你得满仓最好的生意",
     "source": "深潮TechFlow (中文/简体)",
@@ -5213,5 +5203,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "215ff5d0936ad094",
+    "title": "Ripple spent $150M fighting the SEC lawsuit – Now it wants clear crypto rules",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-21T09:45:20.917899+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
