@@ -1,16 +1,5 @@
 [
   {
-    "id": "631785488df8a802",
-    "title": "星球晚讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-12T11:44:48.399541+00:00",
-    "tokens": [
-      "BTC",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "46a542c7890c420e",
     "title": "Thailand wants a piece of the $120 billion Bitcoin and Ethereum ETF market, but on its own terms",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5214,5 +5203,17 @@
       "MORPHO"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e66f924aef04a4e7",
+    "title": "五个 DeFi 项目进观察名单:从分级金库到链上永续订单簿",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-21T12:05:24.986859+00:00",
+    "tokens": [
+      "USDC",
+      "ETH",
+      "AAVE"
+    ],
+    "lang": "zh-TW"
   }
 ]
