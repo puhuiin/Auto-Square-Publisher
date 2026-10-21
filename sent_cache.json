@@ -1,15 +1,5 @@
 [
   {
-    "id": "c37233b9763cce26",
-    "title": "Pando Sets Oct. 13 Hong Kong Listing for Spot Solana ETF",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-12T16:27:02.727516+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "46da3e178c48f846",
     "title": "加密内存池上线,Aptos主网支持按笔交易降低MEV风险",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5208,6 +5198,16 @@
     "sent_at": "2026-10-21T15:24:37.940810+00:00",
     "tokens": [
       "DOT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3babb25607a11604",
+    "title": "Solana’s Alpenglow launches on mainnet, targets 99% faster finality",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-10-21T15:44:57.208392+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
