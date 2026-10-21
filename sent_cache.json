@@ -1,17 +1,5 @@
 [
   {
-    "id": "2220333d24e54f9e",
-    "title": "加密早报:Strive CEO 发布 BTC Tracker 信息,虚假 Ledger 网站登上谷歌搜索前列",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-12T01:04:31.127548+00:00",
-    "tokens": [
-      "BTC",
-      "SOL",
-      "LUNA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7ade3b24485f7103",
     "title": "USD.AI jumps 29% as ‘commit-and-compound’ model draws attention – Can CHIP keep climbing?",
     "source": "AMBCrypto (技术与链上)",
@@ -5210,6 +5198,16 @@
     "sent_at": "2026-10-21T01:02:35.963694+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0c8d3946aa533941",
+    "title": "拜登之子销毁 12% LAPTOP,诺贝尔和平奖结果与未领空投共同触发",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-21T01:24:30.755855+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
