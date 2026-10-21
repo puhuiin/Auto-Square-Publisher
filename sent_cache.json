@@ -1,15 +1,5 @@
 [
   {
-    "id": "f33a363bfd0ce2f9",
-    "title": "Bitcoin Spooked? Crypto Fear and Greed Index Drops to Pre-Rally August Lows",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-12T18:27:40.160015+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2a7899a2d98a46ae",
     "title": "Standard Chartered brings Ripple’s RLUSD into banking custody after $765 million quarterly surge",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5211,6 +5201,16 @@
       "BTC",
       "SOL",
       "MASK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "058324489aaf782d",
+    "title": "Litecoin price rebounds 5% as ETF assets double to $14M",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-21T16:44:34.014077+00:00",
+    "tokens": [
+      "LTC"
     ],
     "lang": "en"
   }
