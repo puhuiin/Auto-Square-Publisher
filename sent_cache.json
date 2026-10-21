@@ -1,15 +1,5 @@
 [
   {
-    "id": "0c4de856df31ab54",
-    "title": "Pudgy Penguins: Airdrop farmers want PENGU compensation after Abstract L2 shutdown",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-12T02:04:31.545631+00:00",
-    "tokens": [
-      "PENGU"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "92ca3ef2aa3bda7e",
     "title": "Aave’s USDG rollover plan has a yield below most quoted borrowing rates",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5212,5 +5202,17 @@
       "SUI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e989cba87201726b",
+    "title": "加密市场普涨,DeFi板块上涨4.38%,BTC突破8.3万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-21T02:24:44.626167+00:00",
+    "tokens": [
+      "BTC",
+      "CVX",
+      "COMP"
+    ],
+    "lang": "zh-TW"
   }
 ]
