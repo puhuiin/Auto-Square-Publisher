@@ -1,15 +1,5 @@
 [
   {
-    "id": "2881c1eaf06bfdfa",
-    "title": "Internet Computer just broke out of its descending triangle – And whales noticed",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-13T03:47:54.948242+00:00",
-    "tokens": [
-      "ICP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9659380d670821f9",
     "title": "Can Hong Kong’s new Solana ETF reverse October’s weak fund demand?",
     "source": "AMBCrypto (技术与链上)",
@@ -5204,6 +5194,16 @@
     "sent_at": "2026-10-21T21:04:37.448368+00:00",
     "tokens": [
       "ENA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9548c685d6878023",
+    "title": "Stellar Ramps Up Quantum Readiness With Bell Upgrade — Why This Could Be Ultra-Bullish For XLM Price",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-21T21:23:59.012873+00:00",
+    "tokens": [
+      "XLM"
     ],
     "lang": "en"
   }
