@@ -20,37 +20,31 @@
   "last_updated": "2026-10-21T08:24:25.850620Z",
   "_feed_health": {
     "深潮TechFlow (中文/简体)": {
-      "last_fail": "2026-10-21T08:06:33.187196+00:00",
+      "reset_at": "2026-10-21T13:43:32.020531+00:00",
       "fails": 1,
-      "reset_at": "2026-10-21T13:23:40.470012+00:00"
+      "last_fail": "2026-10-21T08:06:33.187196+00:00"
     },
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-21T13:23:39.358656+00:00",
       "fails": 3,
+      "last_fail": "2026-10-21T13:43:30.565512+00:00",
       "parked_until": "2026-10-20T06:53:53.228743+00:00"
     },
     "深潮TechFlow (中文/繁体)": {
-      "last_fail": "2026-10-21T08:06:24.541485+00:00",
+      "reset_at": "2026-10-21T13:43:32.931521+00:00",
       "fails": 1,
-      "reset_at": "2026-10-21T13:23:42.247207+00:00"
+      "last_fail": "2026-10-21T08:06:24.541485+00:00"
     }
   },
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
     "date": "2026-10-18"
   },
-  "_llm_breaker": {
-    "Preset-stepfun": {
-      "fails": 1,
-      "cooldown_until": "2026-10-21T13:36:26.909441+00:00",
-      "last_fail": "2026-10-21T13:26:26.909461+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-10-21",
   "_publish_park": {
     "d54ceec3188ef94b": {
-      "last_fail": "2026-10-21T08:47:09.180700+00:00",
-      "fails": 1
+      "fails": 1,
+      "last_fail": "2026-10-21T08:47:09.180700+00:00"
     }
   },
   "_intel_refresh_fail": {},
