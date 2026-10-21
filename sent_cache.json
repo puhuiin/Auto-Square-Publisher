@@ -1,15 +1,5 @@
 [
   {
-    "id": "598c3a6210569ee6",
-    "title": "Sui crypto gets $30M AI boost, but SUI slips toward $1",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-13T04:27:11.801383+00:00",
-    "tokens": [
-      "SUI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "15da5ca0a9be988f",
     "title": "山寨季指数创一年新高,26 个分类里 20 个在跌",
     "source": "深潮TechFlow (中文/简体)",
@@ -5205,5 +5195,15 @@
       "XRP"
     ],
     "lang": "en"
+  },
+  {
+    "id": "2ec15c705cf4970f",
+    "title": "Important Cardano News and ADA Price Update: October 21",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-21T22:04:37.600465+00:00",
+    "tokens": [
+      "ADA"
+    ],
+    "lang": "zh-TW"
   }
 ]
