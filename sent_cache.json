@@ -1,15 +1,5 @@
 [
   {
-    "id": "c5345b120f2ee3b7",
-    "title": "Kalshi 年化交易额约 9000 亿美元,研究员称估值或偏低",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-13T21:04:06.326053+00:00",
-    "tokens": [
-      "ARK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "e8766f506700ec18",
     "title": "ARK Invest’s Cathie Wood says nearly 90% of data center financing is in the US",
     "source": "Crypto Briefing (深度与研报)",
@@ -5204,5 +5194,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "51694113635c47b2",
+    "title": "Why Is No SHIB Burning? Anomaly in Major Shiba Inu Burn Platform Explained",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-22T14:08:48.031035+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "en"
   }
 ]
