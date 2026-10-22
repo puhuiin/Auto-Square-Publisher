@@ -1,15 +1,5 @@
 [
   {
-    "id": "04dc6684623f662e",
-    "title": "Avalanche Highlights KSD Links Ahead of Korea’s 2027 Tokenization Rollout",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-13T18:45:07.955445+00:00",
-    "tokens": [
-      "AVAX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "81e54a5d6bf84f12",
     "title": "Ethena falls 12% and eyes $0.19 liquidity sweep – Yet ENA’s bullish outlook survives IF...",
     "source": "AMBCrypto (技术与链上)",
@@ -5199,5 +5189,15 @@
       "TAO"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "7d4387145b4ece23",
+    "title": "分析:比特币市场占比升至5月以来最高水平,市场等待新催化剂",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-22T11:44:48.811322+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
