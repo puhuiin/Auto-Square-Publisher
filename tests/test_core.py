@@ -23836,5 +23836,92 @@ class TestR828TradingChallengeVocab(unittest.TestCase):
             "纯行情播报，没有任何活动话术。 #Write2Earn #BinanceSquare #TradingTournament"))
 
 
+class TestR830EntryNamesAndEnHatch(unittest.TestCase):
+    """★★ R830：两件事一起做（都是"一侧修了另一侧没对齐"家族）。
+
+    一、**第 6 次词表补漏**：当期活动的**入口名**换了一茬。生产实测（近 40 篇
+       我们自己的帖，正则实测频次）`Binance Pick` ×4、`Qafila 2026` ×2、
+       `RWUSD`（以"练手场地"出现）、`$FF vouchers`，而旧词表只认
+       tournament/season/challenge ⇒ 一律判 False。
+
+    二、**英文分支的逃生阀比中文宽**：中文分支 R778 已收紧成「八竿子打不着」，
+       而英文摘要段一直留着**旧措辞「与交易活动无关才可不提」**。生产实证
+       （R829 逐帖 menu 字段上线后的英文夜窗 n=33）：**真漏 12 篇全部 menu=True**
+       （菜单给了、模型没写），只有 1 篇 menu=False ⇒ 归因在模型侧；
+       基线（10-19~10-21 三个完整夜窗）真漏 **23/64 = 36%**，而中文白天同口径
+       只有 4~7% ⇒ 英文是系统性短板。判据**先预注册再部署**。
+    """
+
+    @staticmethod
+    def _vocab():
+        import importlib.util
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "campaign_vocab.py")
+        spec = importlib.util.spec_from_file_location("campaign_vocab_r830", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    # ---- 一、入口名 ----
+    def test_new_entry_names_are_recognized(self):
+        """★ 生产实录句（模型真在用的入口名）必须命中。"""
+        cv = self._vocab()
+        for line in (
+            "The Binance Pick leaderboard activity can be followed too.",          # Binance Pick
+            "Qafila 2026 is running a million USDC reward pool.",                  # Qafila
+            "just join the comment thread for Word of the Day or Community Voice", # Word of the Day
+            "check the newly listed RWUSD pair",                                    # RWUSD
+            "users can earn $FF vouchers on the leaderboard",                       # FF voucher
+        ):
+            self.assertTrue(cv.mention_in_text(line), "漏检: %s" % line)
+
+    def test_bare_pick_reward_ff_not_matched(self):
+        """★ 精度：裸 pick / 裸 reward / 裸 ff 不得命中（只收窄形态）。"""
+        cv = self._vocab()
+        for line in (
+            "I pick the second option and wait for confirmation.",
+            "The risk-reward is trash, don't chase this pop.",
+            "FF is just a two-letter ticker in this sentence.",
+            "The word of mouth on this token is fading fast.",
+        ):
+            self.assertFalse(cv.mention_in_text(line), "误报: %s" % line)
+
+    def test_qafila_bare_matches_but_that_is_intended(self):
+        """Qafila 是专名，裸词即可命中；这里把"有意放宽"钉住，避免后人当误报删掉。"""
+        cv = self._vocab()
+        self.assertTrue(cv.mention_in_text("Qafila rewards are live this week."))
+
+    # ---- 二、英文分支逃生阀对齐 ----
+    @staticmethod
+    def _en_branch_window(src):
+        """取英文分支指令块（锚点之后的窗口，避开中文分支里同样的措辞）。"""
+        anchor = "【★ 输出语种（最高优先级，覆盖以上所有中文示例）】"
+        i = src.index(anchor)
+        return src[i:i + 4000]
+
+    def _main_src(self):
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "main.py")
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_en_branch_hatch_is_tightened(self):
+        """★ 英文分支必须用收紧后的逃生阀，且**不得**留着旧的宽措辞。
+
+        ⚠️ 首版守卫若只写 `assertIn("八竿子打不着", src)` 会**无区分力**：
+        中文分支里本来就有这四个字。故先按锚点切出英文分支窗口再断言。
+        """
+        win = self._en_branch_window(self._main_src())
+        self.assertIn("八竿子打不着", win, "英文分支未对齐中文的收紧措辞")
+        self.assertNotIn("确实与交易活动无关时才可不提", win,
+                         "旧宽措辞仍在英文分支 ⇒ 模型会读成'可以不提'")
+
+    def test_en_branch_has_expectation_sentence(self):
+        """★ R760 的教训：条件句会被读成许可 ⇒ 必须有"默认必须"的期望句。"""
+        win = self._en_branch_window(self._main_src())
+        self.assertIn("默认**必须**带这一句", win)
+        self.assertIn("都算交易活动", win, "必须显式堵住「利好没兑现/先观望」这类托词")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

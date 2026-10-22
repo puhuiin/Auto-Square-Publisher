@@ -63,7 +63,14 @@ CAMPAIGN_MENTION_RE = re.compile(
     #   这类行情措辞，故只收 `trading challenge` 与 `challenge` 紧邻活动语境的形态。
     r"|trading\s+challenge"
     r"|challenge[^.!?\n]{0,24}(?:reward|prize|bonus|earn)"
-    r"|(?:join|enter|take part in)[^.!?\n]{0,20}challenge",
+    r"|(?:join|enter|take part in)[^.!?\n]{0,20}challenge"
+    # ★★ R830：**第 6 次词表补漏**——当期活动的**入口名**换了一茬：Season 7/8
+    #   之外还多了四个模型真在用的入口，而旧词表只认 tournament/season/challenge。
+    #   生产实证（近 40 篇我们自己的帖，正则实测频次）：`Binance Pick` ×4、
+    #   `Qafila 2026` ×2、`RWUSD`（以"练手场地"出现）、`$FF vouchers`。
+    #   注：`Alpha DNA 交易竞赛` 已被 `交易竞赛`/`競賽` 兜住，故不收裸 `Alpha DNA`。
+    #   ⚠️ 一律**窄形态**（产品全名/固定专名），不收裸 pick / 裸 reward / 裸 ff。
+    r"|binance\s+pick|qafila|word\s*of\s*the\s*day|rwusd|ff\s*voucher",
     re.IGNORECASE)
 
 # 标签形态：注入的 #TradingTournament / #Write2Earn 含 contest/tournament 字样，
