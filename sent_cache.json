@@ -1,16 +1,5 @@
 [
   {
-    "id": "df3cf37ab87e54cf",
-    "title": "Base推出Earn & Borrow,为平台提供稳定币收益及加密抵押借贷方案",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-13T17:44:35.392301+00:00",
-    "tokens": [
-      "USDC",
-      "AAVE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c6d2d4777218c6c3",
     "title": "Uniswap’s retail demand returns after 2 weeks of losses: Can UNI defend $6.80?",
     "source": "AMBCrypto (技术与链上)",
@@ -5198,6 +5187,16 @@
     "sent_at": "2026-10-22T10:26:37.976678+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "bacaa60604300927",
+    "title": "QCP:霍尔木兹海峡能源风险升温,AI 融资压力加剧科技信贷市场分化",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-22T10:48:15.780499+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
