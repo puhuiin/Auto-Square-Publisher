@@ -1,15 +1,5 @@
 [
   {
-    "id": "d3d1e4e60393ba81",
-    "title": "9 月 DEX 与发射台手续费 7.88 亿美元创历史新高",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-13T17:24:23.872054+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "df3cf37ab87e54cf",
     "title": "Base推出Earn & Borrow,为平台提供稳定币收益及加密抵押借贷方案",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5198,6 +5188,16 @@
     "sent_at": "2026-10-22T10:07:36.427113+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "993d04aae0f2b6c7",
+    "title": "Solana records $5 trillion in stablecoin volume in 2026",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-22T10:26:37.976678+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
