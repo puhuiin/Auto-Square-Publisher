@@ -1,15 +1,5 @@
 [
   {
-    "id": "52d254b2b4fa81a9",
-    "title": "AMD Stock At Risk In 2027: Is ARK’s $15 Million Sale A Sign?",
-    "source": "Watcher.Guru (快讯)",
-    "sent_at": "2026-10-13T20:04:10.545107+00:00",
-    "tokens": [
-      "ARK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1856471c50235795",
     "title": "Ripple Brings AI-Powered Payments to XRP Ledger",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5199,6 +5189,16 @@
       "USDC",
       "BNB",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "32ce8d09b8a92589",
+    "title": "Vitalik小说叙事Meme币项目Zipcoin宣布关闭",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-22T13:08:03.131237+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
