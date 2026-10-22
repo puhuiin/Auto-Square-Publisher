@@ -1,16 +1,5 @@
 [
   {
-    "id": "639285c8dbc47c1f",
-    "title": "More than half of Ethena’s USDe backing is allocated to lending",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-13T12:07:58.241452+00:00",
-    "tokens": [
-      "ENA",
-      "USDE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c8b6fc7b33395be8",
     "title": "Ethereum Price Prediction: Hyperliquid Whale Opens $60M ETH Long",
     "source": "CryptoNews (全球快讯)",
@@ -5202,6 +5191,18 @@
     "source": "CryptoNews (全球快讯)",
     "sent_at": "2026-10-22T01:26:29.844254+00:00",
     "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "108e8c16f6c96309",
+    "title": "加密早报:美国 OCC 发布 GENIUS Act 稳定币最终实施规则,马斯克宣布 SpaceX 与特斯拉探讨合并",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-22T01:47:49.579509+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
       "ZEC"
     ],
     "lang": "zh-CN"
