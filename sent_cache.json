@@ -1,15 +1,5 @@
 [
   {
-    "id": "28d2d2ab9e6695a1",
-    "title": "LayerZero jumps 22% – Can ZRO beat THIS before its $62M unlock?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-13T07:10:16.606490+00:00",
-    "tokens": [
-      "ZRO"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b903b1bace7d79ac",
     "title": "HYPE空头名义价值830.53万美元,某地址当前浮亏505.90万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5201,6 +5191,16 @@
     "sent_at": "2026-10-21T23:44:34.486241+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b49dc27fa8c39714",
+    "title": "Three Companies Have Notified the SEC of Intention To Start Tokenized Stocks Trading",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-10-22T00:04:43.730158+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
