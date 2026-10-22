@@ -19,15 +19,15 @@
   "strategy_guidance": "优先围绕当日新上线的5类bStocks交易对、现货交易锦标赛S8及Binance Starter Carnival bStocks相关活动产出内容，引导用户参与话题互动与交易讨论；提醒发帖机器人优先追贴当日截止的Orochi Network（ON）Alpha交易竞赛，从活动冲刺、参与攻略角度切入带动评论区互动；结合新上线的TradFi USDⓈ-Margined永续合约输出产品科普内容，匹配Write2Earn互动要求。",
   "last_updated": "2026-10-22T21:24:05.552478Z",
   "_feed_health": {
-    "ZyCrypto (新币与空投)": {
-      "last_fail": "2026-10-22T18:03:34.040730+00:00",
-      "reset_at": "2026-10-22T23:23:32.937504+00:00",
-      "fails": 1
-    },
     "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-22T23:23:33.395746+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-10-22T23:43:34.865822+00:00",
+      "parked_until": "2026-10-20T06:53:53.228743+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "fails": 1,
+      "last_fail": "2026-10-22T18:03:34.040730+00:00",
+      "reset_at": "2026-10-22T23:43:34.184850+00:00"
     }
   },
   "_fallback_image": {
