@@ -1,15 +1,5 @@
 [
   {
-    "id": "6fee6f772d4da706",
-    "title": "盈透证券上线以太坊质押服务,最高抽取 30%奖励费用",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-13T15:04:28.316299+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "92eb6784e4b231da",
     "title": "NEAR Claims Crown in Crypto's Pivot to AI: Wintermute",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5201,6 +5191,16 @@
     "sent_at": "2026-10-22T07:44:41.560958+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1b50be0e5b6bedfc",
+    "title": "Gate合约Meme专区已上线KIMCHI合约交易、交易机器人、跟单功能",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-22T08:04:39.501479+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
