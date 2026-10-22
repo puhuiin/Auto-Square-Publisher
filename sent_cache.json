@@ -1,15 +1,5 @@
 [
   {
-    "id": "98be706d2ba79aba",
-    "title": "加密早报:AMC CEO 再度公开质疑 Robinhood,SpaceXSI 整合订阅服务",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-14T01:13:11.785407+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7dcb7c4d51e69675",
     "title": "美股潮向(10 月 14 日):摩根大通盈利不及预期,苹果发布 299 美元 HomeView",
     "source": "深潮TechFlow (中文/简体)",
@@ -5198,6 +5188,16 @@
     "title": "SpaceX-Tesla Merger: Passive Flows ‘Hack’, Could Bring More BTC Exposure to S&P 500",
     "source": "Bitcoin Magazine (比特币核心)",
     "sent_at": "2026-10-22T15:24:42.023720+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6b43ef4dd96a0f8b",
+    "title": "Matt Crosby: Bitcoin Is “Primed for a Big Move Higher”",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-10-22T15:50:08.448135+00:00",
     "tokens": [
       "BTC"
     ],
