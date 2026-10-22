@@ -1,16 +1,5 @@
 [
   {
-    "id": "1a88436acaea64e2",
-    "title": "Grayscale Buys $20 Million of Solana",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-13T14:05:10.747230+00:00",
-    "tokens": [
-      "SOL",
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "cfc3cea946c07194",
     "title": "Dogecoin rebounds from $0.0800 as ETF outflows keep downside risks in focus",
     "source": "CoinJournal (山寨异动)",
@@ -5204,6 +5193,16 @@
     "sent_at": "2026-10-22T03:24:52.769598+00:00",
     "tokens": [
       "API3"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "8085d7a8f9ebf338",
+    "title": "日吞吐达万亿Token、用户近 300 万,B.AI 如何以底层“无感化”捕获 Web2 AI 流量?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-22T03:47:36.620063+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "zh-TW"
   }
