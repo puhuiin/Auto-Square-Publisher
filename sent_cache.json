@@ -1,15 +1,5 @@
 [
   {
-    "id": "2ba75ff56a0fd31d",
-    "title": "Just $1 of SHIB Removed as Shiba Inu Burn Resumes From Temporary Hiatus",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-13T16:44:21.491536+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "48464ed8c03e2aaa",
     "title": "今日加密货币市值前 100 代币涨跌:STX 涨 5.08%,ZRO 跌 12.75%",
     "source": "深潮TechFlow (中文/简体)",
@@ -5202,5 +5192,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "5e4d4f415fec7f94",
+    "title": "Solana’s Alpenglow upgrade goes live – Why SOL’s $100 support matters",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-22T09:50:14.102199+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
