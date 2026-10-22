@@ -1,16 +1,5 @@
 [
   {
-    "id": "c80f31e9d5ec23de",
-    "title": "BAT 一週漲 95%、資金費為負:老幣復活還是空頭的燃料?",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-14T02:44:08.387973+00:00",
-    "tokens": [
-      "BAT",
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d944b562b0b35d39",
     "title": "吴说:主要 Meme 市场 24h 交易量约 2.48 亿美元环比降 9.2%,PONS、SEALS、AI 居前",
     "source": "吴说区块链 (中文深度)",
@@ -5195,6 +5184,16 @@
     "sent_at": "2026-10-22T17:04:04.636405+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d5d888ab62c6557b",
+    "title": "Dogecoin Labs Wants to Build the Economy Behind the Meme Coin’s $1 Rallying Cry",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-22T17:24:06.497435+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
