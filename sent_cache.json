@@ -1,15 +1,5 @@
 [
   {
-    "id": "7ec90adf5fe84da8",
-    "title": "Avalanche enables DIFC Courts to verify documents globally in seconds",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-14T12:10:48.821452+00:00",
-    "tokens": [
-      "AVAX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2eb6bd92dfd712d7",
     "title": "Shiba Inu (SHIB) Volume Around Zero, Price Future Stays Unclear",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5186,6 +5176,16 @@
     "tokens": [
       "USD1",
       "USDC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "d1e2762a832ff640",
+    "title": "Mark Zuckerberg’s Meta AI Makes Outlandish XRP Price Claim",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-22T23:04:16.703479+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
