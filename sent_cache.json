@@ -1,15 +1,5 @@
 [
   {
-    "id": "1856471c50235795",
-    "title": "Ripple Brings AI-Powered Payments to XRP Ledger",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-13T20:24:39.519687+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "44d2860fb6509a0d",
     "title": "SEC files Form 25 for Bitwise Dogecoin ETF as wind-down nears its end",
     "source": "Crypto Briefing (深度与研报)",
@@ -5199,6 +5189,18 @@
     "sent_at": "2026-10-22T13:08:03.131237+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "41057d23b4517c56",
+    "title": "Blockaid:WAX 多链桥遭攻击,约 5.3 万枚 USDC 等资产被盗取",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-22T13:29:05.339491+00:00",
+    "tokens": [
+      "USDC",
+      "WBTC",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
