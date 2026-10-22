@@ -1,17 +1,5 @@
 [
   {
-    "id": "02a2fe67b7b768db",
-    "title": "CoinShares 雙週報告:美國現貨比特幣 ETF 單週淨流出 6.79 億美元,為近四個月最大",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-13T13:05:29.264310+00:00",
-    "tokens": [
-      "BTC",
-      "USDC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "eb176820c5281ef0",
     "title": "TechFlow 情報局:Blur 宣佈關站 BLUR 暴跌 16%,Anthropic 用15 台山寨電視盒跑通自複製 AI",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5207,5 +5195,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "d72bf26b46533e20",
+    "title": "Shiba Inu adds 150K holders – Why SHIB still faces downside risks",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-22T02:27:00.940735+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-TW"
   }
 ]
