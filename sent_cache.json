@@ -1,17 +1,5 @@
 [
   {
-    "id": "48464ed8c03e2aaa",
-    "title": "今日加密货币市值前 100 代币涨跌:STX 涨 5.08%,ZRO 跌 12.75%",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-13T17:05:00.317343+00:00",
-    "tokens": [
-      "STX",
-      "ZRO",
-      "TIA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d3d1e4e60393ba81",
     "title": "9 月 DEX 与发射台手续费 7.88 亿美元创历史新高",
     "source": "吴说区块链 (中文深度)",
@@ -5202,5 +5190,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "2d173ce6752c7fe1",
+    "title": "Dogecoin Labs Wants DOGE to Be More Than a Meme Coin: Here’s How",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-22T10:07:36.427113+00:00",
+    "tokens": [
+      "DOGE"
+    ],
+    "lang": "zh-CN"
   }
 ]
