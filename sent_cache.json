@@ -1,15 +1,5 @@
 [
   {
-    "id": "ffca4a8de8012092",
-    "title": "Cardano Under Pressure: Falling Network Activity Adds to ADA Selling Concerns",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-13T18:24:38.298650+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "04dc6684623f662e",
     "title": "Avalanche Highlights KSD Links Ahead of Korea’s 2027 Tokenization Rollout",
     "source": "The Defiant (DeFi 深度)",
@@ -5199,5 +5189,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0a4808293de9fff1",
+    "title": "TAO crypto loses bullish momentum as $252 support nears – What’s next?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-22T11:27:15.456382+00:00",
+    "tokens": [
+      "TAO"
+    ],
+    "lang": "zh-TW"
   }
 ]
