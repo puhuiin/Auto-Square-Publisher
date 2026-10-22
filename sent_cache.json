@@ -1,17 +1,5 @@
 [
   {
-    "id": "3b85ce7ae1acfef6",
-    "title": "加密市场小幅反弹,Layer2板块涨近3%",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-14T02:25:27.687200+00:00",
-    "tokens": [
-      "OP",
-      "ZK",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c80f31e9d5ec23de",
     "title": "BAT 一週漲 95%、資金費為負:老幣復活還是空頭的燃料?",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5197,6 +5185,16 @@
     "sent_at": "2026-10-22T16:44:32.796251+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6b4bed4e60768083",
+    "title": "Bitcoin Falls 3.7% to Test $81,500 ETF Cost Basis",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-22T17:04:04.636405+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
