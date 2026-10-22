@@ -1,15 +1,5 @@
 [
   {
-    "id": "afd9132b238a7043",
-    "title": "Is Cardano overvalued? The data says yes, despite record activity",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-13T22:24:37.872584+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "12ab12c6985caf50",
     "title": "Shiba Inu (SHIB), Zcash (ZEC), Monero (XMR) and Dogecoin (DOGE) Price Analysis for October 14: Bears Show More Dominance",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5202,6 +5192,16 @@
     "sent_at": "2026-10-22T14:26:36.312042+00:00",
     "tokens": [
       "WLFI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d8b42328360faaaf",
+    "title": "Is the XRP Price Heading for a Major Crash? Whale Inflows Hit a 7-Month High",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-22T15:04:21.082534+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
