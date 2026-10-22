@@ -22,12 +22,12 @@
     "Bitcoinist (比特币向)": {
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3,
-      "last_fail": "2026-10-22T02:46:01.531883+00:00"
+      "last_fail": "2026-10-22T03:23:32.541504+00:00"
     },
     "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-10-22T02:46:01.154209+00:00",
       "fails": 2,
-      "last_fail": "2026-10-22T01:46:01.663212+00:00"
+      "last_fail": "2026-10-22T01:46:01.663212+00:00",
+      "reset_at": "2026-10-22T03:23:31.935375+00:00"
     },
     "CoinJournal (山寨异动)": {
       "parked_until": "2026-10-22T04:23:58.562927+00:00",
@@ -36,8 +36,8 @@
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-22",
