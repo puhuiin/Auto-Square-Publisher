@@ -1,16 +1,5 @@
 [
   {
-    "id": "e9457c27a746a7d5",
-    "title": "Real Vision 创始人:为何大多数公链难逃消亡?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-14T06:44:13.533968+00:00",
-    "tokens": [
-      "ETH",
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a557886c3d4c59ff",
     "title": "Binance will delist EPIC and QUICK on October 28, 2026",
     "source": "Crypto Briefing (深度与研报)",
@@ -5191,6 +5180,16 @@
     "sent_at": "2026-10-22T20:24:01.334125+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "61dd4dbbeca7932f",
+    "title": "Zcash Foundation Details Zebra Sync Fixes Ahead Of NU7 Release",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-22T20:44:06.025006+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
