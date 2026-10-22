@@ -1,15 +1,5 @@
 [
   {
-    "id": "1b31e3cfd3341b71",
-    "title": "Lido DAO exposes token flaw and forces a budget review",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-14T05:04:29.745400+00:00",
-    "tokens": [
-      "LDO"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0cee32baa599ddf8",
     "title": "Morpho 金库存款三季度暴增 51%,标普新规却盯上了提现集中度",
     "source": "深潮TechFlow (中文/简体)",
@@ -5193,6 +5183,16 @@
     "sent_at": "2026-10-22T19:23:59.835360+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a2c10bb131b4914f",
+    "title": "Microsoft Copilot AI Predicts Hyperliquid to Soar to New Highs in Q4",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-22T19:44:37.418809+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
