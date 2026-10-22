@@ -1,15 +1,5 @@
 [
   {
-    "id": "a6ce0992a884f4d5",
-    "title": "托管全球 5% 比特币的 Coinbase 喊话:抗量子升级现在就要启动,丢失币之争单独谈",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-14T08:04:05.990058+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "548eecbb20db77e0",
     "title": "Bitcoin Dominance on the Rise as Altcoins Retreat Ahead of CPI: Market Watch",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5189,5 +5179,15 @@
       "SOL"
     ],
     "lang": "en"
+  },
+  {
+    "id": "4b1813292c4c7053",
+    "title": "Shiba Inu Founder Ryoshi May Be Gone for Good, Community Veteran Says; Can the Mystery Spark a SHIB Rally?",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-22T22:04:28.067866+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-TW"
   }
 ]
