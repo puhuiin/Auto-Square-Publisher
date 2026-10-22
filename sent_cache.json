@@ -1,15 +1,5 @@
 [
   {
-    "id": "9c404b45699a687c",
-    "title": "FLOKI’s TokenFi unveils Shield AI – Can it help ‘build the future of Web3’?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-13T16:25:05.341620+00:00",
-    "tokens": [
-      "FLOKI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2ba75ff56a0fd31d",
     "title": "Just $1 of SHIB Removed as Shiba Inu Burn Resumes From Temporary Hiatus",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5202,5 +5192,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "8243856bbe9e52f0",
+    "title": "Gate Live将于今晚举办专题AMA:聚焦BTC反弹、Meme暴涨及贝莱德等机构布局",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-22T09:28:47.208517+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
