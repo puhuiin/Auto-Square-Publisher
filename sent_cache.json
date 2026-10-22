@@ -1,16 +1,5 @@
 [
   {
-    "id": "92eb6784e4b231da",
-    "title": "NEAR Claims Crown in Crypto's Pivot to AI: Wintermute",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-13T15:30:35.182470+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9997527b06c3e384",
     "title": "区块最终确认时间缩短至约150毫秒,Solana Alpenglow将于10月21日上线mainnet-beta",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5203,5 +5192,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "8b30ff9a99b825d8",
+    "title": "Solana’s biggest network change since 2020 is live. Here’s how users benefit",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-10-22T08:24:09.225104+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
