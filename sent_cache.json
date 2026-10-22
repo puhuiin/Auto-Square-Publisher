@@ -1,15 +1,5 @@
 [
   {
-    "id": "2eb6bd92dfd712d7",
-    "title": "Shiba Inu (SHIB) Volume Around Zero, Price Future Stays Unclear",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-14T12:44:36.774255+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3035b43316958cfe",
     "title": "TechFlow 情报局:OpenAI 数学证明翻车,Gemini 4 刷爆 HN 评论区",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,5 +5178,16 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4a5ec52d74e47cb4",
+    "title": "Dogecoin Expands Utility as Robinhood Memecoin Boom Reveals Crypto’s Biggest Adoption Engine",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-22T23:24:01.474820+00:00",
+    "tokens": [
+      "DOGE",
+      "SHIB"
+    ],
+    "lang": "zh-TW"
   }
 ]
