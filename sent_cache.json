@@ -1,15 +1,5 @@
 [
   {
-    "id": "82959be2d528d94e",
-    "title": "Grok AI Predicts Hyperliquid to Surge 20x by 2027",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-14T03:44:05.153474+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e93e862424f96f77",
     "title": "Who Really Owns Nasdaq's New XRP Stock? Fresh SEC Filing Names Key Ripple Insiders",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5193,6 +5183,16 @@
     "sent_at": "2026-10-22T18:04:04.992284+00:00",
     "tokens": [
       "SEI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b7ffd1502910fd2e",
+    "title": "美股血洗!那斯達克重挫 2%、晶片股暴跌 5%,比特幣跌破 8.2 萬美元",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-10-22T18:24:18.684203+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
