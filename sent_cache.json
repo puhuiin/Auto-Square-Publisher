@@ -1,15 +1,5 @@
 [
   {
-    "id": "89705ea3adb3e880",
-    "title": "Why PYTH crypto’s 10% price rally could extend beyond $0.089",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-14T03:26:32.015623+00:00",
-    "tokens": [
-      "PYTH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "82959be2d528d94e",
     "title": "Grok AI Predicts Hyperliquid to Surge 20x by 2027",
     "source": "CryptoNews (全球快讯)",
@@ -5193,6 +5183,16 @@
     "sent_at": "2026-10-22T17:44:24.160805+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ac47e65d32b3ecde",
+    "title": "SEI price falls despite 155% RWA volume surge – Here’s why",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-22T18:04:04.992284+00:00",
+    "tokens": [
+      "SEI"
     ],
     "lang": "en"
   }
