@@ -1,16 +1,5 @@
 [
   {
-    "id": "03c40a492eb70551",
-    "title": "Payy 就跨链桥攻击事件开启为期 30 天的理赔申请,窗口期结束后将完全关停",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-13T07:47:02.311238+00:00",
-    "tokens": [
-      "USDC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b96926b510ee5fa6",
     "title": "Anthropic warns China’s GLM-5.3 open model poses serious cyberattack risk",
     "source": "Crypto Briefing (深度与研报)",
@@ -5203,6 +5192,16 @@
       "OP",
       "AERO",
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "e8778e77e756c9e5",
+    "title": "Dogecoin price enters accumulation zone – Is DOGE nearing a rebound?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-22T00:47:11.917657+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "zh-TW"
   }
