@@ -1,15 +1,5 @@
 [
   {
-    "id": "a0d2168417048978",
-    "title": "Pump.fun drops 12% – Can PUMP recover amid $29.7M sandwich bot attacks?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-14T04:44:08.115382+00:00",
-    "tokens": [
-      "PUMP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1b31e3cfd3341b71",
     "title": "Lido DAO exposes token flaw and forces a budget review",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5193,6 +5183,16 @@
     "sent_at": "2026-10-22T19:04:04.121894+00:00",
     "tokens": [
       "PEPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6ea4649148549a54",
+    "title": "Dogecoin Labs Brings MyDoge And DogeOS Together In Commercial Reset",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-22T19:23:59.835360+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
