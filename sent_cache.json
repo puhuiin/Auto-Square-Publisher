@@ -1,16 +1,5 @@
 [
   {
-    "id": "a557886c3d4c59ff",
-    "title": "Binance will delist EPIC and QUICK on October 28, 2026",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-14T07:04:23.110999+00:00",
-    "tokens": [
-      "EPIC",
-      "QUICK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6a1f02b1c330b7ee",
     "title": "OKX闪赚Lite上线KAT“质押赚币”,总奖池30,000,000 KAT",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5190,6 +5179,16 @@
     "sent_at": "2026-10-22T20:44:06.025006+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7d66786a9b7fe8e2",
+    "title": "Sam Altman ChatGPT AI Predicts Something Huge on the Way for Quant (QNT)",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-22T21:05:54.574326+00:00",
+    "tokens": [
+      "QNT"
     ],
     "lang": "en"
   }
