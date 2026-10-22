@@ -1,16 +1,5 @@
 [
   {
-    "id": "eb176820c5281ef0",
-    "title": "TechFlow 情報局:Blur 宣佈關站 BLUR 暴跌 16%,Anthropic 用15 台山寨電視盒跑通自複製 AI",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-13T13:25:12.689796+00:00",
-    "tokens": [
-      "SOL",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2cb04138c83afd19",
     "title": "鏈上期權成交額飆升,Deribit 地位會被撼動嗎?",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5203,6 +5192,18 @@
     "sent_at": "2026-10-22T02:27:00.940735+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "8756044ed9104b59",
+    "title": "灰度允许拿币换份额,加密 OG 们为什么不自己持币了?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-22T02:47:39.176345+00:00",
+    "tokens": [
+      "XRP",
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-TW"
   }
