@@ -1,15 +1,5 @@
 [
   {
-    "id": "e8766f506700ec18",
-    "title": "ARK Invest’s Cathie Wood says nearly 90% of data center financing is in the US",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-13T21:24:25.988141+00:00",
-    "tokens": [
-      "ARK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "afd9132b238a7043",
     "title": "Is Cardano overvalued? The data says yes, despite record activity",
     "source": "AMBCrypto (技术与链上)",
@@ -5202,6 +5192,16 @@
     "sent_at": "2026-10-22T14:08:48.031035+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "66a5213102f415ac",
+    "title": "Circle股东起诉特朗普及WLFI指控其通过阿联酋相关加密交易牟利",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-22T14:26:36.312042+00:00",
+    "tokens": [
+      "WLFI"
     ],
     "lang": "en"
   }
