@@ -1,15 +1,5 @@
 [
   {
-    "id": "81e54a5d6bf84f12",
-    "title": "Ethena falls 12% and eyes $0.19 liquidity sweep – Yet ENA’s bullish outlook survives IF...",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-13T19:04:14.150866+00:00",
-    "tokens": [
-      "ENA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9b543b416b85376d",
     "title": "Critical Shiba Inu (SHIB) Warning: Here’s the Latest Threat",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5199,5 +5189,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ee43f039b4df7a3f",
+    "title": "Drift 攻击者向 Tornado Cash 存入 1.22 亿美元 ETH",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-22T12:08:15.682246+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
