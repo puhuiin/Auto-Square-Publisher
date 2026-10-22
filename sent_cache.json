@@ -1,15 +1,5 @@
 [
   {
-    "id": "9997527b06c3e384",
-    "title": "区块最终确认时间缩短至约150毫秒,Solana Alpenglow将于10月21日上线mainnet-beta",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-13T16:05:13.111332+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9c404b45699a687c",
     "title": "FLOKI’s TokenFi unveils Shield AI – Can it help ‘build the future of Web3’?",
     "source": "AMBCrypto (技术与链上)",
@@ -5200,6 +5190,16 @@
     "sent_at": "2026-10-22T08:24:09.225104+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "770e361a293bc68b",
+    "title": "David Schwartz Doesn’t Know Who Sent Him This XRP Meme Coin Gift",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-22T09:05:51.700691+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
