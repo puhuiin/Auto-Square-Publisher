@@ -1,17 +1,5 @@
 [
   {
-    "id": "548eecbb20db77e0",
-    "title": "Bitcoin Dominance on the Rise as Altcoins Retreat Ahead of CPI: Market Watch",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-14T11:26:20.484807+00:00",
-    "tokens": [
-      "TIA",
-      "CRV",
-      "RENDER"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9d1bd908ec57120a",
     "title": "2,200% on Hyperliquid (HYPE): Whale Who Bought at $3.5 Cashes Out",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5187,6 +5175,16 @@
     "sent_at": "2026-10-22T22:04:28.067866+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "4199bdf4ac7e5443",
+    "title": "Analyst Warns XRP Could Lose Top 10 Ranking by 2030 “If Nothing Changes”; Details",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-22T22:23:55.825247+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
