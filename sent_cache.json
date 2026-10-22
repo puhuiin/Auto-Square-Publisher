@@ -1,15 +1,5 @@
 [
   {
-    "id": "e93e862424f96f77",
-    "title": "Who Really Owns Nasdaq's New XRP Stock? Fresh SEC Filing Names Key Ripple Insiders",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-14T04:05:04.263882+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3266e39f3657b906",
     "title": "XRP News: Evernorth’s Listing Exposes a $677M Gap",
     "source": "CryptoNews (全球快讯)",
@@ -5193,6 +5183,16 @@
     "sent_at": "2026-10-22T18:24:18.684203+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "bbddfcca99dec95c",
+    "title": "TRON Settles $2.2T in Q3, Captures 73% of All Stablecoin Volume as First TRX ETF Launches: CoinDesk and Nansen",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-22T18:43:50.803813+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "en"
   }
