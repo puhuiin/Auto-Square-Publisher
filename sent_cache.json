@@ -1,17 +1,5 @@
 [
   {
-    "id": "a38f74c84e54af26",
-    "title": "盈透证券推出由 ZeroHash 提供的以太坊质押服务",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-13T14:45:17.993541+00:00",
-    "tokens": [
-      "USDC",
-      "RLUSD",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6fee6f772d4da706",
     "title": "盈透证券上线以太坊质押服务,最高抽取 30%奖励费用",
     "source": "深潮TechFlow (中文/简体)",
@@ -5203,6 +5191,16 @@
     "sent_at": "2026-10-22T07:25:30.213601+00:00",
     "tokens": [
       "DOT"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "09539b52fa20198e",
+    "title": "Why XRP May Retest $1 Before Its Next Major Rally: Analyst",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-22T07:44:41.560958+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
