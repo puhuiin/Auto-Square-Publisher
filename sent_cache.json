@@ -1,15 +1,5 @@
 [
   {
-    "id": "9d1bd908ec57120a",
-    "title": "2,200% on Hyperliquid (HYPE): Whale Who Bought at $3.5 Cashes Out",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-14T11:50:33.441711+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7ec90adf5fe84da8",
     "title": "Avalanche enables DIFC Courts to verify documents globally in seconds",
     "source": "Crypto Briefing (深度与研报)",
@@ -5187,5 +5177,16 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "8ff215edcf5f20b7",
+    "title": "Circle shareholder sues Trump, World Liberty and Steve Witkoff over crypto deals",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-10-22T22:45:04.106911+00:00",
+    "tokens": [
+      "USD1",
+      "USDC"
+    ],
+    "lang": "zh-CN"
   }
 ]
