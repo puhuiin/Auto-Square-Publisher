@@ -1,15 +1,5 @@
 [
   {
-    "id": "c8b6fc7b33395be8",
-    "title": "Ethereum Price Prediction: Hyperliquid Whale Opens $60M ETH Long",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-13T12:32:02.655237+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "02a2fe67b7b768db",
     "title": "CoinShares 雙週報告:美國現貨比特幣 ETF 單週淨流出 6.79 億美元,為近四個月最大",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5204,6 +5194,17 @@
       "BTC",
       "ETH",
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "cddaac875569749b",
+    "title": "Dogecoin 开始给自己搭公司架构,但 Meme 需要组织框架吗?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-22T02:06:40.371862+00:00",
+    "tokens": [
+      "DOGE",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
