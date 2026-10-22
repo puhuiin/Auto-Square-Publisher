@@ -1,15 +1,5 @@
 [
   {
-    "id": "5c09534ec092f5ca",
-    "title": "币安将于10月28日下架EPIC、QUICK",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-14T06:09:15.441333+00:00",
-    "tokens": [
-      "EPIC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e9457c27a746a7d5",
     "title": "Real Vision 创始人:为何大多数公链难逃消亡?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5179,16 @@
     "title": "Reflect Money launches Create for custom yield-bearing stablecoins on Solana",
     "source": "Crypto Briefing (深度与研报)",
     "sent_at": "2026-10-22T20:04:02.511164+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1a1e54ce312053cb",
+    "title": "JPMorgan Brings MONY and JLTXX Tokenized Funds to Solana",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-22T20:24:01.334125+00:00",
     "tokens": [
       "SOL"
     ],
