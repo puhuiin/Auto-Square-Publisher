@@ -1,15 +1,5 @@
 [
   {
-    "id": "3266e39f3657b906",
-    "title": "XRP News: Evernorth’s Listing Exposes a $677M Gap",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-14T04:27:52.287150+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a0d2168417048978",
     "title": "Pump.fun drops 12% – Can PUMP recover amid $29.7M sandwich bot attacks?",
     "source": "AMBCrypto (技术与链上)",
@@ -5193,6 +5183,16 @@
     "sent_at": "2026-10-22T18:43:50.803813+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "36190726e047086a",
+    "title": "MemeCore (M) Flips Pepe (PEPE) After Pumping 25% in a Day: Details",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-22T19:04:04.121894+00:00",
+    "tokens": [
+      "PEPE"
     ],
     "lang": "en"
   }
