@@ -1,15 +1,5 @@
 [
   {
-    "id": "cfc3cea946c07194",
-    "title": "Dogecoin rebounds from $0.0800 as ETF outflows keep downside risks in focus",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-10-13T14:25:01.143919+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a38f74c84e54af26",
     "title": "盈透证券推出由 ZeroHash 提供的以太坊质押服务",
     "source": "深潮TechFlow (中文/简体)",
@@ -5205,5 +5195,15 @@
       "TRX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "dabbb31ad6907235",
+    "title": "Fearless Wallet 私钥泄露长达一年半,已有 8 名用户报告资产被盗",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-22T07:25:30.213601+00:00",
+    "tokens": [
+      "DOT"
+    ],
+    "lang": "zh-CN"
   }
 ]
