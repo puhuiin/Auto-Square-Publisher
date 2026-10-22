@@ -1,16 +1,5 @@
 [
   {
-    "id": "7dcb7c4d51e69675",
-    "title": "美股潮向(10 月 14 日):摩根大通盈利不及预期,苹果发布 299 美元 HomeView",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-14T01:46:22.093686+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "73f69b2c641cf5f2",
     "title": "播客笔记|Taiki Maeda:继续看多 ZEC 到 2 万美金,给比特币买一份“抗量子”保险",
     "source": "深潮TechFlow (中文/简体)",
@@ -5200,6 +5189,16 @@
     "sent_at": "2026-10-22T15:50:08.448135+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "66b4c9bd6d67c959",
+    "title": "Is Justin Sun positioning for PEPE? A 7.2 trillion memecoin transfer sparks intrigue",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-22T16:24:39.650708+00:00",
+    "tokens": [
+      "PEPE"
     ],
     "lang": "en"
   }
