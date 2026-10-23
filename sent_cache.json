@@ -1,15 +1,5 @@
 [
   {
-    "id": "c744b55d609fe409",
-    "title": "Osmosis 社区提案停止 OSMO 通胀发行",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-15T04:44:54.595712+00:00",
-    "tokens": [
-      "OSMO"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "019762eea7b9c383",
     "title": "Chainlink sees $10M ETF inflows – Why LINK’s price still struggles",
     "source": "AMBCrypto (技术与链上)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-10-23T19:04:27.612939+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4c4fa4af8d3a3247",
+    "title": "Billionaire Investor Chamath Palihapitiya Says Bitcoin Will Eventually Be Hacked by AI and Go to Zero",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-23T19:25:07.513404+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
