@@ -1,15 +1,5 @@
 [
   {
-    "id": "f5088de658dca6a1",
-    "title": "XRP Price Faces a Turning Point as ETFs Record 13 Weeks of Inflows",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-14T18:24:10.748196+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "edf3a5c30c0b9b34",
     "title": "Major shareholder presses SkyAI on Solana sales after treasury shrinks 70% in a month",
     "source": "The Block (机构与政策)",
@@ -5188,6 +5178,16 @@
     "title": "Bitcoin to Dodge AI Crash, Analyst Says",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-10-23T07:28:21.963296+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4d77f1252673daaf",
+    "title": "Bitcoin ETF Holders Pull $635 Million Before Price Even Hits Their Usual Breaking Point",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-23T07:49:07.504977+00:00",
     "tokens": [
       "BTC"
     ],
