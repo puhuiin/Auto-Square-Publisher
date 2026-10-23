@@ -1,15 +1,5 @@
 [
   {
-    "id": "f25850a58292e955",
-    "title": "Ethereum Price Prediction: Tom Lee Warns of ETH Drawdown After Kospi Bloodbath",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-14T13:48:22.387450+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a5edc5aca411098b",
     "title": "吴说每日精选加密新闻 - 美国 9 月 CPI 全面超预期,年率升至 3.7%创今年 5 月以来新高",
     "source": "吴说区块链 (中文深度)",
@@ -5188,5 +5178,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "01eb9a524d539db4",
+    "title": "PROM’s rally has a catch – And it’s hiding in the Spot market",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-23T00:04:42.177493+00:00",
+    "tokens": [
+      "PROM"
+    ],
+    "lang": "zh-CN"
   }
 ]
