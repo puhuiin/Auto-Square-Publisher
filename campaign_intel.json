@@ -19,14 +19,9 @@
   "strategy_guidance": "当前可重点结合新上线的5类bStocks交易对及对应USDⓈ-Margined永续合约的公告热点，输出交易科普、标的解读类内容，引导读者参与评论互动获取Write to Earn奖励；同时可跟进现货交易锦标赛S8、Binance Pick预测、S16 LoL冠军赛预测等未截止活动的规则，输出参与攻略、活动解读类内容，提升内容匹配度与曝光量。",
   "last_updated": "2026-10-23T09:44:42.586290Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "parked_until": "2026-10-23T10:04:05.015095+00:00",
-      "last_fail": "2026-10-23T04:04:05.015095+00:00",
-      "fails": 3
-    },
     "Bitcoinist (比特币向)": {
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-23T09:44:43.903754+00:00",
+      "last_fail": "2026-10-23T10:03:32.900161+00:00",
       "fails": 3
     }
   },
@@ -34,13 +29,7 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
     "date": "2026-10-18"
   },
-  "_llm_breaker": {
-    "Preset-stepfun": {
-      "fails": 1,
-      "cooldown_until": "2026-10-23T09:58:06.556090+00:00",
-      "last_fail": "2026-10-23T09:48:06.556108+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-10-23",
   "_publish_park": {},
   "_intel_refresh_fail": {},

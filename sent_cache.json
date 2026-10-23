@@ -1,15 +1,5 @@
 [
   {
-    "id": "699e9283ef019b7f",
-    "title": "Optimism surges 19% – Unichain migration fuels OP enterprise demand",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-14T20:04:42.160317+00:00",
-    "tokens": [
-      "OP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4715e42aabad5632",
     "title": "Rocket Pool Voters Back rETH Withdrawals, Keep 4 ETH Bonds",
     "source": "The Defiant (DeFi 深度)",
@@ -5193,5 +5183,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "8e4d9f3ccde48461",
+    "title": "dYdX 金库质押规模突破 1 亿枚 DYDX:千万枚回购代币入场,5 家验证者遭清零委托",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T10:04:01.781723+00:00",
+    "tokens": [
+      "DYDX"
+    ],
+    "lang": "zh-TW"
   }
 ]
