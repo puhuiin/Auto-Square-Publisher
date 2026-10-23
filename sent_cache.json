@@ -1,15 +1,5 @@
 [
   {
-    "id": "a3b635222df0be7d",
-    "title": "Ripple Prime推出传统资产永续合约交易服务",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-15T12:25:12.388023+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2e7db263a03bf37b",
     "title": "Zcash Tanks Double Digits After 'Meteoric Rise' Sees Leverage Build Up",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5180,6 +5170,16 @@
     "sent_at": "2026-10-23T23:05:06.696128+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4e697628e8fa78d9",
+    "title": "XRP Once Exploded 62,000% After Two Years of Stagnation — Why Patience Could Pay Again",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-23T23:24:49.525264+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
