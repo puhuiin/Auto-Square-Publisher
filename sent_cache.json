@@ -1,15 +1,5 @@
 [
   {
-    "id": "ec5da81fca2b37bf",
-    "title": "上线链上,ARK Venture Fund通过Securitize推进代币化",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-14T22:04:41.395961+00:00",
-    "tokens": [
-      "ARK"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "54a365da3d90d2b9",
     "title": "Analyst traces $100M laundering trail through gas payments, leaving Zcash privacy intact",
     "source": "Crypto Briefing (深度与研报)",
@@ -5193,5 +5183,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "6df8883048d7b518",
+    "title": "Can AI Hack Bitcoin? CZ Says the Real Danger Lies in Phishing and Data Leak",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-23T12:04:51.998502+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
