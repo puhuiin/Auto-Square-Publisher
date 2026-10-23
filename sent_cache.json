@@ -1,16 +1,5 @@
 [
   {
-    "id": "592fe2fc9a0edfef",
-    "title": "Solana Just Did Something in China That Changpeng Zhao Says BNB Chain Couldn’t",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-15T08:07:08.867136+00:00",
-    "tokens": [
-      "BNB",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b315e9c96d8d1e0f",
     "title": "Thailand crypto ETFs may see slow start despite new rules: CoinShares",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5185,5 +5174,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ab53c7d0d93c8ad6",
+    "title": "Hyperliquid Strategies expands stock buyback program to $100M as PURR shares fall over 30%",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-23T22:25:47.961347+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
