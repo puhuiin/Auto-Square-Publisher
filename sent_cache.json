@@ -1,15 +1,5 @@
 [
   {
-    "id": "b315e9c96d8d1e0f",
-    "title": "Thailand crypto ETFs may see slow start despite new rules: CoinShares",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-15T11:28:44.240252+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a9759f00992f8a0b",
     "title": "Why Isn’t XRP Rising? 13 Weeks of ETF Inflows Haven’t Moved the Price",
     "source": "BeInCrypto (山寨与行情)",
@@ -5184,5 +5174,15 @@
       "HYPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a733d651c0d1aae0",
+    "title": "XRP Price May Benefit From XRPL Success, Ripple CTO Says",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-23T22:44:16.114980+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
