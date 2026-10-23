@@ -1,16 +1,5 @@
 [
   {
-    "id": "10012d4a897615a3",
-    "title": "当货币变得可编程,加密行业的下一站或是重写代币规则",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-15T01:06:39.511406+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a3d558a02a7d3166",
     "title": "美股潮向(10 月 15 日):美国 9 月 CPI 超预期,CoreWeave 暴跌逾 15%",
     "source": "深潮TechFlow (中文/简体)",
@@ -5190,6 +5179,16 @@
     "sent_at": "2026-10-23T14:44:09.749027+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5dd08829914d9bde",
+    "title": "Securitize lists Apple, Nvidia, Tesla as tokens on Solana platform",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-23T15:06:43.147876+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
