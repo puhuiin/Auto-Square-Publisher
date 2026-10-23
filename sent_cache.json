@@ -1,15 +1,5 @@
 [
   {
-    "id": "7132905df850f63a",
-    "title": "VanEck 撤回首檔 stETH ETF!ETF 能原生質押後,Lido 的華爾街門票沒了",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-10-15T02:44:05.786395+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e645e0bc76fa610b",
     "title": "AI chip stocks in South Korea and Japan tumble after US semiconductor selloff",
     "source": "Crypto Briefing (深度与研报)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-10-23T16:46:43.152804+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "251a90795937d2cd",
+    "title": "Bitcoin Rejected at $85K as Macro Pressure Mounts and FOMC Looms: Weekly Crypto Recap",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-23T17:06:37.239688+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
