@@ -1,17 +1,5 @@
 [
   {
-    "id": "36bcbc1ee24e2893",
-    "title": "代币化ETF总市值达6.865亿美元,以太坊占比约44%居首",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-14T17:24:50.470029+00:00",
-    "tokens": [
-      "BNB",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c0224117cfe4cb82",
     "title": "Ethereum Whale Lands 17,786% Gains in Nine Years",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5190,6 +5178,17 @@
     "sent_at": "2026-10-23T03:44:58.819418+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "a896d48b90a08716",
+    "title": "Uniswap v4 上线 Aggregator Hooks:聚合竞品流动性,外部路由协议费全额用于销毁 UNI",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T04:05:03.459608+00:00",
+    "tokens": [
+      "UNI",
+      "ETH"
     ],
     "lang": "zh-TW"
   }
