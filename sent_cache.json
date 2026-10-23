@@ -1,15 +1,5 @@
 [
   {
-    "id": "edf3a5c30c0b9b34",
-    "title": "Major shareholder presses SkyAI on Solana sales after treasury shrinks 70% in a month",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-10-14T18:44:17.266598+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "be453800a9f3cd5b",
     "title": "MEXC CEO: This Bitcoin cycle is nothing like the last one",
     "source": "AMBCrypto (技术与链上)",
@@ -5190,6 +5180,16 @@
     "sent_at": "2026-10-23T07:49:07.504977+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "18483e050c5549eb",
+    "title": "XRP Holders Hit a Record 8.24 Million, So Why Is the Price Still Sliding?",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-23T08:09:20.305424+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
