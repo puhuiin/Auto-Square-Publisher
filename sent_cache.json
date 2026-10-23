@@ -1,15 +1,5 @@
 [
   {
-    "id": "e645e0bc76fa610b",
-    "title": "AI chip stocks in South Korea and Japan tumble after US semiconductor selloff",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-15T03:04:34.615804+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "22eab9d3aa16f314",
     "title": "从“会支付”到“办完事”:X-Agent正在构建链上个人AI助理",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5187,6 +5177,18 @@
     "sent_at": "2026-10-23T17:06:37.239688+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3fc9fc94746604b4",
+    "title": "今日加密货币市值前 100 代币涨跌:PEPE 涨 9.86%,LIT 跌 7.41%",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T17:27:08.106663+00:00",
+    "tokens": [
+      "PEPE",
+      "DASH",
+      "BCH"
     ],
     "lang": "en"
   }
