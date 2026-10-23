@@ -1,15 +1,5 @@
 [
   {
-    "id": "54a365da3d90d2b9",
-    "title": "Analyst traces $100M laundering trail through gas payments, leaving Zcash privacy intact",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-14T22:24:22.349439+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e3ee383e97e1c4cb",
     "title": "TAO vs. ICP vs. NEAR: Which AI-Related Altcoin Will Perform the Best in Q4? (3 AIs Speculate)",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5193,5 +5183,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4170102b8793e175",
+    "title": "From Alpenglow to Quantumglow – Inside Solana’s post-quantum plan",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-23T12:24:20.901468+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
