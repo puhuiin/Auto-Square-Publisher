@@ -1,15 +1,5 @@
 [
   {
-    "id": "be453800a9f3cd5b",
-    "title": "MEXC CEO: This Bitcoin cycle is nothing like the last one",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-14T19:04:33.348245+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "249d40ece8d8afdb",
     "title": "Solana Sets a Date for Its Next Major Upgrade",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5192,5 +5182,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "115e7ba28da04f5a",
+    "title": "新加坡、马来西亚和泰国央行加入 BLOOM,推动跨境数字货币结算互操作",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T08:47:46.991429+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
