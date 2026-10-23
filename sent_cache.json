@@ -1,15 +1,5 @@
 [
   {
-    "id": "82cffcce1119f82a",
-    "title": "硬件钱包供应链攻击致1亿美元被盗,Mt. Gox前CEO Mark Karpelès披露Ledger攻击细节",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-14T14:24:41.114405+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6ace3db7366ff60f",
     "title": "Chainlink数据服务上线Stellar,支持开发借贷市场等DeFi应用",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5187,5 +5177,17 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "5e0e91468093a754",
+    "title": "a16z 加密基金管理合伙人 Chris Dixon:我们为什么要将基金更名为 a16z Frontier?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T01:04:54.014740+00:00",
+    "tokens": [
+      "AR",
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
