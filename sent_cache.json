@@ -1,15 +1,5 @@
 [
   {
-    "id": "524e7813fd9ea653",
-    "title": "并非抛售,Ethena大型投资者代币转移属于硬件钱包安全预防",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-14T23:25:03.314217+00:00",
-    "tokens": [
-      "ENA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e216cc71193b7f1a",
     "title": "Microsoft Copilot AI Predicts Unbelievable Chainlink (LINK) Price",
     "source": "CryptoNews (全球快讯)",
@@ -5192,6 +5182,16 @@
       "ETH",
       "BNB",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "81b7d805c6ac2c40",
+    "title": "Bloomberg’s Mike McGlone: AI Risk Could Force Bitcoin Drawdown to $10,000",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-10-23T13:24:59.113652+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
