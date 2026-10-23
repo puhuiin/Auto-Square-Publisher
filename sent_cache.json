@@ -1,15 +1,5 @@
 [
   {
-    "id": "a4aaf70ebe2986ff",
-    "title": "Ripple Joins Forces With Stripe-Owned Privy to Advance AI-Powered Payments on XRP Ledger: Will XRP Price React?",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-14T17:05:19.051342+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "36bcbc1ee24e2893",
     "title": "代币化ETF总市值达6.865亿美元,以太坊占比约44%居首",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5190,6 +5180,16 @@
     "sent_at": "2026-10-23T03:25:21.437967+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "8d7cb42d98ef6efb",
+    "title": "XRP Ledger’s Latest Fix Pushed to November After Voting Setback",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-23T03:44:58.819418+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
