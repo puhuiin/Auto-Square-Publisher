@@ -9382,6 +9382,19 @@ class SquarePublisher(BasePublisher):
             if idx >= floor:
                 # 保留句末标点（"\n" 会被随后的 rstrip 去掉），读起来才是完整句子
                 return head[:idx + len(sep)].rstrip()
+        # ★★ R831：**英文帖会断在词中间**。旧边界表只有中文标点（\n。！？，），而英文
+        #   正文里唯一可用的是 `\n`；尾段 30% 没有换行时直接 `head.rstrip()` **硬截**
+        #   ⇒ 半个单词被发出去。生产实证（创作者中心导出，用户可见）：
+        #     `…Competition is live right now — ru`（ru ← rules/running 被腰斩）
+        #     `…Patience beats FOMO every time, especially with mem`（mem ← memecoins）
+        #     `…way lower downside than blowing a live leveraged tr`（tr ← trades）
+        #     `…S6 are live for low-risk practic`（practic ← practice）
+        #   两条判据：① 只认**标点后跟空白**的形态——否则 `81,524.95` 会在小数点处断开，
+        #   留下 `…81,524.` 这种更假的结尾；② 只保留标点本身（不要那个空格）。
+        for sep in (". ", "! ", "? ", "; ", ": ", ", "):
+            idx = head.rfind(sep)
+            if idx >= floor:
+                return head[:idx + 1].rstrip()
         return head.rstrip()
 
     @classmethod

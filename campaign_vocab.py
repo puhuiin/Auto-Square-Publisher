@@ -70,7 +70,14 @@ CAMPAIGN_MENTION_RE = re.compile(
     #   `Qafila 2026` ×2、`RWUSD`（以"练手场地"出现）、`$FF vouchers`。
     #   注：`Alpha DNA 交易竞赛` 已被 `交易竞赛`/`競賽` 兜住，故不收裸 `Alpha DNA`。
     #   ⚠️ 一律**窄形态**（产品全名/固定专名），不收裸 pick / 裸 reward / 裸 ff。
-    r"|binance\s+pick|qafila|word\s*of\s*the\s*day|rwusd|ff\s*voucher",
+    r"|binance\s+pick|qafila|word\s*of\s*the\s*day|rwusd|ff\s*voucher"
+    # ★★ R831：**第 7 次补漏，这次是拼写错误**——R774 写进去的是 `TraFi`（少一个 d），
+    #   而模型真在写的是 `TradFi USDS-Margined 永续合约`（把 TradFi 当练手场地），
+    #   `trafi` 匹配不到 `TradFi` ⇒ 又是一条静默假阴性。
+    #   生产实证（10-23 前后 40 篇，正则实测）：`TradFi USDS-Margined` ×1、
+    #   `Binance Starter Carnival` / `新手嘉年华`（新一期的活动入口名）。
+    #   ⚠️ 保留 `TraFi` 不删（历史帖/别处可能真写过这个拼法），两种都收。
+    r"|trad?fi|starter\s+carnival|新手嘉年华|新手嘉年華",
     re.IGNORECASE)
 
 # 标签形态：注入的 #TradingTournament / #Write2Earn 含 contest/tournament 字样，

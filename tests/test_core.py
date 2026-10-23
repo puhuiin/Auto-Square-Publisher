@@ -23923,5 +23923,100 @@ class TestR830EntryNamesAndEnHatch(unittest.TestCase):
         self.assertIn("都算交易活动", win, "必须显式堵住「利好没兑现/先观望」这类托词")
 
 
+class TestR831EnTruncationAndVocab(unittest.TestCase):
+    """★★ R831：英文短帖**断在词中间** + 第 7 次词表补漏（这次是**拼写错误**）。
+
+    ★ 生产实证（创作者中心导出，用户可见的结尾）：
+        `…Binance Season 8 Spot Trading Competition is live right now — ru`
+        `…Patience beats FOMO every time, especially with mem`
+        `…way lower downside than blowing a live leveraged tr`
+        `…S6 are live for low-risk practic`
+    ★ 根因：`_truncate_at_boundary` 的边界表**只有中文标点**（`\\n。！？，`）；
+      英文正文里唯一可用的是 `\\n`，尾段 30% 没换行就 `head.rstrip()` **硬截**。
+    """
+
+    # 生产形态的英文短讯：单段、无换行、≈1200 字符（必然触发截断）
+    EN_BODY = (
+        "If you want to test this risk-off approach without going all in, Binance "
+        "Season 8 Spot Trading Competition is live right now, and the rules and the "
+        "prize pool details are all on the official page. Funding rates are still near "
+        "zero, volume is flat as a pancake, and there is no visible buy wall anywhere on "
+        "the book, so the honest read is that nobody wants to be the first one in. Your "
+        "move here is simple, wait for a solid close above the resistance level with real "
+        "volume behind it, and only then start sizing in. Patience beats FOMO every time, "
+        "especially with memecoins that wick without warning and never ask about your "
+        "entry price. Keep half your ammo in cash, split your entries across two or three "
+        "price points, and set a hard stop below the recent swing low before you click "
+        "anything. Chasing this chop right now is just donating to market makers, and the "
+        "tape gives no permission to front-run a headline that has not even landed yet.")
+
+    @staticmethod
+    def _trunc():
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "main.py")
+        with open(path, encoding="utf-8") as fh:
+            src = fh.read()
+        ns = {}
+        m = re.search(r"    def _truncate_at_boundary\(text: str, limit: int\) -> str:"
+                      r"(?P<body>.*?)\n    @classmethod", src, re.S)
+        assert m, "找不到 _truncate_at_boundary（源码结构变了，守卫需更新）"
+        body = "\n".join(ln[4:] if ln.startswith("    ") else ln
+                         for ln in m.group("body").split("\n"))
+        exec("def _truncate_at_boundary(text, limit):\n" + body, ns)
+        return ns["_truncate_at_boundary"]
+
+    def test_fixture_actually_gets_truncated(self):
+        """先证明夹具真的越界——否则下面几条会"通过但没测到东西"。"""
+        self.assertGreater(len(self.EN_BODY), 880)
+
+    def test_english_truncation_never_splits_a_word(self):
+        out = self._trunc()(self.EN_BODY, 880)
+        self.assertLessEqual(len(out), 880)
+        self.assertFalse(re.search(r"[A-Za-z]$", out),
+                         "英文正文被腰斩在词中间（生产实证：`…— ru` / `…with mem`）：%r" % out[-24:])
+        self.assertIn(out[-1], ".!?;:,", "切口应落在标点上")
+
+    def test_decimal_point_is_not_a_boundary(self):
+        """★ `81,524.95` 的小数点不得当边界——否则会留下 `…81,524.` 这种更假的结尾。"""
+        body = ("The level everyone is watching is exactly 81,524.95 and the whole "
+                "market keeps talking about it while the tape does nothing at all "
+                "for hours and hours on end without a single decisive candle. " * 6)
+        out = self._trunc()(body, 880)
+        self.assertFalse(re.search(r"\d\.$", out), "切口落在小数点后：%r" % out[-16:])
+
+    def test_cjk_boundary_behaviour_unchanged(self):
+        """中文帖行为必须**逐字不变**（旧边界表只对中文承诺过）。"""
+        body = "第一段讲盘面。" + "这里是一句很长的行情描述，" * 60 + "最后一句话。"
+        out = self._trunc()(body, 300)
+        self.assertLessEqual(len(out), 300)
+        self.assertIn(out[-1], "。，！？")
+
+    def test_no_punctuation_falls_back_safely(self):
+        """整段没有任何标点时必须安全硬截（不能抛、不能砍掉大半）。"""
+        out = self._trunc()("x" * 1000, 880)
+        self.assertEqual(len(out), 880)
+
+    # ---- 第 7 次词表补漏（拼写错误）----
+    @staticmethod
+    def _vocab():
+        import importlib.util
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "campaign_vocab.py")
+        spec = importlib.util.spec_from_file_location("campaign_vocab_r831", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_tradfi_typo_fixed_and_starter_carnival_covered(self):
+        """`TraFi`（少个 d）匹配不到模型真写的 `TradFi` ⇒ 静默假阴性。"""
+        cv = self._vocab()
+        for line in ("hit the TradFi USDS-Margined perpetuals for practice",
+                     "the Binance Starter Carnival bStocks activity is live",
+                     "幣安新手嘉年華活動正在進行"):
+            self.assertTrue(cv.mention_in_text(line), "漏检: %s" % line)
+        self.assertFalse(cv.mention_in_text("the carnival in Rio is unrelated"),
+                         "裸 carnival 不得命中（只收 starter carnival / 新手嘉年华）")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
