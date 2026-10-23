@@ -1,15 +1,5 @@
 [
   {
-    "id": "348f4bff59b4410f",
-    "title": "Bitwise CIO:选择你自己的冒险,所有路径都通向比特币",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-15T07:07:10.778421+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "043383e9a78dba32",
     "title": "VanEck Pulls Plug on Lido Staked ETH ETF After Yearlong Wait",
     "source": "CryptoNews (全球快讯)",
@@ -5185,6 +5175,16 @@
     "sent_at": "2026-10-23T21:04:16.029450+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3ef097ae1de027af",
+    "title": "Bitwise Dogecoin ETF Reaches Scheduled Liquidation As Holders Face Cash Redemption",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-23T21:24:58.418071+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
