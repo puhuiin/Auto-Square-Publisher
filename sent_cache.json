@@ -1,15 +1,5 @@
 [
   {
-    "id": "94963dc4873362fd",
-    "title": "Solana sets October 21 for massive Alpenglow upgrade that could make transactions 99% faster to finalize",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-15T00:05:01.856831+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a085585723d2a2c5",
     "title": "营收为王:加密项目估值逻辑正在改写",
     "source": "吴说区块链 (中文深度)",
@@ -5194,5 +5184,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "21bcbbebeca586d2",
+    "title": "Cysic 计划销毁 720 万枚 CYS,以抵消此前未经授权增发",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T14:04:47.179608+00:00",
+    "tokens": [
+      "BNB"
+    ],
+    "lang": "en"
   }
 ]
