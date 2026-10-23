@@ -1,15 +1,5 @@
 [
   {
-    "id": "388ad8eaedc111c8",
-    "title": "Galaxy 研报:预测市场的下一站是条件市场,22 个 DAO 已把 5050 万美元交给市场来治理",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-15T04:04:04.065008+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8fb1b3a26cf450c5",
     "title": "播客笔记|对话孙宇晨:极致的孤独,也是一种自由",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5179,16 @@
     "sent_at": "2026-10-23T18:06:40.047617+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "373def3db5424402",
+    "title": "Oil Price Nears Yearly High: Is a Stock and Crypto Crash Coming?",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-23T18:26:52.843829+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
