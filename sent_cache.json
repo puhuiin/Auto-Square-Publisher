@@ -1,17 +1,5 @@
 [
   {
-    "id": "afe3825d602c236c",
-    "title": "Ondo Finance TVL 达 40 亿美元,代币化股票及 ETF 规模超 13 亿美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-14T16:08:25.501158+00:00",
-    "tokens": [
-      "BNB",
-      "ONDO",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c21c2985829ed4aa",
     "title": "两个月前以 1,936 美元做多 2 万枚 ETH 的巨鲸已平仓,获利约 893 万美元",
     "source": "吴说区块链 (中文深度)",
@@ -5192,5 +5180,17 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "838f739a61db53b8",
+    "title": "Grayscale 公布加密资产收益率排名:HYPE 持有人收益率居首,CAKE 调整后盈利收益率最高",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T02:45:09.503226+00:00",
+    "tokens": [
+      "HYPE",
+      "AERO",
+      "UNI"
+    ],
+    "lang": "zh-TW"
   }
 ]
