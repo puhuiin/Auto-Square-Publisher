@@ -1,17 +1,5 @@
 [
   {
-    "id": "a9759f00992f8a0b",
-    "title": "Why Isn’t XRP Rising? 13 Weeks of ETF Inflows Haven’t Moved the Price",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-15T12:06:12.093114+00:00",
-    "tokens": [
-      "XRP",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a3b635222df0be7d",
     "title": "Ripple Prime推出传统资产永续合约交易服务",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5184,5 +5172,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "525b1bcf84330afe",
+    "title": "Aave changes USDT borrowing rules and loan costs suddenly jump",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-23T23:05:06.696128+00:00",
+    "tokens": [
+      "AAVE"
+    ],
+    "lang": "zh-CN"
   }
 ]
