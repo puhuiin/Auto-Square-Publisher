@@ -1,17 +1,5 @@
 [
   {
-    "id": "08b1202b7faac44b",
-    "title": "播客笔记|对话 Ansem:这轮回调仍可逢低加仓,STRK 、PUMP、HYPE 和 GRASS 等仍被低估",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-15T05:52:51.107097+00:00",
-    "tokens": [
-      "STRK",
-      "PUMP",
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "bed7185de250980b",
     "title": "473M XRP at Work: Evernorth’s Game Plan Takes Shape With Ripple, Coinbase, Kraken, and BitGo",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5187,6 +5175,16 @@
     "sent_at": "2026-10-23T20:05:56.755399+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6c18975a72fdc3ec",
+    "title": "Ripple’s XRP Risks Losing Spot Among Top 10 Cryptos by 2030 Unless This Crucial Shift Happens, Pundit Warns",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-23T20:24:15.448564+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
