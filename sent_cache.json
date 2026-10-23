@@ -1,16 +1,5 @@
 [
   {
-    "id": "e3ee383e97e1c4cb",
-    "title": "TAO vs. ICP vs. NEAR: Which AI-Related Altcoin Will Perform the Best in Q4? (3 AIs Speculate)",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-14T22:44:08.510414+00:00",
-    "tokens": [
-      "TAO",
-      "ICP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "af5515acf5d8656f",
     "title": "XRP Whales Are Making a Bigger Mark on Binance as Outflow Gap Nears August Levels",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5193,5 +5182,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e998bd65144b4a52",
+    "title": "JPMorgan Solana Push Brings MONY and JLTXX Into Tokenized Finance",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-23T12:44:04.911914+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
