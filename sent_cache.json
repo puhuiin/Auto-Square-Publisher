@@ -1,15 +1,5 @@
 [
   {
-    "id": "249d40ece8d8afdb",
-    "title": "Solana Sets a Date for Its Next Major Upgrade",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-14T19:24:14.816746+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b9cddb2af38ce154",
     "title": "'Biggest Increase in History': Strategy CEO Predicts Explosive Bitcoin Banking Surge",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5190,6 +5180,17 @@
     "sent_at": "2026-10-23T08:47:46.991429+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "1508a4c767a946cb",
+    "title": "Crypto Whale Activity: $7.2M Flows Into 9 Altcoins as PUMP and ENA Face Selling Pressure",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-23T09:08:08.919653+00:00",
+    "tokens": [
+      "PUMP",
+      "ENA"
     ],
     "lang": "zh-TW"
   }
