@@ -1,17 +1,5 @@
 [
   {
-    "id": "8fb1b3a26cf450c5",
-    "title": "播客笔记|对话孙宇晨:极致的孤独,也是一种自由",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-15T04:25:11.220495+00:00",
-    "tokens": [
-      "WLFI",
-      "TRX",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c744b55d609fe409",
     "title": "Osmosis 社区提案停止 OSMO 通胀发行",
     "source": "吴说区块链 (中文深度)",
@@ -5189,6 +5177,16 @@
     "sent_at": "2026-10-23T18:26:52.843829+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a5490604021192e6",
+    "title": "Zcash falls 7.34% as its rebound stalls—Can $1,200 hold?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-23T19:04:27.612939+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
