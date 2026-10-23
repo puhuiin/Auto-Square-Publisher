@@ -1,15 +1,5 @@
 [
   {
-    "id": "b0bd4b7368cbcc1b",
-    "title": "VanEck 撤回 Lido Staked Ethereum ETF 的 S-1 注册申请",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-14T21:24:21.782127+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "bfb57aa20723acd2",
     "title": "VanEck withdraws SEC registration for its Lido Staked Ethereum ETF",
     "source": "Crypto Briefing (深度与研报)",
@@ -5189,6 +5179,16 @@
     "title": "Gemini 創始人 Winklevoss 兄弟與 DCG 創始人爭奪 Zcash 生態佈局",
     "source": "深潮TechFlow (中文/繁体)",
     "sent_at": "2026-10-23T11:04:45.917419+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1dcc8f158826821f",
+    "title": "Winklevoss 兄弟与 DCG 创始人争夺 Zcash 市场,布局矿业及 ETF",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-23T11:26:12.187686+00:00",
     "tokens": [
       "ZEC"
     ],
