@@ -1,15 +1,5 @@
 [
   {
-    "id": "c0224117cfe4cb82",
-    "title": "Ethereum Whale Lands 17,786% Gains in Nine Years",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-14T17:44:38.335301+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3207de5420098840",
     "title": "Ethereum’s quantum race takes a new turn as zkSync courts banks and Starknet weighs exit",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5191,5 +5181,16 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "9b789a528b08b69b",
+    "title": "用别家的流动性,也能烧自己的币:Uniswap 开始争夺交易入口",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T04:24:51.966751+00:00",
+    "tokens": [
+      "UNI",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
