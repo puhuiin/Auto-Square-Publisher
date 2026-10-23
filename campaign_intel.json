@@ -19,38 +19,31 @@
   "strategy_guidance": "优先围绕当日新上线的5类bStocks交易对、现货交易锦标赛S8及Binance Starter Carnival bStocks相关活动产出内容，引导用户参与话题互动与交易讨论；提醒发帖机器人优先追贴当日截止的Orochi Network（ON）Alpha交易竞赛，从活动冲刺、参与攻略角度切入带动评论区互动；结合新上线的TradFi USDⓈ-Margined永续合约输出产品科普内容，匹配Write2Earn互动要求。",
   "last_updated": "2026-10-22T21:24:05.552478Z",
   "_feed_health": {
+    "CoinJournal (山寨异动)": {
+      "fails": 1,
+      "last_fail": "2026-10-23T03:24:04.774178+00:00"
+    },
     "Odaily星球日报 (中文快讯)": {
+      "fails": 1,
       "last_fail": "2026-10-23T00:23:59.324857+00:00",
-      "reset_at": "2026-10-23T03:03:36.409618+00:00",
-      "fails": 1
+      "reset_at": "2026-10-23T03:23:35.646349+00:00"
     },
     "吴说区块链 (中文深度)": {
+      "fails": 1,
       "last_fail": "2026-10-23T00:24:00.162207+00:00",
-      "reset_at": "2026-10-23T03:03:36.404803+00:00",
-      "fails": 1
+      "reset_at": "2026-10-23T03:23:36.313339+00:00"
     },
     "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-23T03:03:35.404050+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-10-23T03:23:35.016310+00:00",
+      "parked_until": "2026-10-20T06:53:53.228743+00:00"
     }
   },
   "_fallback_image": {
     "date": "2026-10-18",
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
-  "_llm_breaker": {
-    "Preset-stepfun-flash": {
-      "fails": 1,
-      "cooldown_until": "2026-10-23T03:15:16.271735+00:00",
-      "last_fail": "2026-10-23T03:05:16.271741+00:00"
-    },
-    "Preset-stepfun": {
-      "fails": 1,
-      "cooldown_until": "2026-10-23T03:17:33.360209+00:00",
-      "last_fail": "2026-10-23T03:07:33.360231+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-10-23",
   "_publish_park": {},
   "_intel_refresh_fail": {},

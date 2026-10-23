@@ -1,15 +1,5 @@
 [
   {
-    "id": "7661a2a5eb08452d",
-    "title": "Blockaid:以太坊 UNCX 共享代币锁仓池遭攻击,约 8.6 万美元资产被盗",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-14T16:44:52.169225+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a4aaf70ebe2986ff",
     "title": "Ripple Joins Forces With Stripe-Owned Privy to Advance AI-Powered Payments on XRP Ledger: Will XRP Price React?",
     "source": "ZyCrypto (新币与空投)",
@@ -5190,6 +5180,16 @@
     "sent_at": "2026-10-23T03:08:10.766989+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "29f11b6665091aee",
+    "title": "Will Ethereum (ETH) Rally or Crash After the US Midterms: 3 AIs Weigh in",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-23T03:25:21.437967+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-TW"
   }
