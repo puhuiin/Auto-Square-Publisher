@@ -1,15 +1,5 @@
 [
   {
-    "id": "22eab9d3aa16f314",
-    "title": "从“会支付”到“办完事”:X-Agent正在构建链上个人AI助理",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-15T03:24:40.899000+00:00",
-    "tokens": [
-      "ID"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "16e1819758ecc313",
     "title": "Alea 研报:代币化美股一年扩张 7.6 倍,撑起市场的是增发而不是股价",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5179,16 @@
       "PEPE",
       "DASH",
       "BCH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f9f11e15404202a1",
+    "title": "Binance Coin (BNB) Bags Major Hong Kong Listing, Founder Reacts",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-23T17:46:29.858116+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
