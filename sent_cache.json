@@ -1,15 +1,5 @@
 [
   {
-    "id": "3207de5420098840",
-    "title": "Ethereum’s quantum race takes a new turn as zkSync courts banks and Starknet weighs exit",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-14T18:04:14.238925+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f5088de658dca6a1",
     "title": "XRP Price Faces a Turning Point as ETFs Record 13 Weeks of Inflows",
     "source": "CryptoNews (全球快讯)",
@@ -5190,6 +5180,16 @@
     "tokens": [
       "UNI",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7b928b1498be287c",
+    "title": "Bitcoin to Dodge AI Crash, Analyst Says",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-23T07:28:21.963296+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
