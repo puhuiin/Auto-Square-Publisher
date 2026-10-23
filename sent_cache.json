@@ -1,15 +1,5 @@
 [
   {
-    "id": "4715e42aabad5632",
-    "title": "Rocket Pool Voters Back rETH Withdrawals, Keep 4 ETH Bonds",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-14T20:24:32.193407+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2ba015de6b65735e",
     "title": "SUI Demand Explodes as US ETFs Rack Up Five Straight Weeks of Inflows",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5193,5 +5183,15 @@
       "DYDX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d18c3552f565de19",
+    "title": "B.AI 国产模型 Token 周榜出炉,小米紧追 DeepSeek、MiniMax 成增长黑马",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T10:22:58.930269+00:00",
+    "tokens": [
+      "GLM"
+    ],
+    "lang": "zh-CN"
   }
 ]
