@@ -2,22 +2,22 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#SpotTradingTournament",
+    "#TradingTournament",
     "#bStocks",
-    "#AlphaTradingCompetition"
+    "#BinancePick"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$XRP",
     "$USDC",
+    "$BOTB",
+    "$BRKBB",
     "$AAPLB",
-    "$NVDAB",
-    "$ON",
-    "$FF",
+    "$KSTRB",
     "$RLUSD"
   ],
-  "strategy_guidance": "优先围绕当日新上线的5类bStocks交易对、现货交易锦标赛S8及Binance Starter Carnival bStocks相关活动产出内容，引导用户参与话题互动与交易讨论；提醒发帖机器人优先追贴当日截止的Orochi Network（ON）Alpha交易竞赛，从活动冲刺、参与攻略角度切入带动评论区互动；结合新上线的TradFi USDⓈ-Margined永续合约输出产品科普内容，匹配Write2Earn互动要求。",
-  "last_updated": "2026-10-22T21:24:05.552478Z",
+  "strategy_guidance": "当前可重点结合新上线的5类bStocks交易对及对应USDⓈ-Margined永续合约的公告热点，输出交易科普、标的解读类内容，引导读者参与评论互动获取Write to Earn奖励；同时可跟进现货交易锦标赛S8、Binance Pick预测、S16 LoL冠军赛预测等未截止活动的规则，输出参与攻略、活动解读类内容，提升内容匹配度与曝光量。",
+  "last_updated": "2026-10-23T09:44:42.586290Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
       "parked_until": "2026-10-23T10:04:05.015095+00:00",
@@ -26,7 +26,7 @@
     },
     "Bitcoinist (比特币向)": {
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-23T09:07:02.713288+00:00",
+      "last_fail": "2026-10-23T09:44:43.903754+00:00",
       "fails": 3
     }
   },
@@ -34,7 +34,13 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
     "date": "2026-10-18"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun": {
+      "fails": 1,
+      "cooldown_until": "2026-10-23T09:58:06.556090+00:00",
+      "last_fail": "2026-10-23T09:48:06.556108+00:00"
+    }
+  },
   "_article_sent_date": "2026-10-23",
   "_publish_park": {},
   "_intel_refresh_fail": {},

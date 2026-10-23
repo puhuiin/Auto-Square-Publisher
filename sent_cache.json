@@ -1,15 +1,5 @@
 [
   {
-    "id": "b9cddb2af38ce154",
-    "title": "'Biggest Increase in History': Strategy CEO Predicts Explosive Bitcoin Banking Surge",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-14T19:44:24.473004+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "699e9283ef019b7f",
     "title": "Optimism surges 19% – Unichain migration fuels OP enterprise demand",
     "source": "AMBCrypto (技术与链上)",
@@ -5193,5 +5183,15 @@
       "ENA"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ba6d2c94a35ad3d0",
+    "title": "历史上四次中期选举落地后,BTC 到底是怎么走的?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T09:48:21.496174+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
