@@ -1,15 +1,5 @@
 [
   {
-    "id": "019762eea7b9c383",
-    "title": "Chainlink sees $10M ETF inflows – Why LINK’s price still struggles",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-15T05:04:41.596578+00:00",
-    "tokens": [
-      "LINK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7d6fdbb14172d68e",
     "title": "Firelight forces XRP-linked tokens lockup as withdrawal delay queue grows",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-10-23T19:25:07.513404+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "134e68c008c5c340",
+    "title": "Pepe (PEPE) Rises 11% Daily: Further Pump or Correction on the Way?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-23T19:45:03.780743+00:00",
+    "tokens": [
+      "PEPE"
     ],
     "lang": "en"
   }
