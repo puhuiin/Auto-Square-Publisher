@@ -1,15 +1,5 @@
 [
   {
-    "id": "af5515acf5d8656f",
-    "title": "XRP Whales Are Making a Bigger Mark on Binance as Outflow Gap Nears August Levels",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-14T23:04:21.257952+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "524e7813fd9ea653",
     "title": "并非抛售,Ethena大型投资者代币转移属于硬件钱包安全预防",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5189,6 +5179,18 @@
     "source": "CryptoNews (全球快讯)",
     "sent_at": "2026-10-23T12:44:04.911914+00:00",
     "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "8bfb7ba682a87612",
+    "title": "TechFlow 情报局:DeepSeek 拟融资 1000 亿元腾讯宁德领投,Meta 股债双杀未来支出承诺飙至 8250 亿美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T13:05:03.410185+00:00",
+    "tokens": [
+      "ETH",
+      "BNB",
       "SOL"
     ],
     "lang": "zh-CN"
