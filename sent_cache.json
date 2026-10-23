@@ -1,16 +1,5 @@
 [
   {
-    "id": "d245758c16a87b5a",
-    "title": "Bitget UEX 日报|纳指跌 1.88%;美国 9 月 CPI 同比升 3.7%;BTC 贴近 ETF 成本参考线",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-15T02:25:27.910992+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7132905df850f63a",
     "title": "VanEck 撤回首檔 stETH ETF!ETF 能原生質押後,Lido 的華爾街門票沒了",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5188,6 +5177,16 @@
     "tokens": [
       "BTC",
       "PEPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "29a73ec05637c2e3",
+    "title": "Shiba Inu Exchange Netflow Hits 77 Billion SHIB in 24 Hours",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-23T16:46:43.152804+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
