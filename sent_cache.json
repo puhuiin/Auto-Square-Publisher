@@ -1,17 +1,5 @@
 [
   {
-    "id": "a085585723d2a2c5",
-    "title": "营收为王:加密项目估值逻辑正在改写",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-15T00:24:54.283663+00:00",
-    "tokens": [
-      "UNI",
-      "AAVE",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "26160621aac1d532",
     "title": "百亿美债涌入链上,为何只有 2% 进入 DeFi?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5192,6 +5180,16 @@
     "sent_at": "2026-10-23T14:04:47.179608+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c35e6fff233f53a7",
+    "title": "Shiba Inu Community Seeks Elon Musk's Attention Amid Wrong BONE Token on X",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-23T14:24:03.671736+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
