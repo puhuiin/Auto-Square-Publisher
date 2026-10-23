@@ -1,15 +1,5 @@
 [
   {
-    "id": "67071ab56f345830",
-    "title": "Solana's Alpenglow Goes Live Next Week: How Will SOL Price React?",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-14T15:24:21.739479+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b0f5d5b65c331e23",
     "title": "Bitcoin whales accumulate ahead of crucial US inflation report as $744 million exits ETFs",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5188,6 +5178,18 @@
     "tokens": [
       "TRUMP",
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3e0f6eb39ac142d0",
+    "title": "星球早讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-23T02:05:02.563670+00:00",
+    "tokens": [
+      "USDC",
+      "WLFI",
+      "BTC"
     ],
     "lang": "zh-CN"
   }
