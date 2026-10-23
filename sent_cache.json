@@ -1,15 +1,5 @@
 [
   {
-    "id": "2ba015de6b65735e",
-    "title": "SUI Demand Explodes as US ETFs Rack Up Five Straight Weeks of Inflows",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-14T20:44:13.284656+00:00",
-    "tokens": [
-      "SUI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2ab51e7bbcab069f",
     "title": "Shiba Inu Forms First 4-Hour Death Cross Setup in October: Potential Scenarios",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5191,6 +5181,16 @@
     "sent_at": "2026-10-23T10:22:58.930269+00:00",
     "tokens": [
       "GLM"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "aa7a415c1941eb4a",
+    "title": "Can THIS recent update, hike in network activity sustain PUMP’s price rally?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-23T10:44:31.554654+00:00",
+    "tokens": [
+      "PUMP"
     ],
     "lang": "zh-CN"
   }
