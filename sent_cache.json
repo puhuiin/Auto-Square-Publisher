@@ -1,15 +1,5 @@
 [
   {
-    "id": "e216cc71193b7f1a",
-    "title": "Microsoft Copilot AI Predicts Unbelievable Chainlink (LINK) Price",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-14T23:47:46.457394+00:00",
-    "tokens": [
-      "LINK"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "94963dc4873362fd",
     "title": "Solana sets October 21 for massive Alpenglow upgrade that could make transactions 99% faster to finalize",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5192,6 +5182,16 @@
     "sent_at": "2026-10-23T13:24:59.113652+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "632c93122be27c7c",
+    "title": "Singapore, Malaysia and Thailand central banks expand cross-border stablecoin initiative involving Ripple, Visa and Mastercard",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-23T13:45:06.183705+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
