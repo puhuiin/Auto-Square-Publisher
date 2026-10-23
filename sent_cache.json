@@ -1,15 +1,5 @@
 [
   {
-    "id": "16e1819758ecc313",
-    "title": "Alea 研报:代币化美股一年扩张 7.6 倍,撑起市场的是增发而不是股价",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-15T03:45:56.939176+00:00",
-    "tokens": [
-      "ONDO"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "388ad8eaedc111c8",
     "title": "Galaxy 研报:预测市场的下一站是条件市场,22 个 DAO 已把 5050 万美元交给市场来治理",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5179,16 @@
     "sent_at": "2026-10-23T17:46:29.858116+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1636deaf09d99b7f",
+    "title": "Evernorth’s $132 million funding option could buy more XRP while reducing XRP per share",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-23T18:06:40.047617+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
