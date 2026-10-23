@@ -1,16 +1,5 @@
 [
   {
-    "id": "a3d558a02a7d3166",
-    "title": "美股潮向(10 月 15 日):美国 9 月 CPI 超预期,CoreWeave 暴跌逾 15%",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-15T01:24:43.775717+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "958f283d207afaae",
     "title": "加密早报:Polymarket CEO 暗示将发布公告,美国 9 月 CPI 年率超预期上涨",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5178,17 @@
     "sent_at": "2026-10-23T15:06:43.147876+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c124b9a11974abdc",
+    "title": "JUST 品牌全新战略升级:JustLend、USDD 与 GasFree 三大业务协同,JST 回购销毁机制同步多元化升级",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T15:27:21.515688+00:00",
+    "tokens": [
+      "JST",
+      "TRX"
     ],
     "lang": "en"
   }
