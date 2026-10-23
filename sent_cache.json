@@ -1,17 +1,5 @@
 [
   {
-    "id": "fd4bef1ed579b2c0",
-    "title": "Near Protocol (NEAR), XRP, Zcash (ZEC) and Chainlink (LINK) Price Analysis for October 15: Can Bulls Sustain Liquidity?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-15T02:06:12.470715+00:00",
-    "tokens": [
-      "XRP",
-      "ZEC",
-      "LINK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d245758c16a87b5a",
     "title": "Bitget UEX 日报|纳指跌 1.88%;美国 9 月 CPI 同比升 3.7%;BTC 贴近 ETF 成本参考线",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5177,17 @@
     "tokens": [
       "JST",
       "TRX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0d48514265bad127",
+    "title": "Bitcoin steadies near $81,700 as altcoins rebound, pepe climbs 13%",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-10-23T16:27:23.338433+00:00",
+    "tokens": [
+      "BTC",
+      "PEPE"
     ],
     "lang": "en"
   }
