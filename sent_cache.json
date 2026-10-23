@@ -1,16 +1,5 @@
 [
   {
-    "id": "958f283d207afaae",
-    "title": "加密早报:Polymarket CEO 暗示将发布公告,美国 9 月 CPI 年率超预期上涨",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-15T01:46:18.595306+00:00",
-    "tokens": [
-      "EPIC",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fd4bef1ed579b2c0",
     "title": "Near Protocol (NEAR), XRP, Zcash (ZEC) and Chainlink (LINK) Price Analysis for October 15: Can Bulls Sustain Liquidity?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5186,6 +5175,17 @@
     "title": "JUST 品牌全新战略升级:JustLend、USDD 与 GasFree 三大业务协同,JST 回购销毁机制同步多元化升级",
     "source": "深潮TechFlow (中文/简体)",
     "sent_at": "2026-10-23T15:27:21.515688+00:00",
+    "tokens": [
+      "JST",
+      "TRX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "661b7f14a0b3d2f1",
+    "title": "JST 回购销毁机制全新升级:新增 GasFree 收入并注入 2034 万美元存量资金,JUST 三大业务共筑 JST 价值新底座",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T16:04:31.296523+00:00",
     "tokens": [
       "JST",
       "TRX"
