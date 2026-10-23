@@ -137,7 +137,8 @@ def _pool(stats_list) -> dict:
 
 
 # ---- 阈值以**整数分数**给出，判定全程用整数交叉相乘（见 verdict 的注释）----
-REVERT_MISS_NUM, REVERT_MISS_DEN = 3, 18       # 单窗口红线：漏率 > 3/18
+REVERT_MARGIN_PP = 15      # 单窗口真漏率比**基线**高 ≥15 个百分点才算"明显变差"
+REVERT_MIN_NORMAL = 10     # 且该窗口至少 10 篇「配置正常」才谈比率（n<10 时 1 篇=10pp+，是噪声）
 PASS_MISS_NUM, PASS_MISS_DEN = 1, 18           # 合并通过线：漏率 ≤ 1/18
 MENTION_DROP_PP = 10                           # 单窗口提及率跌幅上限（百分点）
 
@@ -153,11 +154,22 @@ def verdict(base_stats, treat_stats) -> tuple:
     """
     base = _pool(base_stats)
     treat = _pool(treat_stats)
-    # ① 单窗口红线（不必等第二个窗口）——漏率 > NUM/DEN ⇔ miss*DEN > NUM*normal
+    # ① 单窗口红线——**相对基线**（不必等第二个窗口）
+    #   ⚠️★ R832 更正：R819 写的是**绝对**红线 `> 3/18 = 16.7%`，而实测基线是 **36%**
+    #   ⇒ 那条线对**任何**窗口都开火（本轮实测：把根本没部署改动的 10-22 判成"回滚"）。
+    #   回滚线只有**相对基线**才表达"变差了"；**通过线（≤1/18）不动**。
+    _bn, _bm = base["normal"], base["miss"]
     for s in treat_stats:
-        if s["normal"] and s["miss"] * REVERT_MISS_DEN > REVERT_MISS_NUM * s["normal"]:
-            return ("回滚", "单窗口真漏率 %d/%d 超过红线 %d/%d（%s）"
-                    % (s["miss"], s["normal"], REVERT_MISS_NUM, REVERT_MISS_DEN, s["date"]))
+        _n, _m = s["normal"], s["miss"]
+        # ⚠️★ R832：还得要求**单窗口最低样本量**——10-23 当晚只发了 3 篇、全漏 ⇒ 100%，
+        #   相对红线照样开火（"3/3 比基线高 15pp"）。n<10 时一篇的波动就是 10 个百分点以上，
+        #   那不是"变差"，是噪声。样本不足的窗口应由判定②的"样本不足"兜住，不是判回滚。
+        if not (_bn and _n) or _n < REVERT_MIN_NORMAL:
+            continue
+        # m_/n_ − bm/bn ≥ 15pp  ⇔  100*(m_*bn − bm*n_) ≥ 15*bn*n_   （全程整数）
+        if 100 * (_m * _bn - _bm * _n) >= REVERT_MARGIN_PP * _bn * _n:
+            return ("回滚", "单窗口真漏率 %d/%d 比基线 %d/%d 高 ≥%d 个百分点（%s）"
+                    % (_m, _n, _bm, _bn, REVERT_MARGIN_PP, s["date"]))
         # 提及率跌幅 ≥ 10 个百分点 ⇔ 100*(b_hit/b_n - s_hit/s_n) ≥ 10
         if (base["n"] and s["n"]
                 and 100 * (base["mention"] * s["n"] - s["mention"] * base["n"])
@@ -195,6 +207,80 @@ def _fmt(s: dict) -> str:
                s["langdev"]))
 
 
+# ===========================================================================
+# 第二条预注册判据（R831）：英文帖**断在词中间**
+# ---------------------------------------------------------------------------
+# 口径（**R832 更正**）：
+#   · 样本＝该 UTC 日**全部** `binance_published` 且 `final_text` 非空的 en 帖。
+#   · 「正文」＝`final_text` 里**第一个 `#` 之前**的部分（读者看到的结尾就在那里）。
+#     ⚠️ 两个已踩的坑：① 不能用 `strip_tags`——它会把标签行里的**非标签词**
+#     （`DeFi`/`Futures`/`MemeCoin`）留在结尾，于是**每一篇**都"以字母结尾"、检测恒真；
+#     ② 不能设"总长 ≥880"这种阈值——实测两篇断词帖总长只有 **839/838**（正文 782），
+#     阈值把它们全滤掉，判定报 0 篇（**假绿**）。⇒ 只看"正文末字符是不是字母"。
+#   · 排除项：末尾 token 是 `$挂件` 或是 ≤6 位的全大写 ticker（"看 $BTC" 这类合法收尾）。
+#   ★ 机制（R832 查清，与本条判据配套）：**不是字数上限截的**——那两篇总长 839 < 900。
+#     遥测 `completion_tokens=2961`（≈3000 预算）⇒ 是**模型输出被 token 预算截断在半句**，
+#     而"残句门"只在越过「过长门」（短讯 1200 / 长文 2500）时才开火 ⇒ 782 字的断句帖
+#     照常发布。（R831 的 `_truncate_at_boundary` 边界修复只覆盖**字数上限**那条路径，
+#     救不了这两篇；根治＝R832 的"完稿完整性门"。）
+TRUNC_MIN_DAYS = 2
+TRUNC_MIN_POSTS = 40
+
+
+def body_before_tags(text: str) -> str:
+    """正文＝第一个 `#` 之前的部分（读者看到的结尾就在那里）。"""
+    return str(text or "").split("#", 1)[0].strip()
+
+
+def is_truncated(r: dict) -> bool:
+    """该发布行是否为「断在半句」——正文末尾没有收尾标点。"""
+    t = r.get("final_text")
+    if not isinstance(t, str) or not t.strip():
+        return False
+    body = body_before_tags(t)
+    if not body:
+        return False
+    tail = body.split()[-1] if body.split() else ""
+    if tail.startswith("$") or (tail.isupper() and tail.isalpha() and len(tail) <= 6):
+        return False                      # $挂件 / 全大写 ticker 结尾 = 合法收尾
+    return bool(re.search(r"[A-Za-z]$", body))
+
+
+def trunc_stats(rows, date_utc: str) -> dict:
+    """单个 UTC 日的英文帖断句统计（纯函数）。"""
+    cohort = [r for r in rows
+              if str(r.get("outcome", "")).startswith("binance_published")
+              and str(r.get("ts") or "").startswith(date_utc)
+              and r.get("lang") == "en"
+              and isinstance(r.get("final_text"), str) and r["final_text"].strip()]
+    bad = [r for r in cohort if is_truncated(r)]
+    return {"date": date_utc, "n": len(cohort), "trunc": len(bad),
+            "examples": ["%s…" % body_before_tags(r["final_text"])[-26:] for r in bad[:3]]}
+
+
+def trunc_verdict(base_stats, treat_stats) -> tuple:
+    """预注册判定。返回 (状态, 说明)。"""
+    n = sum(s["n"] for s in treat_stats)
+    bad = sum(s["trunc"] for s in treat_stats)
+    named = [s for s in treat_stats if s["trunc"]]
+    if named:
+        return ("回滚", "部署后仍有断句帖 %d 篇（%s）%s"
+                % (bad, "、".join(s["date"] for s in named),
+                   "；例：%s" % " / ".join(named[0]["examples"])))
+    if len(treat_stats) < TRUNC_MIN_DAYS and n < TRUNC_MIN_POSTS:
+        return ("样本不足", "需 ≥%d 个完整日期或 ≥%d 篇 en 帖；当前 %d 天 / %d 篇"
+                % (TRUNC_MIN_DAYS, TRUNC_MIN_POSTS, len(treat_stats), n))
+    base_bad = sum(s["trunc"] for s in base_stats)
+    base_n = sum(s["n"] for s in base_stats)
+    return ("通过", "部署后 %d 天 / %d 篇 en 帖里 **0 篇**断句（部署前 %d/%d）"
+            % (len(treat_stats), n, base_bad, base_n))
+
+
+def _fmt_trunc(s: dict) -> str:
+    extra = ("  例：%s" % " / ".join(s["examples"])) if s.get("examples") else ""
+    return "%s  en %d 篇 ｜ 词中截断 %d%s" % (s["date"], s["n"], s["trunc"], extra)
+
+
 def load_rows(path: str):
     rows = []
     with open(path, encoding="utf-8") as fh:
@@ -230,7 +316,23 @@ def main(argv=None) -> int:
         print("  合并：" + _fmt(_pool(stats)))
     if base and treat:
         status, why = verdict(base, treat)
-        print("\n判定：%s —— %s" % (status, why))
+        print("\n判定①（活动提及）：%s —— %s" % (status, why))
+
+    # ---- 第二条判据：英文断句（R831 判定 / R832 更正口径）----
+    tb = [trunc_stats(rows, d) for d in (args.baseline or "").split(",") if d]
+    tt = [trunc_stats(rows, d) for d in (args.treatment or "").split(",") if d]
+    if tb or tt:
+        print("\n【英文断句 · 预注册判据 R831/R832】口径：第一个 `#` 之前的正文"
+              "末字符是字母，且末尾 token 不是 $挂件/全大写 ticker")
+        for label, stats in (("基线臂", tb), ("处置臂", tt)):
+            if not stats:
+                continue
+            print("%s" % label)
+            for s in stats:
+                print("  " + _fmt_trunc(s))
+        if tb and tt:
+            st2, why2 = trunc_verdict(tb, tt)
+            print("\n判定②（词中截断）：%s —— %s" % (st2, why2))
     return 0
 
 

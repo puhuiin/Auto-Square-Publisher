@@ -9094,15 +9094,19 @@ class TestR819EnWindowPreregistration(unittest.TestCase):
         self.assertNotEqual(status, "回滚", why)
 
     def test_above_red_line_reverts(self):
+        """★ R832 起回滚线是**相对基线**（+15pp）且要求窗口 ≥10 篇：
+        基线 36% ⇒ 需 >51%；这里用 6/10 = 60%。
+        （R819 原版用 2/6 = 33% 对基线 22% 判回滚——那套绝对线已废，见
+        TestR832EnAuditCaliberFixes 的说明。）"""
         mod = self._ew()
-        status, why = mod.verdict([self._stats(4, 18, 14, 18)],
-                                  [self._stats(2, 6, 4, 6)])   # 2/6 = 33% > 3/18
+        status, why = mod.verdict([self._stats(23, 64, 41, 69)],
+                                  [self._stats(6, 10, 4, 10)])
         self.assertEqual(status, "回滚", why)
 
     def test_mention_drop_reverts(self):
         mod = self._ew()
-        status, _ = mod.verdict([self._stats(4, 18, 14, 18)],      # 77.8%
-                                [self._stats(0, 6, 4, 6)])         # 66.7% ≤ 77.8−10
+        status, _ = mod.verdict([self._stats(23, 64, 41, 69)],      # 提及 41/69 = 59%
+                                [self._stats(0, 10, 4, 10)])         # 提及 40% ⇒ 跌 19pp
         self.assertEqual(status, "回滚")
 
     # ---- 样本量 ----
@@ -9146,10 +9150,16 @@ class TestR819EnWindowPreregistration(unittest.TestCase):
         self.assertAlmostEqual(f(4, 14, 1, 17), 0.169, places=3)
 
     def test_thresholds_are_integers(self):
-        """阈值必须是整数分数——浮点百分比比较会在边界上"等价却不相等"。"""
+        """阈值必须是整数分数——浮点百分比比较会在边界上"等价却不相等"。
+
+        ★ R832 更正：回滚线从**绝对** `REVERT_MISS_NUM/DEN`（3/18）
+        改成**相对基线**的 `REVERT_MARGIN_PP` + 最低样本量 `REVERT_MIN_NORMAL`。
+        原因见 `test_revert_line_*`：绝对线低于实测基线（36%）⇒ 对任何窗口都开火。
+        """
         mod = self._ew()
-        for name in ("REVERT_MISS_NUM", "REVERT_MISS_DEN", "PASS_MISS_NUM",
-                     "PASS_MISS_DEN", "MENTION_DROP_PP", "MIN_ARM_WINDOWS", "MIN_ARM_N"):
+        for name in ("REVERT_MARGIN_PP", "REVERT_MIN_NORMAL", "PASS_MISS_NUM",
+                     "PASS_MISS_DEN", "MENTION_DROP_PP", "MIN_ARM_WINDOWS", "MIN_ARM_N",
+                     "TRUNC_MIN_DAYS", "TRUNC_MIN_POSTS"):
             self.assertIsInstance(getattr(mod, name), int, name)
 
     def test_insufficient_verdict_p_has_correct_polarity(self):
@@ -9165,6 +9175,112 @@ class TestR819EnWindowPreregistration(unittest.TestCase):
         self.assertTrue(tok, why)
         self.assertAlmostEqual(float(tok[0][2:]), 0.169, places=2,
                                msg="p 极性反了（参数传反）—— 正确值 0.169，反的是 0.798")
+
+
+class TestR832EnAuditCaliberFixes(unittest.TestCase):
+    """★★ R832：把「英文夜窗验收」固化进 `scripts/en_window_audit.py` 时，
+    **当场抓出这条判据自己的两个口径错误**——两个都会产出"假绿"或"假红"。
+
+    坑 1（假绿）：断句检测原先写"正文末字符是字母 **且 final_text 总长 ≥880**"。
+      实测两篇断词帖总长只有 **839 / 838**（正文 782）⇒ 被阈值滤掉，判定报
+      **「通过 —— 0 篇」**。⇒ 去掉长度阈值，只看正文末尾。
+      另：不能用 `strip_tags` 取正文——它会把标签行里的非标签词（`DeFi`/`Futures`/
+      `MemeCoin`）留在结尾，于是**每一篇**都"以字母结尾"，检测恒真。
+
+    坑 2（假红）：提及判定的单窗口回滚线原先是**绝对** `> 3/18 = 16.7%`，而实测基线
+      是 **36%** ⇒ 那条线对**任何**窗口都开火（把根本没部署改动的 10-22 判成"回滚"）。
+      ⇒ 回滚线必须**相对基线**（+15pp），且要求单窗口 ≥10 篇（10-23 只有 3 篇、
+      100% 全漏 ⇒ 3 篇的比率是噪声，不该判回滚）。
+    """
+
+    @staticmethod
+    def _ew():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "en_window_audit_r832",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "en_window_audit.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _pub(self, date, body, tags="#Write2Earn #BinanceSquare #BTC Futures #TradingTournament"):
+        return {"outcome": "binance_published", "ts": date + "T15:00:00+00:00", "lang": "en",
+                "final_text": body + "\n\n" + tags}
+
+    # ---- 坑 1：断句检测 ----
+    def test_short_truncated_post_is_detected(self):
+        """★ 回归守卫：总长 839 的断句帖必须被检出（旧阈值 ≥880 会漏掉它）。"""
+        mod = self._ew()
+        body = ("The current Binance Futures trading event lets you practice with way "
+                "lower downside than blowing a live leveraged tr")
+        row = self._pub("2026-10-22", body)
+        self.assertLess(len(row["final_text"]), 880, "夹具必须落在旧阈值下方才有区分力")
+        self.assertTrue(mod.is_truncated(row))
+
+    def test_production_truncation_shapes_detected(self):
+        mod = self._ew()
+        for tail in ("Competition is live right now — ru",
+                     "Patience beats FOMO every time, especially with mem",
+                     "S6 are live for low-risk practic",
+                     "join the comment thread for Word of the Day or Co"):
+            self.assertTrue(mod.is_truncated(self._pub("2026-10-22", "x " * 60 + tail)),
+                            "漏检: …%s" % tail[-20:])
+
+    def test_proper_endings_not_flagged(self):
+        """反向：正常收尾不得误报——含 `$挂件`/ticker 结尾，以及标签行的非标签词。"""
+        mod = self._ew()
+        for body in ("Price is up. Watch $BTC",
+                     "Price is up. Watch BTC",
+                     "Is this the top?",
+                     "Buy the dip!",
+                     "支撑还在，先观望。 $BTC"):
+            self.assertFalse(mod.is_truncated(self._pub("2026-10-22", body)),
+                             "误报: %s" % body[-14:])
+
+    def test_tagline_words_do_not_fake_a_cut(self):
+        """★ `strip_tags` 会把 `DeFi` 留在结尾 ⇒ 用它取正文会让**每篇**都判截断。"""
+        mod = self._ew()
+        row = self._pub("2026-10-22", "This setup is dead. No trade here.")
+        self.assertFalse(mod.is_truncated(row))
+        # strip_tags 的实现就是下面这一行；用它处理同一段文本，证明标签行的非标签词
+        # （`Futures`/`DeFi`/`MemeCoin`）会留在结尾 ⇒ 用它取正文会"每篇都以字母结尾"。
+        import re as _re          # 本文件不全局 import re（别再加全局依赖）
+        stripped = _re.sub(r"#[^\s#]+", " ", row["final_text"]).strip()
+        self.assertTrue(_re.search(r"[A-Za-z]$", stripped),
+                        "前提：strip_tags 留下的尾巴以字母结尾 ⇒ 检测会恒真（实测 %r）" % stripped[-12:])
+
+    # ---- 坑 2：回滚线 ----
+    def test_revert_line_is_relative_to_baseline(self):
+        mod = self._ew()
+        base = [self._stats(23, 64, 41, 69)]            # 基线 36%
+        same = [self._stats(3, 10, 7, 10)]              # 30% 与基线同量级
+        worse = [self._stats(6, 10, 4, 10)]             # 60% ≥ 36+15
+        self.assertNotEqual(mod.verdict(base, same)[0], "回滚", "同量级不得判回滚")
+        self.assertEqual(mod.verdict(base, worse)[0], "回滚")
+
+    def test_revert_line_needs_min_window_n(self):
+        """★ 3 篇的窗口（100% 全漏）是噪声，不得判回滚——应由「样本不足」兜住。"""
+        mod = self._ew()
+        base = [self._stats(23, 64, 41, 69)]
+        tiny = [self._stats(3, 3, 0, 3)]
+        self.assertNotEqual(mod.verdict(base, tiny)[0], "回滚")
+
+    def test_trunc_verdict_tiers(self):
+        mod = self._ew()
+        clean = {"date": "2026-10-24", "n": 20, "trunc": 0, "examples": []}
+        clean2 = {"date": "2026-10-25", "n": 22, "trunc": 0, "examples": []}
+        bad = {"date": "2026-10-24", "n": 20, "trunc": 1, "examples": ["…with mem"]}
+        one = {"date": "2026-10-24", "n": 20, "trunc": 0, "examples": []}
+        self.assertEqual(mod.trunc_verdict([], [bad])[0], "回滚")
+        self.assertEqual(mod.trunc_verdict([], [one])[0], "样本不足")
+        self.assertEqual(mod.trunc_verdict([], [clean, clean2])[0], "通过")
+
+    @staticmethod
+    def _stats(miss, normal, mention, n):
+        return {"date": "d", "n": n, "normal": normal, "miss": miss,
+                "mention": mention, "mention_rate": 100.0 * mention / n,
+                "miss_rate": (100.0 * miss / normal) if normal else None, "langdev": 0}
 
 
 if __name__ == "__main__":
