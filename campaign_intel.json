@@ -4,46 +4,46 @@
     "#BinanceSquare",
     "#TradingTournament",
     "#bStocks",
-    "#BinancePick"
+    "#BBW2026"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$XRP",
-    "$USDC",
-    "$BOTB",
-    "$BRKBB",
+    "$ON",
+    "$DNA",
     "$AAPLB",
-    "$KSTRB",
-    "$RLUSD"
+    "$NVDAB",
+    "$RLUSD",
+    "$BOTB"
   ],
-  "strategy_guidance": "当前可重点结合新上线的5类bStocks交易对及对应USDⓈ-Margined永续合约的公告热点，输出交易科普、标的解读类内容，引导读者参与评论互动获取Write to Earn奖励；同时可跟进现货交易锦标赛S8、Binance Pick预测、S16 LoL冠军赛预测等未截止活动的规则，输出参与攻略、活动解读类内容，提升内容匹配度与曝光量。",
-  "last_updated": "2026-10-23T09:44:42.586290Z",
+  "strategy_guidance": "重点解析新上线的 bStocks 代币化证券与 TradFi 永续合约，结合 Spot Trading Tournament Season 8 引导用户参与交易互动。优先发布英雄联盟 S16 赛事预测与 BBW 2026 门票挑战赛的参与攻略，通过分享活动节奏与互动心得来提升帖子热度，从而最大化获取 Write to Earn 奖励。",
+  "last_updated": "2026-10-23T22:05:46.834526Z",
   "_feed_health": {
     "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-10-23T21:43:32.392608+00:00",
+      "fails": 1,
       "last_fail": "2026-10-23T20:43:28.331972+00:00",
-      "fails": 1
-    },
-    "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-23T21:43:32.964953+00:00",
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "fails": 3
+      "reset_at": "2026-10-23T22:05:47.252747+00:00"
     },
     "Odaily星球日报 (中文快讯)": {
-      "last_fail": "2026-10-23T21:43:49.927765+00:00",
-      "parked_until": "2026-10-23T18:23:49.675119+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-10-23T22:06:05.233056+00:00",
+      "parked_until": "2026-10-23T18:23:49.675119+00:00"
+    },
+    "Bitcoinist (比特币向)": {
+      "fails": 3,
+      "last_fail": "2026-10-23T22:05:47.985570+00:00",
+      "parked_until": "2026-10-20T06:53:53.228743+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-23",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 268,
+  "_img_rot": 269,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
