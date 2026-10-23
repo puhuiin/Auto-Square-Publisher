@@ -20,22 +20,20 @@
   "last_updated": "2026-10-23T09:44:42.586290Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-23T11:23:29.020983+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-10-23T11:43:32.474136+00:00",
+      "parked_until": "2026-10-20T06:53:53.228743+00:00"
+    },
+    "Odaily星球日报 (中文快讯)": {
+      "fails": 1,
+      "last_fail": "2026-10-23T11:43:49.939592+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
-  "_llm_breaker": {
-    "Preset-stepfun-flash": {
-      "fails": 1,
-      "cooldown_until": "2026-10-23T11:34:01.880712+00:00",
-      "last_fail": "2026-10-23T11:24:01.880724+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-10-23",
   "_publish_park": {},
   "_intel_refresh_fail": {},

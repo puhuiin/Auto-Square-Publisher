@@ -1,15 +1,5 @@
 [
   {
-    "id": "bfb57aa20723acd2",
-    "title": "VanEck withdraws SEC registration for its Lido Staked Ethereum ETF",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-14T21:44:24.920418+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ec5da81fca2b37bf",
     "title": "上线链上,ARK Venture Fund通过Securitize推进代币化",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5193,5 +5183,15 @@
       "ZEC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "f3a37130b1faf13d",
+    "title": "一文拆解:加密货币要进「掩体模式」?AI 真能破解钱包吗?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-23T11:45:28.375035+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
