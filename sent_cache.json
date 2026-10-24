@@ -1,15 +1,5 @@
 [
   {
-    "id": "6033e9ae009c88bf",
-    "title": "Hyperliquid whale stakes $100M – So why is HYPE still below $80?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-15T23:04:48.200672+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d41e9c5675d9603e",
     "title": "Ethereum dips below $2,400 as hot inflation fuels selling and long liquidations",
     "source": "CoinJournal (山寨异动)",
@@ -5190,5 +5180,15 @@
       "ADA"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "6e682b6014de6cb5",
+    "title": "持仓价值较峰值回撤约1870万美元,Bonk Guy当前持仓约890万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-24T13:05:10.422054+00:00",
+    "tokens": [
+      "MARSCOIN"
+    ],
+    "lang": "zh-CN"
   }
 ]
