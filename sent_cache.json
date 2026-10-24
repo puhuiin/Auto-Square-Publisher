@@ -1,15 +1,5 @@
 [
   {
-    "id": "79909a8c7895404a",
-    "title": "Ripple Prime adds RWA swaps referencing perpetual futures listed on Hyperliquid",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-10-15T15:04:14.053585+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5348c19a0960a790",
     "title": "Zcash risks slide toward $1,000 as inflation fears outweigh ETF inflows",
     "source": "CoinJournal (山寨异动)",
@@ -5184,5 +5174,17 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ac8c7a10da23e8ae",
+    "title": "Solayer Pay Adds Five Blockchain Networks For Direct Stablecoin Card Deposits",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-24T01:27:36.057412+00:00",
+    "tokens": [
+      "BNB",
+      "SOL",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
