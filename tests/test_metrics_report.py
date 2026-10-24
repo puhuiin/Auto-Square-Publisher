@@ -9218,6 +9218,23 @@ class TestR832EnAuditCaliberFixes(unittest.TestCase):
         self.assertLess(len(row["final_text"]), 880, "夹具必须落在旧阈值下方才有区分力")
         self.assertTrue(mod.is_truncated(row))
 
+    def test_cap_caliber_matches_production_cluster(self):
+        """★★ R833：把**真实上限口径**钉在测试里——生产 7 篇断句帖的正文挤在 777~789、
+        总长挤在 838~840（聚类 = 固定上限的签名）。
+
+        净化预算 = `SHORT_FORM_MAX_CHARS(900) - _APPEND_HEADROOM(80) = 820`，
+        再减尾部标签 ~57 ⇒ 正文上限 ~763~780。⇒ 判据必须是"看正文末尾有没有收尾标点"，
+        **不能**用"总长 ≥880"这类比基准错一档的阈值（R832 那个假绿就是这么来的）。
+        """
+        import re as _re
+        src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                "main.py"), encoding="utf-8").read()
+        head = int(_re.search(r"_APPEND_HEADROOM\s*=\s*(\d+)", src).group(1))
+        short = int(_re.search(r"SHORT_FORM_MAX_CHARS\s*=\s*(\d+)", src).group(1))
+        self.assertEqual(short - head, 820, "上限口径变了 ⇒ 断句判据的基准要跟着复核")
+        # 生产观测区间（正文 777~789）必须落在「预算内」⇒ 说明它们正是被这个上限截的
+        self.assertLessEqual(789, short - head)
+
     def test_production_truncation_shapes_detected(self):
         mod = self._ew()
         for tail in ("Competition is live right now — ru",
