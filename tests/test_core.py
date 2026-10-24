@@ -24023,5 +24023,140 @@ class TestR831EnTruncationAndVocab(unittest.TestCase):
                          "裸 carnival 不得命中（只收 starter carnival / 新手嘉年华）")
 
 
+class TestR836UnusedChannelSmoke(unittest.TestCase):
+    """★★ R836：给**从未在生产里跑过**的两条分发路径写冒烟测试（启用前的预检）。
+
+    ★ 生产实证：`platforms` 字段 **854/854 全是 `['binance']`** —— OKX 草稿与 Telegram
+      镜像**一次都没送达**。原因已查清且**不是 bug**：`PUBLISH_PLATFORMS` 默认只有
+      `binance`（opt-in 的 repo 变量 `vars.PUBLISH_PLATFORMS`），属**用户侧配置**；
+      `_delivered_platforms()` 的口径是"只记真实送达"，所以空着是诚实的。
+      目录名也核过了：导出器写 `BASE_DIR/drafts`，与 workflow 的 `[ -d drafts ]` 一致 ✓，
+      `.gitignore` 也没有 draft 相关行 ✓（不会白写）。
+    ★ 但"没启用"= 这两条路**从未执行** ⇒ 一旦用户启用，没人知道它还能不能跑
+      （R9 家族：未执行的路径会静默腐坏）。本组就是**启用前的预检**。
+    """
+
+    BODY = ("$BTC is holding $81,500 and the ETF cost basis is the line everyone watches. "
+            "Wait for a confirmed close above it before adding exposure.\n\n"
+            "#Write2Earn #BinanceSquare #BTC Futures #TradingTournament")
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mkdtemp(prefix="okx_draft_")
+        self._orig_dir = m.OKXDraftExporter.DRAFTS_DIR
+        m.OKXDraftExporter.DRAFTS_DIR = self.tmp
+        self.addCleanup(lambda: setattr(m.OKXDraftExporter, "DRAFTS_DIR", self._orig_dir))
+        import shutil
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+
+    def _files(self):
+        """草稿可能落在**日期子目录**里（`_find_existing_draft` 是递归 walk 的），
+        ⚠️ 首版用非递归 glob 只找到 0 份、看起来像"导出器坏了"——其实是测试自己漏了子目录。"""
+        out = []
+        for root, _dirs, fnames in os.walk(self.tmp):
+            for fn in fnames:
+                if fn.endswith(".md"):
+                    out.append(os.path.join(root, fn))
+        return sorted(out)
+
+    # ---- OKX 草稿通道 ----
+    def test_okx_draft_export_writes_file_and_strips_binance_tags(self):
+        exp = m.OKXDraftExporter()
+        ok = exp.publish(self.BODY, meta={"news_id": "rss::smoke1", "title": "T"})
+        self.assertTrue(ok, "OKX 草稿导出失败：%s" % getattr(exp, "last_error", ""))
+        files = self._files()
+        self.assertEqual(len(files), 1, "应恰好产出一份草稿")
+        text = open(files[0], encoding="utf-8").read()
+        self.assertIn("$BTC is holding", text)
+        self.assertNotIn("#Write2Earn", text,
+                         "币安专属标签必须被跨平台适配剥掉（否则 OKX 侧是噪声）")
+
+    def test_okx_second_export_is_idempotent_skip(self):
+        """同一 news_id 再导出 ⇒ 幂等跳过（不是失败），且不产生第二份草稿。"""
+        exp1 = m.OKXDraftExporter()
+        exp1.publish(self.BODY, meta={"news_id": "rss::smoke2", "title": "T"})
+        exp2 = m.OKXDraftExporter()
+        self.assertFalse(exp2.publish(self.BODY, meta={"news_id": "rss::smoke2", "title": "T"}))
+        self.assertEqual(getattr(exp2, "skipped_reason", None), m.IDEMPOTENT_SKIP,
+                         "幂等跳过必须用 IDEMPOTENT_SKIP 标记（否则会误计失败/熔断）")
+        self.assertEqual(len(self._files()), 1)
+
+    def test_okx_prune_keeps_repo_bounded(self):
+        """草稿保留上限必须生效——否则 `drafts/` 会让仓库无限膨胀（每轮都提交）。"""
+        keep = m.OKXDraftExporter.KEEP_DRAFTS
+        for i in range(keep + 5):
+            with open(os.path.join(self.tmp, "2026-01-%02d_x_%03d.md" % ((i % 28) + 1, i)),
+                      "w", encoding="utf-8") as fh:
+                fh.write("dummy")
+            os.utime(os.path.join(self.tmp, "2026-01-%02d_x_%03d.md" % ((i % 28) + 1, i)),
+                     (1000 + i, 1000 + i))
+        m.OKXDraftExporter()._prune_old_drafts()
+        self.assertLessEqual(len(self._files()), keep,
+                             "`_prune_old_drafts` 没把草稿收在上限内")
+
+    # ---- Telegram 镜像通道 ----
+    def test_telegram_unconfigured_is_loud_not_silent(self):
+        """未配置凭证时必须**打日志跳过**（R612：静默失败等于没做）且返回 False。"""
+        saved = {k: os.environ.pop(k, None)
+                 for k in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_MIRROR_CHANNEL_ID",
+                           "TELEGRAM_CHAT_ID")}
+        self.addCleanup(lambda: [os.environ.update({k: v for k, v in saved.items() if v})
+                                 for _ in (0,)])
+        with self.assertLogs(m.logger.name, level="WARNING") as cm:
+            ok = m.TelegramChannelPublisher().publish(self.BODY)
+        self.assertFalse(ok)
+        self.assertTrue(any("未配置凭证" in x or "TELEGRAM" in x for x in cm.output),
+                        "跳过必须留日志：%r" % cm.output)
+
+
+class TestR837NoMojibakeInSources(unittest.TestCase):
+    """★★ R837：源码里**不得有 U+FFFD（替换字符）**——它是"字符已经丢了"的字节级签名。
+
+    ★ 为什么要专门守：**严格 UTF-8 解码查不出它**（`EF BF BD` 本身是合法 UTF-8），
+      所以"能正常 import、能跑测试"完全不能说明文本没坏（本轮就是这么漏过去的）。
+      生产实证（2026-10-24 字节级扫描）：`main.py` 2 处、`tests/test_metrics_report.py`
+      3 处**真损坏**；且 **origin 上同样坏**（不是本地引入，git 也取不回原文）⇒ 只能按
+      上下文重建（本轮改成无歧义的等价措辞，不猜丢失的那个字）。
+    ★ 豁免（**两条都必须显式**，别处一律红）：
+      · 断言"解码失败信息不含乱码"的那行（`assertNotIn` + U+FFFD）；
+      · **讲解乱码现象**的注释/文档串（行内含「乱码」——`validate_workflows.py` 那句
+        「此前一律 utf-8+replace 解码，得到满屏 '�' 的乱码」本来就是在举这个例子）。
+    """
+
+    ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    @staticmethod
+    def _exempt(line: str) -> bool:
+        return "assertNotIn" in line or "乱码" in line
+
+    def _sources(self):
+        out = [os.path.join(self.ROOT, "main.py"),
+               os.path.join(self.ROOT, "campaign_vocab.py")]
+        for d in ("scripts", "tests"):
+            p = os.path.join(self.ROOT, d)
+            for fn in sorted(os.listdir(p)):
+                if fn.endswith(".py"):
+                    out.append(os.path.join(p, fn))
+        return out
+
+    def test_no_replacement_char_in_any_source(self):
+        bad = []
+        for path in self._sources():
+            for i, line in enumerate(open(path, encoding="utf-8"), 1):
+                if "\ufffd" not in line or self._exempt(line):
+                    continue
+                bad.append("%s:%d" % (os.path.relpath(path, self.ROOT), i))
+        self.assertEqual(bad, [], "源码里出现 U+FFFD（字符已丢失，严格 UTF-8 查不出来）：%r" % bad)
+
+    def test_exemptions_are_still_in_use(self):
+        """两条豁免都必须**真的还在用**——若某个豁免点被删了，就该回头收紧规则。"""
+        t = open(os.path.join(self.ROOT, "tests", "test_core.py"), encoding="utf-8").read()
+        self.assertIn('assertNotIn("\ufffd"', t, "刻意断言乱码的那行不在了 ⇒ 复核豁免")
+        w = open(os.path.join(self.ROOT, "scripts", "validate_workflows.py"),
+                 encoding="utf-8").read()
+        self.assertTrue(any("\ufffd" in ln and "乱码" in ln for ln in w.split("\n")),
+                        "讲解乱码现象的那行不在了 ⇒ 复核豁免")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

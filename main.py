@@ -10330,7 +10330,7 @@ class OKXDraftExporter(BasePublisher):
         规则变了？文件名撞车？），也就无法处置——这是 R617「结论必须有出口」
         的又一形态：**检测存在了，但证据没出口**。
 
-        返回完整路径（找不到返�� None），日志与测试都按"证据"用。
+        返回完整路径（找不到返回 None），日志与测试都按"证据"用。
         顺带修 R209 式的 `title` 空值兜底：**有文件名就不该再依赖 title**。
         """
         if not news_id or not os.path.isdir(self.DRAFTS_DIR):

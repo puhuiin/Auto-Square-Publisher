@@ -251,7 +251,7 @@ class TestCheckSite(unittest.TestCase):
 
         mock 前置须与 AUTH_MODE 一致：tokenrouter 配的是 **bearer**，
         所以"首次被拒"必须发生在 bearer 分支上（`calls[0][1]` 非 None），
-        否则测的是另��条分支。
+        否则测的是另一条分支。
         """
         os.environ["TOKENROUTER_API_KEY"] = "tr-key"
         self.assertEqual(ppm.AUTH_MODE["tokenrouter"][1], "bearer",
