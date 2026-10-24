@@ -22805,9 +22805,14 @@ class TestR775EnglishBranchCampaignMention(unittest.TestCase):
                              "摘要里出现具体框架名 %s ⇒ 绕过了轮换池（R592 纪律）" % frame)
 
     def test_english_block_keeps_other_rules(self):
-        """★ 反向：既有规则（挂件/标签/不喊单/数字/节奏/篇幅）不得被补活动提及时删掉"""
+        """★ 反向：既有规则（挂件/标签/不喊单/数字/节奏/篇幅）不得被补活动提及时删掉
+
+        ⚠️ R834 更新锚点：篇幅值从 `110~170` 收到 `110~135`（与可发布预算对齐，见
+        `TestR834EnLengthBudget`）。本用例的**意图**是"篇幅规则那一行还在"，
+        所以锚点跟着新值走——整行被删掉时它照样会红。
+        """
         block = self._english_block()
-        for kw in ("$TOKEN", "不喊单", "数字必须来自素材", "句长节奏", "110~170"):
+        for kw in ("$TOKEN", "不喊单", "数字必须来自素材", "句长节奏", "110~135"):
             self.assertIn(kw, block, "英文分支既有规则 %s 被误删" % kw)
 
     def test_guard_has_teeth(self):

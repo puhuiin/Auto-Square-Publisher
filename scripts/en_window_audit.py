@@ -286,6 +286,60 @@ def _fmt_trunc(s: dict) -> str:
     return "%s  en %d 篇 ｜ 词中截断 %d%s" % (s["date"], s["n"], s["trunc"], extra)
 
 
+# ===========================================================================
+# 第三条预注册判据（R834）：**正文顶到可发布上限**（内容的"看不见的"损失）
+# ---------------------------------------------------------------------------
+# 为什么要单列：`is_truncated` 只看"结尾有没有标点"，只能抓到**切口落在词中**的
+# 可见子集。切口恰好落在标点上时**看不出来**，但一样丢了后面的内容。
+# 口径（写死）：`final_text` 长度 ≥ **814** 即「顶到上限」
+#   = `SHORT_FORM_MAX_CHARS(900) − _APPEND_HEADROOM(80) − 6(容差)`（净化预算 820）。
+#   ★ 这个 820 就是 R833 更正过的"真正生效的预算"——别再拿外层的 900 去比（差一档）。
+# 基线（R834 部署前，n=113 篇 en 帖）：**23 篇 = 20%** 顶格（37% 在 40 字内逼近）；
+#   同口径 **zh-CN 0%**（中文 140~200 字稳在预算内）⇒ 这是**英文侧**的结构问题。
+# 阈值：部署后 **≥2 个完整日期（或 ≥40 篇）** 里占比 **≤5%**（锚点=向 zh-CN 的 0% 看齐、
+#   留 5 个点余量）⇒ 通过；**≥20%（= 没改善）** ⇒ 回滚。
+CAP_TOTAL = 814
+CAP_PASS_PCT = 5
+CAP_REVERT_PCT = 20
+
+
+def cap_stats(rows, date_utc: str, lang: str = "en") -> dict:
+    """单个 UTC 日的「顶到可发布上限」统计（纯函数）。"""
+    cohort = [r for r in rows
+              if str(r.get("outcome", "")).startswith("binance_published")
+              and str(r.get("ts") or "").startswith(date_utc)
+              and r.get("lang") == lang
+              and isinstance(r.get("final_text"), str) and r["final_text"].strip()]
+    at = [r for r in cohort if len(r["final_text"]) >= CAP_TOTAL]
+    return {"date": date_utc, "lang": lang, "n": len(cohort), "at_cap": len(at),
+            "pct": (100.0 * len(at) / len(cohort)) if cohort else 0.0}
+
+
+def cap_verdict(base_stats, treat_stats) -> tuple:
+    """预注册判定。返回 (状态, 说明)。阈值全程用整数交叉相乘。"""
+    n = sum(s["n"] for s in treat_stats)
+    at = sum(s["at_cap"] for s in treat_stats)
+    if len(treat_stats) < TRUNC_MIN_DAYS and n < TRUNC_MIN_POSTS:
+        return ("样本不足", "需 ≥%d 个完整日期或 ≥%d 篇 en 帖；当前 %d 天 / %d 篇"
+                % (TRUNC_MIN_DAYS, TRUNC_MIN_POSTS, len(treat_stats), n))
+    base_at = sum(s["at_cap"] for s in base_stats)
+    base_n = sum(s["n"] for s in base_stats)
+    if at * 100 >= CAP_REVERT_PCT * n:
+        return ("回滚", "顶格占比 %d/%d 仍 ≥%d%%（基线 %d/%d）"
+                % (at, n, CAP_REVERT_PCT, base_at, base_n))
+    if at * 100 <= CAP_PASS_PCT * n:
+        return ("通过", "顶格占比 %d/%d = %.0f%% ≤ %d%%（基线 %d/%d = %.0f%%）"
+                % (at, n, 100.0 * at / n, CAP_PASS_PCT, base_at, base_n,
+                   (100.0 * base_at / base_n) if base_n else 0))
+    return ("未通过", "顶格占比 %d/%d = %.0f%% 高于 %d%% 的通过线（基线 %d/%d）"
+            % (at, n, 100.0 * at / n, CAP_PASS_PCT, base_at, base_n))
+
+
+def _fmt_cap(s: dict) -> str:
+    return "%s  %-6s %d 篇 ｜ 顶格 %d（%.0f%%）" % (
+        s["date"], s["lang"], s["n"], s["at_cap"], s["pct"])
+
+
 def load_rows(path: str):
     rows = []
     with open(path, encoding="utf-8") as fh:
@@ -338,6 +392,28 @@ def main(argv=None) -> int:
         if tb and tt:
             st2, why2 = trunc_verdict(tb, tt)
             print("\n判定②（词中截断）：%s —— %s" % (st2, why2))
+
+    # ---- 第三条判据：正文顶到可发布上限（R834）----
+    cb = [cap_stats(rows, d) for d in (args.baseline or "").split(",") if d]
+    ct = [cap_stats(rows, d) for d in (args.treatment or "").split(",") if d]
+    if cb or ct:
+        print("\n【正文顶到可发布上限 · 预注册判据 R834】口径：final_text 长度 ≥ %d"
+              "（= 900 − 80 − 6，即净化预算 820）" % CAP_TOTAL)
+        for label, stats in (("基线臂", cb), ("处置臂", ct)):
+            if not stats:
+                continue
+            print("%s" % label)
+            for s in stats:
+                print("  " + _fmt_cap(s))
+            print("  " + _fmt_cap({"date": "合并(%d 天)" % len(stats), "lang": "en",
+                                   "n": sum(x["n"] for x in stats),
+                                   "at_cap": sum(x["at_cap"] for x in stats),
+                                   "pct": (100.0 * sum(x["at_cap"] for x in stats)
+                                           / sum(x["n"] for x in stats))
+                                   if sum(x["n"] for x in stats) else 0.0}))
+        if cb and ct:
+            st3, why3 = cap_verdict(cb, ct)
+            print("\n判定③（顶格占比）：%s —— %s" % (st3, why3))
     return 0
 
 

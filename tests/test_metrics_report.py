@@ -9300,5 +9300,97 @@ class TestR832EnAuditCaliberFixes(unittest.TestCase):
                 "miss_rate": (100.0 * miss / normal) if normal else None, "langdev": 0}
 
 
+class TestR834EnLengthBudget(unittest.TestCase):
+    """★★ R834：英文篇幅目标与**可发布预算**对齐 + 「顶到上限」入验收。
+
+    ★ 生产实证（n=113 篇 en 帖）：**23 篇 = 20%** 正文顶到可发布上限（37% 在 40 字符内
+      逼近）；同口径 **zh-CN 0%**（中文 140~200 字稳在预算内）。
+    ★ 根因：旧目标「短讯 110~170 words」按英文 ~5.5 字符/词 = **605~935 字符**，
+      而可发布正文预算只有 `SHORT_FORM_MAX_CHARS(900) − _APPEND_HEADROOM(80) − 标签(~57)
+      ≈ 760` ⇒ **目标的上半段根本发不出去**；切口落在标点上时"看起来正常"，
+      但读者少读到最后一两句（切口落在词中才表现为 `is_truncated`）。
+    """
+
+    @staticmethod
+    def _ew():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "en_window_audit_r834",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "en_window_audit.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _main_src(self):
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "main.py")
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+
+    def _pub(self, date, total_len, lang="en"):
+        tags = "#Write2Earn #BinanceSquare #BTC Futures #TradingTournament"
+        body = "a" * max(1, total_len - len(tags) - 2)
+        return {"outcome": "binance_published", "ts": date + "T15:00:00+00:00", "lang": lang,
+                "final_text": body + "\n\n" + tags}
+
+    # ---- 顶格口径 ----
+    def test_cap_stats_caliber(self):
+        mod = self._ew()
+        rows = [self._pub("2026-10-24", 830),      # ≥814 ⇒ 顶格
+                self._pub("2026-10-24", 814),      # 恰好 814 ⇒ 顶格（含边界）
+                self._pub("2026-10-24", 813),      # 差 1 ⇒ 不算
+                self._pub("2026-10-24", 500),      # 远低于 ⇒ 不算
+                self._pub("2026-10-24", 830, lang="zh-CN")]   # 别的语种不进 en 口径
+        s = mod.cap_stats(rows, "2026-10-24")
+        self.assertEqual((s["n"], s["at_cap"]), (4, 2))
+
+    def test_cap_verdict_tiers(self):
+        mod = self._ew()
+        lo = {"date": "d1", "lang": "en", "n": 20, "at_cap": 1, "pct": 5.0}     # 5% ⇒ 通过
+        mid = {"date": "d1", "lang": "en", "n": 20, "at_cap": 2, "pct": 10.0}   # 10% ⇒ 未通过
+        hi = {"date": "d1", "lang": "en", "n": 20, "at_cap": 4, "pct": 20.0}    # 20% ⇒ 回滚
+        two_lo = [lo, {"date": "d2", "lang": "en", "n": 20, "at_cap": 1, "pct": 5.0}]
+        self.assertEqual(mod.cap_verdict([], two_lo)[0], "通过")
+        self.assertEqual(mod.cap_verdict([], [mid, mid])[0], "未通过")
+        self.assertEqual(mod.cap_verdict([], [hi, hi])[0], "回滚")
+        self.assertEqual(mod.cap_verdict([], [lo])[0], "样本不足")
+
+    def test_cap_total_matches_code_constants(self):
+        """★ 把「814」钉在代码常量上——那两个常量一变，判定③的基准就要复核。"""
+        import re as _re
+        src = self._main_src()
+        short = int(_re.search(r"SHORT_FORM_MAX_CHARS\s*=\s*(\d+)", src).group(1))
+        head = int(_re.search(r"_APPEND_HEADROOM\s*=\s*(\d+)", src).group(1))
+        self.assertEqual(self._ew().CAP_TOTAL, short - head - 6,
+                         "顶格口径与生效预算脱节（R833 的教训：差一档就会把'已截断'读成'没截断'）")
+
+    # ---- 英文篇幅目标 ----
+    def _en_window(self):
+        src = self._main_src()
+        anchor = "【★ 输出语种（最高优先级，覆盖以上所有中文示例）】"
+        i = src.index(anchor)
+        return src[i:i + 4000]
+
+    def test_en_word_target_fits_publish_budget(self):
+        """★ 短讯目标必须落在可发布预算内：110~135 words ≈ 605~745 字符（上限 760）。
+
+        ⚠️ 断言必须用**指令原文的加粗形态**（`短讯 **110~170 words**`）——否则会咬到
+        `main.py` 里那段"引用旧值"的注释（本轮就踩了：`assertNotIn("110~170 words")`
+        在注释里命中，假红）。
+        """
+        win = self._en_window()
+        self.assertIn("短讯 **110~135 words**", win)
+        self.assertNotIn("短讯 **110~170 words**", win,
+                         "旧目标的上半段发不出去（会被切掉）")
+        self.assertIn("会被**直接切掉**", win, "必须把'超了会被切'写进指令，否则模型没有理由收着")
+
+    def test_long_form_target_also_trimmed(self):
+        """长文同因：500 words ≈ 2800 字符 > 2400 预算 ⇒ 收到 300~420。"""
+        win = self._en_window()
+        self.assertIn("长文 **300~420 words**", win)
+        self.assertNotIn("长文 **300~500 words**", win)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
