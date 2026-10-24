@@ -1,15 +1,5 @@
 [
   {
-    "id": "2f231bce64465627",
-    "title": "300 Million DOGE Moves to Binance Amid Uptober Crash",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-15T16:24:18.973895+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ef7a2fa86d8e2999",
     "title": "Zcash price drops 13% – Why ZEC’s $1,036 support matters now",
     "source": "AMBCrypto (技术与链上)",
@@ -5186,5 +5176,16 @@
       "XLM"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c41cf79ee4526547",
+    "title": "Upbit 将上线 BMT 韩元交易对,今日 11:00 开放交易",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-24T02:48:27.110013+00:00",
+    "tokens": [
+      "BMT",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
