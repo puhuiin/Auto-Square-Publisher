@@ -1,15 +1,5 @@
 [
   {
-    "id": "6919f53c45717c26",
-    "title": "Ledger unveils Atom Android device with Solana Mobile integration and new tamper protections amid investigation into modified wallets",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-10-15T14:24:32.820366+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "bd320a3a628f4373",
     "title": "新产品与奖励机制升级:Filecoin 加速面向企业与 AI Agent 的网络转型",
     "source": "深潮TechFlow (中文/简体)",
@@ -5182,6 +5172,16 @@
       "DOGE",
       "XRP",
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "bebc9e824d7b431d",
+    "title": "Arbitrum 宪法级提案拟恢复 One 上 Stylus 合约激活",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-24T00:47:26.316339+00:00",
+    "tokens": [
+      "ARB"
     ],
     "lang": "zh-CN"
   }
