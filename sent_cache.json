@@ -1,15 +1,5 @@
 [
   {
-    "id": "d1bd13e1a922edb5",
-    "title": "84 million XRP added to exchange wallets as price slipped toward $1.30",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-15T21:44:15.103380+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9f1dc6aea30eaa4a",
     "title": "Jito [JTO] drops 14% as TVL shrinks $193M: Can THIS offer relief?",
     "source": "AMBCrypto (技术与链上)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-10-24T11:25:00.935359+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "908cd3292224575c",
+    "title": "Polygon 多签钱包质押近 5300 万枚 POL,价值超 480 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-24T11:46:48.874207+00:00",
+    "tokens": [
+      "POL"
     ],
     "lang": "zh-CN"
   }
