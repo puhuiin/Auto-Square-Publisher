@@ -1,15 +1,5 @@
 [
   {
-    "id": "213bebca9b42970f",
-    "title": "Ripple Taps $9 Billion Perpetual Futures Boom",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-16T00:04:39.893246+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "61f35f923b7dd756",
     "title": "Multiliquid 开发商 Uniform Labs 完成 800 万美元融资,Polychain 领投",
     "source": "深潮TechFlow (中文/简体)",
@@ -5190,5 +5180,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e40f2bd601b4c18c",
+    "title": "吴说每日精选加密新闻 + 吴说每周精选:新闻 Top10 与热门文章",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-24T14:04:48.143284+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
   }
 ]
