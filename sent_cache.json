@@ -1,15 +1,5 @@
 [
   {
-    "id": "ef7a2fa86d8e2999",
-    "title": "Zcash price drops 13% – Why ZEC’s $1,036 support matters now",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-15T16:44:54.346563+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b183b243128556a0",
     "title": "Crypto Market Faces $932 Million Overnight Liquidation: XRP, DOGE, NEAR in Focus",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5185,6 +5175,16 @@
     "tokens": [
       "BMT",
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "dc00153d5f933642",
+    "title": "56 Billion Shiba Inu (SHIB) Added in 24 Hours Amid Recovery Above $0.000005",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-24T03:25:11.201491+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-TW"
   }
