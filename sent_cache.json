@@ -1,15 +1,5 @@
 [
   {
-    "id": "505af9aa9b7aff01",
-    "title": "Solana hits record $7B in tokenized equities volume in Q3 2026",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-15T18:24:39.856299+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5471b471cb160609",
     "title": "Assessing Solana’s short-term risk after price tests $100–$105 support zone",
     "source": "AMBCrypto (技术与链上)",
@@ -5184,6 +5174,17 @@
     "sent_at": "2026-10-24T04:44:13.850175+00:00",
     "tokens": [
       "GTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0e3fc92ccccf37ac",
+    "title": "Swiss Regulator Approves First Domestic Spot Bitcoin ETF Under Fund Law",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-24T07:44:47.532855+00:00",
+    "tokens": [
+      "BTC",
+      "PENGU"
     ],
     "lang": "zh-CN"
   }
