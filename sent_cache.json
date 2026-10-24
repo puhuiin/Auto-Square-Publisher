@@ -1,15 +1,5 @@
 [
   {
-    "id": "a26d81c443f24a08",
-    "title": "Claude AI Predicts that Chainlink (LINK) Could Hit Triple Digits in 2026",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-15T22:42:45.682776+00:00",
-    "tokens": [
-      "LINK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6033e9ae009c88bf",
     "title": "Hyperliquid whale stakes $100M – So why is HYPE still below $80?",
     "source": "AMBCrypto (技术与链上)",
@@ -5190,5 +5180,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "f57b1e942a780e1d",
+    "title": "Cardano Gains 1.7M New Traders Thanks to Pump.fun Integration Amid Midnight’s 2027 Block Production Shift",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-24T12:45:49.686571+00:00",
+    "tokens": [
+      "ADA"
+    ],
+    "lang": "zh-TW"
   }
 ]
