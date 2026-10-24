@@ -207,6 +207,55 @@ def _fmt(s: dict) -> str:
                s["langdev"]))
 
 
+# ---------------------------------------------------------------------------
+# 归因切片（R835）：真漏帖**不是随机分布**——先看它与哪些既有字段相关。
+# ⚠️ **只做诊断、不设阈值**（不新增判据；避免又拍一个数字）。
+# 生产实证（10-19~10-23，en 夜窗，提了 70 / 真漏 43）：
+#   ending_style 榜首：提了组「极简站队/多空辩论/价位竞猜…」；
+#                     真漏组「**仓位表白 8**、情绪表态 7、**灵魂拷问 6**…」
+#   末句含问号比例：提了 **30%** vs 真漏 **12%**
+#   cta_style：真漏里有 **4 篇 = None**（菜单没注入，属已知的 intel 分支）
+# ⇒ 线索：**自我指涉类结尾（仓位表白/灵魂拷问）会把活动句挤掉**。
+#   下一轮若要动 prompt，优先级是"把活动要求放到**结尾风格指令之后**"，
+#   但**必须等 R830 的实验窗口先验收完**（连改两次 prompt 会把实验污染掉）。
+# ---------------------------------------------------------------------------
+def miss_rows(rows, date_utc: str):
+    """该 UTC 夜窗里「配置正常但没提活动」的行（口径与判定①完全一致）。"""
+    cohort = [r for r in rows
+              if str(r.get("outcome", "")).startswith("binance_published")
+              and isinstance(r.get("final_text"), str) and r["final_text"].strip()
+              and in_night_window(r.get("ts"), date_utc)]
+    miss = []
+    for r in cohort:
+        if len(CJK_RE.findall(r["final_text"])) >= CJK_MAX_FOR_NORMAL:
+            continue                                  # 语种跑偏帖不进「配置正常」
+        if (r.get("campaign_tag_count") or 0) < 2:
+            continue                                  # 无活动标签 ⇒ 菜单没注入
+        if mention_in_text(r["final_text"]) is False:
+            miss.append(r)
+    return miss
+
+
+def miss_breakdown(miss) -> dict:
+    """真漏帖的归因切片（诊断用，无阈值）。"""
+    import collections
+    return {
+        "n": len(miss),
+        "ending_style": collections.Counter(str(r.get("ending_style")) for r in miss),
+        "cta_style": collections.Counter(str(r.get("campaign_cta_style")) for r in miss),
+        "q_tail_pct": (100.0 * sum(1 for r in miss
+                                   if "?" in body_before_tags(r["final_text"])[-60:])
+                       / len(miss)) if miss else 0.0,
+    }
+
+
+def _fmt_breakdown(bd: dict) -> str:
+    top = lambda c: "、".join("%s×%d" % (k, v) for k, v in c.most_common(3)) or "—"
+    return ("真漏 %d 篇 ｜ 末句含问号 %.0f%% ｜ ending_style %s ｜ cta_style %s"
+            % (bd["n"], bd["q_tail_pct"],
+               top(bd["ending_style"]), top(bd["cta_style"])))
+
+
 # ===========================================================================
 # 第二条预注册判据（R831）：英文帖**断在词中间**
 # ---------------------------------------------------------------------------
@@ -376,6 +425,14 @@ def main(argv=None) -> int:
     if base and treat:
         status, why = verdict(base, treat)
         print("\n判定①（活动提及）：%s —— %s" % (status, why))
+        # 归因切片（R835）：真漏与哪些既有字段相关（**诊断，不设阈值**）
+        for label, dates in (("基线臂", args.baseline), ("处置臂", args.treatment)):
+            _miss = []
+            for d in (dates or "").split(","):
+                if d:
+                    _miss += miss_rows(rows, d)
+            if _miss:
+                print("   ↳ %s：%s" % (label, _fmt_breakdown(miss_breakdown(_miss))))
 
     # ---- 第二条判据：英文断句（R831 判定 / R832 更正口径）----
     tb = [trunc_stats(rows, d) for d in (args.baseline or "").split(",") if d]

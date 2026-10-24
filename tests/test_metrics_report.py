@@ -9392,5 +9392,73 @@ class TestR834EnLengthBudget(unittest.TestCase):
         self.assertNotIn("长文 **300~500 words**", win)
 
 
+class TestR835MissAttribution(unittest.TestCase):
+    """★★ R835：真漏帖的**归因切片**（诊断用，不设阈值）。
+
+    ★ 生产实证（10-19~10-23，en 夜窗，提了 70 / 真漏 43）：
+      `ending_style` 榜首——提了组「极简站队/多空辩论/价位竞猜…」；
+      真漏组「**仓位表白 8**、情绪表态 7、**灵魂拷问 6**…」；末句含问号 提了 **30%** vs
+      真漏 **12%**；真漏里 **4 篇 `cta_style=None`**（菜单没注入，属已知 intel 分支）。
+    ★ 两条**负结果**（都要记住，别重复劳动）：
+      ① **字数上限不是真漏的原因**：真漏帖多在 558~780 字，只有 4 篇顶格，
+         且末句都是"分析结论"（不是被切掉的 CTA）⇒ R834 不会修到提及率，
+         R830 的判据**依然有效**（两件事互不掩盖）。
+      ② **英文低尾不是问题**：正文 <400 字只有 3/113 = 3%，最短那篇（30 词）活动提法
+         与挂件都在 ⇒ HANDOVER 里那条「英文长度门只卡 40 字符，是否收紧」属**弱证据**，
+         且 R711 有误杀前车 ⇒ **不动**。
+    """
+
+    @staticmethod
+    def _ew():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "en_window_audit_r835",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "en_window_audit.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _row(hour, body, lang="en", tags=2, ending="仓位表白", cta="提问带出"):
+        return {"outcome": "binance_published",
+                "ts": "2026-10-24T%02d:05:00+00:00" % hour, "lang": lang,
+                "final_text": body + "\n\n#Write2Earn #BinanceSquare #BTC DeFi",
+                "campaign_tag_count": tags, "ending_style": ending,
+                "campaign_cta_style": cta}
+
+    def test_miss_rows_caliber(self):
+        """口径必须与判定①一致：夜窗内 + 配置正常（标签 ≥2、非语种跑偏）+ 真漏。
+
+        ⚠️ 口径里**没有 lang 过滤**——夜窗按策略就是英文窗（R708），所以判定①（R819
+        预注册）也不加；这里跟着一致，**不额外收紧**（收紧会改基线 = 移动球门）。
+        所以下面那条 `lang=zh-CN` 却写英文正文的夹具**会被算进来**（但语种跑偏帖
+        ——汉字 ≥20 那些——会被排除，见第 4 条）。
+        """
+        mod = self._ew()
+        rows = [
+            self._row(15, "just a normal news post"),                  # ✅ 真漏
+            self._row(16, "join the trading tournament S6"),           # ❌ 提了
+            self._row(17, "no campaign", tags=1),                      # ❌ 无活动标签
+            self._row(18, "这是一篇很长的中文正文用来触发语种跑偏判据因为汉字数超过二十个了"),  # ❌ 跑偏
+            self._row(3, "just a normal news post"),                   # ❌ 窗外（非夜窗）
+            self._row(19, "no campaign", lang="zh-CN"),                # ✅ 口径内（无 lang 过滤）
+        ]
+        miss = mod.miss_rows(rows, "2026-10-24")
+        self.assertEqual(len(miss), 2)
+        self.assertTrue(any("normal news" in r["final_text"] for r in miss))
+
+    def test_miss_breakdown_counters(self):
+        mod = self._ew()
+        miss = [self._row(15, "a", ending="仓位表白", cta="提问带出"),
+                self._row(16, "b", ending="仓位表白", cta="提问带出"),
+                self._row(17, "c is that all?", ending="灵魂拷问", cta="时点框架")]
+        bd = mod.miss_breakdown(miss)
+        self.assertEqual(bd["n"], 3)
+        self.assertEqual(bd["ending_style"]["仓位表白"], 2)
+        self.assertAlmostEqual(bd["q_tail_pct"], 100.0 / 3, places=1)
+        self.assertIn("仓位表白×2", mod._fmt_breakdown(bd))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
