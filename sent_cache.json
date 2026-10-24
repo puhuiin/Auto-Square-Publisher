@@ -1,15 +1,5 @@
 [
   {
-    "id": "2c7a44117393d1e8",
-    "title": "Rakuten Wallet Will Hand Out Physical Shiba Inu Coins",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-15T19:44:31.188499+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d17b861747a6b7dc",
     "title": "Machi loses $269,000 on ETH, then opens another long seven minutes later",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5184,6 +5174,16 @@
     "sent_at": "2026-10-24T08:53:59.376962+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "05e8cee2d7d55c97",
+    "title": "HIVE commits more than $250 million to build an AI hub in Paraguay",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-24T09:28:21.787214+00:00",
+    "tokens": [
+      "HIVE"
     ],
     "lang": "zh-TW"
   }
