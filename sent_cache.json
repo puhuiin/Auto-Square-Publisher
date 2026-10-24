@@ -1,15 +1,5 @@
 [
   {
-    "id": "9d459807b6d31f80",
-    "title": "Solana Alpenglow升级将于10月21日激活,最终性将从12.8秒降至150毫秒",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-15T20:24:18.488305+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6bd18403d6fb847b",
     "title": "Ripple (XRP) Deepens Wall Street Push With 24/7 RWA Swaps for Institutions",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5188,5 +5178,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4a0f3ab438a8da17",
+    "title": "Switzerland’s Bitcoin ETF Is More Important Than It Looks: Here’s Why",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-24T10:26:03.926718+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
