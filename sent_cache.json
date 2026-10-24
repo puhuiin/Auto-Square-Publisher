@@ -1,15 +1,5 @@
 [
   {
-    "id": "a6afdc9768879b86",
-    "title": "Bitcoin whale accumulation meets $760M in ETF outflows – Is BTC’s recovery at risk?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-15T16:04:08.191585+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2f231bce64465627",
     "title": "300 Million DOGE Moves to Binance Amid Uptober Crash",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5184,6 +5174,16 @@
     "sent_at": "2026-10-24T02:07:34.422026+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b87bde1c05e6a242",
+    "title": "Stellar (XLM) Makes History With First Repo Backed by U.S. Debt",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-24T02:30:22.620440+00:00",
+    "tokens": [
+      "XLM"
     ],
     "lang": "zh-CN"
   }
