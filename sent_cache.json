@@ -1,15 +1,5 @@
 [
   {
-    "id": "d41e9c5675d9603e",
-    "title": "Ethereum dips below $2,400 as hot inflation fuels selling and long liquidations",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-10-15T23:25:19.862031+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "0d1536a50e1d9505",
     "title": "Aave V4 opens dollar-euro borrowing on Circle’s Arc network",
     "source": "Crypto Briefing (深度与研报)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-10-24T13:05:10.422054+00:00",
     "tokens": [
       "MARSCOIN"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "db08d27aca38237b",
+    "title": "Ethereum Staking Demand Is Skyrocketing Even as Yields Sink Toward 2.5%",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-24T13:24:22.390969+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
