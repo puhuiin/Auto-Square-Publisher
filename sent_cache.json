@@ -1,15 +1,5 @@
 [
   {
-    "id": "7742e4a137ea0545",
-    "title": "Zcash Co-Founder Doubles Down on Explosive $5,000 ZEC Call, Reveals $2,000 Is Already a “No-Brainer”",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-15T19:25:33.837525+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2c7a44117393d1e8",
     "title": "Rakuten Wallet Will Hand Out Physical Shiba Inu Coins",
     "source": "BeInCrypto (山寨与行情)",
@@ -5186,5 +5176,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "795ba6603be5f20b",
+    "title": "Swell暂停swETH与rswETH充提,待净值恢复正确值",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-24T08:53:59.376962+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
