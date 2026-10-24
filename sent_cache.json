@@ -1,15 +1,5 @@
 [
   {
-    "id": "7f5c91ad1e7691a9",
-    "title": "币安US拟融资1亿美元,目标估值约10亿美元,较2022年估值下降约78%",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-15T18:04:14.628614+00:00",
-    "tokens": [
-      "ACH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "505af9aa9b7aff01",
     "title": "Solana hits record $7B in tokenized equities volume in Q3 2026",
     "source": "Crypto Briefing (深度与研报)",
@@ -5186,5 +5176,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "cd5de6155337b759",
+    "title": "黃仁勳上台秀機器鴨,Microduck 預購已近兩萬台",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-10-24T04:44:13.850175+00:00",
+    "tokens": [
+      "GTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
