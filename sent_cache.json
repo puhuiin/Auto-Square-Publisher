@@ -1,17 +1,5 @@
 [
   {
-    "id": "ee35c138cbb0b083",
-    "title": "加密市场小幅反弹,AI板块上涨3.63%,仅Meme及CeFi板块下跌",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-16T02:45:12.924059+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "STRK"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "60495036162cfcad",
     "title": "Meme 幣平均 17.2 天見頂:速朽狂歡與資金大遷徙",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5183,6 +5171,17 @@
     "sent_at": "2026-10-24T15:44:16.792806+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7fbc4524a6496975",
+    "title": "Circle shareholder sues Trump over UAE crypto deals, citing up to $82 million in potential annual revenue",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-24T16:08:42.625356+00:00",
+    "tokens": [
+      "USDC",
+      "USD1"
     ],
     "lang": "en"
   }
