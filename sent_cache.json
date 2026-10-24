@@ -1,15 +1,5 @@
 [
   {
-    "id": "b94830a691c57389",
-    "title": "Ledger 被盗大户实为刷单诈骗犯:损失逾 60 枚 BTC",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-16T01:45:20.101771+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "4532a11465816bdb",
     "title": "Zcash Q3 报告:Zakura 落地,隐私池供应量重回 29%",
     "source": "深潮TechFlow (中文/简体)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-10-24T15:04:42.348786+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8a430c2d24dc30d3",
+    "title": "Third X100 Exploit Transaction Pulls 550,000 X From Uniswap Pool",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-24T15:26:28.388578+00:00",
+    "tokens": [
+      "UNI"
     ],
     "lang": "en"
   }
