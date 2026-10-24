@@ -1,15 +1,5 @@
 [
   {
-    "id": "91780b0b11c74f20",
-    "title": "Starknet opens seven-day vote on independent Layer 1 over quantum risks",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-10-15T21:04:44.247361+00:00",
-    "tokens": [
-      "STRK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "86d9fa57fc08d34e",
     "title": "PUMP breaks key support as buybacks struggle to stem losses – Can buyers return?",
     "source": "AMBCrypto (技术与链上)",
@@ -5188,6 +5178,16 @@
       "USDC",
       "INIT",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a69abfe8a9120ce3",
+    "title": "75% XRP Burn Rate Surge Prints Bullish Outlook for Price",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-24T11:05:07.445653+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
