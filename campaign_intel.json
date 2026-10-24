@@ -2,25 +2,25 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#SpotTradingTournament",
-    "#Qafila2026",
+    "#TradingTournament",
+    "#AlphaTrading",
     "#bStocks"
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$USDT",
     "$XRP",
-    "$FF",
-    "$BTC",
     "$USDC",
+    "$ON",
     "$AAPLB",
-    "$NVDAB"
+    "$NVDAB",
+    "$BOTB",
+    "$RLUSD"
   ],
-  "strategy_guidance": "当前未过期的核心官方活动包括现货交易锦标赛S8、Qafila 2026百万USDC互动活动、Binance Pick预测活动、S16 LoL世界赛预测活动及新上线的bStocks交易对，发帖时可结合这些活动主题创作内容，引导读者参与评论互动获取Write2Earn奖励，同时可关联Binance交易返佣活动提升引流收益。",
-  "last_updated": "2026-10-24T10:24:33.001093Z",
+  "strategy_guidance": "优先围绕正在进行的ON Alpha交易竞赛、新上线的5类bStocks交易对及TradFi永续合约输出快讯，结合#Write2Earn活动规则引导用户参与话题评论互动拿奖励；同时可联动无截止日的Spot交易锦标赛S8、RLUSD持仓瓜分XRP、Qafila百万USDC奖励等活动做内容整合，提升帖子匹配活动流量的概率，优先追新上线资产与Alpha竞赛的实时热度。",
+  "last_updated": "2026-10-24T22:26:34.644278Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-24T22:23:43.364827+00:00",
+      "last_fail": "2026-10-24T22:26:36.022239+00:00",
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3
     }
