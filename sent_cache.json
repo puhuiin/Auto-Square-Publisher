@@ -1,17 +1,5 @@
 [
   {
-    "id": "a4dc7f31d2a45adf",
-    "title": "应用层迎来爆发,盘点 7 款即刻可用的前沿链上隐私应用",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-16T05:45:47.377441+00:00",
-    "tokens": [
-      "ETH",
-      "ZEC",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "54d9c4bf6da85a85",
     "title": "應用層迎來爆發,盤點 7 款即刻可用的前沿鏈上隱私應用",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5179,6 +5167,16 @@
     "title": "比特币跌破8万美元,Hyperliquid两巨鲸多单遭清算并亏损27.8万美元",
     "source": "Odaily星球日报 (中文快讯)",
     "sent_at": "2026-10-24T19:46:39.557295+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "22888be7e3e7c4e3",
+    "title": "Bitcoin faces THREE major tests – Can BTC avoid another 17% November crash?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-24T20:03:56.448414+00:00",
     "tokens": [
       "BTC"
     ],
