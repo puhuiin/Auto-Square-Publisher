@@ -1,15 +1,5 @@
 [
   {
-    "id": "d17b861747a6b7dc",
-    "title": "Machi loses $269,000 on ETH, then opens another long seven minutes later",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-15T20:04:43.029383+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9d459807b6d31f80",
     "title": "Solana Alpenglow升级将于10月21日激活,最终性将从12.8秒降至150毫秒",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5186,5 +5176,17 @@
       "HIVE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "355bacbd467fff9b",
+    "title": "美国 SEC 股票代币化豁免规则引发争议,Solana、Hedera 等就公链准入标准提出不同意见",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-24T10:04:06.725654+00:00",
+    "tokens": [
+      "SOL",
+      "HBAR",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
