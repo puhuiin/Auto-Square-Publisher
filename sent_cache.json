@@ -1,15 +1,5 @@
 [
   {
-    "id": "425ad0c9aea68d8a",
-    "title": "Charles Edwards: Why Quantum Risk Could Be MASSIVE BTC Upside Catalyst",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-15T14:04:12.253527+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6919f53c45717c26",
     "title": "Ledger unveils Atom Android device with Solana Mobile integration and new tamper protections amid investigation into modified wallets",
     "source": "The Block (机构与政策)",
@@ -5181,5 +5171,18 @@
       "DASH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "10ca1ab456f7f144",
+    "title": "Shiba Inu (SHIB), Dogecoin (DOGE), XRP and Binance Coin (BNB) Price Analysis for Oct. 24: Can Bullish Pace Be Preserved?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-24T00:25:07.241303+00:00",
+    "tokens": [
+      "SHIB",
+      "DOGE",
+      "XRP",
+      "BNB"
+    ],
+    "lang": "zh-CN"
   }
 ]
