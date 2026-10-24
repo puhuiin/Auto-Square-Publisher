@@ -1,16 +1,5 @@
 [
   {
-    "id": "9be25482df1ca244",
-    "title": "XRP News: DriveWealth RLUSD Settlement Starting in Europe",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-15T19:04:13.626266+00:00",
-    "tokens": [
-      "XRP",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7742e4a137ea0545",
     "title": "Zcash Co-Founder Doubles Down on Explosive $5,000 ZEC Call, Reveals $2,000 Is Already a “No-Brainer”",
     "source": "ZyCrypto (新币与空投)",
@@ -5185,6 +5174,16 @@
     "sent_at": "2026-10-24T08:05:10.978295+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "33a25960db02ff53",
+    "title": "Here’s why XRP’s price recovery faces threat from surge in whale inflows",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-24T08:25:22.583442+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
