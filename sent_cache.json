@@ -1,15 +1,5 @@
 [
   {
-    "id": "5348c19a0960a790",
-    "title": "Zcash risks slide toward $1,000 as inflation fears outweigh ETF inflows",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-10-15T15:24:40.811167+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0341aa9ed585cb4d",
     "title": "索赔324.8枚BTC、约合2720万美元,Lewis Barber起诉BitMEX运营方HDR Global Trading",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5184,6 +5174,16 @@
       "BNB",
       "SOL",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1e26a7824fc89cc4",
+    "title": "Franklin Templeton Buys XRP Despite Bearish Price Reversal",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-24T01:47:29.668685+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
