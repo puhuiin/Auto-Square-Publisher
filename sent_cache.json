@@ -1,15 +1,5 @@
 [
   {
-    "id": "0341aa9ed585cb4d",
-    "title": "索赔324.8枚BTC、约合2720万美元,Lewis Barber起诉BitMEX运营方HDR Global Trading",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-15T15:42:10.836952+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a6afdc9768879b86",
     "title": "Bitcoin whale accumulation meets $760M in ETF outflows – Is BTC’s recovery at risk?",
     "source": "AMBCrypto (技术与链上)",
@@ -5184,6 +5174,16 @@
     "sent_at": "2026-10-24T01:47:29.668685+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "d9726d53585a220b",
+    "title": "富兰克林邓普顿提交 8-A 注册比特币相关 ETF 拟纳市上市",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-24T02:07:34.422026+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
