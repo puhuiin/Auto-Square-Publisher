@@ -1,16 +1,5 @@
 [
   {
-    "id": "97f3ee5e9e18a6ea",
-    "title": "币安将支持VELODROME代币合并至Aerodrome及AERO合约置换",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-16T07:05:34.276052+00:00",
-    "tokens": [
-      "VELODROME",
-      "AERO"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "baec49565de8feb2",
     "title": "Chainalysis 研报:散户正把比特币转出美国,而机构正在把比特币搬进美国",
     "source": "深潮TechFlow (中文/简体)",
@@ -5178,5 +5167,15 @@
       "SOL"
     ],
     "lang": "en"
+  },
+  {
+    "id": "69f1b561ea8d0b1e",
+    "title": "AAVE whale moves $22.8M in tokens – Is $140 support at risk?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-24T22:04:39.004428+00:00",
+    "tokens": [
+      "AAVE"
+    ],
+    "lang": "zh-CN"
   }
 ]
