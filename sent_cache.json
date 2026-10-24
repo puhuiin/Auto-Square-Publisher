@@ -1,15 +1,5 @@
 [
   {
-    "id": "9f1dc6aea30eaa4a",
-    "title": "Jito [JTO] drops 14% as TVL shrinks $193M: Can THIS offer relief?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-15T22:04:38.157894+00:00",
-    "tokens": [
-      "JTO"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7ffcb637a8c670e7",
     "title": "Aave V4’s Arc Markets Connect Dollar-Euro Loans to Shared Liquidity",
     "source": "The Defiant (DeFi 深度)",
@@ -5190,5 +5180,15 @@
       "POL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "87ff4101bc86edc8",
+    "title": "Cardano (ADA) Eyes 20% Move as Rising Channel Pattern Faces Critical Test",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-24T12:05:13.316087+00:00",
+    "tokens": [
+      "ADA"
+    ],
+    "lang": "zh-TW"
   }
 ]
