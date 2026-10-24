@@ -1,17 +1,5 @@
 [
   {
-    "id": "54d9c4bf6da85a85",
-    "title": "應用層迎來爆發,盤點 7 款即刻可用的前沿鏈上隱私應用",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-16T06:08:34.656274+00:00",
-    "tokens": [
-      "ETH",
-      "ZEC",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e2ed2e5e9baf014f",
     "title": "GasFree 用户突破 50 万,TRC-20 代币转账免持 TRX 更便捷",
     "source": "深潮TechFlow (中文/简体)",
@@ -5179,6 +5167,16 @@
     "sent_at": "2026-10-24T20:03:56.448414+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5dffd8319df45788",
+    "title": "Solana co-founder Toly floats a validator stake-weighted oracle to mint SOL against tokenized collateral",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-24T20:25:30.324079+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
