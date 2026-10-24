@@ -1,16 +1,5 @@
 [
   {
-    "id": "b183b243128556a0",
-    "title": "Crypto Market Faces $932 Million Overnight Liquidation: XRP, DOGE, NEAR in Focus",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-15T17:05:15.055170+00:00",
-    "tokens": [
-      "XRP",
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "db0e78f2df86de28",
     "title": "DeFi Development boosts CHAD dividend to 14% amid push to grow Solana holdings",
     "source": "The Block (机构与政策)",
@@ -5185,6 +5174,16 @@
     "sent_at": "2026-10-24T03:25:11.201491+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "25f94482a4c06e38",
+    "title": "彭博社:加密相关预测合约周名义交易量达 27 亿美元,创历史新高",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-24T03:45:12.611651+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
