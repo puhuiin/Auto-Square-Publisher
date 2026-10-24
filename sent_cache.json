@@ -1,15 +1,5 @@
 [
   {
-    "id": "5471b471cb160609",
-    "title": "Assessing Solana’s short-term risk after price tests $100–$105 support zone",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-15T18:44:52.578048+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9be25482df1ca244",
     "title": "XRP News: DriveWealth RLUSD Settlement Starting in Europe",
     "source": "CryptoNews (全球快讯)",
@@ -5185,6 +5175,16 @@
     "tokens": [
       "BTC",
       "PENGU"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b2b67a37f78af1b9",
+    "title": "Bitcoin Core changes security rules as AI makes finding code bugs dangerously easy",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-10-24T08:05:10.978295+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
