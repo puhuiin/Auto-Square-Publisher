@@ -1,16 +1,5 @@
 [
   {
-    "id": "e2ed2e5e9baf014f",
-    "title": "GasFree 用户突破 50 万,TRC-20 代币转账免持 TRX 更便捷",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-16T06:48:20.597853+00:00",
-    "tokens": [
-      "TRX",
-      "RWUSD"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "97f3ee5e9e18a6ea",
     "title": "币安将支持VELODROME代币合并至Aerodrome及AERO合约置换",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5175,6 +5164,16 @@
     "title": "Solana co-founder Toly floats a validator stake-weighted oracle to mint SOL against tokenized collateral",
     "source": "Crypto Briefing (深度与研报)",
     "sent_at": "2026-10-24T20:25:30.324079+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ae6322a2229d20ef",
+    "title": "Firedancer makes bounty hunters burn 1 SOL even for duplicate bug reports",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-24T21:04:55.694112+00:00",
     "tokens": [
       "SOL"
     ],
