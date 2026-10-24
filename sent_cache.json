@@ -1,15 +1,5 @@
 [
   {
-    "id": "be1c39b248b86c4e",
-    "title": "Ethereum’s faster-exit plan would leave new validators waiting to earn",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-15T17:44:31.077843+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7f5c91ad1e7691a9",
     "title": "币安US拟融资1亿美元,目标估值约10亿美元,较2022年估值下降约78%",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5184,6 +5174,16 @@
     "sent_at": "2026-10-24T04:04:35.003017+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "fd948f1077f74b86",
+    "title": "XRP to $2 Delayed? Why Bollinger Bands Warn Ripple Bulls to Wait 2 Years",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-24T04:24:55.137785+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
