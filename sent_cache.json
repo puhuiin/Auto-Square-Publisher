@@ -1,15 +1,5 @@
 [
   {
-    "id": "4532a11465816bdb",
-    "title": "Zcash Q3 报告:Zakura 落地,隐私池供应量重回 29%",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-16T02:08:59.000804+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ee35c138cbb0b083",
     "title": "加密市场小幅反弹,AI板块上涨3.63%,仅Meme及CeFi板块下跌",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-10-24T15:26:28.388578+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7282fdcf2a559e38",
+    "title": "Ripple Price Analysis: XRP Faces Another Rejection as Short-Term Outlook Weakens",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-24T15:44:16.792806+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
