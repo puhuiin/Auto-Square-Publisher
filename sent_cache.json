@@ -1,15 +1,5 @@
 [
   {
-    "id": "7ffcb637a8c670e7",
-    "title": "Aave V4’s Arc Markets Connect Dollar-Euro Loans to Shared Liquidity",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-15T22:24:33.685237+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a26d81c443f24a08",
     "title": "Claude AI Predicts that Chainlink (LINK) Could Hit Triple Digits in 2026",
     "source": "CryptoNews (全球快讯)",
@@ -5190,5 +5180,15 @@
       "ADA"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "522a73aebddd68bf",
+    "title": "Bitcoin Core Speeds Up Bug Fixes As AI Changes Disclosure Rules",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-24T12:26:36.479758+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
