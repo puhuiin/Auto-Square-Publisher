@@ -1146,7 +1146,7 @@ class TestMetricsReport(unittest.TestCase):
         生产实锤两例并存且此前完全同貌：
           openrouter/minimax-m3:free 09-08 因模型下架永久失败 →但该 provider
             后来换默认名为 openrouter/free，09-29 仍在成功出稿 → **已自愈**
-          b.ai/glm-5.3-flash 09-29 余额耗尽 → 此后再没成功出过一��� → **仍死**
+          b.ai/glm-5.3-flash 09-29 余额耗尽 → 此后再没成功出过一次 → **仍死**
 
         判据是**末次成功 vs 末次失败的先后**，且粒度必须是 provider 而非
         provider/model：换个模型就救活一条通道，算已自愈。
