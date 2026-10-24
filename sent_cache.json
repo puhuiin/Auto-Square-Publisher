@@ -1,18 +1,5 @@
 [
   {
-    "id": "c9a501abdaf8341d",
-    "title": "NEAR反弹近10%,PYTH与INJ创去年11月以来新高",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-16T01:07:40.251203+00:00",
-    "tokens": [
-      "PYTH",
-      "INJ",
-      "ZEC",
-      "NEAR"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "0d30f5adf50ad2cc",
     "title": "美股潮向(10 月 16 日):道指反弹逾 550 点,台积电净利增近七成仍收跌",
     "source": "深潮TechFlow (中文/简体)",
@@ -5186,6 +5173,17 @@
     "sent_at": "2026-10-24T14:24:07.033513+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "dc1c66c1b651e1f2",
+    "title": "TechFlow 情报局:iPhone Duo 开售当日被加州团队越狱,Initia 遭攻击紧急停机",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-24T14:44:03.460799+00:00",
+    "tokens": [
+      "BTC",
+      "INIT"
     ],
     "lang": "en"
   }
