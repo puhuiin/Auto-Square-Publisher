@@ -1,16 +1,5 @@
 [
   {
-    "id": "0d30f5adf50ad2cc",
-    "title": "美股潮向(10 月 16 日):道指反弹逾 550 点,台积电净利增近七成仍收跌",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-16T01:24:44.277489+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b94830a691c57389",
     "title": "Ledger 被盗大户实为刷单诈骗犯:损失逾 60 枚 BTC",
     "source": "深潮TechFlow (中文/简体)",
@@ -5184,6 +5173,16 @@
     "tokens": [
       "BTC",
       "INIT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "14e47ad0acc63510",
+    "title": "X100 Exploit Nets 4.85 Million USDT After Governance Takeover",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-24T15:04:42.348786+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
