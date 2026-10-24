@@ -1,15 +1,5 @@
 [
   {
-    "id": "6bd18403d6fb847b",
-    "title": "Ripple (XRP) Deepens Wall Street Push With 24/7 RWA Swaps for Institutions",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-15T20:44:33.045319+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "91780b0b11c74f20",
     "title": "Starknet opens seven-day vote on independent Layer 1 over quantum risks",
     "source": "The Block (机构与政策)",
@@ -5188,5 +5178,17 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f5e2800c91e5e8bf",
+    "title": "Initia:MoveVM 漏洞导致约 270 万美元资产被盗,正推进漏洞修复及资产追回工作",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-24T10:48:26.746062+00:00",
+    "tokens": [
+      "USDC",
+      "INIT",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
