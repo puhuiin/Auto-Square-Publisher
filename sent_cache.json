@@ -1,15 +1,5 @@
 [
   {
-    "id": "028e1c7344bd71ea",
-    "title": "Polymarket Bitcoin and Rate Hike Odds Shift as CME Says No Change",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-16T15:44:04.852898+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9edcc0e40cd001ed",
     "title": "Bitcoin steadies near $82,000 as Warsh declines to signal another Fed hike",
     "source": "Crypto Briefing (深度与研报)",
@@ -5174,6 +5164,16 @@
     "tokens": [
       "ID",
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "289275f0c572a161",
+    "title": "Tether冻结9个CoinDCX安全事件关联地址,涉221.29万枚USDT",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-25T06:44:54.322765+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "zh-CN"
   }
