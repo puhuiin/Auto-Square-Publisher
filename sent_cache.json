@@ -1,15 +1,5 @@
 [
   {
-    "id": "1873deafb77b17f8",
-    "title": "Why PYTH crypto faces a crucial $0.10 test after 45% volume surge",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-16T14:47:07.433230+00:00",
-    "tokens": [
-      "PYTH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "68ee0567c7fe1a1d",
     "title": "Injective jumps 27% in a day, leaving NEAR and Sei behind",
     "source": "Crypto Briefing (深度与研报)",
@@ -5173,6 +5163,16 @@
     "sent_at": "2026-10-25T05:05:12.083433+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c5c9a1fb96c1db4a",
+    "title": "Arthur Hayes 再次向 Cumberland 转入 1,400 万枚 ENA",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-25T05:24:56.647542+00:00",
+    "tokens": [
+      "ENA"
     ],
     "lang": "zh-CN"
   }
