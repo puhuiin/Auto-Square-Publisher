@@ -1,16 +1,5 @@
 [
   {
-    "id": "5b954bf31d5192cc",
-    "title": "STRK’s L1 Bet: Eli Ben-Sasson on Starknet’s Exit Plan",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-16T23:45:02.208156+00:00",
-    "tokens": [
-      "STRK",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "04a7507d8e2830f7",
     "title": "Celestia crypto hits 11-month high – Is $0.80 TIA’s next target?",
     "source": "AMBCrypto (技术与链上)",
@@ -5174,6 +5163,16 @@
     "sent_at": "2026-10-25T14:24:41.902994+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "136b3bf81b9b124d",
+    "title": "Video Game Giant Hit by Breach Affecting 11,774,247 Records – Email Addresses and Login Data at Risk",
+    "source": "DailyHodl (山寨异动与百倍币叙事)",
+    "sent_at": "2026-10-25T14:46:26.055708+00:00",
+    "tokens": [
+      "ID"
     ],
     "lang": "en"
   }
