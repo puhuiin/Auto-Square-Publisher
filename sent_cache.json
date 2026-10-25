@@ -1,15 +1,5 @@
 [
   {
-    "id": "387d852ec3b634ad",
-    "title": "Bullish: XRP Whale Inflows to Binance Hit Seven-Month High, Details",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-16T22:05:14.770269+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f54229f4b4603599",
     "title": "Cardano governance hits a wall as treasury reaches 91% cap",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5173,5 +5163,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "bf3a94c2a70c1d74",
+    "title": "某巨鲸去年交易WLD获利近100万美元,今年利润已全部回吐",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-25T13:04:03.477443+00:00",
+    "tokens": [
+      "WLD"
+    ],
+    "lang": "zh-TW"
   }
 ]
