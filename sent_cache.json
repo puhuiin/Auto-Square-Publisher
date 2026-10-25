@@ -1,16 +1,5 @@
 [
   {
-    "id": "d105e65b1292fe2e",
-    "title": "星球午讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-17T05:48:44.458622+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9bbc2229969d1cdd",
     "title": "昨日以太坊現貨 ETF 總淨流出 6,970 萬美元",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5167,6 +5156,18 @@
       "XRP",
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2e2ff0ff9c64dd07",
+    "title": "‘Not good for Zcash’ – ZODL founder pushes back against Crosslink upgrade",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-25T20:07:10.749901+00:00",
+    "tokens": [
+      "ZEC",
+      "BTC",
+      "SOL"
     ],
     "lang": "en"
   }
