@@ -1,15 +1,5 @@
 [
   {
-    "id": "9edcc0e40cd001ed",
-    "title": "Bitcoin steadies near $82,000 as Warsh declines to signal another Fed hike",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-16T16:07:15.012956+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c57c3030f9b09113",
     "title": "Filecoin – How rising whale demand could extend FIL’s 14% gains",
     "source": "AMBCrypto (技术与链上)",
@@ -5176,5 +5166,15 @@
       "TRX"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "cd8c15d5f1fadc88",
+    "title": "币安将于 10 月 25 日上线 PREDICTUSDT 合约盘前交易",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-25T07:25:00.560112+00:00",
+    "tokens": [
+      "BNB"
+    ],
+    "lang": "zh-TW"
   }
 ]
