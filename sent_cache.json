@@ -1,15 +1,5 @@
 [
   {
-    "id": "d6623c7439182530",
-    "title": "81 Billion Shiba Inu (SHIB) Traded in 24 Hours: There's Hope",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-17T04:30:26.867949+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0bf85eb776f1154a",
     "title": "Will APT’s price clear $0.87 after Aptos’s launch of Block-STM v2 upgrade?",
     "source": "AMBCrypto (技术与链上)",
@@ -5167,6 +5157,16 @@
     "sent_at": "2026-10-25T18:24:50.783122+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "08acd4e0b5d4840b",
+    "title": "Hydra Test Replays Midnight Claims And Finds A Smaller, More Useful Speed Gain",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-25T18:44:02.186240+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
