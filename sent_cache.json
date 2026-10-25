@@ -1,15 +1,5 @@
 [
   {
-    "id": "d4139285122701fd",
-    "title": "美国NEAR现货ETF单日净流入260.62万美元,ZEC现货ETF净流出121.97万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-17T02:04:44.566667+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "cd07782e6613c05b",
     "title": "Slush接入Halliday,支持从25条链及银行卡等渠道入金SUI或USDC",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5168,6 +5158,17 @@
     "sent_at": "2026-10-25T16:25:28.462911+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "36eec76a904bf9bf",
+    "title": "反对在OKX与ICE代币化股票平台交易的企业增至22家",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-25T16:44:45.378657+00:00",
+    "tokens": [
+      "USDC",
+      "UNI"
     ],
     "lang": "en"
   }
