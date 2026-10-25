@@ -1,15 +1,5 @@
 [
   {
-    "id": "57497e75470d6582",
-    "title": "Aptos burns 174K APT in 30 days as total burn hits 1.9 million",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-17T04:08:16.167885+00:00",
-    "tokens": [
-      "APT"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d6623c7439182530",
     "title": "81 Billion Shiba Inu (SHIB) Traded in 24 Hours: There's Hope",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5167,6 +5157,16 @@
     "tokens": [
       "USDC",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c8ddf33014f459cc",
+    "title": "Kraken Lists SFI As Saffron Puts Uniswap Trading Fees At The Center Of Its Product",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-25T18:24:50.783122+00:00",
+    "tokens": [
+      "UNI"
     ],
     "lang": "en"
   }
