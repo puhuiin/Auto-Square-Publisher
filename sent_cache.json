@@ -1,15 +1,5 @@
 [
   {
-    "id": "f98bc152bb5be1b2",
-    "title": "SEI Perpetual Futures Trade on CFTC-Regulated OG.com Markets",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-16T20:24:36.242055+00:00",
-    "tokens": [
-      "SEI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b442aa92f78c7ace",
     "title": "Starknet’s STRK Climbs 210% in Four Weeks, but Can the Rally Last?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-10-25T11:05:07.395770+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "d36c425c2727f9b1",
+    "title": "A 20-month Polkadot wallet breach reveals the dark side of faster crypto withdrawals",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-25T11:25:00.735773+00:00",
+    "tokens": [
+      "DOT"
     ],
     "lang": "zh-CN"
   }
