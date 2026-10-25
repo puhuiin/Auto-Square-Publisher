@@ -1,15 +1,5 @@
 [
   {
-    "id": "0bf85eb776f1154a",
-    "title": "Will APT’s price clear $0.87 after Aptos’s launch of Block-STM v2 upgrade?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-17T04:46:52.763299+00:00",
-    "tokens": [
-      "APT"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "08f34bbce4bd7a88",
     "title": "播客笔记 | 对话孙宇晨:AI 黄金时代,普通人如何下注?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5167,6 +5157,16 @@
     "sent_at": "2026-10-25T18:44:02.186240+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6f61219993152c5d",
+    "title": "Fed Week Puts Stocks, Bitcoin, and DXY on Collision Course Before $11 Billion Expiry",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-25T19:04:22.904266+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
