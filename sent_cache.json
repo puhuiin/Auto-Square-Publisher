@@ -1,15 +1,5 @@
 [
   {
-    "id": "271e0f86dcfe9db2",
-    "title": "TIA crypto climbs nearly 17%—Can Celestia reclaim $0.70?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-16T21:44:45.726834+00:00",
-    "tokens": [
-      "TIA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "387d852ec3b634ad",
     "title": "Bullish: XRP Whale Inflows to Binance Hit Seven-Month High, Details",
     "source": "ZyCrypto (新币与空投)",
@@ -5173,5 +5163,15 @@
       "DOGE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "2bddc1e6ec8de27f",
+    "title": "XRP Death Cross Is Complete: Next Price Levels",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-25T12:45:10.326918+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
