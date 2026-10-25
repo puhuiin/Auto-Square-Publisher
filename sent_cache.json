@@ -1,16 +1,5 @@
 [
   {
-    "id": "c57c3030f9b09113",
-    "title": "Filecoin – How rising whale demand could extend FIL’s 14% gains",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-16T16:27:39.607905+00:00",
-    "tokens": [
-      "FIL",
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5684258e764ded12",
     "title": "今日加密货币市值前 100 代币涨跌:TIA 涨 18.44%,STRK 跌 20.45%",
     "source": "深潮TechFlow (中文/简体)",
@@ -5176,5 +5165,15 @@
       "BNB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f406ac4773f71182",
+    "title": "ElizaOS 创始人 Shaw 称已完成 Pump fun 合约约 90% 的逆向工程,计划公开研究成果",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-25T07:44:58.105531+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
