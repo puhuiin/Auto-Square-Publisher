@@ -1,17 +1,5 @@
 [
   {
-    "id": "70b89110497e7557",
-    "title": "Binance Founder CZ Voices Support for XRP, ZEC and SOL Amid China Crypto Controversy",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-17T08:04:23.453158+00:00",
-    "tokens": [
-      "XRP",
-      "ZEC",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "801691d2b070356b",
     "title": "DTCC 代币化服务首批支持 25 种证券,底层资产规模约 30 万亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5169,5 +5157,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "1b765925c77f30a7",
+    "title": "Pump.fun app passes Fomo in daily active traders on Solana",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-25T23:26:34.947059+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
