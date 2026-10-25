@@ -1,15 +1,5 @@
 [
   {
-    "id": "54d4a0a754c321dc",
-    "title": "Ethereum Price Prediction: ETH Outpaces the Market as Crypto Rebounds",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-16T18:44:20.555310+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "302149dca8cc2229",
     "title": "Nvidia reportedly bars neoclouds from GTC Berlin over AMD and TPU use",
     "source": "Crypto Briefing (深度与研报)",
@@ -5171,6 +5161,18 @@
     "sent_at": "2026-10-25T09:24:02.774200+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "f73f08d1882b1734",
+    "title": "Ethereum’s RWA Dominance Slips as Solana, BNB Chain, Stellar, and Avalanche Gain Ground: Data",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-25T09:44:41.590819+00:00",
+    "tokens": [
+      "BNB",
+      "ETH",
+      "SOL"
     ],
     "lang": "zh-TW"
   }
