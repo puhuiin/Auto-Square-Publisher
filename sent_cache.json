@@ -1,15 +1,5 @@
 [
   {
-    "id": "2b66bce1986f24fc",
-    "title": "Google Quantum 40x Breakthrough Rekindles Fears of Q-Day",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-16T12:08:52.769058+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "836494702fb62ff6",
     "title": "LayerZero surges 23% – Why ZRO’s price rally faces THESE risks",
     "source": "AMBCrypto (技术与链上)",
@@ -5174,6 +5164,16 @@
     "sent_at": "2026-10-25T03:04:34.592370+00:00",
     "tokens": [
       "PEPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "c576f989fbd0431f",
+    "title": "2026年唯一获引进区块链基础设施企业,Solana Company入选香港第七批战略企业名单",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-25T03:24:36.869699+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
