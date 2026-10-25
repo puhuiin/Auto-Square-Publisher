@@ -1,15 +1,5 @@
 [
   {
-    "id": "3529ae7933b1453f",
-    "title": "Injective (INJ) Explodes to a 1-Year High: Has Its Bull Run Begun?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-16T17:07:57.913073+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "563652955fa4e1f3",
     "title": "XRP News: RLUSD Settlement Comes to Cross River Fintechs",
     "source": "CryptoNews (全球快讯)",
@@ -5169,6 +5159,16 @@
     "title": "Bitcoin ETF Week Stays Positive After Nearly $774 Million In Late Outflows",
     "source": "NewsBTC (比特币与山寨)",
     "sent_at": "2026-10-25T08:04:41.142133+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "44eec0e54a51a1b4",
+    "title": "Bitcoin’s Fed Week Starts With A Fresh Rise In US Inflation Expectations",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-25T08:26:01.872605+00:00",
     "tokens": [
       "BTC"
     ],
