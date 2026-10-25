@@ -1,16 +1,5 @@
 [
   {
-    "id": "2310615d741cbafd",
-    "title": "TechFlow 情報局:Anthropic 增長神話破滅被砍到 1.5 萬億估值,特斯拉 Roadster 能飛能翻滾還能倒著開",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-16T12:50:27.998854+00:00",
-    "tokens": [
-      "ETH",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d73b01beccbd557a",
     "title": "Celestia推出Eden鏈,AI Agent商務實驗沙盒",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5174,6 +5163,16 @@
     "sent_at": "2026-10-25T03:44:37.972414+00:00",
     "tokens": [
       "WLD"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "6346796a64e9afab",
+    "title": "Bitcoin ETF Flows Trail Price Moves, DWF Study Finds",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-25T04:06:18.101220+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
