@@ -1,17 +1,5 @@
 [
   {
-    "id": "08f34bbce4bd7a88",
-    "title": "播客笔记 | 对话孙宇晨:AI 黄金时代,普通人如何下注?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-17T05:09:27.329744+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "TRX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "313e2adb9b958b80",
     "title": "Cardano shifts $26M to USDCx as bridge controls freeze payouts",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5167,6 +5155,16 @@
     "sent_at": "2026-10-25T19:04:22.904266+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "743d35eb71427222",
+    "title": "Worldcoin team deposits $4.86M in WLD to OKX – As price tests $0.45 support",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-25T19:28:33.991539+00:00",
+    "tokens": [
+      "WLD"
     ],
     "lang": "en"
   }
