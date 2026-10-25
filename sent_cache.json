@@ -1,15 +1,5 @@
 [
   {
-    "id": "3ff99e135003c375",
-    "title": "美国SOL现货ETF单日总净流出1266.80万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-17T01:44:46.359628+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d4139285122701fd",
     "title": "美国NEAR现货ETF单日净流入260.62万美元,ZEC现货ETF净流出121.97万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5168,6 +5158,16 @@
     "tokens": [
       "RLUSD",
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f2ba7e60bc81b4ab",
+    "title": "X100 Exploit Proceeds Split Into Four 400-ETH Wallets",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-25T16:25:28.462911+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
