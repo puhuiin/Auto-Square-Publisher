@@ -3,31 +3,30 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Futures",
-    "#bStocks"
+    "#bStocks",
+    "#Futures"
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$USDC",
     "$XRP",
-    "$FF",
-    "$RLUSD",
+    "$USDC",
     "$PREDICTUSDT",
+    "$BRKBB",
     "$AAPLB",
-    "$NVDAB"
+    "$RLUSD"
   ],
-  "strategy_guidance": "当前可重点围绕无截止日期的Spot交易锦标赛S8、Binance Starter Carnival、新上线的bStocks交易对及PREDICTUSDT合约展开发帖，引导读者参与相关活动互动、分享交易思路以获取Write2Earn奖励；可结合Binance Blockchain Week Starter Pack挑战、Binance Pick预测活动等内容输出参与攻略，带动社区互动热度以追当期活动流量。",
-  "last_updated": "2026-10-25T10:44:14.487826Z",
+  "strategy_guidance": "今日（2026-10-25）为PREDICTUSDT合约上线首日，可优先围绕该新合约规则、玩法输出科普内容，联动当日同步上线的5款bStocks交易对公告，结合仍在进行的Spot Trading Tournament Season 8、RLUSD持仓分XRP、Qafila 2026等无明确截止日的活动，引导用户参与评论互动、分享交易思路参与Write to Earn活动，针对赛事类内容可做进度复盘、冲刺攻略类内容追活动热度。",
+  "last_updated": "2026-10-25T23:04:07.948790Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-25T22:06:02.762862+00:00",
+      "last_fail": "2026-10-25T23:04:09.453395+00:00",
       "fails": 3
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-25",

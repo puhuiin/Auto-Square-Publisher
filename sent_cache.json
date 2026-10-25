@@ -1,15 +1,5 @@
 [
   {
-    "id": "073ab802d8100c83",
-    "title": "持仓回报率达272%,某巨鲸5倍做多111.95万枚TIA;另一巨鲸5倍做空浮亏34.2万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-17T07:47:47.005493+00:00",
-    "tokens": [
-      "TIA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "70b89110497e7557",
     "title": "Binance Founder CZ Voices Support for XRP, ZEC and SOL Amid China Crypto Controversy",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5168,5 +5158,16 @@
       "UNI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "3fd67b32d48c4461",
+    "title": "AI agents help rescue ETH’s Glamsterdam fork, ‘Steal My Bitcoin’ site: Hodler’s Digest",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-10-25T23:05:35.317187+00:00",
+    "tokens": [
+      "ETH",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
