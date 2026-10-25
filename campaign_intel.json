@@ -19,15 +19,15 @@
   "strategy_guidance": "当前可重点围绕无截止日期的Spot交易锦标赛S8、Binance Starter Carnival、新上线的bStocks交易对及PREDICTUSDT合约展开发帖，引导读者参与相关活动互动、分享交易思路以获取Write2Earn奖励；可结合Binance Blockchain Week Starter Pack挑战、Binance Pick预测活动等内容输出参与攻略，带动社区互动热度以追当期活动流量。",
   "last_updated": "2026-10-25T10:44:14.487826Z",
   "_feed_health": {
-    "ZyCrypto (新币与空投)": {
-      "fails": 1,
-      "last_fail": "2026-10-25T08:43:30.539857+00:00",
-      "reset_at": "2026-10-25T11:23:32.337941+00:00"
-    },
     "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3,
-      "last_fail": "2026-10-25T11:23:33.011503+00:00"
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "last_fail": "2026-10-25T11:43:31.552830+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-10-25T11:43:31.018481+00:00",
+      "fails": 1,
+      "last_fail": "2026-10-25T08:43:30.539857+00:00"
     }
   },
   "_fallback_image": {
@@ -36,7 +36,12 @@
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-25",
-  "_publish_park": {},
+  "_publish_park": {
+    "fa19af0d019990c8": {
+      "fails": 1,
+      "last_fail": "2026-10-25T11:45:43.157466+00:00"
+    }
+  },
   "_intel_refresh_fail": {},
   "_img_rot": 327,
   "_alert_state": {},

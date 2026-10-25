@@ -1,15 +1,5 @@
 [
   {
-    "id": "b442aa92f78c7ace",
-    "title": "Starknet’s STRK Climbs 210% in Four Weeks, but Can the Rally Last?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-16T20:44:28.824810+00:00",
-    "tokens": [
-      "STRK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9c47c2820f6c4585",
     "title": "Stellar Eyes 200% Rally as XLM Closes In on $1 Billion Stablecoin Milestone",
     "source": "ZyCrypto (新币与空投)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-10-25T11:25:00.735773+00:00",
     "tokens": [
       "DOT"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "29d26ca405a926a3",
+    "title": "Dogecoin Foundation and House of Doge End Exclusive Brand Deal",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-25T11:46:43.433282+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "zh-CN"
   }
