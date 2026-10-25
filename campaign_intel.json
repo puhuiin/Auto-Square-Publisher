@@ -19,15 +19,15 @@
   "strategy_guidance": "当前可重点围绕无截止日期的Spot交易锦标赛S8、Binance Starter Carnival、新上线的bStocks交易对及PREDICTUSDT合约展开发帖，引导读者参与相关活动互动、分享交易思路以获取Write2Earn奖励；可结合Binance Blockchain Week Starter Pack挑战、Binance Pick预测活动等内容输出参与攻略，带动社区互动热度以追当期活动流量。",
   "last_updated": "2026-10-25T10:44:14.487826Z",
   "_feed_health": {
-    "CryptoPotato (山寨币/Meme热点)": {
-      "last_fail": "2026-10-25T12:03:31.920184+00:00",
-      "fails": 1,
-      "reset_at": "2026-10-25T15:43:29.771634+00:00"
-    },
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-25T15:43:30.399324+00:00",
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3,
-      "parked_until": "2026-10-20T06:53:53.228743+00:00"
+      "last_fail": "2026-10-25T16:03:33.336774+00:00"
+    },
+    "CryptoPotato (山寨币/Meme热点)": {
+      "reset_at": "2026-10-25T16:03:32.567359+00:00",
+      "fails": 1,
+      "last_fail": "2026-10-25T12:03:31.920184+00:00"
     }
   },
   "_fallback_image": {
@@ -38,8 +38,8 @@
   "_article_sent_date": "2026-10-25",
   "_publish_park": {
     "fa19af0d019990c8": {
-      "last_fail": "2026-10-25T11:45:43.157466+00:00",
-      "fails": 1
+      "fails": 1,
+      "last_fail": "2026-10-25T11:45:43.157466+00:00"
     }
   },
   "_intel_refresh_fail": {},
