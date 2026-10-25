@@ -1,15 +1,5 @@
 [
   {
-    "id": "d73b01beccbd557a",
-    "title": "Celestia推出Eden鏈,AI Agent商務實驗沙盒",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-10-16T13:26:46.202064+00:00",
-    "tokens": [
-      "TIA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6c356c614f3b491f",
     "title": "Celestia leads altcoin surge with 32% gain in 24 hours",
     "source": "Crypto Briefing (深度与研报)",
@@ -5173,6 +5163,17 @@
     "sent_at": "2026-10-25T04:06:18.101220+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "e01a58aea9a8e080",
+    "title": "清算价格降至2181.69美元和2177.79美元,持有价值2.14亿美元ETH多单的某巨鲸追加567万美元保证金",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-25T04:25:33.012019+00:00",
+    "tokens": [
+      "ETH",
+      "USDC"
     ],
     "lang": "zh-TW"
   }
