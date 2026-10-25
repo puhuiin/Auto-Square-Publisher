@@ -1,15 +1,5 @@
 [
   {
-    "id": "0df83e307dbebd2b",
-    "title": "Fortitude sold $8.3 million in borrowed Zcash to fund its mining expansion",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-16T19:24:06.588679+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "seed::bitget-hack-2026-09::2",
     "title": "Bitget 事件后行业驰援 Bybit CEO 主动伸援手 受影响资产有望修复 $XRP $AVAX 韧性可期",
     "source": "priority_seed:bitget-hack",
@@ -5173,6 +5163,16 @@
     "sent_at": "2026-10-25T10:00:24.695027+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "09b2f234db99bf08",
+    "title": "Dogecoin Community Gets Crucial Warning as Hardware Wallet Reveals Security Incident",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-25T10:24:48.417472+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "zh-CN"
   }
