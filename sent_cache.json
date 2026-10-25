@@ -1,17 +1,5 @@
 [
   {
-    "id": "2085b72021625036",
-    "title": "Dogecoin (DOGE), Shiba Inu (SHIB), Uniswap (UNI) and Ethereum (ETH) Price Analysis For October 17: Unexpected Recovery Is Here",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-17T00:40:32.295425+00:00",
-    "tokens": [
-      "DOGE",
-      "SHIB",
-      "UNI"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e43e1d8b01a71405",
     "title": "吴说周精选:Ledger 遭硬件篡改攻击、Solana 性能预计大幅提升、美国 CPI 超预期与新闻 Top10",
     "source": "吴说区块链 (中文深度)",
@@ -5173,6 +5161,16 @@
     "sent_at": "2026-10-25T15:04:13.391290+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "468339f2bb729599",
+    "title": "Big Week Ahead: Ripple Heads to NYC With Wall Street Heavyweights",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-25T15:25:14.170167+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
