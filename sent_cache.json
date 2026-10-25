@@ -1,15 +1,5 @@
 [
   {
-    "id": "a8694854d2d8454c",
-    "title": "Celestia’s TIA Jumps 23% in a Day, Extending Four-Week Rally",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-17T07:24:22.149230+00:00",
-    "tokens": [
-      "TIA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "073ab802d8100c83",
     "title": "持仓回报率达272%,某巨鲸5倍做多111.95万枚TIA;另一巨鲸5倍做空浮亏34.2万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5168,5 +5158,15 @@
       "ADA"
     ],
     "lang": "en"
+  },
+  {
+    "id": "2bb641b3f8246cd2",
+    "title": "Uniswap 近 30 日交易量 654.86 亿美元,v4 首超 v3 成最大版本",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-25T22:08:24.374999+00:00",
+    "tokens": [
+      "UNI"
+    ],
+    "lang": "zh-CN"
   }
 ]
