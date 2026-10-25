@@ -1,15 +1,5 @@
 [
   {
-    "id": "23bf9c95d273e089",
-    "title": "Cross River Bank links $2.4B RLUSD to core banking system",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-16T22:44:31.379947+00:00",
-    "tokens": [
-      "RLUSD"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c5315a31dc3c8421",
     "title": "Top Bittensor Price Predictions as TAO Rises 10% Daily",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5171,6 +5161,18 @@
     "sent_at": "2026-10-25T13:25:19.705578+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6ec93912aff4f991",
+    "title": "Solana, Tether, and XRP Ledger Drive New Wave of Asset Tokenization",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-25T13:45:16.641499+00:00",
+    "tokens": [
+      "XRP",
+      "SOL",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
