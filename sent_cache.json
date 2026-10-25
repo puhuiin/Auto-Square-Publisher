@@ -1,15 +1,5 @@
 [
   {
-    "id": "6d4593302e2a04d6",
-    "title": "Gemini 500万美元和解协议被拒撤销,已缴罚款及永久禁令维持",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-17T03:24:36.542625+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7924a1eaad1503a6",
     "title": "某山寨大户从 Binance 提取 245.5 万枚 ONDO,三大山寨持仓浮亏超 150 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5168,6 +5158,16 @@
     "sent_at": "2026-10-25T17:25:41.466985+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5e53f4fcacaec30e",
+    "title": "Stellar (XLM) Clocks Busiest Day of Month With 14.16 Million Transactions",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-25T17:44:30.006032+00:00",
+    "tokens": [
+      "XLM"
     ],
     "lang": "en"
   }
