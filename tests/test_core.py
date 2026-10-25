@@ -23910,22 +23910,43 @@ class TestR830EntryNamesAndEnHatch(unittest.TestCase):
         with open(path, encoding="utf-8") as fh:
             return fh.read()
 
-    def test_en_branch_hatch_is_tightened(self):
-        """★ 英文分支必须用收紧后的逃生阀，且**不得**留着旧的宽措辞。
+class TestR840RevertedEnHatch(unittest.TestCase):
+    """★★ R840：英文分支的逃生阀**已回滚到 R775/R778 原文**（R830 的收紧「未被证实」）。
 
-        ⚠️ 首版守卫若只写 `assertIn("八竿子打不着", src)` 会**无区分力**：
-        中文分支里本来就有这四个字。故先按锚点切出英文分支窗口再断言。
-        """
-        win = self._en_branch_window(self._main_src())
-        self.assertIn("八竿子打不着", win, "英文分支未对齐中文的收紧措辞")
-        self.assertNotIn("确实与交易活动无关时才可不提", win,
-                         "旧宽措辞仍在英文分支 ⇒ 模型会读成'可以不提'")
+    实验记录（别丢，否则下一轮会盲目重做）：
+      · R830 做过：把英文摘要段逃生阀从「与交易活动无关」收紧成「八竿子打不着」，
+        并补 R760 的期望句（「默认**必须**带这一句」）+ 堵住托词（「都算交易活动」）。
+      · 验收（10-23/10-24 两个完整夜窗，R819 脚本口径）：**回滚**——
+        合并真漏 13/38 = **34%** vs 基线 23/64 = **36%**（基本无改善）；脚本条款
+        「单窗提及率跌 ≥10pp」在 10-23 触发（50% vs 62%）。
+      · 措辞：**未被证实**，不是被证伪——两窗真漏 **48% vs 18%**，单窗方差就有 30pp。
+      ⇒ 本组锁的是**回滚后的状态**：逃生阀必须是 R778 原文，且不得残留 R830 的收紧措辞。
+        下次谁要再收紧：**先按 R819 脚本把判据写死**（并把"提及率跌"那条噪声敏感条款
+        一并复核——它是本轮触发回滚的条款）。
+    """
 
-    def test_en_branch_has_expectation_sentence(self):
-        """★ R760 的教训：条件句会被读成许可 ⇒ 必须有"默认必须"的期望句。"""
-        win = self._en_branch_window(self._main_src())
-        self.assertIn("默认**必须**带这一句", win)
-        self.assertIn("都算交易活动", win, "必须显式堵住「利好没兑现/先观望」这类托词")
+    @staticmethod
+    def _en_window():
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "main.py")
+        src = open(path, encoding="utf-8").read()
+        anchor = "【★ 输出语种（最高优先级，覆盖以上所有中文示例）】"
+        return src[src.index(anchor):src.index(anchor) + 4000]
+
+    def test_hatch_is_the_r778_original(self):
+        win = self._en_window()
+        self.assertIn("确实与交易活动无关时才可不提", win,
+                      "回滚后必须回到 R775/R778 的原文措辞")
+        self.assertNotIn("默认**必须**带这一句", win)
+        self.assertNotIn("都算交易活动", win)
+
+    def test_header_of_the_revert_is_recorded(self):
+        """回滚必须**留痕**（为什么回滚、判据是什么），否则下一轮会当"没人试过"重做。"""
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "main.py")
+        src = open(path, encoding="utf-8").read()
+        self.assertIn("R840", src)
+        self.assertIn("未被证实", src)
 
 
 class TestR831EnTruncationAndVocab(unittest.TestCase):
