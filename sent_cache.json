@@ -1,15 +1,5 @@
 [
   {
-    "id": "9795c5a872c65995",
-    "title": "XRP Price Could Surge 145% as 2023 Rally Pattern Returns",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-16T18:04:22.539644+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "014aefe9a3e2df20",
     "title": "Celestia’s Eden launch sends TIA up about 16% in a day",
     "source": "Crypto Briefing (深度与研报)",
@@ -5173,5 +5163,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "5d7dfdbbd1feb190",
+    "title": "Peter Schiff’s ‘$75K Bitcoin call’ meets a vital week: Fed, inflation, and ETF outflows loom",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-25T09:04:43.490791+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
