@@ -1,15 +1,5 @@
 [
   {
-    "id": "dc55c218881ac950",
-    "title": "Plasma partners with Stripe as XPL surges by 10% — Can the rally continue?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-16T15:27:05.077390+00:00",
-    "tokens": [
-      "XPL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "028e1c7344bd71ea",
     "title": "Polymarket Bitcoin and Rate Hike Odds Shift as CME Says No Change",
     "source": "CryptoNews (全球快讯)",
@@ -5175,5 +5165,16 @@
       "SHIB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "7704add93b155c81",
+    "title": "Four.Meme推出Binance Agent ID Exclusive AI Agent专属发射模式,支持BNB募资",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-25T06:24:20.345291+00:00",
+    "tokens": [
+      "ID",
+      "BNB"
+    ],
+    "lang": "zh-CN"
   }
 ]
