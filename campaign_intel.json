@@ -3,42 +3,42 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#AlphaTrading",
+    "#Futures",
     "#bStocks"
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$XRP",
     "$USDC",
-    "$ON",
+    "$XRP",
+    "$FF",
+    "$RLUSD",
+    "$PREDICTUSDT",
     "$AAPLB",
-    "$NVDAB",
-    "$BOTB",
-    "$RLUSD"
+    "$NVDAB"
   ],
-  "strategy_guidance": "优先围绕正在进行的ON Alpha交易竞赛、新上线的5类bStocks交易对及TradFi永续合约输出快讯，结合#Write2Earn活动规则引导用户参与话题评论互动拿奖励；同时可联动无截止日的Spot交易锦标赛S8、RLUSD持仓瓜分XRP、Qafila百万USDC奖励等活动做内容整合，提升帖子匹配活动流量的概率，优先追新上线资产与Alpha竞赛的实时热度。",
-  "last_updated": "2026-10-24T22:26:34.644278Z",
+  "strategy_guidance": "当前可重点围绕无截止日期的Spot交易锦标赛S8、Binance Starter Carnival、新上线的bStocks交易对及PREDICTUSDT合约展开发帖，引导读者参与相关活动互动、分享交易思路以获取Write2Earn奖励；可结合Binance Blockchain Week Starter Pack挑战、Binance Pick预测活动等内容输出参与攻略，带动社区互动热度以追当期活动流量。",
+  "last_updated": "2026-10-25T10:44:14.487826Z",
   "_feed_health": {
     "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-10-25T10:23:35.135620+00:00",
       "fails": 1,
+      "reset_at": "2026-10-25T10:44:15.530667+00:00",
       "last_fail": "2026-10-25T08:43:30.539857+00:00"
     },
     "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3,
-      "last_fail": "2026-10-25T10:23:35.604267+00:00"
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "last_fail": "2026-10-25T10:44:15.972383+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-25",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 325,
+  "_img_rot": 326,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

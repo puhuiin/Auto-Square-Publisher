@@ -1,17 +1,5 @@
 [
   {
-    "id": "seed::bitget-hack-2026-09::2",
-    "title": "Bitget 事件后行业驰援 Bybit CEO 主动伸援手 受影响资产有望修复 $XRP $AVAX 韧性可期",
-    "source": "priority_seed:bitget-hack",
-    "sent_at": "2026-10-16T19:44:35.079141+00:00",
-    "tokens": [
-      "XRP",
-      "AVAX",
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "seed::bitget-hack-2026-09::1",
     "title": "Bitget 被盗复盘：后台系统被入侵伪造授权签名 冷钱包安然无恙 $ETH $BNB 自托管更显价值",
     "source": "priority_seed:bitget-hack",
@@ -5175,5 +5163,15 @@
       "DOGE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "aa3f5cc91d0980d4",
+    "title": "Ripple CTO Emeritus Warns Against AI Content Filters in XRP Scam Debate",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-25T10:45:23.954356+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
