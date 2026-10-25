@@ -22,7 +22,7 @@
     "Bitcoinist (比特币向)": {
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3,
-      "last_fail": "2026-10-25T02:03:31.825832+00:00"
+      "last_fail": "2026-10-25T02:23:28.143147+00:00"
     }
   },
   "_fallback_image": {
@@ -30,10 +30,10 @@
     "date": "2026-10-18"
   },
   "_llm_breaker": {},
-  "_article_sent_date": "2026-10-24",
+  "_article_sent_date": "2026-10-25",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 305,
+  "_img_rot": 306,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
