@@ -1,16 +1,5 @@
 [
   {
-    "id": "seed::bitget-hack-2026-09::1",
-    "title": "Bitget 被盗复盘：后台系统被入侵伪造授权签名 冷钱包安然无恙 $ETH $BNB 自托管更显价值",
-    "source": "priority_seed:bitget-hack",
-    "sent_at": "2026-10-16T20:04:16.766288+00:00",
-    "tokens": [
-      "ETH",
-      "BNB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f98bc152bb5be1b2",
     "title": "SEI Perpetual Futures Trade on CFTC-Regulated OG.com Markets",
     "source": "The Defiant (DeFi 深度)",
@@ -5173,5 +5162,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d37fbde4ead38519",
+    "title": "XRP面临巨鲸抛压?分析师称跌破1.26美元或下探0.98美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-25T11:05:07.395770+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
