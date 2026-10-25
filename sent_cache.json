@@ -1,17 +1,5 @@
 [
   {
-    "id": "e43e1d8b01a71405",
-    "title": "吴说周精选:Ledger 遭硬件篡改攻击、Solana 性能预计大幅提升、美国 CPI 超预期与新闻 Top10",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-17T01:05:19.728009+00:00",
-    "tokens": [
-      "ETH",
-      "SOL",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8f30420bd727973e",
     "title": "微软联合多方捣毁接受 USDT 付款的钓鱼网络,涉及超 7.5 万家机构",
     "source": "深潮TechFlow (中文/简体)",
@@ -5171,6 +5159,16 @@
     "sent_at": "2026-10-25T15:25:14.170167+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "eafb3d8ee84bb58b",
+    "title": "Shiba Inu: Shytoshi Kusama's X Silence Lingers Amid Quiet Developments",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-25T15:44:32.397748+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
