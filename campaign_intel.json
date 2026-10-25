@@ -20,24 +20,24 @@
   "last_updated": "2026-10-25T10:44:14.487826Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "fails": 3,
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-25T14:03:34.758641+00:00"
+      "fails": 3,
+      "last_fail": "2026-10-25T14:23:33.950744+00:00"
     },
     "ZyCrypto (新币与空投)": {
-      "last_fail": "2026-10-25T08:43:30.539857+00:00",
+      "reset_at": "2026-10-25T14:23:33.365600+00:00",
       "fails": 1,
-      "reset_at": "2026-10-25T14:03:34.225074+00:00"
+      "last_fail": "2026-10-25T08:43:30.539857+00:00"
     },
     "CryptoPotato (山寨币/Meme热点)": {
-      "last_fail": "2026-10-25T12:03:31.920184+00:00",
+      "reset_at": "2026-10-25T14:23:33.710015+00:00",
       "fails": 1,
-      "reset_at": "2026-10-25T14:03:34.048477+00:00"
+      "last_fail": "2026-10-25T12:03:31.920184+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-25",

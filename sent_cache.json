@@ -1,15 +1,5 @@
 [
   {
-    "id": "84dd82e9e3e71864",
-    "title": "XRP Price Prediction: Evernorth Plans to Turn 473 Million XRP Into Yield",
-    "source": "Watcher.Guru (快讯)",
-    "sent_at": "2026-10-16T23:24:47.762542+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "5b954bf31d5192cc",
     "title": "STRK’s L1 Bet: Eli Ben-Sasson on Starknet’s Exit Plan",
     "source": "The Defiant (DeFi 深度)",
@@ -5174,6 +5164,16 @@
     "tokens": [
       "SOL",
       "ENA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6ad8bc94830823c3",
+    "title": "Why Bitcoin's Next Market Cycle May Look Very Different – BloFin CEO",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-25T14:24:41.902994+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
