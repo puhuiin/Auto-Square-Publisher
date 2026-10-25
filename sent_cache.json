@@ -1,15 +1,5 @@
 [
   {
-    "id": "a9d509d5ea277657",
-    "title": "Shiba Inu (SHIB) Eyes 'Zero Deletion' Scenario as Bulls Defend Key $3 Billion Support",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-16T14:26:57.428745+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1873deafb77b17f8",
     "title": "Why PYTH crypto faces a crucial $0.10 test after 45% volume surge",
     "source": "AMBCrypto (技术与链上)",
@@ -5175,5 +5165,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "3dc98e7519446505",
+    "title": "XRP Ledger Fix Upgrade Faces November 4 Earliest Activation After Vote Reset",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-25T05:05:12.083433+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
