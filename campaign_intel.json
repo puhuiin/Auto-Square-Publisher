@@ -20,9 +20,9 @@
   "last_updated": "2026-10-25T10:44:14.487826Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "fails": 3,
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "last_fail": "2026-10-25T22:06:02.762862+00:00",
-      "parked_until": "2026-10-20T06:53:53.228743+00:00"
+      "fails": 3
     }
   },
   "_fallback_image": {
