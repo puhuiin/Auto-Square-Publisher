@@ -1,15 +1,5 @@
 [
   {
-    "id": "313e2adb9b958b80",
-    "title": "Cardano shifts $26M to USDCx as bridge controls freeze payouts",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-17T05:30:59.150612+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d105e65b1292fe2e",
     "title": "星球午讯",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5165,6 +5155,18 @@
     "sent_at": "2026-10-25T19:28:33.991539+00:00",
     "tokens": [
       "WLD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "269e40c1dc90cc7c",
+    "title": "XRP ETFs buck Bitcoin and Ethereum outflows – Can price follow?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-25T19:49:13.944554+00:00",
+    "tokens": [
+      "XRP",
+      "BTC",
+      "ETH"
     ],
     "lang": "en"
   }
