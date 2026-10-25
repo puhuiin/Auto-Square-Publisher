@@ -1,15 +1,5 @@
 [
   {
-    "id": "f54229f4b4603599",
-    "title": "Cardano governance hits a wall as treasury reaches 91% cap",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-16T22:24:38.579160+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "23bf9c95d273e089",
     "title": "Cross River Bank links $2.4B RLUSD to core banking system",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5173,5 +5163,15 @@
       "WLD"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d88d4d964be46cb3",
+    "title": "'Not Good for Zcash': Key Developer Josh Swihart Halts ZEC Staking Upgrade",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-25T13:25:19.705578+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
