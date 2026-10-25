@@ -1,15 +1,5 @@
 [
   {
-    "id": "9c47c2820f6c4585",
-    "title": "Stellar Eyes 200% Rally as XLM Closes In on $1 Billion Stablecoin Milestone",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-16T21:04:03.071530+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1fc11c862682390c",
     "title": "Charles Hoskinson Reveals What Comes After Smart Contracts as Cardano Pushes Into AI",
     "source": "ZyCrypto (新币与空投)",
@@ -5170,6 +5160,17 @@
     "sent_at": "2026-10-25T11:46:43.433282+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "fa19af0d019990c8",
+    "title": "ETF Investors Pouring Millions Back Into Zcash as Bitcoin Falls",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-25T12:06:24.688173+00:00",
+    "tokens": [
+      "ZEC",
+      "BTC"
     ],
     "lang": "zh-CN"
   }
