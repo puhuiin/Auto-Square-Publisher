@@ -1,17 +1,5 @@
 [
   {
-    "id": "5684258e764ded12",
-    "title": "今日加密货币市值前 100 代币涨跌:TIA 涨 18.44%,STRK 跌 20.45%",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-16T16:46:52.297992+00:00",
-    "tokens": [
-      "TIA",
-      "STRK",
-      "INJ"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3529ae7933b1453f",
     "title": "Injective (INJ) Explodes to a 1-Year High: Has Its Bull Run Begun?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5173,6 +5161,16 @@
     "sent_at": "2026-10-25T07:44:58.105531+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "19772f6b47349040",
+    "title": "Bitcoin ETF Week Stays Positive After Nearly $774 Million In Late Outflows",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-25T08:04:41.142133+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }

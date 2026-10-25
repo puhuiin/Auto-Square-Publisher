@@ -19,15 +19,15 @@
   "strategy_guidance": "优先围绕正在进行的ON Alpha交易竞赛、新上线的5类bStocks交易对及TradFi永续合约输出快讯，结合#Write2Earn活动规则引导用户参与话题评论互动拿奖励；同时可联动无截止日的Spot交易锦标赛S8、RLUSD持仓瓜分XRP、Qafila百万USDC奖励等活动做内容整合，提升帖子匹配活动流量的概率，优先追新上线资产与Alpha竞赛的实时热度。",
   "last_updated": "2026-10-24T22:26:34.644278Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "fails": 3,
-      "last_fail": "2026-10-25T04:24:03.415250+00:00",
-      "parked_until": "2026-10-25T10:24:03.415250+00:00"
-    },
     "Bitcoinist (比特币向)": {
       "fails": 3,
-      "last_fail": "2026-10-25T07:43:41.806823+00:00",
-      "parked_until": "2026-10-20T06:53:53.228743+00:00"
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "last_fail": "2026-10-25T08:03:33.673222+00:00"
+    },
+    "CoinJournal (山寨异动)": {
+      "fails": 3,
+      "parked_until": "2026-10-25T10:24:03.415250+00:00",
+      "last_fail": "2026-10-25T04:24:03.415250+00:00"
     }
   },
   "_fallback_image": {
