@@ -1,15 +1,5 @@
 [
   {
-    "id": "68ee0567c7fe1a1d",
-    "title": "Injective jumps 27% in a day, leaving NEAR and Sei behind",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-16T15:07:22.845345+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "dc55c218881ac950",
     "title": "Plasma partners with Stripe as XPL surges by 10% — Can the rally continue?",
     "source": "AMBCrypto (技术与链上)",
@@ -5175,5 +5165,15 @@
       "ENA"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "31bd97435d92dc4b",
+    "title": "95 Billion SHIB in 24 Hours: Shiba Inu Exchange Activity Flips Bullish",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-25T06:04:18.624225+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-TW"
   }
 ]
