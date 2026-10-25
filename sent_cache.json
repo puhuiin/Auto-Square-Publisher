@@ -1,15 +1,5 @@
 [
   {
-    "id": "a8cb19644645019d",
-    "title": "法官拒绝撤销 Gemini 与 CFTC 的 500 万美元和解协议",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-17T02:48:07.159918+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "6d4593302e2a04d6",
     "title": "Gemini 500万美元和解协议被拒撤销,已缴罚款及永久禁令维持",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5168,6 +5158,16 @@
     "sent_at": "2026-10-25T17:06:43.320816+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "83d2ea31b599882b",
+    "title": "How a DAO Vote Becomes a Treasury Transfer",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-25T17:25:41.466985+00:00",
+    "tokens": [
+      "UNI"
     ],
     "lang": "en"
   }
