@@ -1,15 +1,5 @@
 [
   {
-    "id": "ee3f4712bf869624",
-    "title": "未实现盈利约5800万美元,某巨鲸持有1120万美元HYPE多仓",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-16T09:44:56.295623+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "aab35116db2be4c4",
     "title": "SEC 批准 23 家美股上市公司 KPI 二元期权上市,涉及 Coinbase、Robinhood 及 MARA",
     "source": "深潮TechFlow (中文/简体)",
@@ -5175,6 +5165,16 @@
     "tokens": [
       "BNB",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "adbd33678d55529f",
+    "title": "Bitcoin – Why Coinbase warns BTC could fall to $75K amid macro risks",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-25T02:45:17.834259+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
