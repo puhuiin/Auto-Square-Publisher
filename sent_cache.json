@@ -1,16 +1,5 @@
 [
   {
-    "id": "cd07782e6613c05b",
-    "title": "Slush接入Halliday,支持从25条链及银行卡等渠道入金SUI或USDC",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-17T02:24:41.775686+00:00",
-    "tokens": [
-      "SUI",
-      "USDC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a8cb19644645019d",
     "title": "法官拒绝撤销 Gemini 与 CFTC 的 500 万美元和解协议",
     "source": "深潮TechFlow (中文/简体)",
@@ -5169,6 +5158,16 @@
     "tokens": [
       "USDC",
       "UNI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4642534e43d56e45",
+    "title": "Cardano Leios Plan Makes Higher Throughput A Series Of Votes And Tests",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-25T17:06:43.320816+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
