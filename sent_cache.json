@@ -1,16 +1,5 @@
 [
   {
-    "id": "563652955fa4e1f3",
-    "title": "XRP News: RLUSD Settlement Comes to Cross River Fintechs",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-16T17:27:51.474238+00:00",
-    "tokens": [
-      "XRP",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9795c5a872c65995",
     "title": "XRP Price Could Surge 145% as 2023 Rally Pattern Returns",
     "source": "CryptoNews (全球快讯)",
@@ -5171,6 +5160,17 @@
     "sent_at": "2026-10-25T08:26:01.872605+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "18e1dd64d15e5175",
+    "title": "Mastercard Praises Ripple's RLUSD Stablecoin",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-25T08:44:37.625682+00:00",
+    "tokens": [
+      "RLUSD",
+      "XRP"
     ],
     "lang": "zh-CN"
   }
