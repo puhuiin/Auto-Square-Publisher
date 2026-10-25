@@ -64,6 +64,34 @@ def baseline() -> dict:
     return {"strong": strong, "weak": weak}
 
 
+# ★★ R839：创作者中心导出（浏览/互动数据）——相对仓库根读，便于测试注入。
+#   它由**人工导出**驱动（import_content_stats.py），所以"有没有/新不新"必须显式报出。
+_CONTENT_STATS_FILE = os.path.join(ROOT, "content_stats.jsonl")
+
+
+def _load_content_stats(path: str = None):
+    """读创作者中心导出（`content_stats.jsonl`）。
+
+    缺失 / 空 / 全行解析失败 → **None**（纪律 12：未知不是 0，≠"浏览为 0"）。
+    只读不写；**不在这里做速率换算**（跨帖龄的速率是 profit_report.py 的口径）。
+    """
+    p = path or _CONTENT_STATS_FILE
+    try:
+        rows = []
+        with open(p, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rows.append(json.loads(line))
+                except ValueError:
+                    continue
+        return rows or None
+    except Exception:
+        return None
+
+
 _MR_MODULE = None
 
 
@@ -478,6 +506,42 @@ def build_report(rows, hours: int) -> str:
         else:
             L.append("")
             L.append("⑥ 内容质量（近20篇）：✅ 未检出收敛复读")
+
+    # ★★ R839：**触达/互动面**（此前日报**完全没有这一面**）。
+    #   为什么必须补：日报有 ①②③④(发布失败)⑤(语种)⑥(内容质量)⑦(结论)，唯独没有
+    #   「浏览/赞/评论/粉丝」—— 而那是**盈利侧唯一的直接观测量**。
+    #   用户 10-25 的面板：58 篇/日、浏览 **257**、赞 **0**、分享 **0**、粉丝 **1**；
+    #   运营不打开创作者中心就完全看不见（R612「程序在用≠人在看」同族）。
+    #   ⚠️ 数据只能来自**人工导出**（`content_stats.jsonl`，import_content_stats.py）
+    #   ⇒ 缺失/陈旧时**必须明说**（R784：覆盖 0 要明说，绝不并进"未检出"），
+    #   并给出让用户能动手的下一句（导出后跑哪个脚本）。
+    #   ⚠️ 只报**事实**：不折算"每日浏览量"、不设阈值、不判好坏——跨帖龄的速率换算
+    #   是另一套口径（由 profit_report.py 负责，R820 已对那条口径取过证）。
+    _cs = _load_content_stats()
+    L.append("")
+    if not _cs:
+        L.append("📈 触达/互动：⚠️ 无导出数据（content_stats.jsonl 不存在或为空）"
+                 "——**盈利侧指标不可测**；从币安创作者中心导出后跑 "
+                 "`python scripts/import_content_stats.py <csv>`")
+    else:
+        _vs = [r["views"] for r in _cs if isinstance(r.get("views"), int)]
+        _lk = sum(r["likes"] for r in _cs if isinstance(r.get("likes"), int))
+        _cm = sum(r["comments"] for r in _cs if isinstance(r.get("comments"), int))
+        _last = max((str(r.get("ts") or "") for r in _cs), default="")
+        _age = ""
+        if _last:
+            try:
+                _d = dt.datetime.fromisoformat(_last.replace("Z", "+00:00"))
+                if _d.tzinfo is not None:
+                    _d = _d.astimezone(dt.timezone.utc)
+                _h = (now - _d.replace(tzinfo=None)).total_seconds() / 3600.0
+                _age = "（%.1f 天前）" % (_h / 24.0) if _h >= 48 else "（%.1f 小时前）" % _h
+            except Exception:
+                _age = ""
+        L.append("📈 触达/互动（创作者中心导出）：覆盖 %d 帖 ｜ 浏览 合计 %d、中位 %d/帖 "
+                 "｜ 赞 %d ｜ 评论 %d ｜ 导出观测 %s%s"
+                 % (len(_cs), sum(_vs), (sorted(_vs)[len(_vs) // 2] if _vs else 0),
+                    _lk, _cm, (_last[:16] if _last else "未知"), _age))
 
     # ⑦ 结论
     L.append("")

@@ -9300,6 +9300,87 @@ class TestR832EnAuditCaliberFixes(unittest.TestCase):
                 "miss_rate": (100.0 * miss / normal) if normal else None, "langdev": 0}
 
 
+class TestR839EngagementSection(unittest.TestCase):
+    """★★ R839：日报补「📈 触达/互动」——**盈利侧唯一的直接观测量此前在日报里完全缺席**。
+
+    ★ 用户 10-25 面板（创作者中心「数据表现」）：58 篇/日 ｜ 浏览 **257** ｜ 赞 **0**
+      ｜ 分享 **0** ｜ 粉丝 **1**。日报有 ①②③④⑤⑥⑦，唯独没有这一面 ⇒ 不打开创作者
+      中心就完全看不见（R612「程序在用≠人在看」同族）。
+    ★ 数据只能来自**人工导出**（`content_stats.jsonl`）⇒ 缺失/陈旧必须**明说**
+      （R784：覆盖 0 要明说，别并进"未检出"），并给出下一句（导出后跑哪个脚本）。
+    ★ 只报事实：**不**折算"每日浏览量"、**不**设阈值、**不**判好坏（跨帖龄速率是
+      profit_report.py 的口径，R820 已对那条口径取过证）。
+    """
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r839",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _tmp(self, lines):
+        import tempfile
+        fd, p = tempfile.mkstemp(suffix=".jsonl")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(lines))
+        self.addCleanup(os.remove, p)
+        return p
+
+    def _row(self, cid, views, likes, comments):
+        """★ 用**相对**时间戳（`_ago`）构造导出行——硬编码绝对日期会被
+        `TestNoWallClockWindowedTests`（R799 时钟窗纪律）当场咬住（R818 就吃过一次）。"""
+        import json as _json
+        return _json.dumps({"content_id": cid, "ts": _ago(36), "views": views,
+                            "likes": likes, "comments": comments})
+
+    def _line(self, text):
+        return next(l for l in text.split("\n") if l.startswith("📈"))
+
+    def test_line_reports_export_facts(self):
+        mod = self._dr()
+        mod._CONTENT_STATS_FILE = self._tmp([self._row("c1", 93, 0, 0),
+                                             self._row("c2", 3, 0, 0),
+                                             self._row("c3", 0, 0, 1)])
+        line = self._line(mod.build_report([], 24))
+        self.assertIn("覆盖 3 帖", line)
+        self.assertIn("浏览 合计 96", line)
+        self.assertIn("中位 3/帖", line)
+        self.assertIn("赞 0", line)
+        self.assertIn("评论 1", line)
+        # 断"报出了导出观测时刻"这件事本身，**不断具体日期**（后者到点会变红）
+        self.assertRegex(line, r"导出观测 \d{4}-\d{2}-\d{2}T\d{2}:\d{2}")
+        self.assertRegex(line, r"（\d+\.\d+ 小时前）|（\d+\.\d+ 天前）",
+                         "必须给出「多久以前」，否则读者不知道数据新不新")
+
+    def test_missing_export_is_loud_and_actionable(self):
+        """★ 无导出时必须**明说不可测**并给出下一句——绝不能整段消失（R784）。"""
+        mod = self._dr()
+        mod._CONTENT_STATS_FILE = os.path.join(os.path.dirname(__file__), "no_such_cs.jsonl")
+        line = self._line(mod.build_report([], 24))
+        self.assertIn("无导出数据", line)
+        self.assertIn("不可测", line)
+        self.assertIn("import_content_stats.py", line, "必须告诉用户下一步跑什么")
+
+    def test_empty_export_is_unknown_not_zero(self):
+        """空文件 = 未知，**不是**"浏览为 0"（纪律 12）。"""
+        mod = self._dr()
+        mod._CONTENT_STATS_FILE = self._tmp(["", "   "])
+        self.assertIsNone(mod._load_content_stats())
+        self.assertIn("无导出数据", self._line(mod.build_report([], 24)))
+
+    def test_garbage_lines_skipped_but_good_ones_kept(self):
+        mod = self._dr()
+        mod._CONTENT_STATS_FILE = self._tmp(["{ not json ]]", self._row("c1", 7, 1, 0)])
+        line = self._line(mod.build_report([], 24))
+        self.assertIn("覆盖 1 帖", line)
+        self.assertIn("浏览 合计 7", line)
+
+
 class TestR834EnLengthBudget(unittest.TestCase):
     """★★ R834：英文篇幅目标与**可发布预算**对齐 + 「顶到上限」入验收。
 
