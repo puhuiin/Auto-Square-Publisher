@@ -1,15 +1,5 @@
 [
   {
-    "id": "302149dca8cc2229",
-    "title": "Nvidia reportedly bars neoclouds from GTC Berlin over AMD and TPU use",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-16T19:04:28.895332+00:00",
-    "tokens": [
-      "GTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0df83e307dbebd2b",
     "title": "Fortitude sold $8.3 million in borrowed Zcash to fund its mining expansion",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5175,5 +5165,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "1e3cd3a299e6ae4c",
+    "title": "Solana联创提出验证者权益加权预言机设想",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-25T10:00:24.695027+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
