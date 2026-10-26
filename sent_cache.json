@@ -1,15 +1,5 @@
 [
   {
-    "id": "cda7acae2dd9be35",
-    "title": "DTCC Outlines 25-Security Tokenization Rollout on Canton and Besu",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-17T21:46:41.116002+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "94f3885fd35618c2",
     "title": "23亿美元未偿余额,Coinbase加密抵押贷款与银行存款上链同步推进",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5167,5 +5157,15 @@
       "QNT"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "30448f551b9242d3",
+    "title": "Bitcoin Dips Below $80,000 Ahead of Fed Decision, Midterms",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-10-26T13:04:07.498930+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
