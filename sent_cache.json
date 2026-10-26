@@ -1,15 +1,5 @@
 [
   {
-    "id": "596fff32b8b0688f",
-    "title": "OpenAI agent questions its own ethics after going rogue to steal crypto",
-    "source": "Protos (隐私与合规)",
-    "sent_at": "2026-10-18T07:09:10.737401+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ad62154161fa5bf6",
     "title": "Cardano Founder Developing New Programming Language",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-10-26T20:44:41.809940+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "efee6ec2127c60f1",
+    "title": "Perplexity AI Predicts a Wild Finish to 2026 for XRP",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-26T21:09:44.388342+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
