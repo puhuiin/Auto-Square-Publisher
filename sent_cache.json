@@ -1,15 +1,5 @@
 [
   {
-    "id": "1e98a43beb3d27f8",
-    "title": "XRP Could Reach $2.16 as Peter Brandt Spots This Historically Proven Pattern",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-17T20:47:04.737158+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "741cbaa04e3dad69",
     "title": "TRON moved $2.2 trillion in stablecoins while TRX supply grew for 108 straight days",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5165,6 +5155,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e971df271c01471f",
+    "title": "Strive 拟通过 ATM 增发最高 10 亿美元 SATS 优先股",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-26T12:04:38.237195+00:00",
+    "tokens": [
+      "SATS"
     ],
     "lang": "zh-CN"
   }
