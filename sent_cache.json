@@ -1,16 +1,5 @@
 [
   {
-    "id": "dd1c4e0b183ac6ab",
-    "title": "USDD向 Gate DEX Bonus 活动追加激励 总奖池提升至 154000 USDD",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-17T20:06:59.908531+00:00",
-    "tokens": [
-      "BNB",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ca00803261035bfd",
     "title": "马斯克:解决美债问题的唯一办法是依靠人工智能和机器人",
     "source": "深潮TechFlow (中文/简体)",
@@ -5166,5 +5155,16 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "c41cda8f9d63f01c",
+    "title": "10 Days Left: Zcash Set to Cut Block Times to 25 Seconds",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-26T11:24:08.203563+00:00",
+    "tokens": [
+      "ZEC",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
