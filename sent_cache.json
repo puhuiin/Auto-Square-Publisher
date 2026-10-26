@@ -1,15 +1,5 @@
 [
   {
-    "id": "d56c8c9b1debafb9",
-    "title": "Vitalik Buterin Reveals Why AI Could Push Bitcoin Miners Out",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-18T03:45:03.497541+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1611a778a9633cbc",
     "title": "Papertrade永续合约或将上线,Paragon以约4.5万美元拍下PAPER代码",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5167,6 +5157,16 @@
     "tokens": [
       "XRP",
       "RLUSD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ea5ffc567fcfe8db",
+    "title": "Anthropic’s Claude AI Predicts a Huge Move for Solana by 2027",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-26T17:40:59.496986+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
