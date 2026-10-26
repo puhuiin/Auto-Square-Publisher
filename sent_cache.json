@@ -1,15 +1,5 @@
 [
   {
-    "id": "9170d504cb502920",
-    "title": "152 Million SHIB Tokens Sent to Dead Wallets From Coinbase Uncovered",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-17T15:10:36.092860+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a075dd016ddceea1",
     "title": "Grayscale Opens DeFi And AI Crypto Funds To Investors With Just $2,500",
     "source": "NewsBTC (比特币与山寨)",
@@ -5166,5 +5156,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "df5437256faa9760",
+    "title": "星球午讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-26T06:07:13.930059+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
