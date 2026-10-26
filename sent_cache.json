@@ -1,15 +1,5 @@
 [
   {
-    "id": "d829bac63927845f",
-    "title": "Ripple Opens Wall Street Trading To Hyperliquid With New 24/7 Market Access",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-10-17T23:26:35.624669+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "969b0c8c79aabe94",
     "title": "Ethereum whale moves $57.88M as outflows deepen — Can ETH defend $2,400?",
     "source": "AMBCrypto (技术与链上)",
@@ -5164,6 +5154,16 @@
       "BTC",
       "ETH",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b9ceaec4ce9f9e33",
+    "title": "Dogecoin Bulls Zero In on $0.081 as Whale Buying and a Key Buy Signal Align",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-26T14:45:16.897982+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
