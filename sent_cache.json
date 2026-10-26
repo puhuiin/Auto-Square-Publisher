@@ -1,16 +1,5 @@
 [
   {
-    "id": "655d1df88e6bcf6f",
-    "title": "Pump.fun taps Hyperliquid for perpetual futures trading — Will it boost PUMP, HYPE?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-17T22:48:42.605231+00:00",
-    "tokens": [
-      "PUMP",
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9a23aa3307944eff",
     "title": "Cardano Price Tests Key Support as Whales Offload 110 Million ADA in Five Days",
     "source": "ZyCrypto (新币与空投)",
@@ -5165,5 +5154,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "3b434dd4b9171e1d",
+    "title": "$29 Billion More for XRP: Aviva Partners With Ripple for Milestone RWA Deal",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-26T14:04:10.553749+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
   }
 ]
