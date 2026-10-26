@@ -1,16 +1,5 @@
 [
   {
-    "id": "7810aefe653031a9",
-    "title": "某鲸鱼从CEX提取100万枚CAKE,价值216万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-18T04:25:12.863733+00:00",
-    "tokens": [
-      "BNB",
-      "CAKE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "61f978624abf280a",
     "title": "Zcash price prediction — Assessing the risk of a breakdown below $1,000 for ZEC",
     "source": "AMBCrypto (技术与链上)",
@@ -5167,6 +5156,16 @@
     "sent_at": "2026-10-26T18:04:18.988746+00:00",
     "tokens": [
       "SUI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "50595a4fc41226ca",
+    "title": "Elon Musk's DOGE Staffers Went From Jobless to Hacking Anthropic",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-26T18:24:09.533640+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
