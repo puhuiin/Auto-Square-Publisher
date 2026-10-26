@@ -18,15 +18,15 @@
   "strategy_guidance": "今日最紧迫的为今日截止的$AXIS Alpha交易竞赛，发帖优先以「活动冲刺」角度切入，可盘点竞赛实时交易动态或分享合规交易思路，带相关活动标签引导用户参与交易及评论互动拿对应奖励。同时可结合当日新上线的USDⓈ-Margined永续合约、预市交易及新增bStocks抵押物等快讯，联动#HalloweenPumpkinFrenzy等当期活动话题，追平台生态热度提升内容曝光。",
   "last_updated": "2026-10-26T13:24:29.187955Z",
   "_feed_health": {
+    "Bitcoinist (比特币向)": {
+      "last_fail": "2026-10-26T22:23:37.035265+00:00",
+      "fails": 3,
+      "parked_until": "2026-10-20T06:53:53.228743+00:00"
+    },
     "ZyCrypto (新币与空投)": {
       "fails": 1,
-      "reset_at": "2026-10-26T21:09:06.065585+00:00",
+      "reset_at": "2026-10-26T22:23:36.585079+00:00",
       "last_fail": "2026-10-26T19:43:34.011859+00:00"
-    },
-    "Bitcoinist (比特币向)": {
-      "fails": 3,
-      "last_fail": "2026-10-26T21:09:06.673039+00:00",
-      "parked_until": "2026-10-20T06:53:53.228743+00:00"
     }
   },
   "_fallback_image": {
@@ -37,7 +37,7 @@
   "_article_sent_date": "2026-10-26",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 373,
+  "_img_rot": 374,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

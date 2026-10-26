@@ -1,15 +1,5 @@
 [
   {
-    "id": "ad62154161fa5bf6",
-    "title": "Cardano Founder Developing New Programming Language",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-18T07:44:26.743445+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ba3aeaefac764409",
     "title": "Can $299M in app revenue, positive Q3 releases push SOL’s price higher?",
     "source": "AMBCrypto (技术与链上)",
@@ -5164,5 +5154,15 @@
       "XRP"
     ],
     "lang": "en"
+  },
+  {
+    "id": "4283c2be078e18f2",
+    "title": "XRP ETFs bring in $4.26M – Yet THIS whale signal raises questions",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-26T22:26:07.765873+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
