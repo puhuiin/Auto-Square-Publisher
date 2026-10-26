@@ -1,15 +1,5 @@
 [
   {
-    "id": "92ca45f059bda630",
-    "title": "Solana Cancels Major Shanghai Event As Attendance Surge Creates Problems",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-10-17T15:46:58.826175+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c711b9aa3fcab6f5",
     "title": "Crypto Scammer Loses $4.8 Million In Stolen Bitcoin To Another Group Of Thieves",
     "source": "Bitcoinist (比特币向)",
@@ -5164,6 +5154,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "44ae2f153409f6a3",
+    "title": "麦当劳 McRib 回归,加密圈高喊「绝不要做空」:一款汉堡如何成为比特币的牛市玄学?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-26T06:46:32.727237+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
