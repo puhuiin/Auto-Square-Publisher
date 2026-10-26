@@ -1,15 +1,5 @@
 [
   {
-    "id": "25809ddc7577000f",
-    "title": "Hyperliquid 调整 write priority fees 规则 测试网上线并增加 10 HYPE 门槛",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-18T09:24:39.017900+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "1862d3fc0c5e6f94",
     "title": "BTC, ETH, AI Stock Perpetuals Suddenly Dump as ‘Black Monday’ Fears Surge",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-10-26T23:28:56.255448+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9b22e76d9e672f6b",
+    "title": "Osmosis Ends OSMO Inflation, Shifting Staking Rewards to Revenue",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-26T23:48:54.997441+00:00",
+    "tokens": [
+      "OSMO"
     ],
     "lang": "zh-CN"
   }
