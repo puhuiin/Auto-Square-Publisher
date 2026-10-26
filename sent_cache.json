@@ -1,15 +1,5 @@
 [
   {
-    "id": "c711b9aa3fcab6f5",
-    "title": "Crypto Scammer Loses $4.8 Million In Stolen Bitcoin To Another Group Of Thieves",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-10-17T16:10:03.715615+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4918ba86f6769ecc",
     "title": "Bitcoin ETFs Lose $82 Million As BlackRock Leads Friday’s Withdrawals",
     "source": "NewsBTC (比特币与山寨)",
@@ -5166,5 +5156,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4cdbf772246f8b98",
+    "title": "XRP Takes Over New York City Subway Advertising",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-26T07:28:15.811482+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
