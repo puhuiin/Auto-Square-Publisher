@@ -18,20 +18,20 @@
   "strategy_guidance": "今日最紧迫的为今日截止的$AXIS Alpha交易竞赛，发帖优先以「活动冲刺」角度切入，可盘点竞赛实时交易动态或分享合规交易思路，带相关活动标签引导用户参与交易及评论互动拿对应奖励。同时可结合当日新上线的USDⓈ-Margined永续合约、预市交易及新增bStocks抵押物等快讯，联动#HalloweenPumpkinFrenzy等当期活动话题，追平台生态热度提升内容曝光。",
   "last_updated": "2026-10-26T13:24:29.187955Z",
   "_feed_health": {
-    "CryptoPotato (山寨币/Meme热点)": {
-      "fails": 1,
-      "reset_at": "2026-10-26T17:39:52.412851+00:00",
-      "last_fail": "2026-10-26T13:03:32.932400+00:00"
-    },
     "Bitcoinist (比特币向)": {
+      "last_fail": "2026-10-26T17:39:52.732113+00:00",
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "fails": 3,
-      "last_fail": "2026-10-26T17:39:52.732113+00:00"
+      "fails": 3
+    },
+    "CryptoPotato (山寨币/Meme热点)": {
+      "last_fail": "2026-10-26T13:03:32.932400+00:00",
+      "reset_at": "2026-10-26T17:39:52.412851+00:00",
+      "fails": 1
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-26",
