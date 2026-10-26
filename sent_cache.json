@@ -1,15 +1,5 @@
 [
   {
-    "id": "ca00803261035bfd",
-    "title": "马斯克:解决美债问题的唯一办法是依靠人工智能和机器人",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-17T20:27:14.580466+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1e98a43beb3d27f8",
     "title": "XRP Could Reach $2.16 as Peter Brandt Spots This Historically Proven Pattern",
     "source": "ZyCrypto (新币与空投)",
@@ -5164,6 +5154,17 @@
     "tokens": [
       "ZEC",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "52a193cc4c5a72bc",
+    "title": "QCP Capital:比特币跌破8万美元,关注美联储决议及科技巨头财报,关键支撑位7.8万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-26T11:44:48.020098+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
