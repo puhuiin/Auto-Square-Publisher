@@ -1,17 +1,5 @@
 [
   {
-    "id": "f1872a63aff9d3f4",
-    "title": "BitTorrent 品牌升级与 BTT 首期回购销毁同步落地,双核驱动开启 Web3 基建新纪元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-17T13:32:48.846933+00:00",
-    "tokens": [
-      "JST",
-      "BTTC",
-      "TRX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4ac7a8869c579b88",
     "title": "吴说每日精选加密新闻 + 吴说每周精选:新闻 Top10 与热门文章",
     "source": "吴说区块链 (中文深度)",
@@ -5166,6 +5154,16 @@
     "tokens": [
       "VIRTUAL",
       "UNI"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "2a3debea66c12a78",
+    "title": "Alea 研报:银行和清算巨头各建各的链,反成 Chainlink 的生意",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-26T04:44:53.039917+00:00",
+    "tokens": [
+      "LINK"
     ],
     "lang": "zh-TW"
   }

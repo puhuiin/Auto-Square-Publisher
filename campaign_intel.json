@@ -17,15 +17,15 @@
   "strategy_guidance": "当前Qafila 2026百万USDC奖励活动、Binance Pick预测竞赛、Spot Trading Tournament Season 8等无明确截止日期的活动热度较高，发帖时优先结合这些官方活动节点、新上线的PREDICTUSDT预市合约及新增bStocks交易对等热点输出内容，引导读者参与评论互动瓜分活动奖励，同时关联赛事、交易等话题提升内容曝光，合规提示用户以官方活动规则为准参与。",
   "last_updated": "2026-10-26T01:04:12.279941Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "parked_until": "2026-10-26T08:47:37.461383+00:00",
-      "last_fail": "2026-10-26T02:47:37.461383+00:00",
-      "fails": 3
-    },
     "Bitcoinist (比特币向)": {
+      "fails": 3,
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-26T04:08:06.509490+00:00",
-      "fails": 3
+      "last_fail": "2026-10-26T04:43:28.993551+00:00"
+    },
+    "CoinJournal (山寨异动)": {
+      "fails": 3,
+      "parked_until": "2026-10-26T08:47:37.461383+00:00",
+      "last_fail": "2026-10-26T02:47:37.461383+00:00"
     }
   },
   "_fallback_image": {
