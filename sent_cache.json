@@ -1,15 +1,5 @@
 [
   {
-    "id": "e048dc6c6d34547b",
-    "title": "Can 36 billion DOGE UTXO cluster avert price breakdown below $0.081?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-18T03:05:35.409617+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d56c8c9b1debafb9",
     "title": "Vitalik Buterin Reveals Why AI Could Push Bitcoin Miners Out",
     "source": "BeInCrypto (山寨与行情)",
@@ -5166,6 +5156,17 @@
     "sent_at": "2026-10-26T17:04:34.436739+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "30b46971f398b0a1",
+    "title": "Ripple Treasury SVP Unveils Always-On AI Treasury: What It Means for XRP Ecosystem",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-26T17:24:17.648664+00:00",
+    "tokens": [
+      "XRP",
+      "RLUSD"
     ],
     "lang": "en"
   }
