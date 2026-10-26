@@ -1,17 +1,5 @@
 [
   {
-    "id": "94f3885fd35618c2",
-    "title": "23亿美元未偿余额,Coinbase加密抵押贷款与银行存款上链同步推进",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-17T22:08:28.427674+00:00",
-    "tokens": [
-      "USDC",
-      "XRP",
-      "DOGE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2f9cbda0daffcba5",
     "title": "Almost 86 Trillion SHIB: Shiba Inu Eyes Key Support Threshold",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5167,5 +5155,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0401edb3f4f9634f",
+    "title": "PHP Hack: How Bitcoin Will Respond to the “Cyber Pandemic”",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-10-26T13:25:55.685751+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
