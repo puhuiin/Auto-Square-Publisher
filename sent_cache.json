@@ -1,15 +1,5 @@
 [
   {
-    "id": "741cbaa04e3dad69",
-    "title": "TRON moved $2.2 trillion in stablecoins while TRX supply grew for 108 straight days",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-17T21:06:44.479753+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "bb6604efdc944fc3",
     "title": "Strive Prices $630 Million SATS Preferred Offering at $90",
     "source": "The Defiant (DeFi 深度)",
@@ -5165,6 +5155,16 @@
     "sent_at": "2026-10-26T12:04:38.237195+00:00",
     "tokens": [
       "SATS"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "534d97a08bf9e7eb",
+    "title": "XRP Ledger Payment Volume Soars 2,633%: What's the Drive?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-26T12:24:49.684657+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
