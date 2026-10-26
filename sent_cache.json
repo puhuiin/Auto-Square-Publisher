@@ -1,15 +1,5 @@
 [
   {
-    "id": "a5d946cd2f8e4b07",
-    "title": "Can Worldcoin’s recovery catalysts help defend THESE key levels?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-17T19:07:06.796592+00:00",
-    "tokens": [
-      "WLD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "55c840c319fc1f94",
     "title": "Is Cardano Complete? Hoskinson Says 'Yes' but There Is One Thing Left",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5166,5 +5156,15 @@
       "SHIB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "df2df9f53aea79d8",
+    "title": "XRP 财库公司 Evernorth 与 Cantor 达成股权融资协议,拟筹集最多 8070 万美元",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-26T10:24:39.081039+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
