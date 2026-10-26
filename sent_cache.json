@@ -1,15 +1,5 @@
 [
   {
-    "id": "61f978624abf280a",
-    "title": "Zcash price prediction — Assessing the risk of a breakdown below $1,000 for ZEC",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-18T04:47:15.370755+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d7de7d60c979519c",
     "title": "Japan taps Chainlink’s CCIP to accelerate tokenization — Details",
     "source": "AMBCrypto (技术与链上)",
@@ -5166,6 +5156,16 @@
     "sent_at": "2026-10-26T18:24:09.533640+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "74980d1a7ba082f9",
+    "title": "XRP Ledger Gets Another Major Fund as Aviva Expands Tokenization Push",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-26T18:44:53.218573+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
