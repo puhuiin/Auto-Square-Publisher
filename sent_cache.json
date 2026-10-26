@@ -1,15 +1,5 @@
 [
   {
-    "id": "1418cde2b63ea0a0",
-    "title": "Shiba Inu flashes mixed signals, but which way will its price really go?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-17T17:24:12.823461+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "63fe1419ab9b32bb",
     "title": "Bitwise Holds Over Half a Billion XRP",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5164,6 +5154,16 @@
     "sent_at": "2026-10-26T08:07:36.887718+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e15e7369579f61ea",
+    "title": "Ripple Swell Preview: The Evidence To Watch When Finance And Developers Meet",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-26T08:27:48.645308+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
