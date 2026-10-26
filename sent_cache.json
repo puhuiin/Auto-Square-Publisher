@@ -1,15 +1,5 @@
 [
   {
-    "id": "4b3de81f8bf6d906",
-    "title": "Dogecoin Volume Drops 50% in Quiet Weekend Trade Amid Market Selloff",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-18T02:44:46.757061+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e048dc6c6d34547b",
     "title": "Can 36 billion DOGE UTXO cluster avert price breakdown below $0.081?",
     "source": "AMBCrypto (技术与链上)",
@@ -5166,6 +5156,16 @@
     "sent_at": "2026-10-26T16:45:06.809950+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1607a84587d7d71d",
+    "title": "富兰克林邓普顿两只比特币分红再投资ETF预计即将推出",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-26T17:04:34.436739+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
