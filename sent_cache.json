@@ -1,15 +1,5 @@
 [
   {
-    "id": "341371571bd878e0",
-    "title": "Solana Ad Lasted 10 Minutes in China. Critics Blamed CZ",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-17T16:48:53.003541+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1418cde2b63ea0a0",
     "title": "Shiba Inu flashes mixed signals, but which way will its price really go?",
     "source": "AMBCrypto (技术与链上)",
@@ -5164,6 +5154,16 @@
     "sent_at": "2026-10-26T07:47:41.852309+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "104fb9c98f64bf6b",
+    "title": "Hong Kong names Nasdaq-listed Solana Company a strategic enterprise",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-10-26T08:07:36.887718+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
