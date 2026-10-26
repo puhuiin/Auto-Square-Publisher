@@ -1,15 +1,5 @@
 [
   {
-    "id": "9a23aa3307944eff",
-    "title": "Cardano Price Tests Key Support as Whales Offload 110 Million ADA in Five Days",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-17T23:06:41.132532+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d829bac63927845f",
     "title": "Ripple Opens Wall Street Trading To Hyperliquid With New 24/7 Market Access",
     "source": "Bitcoinist (比特币向)",
@@ -5162,6 +5152,18 @@
     "sent_at": "2026-10-26T14:04:10.553749+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "01dee61e3e1ad826",
+    "title": "Ansem 看空 BTC、ETH 及大型股,预计先回调再续涨",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-26T14:24:50.013625+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "SOL"
     ],
     "lang": "en"
   }
