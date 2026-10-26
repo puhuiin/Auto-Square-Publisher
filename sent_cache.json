@@ -1,15 +1,5 @@
 [
   {
-    "id": "a80882049885a956",
-    "title": "Vitalik Buterin’s ‘Paranoid Mode’ puts Ethereum’s AI security push under institutional lens",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-18T02:24:43.171273+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "4b3de81f8bf6d906",
     "title": "Dogecoin Volume Drops 50% in Quiet Weekend Trade Amid Market Selloff",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5166,6 +5156,16 @@
       "QNT",
       "GRAM",
       "NIGHT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ebe2e05cedb15835",
+    "title": "Who Owns Dogecoin (DOGE)? Controversial Corporate Merger Splits Community",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-26T16:45:06.809950+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
