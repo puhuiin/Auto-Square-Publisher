@@ -1,15 +1,5 @@
 [
   {
-    "id": "ba3aeaefac764409",
-    "title": "Can $299M in app revenue, positive Q3 releases push SOL’s price higher?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-18T08:24:09.168676+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "020a49e479286339",
     "title": "Hyperliquid调整交易优先级机制,部分CoreWriter用户将被降级",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-10-26T22:26:07.765873+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0a40dc3ebedd18a9",
+    "title": "Tuttle提交多只细分杠杆ETF申请,包括2倍做多亚洲存储和Zcash ETF",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-26T23:08:44.291479+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
