@@ -1,17 +1,5 @@
 [
   {
-    "id": "b191575fdecaa3f7",
-    "title": "星球早讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-18T01:44:03.489741+00:00",
-    "tokens": [
-      "TRUMP",
-      "BTC",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e25d133fb4509d67",
     "title": "Solana官方宣布Yuga Labs旗下Mudwater卡牌游戏上线,包含120幅BAYC艺术作品",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5166,6 +5154,16 @@
     "sent_at": "2026-10-26T15:45:16.138928+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8e097540d480bf0d",
+    "title": "存款额创历史新高,Aave V4突破15亿美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-26T16:06:09.615299+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "en"
   }
