@@ -1,15 +1,5 @@
 [
   {
-    "id": "5d72f35fee04c768",
-    "title": "CME Futures launch news fails to spur UNI’s price rally — What happened?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-17T09:05:24.538568+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "4c20d9b2e5bd4df2",
     "title": "你为什么会被 Papertrade 反撸?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5167,5 +5157,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "fe6941959102facf",
+    "title": "Internet Computer tops Solana at 2323 TPS: Why is ICP still falling?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-26T02:10:27.141509+00:00",
+    "tokens": [
+      "ICP",
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
