@@ -1,15 +1,5 @@
 [
   {
-    "id": "bb6604efdc944fc3",
-    "title": "Strive Prices $630 Million SATS Preferred Offering at $90",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-17T21:27:49.831598+00:00",
-    "tokens": [
-      "SATS"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "cda7acae2dd9be35",
     "title": "DTCC Outlines 25-Security Tokenization Rollout on Canton and Besu",
     "source": "The Defiant (DeFi 深度)",
@@ -5167,5 +5157,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "66263a365652bfbe",
+    "title": "Quant Crypto Soars 18% as QNT Charges Toward $250",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-26T12:46:53.692478+00:00",
+    "tokens": [
+      "QNT"
+    ],
+    "lang": "zh-TW"
   }
 ]
