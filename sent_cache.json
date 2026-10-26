@@ -1,15 +1,5 @@
 [
   {
-    "id": "6f1da9aca24365e4",
-    "title": "价值1.1亿美元,某巨鲸1360枚BTC多单设置80500美元市价止损",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-18T01:24:09.216039+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b191575fdecaa3f7",
     "title": "星球早讯",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5166,6 +5156,16 @@
       "GLM",
       "ETH",
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "aa553c4a28480fd1",
+    "title": "Solana RWA holders reach 1.73M, adding 140,000 in one week",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-26T15:45:16.138928+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
