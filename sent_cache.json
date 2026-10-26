@@ -1,15 +1,5 @@
 [
   {
-    "id": "2f9cbda0daffcba5",
-    "title": "Almost 86 Trillion SHIB: Shiba Inu Eyes Key Support Threshold",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-17T22:29:37.195343+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "655d1df88e6bcf6f",
     "title": "Pump.fun taps Hyperliquid for perpetual futures trading — Will it boost PUMP, HYPE?",
     "source": "AMBCrypto (技术与链上)",
@@ -5165,5 +5155,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "0fdd1016ddf44823",
+    "title": "Are XRP Holders Quietly Accumulating Before the Fed? The Data Is Mixed",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-26T13:45:18.514976+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
