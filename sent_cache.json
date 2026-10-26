@@ -1,15 +1,5 @@
 [
   {
-    "id": "b44b108f6d32e762",
-    "title": "盗取资金持续流入ZEC,涉及Cryptobills Ledger事件及价值1200万美元的Triple-A黑客攻击",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-17T12:44:25.898381+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d5b6d3c17dfc2de3",
     "title": "JST 第五次回购销毁圆满收官:本次销毁超 1.7 亿枚、价值约 2353 万美元,回购机制即将全面升级",
     "source": "深潮TechFlow (中文/简体)",
@@ -5166,6 +5156,16 @@
       "BNB",
       "SOL",
       "APT"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "3d57b2ae6c38357f",
+    "title": "富兰克林邓普顿将推出股息再投资比特币 ETF,目标配置 5% BTC",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-26T03:47:18.160303+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
