@@ -4,24 +4,23 @@
     "#BinanceSquare",
     "#TradingTournament",
     "#bStocks",
-    "#Futures"
+    "#PredictContest"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$XRP",
     "$USDC",
+    "$FF",
     "$PREDICTUSDT",
-    "$BRKBB",
-    "$AAPLB",
     "$RLUSD"
   ],
-  "strategy_guidance": "今日（2026-10-25）为PREDICTUSDT合约上线首日，可优先围绕该新合约规则、玩法输出科普内容，联动当日同步上线的5款bStocks交易对公告，结合仍在进行的Spot Trading Tournament Season 8、RLUSD持仓分XRP、Qafila 2026等无明确截止日的活动，引导用户参与评论互动、分享交易思路参与Write to Earn活动，针对赛事类内容可做进度复盘、冲刺攻略类内容追活动热度。",
-  "last_updated": "2026-10-25T23:04:07.948790Z",
+  "strategy_guidance": "当前Qafila 2026百万USDC奖励活动、Binance Pick预测竞赛、Spot Trading Tournament Season 8等无明确截止日期的活动热度较高，发帖时优先结合这些官方活动节点、新上线的PREDICTUSDT预市合约及新增bStocks交易对等热点输出内容，引导读者参与评论互动瓜分活动奖励，同时关联赛事、交易等话题提升内容曝光，合规提示用户以官方活动规则为准参与。",
+  "last_updated": "2026-10-26T01:04:12.279941Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "last_fail": "2026-10-26T00:26:05.569841+00:00",
       "fails": 3,
-      "last_fail": "2026-10-26T00:26:05.569841+00:00"
+      "parked_until": "2026-10-20T06:53:53.228743+00:00"
     }
   },
   "_fallback_image": {
