@@ -1,15 +1,5 @@
 [
   {
-    "id": "1611a778a9633cbc",
-    "title": "Papertrade永续合约或将上线,Paragon以约4.5万美元拍下PAPER代码",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-18T04:05:03.341969+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7810aefe653031a9",
     "title": "某鲸鱼从CEX提取100万枚CAKE,价值216万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5167,6 +5157,16 @@
     "sent_at": "2026-10-26T17:40:59.496986+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b9f035a682ae8ed6",
+    "title": "SUI adds Cetus AI tools and Samsung access – Why is capital leaving?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-26T18:04:18.988746+00:00",
+    "tokens": [
+      "SUI"
     ],
     "lang": "en"
   }
