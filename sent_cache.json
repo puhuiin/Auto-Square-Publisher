@@ -1,15 +1,5 @@
 [
   {
-    "id": "4918ba86f6769ecc",
-    "title": "Bitcoin ETFs Lose $82 Million As BlackRock Leads Friday’s Withdrawals",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-17T16:30:05.193408+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "341371571bd878e0",
     "title": "Solana Ad Lasted 10 Minutes in China. Critics Blamed CZ",
     "source": "BeInCrypto (山寨与行情)",
@@ -5166,5 +5156,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "b78738b31db7cbd5",
+    "title": "Dogecoin 基金会终止与 House of Doge 独家授权协议,后者须付 40 万美元",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-26T07:47:41.852309+00:00",
+    "tokens": [
+      "DOGE"
+    ],
+    "lang": "zh-CN"
   }
 ]
