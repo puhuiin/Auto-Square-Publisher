@@ -1,15 +1,5 @@
 [
   {
-    "id": "d3f74f1db58e09b8",
-    "title": "Arbitrum Courts European Investors Managing €800 Billion With New Revenue Pitch",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-17T18:47:02.714117+00:00",
-    "tokens": [
-      "ARB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a5d946cd2f8e4b07",
     "title": "Can Worldcoin’s recovery catalysts help defend THESE key levels?",
     "source": "AMBCrypto (技术与链上)",
@@ -5166,5 +5156,15 @@
       "JST"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "25777a52ed4c2eb0",
+    "title": "Shiba Inu (SHIB) to Hit 2026 Low? Price Is Too Close to It",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-26T10:04:22.016158+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-CN"
   }
 ]
