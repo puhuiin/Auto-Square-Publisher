@@ -1,15 +1,5 @@
 [
   {
-    "id": "3ab4135c6a82a347",
-    "title": "Ripple CTO Emeritus Exposes Suspected Wallet Scam Targeting Recovery Phrases",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-17T18:27:45.854208+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d3f74f1db58e09b8",
     "title": "Arbitrum Courts European Investors Managing €800 Billion With New Revenue Pitch",
     "source": "NewsBTC (比特币与山寨)",
@@ -5164,6 +5154,16 @@
     "sent_at": "2026-10-26T09:07:16.921954+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b6fe2057eeb48e8d",
+    "title": "JUST 发布 JST 2026 Q3 及 10 月重点进展报告 ,回购机制转向以持续收入为基础",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-26T09:44:59.883512+00:00",
+    "tokens": [
+      "JST"
     ],
     "lang": "zh-TW"
   }
