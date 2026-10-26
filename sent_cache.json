@@ -1,15 +1,5 @@
 [
   {
-    "id": "55c840c319fc1f94",
-    "title": "Is Cardano Complete? Hoskinson Says 'Yes' but There Is One Thing Left",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-17T19:26:52.128862+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "21ff45b4aec6f1df",
     "title": "Bitcoin ETFs log $228M in weekly sales as monthly outflows near $618M",
     "source": "Crypto Briefing (深度与研报)",
@@ -5166,5 +5156,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f02cb74435787f67",
+    "title": "2,633% XRP Ledger Surge: Enormous Recovery Recorded",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-26T10:44:47.081669+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
