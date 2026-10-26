@@ -1,15 +1,5 @@
 [
   {
-    "id": "63fe1419ab9b32bb",
-    "title": "Bitwise Holds Over Half a Billion XRP",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-17T17:44:12.475709+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1d82f395175938ab",
     "title": "Analyzing STRK’s 15% fall, $2M in long liquidations — What’s next?",
     "source": "AMBCrypto (技术与链上)",
@@ -5164,6 +5154,16 @@
     "sent_at": "2026-10-26T08:27:48.645308+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "553970da62a246b5",
+    "title": "Alpaca 阿布扎比实体获 ADGM 原则性批准,拟提供虚拟资产经纪及托管服务",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-26T08:47:23.641590+00:00",
+    "tokens": [
+      "ME"
     ],
     "lang": "zh-CN"
   }
