@@ -1,15 +1,5 @@
 [
   {
-    "id": "5f7df6e85a7cd0ca",
-    "title": "STRK最大多头浮亏101.9万美元,另一巨鲸强平2136万枚STRK并亏损20.7万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-17T14:29:40.450594+00:00",
-    "tokens": [
-      "STRK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0d8dea5b9f5ec286",
     "title": "涉损约80.76万美元,UNCX披露Smart Token Vesting V2跨链攻击事件",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5166,5 +5156,15 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f517415fa315b4c1",
+    "title": "Reflect Makes Branded Token Issuance Easier While Leaving The Collateral In Charge",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-26T05:24:04.900364+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
