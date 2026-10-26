@@ -1,16 +1,5 @@
 [
   {
-    "id": "a075dd016ddceea1",
-    "title": "Grayscale Opens DeFi And AI Crypto Funds To Investors With Just $2,500",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-17T15:29:39.460336+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "92ca45f059bda630",
     "title": "Solana Cancels Major Shanghai Event As Attendance Surge Creates Problems",
     "source": "Bitcoinist (比特币向)",
@@ -5166,5 +5155,16 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "682ed2c87beb4288",
+    "title": "錢生錢的遊戲,請用三個問題問清楚你買的是什麼",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-26T06:28:11.420857+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
