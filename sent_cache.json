@@ -1,15 +1,5 @@
 [
   {
-    "id": "020a49e479286339",
-    "title": "Hyperliquid调整交易优先级机制,部分CoreWriter用户将被降级",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-18T09:04:41.277954+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "25809ddc7577000f",
     "title": "Hyperliquid 调整 write priority fees 规则 测试网上线并增加 10 HYPE 门槛",
     "source": "吴说区块链 (中文深度)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-10-26T23:08:44.291479+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "10566af0c2213172",
+    "title": "Cardano to $4 This Year? Popular Analyst Says Parabolic ADA Breakout Is Coming Despite Frustrating Price Lull",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-26T23:28:56.255448+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "zh-CN"
   }
