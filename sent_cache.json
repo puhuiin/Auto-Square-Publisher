@@ -1,15 +1,5 @@
 [
   {
-    "id": "21ff45b4aec6f1df",
-    "title": "Bitcoin ETFs log $228M in weekly sales as monthly outflows near $618M",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-17T19:47:10.920654+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "dd1c4e0b183ac6ab",
     "title": "USDD向 Gate DEX Bonus 活动追加激励 总奖池提升至 154000 USDD",
     "source": "深潮TechFlow (中文/简体)",
@@ -5166,5 +5156,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4083915ff851f6c2",
+    "title": "Tokenized equities on Solana hit 1.5M holders, adoption grows",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-26T11:04:40.481725+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
