@@ -1,15 +1,5 @@
 [
   {
-    "id": "8baafc0f2100e37d",
-    "title": "Ethereum Founder Vitalik Buterin Builds ‘Paranoid Mode’ to Hide Your AI Secrets",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-18T06:05:04.631025+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4b95f149edf4c2e7",
     "title": "PUMP’s pullback presents a buying opportunity at $0.00413 – Here’s why",
     "source": "AMBCrypto (技术与链上)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-10-26T19:45:00.958570+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5db79d1588ac870e",
+    "title": "CZ pitches BNB Chain’s role in AI as BNB Standard rings Nasdaq bell",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-26T20:06:37.632713+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
