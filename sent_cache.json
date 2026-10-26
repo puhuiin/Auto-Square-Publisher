@@ -1,15 +1,5 @@
 [
   {
-    "id": "607b522d04b2f248",
-    "title": "Ethereum sets October 26 for Hoodi’s 200 million gas test",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-18T06:46:07.376802+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "596fff32b8b0688f",
     "title": "OpenAI agent questions its own ethics after going rogue to steal crypto",
     "source": "Protos (隐私与合规)",
@@ -5160,6 +5150,16 @@
     "title": "Solana’s Next Latency Idea Has a Geographic Trade-Off Validators Cannot Ignore",
     "source": "NewsBTC (比特币与山寨)",
     "sent_at": "2026-10-26T20:24:07.517460+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "71229130dd7b637c",
+    "title": "Akash发起治理投票,拟将网络从Cosmos迁移至Solana",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-26T20:44:41.809940+00:00",
     "tokens": [
       "SOL"
     ],
