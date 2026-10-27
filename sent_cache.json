@@ -1,16 +1,5 @@
 [
   {
-    "id": "a376f9fd833cad55",
-    "title": "10x Research:山寨币反弹势头消退,上周追踪代币平均下跌14%,市场资金持续流出",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-19T01:11:03.800992+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "cf8a28a3aa50154d",
     "title": "加密早报:英伟达辟谣 RTX 5090 停产,OpenCode 遭大规模模型蒸馏攻击",
     "source": "深潮TechFlow (中文/简体)",
@@ -5172,6 +5161,16 @@
     "tokens": [
       "TRX",
       "SUN"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "05a8613ceb76a027",
+    "title": "加密赌场 Gamdom 遭勒索组织 Whitearmor 索要 1500 万美元比特币赎金",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-27T15:44:50.402114+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }

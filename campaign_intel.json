@@ -17,36 +17,36 @@
   "strategy_guidance": "优先追踪“万圣节南瓜狂欢”与“第八季现货交易赛”的实时动态，通过分享实战分析引导读者参与互动以获取奖励。结合新上线的 TradFi 永续合约与 bStocks 资产，利用 Binance Pick 预测功能进行热点解读，在合规前提下提升内容在 Write to Earn 机制下的曝光度与交易返佣潜力。",
   "last_updated": "2026-10-27T13:45:01.855956Z",
   "_feed_health": {
+    "深潮TechFlow (中文/繁体)": {
+      "fails": 1,
+      "last_fail": "2026-10-27T14:03:51.002876+00:00",
+      "reset_at": "2026-10-27T15:43:45.117217+00:00"
+    },
     "Bitcoinist (比特币向)": {
+      "fails": 3,
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-27T15:23:32.186415+00:00",
-      "fails": 3
+      "last_fail": "2026-10-27T15:43:42.261139+00:00"
     },
     "深潮TechFlow (中文/简体)": {
+      "fails": 1,
       "last_fail": "2026-10-27T14:03:43.270167+00:00",
-      "reset_at": "2026-10-27T15:23:33.428434+00:00",
-      "fails": 1
+      "reset_at": "2026-10-27T15:43:43.074154+00:00"
     },
     "ZyCrypto (新币与空投)": {
+      "fails": 1,
       "last_fail": "2026-10-27T15:03:33.945353+00:00",
-      "reset_at": "2026-10-27T15:23:31.549405+00:00",
-      "fails": 1
-    },
-    "深潮TechFlow (中文/繁体)": {
-      "last_fail": "2026-10-27T14:03:51.002876+00:00",
-      "reset_at": "2026-10-27T15:23:33.386930+00:00",
-      "fails": 1
+      "reset_at": "2026-10-27T15:43:41.606795+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-27",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 394,
+  "_img_rot": 395,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
