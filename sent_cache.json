@@ -1,15 +1,5 @@
 [
   {
-    "id": "f6dc65cccec7f8e7",
-    "title": "Galaxy 研报:Ledger 钱包在经销商环节被植入窃密芯片,比特币“最稳”的一角本季接连失守",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-19T05:25:09.934210+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e4a1fafab71f983e",
     "title": "韩国代币化资产和稳定币市场展望:2030 年规模或达 2530 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5172,6 +5162,16 @@
     "tokens": [
       "XRP",
       "RLUSD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1d5a5647a4740bd8",
+    "title": "Charles Hoskinson’s Midnight to Hit 50,000 Transactions as Crypto Privacy Race Heats Up",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-27T19:24:32.138165+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
