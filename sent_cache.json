@@ -1,15 +1,5 @@
 [
   {
-    "id": "610596ec2e0599a9",
-    "title": "Four Days Left: XRP Ledger Key Fix Upgrade Eyes October Activation",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-18T23:29:47.049835+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "058a3463da5f0e28",
     "title": "Ripple Prime上线RWA永续掉期,定价参考Hyperliquid永续合约",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5172,6 +5162,16 @@
       "RLUSD",
       "USDC",
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0398ec0d000deb8f",
+    "title": "OpenAI ChatGPT AI Predicts a Monumental Event for BTC by 2027",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-27T14:44:43.718286+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
