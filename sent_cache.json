@@ -1,15 +1,5 @@
 [
   {
-    "id": "cf8a28a3aa50154d",
-    "title": "加密早报:英伟达辟谣 RTX 5090 停产,OpenCode 遭大规模模型蒸馏攻击",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-19T01:36:32.301660+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8f00d33e342247f0",
     "title": "Strive CEO:稀缺资产长期跑赢货币超发,比特币应为“数字黄金”",
     "source": "深潮TechFlow (中文/简体)",
@@ -5171,6 +5161,16 @@
     "sent_at": "2026-10-27T15:44:50.402114+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4878755fe98c4f35",
+    "title": "Google Gemini AI Predicts a Pudgy Penguins (PENGU) Takeover",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-27T16:03:58.442615+00:00",
+    "tokens": [
+      "PENGU"
     ],
     "lang": "en"
   }
