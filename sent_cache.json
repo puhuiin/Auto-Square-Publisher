@@ -1,15 +1,5 @@
 [
   {
-    "id": "4132e27ee4846a81",
-    "title": "Filecoin’s bearish week meets a massive upgrade on October 19 – Can FIL hold $1?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-18T20:44:55.799981+00:00",
-    "tokens": [
-      "FIL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f737d3b8740becc4",
     "title": "Grok AI Predicts a Modest Gain for XRP USD by 2027: Is Bullish Optimism Over?",
     "source": "CryptoNews (全球快讯)",
@@ -5165,6 +5155,17 @@
     "tokens": [
       "PUMP",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b46d69ea836e79cd",
+    "title": "Wintermute:BTC 连续第三周下跌,FOMC 与 PCE 将决定短期方向",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-27T12:04:15.045368+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
