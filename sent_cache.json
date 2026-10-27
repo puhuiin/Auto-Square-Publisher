@@ -1,15 +1,5 @@
 [
   {
-    "id": "bb27b735b60d391a",
-    "title": "Cardano Is One Upgrade Away From Being Fully Complete, Hoskinson Declares — Will It Be Enough To Ignite ADA’s Price?",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-18T17:44:12.754990+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a2d2bc3a109c9072",
     "title": "Vitalik推出AI偏执模式,隐藏身份、请求来源与支付痕迹",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5163,6 +5153,16 @@
     "sent_at": "2026-10-27T08:24:24.383346+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3df873c97f18bb0f",
+    "title": "美国中期选举成「金钱战」:50 大金主豪掷 27.7 亿美元,马斯克领跑、加密巨头集体入局",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-27T08:47:51.745986+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
