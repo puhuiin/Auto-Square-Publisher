@@ -1,15 +1,5 @@
 [
   {
-    "id": "2a07ae362c20be31",
-    "title": "Shiba Inu (SHIB) Spot Flows Skyrocket 215% in 8 Hours: 3 Key Price Signals to Watch",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-18T12:54:05.480101+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f21cff0ccb868781",
     "title": "比特币年末重返10万美元?市场观点出现分歧",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-10-27T03:47:54.417381+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "7542e13472caf574",
+    "title": "Quant rallies 16% on renewed RWA interest – Can QNT’s $200 support hold?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-27T04:07:26.506089+00:00",
+    "tokens": [
+      "QNT"
     ],
     "lang": "zh-TW"
   }
