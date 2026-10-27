@@ -1,15 +1,5 @@
 [
   {
-    "id": "2b364ff1b2f686f5",
-    "title": "价值9787万美元比特币多单面临清算,Hyperliquid杠杆达40倍",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-18T20:04:11.353237+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ae172bb562dce89c",
     "title": "Aptos Burns 174,000 APT In A Month, Yet Token Supply Keeps Rising",
     "source": "Bitcoinist (比特币向)",
@@ -5164,5 +5154,17 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "03f64e2918d8778e",
+    "title": "慢雾:Udesk 客服脚本被植入恶意代码,可窃取用户会话数据并替换充值地址",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-27T11:08:08.965842+00:00",
+    "tokens": [
+      "BTC",
+      "LTC",
+      "DOGE"
+    ],
+    "lang": "zh-TW"
   }
 ]
