@@ -89,7 +89,40 @@ CAMPAIGN_MENTION_RE = re.compile(
     #   ⚠️ 精度取舍同 R774/R805：这是**趋势度量不是门**；「交易活动」可能出现在
     #   「交易活动频繁」这类泛化语境里（误报面已知、可接受）。不收裸「活动」——
     #   太泛（「市场活动」「链上活动」都会命中）。
-    r"|万圣节|萬聖節|halloween|交易活动|交易活動",
+    r"|万圣节|萬聖節|halloween|交易活动|交易活動"
+    # ★★ R842：**第 9 次补漏**——当期活动名是「**$AXIS Alpha 交易竞赛**」（Binance
+    #   Alpha 系列的代币交易竞赛），模型在正文里写成 `AXIS Alpha comp/contest/
+    #   competition/竞赛`，而旧表只认 `trading (tournament|championship|competition|
+    #   event|race)`——「**Alpha + 活动名词**」这一层完全没覆盖（`trading comp`
+    #   也漏，`comp` 不是 `competition`）。
+    #   ★ 证据①（**实测词频**，AXIS 情报窗口 10-26T13:20~10-27T01:40 的 29 篇
+    #     我们自己的已发布帖）：`AXIS Alpha`（专名）**19/29** ｜ `Alpha…contest` 7 ｜
+    #     中文`竞赛` 5 ｜ `Alpha…comp` 3 ｜ `Alpha…competition` 2 ｜
+    #     裸 `tournament` / 裸 `carnival` **0 篇**（⇒ 不为没观测到的形态加词）。
+    #   ★ 证据②（**来源**已查清，不是模型编的）：intel 历史逐版扫描
+    #     （`/commits?path=campaign_intel.json` + 逐版取 blob），只有两版出现过
+    #     AXIS，其中 10-26T13:45 那版 strategy_guidance 原文是
+    #     「今日最紧迫的为今日截止的 **$AXIS Alpha交易竞赛**」，同版
+    #     `incentivized_tokens` 含 `$AXIS`——而 AXIS 帖的时间跨
+    #     （10-26T13:25 → 10-27T00:31）与之**完全对齐**。
+    #   ⇒ 后果：旧表把 **4 篇真提了活动的帖**判成「真漏」，把 10-26 夜窗真漏率
+    #     从真值 **8/22(36%)** 虚高成 **12/22(55%)**，直接触发判定① 的相对红线
+    #     （虚报 +22pp）——**差点按一个假数回滚**。
+    #   ⚠️ 精度取舍（三条都是实测反例换来的）：
+    #     ① **不收裸 `alpha`**——alpha=超额收益，是行情高频词；必须与活动名词紧邻。
+    #     ② **不收裸 `comp`**（`comp` 从不在表里，本轮也不加）。
+    #     ③ ⚠️⚠️ **更正一处随口断言（本轮自己先写错、被测试咬住）**：R842 初稿注释写
+    #        「不收裸 `contest/competition`」——**是错的**：`contest|tournament` 从
+    #        R774 起就在表里（裸词，见上文第一段），`competition` 只在 `trading `
+    #        后才算。后果是一条**既有**误报面：`#QNT TradingContest` 这类**畸形
+    #        标签**（标签内混空格），`strip_tags` 只吃掉 `#QNT`、把 `TradingContest`
+    #        留在正文 ⇒ 命中裸 `contest` ⇒ **保底标签替正文背了提及率**（R291 同族）。
+    #        这不是 R842 引入的，修它要动 `strip_tags`（＝动口径），须单开一轮并先
+    #        写预注册判据；本轮只在测试里**锁住现状**（见
+    #        `TestR842AlphaVocab::test_known_pre_existing_false_positive_face`）。
+    r"|axis\s+alpha"
+    r"|alpha\s+(?:trading\s+)?(?:comp|contest|competition|tournament|race|event|carnival)"
+    r"|alpha\s*[（(]?\s*(?:交易)?(?:竞赛|競賽|活动|活動)",
     re.IGNORECASE)
 
 # 标签形态：注入的 #TradingTournament / #Write2Earn 含 contest/tournament 字样，

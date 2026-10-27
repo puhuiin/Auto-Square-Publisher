@@ -23961,6 +23961,105 @@ class TestR841HalloweenVocab(unittest.TestCase):
             self.assertTrue(cv.mention_in_text(line + " 活动进行中"), "漏检: %s" % line)
 
 
+class TestR842AlphaVocab(unittest.TestCase):
+    """★★ R842：**第 9 次词表补漏**——当期活动名是「$AXIS Alpha 交易竞赛」，
+    而旧表只认 `trading (tournament|championship|competition|event|race)`，
+    「**Alpha + 活动名词**」这一层没覆盖（`Alpha trading comp` 也漏，`comp` ≠ `competition`）。
+
+    ★ 为什么这轮**不是**普通的"再加一个专名"：
+      · 前 8 次补的多是**固定专名**（KGST/XPIN/XDP…），加一次能管一期；
+      · 这次漏的是**产品族形态**——Binance Alpha 系列的代币交易竞赛，正文写法是
+        `<标的> Alpha <活动名词>`，`Alpha` 前面的标的每期都换 ⇒ 只加 `AXIS`
+        下期换 `ON Alpha` 又漏（**必须收"Alpha + 活动名词"这个结构**）。
+    ★ 证据①（**实测词频**，AXIS 情报窗口 10-26T13:20~10-27T01:40 的 29 篇已发布帖）：
+        `AXIS Alpha`（专名）**19/29** ｜ `Alpha…contest` 7 ｜ 中文`竞赛` 5 ｜
+        `Alpha…comp` 3 ｜ `Alpha…competition` 2 ｜ 裸 `tournament`/裸 `carnival` **0**
+        ⇒ 不为**没观测到**的形态加词。
+    ★ 证据②（**来源查清**）：intel 历史逐版扫描，只有两版出现过 AXIS，
+        10-26T13:45 那版 guidance 原文＝「今日最紧迫的为今日截止的 **$AXIS Alpha交易竞赛**」，
+        同版 `incentivized_tokens` 含 `$AXIS`，而 AXIS 帖时间跨与之**完全对齐**
+        ⇒ 活动名来自情报源，**不是模型编的**。
+    ★ 后果（这组测试真正要防的事）：旧表把 **4 篇真提了活动的帖**判成「真漏」，
+        使 10-26 夜窗真漏率 **8/22(36%)** 被虚报成 **12/22(55%)**，触发判定① 的相对红线
+        ⇒ **差一点按一个假数回滚**。测试里锁住那 4 篇的**原句**，防止再被误判。
+    """
+
+    @staticmethod
+    def _vocab():
+        import importlib.util
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "campaign_vocab.py")
+        spec = importlib.util.spec_from_file_location("campaign_vocab_r842", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_the_four_false_misses_are_recognized(self):
+        """★ 这 4 句是**生产实录**（10-26 夜窗被旧表判成「真漏」的那 4 篇），原句照抄。"""
+        cv = self._vocab()
+        for line in (
+                "The AXIS Alpha trading comp is live today, go prove your thesis "
+                "before the deadline.",
+                "The AXIS Alpha comp ends today, so prove it there instead of yoloing spot.",
+                "The AXIS Alpha competition closes today, so if you want in, use the "
+                "official entry.",
+                "the AXIS Alpha trading comp ending today is where you prove it. "
+                "Trade and comment rewards are live."):
+            self.assertTrue(cv.mention_in_text(line), "漏检（就是被虚报成真漏的那类）: %s" % line)
+
+    def test_chinese_alpha_form_recognized(self):
+        cv = self._vocab()
+        for line in ("今天 AXIS Alpha 競賽截止，想練手的走官方入口",
+                     "AXIS Alpha交易竞赛今天截止",
+                     "去 AXIS Alpha 交易競賽练手，今天截止"):
+            self.assertTrue(cv.mention_in_text(line), "漏检: %s" % line)
+
+    def test_generalizes_to_next_token_not_just_axis(self):
+        """★ 本组的**主目的**：收的是「Alpha + 活动名词」**结构**，下期换标的别再漏。
+
+        （前 8 次都是加固定专名，一期一补；这次必须让它对 `ON Alpha`… 同样有效，
+          否则下期又是一次 R842 同型事故。）
+        """
+        cv = self._vocab()
+        for line in ("ON Alpha trading contest ends today",
+                     "$FF Alpha trading competition is live",
+                     "去 ON Alpha 竞赛练手"):
+            self.assertTrue(cv.mention_in_text(line), "结构没泛化到: %s" % line)
+
+    def test_bare_alpha_not_matched(self):
+        """★ 精度：**不收裸 `alpha`**——alpha=超额收益，是行情高频词。"""
+        cv = self._vocab()
+        for line in ("This strategy still generates alpha in choppy markets.",
+                     "The alpha decayed after the upgrade went live.",
+                     "没有 alpha 的行情，别硬做。"):
+            self.assertFalse(cv.mention_in_text(line), "误报: %s" % line)
+
+    def test_bare_contest_words_not_matched(self):
+        """★ 精度：R842 **没有**把裸 `competition` / 裸 `comp` 放开。
+
+        反例锁死：`competition` 只在 `trading ` / `Alpha ` 紧邻时才算；裸 `comp` 从不算。
+        """
+        cv = self._vocab()
+        for line in ("The competition for blockspace is getting fierce.",
+                     "market comps are compressing"):
+            self.assertFalse(cv.mention_in_text(line), "误报: %s" % line)
+
+    def test_known_pre_existing_false_positive_face(self):
+        """⚠️ 如实记录一条**既有**（不是本轮的）误报面，别把它当成 R842 的功劳或罪过。
+
+        `#QNT TradingContest` 是**畸形活动标签**（标签内混了空格）：`strip_tags`
+        只吃掉 `#QNT`、把 `TradingContest` 留在正文，于是命中**裸 `contest`**
+        （该裸词是 R774 加进去的，比 R842 早）。后果是**保底标签替正文背了提及率**
+        （R291 同族：注入标签让提及率虚高）。
+        本组只**锁住现状**（避免以后误判成"新回归"），修它要单开一轮
+        ——`strip_tags` 是判据语义的一部分，动它等于动口径，必须先写预注册判据。
+        """
+        cv = self._vocab()
+        self.assertTrue(cv.mention_in_text("#Write2Earn #QNT TradingContest"))
+        # 但把标签整体去掉后（只剩真正文）不得命中——证明这是**标签**带来的
+        self.assertFalse(cv.mention_in_text("市场没什么说的，先观望。"))
+
+
 class TestR840RevertedEnHatch(unittest.TestCase):
     """★★ R840：英文分支的逃生阀**已回滚到 R775/R778 原文**（R830 的收紧「未被证实」）。
 
