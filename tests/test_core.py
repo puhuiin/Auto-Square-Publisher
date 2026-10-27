@@ -23910,6 +23910,57 @@ class TestR830EntryNamesAndEnHatch(unittest.TestCase):
         with open(path, encoding="utf-8") as fh:
             return fh.read()
 
+class TestR841HalloweenVocab(unittest.TestCase):
+    """★★ R841：**第 8 次词表补漏**——当期活动名换成了「万圣节南瓜狂欢 / Halloween」，
+    而词表里既没有「万圣节/萬聖節/Halloween」，也没有中文分支实际在用的「交易活动」。
+
+    ★ 证据（用户 10-27 粘贴的**已发布**正文，逐条当探针）：**7/19 漏**——
+        「想去参加币安万圣节交易活动」「萬聖節活動剩不到一週」「万圣节活动快收官」
+        「Halloween trading carnival lets you practice」「顺便去万圣节交易活动练手」
+      而「万圣节交易**赛**」**命中**（旧表有「交易赛」）⇒ 漏的正是**新活动名 + 新措辞**。
+    ★ 因此「正文活动提及率」对**当期中文帖**会被系统性低估（与 R828 的 `trading
+      challenge` 同型，只是这次换到中文侧、而且是换期导致的）。
+    ★ 精度取舍：只看「万圣节/萬聖節/halloween」与「交易活动/交易活動」**窄形态**；
+      **不收裸「活动」**（「市场活动」「链上活动」「社区活动」都会误中）。
+      「交易活动」的泛化语境（如「交易活动频繁」）是已知的误报面——该字段是**趋势度量
+      不是门**（R774/R805 同口径），可以接受。
+    """
+
+    @staticmethod
+    def _vocab():
+        import importlib.util
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "campaign_vocab.py")
+        spec = importlib.util.spec_from_file_location("campaign_vocab_r841", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_production_phrases_are_recognized(self):
+        cv = self._vocab()
+        for line in ("想去参加币安万圣节交易活动",
+                     "萬聖節活動剩不到一週",
+                     "万圣节活动快收官",
+                     "Halloween trading carnival lets you practice",
+                     "顺便去万圣节交易活动练手",
+                     "万圣节交易赛剩不到一周"):
+            self.assertTrue(cv.mention_in_text(line), "漏检: %s" % line)
+
+    def test_bare_activity_word_not_matched(self):
+        """★ 精度：裸「活动」不得命中（太泛）——只收「交易活动」这种带限定词的形态。"""
+        cv = self._vocab()
+        for line in ("市场活动频繁，资金观望",
+                     "链上活动冷清，没有新增地址",
+                     "社区活动结束后价格回落"):
+            self.assertFalse(cv.mention_in_text(line), "误报: %s" % line)
+
+    def test_language_variants_all_covered(self):
+        """简/繁/英三种写法必须都在——少一个就等于漏一类帖（R802 的语种同型）。"""
+        cv = self._vocab()
+        for line in ("万圣节", "萬聖節", "Halloween", "HALLOWEEN"):
+            self.assertTrue(cv.mention_in_text(line + " 活动进行中"), "漏检: %s" % line)
+
+
 class TestR840RevertedEnHatch(unittest.TestCase):
     """★★ R840：英文分支的逃生阀**已回滚到 R775/R778 原文**（R830 的收紧「未被证实」）。
 
