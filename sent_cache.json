@@ -1,15 +1,5 @@
 [
   {
-    "id": "b47f36fc6f5b60f8",
-    "title": "SUI has rewards, buybacks, and a new CEO – What’s still missing is...",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-19T03:10:43.769831+00:00",
-    "tokens": [
-      "SUI"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9810394338aa36b3",
     "title": "Algorand tops post-quantum race with 2.7M secure transfers- Will it rally ALGO?",
     "source": "AMBCrypto (技术与链上)",
@@ -5169,6 +5159,18 @@
     "sent_at": "2026-10-27T17:07:15.011497+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "bdd61ac1888f5ad3",
+    "title": "Cancore 完成 720 万美元种子轮融资,估值 6000 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-27T17:24:08.557620+00:00",
+    "tokens": [
+      "BNB",
+      "ETH",
+      "ARB"
     ],
     "lang": "en"
   }
