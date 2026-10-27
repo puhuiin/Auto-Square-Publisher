@@ -1,15 +1,5 @@
 [
   {
-    "id": "f737d3b8740becc4",
-    "title": "Grok AI Predicts a Modest Gain for XRP USD by 2027: Is Bullish Optimism Over?",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-18T21:03:26.635611+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "fd8c4197cedcef41",
     "title": "Cardano Stablecoin Market Tops $70 Million As USDC Dominates Supply",
     "source": "Bitcoinist (比特币向)",
@@ -5166,6 +5156,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "240fd8481fa01ba7",
+    "title": "XRP Whale Holdings Hit Highest Supply Share Since November 2022",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-27T12:24:53.929671+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
