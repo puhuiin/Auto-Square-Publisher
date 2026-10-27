@@ -1,15 +1,5 @@
 [
   {
-    "id": "e5d963a8d7923818",
-    "title": "Zcash’s planned Sprout freeze would leave private keys unable to move funds",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-18T19:04:07.183214+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8939622559c1188a",
     "title": "XRP Price Prediction: Can Ripple Stop the Bleeding?",
     "source": "CryptoNews (全球快讯)",
@@ -5164,5 +5154,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d3e93da4e8358fa5",
+    "title": "比特币 8 万美元:一场没有赢家的拉锯",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-27T10:07:28.011458+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
