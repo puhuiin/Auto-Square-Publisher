@@ -1,15 +1,5 @@
 [
   {
-    "id": "7b1577ad71b69f5c",
-    "title": "Analyst Maps Out 3 Reasons to Be Bullish on Dogecoin (DOGE): But Should You Really Be?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-18T15:44:16.384498+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1833fba0d2c29fcb",
     "title": "XRP clings to $1.25 as Evernorth’s rumored $655M purchase stays unconfirmed",
     "source": "AMBCrypto (技术与链上)",
@@ -5166,5 +5156,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "325a1b096b8137ba",
+    "title": "Akash Opens Vote to Move From Cosmos to Solana",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-27T06:44:58.627243+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
