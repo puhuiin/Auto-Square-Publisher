@@ -1,15 +1,5 @@
 [
   {
-    "id": "a81c46397edd3834",
-    "title": "Cysic 跨鏈橋遭攻擊,BNB Chain 上被未經授權鑄造 1000 萬枚 CYS",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-18T11:02:04.829818+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "791b31d916206bb4",
     "title": "Cysic跨链桥因未经授权增发1000万枚CYS暂停",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5162,6 +5152,17 @@
     "tokens": [
       "BNB",
       "ONDO"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "2f7a08fcfc565f4d",
+    "title": "Solana、Robinhood、BNB 等 Meme 市场核心交易量约 1.93 亿美元,日环比增长 18.8%",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-27T02:45:00.799368+00:00",
+    "tokens": [
+      "BNB",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
