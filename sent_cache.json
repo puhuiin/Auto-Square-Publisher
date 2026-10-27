@@ -1,15 +1,5 @@
 [
   {
-    "id": "b0724eb3a061776d",
-    "title": "韩国未来资产证券计划 2027 年一季度推出代币化产品,首批含代币化货币市场基金与私募债券",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-19T07:05:32.797534+00:00",
-    "tokens": [
-      "STO"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7e72a3bf07d8283d",
     "title": "从美股到亚洲、从公开市场到 Pre-IPO:Ondo 闭门会 AMA 揭示代币化资产下一章",
     "source": "深潮TechFlow (中文/简体)",
@@ -5169,6 +5159,16 @@
     "sent_at": "2026-10-27T20:45:02.023447+00:00",
     "tokens": [
       "XLM"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "455d58da37ed4d86",
+    "title": "Seeker phone owners keep full support as Ledger unveils Atom",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-27T21:06:31.704895+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
