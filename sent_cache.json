@@ -1,15 +1,5 @@
 [
   {
-    "id": "8939622559c1188a",
-    "title": "XRP Price Prediction: Can Ripple Stop the Bleeding?",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-18T19:24:27.649597+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7f03f4d836431dc6",
     "title": "Just 659? Shiba Inu L2 Transaction Hits Monthly Low as Activity Drops",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5164,5 +5154,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0268b1b862c9f88f",
+    "title": "Public wallet logs expose founder histories, and Zcash group demands fix",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-27T10:26:42.832147+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
