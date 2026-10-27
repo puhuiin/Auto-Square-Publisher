@@ -1,15 +1,5 @@
 [
   {
-    "id": "7f03f4d836431dc6",
-    "title": "Just 659? Shiba Inu L2 Transaction Hits Monthly Low as Activity Drops",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-18T19:43:03.596473+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2b364ff1b2f686f5",
     "title": "价值9787万美元比特币多单面临清算,Hyperliquid杠杆达40倍",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5164,5 +5154,15 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "a61a1b25d46d3362",
+    "title": "XRP Eyes $15 as Ripple Wins Final Bank Approval Ahead of Swell",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-27T10:47:41.602082+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
