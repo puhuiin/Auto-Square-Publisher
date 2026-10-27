@@ -1,16 +1,5 @@
 [
   {
-    "id": "6929ec3f2cb3e0b7",
-    "title": "数据:主要 Meme 市场 24h 交易量约 2.67 亿美元,环比增长 31.3%",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-19T02:49:07.205134+00:00",
-    "tokens": [
-      "BNB",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b47f36fc6f5b60f8",
     "title": "SUI has rewards, buybacks, and a new CEO – What’s still missing is...",
     "source": "AMBCrypto (技术与链上)",
@@ -5170,6 +5159,16 @@
     "sent_at": "2026-10-27T16:44:22.983603+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5f21efc1d364bb78",
+    "title": "SHIB Community Buzzes as Shiba Inu Unlocks New Travel Use Case",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-27T17:07:15.011497+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
