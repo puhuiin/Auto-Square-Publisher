@@ -1,15 +1,5 @@
 [
   {
-    "id": "7e72a3bf07d8283d",
-    "title": "从美股到亚洲、从公开市场到 Pre-IPO:Ondo 闭门会 AMA 揭示代币化资产下一章",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-19T07:23:35.488538+00:00",
-    "tokens": [
-      "ONDO"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ce50253034040daa",
     "title": "Zcash 開發團隊出手了!Zakura 提出量子防護方案,每筆跨鏈交易獨立金鑰",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5169,6 +5159,16 @@
     "sent_at": "2026-10-27T21:06:31.704895+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b6b90f50e6c58f27",
+    "title": "Bessent:将借SEC和CFTC行动推进加密监管框架",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-27T21:26:29.269640+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
