@@ -1,15 +1,5 @@
 [
   {
-    "id": "ae172bb562dce89c",
-    "title": "Aptos Burns 174,000 APT In A Month, Yet Token Supply Keeps Rising",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-10-18T20:24:10.692373+00:00",
-    "tokens": [
-      "APT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4132e27ee4846a81",
     "title": "Filecoin’s bearish week meets a massive upgrade on October 19 – Can FIL hold $1?",
     "source": "AMBCrypto (技术与链上)",
@@ -5166,5 +5156,16 @@
       "DOGE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "7ac69ed1373a5985",
+    "title": "Solana 交易員再向幣安存入 1 億枚 PUMP,6 日累計存入 3 億枚約 131 萬美元",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-27T11:45:19.645381+00:00",
+    "tokens": [
+      "PUMP",
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
