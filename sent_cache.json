@@ -1,15 +1,5 @@
 [
   {
-    "id": "eadabfe82a4c4e30",
-    "title": "Zcash Shielded Pools Draw Fresh Scrutiny After Stolen Crypto Transfers",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-10-18T18:44:05.989642+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "e5d963a8d7923818",
     "title": "Zcash’s planned Sprout freeze would leave private keys unable to move funds",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-10-27T09:24:04.683642+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "26b361ee42c5625d",
+    "title": "Solana bug reports now cost 1 SOL as AI floods security teams with spam",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-10-27T09:48:00.412637+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
