@@ -1,17 +1,5 @@
 [
   {
-    "id": "f5ffbdf1d9cb5713",
-    "title": "单资产加密期货增至11个,芝商所将上线比特币现金与Uniswap期货",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-19T04:04:47.216855+00:00",
-    "tokens": [
-      "BCH",
-      "UNI",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ea08ba5df0473c11",
     "title": "价值3892万美元,某巨鲸过去1日再质押约50万枚HYPE",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5171,6 +5159,17 @@
     "sent_at": "2026-10-27T17:44:28.859428+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f46b33c2224aafa2",
+    "title": "Aave vs. Bitso USDC Prime: What Lenders Hold and What Limits Exits",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-27T18:06:41.290241+00:00",
+    "tokens": [
+      "USDC",
+      "AAVE"
     ],
     "lang": "en"
   }
