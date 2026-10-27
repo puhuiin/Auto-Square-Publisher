@@ -1,17 +1,5 @@
 [
   {
-    "id": "183588b950efc2a6",
-    "title": "TechFlow 情报局:DeepSeek 新产品被指“换皮”GPT-6,Starknet 99.95% 票数支持转型独立 L1",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-18T12:27:11.138856+00:00",
-    "tokens": [
-      "HYPE",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2a07ae362c20be31",
     "title": "Shiba Inu (SHIB) Spot Flows Skyrocket 215% in 8 Hours: 3 Key Price Signals to Watch",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5164,6 +5152,16 @@
     "sent_at": "2026-10-27T03:24:44.876384+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "c05941ed4c2403e6",
+    "title": "Zcash (ZEC) Rallied Hard This Year, But Is the Party Finally Over?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-27T03:47:54.417381+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-TW"
   }
