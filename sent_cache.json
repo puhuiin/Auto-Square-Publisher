@@ -1,15 +1,5 @@
 [
   {
-    "id": "c26ea888d7a18a9b",
-    "title": "Claude unpicks an NSA mystery behind Ethereum passkey security",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-18T16:24:42.458232+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0ced4a3d66cadfcc",
     "title": "SEC approves Coinbase earnings bets that stay settled when the numbers change",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5164,6 +5154,16 @@
     "sent_at": "2026-10-27T07:04:13.464987+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e18fd36c17aa1f7b",
+    "title": "以太坊开发者修复Glamsterdam升级潜在漏洞,避免质押ETH被错误划入区块构建者账户",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-27T07:24:46.934214+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
