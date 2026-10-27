@@ -1,15 +1,5 @@
 [
   {
-    "id": "788ab81c57b851d7",
-    "title": "Aster 过去两周回购并销毁超 272 万枚 ASTER,累计销毁总量超 2.1 亿枚",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-19T08:27:13.075886+00:00",
-    "tokens": [
-      "ASTER"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fa6210a21a72ab36",
     "title": "JPMorgan expands ‘JPM Coin’ deposit token to Ethereum for institutional clients",
     "source": "The Block (机构与政策)",
@@ -5169,6 +5159,16 @@
     "sent_at": "2026-10-27T22:30:37.719060+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "09c1637c1314c35c",
+    "title": "Zcash’s $125 million funding fight widens as Tyler Winklevoss calls to end its ‘USAID’",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-27T23:25:13.110824+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
