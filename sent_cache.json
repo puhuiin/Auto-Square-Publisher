@@ -1,15 +1,5 @@
 [
   {
-    "id": "b409654ae069b899",
-    "title": "Uniswap reserves drop to 72.9M as Grayscale maintains exposure – Can UNI rebound?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-18T22:43:23.574473+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "70fcdf58a999f5d6",
     "title": "Hyperliquid 过去 24 小时回购并销毁约 89.1 万美元 HYPE, 累计销毁约 4963 万枚",
     "source": "深潮TechFlow (中文/简体)",
@@ -5171,5 +5161,16 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "5da8cc80ed89ce83",
+    "title": "Bitcoin Security Expert Jameson Lopp: Cyberattacks on “Exponential” Path",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-10-27T14:06:32.492678+00:00",
+    "tokens": [
+      "BTC",
+      "SOL"
+    ],
+    "lang": "en"
   }
 ]
