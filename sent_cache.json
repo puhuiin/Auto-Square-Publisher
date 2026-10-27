@@ -1,15 +1,5 @@
 [
   {
-    "id": "ac295feed70a6daa",
-    "title": "孙宇晨地址从 Poloniex 多签地址收到 7.2 万亿枚 PEPE,价值约 2844 万美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-18T15:24:10.362983+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7b1577ad71b69f5c",
     "title": "Analyst Maps Out 3 Reasons to Be Bullish on Dogecoin (DOGE): But Should You Really Be?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5166,5 +5156,15 @@
       "ZEC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a9c125b68389ee0e",
+    "title": "约68.5万美元资金被盗,DotSwap V1遭攻击",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-27T06:24:58.829509+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
