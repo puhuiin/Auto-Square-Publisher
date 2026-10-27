@@ -1,15 +1,5 @@
 [
   {
-    "id": "f2eee89cc33185bc",
-    "title": "Cysic suspends bridge after attacker mints tokens and moves $727,000 to Ethereum",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-10-19T00:11:14.220206+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a376f9fd833cad55",
     "title": "10x Research:山寨币反弹势头消退,上周追踪代币平均下跌14%,市场资金持续流出",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5171,6 +5161,17 @@
     "sent_at": "2026-10-27T15:04:30.269850+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8d3d6e88904eec64",
+    "title": "SUN.io 已连续完成 52 期回购销毁:累计销毁 SUN 超6.85 亿枚,SunSwap 生态集成全速推进",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-27T15:24:39.830055+00:00",
+    "tokens": [
+      "TRX",
+      "SUN"
     ],
     "lang": "en"
   }
