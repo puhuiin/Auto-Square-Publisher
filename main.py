@@ -9181,7 +9181,11 @@ class SquarePublisher(BasePublisher):
     BINANCE_ERROR_GUIDE = {
         "20002":  "内容触发安全风控拦截（如含违禁词/诱导信息），请检查文案或换一篇。",
         "20022":  "内容触发安全风控拦截（高危违规），同题需人工审核。",
-        "220094": "Hashtag 数量超过币安限制（>3），已自动切除多余标签仍失败则需查 prompt。",
+        # ★★ R843 更正措辞：原写「超过币安限制（**>3**）」——那个「3」是**没被验证过**的
+        #   断言，而本轮取证**反证**了它（见 MAX_HASHTAGS 常量处的完整证据）。错误码映射
+        #   本身保留（真出现时仍要能翻译），但**不再宣称阈值是 3**，否则下一轮会照着
+        #   这个数字把上限又调回去（"把自己写错的结论留在代码里"是最贵的坑）。
+        "220094": "Hashtag 数量超过币安限制，已自动切除多余标签仍失败则需查 prompt。",
         "220095": "币对（$ 挂件）数量超过币安上限，已自动降格多余 $ 挂件为纯名；仍失败则调低 MAX_TOKENS_PER_POST。",
         "20005":  "账户发帖频率或被限流，请降低发帖频率/检查账号状态。",
     }
@@ -9320,6 +9324,40 @@ class SquarePublisher(BasePublisher):
     # 挂件/活动标签会在净化之后追加，净化时预留这段余量，避免"净化刚好卡上限、
     # 追加后越界"（R9）
     _APPEND_HEADROOM = 80
+    # ★★★ R843：**Hashtag 上限从 3 提到 4**（唯一真源；`_sanitize_content` 第 5/6 步都用它）。
+    #
+    # 一、为什么要改：prompt 第 6 条要求「文末附 3~4 个标签：#Write2Earn #BinanceSquare
+    #      #核心代币，再按内容加 1 个垂直标签（如 #MemeCoin/#Futures/#ETF）」——
+    #      而第 5 步只留 3 个，且对超出的标签执行的是「**精确脱壳 `#`**」（把 `#` 去掉、
+    #      把词留在原地），于是模型按 prompt 写的**垂直标签**永远排在末位、被脱壳成裸词：
+    #        生产原文尾行：`#Write2Earn #BinanceSquare #HYPE Staking #TradingTournament`
+    #      （`Staking` 就是被脱壳的 `#Staking`）。实测 **378/495 = 76%** 的已发布帖
+    #      带这种「`#tag` + 裸词」形态；405→ 尾行 `#` 标签数 **98% 恰好是 4**、**0 篇 ≥5**。
+    #      ⇒ **prompt 与净化器自相矛盾**，而被牺牲的正是"与内容相关性最强"的那个标签
+    #        （"Prioritize project names, sector names, and topic terms tightly tied to
+    #        the content"），也就是说**每篇帖都少了一个真正的内容标签**（触达问题）。
+    #
+    # 二、为什么敢改（三条证据，缺一不可）：
+    #      ① **官方口径**：币安广场官方风格帖《How to Write on Binance Square
+    #         (Official Style)》（2025-08-25）：「**Hashtags: Use 3–6 max**, all
+    #         crypto-relevant」；2026 年实操指南进一步给「**3–5 tags per post**, fewer
+    #         rather than spammier」⇒ **4 个在上限之内** ✓。
+    #      ② **我方遥测**：5000 行 metrics.jsonl 里 **`220094` 出现 0 次**——从未因
+    #         hashtag 太多被拒过。
+    #      ③ **生产已证**：**485 篇带 4 个 hashtag 的帖全部 `binance_published`** ✓
+    #         （即当前"净化留 3 + 注入活动标签 = 4"这个形态本身就跑在生产上）。
+    #      ⇒ 上限 3 是**保守到有反证据**的旧值，把它提到 4 只是"让 prompt 要的东西
+    #        真的发出去"，净变化是**给一个已在正文里的词补上 `#`**（+1 字符），
+    #        不改其它任何内容。
+    #
+    # 三、预注册验收判据（跑 ≥1 个完整日后再裁；见 HANDOVER）：
+    #      · **通过**：尾行 `#` 标签数 ∈ [4, 5] 占比 **≥95%**，且「`#tag` + 裸词」
+    #        形态占比从 76% → **≤5%**，且新增 `publish_failed` = 0。
+    #      · **回滚**：出现任何 `220094`/hashtag 相关拒稿 ⇒ **把本常量退回 3**
+    #        （逐字还原，同时把判据与证据一起写回注释，别让它再被当成"没人试过"）。
+    #      · ⚠️ 不许只改数字不留证据：阈值必须和上面三条证据绑在一起，
+    #        否则下一轮有人看到 4>3 又会"顺手调回去"（R834 同族：常量与判据脱节）。
+    MAX_HASHTAGS = 4
 
     # 敏感词安全过滤表（防封号/防平台风控拦截 20002/20022）。R355：提到类级
     # 常量作为唯一真源——此前是 _sanitize_content 内的局部 dict，只净化正文；
@@ -9453,8 +9491,9 @@ class SquarePublisher(BasePublisher):
         # 追加超 _APPEND_HEADROOM）。R352/R353 只自持保底双标签，漏了活动标签这一
         # 对称席位。故把调用方点名保留的标签（keep_tags，publish() 传
         # last_campaign_tag）在场者接在保底之后一并保留（大小写按原文、去重、排除
-        # 保底重复）。keep_tags 为空（sanitize 内部调用，此时活动标签尚未注入）时
-        # 行为与 R353 逐字一致（零回归）；仍受 ≤3 标签口径约束（保底 2 + 活动 1）。
+        #   保底重复）。keep_tags 为空（sanitize 内部调用，此时活动标签尚未注入）时
+        #   行为与 R353 逐字一致（零回归）；仍受 `MAX_HASHTAGS`（R843 起为 4）口径约束
+        #   ——注入的活动标签是第 5 席，所以这里只自持"保底 2 + 点名保留的 1"。
         for kt in (keep_tags or []):
             kt = str(kt).strip()
             if not kt.startswith("#"):
@@ -9641,11 +9680,15 @@ class SquarePublisher(BasePublisher):
         if len(content) > budget:
             content = cls._enforce_max_chars(content, budget)
 
-        # 5. Hashtag 上限 3 个：#Write2Earn/#BinanceSquare 保底优先保留（Write to Earn
-        #    收益归因就靠它们；此前纯位置优先，模型自带 3 个标签时会把保底全切掉），
-        #    其余按出现顺序补足；超出的按字符位置精确脱壳 #（避免误伤同名前序标签）
+        # 5. Hashtag 上限 `MAX_HASHTAGS`（R843 从 3 提到 4，证据见常量处）：
+        #    #Write2Earn/#BinanceSquare 保底优先保留（Write to Earn 收益归因就靠它们；
+        #    此前纯位置优先，模型自带 3 个标签时会把保底全切掉），其余按出现顺序补足；
+        #    超出的按字符位置精确脱壳 #（避免误伤同名前序标签）
+        #    ⚠️ 被脱壳的词**仍然留在正文里**（这是"精确脱壳"的语义）⇒ 上限越低，
+        #      留下的裸词越多（76% 的帖就是这么来的）。上限提到 4 后，模型按 prompt
+        #      写的 4 个标签（保底 2 + 币名 + 垂直）全部保住，注入的活动标签是第 5 席。
         tag_matches = list(re.finditer(r"#[^\s#]+", content))
-        if len(tag_matches) > 3:
+        if len(tag_matches) > cls.MAX_HASHTAGS:
             keep = set()
             seen_mandatory = set()
             for idx, mm in enumerate(tag_matches):
@@ -9654,7 +9697,7 @@ class SquarePublisher(BasePublisher):
                     seen_mandatory.add(tag_low)
                     keep.add(idx)
             for idx in range(len(tag_matches)):
-                if len(keep) >= 3:
+                if len(keep) >= cls.MAX_HASHTAGS:
                     break
                 keep.add(idx)
             rebuild = []
@@ -9667,13 +9710,13 @@ class SquarePublisher(BasePublisher):
             content = "".join(rebuild)
 
         # 6. 保底标签补齐：缺 #Write2Earn/#BinanceSquare 且还有名额时补上
-        #    （正常管线 summarize 已保证在文，走到这里多为短内容；已满 3 个不再硬塞）
+        #    （正常管线 summarize 已保证在文，走到这里多为短内容；已满 MAX_HASHTAGS 不再硬塞）
         for mandatory in ("#Write2Earn", "#BinanceSquare"):
             tags_now = list(re.finditer(r"#[^\s#]+", content))
             have = {mm.group(0)[1:].lower() for mm in tags_now}
             if mandatory[1:].lower() in have:
                 continue
-            if len(tags_now) >= 3:
+            if len(tags_now) >= cls.MAX_HASHTAGS:
                 # R9：名额不够时**挤掉一个非保底标签**，而不是放弃保底。
                 # 旧实现"满 3 个就 continue"让保底变成顺序相关：模型自带 2 个自定义
                 # 标签时补进 #Write2Earn 后名额用尽，#BinanceSquare 被静默丢掉——

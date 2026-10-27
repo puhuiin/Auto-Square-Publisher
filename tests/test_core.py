@@ -2547,44 +2547,51 @@ class TestContentSanitizer(unittest.TestCase):
         s = m.SquarePublisher._sanitize_content("目标价 $120000 不变")
         self.assertIn("$120000", s)
 
-    def test_hashtag_capped_at_3(self):
+    def test_hashtag_capped_at_max(self):
+        """★★ R843：上限从 3 提到 **4**（`MAX_HASHTAGS`，证据见常量处）。
+
+        ⚠️ 判据**只许引用常量**，不许把 `3`/`4` 写死（R834 同族：阈值与常量脱节，
+        改了代码没人发现判据还停在旧值）。
+        """
+        cap = m.SquarePublisher.MAX_HASHTAGS
         s = m.SquarePublisher._sanitize_content(
-            "重仓 $PEPE 冲 #Write2Earn #BinanceSquare #PEPE #Extra #More")
-        self.assertLessEqual(s.count("#"), 3)
+            "重仓 $PEPE 冲 #Write2Earn #BinanceSquare #PEPE #Extra #More #EvenMore")
+        self.assertLessEqual(s.count("#"), cap)
+        self.assertGreater(cap, 3, "R843 起上限必须是 4；若要退回 3，必须连证据一起退回")
 
     def test_hashtag_positional_stripping(self):
-        """超限时只切第 4 个及以后，不动前 3 个同名标签"""
+        """超限时只切**末位**，不动前面的同名标签（上限 4 后要 5 个才触发）"""
         s = m.SquarePublisher._sanitize_content(
-            "分析 $BTC\n\n#BTC #Write2Earn #BinanceSquare\n\n复盘观点 #BTC"
+            "分析 $BTC\n\n#BTC #Write2Earn #BinanceSquare #SOL\n\n复盘观点 #BTC"
         )
         self.assertEqual(s.count("#BTC"), 1, "正文中第一个 #BTC 应保留，末尾超出的应脱壳")
-        self.assertTrue(s.rstrip().endswith("BTC"), "末尾的第 4 个同名标签应被脱壳为 BTC")
-        self.assertLessEqual(s.count("#"), 3)
+        self.assertTrue(s.rstrip().endswith("BTC"), "末尾的第 5 个标签应被脱壳为 BTC")
+        self.assertLessEqual(s.count("#"), m.SquarePublisher.MAX_HASHTAGS)
 
     def test_mandatory_tags_survive_overflow(self):
-        # 模型自带 3 个标签 +  append 的保底：保底必须活下来（收益归因），总数仍 ≤3
+        # 模型自带 3 个标签 + append 的保底：保底必须活下来（收益归因），总数仍 ≤ 上限
         s = m.SquarePublisher._sanitize_content(
             "分析 $BTC #BTC #ETH #SOL 观点 #Write2Earn #BinanceSquare #PEPE")
         self.assertIn("#Write2Earn", s)
         self.assertIn("#BinanceSquare", s)
-        self.assertLessEqual(s.count("#"), 3)
+        self.assertLessEqual(s.count("#"), m.SquarePublisher.MAX_HASHTAGS)
 
     def test_mandatory_filled_when_room(self):
         # 无标签短内容：保底补齐（此前保持 0 标签发出，无归因）
         s = m.SquarePublisher._sanitize_content("比特币放量突破，短线情绪转多。")
         self.assertIn("#Write2Earn", s)
         self.assertIn("#BinanceSquare", s)
-        self.assertLessEqual(s.count("#"), 3)
+        self.assertLessEqual(s.count("#"), m.SquarePublisher.MAX_HASHTAGS)
 
     def test_truncation_respects_tag_budget(self):
-        # 超长截断不再无条件追加保底（曾与残留叠加超 3 个触发 220094）；
+        # 超长截断不再无条件追加保底（曾与残留叠加超上限触发 220094）；
         # 前缀残留清掉后统一重补，结果恰好 2 个保底
         body = "正文内容。" * 200 + "\n#AAA #BBB #CCC\n" + "结尾。" * 100 + "\n#Write2Earn #BinanceSquare #XRP"
         self.assertGreater(len(body), 900)
         s = m.SquarePublisher._sanitize_content(body)
         self.assertIn("#Write2Earn", s)
         self.assertIn("#BinanceSquare", s)
-        self.assertLessEqual(s.count("#"), 3)
+        self.assertLessEqual(s.count("#"), m.SquarePublisher.MAX_HASHTAGS)
         self.assertNotIn("#AAA", s)
 
     def test_fullwidth_symbols_normalized(self):
@@ -15261,20 +15268,101 @@ class TestMandatoryTagBudget(unittest.TestCase):
         tags = self._tags(m.SquarePublisher._sanitize_content(text))
         self.assertIn("#Write2Earn", tags)
         self.assertIn("#BinanceSquare", tags, "旧实现补完 Write2Earn 后名额用尽，会丢掉 BinanceSquare")
-        self.assertLessEqual(len(tags), 3)
+        self.assertLessEqual(len(tags), m.SquarePublisher.MAX_HASHTAGS)
 
     def test_three_custom_tags_evict_one_for_mandatory(self):
         text = "一段足够长的正文内容。" + "补充说明。" * 20 + " #BTC #ETH #SOL"
         tags = self._tags(m.SquarePublisher._sanitize_content(text))
         self.assertIn("#Write2Earn", tags)
         self.assertIn("#BinanceSquare", tags)
-        self.assertLessEqual(len(tags), 3)
+        self.assertLessEqual(len(tags), m.SquarePublisher.MAX_HASHTAGS)
 
     def test_existing_mandatory_not_duplicated(self):
         text = "一段足够长的正文内容。" + "补充说明。" * 20 + " #Write2Earn #BinanceSquare"
         tags = self._tags(m.SquarePublisher._sanitize_content(text))
         self.assertEqual(tags.count("#Write2Earn"), 1)
         self.assertEqual(tags.count("#BinanceSquare"), 1)
+
+
+class TestR843TagBudget(unittest.TestCase):
+    """★★★ R843：**Hashtag 上限 3 → 4**，让 prompt 明确要求的「垂直标签」真的发得出去。
+
+    ★ 这场事故的形状（不是模型写错，是**我们自己的净化器**把它脱壳了）：
+      prompt 第 6 条要求「文末附 3~4 个标签：#Write2Earn #BinanceSquare #核心代币，
+      再按内容加 1 个垂直标签（如 #MemeCoin/#Futures/#ETF）」；
+      而 `_sanitize_content` 第 5 步只留 3 个，对超出的标签执行「**精确脱壳 `#`**」
+      （把 `#` 去掉、词留在原地）⇒ 模型的垂直标签永远排末位、被脱壳成裸词：
+        生产原文尾行：`#Write2Earn #BinanceSquare #HYPE Staking #TradingTournament`
+      实测 **378/495 = 76%** 的已发布帖带这种「`#tag` + 裸词」形态，
+      尾行 `#` 标签数 **98% 恰好 4**、**0 篇 ≥5**。
+      ⇒ prompt 与净化器自相矛盾，牺牲的正是"与内容相关性最强"的那个标签（触达问题）。
+
+    ★ 为什么敢改（三条证据，缺一不可，**改动必须与它们绑在一起**）：
+      ① 官方风格帖《How to Write on Binance Square (Official Style)》(2025-08-25)：
+         「**Hashtags: Use 3–6 max**」；2026 实操指南：「**3–5 tags per post**」⇒ 4 合规；
+      ② 5000 行遥测里 **`220094` 出现 0 次**（从未因 hashtag 太多被拒）；
+      ③ **485 篇带 4 个 hashtag 的帖全部 `binance_published`**（该形态已在生产跑着）。
+
+    ★★ **预注册验收判据（跑 ≥1 个完整日后再裁；不得事后移动）**：
+      · **通过**：尾行 `#` 标签数 ∈ [4,5] 占比 **≥95%**，且「`#tag` + 裸词」形态占比
+        从 **76% → ≤5%**，且新增 `publish_failed` = **0**。
+      · **回滚**：出现**任何** `220094`/hashtag 相关拒稿 ⇒ `MAX_HASHTAGS` 退回 3，
+        并把证据与判据一起写回注释（逐字还原，别让它被当成"没人试过"）。
+      · ⚠️ 单窗口/单日只能出「样本不足」；不许因为"看着变好了"提前宣布通过。
+    """
+
+    @staticmethod
+    def _src():
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "main.py")
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_constant_bound_to_prompt_ask(self):
+        """常量必须与 prompt 的要求**同源**：prompt 要 4 个，上限就不能是 3。
+
+        ⚠️ 这条是防"悄悄调回去"的锁：谁把上限改小，必须先让 prompt 也不再要求 4 个。
+        """
+        self.assertGreaterEqual(m.SquarePublisher.MAX_HASHTAGS, 4)
+        self.assertIn("3~4 个标签", self._src(), "prompt 仍要求 3~4 个标签 ⇒ 上限不得低于 4")
+
+    def test_prompt_shaped_tag_line_survives(self):
+        """prompt 形状的 4 个标签（保底 2 + 币名 + 垂直）必须**全部带 # 发出**。"""
+        s = m.SquarePublisher._sanitize_content(
+            "比特币放量突破。\n\n#Write2Earn #BinanceSquare #BTC #Staking")
+        for tag in ("#Write2Earn", "#BinanceSquare", "#BTC", "#Staking"):
+            self.assertIn(tag, s, "被脱壳的正是与内容最相关的那个标签：%s" % tag)
+        self.assertNotIn(" Staking", s.replace("#Staking", ""), "不得再留下裸词 Staking")
+
+    def test_production_line_reproduced(self):
+        """生产实录形状：模型按 prompt 写 4 个带 `#` 的标签 ⇒ 4 个必须原样发出。
+
+        ⚠️ 这条同时是**机制假设的直接检验**。假设是：「模型写的是 `#Staking`，
+        **是我们第 5 步把它脱壳成裸词**」。若修后新帖里垂直标签**仍以裸词出现**，
+        说明假设错（模型本来就没写 `#`）⇒ 要回来把这条与常量注释一起改掉。
+        （只靠最终文本无法唯一识别机制：两种假说产出的尾行一模一样，所以这里用
+          "改上限后再看新帖"当区分实验，判据已在 HANDOVER 预注册。）
+        """
+        s = m.SquarePublisher._sanitize_content(
+            "分析 $HYPE 走势。\n\n#Write2Earn #BinanceSquare #HYPE #Staking")
+        self.assertEqual(len(re.findall(r"#[^\s#]+", s)), 4)
+        self.assertNotIn("Staking", re.sub(r"#Staking", "", s),
+                         "除标签本身外不得再留下裸词")
+
+    def test_overflow_still_bounded(self):
+        """超限仍要收敛——不能因为放宽就漏出 6、7 个标签（那才会真触发平台限流）。"""
+        s = m.SquarePublisher._sanitize_content(
+            "正文。\n\n#Write2Earn #BinanceSquare #A #B #C #D #E")
+        self.assertLessEqual(len(re.findall(r"#[^\s#]+", s)),
+                             m.SquarePublisher.MAX_HASHTAGS)
+
+    def test_campaign_tag_is_the_fifth_slot(self):
+        """活动标签是**第 5 席**（注入发生在净化之后）——这是既有的 R291 口径，不随本轮变。"""
+        s = m.SquarePublisher._sanitize_content(
+            "正文。\n\n#Write2Earn #BinanceSquare #BTC #Staking")
+        out = m.SquarePublisher._inject_campaign_tag(s, {"active_tags": ["#TradingTournament"]})
+        self.assertIn("#TradingTournament", out, "活动入口不容丢")
+        self.assertEqual(len(re.findall(r"#[^\s#]+", out)), m.SquarePublisher.MAX_HASHTAGS + 1)
 
 
 class TestZeroWidthStripping(unittest.TestCase):
