@@ -1,15 +1,5 @@
 [
   {
-    "id": "2625502b017b2f8c",
-    "title": "Cardano Eyes Insanely Bullish Cup-And-Handle Breakout As Hoskinson Teases New Programming Language For ADA",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-18T22:04:56.798411+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9e038e32d895ae08",
     "title": "Cross River Bank Adds Ripple’s RLUSD To Its Payment Infrastructure",
     "source": "Bitcoinist (比特币向)",
@@ -5169,5 +5159,16 @@
       "TRUMP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e74b30b930b75841",
+    "title": "Initia 停机 4 天后公布进展:MoveVM 漏洞修复方案进入审计,拟于近日重启网络",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-27T13:28:24.560991+00:00",
+    "tokens": [
+      "ETH",
+      "USDC"
+    ],
+    "lang": "zh-CN"
   }
 ]
