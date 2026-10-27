@@ -1,15 +1,5 @@
 [
   {
-    "id": "0efbb0eb7791709c",
-    "title": "比特幣年底能否突破 10 萬美元引發分歧,通脹與美聯儲政策成關鍵變量",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-18T14:29:03.421620+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6a95c731a3f0ced0",
     "title": "Hackers move stolen funds from Ledger, Bitget into Zcash shielded pools: Is ZEC at risk?",
     "source": "AMBCrypto (技术与链上)",
@@ -5163,6 +5153,17 @@
     "tokens": [
       "ID",
       "BNB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "d575ddaec502d6c8",
+    "title": "Arthur Hayes 新文:美联储三杀局,鲍威尔越挣扎,加密牛市越疯狂",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-27T05:11:01.914527+00:00",
+    "tokens": [
+      "ENA",
+      "BTC"
     ],
     "lang": "zh-TW"
   }
