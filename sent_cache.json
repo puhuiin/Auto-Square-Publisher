@@ -1,15 +1,5 @@
 [
   {
-    "id": "1df311ae7350feb9",
-    "title": "CZ 回应推出 BNB 手机提议:不确定随身携带“加密手机”是否是个好主意",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-18T18:23:48.361071+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "eadabfe82a4c4e30",
     "title": "Zcash Shielded Pools Draw Fresh Scrutiny After Stolen Crypto Transfers",
     "source": "Bitcoinist (比特币向)",
@@ -5164,5 +5154,15 @@
       "HYPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "b9256bb0b98c58e5",
+    "title": "Four.Meme旗下OpenFour联合GoPlus推出50万美元激励计划,征集创新发射机制",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-27T09:24:04.683642+00:00",
+    "tokens": [
+      "BNB"
+    ],
+    "lang": "zh-TW"
   }
 ]
