@@ -1,15 +1,5 @@
 [
   {
-    "id": "fa6210a21a72ab36",
-    "title": "JPMorgan expands ‘JPM Coin’ deposit token to Ethereum for institutional clients",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-10-19T09:07:06.832083+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2663bb599c99d5f4",
     "title": "摩根大通面向機構客戶在以太坊網絡推出 JPM Coin",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5169,6 +5159,16 @@
     "sent_at": "2026-10-27T23:25:13.110824+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9353b9613c05def9",
+    "title": "SkyAI 与主要股东达成收购支持协议,清仓约 200 万枚 SOL",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-27T23:45:29.440871+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
