@@ -1,15 +1,5 @@
 [
   {
-    "id": "70fcdf58a999f5d6",
-    "title": "Hyperliquid 过去 24 小时回购并销毁约 89.1 万美元 HYPE, 累计销毁约 4963 万枚",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-18T23:04:59.393383+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "610596ec2e0599a9",
     "title": "Four Days Left: XRP Ledger Key Fix Upgrade Eyes October Activation",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5170,6 +5160,18 @@
     "tokens": [
       "BTC",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a45361939ee12c99",
+    "title": "吴说每日精选加密新闻 - 美国 OCC 正式批准 Ripple National Trust Bank,将支持 RLUSD 及企业数字资产托管业务",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-27T14:24:29.052962+00:00",
+    "tokens": [
+      "RLUSD",
+      "USDC",
+      "XRP"
     ],
     "lang": "en"
   }

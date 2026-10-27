@@ -18,22 +18,24 @@
   "last_updated": "2026-10-27T13:45:01.855956Z",
   "_feed_health": {
     "深潮TechFlow (中文/繁体)": {
+      "reset_at": "2026-10-27T14:23:36.886671+00:00",
       "fails": 1,
       "last_fail": "2026-10-27T14:03:51.002876+00:00"
     },
     "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3,
-      "last_fail": "2026-10-27T14:03:34.830726+00:00"
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "last_fail": "2026-10-27T14:23:35.926625+00:00"
     },
     "深潮TechFlow (中文/简体)": {
+      "reset_at": "2026-10-27T14:23:36.931018+00:00",
       "fails": 1,
       "last_fail": "2026-10-27T14:03:43.270167+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-27",
