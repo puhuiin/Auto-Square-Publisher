@@ -1,15 +1,5 @@
 [
   {
-    "id": "cf787da125b32abf",
-    "title": "Fidelity Sees A Stronger Solana Network, With Concentration Risks Still In View",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-18T17:24:45.112083+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "bb27b735b60d391a",
     "title": "Cardano Is One Upgrade Away From Being Fully Complete, Hoskinson Declares — Will It Be Enough To Ignite ADA’s Price?",
     "source": "ZyCrypto (新币与空投)",
@@ -5163,6 +5153,16 @@
     "sent_at": "2026-10-27T08:04:28.102592+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "2a326925143d6172",
+    "title": "Firedancer 漏洞赏金新规:每份报告需销毁 1 枚 SOL,应对 AI 刷量",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-27T08:24:24.383346+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
