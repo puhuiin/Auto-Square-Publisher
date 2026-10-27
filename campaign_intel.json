@@ -19,22 +19,33 @@
   "strategy_guidance": "当前万圣节主题交易活动剩余周期不足1周，是时间压力最突出的官方活动，发帖可围绕活动玩法做冲刺向内容，引导读者参与评论互动拿Write2Earn奖励；同时结合10月28日即将上线的新交易对、新USDⓈ-Margined合约及PREDICTUSDT预市交易等产品快讯，输出交易工具使用、新合约布局类内容，关联正在进行的Spot Trading Tournament Season 8等交易竞赛，引导用户参与活动追平台热度，提升内容曝光与返佣导流效果。",
   "last_updated": "2026-10-27T01:27:32.348901Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "fails": 3,
-      "last_fail": "2026-10-27T04:24:08.301081+00:00",
-      "parked_until": "2026-10-27T10:24:08.301081+00:00"
-    },
     "Bitcoinist (比特币向)": {
+      "last_fail": "2026-10-27T09:03:32.603545+00:00",
       "fails": 3,
-      "last_fail": "2026-10-27T08:43:35.982852+00:00",
       "parked_until": "2026-10-20T06:53:53.228743+00:00"
+    },
+    "CoinJournal (山寨异动)": {
+      "last_fail": "2026-10-27T04:24:08.301081+00:00",
+      "fails": 3,
+      "parked_until": "2026-10-27T10:24:08.301081+00:00"
     }
   },
   "_fallback_image": {
     "date": "2026-10-18",
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun-flash": {
+      "fails": 1,
+      "cooldown_until": "2026-10-27T09:15:42.608827+00:00",
+      "last_fail": "2026-10-27T09:05:42.608836+00:00"
+    },
+    "Preset-stepfun": {
+      "fails": 1,
+      "cooldown_until": "2026-10-27T09:17:57.540554+00:00",
+      "last_fail": "2026-10-27T09:07:57.540575+00:00"
+    }
+  },
   "_article_sent_date": "2026-10-27",
   "_publish_park": {},
   "_intel_refresh_fail": {},
