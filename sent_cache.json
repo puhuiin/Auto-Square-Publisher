@@ -1,15 +1,5 @@
 [
   {
-    "id": "f065c314b0545f6a",
-    "title": "Ethereum Price Prediction: Is ETH’s 7% Weekly Drop Just the Start?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-18T21:44:09.006537+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2625502b017b2f8c",
     "title": "Cardano Eyes Insanely Bullish Cup-And-Handle Breakout As Hoskinson Teases New Programming Language For ADA",
     "source": "ZyCrypto (新币与空投)",
@@ -5169,5 +5159,15 @@
       "AAVE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "dfe1a483dd9b0a0c",
+    "title": "Bonk Guy:链上Meme市场远未触底,历史性机会或将再现",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-27T13:07:55.750015+00:00",
+    "tokens": [
+      "TRUMP"
+    ],
+    "lang": "zh-TW"
   }
 ]
