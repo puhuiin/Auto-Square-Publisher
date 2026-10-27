@@ -1,15 +1,5 @@
 [
   {
-    "id": "8f535b98502d31ec",
-    "title": "Tokenized Stocks Reach $262 Million In DeFi, But The Growth Is Not All On Base",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-19T05:05:10.765393+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f6dc65cccec7f8e7",
     "title": "Galaxy 研报:Ledger 钱包在经销商环节被植入窃密芯片,比特币“最稳”的一角本季接连失守",
     "source": "深潮TechFlow (中文/简体)",
@@ -5171,6 +5161,17 @@
     "sent_at": "2026-10-27T18:45:03.782360+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "01c60565c0cf8324",
+    "title": "紐約梅隆銀行擴大與 Ripple 合作!XRP、RLUSD 納入託管,測試鏈上貿易融資",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-10-27T19:04:48.098947+00:00",
+    "tokens": [
+      "XRP",
+      "RLUSD"
     ],
     "lang": "en"
   }
