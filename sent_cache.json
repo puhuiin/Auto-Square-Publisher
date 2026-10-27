@@ -1,16 +1,5 @@
 [
   {
-    "id": "9e038e32d895ae08",
-    "title": "Cross River Bank Adds Ripple’s RLUSD To Its Payment Infrastructure",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-10-18T22:25:05.252296+00:00",
-    "tokens": [
-      "RLUSD",
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b409654ae069b899",
     "title": "Uniswap reserves drop to 72.9M as Grayscale maintains exposure – Can UNI rebound?",
     "source": "AMBCrypto (技术与链上)",
@@ -5170,5 +5159,17 @@
       "USDC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "04c0d7d4a8acee6c",
+    "title": "TechFlow 情報局:SpaceX 舉債 400 億美元買 GPU,Ripple 終獲美國國家信託銀行牌照",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-10-27T13:47:29.195369+00:00",
+    "tokens": [
+      "USDC",
+      "RLUSD",
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]

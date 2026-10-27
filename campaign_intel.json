@@ -2,44 +2,36 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#HalloweenPumpkinFrenzy",
-    "#FuturesTrading",
-    "#TradingTournament"
+    "#TradingTournament",
+    "#BinanceBlockchainWeek",
+    "#Halloween"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$USDC",
     "$XRP",
-    "$FF",
     "$AAPLB",
     "$NVDAB",
-    "$PREDICT",
-    "$RLUSD"
+    "$PREDICT"
   ],
-  "strategy_guidance": "当前万圣节主题交易活动剩余周期不足1周，是时间压力最突出的官方活动，发帖可围绕活动玩法做冲刺向内容，引导读者参与评论互动拿Write2Earn奖励；同时结合10月28日即将上线的新交易对、新USDⓈ-Margined合约及PREDICTUSDT预市交易等产品快讯，输出交易工具使用、新合约布局类内容，关联正在进行的Spot Trading Tournament Season 8等交易竞赛，引导用户参与活动追平台热度，提升内容曝光与返佣导流效果。",
-  "last_updated": "2026-10-27T01:27:32.348901Z",
+  "strategy_guidance": "优先追踪“万圣节南瓜狂欢”与“第八季现货交易赛”的实时动态，通过分享实战分析引导读者参与互动以获取奖励。结合新上线的 TradFi 永续合约与 bStocks 资产，利用 Binance Pick 预测功能进行热点解读，在合规前提下提升内容在 Write to Earn 机制下的曝光度与交易返佣潜力。",
+  "last_updated": "2026-10-27T13:45:01.855956Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3,
-      "last_fail": "2026-10-27T13:23:37.218172+00:00",
-      "parked_until": "2026-10-20T06:53:53.228743+00:00"
+      "last_fail": "2026-10-27T13:45:03.044879+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
-  "_llm_breaker": {
-    "Preset-stepfun-flash": {
-      "fails": 2,
-      "last_fail": "2026-10-27T13:25:56.543006+00:00",
-      "cooldown_until": "2026-10-27T13:45:56.542984+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-10-27",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 393,
+  "_img_rot": 394,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
