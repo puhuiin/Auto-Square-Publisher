@@ -1,15 +1,5 @@
 [
   {
-    "id": "9810394338aa36b3",
-    "title": "Algorand tops post-quantum race with 2.7M secure transfers- Will it rally ALGO?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-19T03:44:29.841883+00:00",
-    "tokens": [
-      "ALGO"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f5ffbdf1d9cb5713",
     "title": "单资产加密期货增至11个,芝商所将上线比特币现金与Uniswap期货",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5171,6 +5161,16 @@
       "BNB",
       "ETH",
       "ARB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "44744f47b32096e1",
+    "title": "余烬:疑似 UXLINK 黑客在 Hyperliquid 持有逾 7000 万美元 ETH 多单,浮盈 562 万美元",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-27T17:44:28.859428+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
