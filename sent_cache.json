@@ -1,15 +1,5 @@
 [
   {
-    "id": "8f00d33e342247f0",
-    "title": "Strive CEO:稀缺资产长期跑赢货币超发,比特币应为“数字黄金”",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-19T01:57:47.951574+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "53c2d1e649f9f8f2",
     "title": "加密板块涨跌互现,PayFi板块涨超1%,RWA及DePIN板块小幅下跌",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5171,6 +5161,17 @@
     "sent_at": "2026-10-27T16:03:58.442615+00:00",
     "tokens": [
       "PENGU"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "067d8c79ae13a862",
+    "title": "Akash Network leaves Cosmos for Solana – What you need to know!",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-27T16:24:27.352697+00:00",
+    "tokens": [
+      "SOL",
+      "ATOM"
     ],
     "lang": "en"
   }
