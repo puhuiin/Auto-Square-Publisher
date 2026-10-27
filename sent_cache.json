@@ -1,16 +1,5 @@
 [
   {
-    "id": "fd8c4197cedcef41",
-    "title": "Cardano Stablecoin Market Tops $70 Million As USDC Dominates Supply",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-10-18T21:24:27.441067+00:00",
-    "tokens": [
-      "USDC",
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f065c314b0545f6a",
     "title": "Ethereum Price Prediction: Is ETH’s 7% Weekly Drop Just the Start?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5166,6 +5155,18 @@
     "sent_at": "2026-10-27T12:24:53.929671+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c32a509dedc05711",
+    "title": "孙宇晨两个钱包累计接收 4,876 万美元 PEPE,持仓价值升至 5,101 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-27T12:45:21.345448+00:00",
+    "tokens": [
+      "PEPE",
+      "USDC",
+      "AAVE"
     ],
     "lang": "zh-CN"
   }
