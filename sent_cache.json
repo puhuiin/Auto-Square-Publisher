@@ -1,15 +1,5 @@
 [
   {
-    "id": "ea08ba5df0473c11",
-    "title": "价值3892万美元,某巨鲸过去1日再质押约50万枚HYPE",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-19T04:24:58.015057+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2c32ed93dc016ead",
     "title": "Worldcoin’s October slide: AI hype isn’t enough to hold $0.50",
     "source": "AMBCrypto (技术与链上)",
@@ -5170,6 +5160,17 @@
     "tokens": [
       "USDC",
       "AAVE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a5b97578003853d4",
+    "title": "RLUSD 将于年底前上线 Robinhood App",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-27T18:24:07.676003+00:00",
+    "tokens": [
+      "RLUSD",
+      "XRP"
     ],
     "lang": "en"
   }
