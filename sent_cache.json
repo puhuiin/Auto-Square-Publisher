@@ -1,15 +1,5 @@
 [
   {
-    "id": "609f6380efd74a09",
-    "title": "现货 ETF 两周失血近 10 亿美元,加密“Uptober”向宏观重力低头",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-19T06:44:45.695074+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b0724eb3a061776d",
     "title": "韩国未来资产证券计划 2027 年一季度推出代币化产品,首批含代币化货币市场基金与私募债券",
     "source": "深潮TechFlow (中文/简体)",
@@ -5169,6 +5159,16 @@
     "tokens": [
       "RLUSD",
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "97d3131b31470bb7",
+    "title": "Stellar Repo Test Executes 72 Hourly Rolls Using Sovereign Debt",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-27T20:45:02.023447+00:00",
+    "tokens": [
+      "XLM"
     ],
     "lang": "en"
   }
