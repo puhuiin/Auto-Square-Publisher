@@ -1,15 +1,5 @@
 [
   {
-    "id": "6a95c731a3f0ced0",
-    "title": "Hackers move stolen funds from Ledger, Bitget into Zcash shielded pools: Is ZEC at risk?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-18T15:04:10.611488+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ac295feed70a6daa",
     "title": "孙宇晨地址从 Poloniex 多签地址收到 7.2 万亿枚 PEPE,价值约 2844 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5166,5 +5156,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d77e7f6a54d6731d",
+    "title": "Zcash 联创提议停止向社区基金「输血」:坐拥 9.1 万枚 ZEC,8% 区块奖励拟转入网络储备",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-27T05:48:43.725169+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
