@@ -1,15 +1,5 @@
 [
   {
-    "id": "1833fba0d2c29fcb",
-    "title": "XRP clings to $1.25 as Evernorth’s rumored $655M purchase stays unconfirmed",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-18T16:05:09.325588+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c26ea888d7a18a9b",
     "title": "Claude unpicks an NSA mystery behind Ethereum passkey security",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5164,6 +5154,16 @@
     "sent_at": "2026-10-27T06:44:58.627243+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "259dd59fc42867f7",
+    "title": "Elon Musk’s Grok AI Predicts When Bitcoin Will Finally Hit its Ultimate Price Target",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-27T07:04:13.464987+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
