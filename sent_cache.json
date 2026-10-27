@@ -1,17 +1,5 @@
 [
   {
-    "id": "53c2d1e649f9f8f2",
-    "title": "加密板块涨跌互现,PayFi板块涨超1%,RWA及DePIN板块小幅下跌",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-19T02:24:07.271547+00:00",
-    "tokens": [
-      "ZEC",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "6929ec3f2cb3e0b7",
     "title": "数据:主要 Meme 市场 24h 交易量约 2.67 亿美元,环比增长 31.3%",
     "source": "吴说区块链 (中文深度)",
@@ -5172,6 +5160,16 @@
     "tokens": [
       "SOL",
       "ATOM"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fc451a921de7bb30",
+    "title": "Elon Musk’s Grok AI Predicts an Unbelievable XRP Price",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-27T16:44:22.983603+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
