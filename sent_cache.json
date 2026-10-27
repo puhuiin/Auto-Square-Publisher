@@ -1,15 +1,5 @@
 [
   {
-    "id": "ce50253034040daa",
-    "title": "Zcash 開發團隊出手了!Zakura 提出量子防護方案,每筆跨鏈交易獨立金鑰",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-10-19T07:47:02.065987+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "788ab81c57b851d7",
     "title": "Aster 过去两周回购并销毁超 272 万枚 ASTER,累计销毁总量超 2.1 亿枚",
     "source": "深潮TechFlow (中文/简体)",
@@ -5171,5 +5161,15 @@
       "XRP"
     ],
     "lang": "en"
+  },
+  {
+    "id": "6caa2e7dc4d52fb7",
+    "title": "XRP’s Wall Street Push Accelerates: America’s Oldest Bank BNY Joins Ripple for Tokenized Trade Finance on XRP Ledger",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-27T22:30:37.719060+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
