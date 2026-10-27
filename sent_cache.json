@@ -1,15 +1,5 @@
 [
   {
-    "id": "0ced4a3d66cadfcc",
-    "title": "SEC approves Coinbase earnings bets that stay settled when the numbers change",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-18T16:41:42.922572+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "938767fa91feb0a9",
     "title": "BitTorrent Ushers in Next-Gen Web3 Infrastructure with Strategic Rebrand and Inaugural BTT Burn",
     "source": "NewsBTC (比特币与山寨)",
@@ -5166,5 +5156,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "920455251b68842d",
+    "title": "BNB Chain tokenized assets surge in Q3 as RWA supply reaches $4.96B",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-27T07:45:02.792282+00:00",
+    "tokens": [
+      "BNB"
+    ],
+    "lang": "zh-TW"
   }
 ]
