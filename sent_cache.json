@@ -1,15 +1,5 @@
 [
   {
-    "id": "89184b29129e2956",
-    "title": "Solana (SOL) Hits 1.4 Million Tokenized Stock Holders in Historic Retail Surge",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-19T16:44:00.514367+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "dd027c28c8fc8607",
     "title": "Abandoned Bitcoin? Wallet Targeted by Noah Doe Lawsuit Moves $33 Million",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5172,6 +5162,16 @@
     "sent_at": "2026-10-28T07:10:00.619657+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "371f72b6f4510b6a",
+    "title": "以太坊现货ETF昨日总净流出6021.78万美元,仅贝莱德ETHA净流出",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-28T07:26:58.766425+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
