@@ -1,16 +1,5 @@
 [
   {
-    "id": "b7152717d6a33fd5",
-    "title": "股市疲軟或將抑制比特幣需求,分析師警告 8 萬美元支撐位或面臨考驗",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-20T11:43:50.446044+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e30b413833b33e6f",
     "title": "BNB’s 37th quarterly burn removes 1.64M tokens – Move toward $800 needs...",
     "source": "AMBCrypto (技术与链上)",
@@ -5164,5 +5153,15 @@
       "ETH"
     ],
     "lang": "en"
+  },
+  {
+    "id": "ddbdb72b02678e98",
+    "title": "Mark Zuckerberg’s Meta AI Predicts an Astonishing XRP Price",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-28T22:45:52.408453+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
