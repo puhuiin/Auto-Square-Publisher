@@ -1,15 +1,5 @@
 [
   {
-    "id": "373d9a3245280243",
-    "title": "Hoskinson reveals new code for Cardano, but $63M TVL exposes a gap",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-19T21:25:08.378129+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f68260d84775a238",
     "title": "BlackRock files for iShares Bitcoin Managed Protection ETF",
     "source": "Crypto Briefing (深度与研报)",
@@ -5171,6 +5161,18 @@
     "sent_at": "2026-10-28T12:08:02.670714+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "2b8b215806313431",
+    "title": "TechFlow 情报局:SK 海力士称存储芯片三年卖光,华尔街为 Anthropic 发210 亿美元债券买博通芯片",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-28T12:48:32.090723+00:00",
+    "tokens": [
+      "RLUSD",
+      "XRP",
+      "XLM"
     ],
     "lang": "zh-CN"
   }
