@@ -1,16 +1,5 @@
 [
   {
-    "id": "e3a3310625ef127e",
-    "title": "股市疲软或将抑制比特币需求,分析师警告 8 万美元支撑位或面临考验",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-20T11:23:46.540739+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b7152717d6a33fd5",
     "title": "股市疲軟或將抑制比特幣需求,分析師警告 8 萬美元支撐位或面臨考驗",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5161,6 +5150,18 @@
     "sent_at": "2026-10-28T21:26:02.831586+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fa27a593dc8c7105",
+    "title": "Coinbase adds Ripple’s RLUSD stablecoin across retail, exchange and Prime platforms",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-28T21:44:38.012334+00:00",
+    "tokens": [
+      "RLUSD",
+      "XRP",
+      "ETH"
     ],
     "lang": "en"
   }
