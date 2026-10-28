@@ -1,15 +1,5 @@
 [
   {
-    "id": "b5a7f475521e56d4",
-    "title": "Hoskinson Hails Midnight as His Career’s “Magnum Opus,” Says Leios Will Complete Cardano",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-20T00:07:25.961767+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b5d215dcb956820d",
     "title": "某 ETH 巨鲸卖出 12,468 枚 ETH 获利 899 万美元,转向 Hyperliquid 做多原油",
     "source": "深潮TechFlow (中文/简体)",
@@ -5175,6 +5165,16 @@
     "sent_at": "2026-10-28T14:27:27.854530+00:00",
     "tokens": [
       "ONDO"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "eb85ea982ed7ceb1",
+    "title": "18万枚HYPE解质押,Hyperliquid用于团队每月解锁",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-28T14:44:41.789788+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
