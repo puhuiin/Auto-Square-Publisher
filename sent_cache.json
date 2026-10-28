@@ -1,15 +1,5 @@
 [
   {
-    "id": "fb5ee5a71713bf96",
-    "title": "Binance Completes 37th BNB Chain Burn: This Is How Many Tokens Were Burned",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-19T15:27:44.192213+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8b889c9d30d975a7",
     "title": "Shiba Inu Burn Rate Rockets 2,349% but Just $5 Burned: What's Happening?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5172,5 +5162,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "b020380f7a97cb2c",
+    "title": "Bitcoin nears $81,000 ahead of Fed decision as ZEC jumps 8%",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-10-28T06:30:31.232690+00:00",
+    "tokens": [
+      "ZEC",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
