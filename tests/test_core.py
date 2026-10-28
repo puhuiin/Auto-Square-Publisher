@@ -15365,6 +15365,80 @@ class TestR843TagBudget(unittest.TestCase):
         self.assertEqual(len(re.findall(r"#[^\s#]+", out)), m.SquarePublisher.MAX_HASHTAGS + 1)
 
 
+class TestR844CampaignRequirementLast(unittest.TestCase):
+    """★★ R844：活动要求的**位置**搬到了 prompt 最末一条核心要求，**措辞一个字没动**。
+
+    ★ 为什么只调顺序：R760 的教训——那次只把条件句改成期望句的**措辞**，正文提及率就从
+      93% 掉到 33%（模型把"换说法"读成"可以不提"）⇒ 本轮连逃生阀那句都逐字保留。
+    ★ 为什么搬：R835 归因——真漏帖的 `ending_style` 集中在「仓位表白/时间竞猜/情绪表态」，
+      而要求原先挂在结尾风格指令**之前**，被后写下的结尾风格压过。
+    """
+
+    def _eng(self):
+        import main as _m
+        eng = _m.MultiLLMEngine.__new__(_m.MultiLLMEngine)
+        eng.last_intel_section = ""
+        eng.last_campaign_guidance_usable = False
+        eng._recent_published_rows = lambda n: []
+        eng._recent_fng_hook_count = lambda: 0
+        eng.fng_ban_active = False
+        return _m, eng
+
+    @staticmethod
+    def _intel():
+        import datetime as _dt
+        return {"strategy_guidance": "结合 Spot Trading Tournament Season 8 引导交易",
+                "active_tags": ["#Write2Earn", "#BinanceSquare", "#TradingTournament"],
+                "last_updated": _dt.datetime.now(_dt.timezone.utc).isoformat()}
+
+    @staticmethod
+    def _item():
+        return {"title": "比特币放量突破", "summary": "BTC 涨了 3%", "tokens": ["BTC"]}
+
+    def test_requirement_is_last_core_requirement(self):
+        _m, eng = self._eng()
+        up, _ = eng._build_user_prompt(self._item(), self._intel(), market_context="",
+                                       token_hints=["BTC"], article=False)
+        i_req = up.find("本篇活动提法套路")
+        i_end = up.find("本条结尾站队提问的套路")
+        i_out = up.find("直接输出正文")
+        self.assertGreater(i_req, i_end, "要求必须在结尾风格指令之后——这就是本次干预本身")
+        self.assertLess(i_req, i_out, "要求必须落在「直接输出」之前（否则不成为指令）")
+        self.assertIn("8. 【本篇活动提法套路", up, "短讯分支的要求必须是末条第 8 项")
+
+    def test_article_branch_also_last(self):
+        _m, eng = self._eng()
+        up, _ = eng._build_user_prompt(self._item(), self._intel(), market_context="",
+                                       token_hints=["BTC"], article=True)
+        self.assertIn("7. 【本篇活动提法套路", up, "长文分支编号到 6 ⇒ 要求是第 7 项")
+        self.assertLess(up.find("本篇活动提法套路"), up.find("直接输出 TITLE"))
+
+    def test_wording_unchanged(self):
+        """★ R760 守卫：措辞必须逐字未动（改措辞曾把提及率从 93% 打到 33%）。
+
+        ⚠️ **必须比对运行时 prompt，不能比对源码**：这几句在 main.py 里是**括号内隐式拼接**
+        （`"…只有当本条新闻确实与交易活动"` + `"八竿子打不着时才可不提。"`），
+        源码文本里根本**不存在**完整句 ⇒ 拿源码做 `assertIn` 会假红（R840 踩过同型坑：
+        那种拼接对缩进不敏感，但会骗过一切"按源码文本断言"的工具）。
+        """
+        _m, eng = self._eng()
+        up, _ = eng._build_user_prompt(self._item(), self._intel(), market_context="",
+                                       token_hints=["BTC"], article=False)
+        for frag in ("【本篇活动提法套路（本帖照这个框架带一句活动提法，每帖换说法）】：",
+                     "★ 别把活动提法写成「想练手/想试水」类念头与「竞赛/锦标赛」"
+                     "**出现在同一句**的那个模板",
+                     "只有当本条新闻确实与交易活动八竿子打不着时才可不提。"):
+            self.assertIn(frag, up, "措辞被改动了——本轮只允许搬位置：%s" % frag)
+
+    def test_guidance_stays_in_intel_section(self):
+        """只搬**要求**，不搬**情报**：guidance 必须还在 intel_section，否则模型不知道活动是什么。"""
+        _m, eng = self._eng()
+        eng._build_user_prompt(self._item(), self._intel(), market_context="",
+                               token_hints=["BTC"], article=False)
+        self.assertIn("Spot Trading Tournament Season 8", eng.last_intel_section)
+        self.assertNotIn("本篇活动提法套路", eng.last_intel_section)
+
+
 class TestZeroWidthStripping(unittest.TestCase):
     """R9：零宽字符能插在敏感词/标签/$TOKEN 中间拆开下游所有正则"""
 

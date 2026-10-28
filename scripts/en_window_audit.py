@@ -389,6 +389,50 @@ def _fmt_cap(s: dict) -> str:
         s["date"], s["lang"], s["n"], s["at_cap"], s["pct"])
 
 
+# ===========================================================================
+# 第四条预注册判据（R844）：把「必须带活动提法」挪到 prompt 的**最后一条核心要求**
+# ---------------------------------------------------------------------------
+# 假设（来自 R835 的归因切片）：真漏帖的 `ending_style` 集中在「仓位表白 / 时间竞猜 /
+#   情绪表态」这类**自我指涉式结尾**——模型写最后一句时服从的是"结尾站姿/实操角度"指令，
+#   把活动句挤掉。而活动要求当时挂在 `intel_section`（在结尾指令**之前**）⇒ 被后写下去的
+#   指令压过。
+# 干预：把要求（框架行 + 禁令行 + 逃生阀）**逐字**搬进 prompt 末尾的【核心要求】列表第 7 条。
+#   ★ **只调顺序，一个字的措辞都不动**——R760 的教训：一次"改措辞"把正文提及率从 93%
+#     打到 33%（模型把"换说法"读成"可以不提"）。连逃生阀那句都原样保留。
+# 基线（干预前现况）：10-26 + 10-27 两个夜窗 = **15/45 = 33%**（R842 更正后的口径）。
+# 阈值（整数分数；判定全程整数交叉相乘，**禁止比浮点百分比**）：
+#   · **通过**：处置臂 ≥2 窗且合并 n ≥ 36，合并真漏率 **≤ 1/10**；
+#   · **回滚**：合并真漏率**比基线更差**，或**任一窗 > 50%** ⇒ 把要求逐字搬回 intel_section；
+#   · **未通过**（介于两者）：**保留改动但标注「未被证实」**，下一轮复看是否继续。
+#     ★ 这一档补的是 R843 发现的缺口：旧条款只写了通过线/回滚线，**没写"未通过"之后怎么办**。
+# 副作用守卫（与 ①②③ 一起读）：② 断句仍为 0；③ 顶格不恶化（≤ 基线 19%）；quality 拒稿不增。
+R844_BASE_MISS, R844_BASE_NORMAL = 15, 45      # 10-26+10-27 实测（干预前）
+R844_PASS_NUM, R844_PASS_DEN = 1, 10           # 通过线：合并真漏 ≤ 1/10
+R844_REVERT_WINDOW_PCT = 50                    # 单窗红线
+
+
+def r844_verdict(treat_stats) -> tuple:
+    """R844 预注册判定（返回 (状态, 说明)）。阈值全程整数交叉相乘。"""
+    n = sum(s["normal"] for s in treat_stats)
+    miss = sum(s["miss"] for s in treat_stats)
+    if len(treat_stats) < MIN_ARM_WINDOWS or n < MIN_ARM_N:
+        return ("样本不足", "需 ≥%d 窗口 / n≥%d；当前 %d 窗 / %d 篇"
+                % (MIN_ARM_WINDOWS, MIN_ARM_N, len(treat_stats), n))
+    for s in treat_stats:
+        if s["normal"] and s["miss"] * 100 > R844_REVERT_WINDOW_PCT * s["normal"]:
+            return ("回滚", "单窗真漏 %d/%d 超过 %d 个百分点上限"
+                    % (s["miss"], s["normal"], R844_REVERT_WINDOW_PCT))
+    if miss * R844_BASE_NORMAL > R844_BASE_MISS * n:          # miss/n > base/normal
+        return ("回滚", "合并真漏 %d/%d 比 R844 基线 %d/%d 更差"
+                % (miss, n, R844_BASE_MISS, R844_BASE_NORMAL))
+    if miss * R844_PASS_DEN <= R844_PASS_NUM * n:
+        return ("通过", "合并真漏 %d/%d ≤ 通过线 %d/%d（基线 %d/%d）"
+                % (miss, n, R844_PASS_NUM, R844_PASS_DEN, R844_BASE_MISS, R844_BASE_NORMAL))
+    return ("未通过", "合并真漏 %d/%d 高于通过线 %d/%d、但不比基线 %d/%d 差 "
+            "⇒ 保留改动并标注「未被证实」，下一轮复看"
+            % (miss, n, R844_PASS_NUM, R844_PASS_DEN, R844_BASE_MISS, R844_BASE_NORMAL))
+
+
 def load_rows(path: str):
     rows = []
     with open(path, encoding="utf-8") as fh:
@@ -425,6 +469,9 @@ def main(argv=None) -> int:
     if base and treat:
         status, why = verdict(base, treat)
         print("\n判定①（活动提及）：%s —— %s" % (status, why))
+        # ---- 第四条判据（R844）：同口径、不同的基线与阈值（干预 = 把要求挪到核心要求末条）----
+        st4, why4 = r844_verdict(treat)
+        print("判定④（R844 活动提法位置）：%s —— %s" % (st4, why4))
         # 归因切片（R835）：真漏与哪些既有字段相关（**诊断，不设阈值**）
         for label, dates in (("基线臂", args.baseline), ("处置臂", args.treatment)):
             _miss = []

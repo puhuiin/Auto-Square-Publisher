@@ -9381,6 +9381,71 @@ class TestR839EngagementSection(unittest.TestCase):
         self.assertIn("浏览 合计 7", line)
 
 
+class TestR844Preregistration(unittest.TestCase):
+    """★★ R844：把「必须带活动提法」从 `intel_section` 搬到 prompt **最末一条核心要求**。
+
+    这是**真预注册**：处置窗口还不存在（干预 10-28 上线），阈值无法事后拟合。
+    ★ 基线（干预前现况）：10-26+10-27 两夜窗 = **15/45 = 33%**（R842 更正后的口径）。
+    ★ 假设来源：R835 归因切片——真漏帖的 `ending_style` 集中在「仓位表白/时间竞猜/情绪表态」
+      这类自我指涉式结尾；要求原先挂在结尾指令**之前** ⇒ 被后写的结尾风格压过。
+    ★ 副作用守卫：② 断句仍 0；③ 顶格不恶化（≤19%）；quality 拒稿不增。
+    ⚠️ 本组只钉**口径与阈值**，不钉结论（结论要等 ≥2 个干预后的夜窗）。
+    """
+
+    @staticmethod
+    def _ew():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "en_window_audit_r844",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "en_window_audit.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _win(normal, miss):
+        return {"date": "d", "n": normal, "mention": normal - miss, "normal": normal,
+                "miss": miss, "langdev": 0,
+                "mention_rate": 100.0 * (normal - miss) / normal,
+                "miss_rate": 100.0 * miss / normal}
+
+    def test_baseline_matches_measured_preregistration(self):
+        """基线必须就是 R842 更正后实测的那两个窗口（15/45），不许随手改。"""
+        mod = self._ew()
+        self.assertEqual((mod.R844_BASE_MISS, mod.R844_BASE_NORMAL), (15, 45))
+
+    def test_verdict_tiers(self):
+        mod = self._ew()
+        # 13/45 ≈ 29% ⇒ 高于通过线（10%）但不比基线（33%）差 ⇒ **未通过**
+        #   （★ 这是 R843 发现的新档位：旧条款只写了通过线/回滚线，"未通过"之后怎么办留空）
+        self.assertEqual(mod.r844_verdict([self._win(22, 6), self._win(23, 7)])[0], "未通过")
+        # 4/45 ≈ 9% ⇒ ≤1/10 ⇒ 通过
+        self.assertEqual(mod.r844_verdict([self._win(22, 2), self._win(23, 2)])[0], "通过")
+        # 22/45 ≈ 49% ⇒ **比基线 33% 差** ⇒ 回滚
+        self.assertEqual(mod.r844_verdict([self._win(22, 11), self._win(23, 11)])[0], "回滚")
+        # 单窗 11/20 = 55% ⇒ 回滚（哪怕合并还行）
+        self.assertEqual(mod.r844_verdict([self._win(20, 11), self._win(25, 3)])[0], "回滚")
+        # 单臂只有 1 窗 ⇒ 样本不足
+        self.assertEqual(mod.r844_verdict([self._win(22, 2)])[0], "样本不足")
+
+    def test_pass_line_is_integer_fraction(self):
+        """★ 阈值必须是**整数分数**且判定走整数交叉相乘（R832 的教训：浮点边界永不相等）。
+
+        恰好落在通过线（4/40 = 1/10）的样本**必须判通过**，不许因为浮点误差落到"未通过"。
+        """
+        mod = self._ew()
+        self.assertEqual((mod.R844_PASS_NUM, mod.R844_PASS_DEN), (1, 10))
+        self.assertEqual(mod.r844_verdict([self._win(20, 2), self._win(20, 2)])[0], "通过")
+
+    def test_no_float_percent_in_verdict(self):
+        """判定函数里不许出现浮点百分比比较（只许整数交叉相乘）。"""
+        import inspect
+        src = inspect.getsource(self._ew().r844_verdict)
+        self.assertNotIn("miss_rate", src, "不许拿 miss_rate（浮点%）去比阈值")
+        self.assertIn("R844_BASE_NORMAL", src, "必须用整数交叉相乘比基线")
+
+
 class TestR834EnLengthBudget(unittest.TestCase):
     """★★ R834：英文篇幅目标与**可发布预算**对齐 + 「顶到上限」入验收。
 
