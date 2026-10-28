@@ -1,15 +1,5 @@
 [
   {
-    "id": "b98d53c0f51b2b9f",
-    "title": "BitMine Adds 12,535 ETH to Treasury as Tom Lee Cites Macro and Tech Headwinds",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-19T18:23:45.192120+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0508939f93619b41",
     "title": "Worldcoin goes Wall Street: World ID suite rolls out for banks and financial firms",
     "source": "AMBCrypto (技术与链上)",
@@ -5174,6 +5164,16 @@
       "USDC",
       "ETH",
       "INIT"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0e129438180620a4",
+    "title": "Justin Sun now holds 2.82% of PEPE supply – The biggest individual holder",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-28T09:15:04.202859+00:00",
+    "tokens": [
+      "PEPE"
     ],
     "lang": "zh-CN"
   }
