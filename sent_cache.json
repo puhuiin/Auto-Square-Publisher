@@ -1,16 +1,5 @@
 [
   {
-    "id": "278bd92fc88d7ef7",
-    "title": "Stay Cautious: ZEC Whale Buys Nullmask (MASK), Massive Token Concentration Raises Red Flags",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-20T09:44:13.909323+00:00",
-    "tokens": [
-      "ZEC",
-      "MASK"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "cc93266f7c00e95c",
     "title": "Drift-Linked Wallet Sends $54.8 Million in ETH to Tornado Cash",
     "source": "The Defiant (DeFi 深度)",
@@ -5161,6 +5150,16 @@
     "sent_at": "2026-10-28T19:46:27.841998+00:00",
     "tokens": [
       "GMX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6edf053eb959c196",
+    "title": "Sam Altman’s ChatGPT AI Predicts PEPE to Spark a Meme Coin Supercycle",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-28T20:06:15.762812+00:00",
+    "tokens": [
+      "PEPE"
     ],
     "lang": "en"
   }
