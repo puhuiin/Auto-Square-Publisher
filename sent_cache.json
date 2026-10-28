@@ -1,17 +1,5 @@
 [
   {
-    "id": "6771cef7fd7c6957",
-    "title": "BlackRock files for third Bitcoin ETF, still no Solana or XRP",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-20T08:24:37.531245+00:00",
-    "tokens": [
-      "XRP",
-      "BTC",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "873fac2335a3a98f",
     "title": "币安将移除BONK等4个现货交易对",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5162,6 +5150,16 @@
     "title": "Solana Ships New Validator and SDK Releases After Alpenglow Upgrade",
     "source": "NewsBTC (比特币与山寨)",
     "sent_at": "2026-10-28T18:24:42.581677+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "dd356f3a9bd4c2e9",
+    "title": "Solana Alpenglow Goes Live, Targeting 150-Millisecond Finality",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-28T18:45:03.601013+00:00",
     "tokens": [
       "SOL"
     ],
