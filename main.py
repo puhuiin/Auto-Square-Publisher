@@ -647,6 +647,31 @@ METRICS_FILE = os.path.join(BASE_DIR, "metrics.jsonl")
 TOKEN_ENGAGEMENT_FILE = os.path.join(BASE_DIR, "token_engagement.json")
 
 
+def _raw_trim_stats(raw, final):
+    """★★★ R845：把「原稿 vs 发布」的读数集中在一处（抽出来是为了**可单测**——
+    按源码文本断言那种做法本轮刚吃过亏：括号内隐式拼接会让源码里根本不存在完整表达式）。
+
+    返回 `(raw_chars, trimmed_chars)`；任一不可用 ⇒ 对应位置 None（未知不是 0，纪律 12）。
+
+    ★ 读法（**符号已定好，别反过来**）：
+      · `trimmed_chars` **正值且 > 50** ⇒ 原稿明显比发布的长 ⇒ **是我们截的**
+        （净化预算 820；追加的挂件/活动标签只会 +~30，抵不掉这个量级）；
+      · **≈0 或略负（−30..0）** ⇒ 我们没截 ⇒ 若正文**仍以半词结尾**，那半句是
+        **上游给的**（模型/提供方的可见输出被切）——两者修法完全不同。
+
+    为什么需要它：7 篇残留断句帖的签名是"**字符级**硬切"（总长紧聚 838~840、极差仅 2），
+    而分布反推判不了归属——`completion_tokens` **含推理 token**，可见输出被切时照样散开
+    （上一轮的错误判据就栽在这）。⇒ 落这一个等式，把"谁切的"变成可直查的事实。
+    """
+    raw_n = len(raw) if isinstance(raw, str) and raw else None
+    fin_n = len(final) if isinstance(final, str) and final else None
+    if raw_n is None:
+        return None, None
+    if fin_n is None:
+        return raw_n, None
+    return raw_n, raw_n - fin_n
+
+
 def append_metrics(record: Dict[str, Any]) -> None:
     """追加一行投递指标（主线程调用，无需锁；JSONL 单行追加对并发写安全）"""
     try:
@@ -13177,6 +13202,13 @@ def _run_main():
                     # R181：陈旧小时数（float 防御性强转）
                     _iah = getattr(llm_engine, "last_intel_age_hours", None)
                     intel_age_hours = _iah if isinstance(_iah, (int, float)) else None
+                    # ★★★ R845：**净化前原稿长度 + 是否被我们截过**（诊断字段，不改任何门禁行为）。
+                    # 计算集中在 `_raw_trim_stats`（可单测）；读法见那里的 docstring。
+                    # 净效果：以后遇到断句帖，直接看这两列就能判"是我们截的、还是上游给的半句"，
+                    # 不必再拿分布反推（`completion_tokens` 含推理 token，反推无效）。
+                    _raw_chars, _trimmed_chars = _raw_trim_stats(
+                        llm_result.get("content"),
+                        getattr(publisher, "last_final_content", None))
                     append_metrics({
                         "title": title[:60], "source": source, "tokens": post_tokens,
                         "impact_score": score, "provider": llm_result["provider"],
@@ -13219,6 +13251,11 @@ def _run_main():
                         # 唯一度量面；None=Mock/异常态防御性降级
                         "content_chars": content_chars,
                         "content_cjk": content_cjk,
+                        # ★★★ R845：净化前原稿长度 + 「原稿 − 发布」（成对消费，读法见
+                        # `_raw_trim_stats`）：正值且 >50 ⇒ 我们截的；≈0/略负 ⇒ 我们没截
+                        # （那半句是上游给的）。历史行无此字段 ⇒ None（未知不是 0）。
+                        "raw_chars": _raw_chars,
+                        "trimmed_chars": _trimmed_chars,
                         # ★★ R712：**输出语种**进遥测——按语种归因的**唯一 join 键**。
                         # 为什么必须落：`content_cjk` **分不出简繁**（都是 CJK），
                         # 英文帖虽 cjk=0 但那是**副作用**不是标记 ⇒ 没有它就无法回答

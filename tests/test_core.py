@@ -15439,6 +15439,46 @@ class TestR844CampaignRequirementLast(unittest.TestCase):
         self.assertNotIn("本篇活动提法套路", eng.last_intel_section)
 
 
+class TestR845RawTrimTelemetry(unittest.TestCase):
+    """★★★ R845：**净化前原稿长度**进遥测 —— 把"谁把句子切了"从"分布反推"变成"可直查的等式"。
+
+    ★ 背景（本窗口诊断）：7 篇残留断句帖的签名是「**字符级**硬切」（总长紧聚 838~840、极差 2）。
+      已**排除**我们自己的截断器（最小复现：`_enforce_max_chars` 两个分支都尊重边界，末字符是标点）
+      与平台侧上限（全库长度分布连续到 842、没有天花板）。剩下的假说（上游可见输出被切）
+      靠分布判不了 —— `completion_tokens` **含推理 token**，可见输出被切时它照样散开
+      （上一轮我就是拿它做了个**无效判据**，这条测试的存在就是为了以后不必再猜）。
+    ★ 读法：`trimmed_chars` **正值且 > 50** ⇒ 我们截的；**≈0 或略负** ⇒ 我们没截。
+    """
+
+    def test_trimmed_by_us_is_positive_and_large(self):
+        self.assertEqual(m._raw_trim_stats("a" * 1100, "a" * 840), (1100, 260))
+
+    def test_not_trimmed_is_about_zero_or_slightly_negative(self):
+        """我们没截时，追加的挂件/活动标签会让**发布文本比原稿略长** ⇒ 差值为负。
+
+        （这正是判据的分界线：负值/近零 = 不是我们切的，别读反。）
+        """
+        self.assertEqual(m._raw_trim_stats("a" * 838, "a" * 840), (838, -2))
+        self.assertEqual(m._raw_trim_stats("a" * 800, "a" * 800), (800, 0))
+
+    def test_unknown_is_none_not_zero(self):
+        """未知不是 0（纪律 12）：原稿缺失 ⇒ 两个都 None；只有发布缺失 ⇒ trimmed 为 None。"""
+        self.assertEqual(m._raw_trim_stats(None, "x"), (None, None))
+        self.assertEqual(m._raw_trim_stats("", "x"), (None, None))
+        self.assertEqual(m._raw_trim_stats("abc", None), (3, None))
+
+    def test_wired_into_publish_row(self):
+        """行为面：发布行必须真的带这两列（不是只在 helper 里算完就丢）。"""
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "main.py")
+        with open(path, encoding="utf-8") as fh:
+            src = fh.read()
+        self.assertIn('"raw_chars": _raw_chars', src, "发布行没落 raw_chars")
+        self.assertIn('"trimmed_chars": _trimmed_chars', src, "发布行没落 trimmed_chars")
+        self.assertIn("_raw_chars, _trimmed_chars = _raw_trim_stats(", src,
+                      "计算必须走唯一实现（helper），别在行内重写一份")
+
+
 class TestZeroWidthStripping(unittest.TestCase):
     """R9：零宽字符能插在敏感词/标签/$TOKEN 中间拆开下游所有正则"""
 
@@ -22285,7 +22325,15 @@ class TestR758CampaignCtaRotationPool(unittest.TestCase):
                       "必须明示活动信息要说准=返佣红线（R619/R620：弱化=少赚 Write2Earn）")
 
     def test_style_rotates_across_calls(self):
-        """★★ 连续多帖抽到的框架必须互异（draw_fresh 契约；不互异=没轮换）"""
+        """★★ 连续多帖抽到的框架必须互异（draw_fresh 契约；不互异=没轮换）。
+
+        ⚠️ **必须先把池重置到受控初态**：`_CAMPAIGN_CTA_BAG` 是**模块级共享**的洗牌袋，
+          全量跑时它的洗牌位置已被前面所有建过 prompt 的测试消耗过；若这 4 次抽签**跨越
+          一次重新洗牌**，首抽可能与上一周期末尾重复 ⇒ 断言假红。
+          （本轮全量跑时就是这么间歇失败一次：孤立跑 ✓、整类跑 ✓、全量 ✗ ⇒ 典型"顺序相关"。）
+          重置后本条只断言**同一周期内**的互异契约——那才是 `draw_fresh` 真正的约定。
+        """
+        m._CAMPAIGN_CTA_BAG = m.ShuffleBag(m.CAMPAIGN_CTA_STYLE_POOL)
         eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
         eng._fail_counts = {}
         eng._clients = {}
@@ -22298,7 +22346,7 @@ class TestR758CampaignCtaRotationPool(unittest.TestCase):
             eng._build_user_prompt(item, fresh, "", ["BTC"])
             seen.append(eng.last_campaign_cta_style)
         self.assertEqual(len(set(seen)), len(seen),
-                         "连续 %d 帖抽到重复框架 %s ⇒ draw_fresh 失效" % (len(seen), seen))
+                         "同一洗牌周期内抽到重复框架 %s ⇒ draw_fresh 失效" % (seen,))
 
     def test_regex_detects_all_observed_variants(self):
         """★★★ 实测变体零漏报（漏一个=该变体继续收敛而雷达不报）"""
