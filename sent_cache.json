@@ -1,17 +1,5 @@
 [
   {
-    "id": "b34f0577cd67ee2e",
-    "title": "Bitcoin spot ETFs see $526.6 million inflows on October 19 as Ethereum and Solana funds bleed",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-20T07:45:07.811061+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5e739fe7dc9d72e2",
     "title": "Monero (XMR) Rises 11% Weekly: 3 AIs Speculate Whether It Can Flip Zcash (ZEC) in 2026",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5166,6 +5154,16 @@
     "sent_at": "2026-10-28T17:44:37.618975+00:00",
     "tokens": [
       "APT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "621968ec55ff8a97",
+    "title": "Solana co-founder tells US firms opposing tokenized stock trading to go private",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-28T18:04:49.226372+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
