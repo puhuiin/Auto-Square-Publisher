@@ -1,16 +1,5 @@
 [
   {
-    "id": "14c777df869f1a16",
-    "title": "XRP’s transaction volume explodes to $49.66B overnight – Will price follow?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-19T23:05:28.179164+00:00",
-    "tokens": [
-      "XRP",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1790f70f3fbc65db",
     "title": "Long-Awaited XRP Twitter Account Finally Goes Live",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5176,5 +5165,17 @@
       "SHIB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c025f20f829ae9e0",
+    "title": "XRP, HYPE, and ENA Levels to Watch Before the Fed Meets Today: Analyst",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-28T14:05:58.842023+00:00",
+    "tokens": [
+      "XRP",
+      "HYPE",
+      "ENA"
+    ],
+    "lang": "en"
   }
 ]
