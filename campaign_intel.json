@@ -18,16 +18,16 @@
   "strategy_guidance": "优先追贴限时的Halloween Pumpkin Frenzy活动，可从任务攻略、进度冲刺角度切入引导用户参与互动拿Write to Earn奖励；同时结合新上线的USDⓈ-Margined永续合约、仍在进行的AXIS Alpha交易竞赛、Spot交易锦标赛S8、Binance Pick预测活动等当期官方热点，输出快讯、玩法解析类内容，引导用户参与活动互动并关联交易返佣引导。",
   "last_updated": "2026-10-28T01:49:01.890552Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "fails": 3,
-      "last_fail": "2026-10-28T06:46:34.852622+00:00",
-      "reset_at": "2026-10-28T08:26:02.834134+00:00",
-      "parked_until": "2026-10-28T06:37:31.653707+00:00"
-    },
     "Bitcoinist (比特币向)": {
-      "fails": 3,
       "last_fail": "2026-10-28T08:26:04.029721+00:00",
-      "parked_until": "2026-10-20T06:53:53.228743+00:00"
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "fails": 3
+    },
+    "CoinJournal (山寨异动)": {
+      "reset_at": "2026-10-28T08:26:02.834134+00:00",
+      "parked_until": "2026-10-28T06:37:31.653707+00:00",
+      "last_fail": "2026-10-28T06:46:34.852622+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
