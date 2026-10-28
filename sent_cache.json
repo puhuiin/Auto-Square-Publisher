@@ -1,17 +1,5 @@
 [
   {
-    "id": "c2678d91066a2aaf",
-    "title": "CME Targets October 19 Start For Bitcoin Cash And Uniswap Futures",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-19T20:04:50.776322+00:00",
-    "tokens": [
-      "BCH",
-      "UNI",
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "52128bee8057cd05",
     "title": "BNB Chain’s tokenized stock market cap grows by $239.3M in a week",
     "source": "Crypto Briefing (深度与研报)",
@@ -5176,5 +5164,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "090f32d38e95e799",
+    "title": "SUN.io Completes 52nd Buyback and Burn: Total SUN Burned Surpasses 685M as SunSwap Accelerates Ecosystem Integrations",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-28T11:04:28.333031+00:00",
+    "tokens": [
+      "TRX"
+    ],
+    "lang": "zh-CN"
   }
 ]
