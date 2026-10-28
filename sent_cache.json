@@ -1,15 +1,5 @@
 [
   {
-    "id": "75a2c85cbb067e47",
-    "title": "Cardano: Hoskinson reveals new programming language as ADA slips below $0.22",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-20T02:16:21.278424+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a84cd86bbb74b4dd",
     "title": "标普警告超大规模数据中心运营商 AI 债务或高于已知水平",
     "source": "深潮TechFlow (中文/简体)",
@@ -5173,6 +5163,16 @@
       "DOGE",
       "ETH",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "bca8cb0b74933a9f",
+    "title": "Wall Street Veteran Sees Bigger Returns in Crypto Than AI Stocks",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-28T16:06:23.375979+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
