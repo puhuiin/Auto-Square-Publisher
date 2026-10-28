@@ -1,15 +1,5 @@
 [
   {
-    "id": "f68260d84775a238",
-    "title": "BlackRock files for iShares Bitcoin Managed Protection ETF",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-19T21:44:11.964624+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "040be2a52e75eb90",
     "title": "Ethereum Price Prediction: JPMorgan Brings Wall Street Closer to ETH",
     "source": "CryptoNews (全球快讯)",
@@ -5173,6 +5163,17 @@
       "RLUSD",
       "XRP",
       "XLM"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e41f25dcdf423461",
+    "title": "$10 Million Crypto Whale Awakening Closes Market Gap Between Shiba Inu (SHIB) and PEPE",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-28T13:04:02.653184+00:00",
+    "tokens": [
+      "SHIB",
+      "PEPE"
     ],
     "lang": "zh-CN"
   }
