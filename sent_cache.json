@@ -1,17 +1,5 @@
 [
   {
-    "id": "0063d4c7f9f339b9",
-    "title": "German Savings Banks Begin Crypto Trading Rollout Inside Sparkassen App",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-20T07:05:15.452458+00:00",
-    "tokens": [
-      "XRP",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5455dac48943ef47",
     "title": "SUI计划接入三星Wallet,支持USDC转账并预计10月最后一周在美国上线",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5170,6 +5158,16 @@
     "sent_at": "2026-10-28T17:07:17.265757+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "aadca952309dfd9f",
+    "title": "Shiba Inu (SHIB) Risks Losing $50 Million OI Threshold",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-28T17:24:39.778111+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
