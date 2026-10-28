@@ -1,15 +1,5 @@
 [
   {
-    "id": "c0c0867d64844572",
-    "title": "entropy 以 574.98 枚 HYPE 买下 HIP-3 代码 MOONSHOT",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-19T22:45:18.874490+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "14c777df869f1a16",
     "title": "XRP’s transaction volume explodes to $49.66B overnight – Will price follow?",
     "source": "AMBCrypto (技术与链上)",
@@ -5176,5 +5166,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f7d8b5a62982ea60",
+    "title": "428,862% Surge in 24 Hours: Shiba Inu Sees Highest Burn Rate This Month",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-28T13:44:45.117512+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-CN"
   }
 ]
