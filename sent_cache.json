@@ -1,15 +1,5 @@
 [
   {
-    "id": "37fffaa05f2e3da0",
-    "title": "BlackRock’s proposed Bitcoin ETF would hold no Bitcoin or spot ETF shares",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-20T11:04:02.569289+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e3a3310625ef127e",
     "title": "股市疲软或将抑制比特币需求,分析师警告 8 万美元支撑位或面临考验",
     "source": "深潮TechFlow (中文/简体)",
@@ -5159,6 +5149,16 @@
     "title": "XRP Ledger Foundation Adds Flare to Validator List",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-10-28T21:04:02.888950+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "bd041818db6b4784",
+    "title": "Aviva Investors tokenizes £50 million share class of Sterling Liquidity Fund on XRP Ledger",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-28T21:26:02.831586+00:00",
     "tokens": [
       "XRP"
     ],
