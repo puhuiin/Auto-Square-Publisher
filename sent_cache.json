@@ -1,15 +1,5 @@
 [
   {
-    "id": "cdc65d8ef5f56a0e",
-    "title": "以太坊研究者提出新型隐私池方案:支持抗量子与递归聚合,显著提升证明生成速度",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-19T12:07:30.545569+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e754e8c7e034580f",
     "title": "StakerX’s AI Agent Surpasses Passes $40M Staked Assets on Solana Within Three Months of Launch",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5172,5 +5162,15 @@
       "UNI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "33f0e9d3e1234393",
+    "title": "太子集团资产追查再推进:中国受害者或可申报债权,超9万枚比特币曾流经关联实体",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-28T03:27:19.852789+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
