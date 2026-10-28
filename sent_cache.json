@@ -1,15 +1,5 @@
 [
   {
-    "id": "52128bee8057cd05",
-    "title": "BNB Chain’s tokenized stock market cap grows by $239.3M in a week",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-19T20:25:26.485647+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7d8d9aedeec391fa",
     "title": "Major XRP Adoption News Sparks Excitement Across Ripple’s Community: Details",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5174,5 +5164,15 @@
       "TRX"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "06957e6fd27c48e4",
+    "title": "Bitcoin Traders Are Preparing for the Fed in 2 Very Different Ways",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-10-28T11:25:19.084054+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
