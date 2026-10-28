@@ -1,15 +1,5 @@
 [
   {
-    "id": "2663bb599c99d5f4",
-    "title": "摩根大通面向機構客戶在以太坊網絡推出 JPM Coin",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-19T09:26:22.182223+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2dadd3ae85cc5fcb",
     "title": "可编程交易到来,Hook 如何成为交易池「大脑」?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5169,6 +5159,16 @@
     "sent_at": "2026-10-27T23:45:29.440871+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "47d61fc984d5819b",
+    "title": "USD.AI’s $1M CHIP buyback sparks 19% rally amid Elon Musk’s AI warning",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-28T00:10:06.170043+00:00",
+    "tokens": [
+      "CHIP"
     ],
     "lang": "zh-CN"
   }
