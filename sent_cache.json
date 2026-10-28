@@ -1,16 +1,5 @@
 [
   {
-    "id": "0f2838430a1e5849",
-    "title": "XRP Ledger Repairs Its Lending Protocol Before It Goes Live",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-19T21:06:37.650895+00:00",
-    "tokens": [
-      "XRP",
-      "FF"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "373d9a3245280243",
     "title": "Hoskinson reveals new code for Cardano, but $63M TVL exposes a gap",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5170,6 +5159,16 @@
     "title": "Live updates: Bitcoin climbs above $81,000 as majors rally ahead of Fed decision",
     "source": "CoinDesk (权威宏观与机构)",
     "sent_at": "2026-10-28T11:47:42.396522+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "2476447cc140b60b",
+    "title": "Bitcoin Investors Beware: Analyst Warns of BTC Price Crash After Fed Meeting",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-28T12:08:02.670714+00:00",
     "tokens": [
       "BTC"
     ],
