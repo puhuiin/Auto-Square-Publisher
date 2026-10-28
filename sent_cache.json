@@ -1,15 +1,5 @@
 [
   {
-    "id": "0867caa4d42791af",
-    "title": "吴说每日精选加密新闻 - Layer 1 网络 Qubic 遭攻击致 1,404 个钱包被盗约 2.94 万亿枚 QU,87.1% 被盗资金被冻结",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-19T13:47:35.632557+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9f42f574527baef4",
     "title": "Echo Protocol 宣布逐步关停协议,提现及还款流程已开启",
     "source": "深潮TechFlow (中文/简体)",
@@ -5169,6 +5159,16 @@
     "tokens": [
       "USDC",
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "7a1fb3535fa84181",
+    "title": "Forest Road联合Perena在Solana推出首个金库sUSD-FR",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-28T04:49:37.534772+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
