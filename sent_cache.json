@@ -1,17 +1,5 @@
 [
   {
-    "id": "5455dac48943ef47",
-    "title": "SUI计划接入三星Wallet,支持USDC转账并预计10月最后一周在美国上线",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-20T07:24:47.885032+00:00",
-    "tokens": [
-      "SUI",
-      "USDC",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b34f0577cd67ee2e",
     "title": "Bitcoin spot ETFs see $526.6 million inflows on October 19 as Ethereum and Solana funds bleed",
     "source": "Crypto Briefing (深度与研报)",
@@ -5168,6 +5156,16 @@
     "sent_at": "2026-10-28T17:24:39.778111+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "28bcd66329986aba",
+    "title": "Aptos Advisor Leaves Post, Moves Meme-Fueled Campaign to Meta Stock",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-10-28T17:44:37.618975+00:00",
+    "tokens": [
+      "APT"
     ],
     "lang": "en"
   }
