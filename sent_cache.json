@@ -1,17 +1,5 @@
 [
   {
-    "id": "b2a14dc980580509",
-    "title": "Aptos加密内存池功能已在主网上线,旨在防范抢先交易及三明治攻击",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-20T01:15:44.409044+00:00",
-    "tokens": [
-      "APT",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a84b42d02e1362a1",
     "title": "PEARL突破2美元,月涨幅达82.2%,市值超7亿美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5172,6 +5160,16 @@
     "title": "Tech Investor Who Nailed AI Boom Warns of Bitcoin Collapse, Urges Shift to Super Intelligence",
     "source": "DailyHodl (山寨异动与百倍币叙事)",
     "sent_at": "2026-10-28T15:04:46.705582+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7e149cd8a7051545",
+    "title": "IREN完成3.63亿美元AI设备融资再融资,释放资金用于业务扩张",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-28T15:27:11.824907+00:00",
     "tokens": [
       "BTC"
     ],
