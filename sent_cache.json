@@ -1,15 +1,5 @@
 [
   {
-    "id": "e754e8c7e034580f",
-    "title": "StakerX’s AI Agent Surpasses Passes $40M Staked Assets on Solana Within Three Months of Launch",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-19T12:31:06.024969+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "225e898f6998740d",
     "title": "Cysic Bridge Exploit Creates 10 Million Tokens Before $727,000 Moves To Ethereum",
     "source": "Bitcoinist (比特币向)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-10-28T03:27:19.852789+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "4a947a2f9dc5023f",
+    "title": "Binance credits ASMLB holders with $1.79 per share dividend in extra tokens",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-28T03:50:25.216348+00:00",
+    "tokens": [
+      "ASMLB"
     ],
     "lang": "zh-TW"
   }
