@@ -1,15 +1,5 @@
 [
   {
-    "id": "7399d61f0e3dc093",
-    "title": "XRP Reserves on Track to Hit 2026 High: What's Happening?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-19T16:15:09.303793+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "89184b29129e2956",
     "title": "Solana (SOL) Hits 1.4 Million Tokenized Stock Holders in Historic Retail Surge",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5172,6 +5162,16 @@
     "tokens": [
       "BNB",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "8b05e7d19b629d50",
+    "title": "Bitcoin Treasury Stock Crashes 50% Amid Withdrawal Trouble",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-28T07:10:00.619657+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
