@@ -1,15 +1,5 @@
 [
   {
-    "id": "6a466b0fa32bcff5",
-    "title": "Four.Meme推出OpenFour Boost,支持项目方快速搭建品牌专属Launchpad",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-20T10:23:50.688905+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0771e79c73aa4915",
     "title": "Shiba Inu (SHIB) Loses Most Importnat Support For Now",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5160,6 +5150,17 @@
     "sent_at": "2026-10-28T20:24:02.679844+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "768ae75cdbae87d9",
+    "title": "Privacy Pools v2 Brings Shielded Payments and Yield to BNB Chain",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-28T20:44:23.714983+00:00",
+    "tokens": [
+      "BNB",
+      "FDUSD"
     ],
     "lang": "en"
   }
