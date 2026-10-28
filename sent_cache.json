@@ -1,16 +1,5 @@
 [
   {
-    "id": "225e898f6998740d",
-    "title": "Cysic Bridge Exploit Creates 10 Million Tokens Before $727,000 Moves To Ethereum",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-10-19T12:57:35.218574+00:00",
-    "tokens": [
-      "BNB",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9513c4b1109844ca",
     "title": "優先股撬動 259 萬持倉:DFDV 的 SOL 財庫飛輪",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5170,6 +5159,16 @@
     "sent_at": "2026-10-28T03:50:25.216348+00:00",
     "tokens": [
       "ASMLB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "3be68022ea590909",
+    "title": "Zilliqa:跨链桥及代理合约受损,CEO 已辞职",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-28T04:10:18.641121+00:00",
+    "tokens": [
+      "ZIL"
     ],
     "lang": "zh-TW"
   }
