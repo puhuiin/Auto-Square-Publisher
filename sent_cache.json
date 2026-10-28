@@ -1,16 +1,5 @@
 [
   {
-    "id": "a84b42d02e1362a1",
-    "title": "PEARL突破2美元,月涨幅达82.2%,市值超7亿美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-20T01:47:34.721086+00:00",
-    "tokens": [
-      "BTC",
-      "TAO"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "75a2c85cbb067e47",
     "title": "Cardano: Hoskinson reveals new programming language as ADA slips below $0.22",
     "source": "AMBCrypto (技术与链上)",
@@ -5172,6 +5161,18 @@
     "sent_at": "2026-10-28T15:27:11.824907+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d18178b131c4a1f4",
+    "title": "'DOGE Was Never Meant to Be Ethereum or Solana': Dogecoin Contributor Sets Record Straight",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-28T15:44:35.761092+00:00",
+    "tokens": [
+      "DOGE",
+      "ETH",
+      "SOL"
     ],
     "lang": "en"
   }
