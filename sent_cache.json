@@ -1,15 +1,5 @@
 [
   {
-    "id": "8e62ca4b01a7eecc",
-    "title": "ZEC 與 NEAR 深度綁定?Zakura 量子防護方案揭露跨鏈隱私的真實代價",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-10-19T15:07:07.450010+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "fb5ee5a71713bf96",
     "title": "Binance Completes 37th BNB Chain Burn: This Is How Many Tokens Were Burned",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5171,5 +5161,16 @@
       "NIGHT"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "48f764f0b9e76b70",
+    "title": "HIVE 旗下 BUZZ HPC 获约 1.29 亿美元固定利率融资,用于扩展主权 AI 基础设施",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-28T06:07:31.907377+00:00",
+    "tokens": [
+      "HIVE",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
