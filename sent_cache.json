@@ -1,15 +1,5 @@
 [
   {
-    "id": "f0c5d8f712285dca",
-    "title": "MiniMax 认领 Space Bunny,M3.1 Flash 正式版即将发布",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-19T11:31:07.588801+00:00",
-    "tokens": [
-      "GLM"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "cdc65d8ef5f56a0e",
     "title": "以太坊研究者提出新型隐私池方案:支持抗量子与递归聚合,显著提升证明生成速度",
     "source": "深潮TechFlow (中文/简体)",
@@ -5168,6 +5158,18 @@
     "sent_at": "2026-10-28T02:46:51.772730+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c57eac5b90de3033",
+    "title": "某巨鲸1小时内从BitGo买入价值4230万美元加密资产",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-28T03:10:39.070655+00:00",
+    "tokens": [
+      "ETH",
+      "AAVE",
+      "UNI"
     ],
     "lang": "zh-CN"
   }
