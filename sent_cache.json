@@ -1,15 +1,5 @@
 [
   {
-    "id": "dd027c28c8fc8607",
-    "title": "Abandoned Bitcoin? Wallet Targeted by Noah Doe Lawsuit Moves $33 Million",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-19T17:03:59.003654+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "832f1990437fbba5",
     "title": "STRK Sinks 38% in a Week as Starknet Rally Reverses",
     "source": "The Defiant (DeFi 深度)",
@@ -5174,5 +5164,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e0057e0c937fb632",
+    "title": "HYPE token rises 5% as Kraken’s parent plans US perpetuals market launch",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-28T07:47:20.288678+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
