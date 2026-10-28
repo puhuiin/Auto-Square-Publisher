@@ -1,15 +1,5 @@
 [
   {
-    "id": "8b889c9d30d975a7",
-    "title": "Shiba Inu Burn Rate Rockets 2,349% but Just $5 Burned: What's Happening?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-19T15:46:29.332817+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7399d61f0e3dc093",
     "title": "XRP Reserves on Track to Hit 2026 High: What's Happening?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5173,5 +5163,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "a94e2f74991e6d0c",
+    "title": "赵长鹏现身纳斯达克敲钟,BNC 是什么来头?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-28T06:48:30.192744+00:00",
+    "tokens": [
+      "BNB",
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
