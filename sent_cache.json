@@ -1,15 +1,5 @@
 [
   {
-    "id": "72244bc7fc78994b",
-    "title": "Ethereum Sets October 26 Hoodi Test For Glamsterdam Upgrade As 200M Gas Limit Nears",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-19T18:07:33.656266+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b98d53c0f51b2b9f",
     "title": "BitMine Adds 12,535 ETH to Treasury as Tom Lee Cites Macro and Tech Headwinds",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5172,6 +5162,18 @@
     "sent_at": "2026-10-28T08:27:04.199086+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "12faea0e6a8459f5",
+    "title": "Initia 基金会批准漏洞损失兜底方案:全额补足受损抵押品,恢复 iUSD 1:1 支撑",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-28T08:49:39.974957+00:00",
+    "tokens": [
+      "USDC",
+      "ETH",
+      "INIT"
     ],
     "lang": "zh-CN"
   }
