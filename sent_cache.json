@@ -1,15 +1,5 @@
 [
   {
-    "id": "832f1990437fbba5",
-    "title": "STRK Sinks 38% in a Week as Starknet Rally Reverses",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-19T17:23:57.481244+00:00",
-    "tokens": [
-      "STRK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9850f2d08e9e6a2e",
     "title": "Under 1,000 Shiba Inu (SHIB) Users Actually Withdraw Tokens From Exchanges",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5174,5 +5164,15 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "cd8ae87f93ab0f66",
+    "title": "从 ETF 到企业囤币,火币 HTX 将直播探讨加密市场机构化的机遇与挑战",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-28T08:06:41.544960+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]

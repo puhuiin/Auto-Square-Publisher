@@ -19,31 +19,31 @@
   "last_updated": "2026-10-28T01:49:01.890552Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "parked_until": "2026-10-28T06:37:31.653707+00:00",
+      "reset_at": "2026-10-28T08:06:02.786164+00:00",
       "last_fail": "2026-10-28T06:46:34.852622+00:00",
-      "reset_at": "2026-10-28T07:46:07.447537+00:00",
+      "parked_until": "2026-10-28T06:37:31.653707+00:00",
+      "fails": 3
+    },
+    "Bitcoinist (比特币向)": {
+      "last_fail": "2026-10-28T08:06:03.121639+00:00",
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3
     },
     "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-10-28T08:06:02.419939+00:00",
       "last_fail": "2026-10-28T02:26:03.340905+00:00",
-      "reset_at": "2026-10-28T07:46:07.096542+00:00",
       "fails": 1
-    },
-    "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-28T07:46:07.673719+00:00",
-      "fails": 3
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-28",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 417,
+  "_img_rot": 418,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
