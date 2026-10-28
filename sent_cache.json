@@ -1,16 +1,5 @@
 [
   {
-    "id": "763ddb1440c62b4a",
-    "title": "SkyAI 清仓 SOL:当 DAT 模式走到「退出」这一步",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-20T03:07:17.109118+00:00",
-    "tokens": [
-      "SOL",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "fd071098ee222e6f",
     "title": "Starknet (STRK), Filecoin (FIL), Midnight (NIGHT) and Near Protocol (NEAR) Price Analysis for October 20: Worst Performers in October",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5171,6 +5160,16 @@
     "title": "Zcash turns 10 as privacy coin rides upgrades and ETF interest",
     "source": "Crypto Briefing (深度与研报)",
     "sent_at": "2026-10-28T16:24:23.709232+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "81a939e65058fac3",
+    "title": "Euronext Restarts CoinShares’ Zcash ETP After Debut-Day Halt",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-28T16:44:31.751517+00:00",
     "tokens": [
       "ZEC"
     ],
