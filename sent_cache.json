@@ -1,15 +1,5 @@
 [
   {
-    "id": "c8aa9ad8a0e62a1a",
-    "title": "BNB Chain splits asset power across 4 roles while admins hold the key",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-20T09:05:39.894476+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "41dd973ca94bcf52",
     "title": "BlackRock Files for 'Buffer' Bitcoin ETF as IBIT Draws $665M in a Day",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5160,6 +5150,17 @@
     "sent_at": "2026-10-28T19:04:27.292003+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7fef243eaa05782c",
+    "title": "C2FO and Ripple Bring Instant-Pay Settlement Plans to XRP Ledger",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-28T19:24:39.111332+00:00",
+    "tokens": [
+      "XRP",
+      "RLUSD"
     ],
     "lang": "en"
   }
