@@ -1,15 +1,5 @@
 [
   {
-    "id": "e30b413833b33e6f",
-    "title": "BNB’s 37th quarterly burn removes 1.64M tokens – Move toward $800 needs...",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-20T12:03:57.005556+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4ed0dbf52a032e67",
     "title": "ZachXBT 揭露 Hyperliquid 生态洗钱服务 FreedomXMR:87% 流入资金涉黑,金额超 2000 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-10-28T22:45:52.408453+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "326c4b6c9b94460e",
+    "title": "Shiba Inu burns 1.42M tokens as sellers tighten their grip – Can SHIB recover?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-28T23:27:26.627855+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-CN"
   }
