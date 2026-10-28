@@ -1,15 +1,5 @@
 [
   {
-    "id": "9f42f574527baef4",
-    "title": "Echo Protocol 宣布逐步关停协议,提现及还款流程已开启",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-19T14:44:44.533829+00:00",
-    "tokens": [
-      "APT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8e62ca4b01a7eecc",
     "title": "ZEC 與 NEAR 深度綁定?Zakura 量子防護方案揭露跨鏈隱私的真實代價",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5169,6 +5159,16 @@
     "sent_at": "2026-10-28T04:49:37.534772+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "cd76d702c56710f5",
+    "title": "SecondFi:部分用户 NIGHT 资产恢复余额存在缺口,将补发差额",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-28T05:27:41.624503+00:00",
+    "tokens": [
+      "NIGHT"
     ],
     "lang": "zh-TW"
   }
