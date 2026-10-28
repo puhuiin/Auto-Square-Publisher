@@ -1,15 +1,5 @@
 [
   {
-    "id": "cc93266f7c00e95c",
-    "title": "Drift-Linked Wallet Sends $54.8 Million in ETH to Tornado Cash",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-20T10:06:12.568702+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6a466b0fa32bcff5",
     "title": "Four.Meme推出OpenFour Boost,支持项目方快速搭建品牌专属Launchpad",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5160,6 +5150,16 @@
     "sent_at": "2026-10-28T20:06:15.762812+00:00",
     "tokens": [
       "PEPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9ee2f8396434a191",
+    "title": "Hyperliquid reclaims $20B market cap – Why HYPE’s recovery faces THESE risks",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-28T20:24:02.679844+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
