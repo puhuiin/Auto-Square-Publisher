@@ -1,15 +1,5 @@
 [
   {
-    "id": "928d9be9bfbcfd4f",
-    "title": "Brave retools its search engine for AI agents and plans a BAT overhaul",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-19T19:46:44.911021+00:00",
-    "tokens": [
-      "BAT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c2678d91066a2aaf",
     "title": "CME Targets October 19 Start For Bitcoin Cash And Uniswap Futures",
     "source": "NewsBTC (比特币与山寨)",
@@ -5175,5 +5165,16 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "5daf4202b33f0d04",
+    "title": "Bloom 钓鱼工具盗取近 100 万美元,攻击者通过 2,152 个地址洗钱并跨链至 Zcash",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-28T10:44:46.054527+00:00",
+    "tokens": [
+      "ZEC",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
