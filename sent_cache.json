@@ -1,15 +1,5 @@
 [
   {
-    "id": "972a4e3070a7009a",
-    "title": "Trump-associated ALT5 Sigma down 96% since WLFI deal",
-    "source": "Protos (隐私与合规)",
-    "sent_at": "2026-10-19T19:05:21.946375+00:00",
-    "tokens": [
-      "WLFI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c296174389a93034",
     "title": "Tether loses nearly $5 billion across crypto exchanges as USDC and RLUSD rivals pay to win liquidity",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5173,6 +5163,16 @@
     "sent_at": "2026-10-28T09:44:47.517311+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "f8afe0fc87631f7f",
+    "title": "PEPE日内上涨15.8%,Justin Sun关联地址持有11.8万亿枚PEPE",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-28T10:04:49.628989+00:00",
+    "tokens": [
+      "PEPE"
     ],
     "lang": "zh-TW"
   }
