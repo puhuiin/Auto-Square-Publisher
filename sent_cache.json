@@ -1,15 +1,5 @@
 [
   {
-    "id": "7d8d9aedeec391fa",
-    "title": "Major XRP Adoption News Sparks Excitement Across Ripple’s Community: Details",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-19T20:44:37.874837+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0f2838430a1e5849",
     "title": "XRP Ledger Repairs Its Lending Protocol Before It Goes Live",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5174,5 +5164,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "67a2fa3a91be9fe7",
+    "title": "Live updates: Bitcoin climbs above $81,000 as majors rally ahead of Fed decision",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-10-28T11:47:42.396522+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
