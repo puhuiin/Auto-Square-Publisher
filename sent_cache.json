@@ -1,15 +1,5 @@
 [
   {
-    "id": "040be2a52e75eb90",
-    "title": "Ethereum Price Prediction: JPMorgan Brings Wall Street Closer to ETH",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-19T22:11:54.221854+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c0c0867d64844572",
     "title": "entropy 以 574.98 枚 HYPE 买下 HIP-3 代码 MOONSHOT",
     "source": "深潮TechFlow (中文/简体)",
@@ -5176,5 +5166,15 @@
       "PEPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c3559e05e17cc90a",
+    "title": "Glassnode:比特币卖压持续减弱,美联储决议或引发下一轮行情",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-28T13:24:08.902834+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
