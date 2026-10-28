@@ -1,15 +1,5 @@
 [
   {
-    "id": "9850f2d08e9e6a2e",
-    "title": "Under 1,000 Shiba Inu (SHIB) Users Actually Withdraw Tokens From Exchanges",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-19T17:44:31.867623+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "72244bc7fc78994b",
     "title": "Ethereum Sets October 26 Hoodi Test For Glamsterdam Upgrade As 200M Gas Limit Nears",
     "source": "NewsBTC (比特币与山寨)",
@@ -5172,6 +5162,16 @@
     "sent_at": "2026-10-28T08:06:41.544960+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ddeaae8eb8835c35",
+    "title": "Zcash (ZEC) Launched 10 Years Ago, 2 Things That Made It Stand Out in 2026",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-28T08:27:04.199086+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
