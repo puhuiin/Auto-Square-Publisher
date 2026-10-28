@@ -1,16 +1,5 @@
 [
   {
-    "id": "73ac4bc7c659934e",
-    "title": "Circle mints approximately 3.75 billion USDC on Solana in the last week",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-19T10:11:30.761530+00:00",
-    "tokens": [
-      "USDC",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1a2f7f946f717dae",
     "title": "QCP:比特币维持区间震荡,美债收益率回落支撑风险资产",
     "source": "深潮TechFlow (中文/简体)",
@@ -5170,5 +5159,16 @@
       "BNB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "304147bc1dcc6e84",
+    "title": "TAO crypto steadies near $250 after September rally fades",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-28T02:26:39.108962+00:00",
+    "tokens": [
+      "TAO",
+      "PEPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
