@@ -1,16 +1,5 @@
 [
   {
-    "id": "0508939f93619b41",
-    "title": "Worldcoin goes Wall Street: World ID suite rolls out for banks and financial firms",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-19T18:43:50.126808+00:00",
-    "tokens": [
-      "ID",
-      "WLD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "972a4e3070a7009a",
     "title": "Trump-associated ALT5 Sigma down 96% since WLFI deal",
     "source": "Protos (隐私与合规)",
@@ -5176,5 +5165,15 @@
       "PEPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "91c2de165e2c0f2c",
+    "title": "Predict.fun 发币前夜:拆解 $PREDICT 的生息机制、空投博弈与安全账单",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-28T09:44:47.517311+00:00",
+    "tokens": [
+      "BNB"
+    ],
+    "lang": "zh-TW"
   }
 ]
