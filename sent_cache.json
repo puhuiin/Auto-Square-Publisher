@@ -1,15 +1,5 @@
 [
   {
-    "id": "0771e79c73aa4915",
-    "title": "Shiba Inu (SHIB) Loses Most Importnat Support For Now",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-20T10:43:53.665281+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "37fffaa05f2e3da0",
     "title": "BlackRock’s proposed Bitcoin ETF would hold no Bitcoin or spot ETF shares",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5161,6 +5151,16 @@
     "tokens": [
       "BNB",
       "FDUSD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "34acabd1b9f09133",
+    "title": "XRP Ledger Foundation Adds Flare to Validator List",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-28T21:04:02.888950+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
