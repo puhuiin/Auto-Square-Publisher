@@ -1,17 +1,5 @@
 [
   {
-    "id": "fd071098ee222e6f",
-    "title": "Starknet (STRK), Filecoin (FIL), Midnight (NIGHT) and Near Protocol (NEAR) Price Analysis for October 20: Worst Performers in October",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-20T03:31:31.546416+00:00",
-    "tokens": [
-      "STRK",
-      "FIL",
-      "NIGHT"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "0063d4c7f9f339b9",
     "title": "German Savings Banks Begin Crypto Trading Rollout Inside Sparkassen App",
     "source": "NewsBTC (比特币与山寨)",
@@ -5172,6 +5160,16 @@
     "sent_at": "2026-10-28T16:44:31.751517+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b3485c8625cb238d",
+    "title": "'We Will Never Give Up on XRP': Ripple CEO Ends Speculations",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-28T17:07:17.265757+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
