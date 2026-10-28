@@ -1,16 +1,5 @@
 [
   {
-    "id": "c296174389a93034",
-    "title": "Tether loses nearly $5 billion across crypto exchanges as USDC and RLUSD rivals pay to win liquidity",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-19T19:26:04.419145+00:00",
-    "tokens": [
-      "USDC",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "928d9be9bfbcfd4f",
     "title": "Brave retools its search engine for AI agents and plans a BAT overhaul",
     "source": "Crypto Briefing (深度与研报)",
@@ -5175,5 +5164,16 @@
       "PEPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "47de2c682a7fe9bb",
+    "title": "近100万美元被盗,Bloom drainer使用2152个地址转移资金",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-28T10:25:52.383416+00:00",
+    "tokens": [
+      "ZEC",
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
