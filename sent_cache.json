@@ -1,15 +1,5 @@
 [
   {
-    "id": "33eea6f046e1df03",
-    "title": "Basic Attention Token – Why BAT crypto’s 12% rally could face THIS test",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-20T15:03:59.576229+00:00",
-    "tokens": [
-      "BAT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "357010e041e24578",
     "title": "Zcash (ZEC) vs Hyperliquid (HYPE): Battle for Crypto Market's Top 10",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-10-29T03:44:53.608900+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "28fdcfc27bff1e0d",
+    "title": "Z.AI’s GLM-5.3 completes 3 of 13 cyberattack scenarios in Irregular’s simulated tests",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-29T04:05:09.169389+00:00",
+    "tokens": [
+      "GLM"
     ],
     "lang": "zh-TW"
   }
