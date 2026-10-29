@@ -1,15 +1,5 @@
 [
   {
-    "id": "61418f3e32cf45fe",
-    "title": "上诉获准,钱志敏逾6万枚比特币财产权争议再起诉讼",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-21T09:25:38.362556+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "215ff5d0936ad094",
     "title": "Ripple spent $150M fighting the SEC lawsuit – Now it wants clear crypto rules",
     "source": "AMBCrypto (技术与链上)",
@@ -5156,6 +5146,16 @@
     "sent_at": "2026-10-29T19:05:37.329443+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "64c9eb84f8cd85c6",
+    "title": "Solana Hits $5 Billion in RWA Value",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-29T19:26:38.676168+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
