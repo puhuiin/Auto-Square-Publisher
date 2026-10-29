@@ -1,17 +1,5 @@
 [
   {
-    "id": "9c4aba4f8c809f62",
-    "title": "NGRAVE遭钓鱼攻击,约70个钱包被盗256万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-20T23:44:38.182899+00:00",
-    "tokens": [
-      "XRP",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2adbf81e84d4ad50",
     "title": "拆解 Abraxas:巨鲸如何在 Hyperliquid 上开展中性策略?",
     "source": "吴说区块链 (中文深度)",
@@ -5161,5 +5149,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "97bc3e1334276f37",
+    "title": "Ondo 智能投资组合上线Solana,涵盖7种投资组合配置",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-29T14:07:33.099319+00:00",
+    "tokens": [
+      "ONDO",
+      "SOL"
+    ],
+    "lang": "en"
   }
 ]
