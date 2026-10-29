@@ -19,21 +19,21 @@
   "strategy_guidance": "优先追贴10月30日截止的持USD1瓜分WLFI及新持仓USD1奖励活动，输出规则解读、参与攻略类内容蹭时间紧迫感；同步结合新上线的PREDICT代币、新增5项bStocks交易对、进行中的万圣节170万奖池活动及第10季现货交易竞赛，输出新资产玩法、赛事冲榜技巧类内容，引导读者参与评论互动拿Write2Earn奖励，同时挂载交易返佣链接获取推广收益。",
   "last_updated": "2026-10-29T16:44:17.132540Z",
   "_feed_health": {
-    "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-29T18:23:33.692504+00:00",
-      "fails": 3,
-      "parked_until": "2026-10-20T06:53:53.228743+00:00"
-    },
     "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-10-29T14:03:37.377183+00:00",
       "last_fail": "2026-10-29T15:03:38.837241+00:00",
+      "reset_at": "2026-10-29T14:03:37.377183+00:00",
       "fails": 3,
       "parked_until": "2026-10-29T21:03:38.837241+00:00"
+    },
+    "Bitcoinist (比特币向)": {
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "last_fail": "2026-10-29T18:43:31.189105+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-29",
