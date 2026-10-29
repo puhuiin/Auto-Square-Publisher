@@ -1,16 +1,5 @@
 [
   {
-    "id": "d709c17f0ae66ef2",
-    "title": "今日热议:Kimchi加入Pumpfun后,同名Meme币一小时冲上4000万美元市值",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-21T10:24:57.081538+00:00",
-    "tokens": [
-      "PUMP",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "bad39dd3915d396d",
     "title": "Crypto rises with Asian tech stocks, zcash extends gain after setting upgrade date",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5158,6 +5147,16 @@
     "tokens": [
       "USDC",
       "XLM"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "da727901f6d28017",
+    "title": "Celestia Unveils Voyager for AI Payments, Citing 21 Million TPS Benchmark",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-10-29T20:24:37.032313+00:00",
+    "tokens": [
+      "TIA"
     ],
     "lang": "en"
   }
