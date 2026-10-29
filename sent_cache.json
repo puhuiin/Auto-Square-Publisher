@@ -1,15 +1,5 @@
 [
   {
-    "id": "f35217ed9c6e4df0",
-    "title": "BlackRock Enters the Buffered Bitcoin ETF Race With New SEC Filing",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-20T16:24:26.448078+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "351b63250c9f32a5",
     "title": "BlackRock Files for Bitcoin ETF With Downside Buffer and Capped Upside",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5161,6 +5151,16 @@
     "tokens": [
       "STRK",
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "0d2e0d394ef361d9",
+    "title": "代币化美股抵押贷款兴起,周末价格停摆成最大清算隐患",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-29T05:31:15.605656+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "zh-TW"
   }
