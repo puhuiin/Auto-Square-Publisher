@@ -1,15 +1,5 @@
 [
   {
-    "id": "39d99350c5329677",
-    "title": "XRP Reserves Surge on Binance, Does It Signal Flash Sell-Offs?",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-20T22:44:26.781817+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "96e958ebdc50576d",
     "title": "BNB Chain burns $1.2B in October tokens, leaving real supply impact hidden",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5159,6 +5149,16 @@
     "sent_at": "2026-10-29T12:26:50.981792+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "64c8a35b29abb52b",
+    "title": "Binance's CZ Denies Owning Shiba Inu (SHIB)",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-29T13:04:41.609947+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-CN"
   }
