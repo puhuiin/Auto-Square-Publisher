@@ -1,15 +1,5 @@
 [
   {
-    "id": "2219a796e2afda3d",
-    "title": "Injective eyes $10B real estate tokenization – Will INJ demand rise?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-20T21:04:33.228334+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "14cb82db8eb78271",
     "title": "XRP Treasury Stock XRPN Now Available on Uphold",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5161,5 +5151,15 @@
       "HYPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "38535877396cd4cd",
+    "title": "Tokenized commodities supply on Solana hits record $63.2 million",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-29T10:47:34.261469+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
