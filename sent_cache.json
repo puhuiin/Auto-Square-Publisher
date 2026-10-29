@@ -1,15 +1,5 @@
 [
   {
-    "id": "5f6b2ad330a7afac",
-    "title": "Solana’s Alpenglow upgrade set to enhance transaction speeds in 19 hours",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-20T19:24:41.003168+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5c77a78f9eb5c24e",
     "title": "GRVT Burns 1.1 Million Tokens as GRVT 2.0 Draws Closer",
     "source": "ZyCrypto (新币与空投)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-10-29T08:47:47.182683+00:00",
     "tokens": [
       "SOMI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "8d5f024ac586bf6b",
+    "title": "Uniswap Adds 13,137 New Addresses in Its Biggest Growth Spike Since 2020",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-29T09:04:49.903729+00:00",
+    "tokens": [
+      "UNI"
     ],
     "lang": "zh-CN"
   }
