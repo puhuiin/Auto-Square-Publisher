@@ -19,19 +19,19 @@
   "strategy_guidance": "当前Halloween Pumpkin Frenzy为限时进行中活动，优先围绕其交易、邀请规则输出参与攻略类内容，引导用户互动参与活动获取Write2Earn相关激励；同时结合10月28日新上线的5款bStocks交易对、新增USDⓈ-Margined永续合约的官方公告，以及当期Spot Trading Tournament赛制输出交易技巧分享内容，引导用户关注官方活动动态参与互动。",
   "last_updated": "2026-10-29T04:24:15.036424Z",
   "_feed_health": {
-    "CryptoPotato (山寨币/Meme热点)": {
-      "last_fail": "2026-10-29T11:49:01.579702+00:00",
-      "reset_at": "2026-10-29T13:23:32.866990+00:00",
+    "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-10-29T13:43:34.580771+00:00",
+      "last_fail": "2026-10-29T13:03:35.571220+00:00",
       "fails": 1
     },
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-29T13:23:33.461616+00:00",
+      "last_fail": "2026-10-29T13:43:34.658079+00:00",
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3
     },
-    "ZyCrypto (新币与空投)": {
-      "last_fail": "2026-10-29T13:03:35.571220+00:00",
-      "reset_at": "2026-10-29T13:23:33.659362+00:00",
+    "CryptoPotato (山寨币/Meme热点)": {
+      "reset_at": "2026-10-29T13:43:33.900850+00:00",
+      "last_fail": "2026-10-29T11:49:01.579702+00:00",
       "fails": 1
     }
   },
@@ -39,7 +39,13 @@
     "date": "2026-10-18",
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun-flash": {
+      "fails": 1,
+      "cooldown_until": "2026-10-29T13:55:24.229993+00:00",
+      "last_fail": "2026-10-29T13:45:24.230002+00:00"
+    }
+  },
   "_article_sent_date": "2026-10-29",
   "_publish_park": {},
   "_intel_refresh_fail": {},

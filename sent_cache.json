@@ -1,15 +1,5 @@
 [
   {
-    "id": "fafd1d372bb607eb",
-    "title": "Google Gemini AI Predicts a Huge Run for Chainlink (LINK)",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-20T23:23:55.383814+00:00",
-    "tokens": [
-      "LINK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9c4aba4f8c809f62",
     "title": "NGRAVE遭钓鱼攻击,约70个钱包被盗256万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5161,5 +5151,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "42efa20852a2fbe2",
+    "title": "Bitcoin options carried a far smaller election premium than in 2024",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-29T13:47:42.202352+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
