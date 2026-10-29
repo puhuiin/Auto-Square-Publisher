@@ -1,15 +1,5 @@
 [
   {
-    "id": "4fa2aea5b4940096",
-    "title": "Worldcoin’s banking launch, 23% leverage jump and WLD’s $0.55 test – Explained!",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-20T17:05:06.266350+00:00",
-    "tokens": [
-      "WLD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "125b683cee33973a",
     "title": "XRP Millionaires Make Bold 5-Year-Low Move Amid Market Drop",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5163,5 +5153,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0d3461a2b2a8d8d1",
+    "title": "每秒处理702万笔支付,Stellar推出新执行模型Project Thruput",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-29T06:46:46.530035+00:00",
+    "tokens": [
+      "XLM"
+    ],
+    "lang": "zh-TW"
   }
 ]
