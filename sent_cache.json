@@ -1,15 +1,5 @@
 [
   {
-    "id": "7d5ebef748597f70",
-    "title": "Delphi Digital:將 HOOD、HYPE 和 LIT 列為投機交易主題投資標的",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-21T08:49:43.778137+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "61418f3e32cf45fe",
     "title": "上诉获准,钱志敏逾6万枚比特币财产权争议再起诉讼",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5156,6 +5146,16 @@
     "sent_at": "2026-10-29T18:46:54.048446+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "22fc3f344ec0d0e3",
+    "title": "Crypto investors refuse to sell XRP ETF tokens despite a 25% price crash",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-29T19:05:37.329443+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
