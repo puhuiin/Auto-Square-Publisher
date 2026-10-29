@@ -1,15 +1,5 @@
 [
   {
-    "id": "7fada8733431ff43",
-    "title": "SpaceX’s $194 billion share unlock exposes a major risk in Aave’s tokenized stock ambitions",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-21T10:04:47.541797+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d709c17f0ae66ef2",
     "title": "今日热议:Kimchi加入Pumpfun后,同名Meme币一小时冲上4000万美元市值",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5157,6 +5147,17 @@
     "tokens": [
       "POL",
       "USDC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b3a660b029016795",
+    "title": "Stellar Gains USDC Payment Corridor as Movantis Targets US–El Salvador Transfers",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-29T20:04:00.843133+00:00",
+    "tokens": [
+      "USDC",
+      "XLM"
     ],
     "lang": "en"
   }
