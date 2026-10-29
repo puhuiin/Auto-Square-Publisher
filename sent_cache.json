@@ -1,15 +1,5 @@
 [
   {
-    "id": "14cb82db8eb78271",
-    "title": "XRP Treasury Stock XRPN Now Available on Uphold",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-20T21:24:21.204564+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "cfcba85b43501e85",
     "title": "Sui crypto reclaims $1—Can buyers clear the $1.05 recovery hurdle?",
     "source": "AMBCrypto (技术与链上)",
@@ -5161,5 +5151,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "419b4d48633e737b",
+    "title": "Curve Finance 首次拓展至 EVM 生态外,StableSwap 已在 Stellar 主网上线",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-29T11:09:41.450721+00:00",
+    "tokens": [
+      "XLM"
+    ],
+    "lang": "zh-CN"
   }
 ]
