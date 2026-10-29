@@ -1,15 +1,5 @@
 [
   {
-    "id": "771598e7383899ab",
-    "title": "Celestia Activates Fibre, Opening Direct Validator Uploads for Rollups",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-20T15:44:03.636091+00:00",
-    "tokens": [
-      "TIA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c748de7b68ef273f",
     "title": "蘋果最高 1 億美元押注美國鈦材!賓州 Perryman 供應 iPhone Duo 機身",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5160,6 +5150,16 @@
     "sent_at": "2026-10-29T04:25:18.119415+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "5c784455be7e5e41",
+    "title": "某巨鲸向Coinbase转入38.7万枚HYPE,价值约3193万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-29T04:44:56.866145+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-TW"
   }
