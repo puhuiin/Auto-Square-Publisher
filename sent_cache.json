@@ -1,15 +1,5 @@
 [
   {
-    "id": "31c35f282b74fa59",
-    "title": "某地址 1,009 美元买入 Kimchi 爆赚 27.3 万美元,回报率达 26,758.8%",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-21T01:44:06.761143+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f68693ba7f590bd8",
     "title": "XRP, Shiba Inu (SHIB), Tron (TRX) and Solana (SOL) Price Analysis For October 21: When Do Headliners Pick Up Bullish Pace?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5160,6 +5150,18 @@
       "XRP",
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "135ff95e88db721b",
+    "title": "$342 Million Crypto Bloodbath as Bitcoin and XRP Longs Smashed: Main Crypto News This Morning",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-29T15:44:27.712933+00:00",
+    "tokens": [
+      "XRP",
+      "BTC",
+      "HYPE"
     ],
     "lang": "en"
   }
