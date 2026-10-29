@@ -1,17 +1,5 @@
 [
   {
-    "id": "e66f924aef04a4e7",
-    "title": "五个 DeFi 项目进观察名单:从分级金库到链上永续订单簿",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-21T12:05:24.986859+00:00",
-    "tokens": [
-      "USDC",
-      "ETH",
-      "AAVE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a20db29854e95cf0",
     "title": "Dogecoin Labs正式成立,推动DOGE拓展支付与DeFi应用",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5157,5 +5145,16 @@
       "ETH"
     ],
     "lang": "en"
+  },
+  {
+    "id": "94f3d5e847201041",
+    "title": "Blockaid:Binance 热钱包疑遭 7702 授权攻击",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-29T22:04:04.709241+00:00",
+    "tokens": [
+      "ETH",
+      "PEPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
