@@ -20,9 +20,9 @@
   "last_updated": "2026-10-28T14:04:33.641655Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-29T00:18:45.490013+00:00",
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3,
-      "parked_until": "2026-10-20T06:53:53.228743+00:00"
+      "last_fail": "2026-10-29T00:43:39.233947+00:00"
     }
   },
   "_fallback_image": {
@@ -31,15 +31,20 @@
   },
   "_llm_breaker": {
     "Preset-stepfun": {
-      "cooldown_until": "2026-10-29T00:32:24.720551+00:00",
-      "last_fail": "2026-10-29T00:22:24.720577+00:00",
-      "fails": 1
+      "fails": 2,
+      "cooldown_until": "2026-10-29T01:07:49.693916+00:00",
+      "last_fail": "2026-10-29T00:47:49.693941+00:00"
+    },
+    "Preset-stepfun-flash": {
+      "fails": 1,
+      "cooldown_until": "2026-10-29T00:55:41.939651+00:00",
+      "last_fail": "2026-10-29T00:45:41.939661+00:00"
     }
   },
   "_article_sent_date": "2026-10-29",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 441,
+  "_img_rot": 442,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

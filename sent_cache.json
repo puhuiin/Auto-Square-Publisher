@@ -1,17 +1,5 @@
 [
   {
-    "id": "e15cc748eb498bd2",
-    "title": "芝加哥商品交易所上线 BCH 和 UNI 期货,FalconX 与 GSR 完成首笔大宗交易",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-20T13:24:41.651818+00:00",
-    "tokens": [
-      "BCH",
-      "UNI",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ebb386fff30f5240",
     "title": "吴说每日精选加密新闻 - 瑞士监管机构批准首只本土比特币 ETF,豁免部分风险分散规则",
     "source": "吴说区块链 (中文深度)",
@@ -5165,5 +5153,15 @@
       "LINK"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "7701a7aa86a252ee",
+    "title": "美国SOL现货ETF单日总净流出565.76万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-29T00:48:06.134816+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
