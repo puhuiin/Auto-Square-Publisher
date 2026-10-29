@@ -20,31 +20,31 @@
   "last_updated": "2026-10-29T16:44:17.132540Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-29T20:23:32.635603+00:00",
+      "last_fail": "2026-10-29T20:43:28.577659+00:00",
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "fails": 3
+    },
+    "ZyCrypto (新币与空投)": {
+      "last_fail": "2026-10-29T15:03:38.837241+00:00",
+      "parked_until": "2026-10-29T21:03:38.837241+00:00",
+      "reset_at": "2026-10-29T14:03:37.377183+00:00",
       "fails": 3
     },
     "CryptoPotato (山寨币/Meme热点)": {
       "last_fail": "2026-10-29T19:03:31.959248+00:00",
-      "fails": 1,
-      "reset_at": "2026-10-29T20:23:32.408013+00:00"
-    },
-    "ZyCrypto (新币与空投)": {
-      "parked_until": "2026-10-29T21:03:38.837241+00:00",
-      "reset_at": "2026-10-29T14:03:37.377183+00:00",
-      "last_fail": "2026-10-29T15:03:38.837241+00:00",
-      "fails": 3
+      "reset_at": "2026-10-29T20:43:28.043849+00:00",
+      "fails": 1
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-29",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 471,
+  "_img_rot": 472,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
