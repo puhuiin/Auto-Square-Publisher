@@ -1,15 +1,5 @@
 [
   {
-    "id": "187845777a1825e8",
-    "title": "Shiba Inu (SHIB) Burn Rate Explodes Nearly 500% in a Day, But There Is a Catch",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-21T07:09:07.706013+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "38022bcc1e05def3",
     "title": "Ripple Backs SEC’s Proposed Crypto Regulation, Calls for End to Case-by-Case Enforcement",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5156,6 +5146,16 @@
     "sent_at": "2026-10-29T17:25:00.402960+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "263ee4ef6c690337",
+    "title": "Securitize Plans Stellar Integration as Tokenized Asset Platforms Expand",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-29T17:44:05.501382+00:00",
+    "tokens": [
+      "XLM"
     ],
     "lang": "en"
   }
