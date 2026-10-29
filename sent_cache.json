@@ -1,15 +1,5 @@
 [
   {
-    "id": "d4f8613f8959d0f9",
-    "title": "ZENDEX Private EVM ZK-Privacy DEX Testnet Goes Live",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-20T19:04:26.885422+00:00",
-    "tokens": [
-      "ZK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5f6b2ad330a7afac",
     "title": "Solana’s Alpenglow upgrade set to enhance transaction speeds in 19 hours",
     "source": "Crypto Briefing (深度与研报)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-10-29T08:24:32.245900+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "5b823fa2b1f1e3cf",
+    "title": "Perplexity AI Predicts Somnia Crypto Is About to Explode",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-29T08:47:47.182683+00:00",
+    "tokens": [
+      "SOMI"
     ],
     "lang": "zh-CN"
   }
