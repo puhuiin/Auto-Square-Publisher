@@ -1,15 +1,5 @@
 [
   {
-    "id": "d5a1f9ec810ed4b0",
-    "title": "Zcash has one shot at $1,350 as ETF inflows return – Or it’s back to $1,040",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-21T11:04:13.646178+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a69e072a619db5ed",
     "title": "分析:比特币期权未平仓合约占比升至近60%,市场转向更注重风险管理",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5157,6 +5147,16 @@
     "sent_at": "2026-10-29T20:44:26.178275+00:00",
     "tokens": [
       "POL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4448c3d3f36cbae3",
+    "title": "Polygon adds Solana support for stablecoin payments and bank payouts",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-29T21:04:36.916442+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
