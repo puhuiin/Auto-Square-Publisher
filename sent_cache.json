@@ -1,15 +1,5 @@
 [
   {
-    "id": "5c77a78f9eb5c24e",
-    "title": "GRVT Burns 1.1 Million Tokens as GRVT 2.0 Draws Closer",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-20T19:43:59.525966+00:00",
-    "tokens": [
-      "ZK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ee76f8d06581c5eb",
     "title": "5亿枚USDC在Solana链上5分钟内完成铸造,价值约5亿美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-10-29T09:04:49.903729+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "81f86abff9118414",
+    "title": "日本 11 月 1 日起支持稳定币退税:游客可通过 Avalanche 链领取日元稳定币 JPYC",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-29T09:23:59.335131+00:00",
+    "tokens": [
+      "AVAX"
     ],
     "lang": "zh-CN"
   }
