@@ -1,16 +1,5 @@
 [
   {
-    "id": "e757a5dad91db7ab",
-    "title": "XRP Ledger’s booming activity faces scrutiny as 110 bot wallets dominate RLUSD payments",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-20T20:43:57.306173+00:00",
-    "tokens": [
-      "XRP",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2219a796e2afda3d",
     "title": "Injective eyes $10B real estate tokenization – Will INJ demand rise?",
     "source": "AMBCrypto (技术与链上)",
@@ -5162,5 +5151,15 @@
       "GLM"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "71a7b2443444f9dc",
+    "title": "神秘巨鲸过去 5 天抛售 69.43 万枚 HYPE,价值约 5327 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-29T10:27:40.676485+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
