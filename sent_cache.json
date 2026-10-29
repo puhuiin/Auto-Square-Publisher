@@ -1,16 +1,5 @@
 [
   {
-    "id": "357010e041e24578",
-    "title": "Zcash (ZEC) vs Hyperliquid (HYPE): Battle for Crypto Market's Top 10",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-20T15:21:17.281306+00:00",
-    "tokens": [
-      "ZEC",
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "771598e7383899ab",
     "title": "Celestia Activates Fibre, Opening Direct Validator Uploads for Rollups",
     "source": "The Defiant (DeFi 深度)",
@@ -5161,6 +5150,16 @@
     "sent_at": "2026-10-29T04:05:09.169389+00:00",
     "tokens": [
       "GLM"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "638d82d7be3d0f96",
+    "title": "Ripple and DriveWealth Link Stablecoin Settlement to Global Brokerage",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-29T04:25:18.119415+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
