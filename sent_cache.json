@@ -1,15 +1,5 @@
 [
   {
-    "id": "a69e072a619db5ed",
-    "title": "分析:比特币期权未平仓合约占比升至近60%,市场转向更注重风险管理",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-21T11:24:44.675582+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "747b1943be140f45",
     "title": "星球晚讯",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5157,6 +5147,16 @@
     "sent_at": "2026-10-29T21:04:36.916442+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4016e7ca91531246",
+    "title": "Ripple’s Futures volume hits $68B, yet XRP faces a liquidity test – Why?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-29T21:24:05.839128+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
