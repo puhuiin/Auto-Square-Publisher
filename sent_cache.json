@@ -1,15 +1,5 @@
 [
   {
-    "id": "cfcba85b43501e85",
-    "title": "Sui crypto reclaims $1—Can buyers clear the $1.05 recovery hurdle?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-20T21:44:29.134637+00:00",
-    "tokens": [
-      "SUI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9c10600b8576cff7",
     "title": "XRP Price Warning: Leverage Resets as $11.8B in Reserves Loom",
     "source": "CryptoNews (全球快讯)",
@@ -5161,5 +5151,15 @@
       "XLM"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ae31398598689cc1",
+    "title": "Bitcoin drops to $80,000 on Fed dissent, Samsung, Alphabet earnings; AI tokens slump",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-10-29T11:28:18.287069+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
