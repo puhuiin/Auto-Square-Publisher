@@ -1,15 +1,5 @@
 [
   {
-    "id": "96e958ebdc50576d",
-    "title": "BNB Chain burns $1.2B in October tokens, leaving real supply impact hidden",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-20T23:04:10.096002+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "fafd1d372bb607eb",
     "title": "Google Gemini AI Predicts a Huge Run for Chainlink (LINK)",
     "source": "CryptoNews (全球快讯)",
@@ -5159,6 +5149,16 @@
     "sent_at": "2026-10-29T13:04:41.609947+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "60ff7745f045b666",
+    "title": "Solana 上线 Polygon 开放货币技术栈",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-29T13:24:34.237450+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
