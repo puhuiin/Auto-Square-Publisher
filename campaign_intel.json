@@ -21,28 +21,35 @@
   "_feed_health": {
     "ZyCrypto (新币与空投)": {
       "fails": 1,
-      "last_fail": "2026-10-29T09:46:01.448499+00:00"
+      "last_fail": "2026-10-29T09:46:01.448499+00:00",
+      "reset_at": "2026-10-29T10:06:03.012366+00:00"
     },
     "Bitcoinist (比特币向)": {
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3,
-      "last_fail": "2026-10-29T09:46:02.043635+00:00",
-      "parked_until": "2026-10-20T06:53:53.228743+00:00"
+      "last_fail": "2026-10-29T10:06:03.539328+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun": {
+      "fails": 1,
+      "cooldown_until": "2026-10-29T10:18:56.456109+00:00",
+      "last_fail": "2026-10-29T10:08:56.456128+00:00"
+    }
+  },
   "_article_sent_date": "2026-10-29",
   "_publish_park": {
     "aa0c7cd45a942fa4": {
-      "last_fail": "2026-10-29T05:06:44.796729+00:00",
-      "fails": 1
+      "fails": 1,
+      "last_fail": "2026-10-29T05:06:44.796729+00:00"
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 452,
+  "_img_rot": 453,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
