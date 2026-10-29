@@ -1,17 +1,5 @@
 [
   {
-    "id": "d6923b02574a1a40",
-    "title": "TRUMP 获利超 4000 万美元交易员提取 643 万美元 PUMP,同名 Meme 币市值达 4000 万美元",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-21T03:09:41.936182+00:00",
-    "tokens": [
-      "TRUMP",
-      "PUMP",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f367978ca8faf0f6",
     "title": "火币 HTX 首席分析师 Cloud:议息前比特币大概率延续震荡,8 万美元下沿或先受考验",
     "source": "深潮TechFlow (中文/简体)",
@@ -5158,6 +5146,16 @@
     "sent_at": "2026-10-29T16:46:57.546030+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "04df8563f673eca7",
+    "title": "92 Billion Shiba Inu (SHIB) in 24 Hours: Reasons Behind the Drop Are Clear Now",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-29T17:04:52.874697+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
