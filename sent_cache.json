@@ -1,15 +1,5 @@
 [
   {
-    "id": "a10508d01090a451",
-    "title": "Stellar (XLM) Alert Issued by Japanese Crypto Exchange: Here's the Reason",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-20T22:24:28.404381+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "39d99350c5329677",
     "title": "XRP Reserves Surge on Binance, Does It Signal Flash Sell-Offs?",
     "source": "ZyCrypto (新币与空投)",
@@ -5157,6 +5147,16 @@
     "title": "Bitcoin’s ‘Uptober’ rally falters – Why BTC is down 4.2% in October",
     "source": "AMBCrypto (技术与链上)",
     "sent_at": "2026-10-29T11:50:51.885508+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "dd63d2dd99c4e33b",
+    "title": "Bitcoin Whales Are Loading BTC Again — Is a 2023-Style Mega Rally Brewing?",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-29T12:26:50.981792+00:00",
     "tokens": [
       "BTC"
     ],
