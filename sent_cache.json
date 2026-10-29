@@ -1,15 +1,5 @@
 [
   {
-    "id": "215ff5d0936ad094",
-    "title": "Ripple spent $150M fighting the SEC lawsuit – Now it wants clear crypto rules",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-21T09:45:20.917899+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7fada8733431ff43",
     "title": "SpaceX’s $194 billion share unlock exposes a major risk in Aave’s tokenized stock ambitions",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5156,6 +5146,17 @@
     "sent_at": "2026-10-29T19:26:38.676168+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "26a4f1805f6f5734",
+    "title": "约265万美元资金兑换为POL,疑似Polymarket攻击者随后转出约2864万枚POL",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-29T19:45:47.153515+00:00",
+    "tokens": [
+      "POL",
+      "USDC"
     ],
     "lang": "en"
   }
