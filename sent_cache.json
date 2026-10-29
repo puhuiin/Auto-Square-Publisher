@@ -1,17 +1,5 @@
 [
   {
-    "id": "2d29da13805a9dc3",
-    "title": "Blockchain.com 正式推出加密期权交易,初期支持 BTC、HYPE 等 7 种资产",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-20T14:24:29.495723+00:00",
-    "tokens": [
-      "BTC",
-      "HYPE",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c9e451b3b3093c6a",
     "title": "Worldcoin (WLD) Jumps 9% Daily: What Happened and What’s Next?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5162,6 +5150,17 @@
     "sent_at": "2026-10-29T02:49:34.482323+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "822f5c97fa48f283",
+    "title": "Bitget UEX 日报|美联储维持利率不变;云厂商财报引发分化;AI基建股延续强势",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-29T03:25:21.009353+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
