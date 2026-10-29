@@ -1,15 +1,5 @@
 [
   {
-    "id": "351b63250c9f32a5",
-    "title": "BlackRock Files for Bitcoin ETF With Downside Buffer and Capped Upside",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-20T16:44:13.919879+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4fa2aea5b4940096",
     "title": "Worldcoin’s banking launch, 23% leverage jump and WLD’s $0.55 test – Explained!",
     "source": "AMBCrypto (技术与链上)",
@@ -5163,5 +5153,15 @@
       "AAVE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "1db4d196fc19416b",
+    "title": "Solflare halts SOL staking rewards after validator operator loses security keys — Details",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-29T06:12:21.166196+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
