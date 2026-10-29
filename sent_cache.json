@@ -1,18 +1,5 @@
 [
   {
-    "id": "f68693ba7f590bd8",
-    "title": "XRP, Shiba Inu (SHIB), Tron (TRX) and Solana (SOL) Price Analysis For October 21: When Do Headliners Pick Up Bullish Pace?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-21T02:04:27.696936+00:00",
-    "tokens": [
-      "XRP",
-      "SHIB",
-      "TRX",
-      "SUI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e989cba87201726b",
     "title": "加密市场普涨,DeFi板块上涨4.38%,BTC突破8.3万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5162,6 +5149,18 @@
       "XRP",
       "BTC",
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "90d07e13f8d1ffda",
+    "title": "今日加密货币市值前 100 代币涨跌:HYPE 涨 17.35%,DASH 跌 3.34%",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-29T16:04:55.405678+00:00",
+    "tokens": [
+      "HYPE",
+      "DASH",
+      "PEPE"
     ],
     "lang": "en"
   }
