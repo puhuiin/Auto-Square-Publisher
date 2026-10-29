@@ -1,15 +1,5 @@
 [
   {
-    "id": "c748de7b68ef273f",
-    "title": "蘋果最高 1 億美元押注美國鈦材!賓州 Perryman 供應 iPhone Duo 機身",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-10-20T16:04:18.145497+00:00",
-    "tokens": [
-      "AMP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f35217ed9c6e4df0",
     "title": "BlackRock Enters the Buffered Bitcoin ETF Race With New SEC Filing",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5160,6 +5150,17 @@
     "sent_at": "2026-10-29T04:44:56.866145+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "dc4e8dda2e697971",
+    "title": "Strategy 面临 MSCI 指数剔除风险:11 月 11 日之前你需要关注什么",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-29T05:07:22.343052+00:00",
+    "tokens": [
+      "STRK",
+      "BTC"
     ],
     "lang": "zh-TW"
   }
