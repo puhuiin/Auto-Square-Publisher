@@ -1,16 +1,5 @@
 [
   {
-    "id": "4722736e7eab195f",
-    "title": "ether.fi 12家节点运营商改为强制采用mump2p,Optimum软件上线以太坊主网",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-20T17:44:19.805328+00:00",
-    "tokens": [
-      "ETH",
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ca3a54f953ea044b",
     "title": "PENGU Dumps 20% in 2 Weeks, But Analyst Predicts a Massive Rebound",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5161,6 +5150,16 @@
     "sent_at": "2026-10-29T07:05:15.686217+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9f3128a83dcbf44e",
+    "title": "某巨鲸过去5天卖出102万枚SOL,价值1.04亿美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-29T07:25:51.877889+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
