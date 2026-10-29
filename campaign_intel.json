@@ -2,38 +2,42 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#TradingTournament",
-    "#HalloweenFrenzy",
-    "#Futures"
+    "#HalloweenPumpkinFrenzy",
+    "#SpotTradingTournament",
+    "#BinancePick"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$USDT",
-    "$XRP",
     "$SPCXB",
+    "$RLUSD",
+    "$XRP",
     "$AAPLB",
     "$NVDAB",
-    "$FF",
-    "$RLUSD"
+    "$PREDICT"
   ],
-  "strategy_guidance": "Halloween Pumpkin Frenzy为限时万圣节活动，仅剩3天左右结束，优先围绕活动冲刺方向产出内容，引导用户参与官方互动与交易拿Write2Earn评论奖励；可结合当日新上线的5项bStocks交易对及Futures新推出的USDⓈ-Margined永续合约快讯，关联对应交易竞赛与产品活动，引导用户参与互动获取交易返佣。",
-  "last_updated": "2026-10-28T14:04:33.641655Z",
+  "strategy_guidance": "当前无明确截止日期的Halloween Pumpkin Frenzy、第9季现货交易锦标赛、Binance Pick预测活动热度较高，发帖时可结合10月28日新上线的5支bStocks tokenized证券交易对、10月26日上线的TradFi USDⓈ-Margined永续合约等产品动态，引导用户参与官方活动互动、讨论交易产品相关话题获取Write2Earn奖励；同时可科普活动参与规则，引导用户合规参与官方活动。",
+  "last_updated": "2026-10-29T02:24:43.047636Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-29T00:43:39.233947+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-10-29T02:28:14.244592+00:00"
+    },
+    "CoinJournal (山寨异动)": {
+      "fails": 1,
+      "last_fail": "2026-10-29T02:28:44.033385+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-29",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 442,
+  "_img_rot": 443,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
