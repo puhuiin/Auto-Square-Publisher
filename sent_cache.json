@@ -1,15 +1,5 @@
 [
   {
-    "id": "c9e451b3b3093c6a",
-    "title": "Worldcoin (WLD) Jumps 9% Daily: What Happened and What’s Next?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-20T14:43:48.543068+00:00",
-    "tokens": [
-      "WLD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "33eea6f046e1df03",
     "title": "Basic Attention Token – Why BAT crypto’s 12% rally could face THIS test",
     "source": "AMBCrypto (技术与链上)",
@@ -5163,5 +5153,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a10f69d8ea713654",
+    "title": "$200M Bitcoin hits exchanges in 24 hours – But a $903M whale buy absorbs the pressure",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-29T03:44:53.608900+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
