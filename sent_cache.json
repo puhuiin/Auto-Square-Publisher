@@ -1,15 +1,5 @@
 [
   {
-    "id": "9c10600b8576cff7",
-    "title": "XRP Price Warning: Leverage Resets as $11.8B in Reserves Loom",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-20T22:06:00.468559+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a10508d01090a451",
     "title": "Stellar (XLM) Alert Issued by Japanese Crypto Exchange: Here's the Reason",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5161,5 +5151,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f25c77d75c43fa34",
+    "title": "Bitcoin’s ‘Uptober’ rally falters – Why BTC is down 4.2% in October",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-29T11:50:51.885508+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
