@@ -26,19 +26,14 @@
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {
     "Preset-stepfun": {
-      "fails": 2,
       "cooldown_until": "2026-10-29T01:07:49.693916+00:00",
+      "fails": 2,
       "last_fail": "2026-10-29T00:47:49.693941+00:00"
-    },
-    "Preset-stepfun-flash": {
-      "fails": 1,
-      "cooldown_until": "2026-10-29T00:55:41.939651+00:00",
-      "last_fail": "2026-10-29T00:45:41.939661+00:00"
     }
   },
   "_article_sent_date": "2026-10-29",
