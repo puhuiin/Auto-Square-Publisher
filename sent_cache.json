@@ -1,17 +1,5 @@
 [
   {
-    "id": "e989cba87201726b",
-    "title": "加密市场普涨,DeFi板块上涨4.38%,BTC突破8.3万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-21T02:24:44.626167+00:00",
-    "tokens": [
-      "BTC",
-      "CVX",
-      "COMP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "96f9f5818c75ae3c",
     "title": "主要 Meme 市场 24 小时成交约 2.72 亿美元,环比增长 20.2%",
     "source": "吴说区块链 (中文深度)",
@@ -5161,6 +5149,16 @@
       "HYPE",
       "DASH",
       "PEPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "08613b50c4f72400",
+    "title": "Bitcoin developers rush to fix 3 security flaws after AI uncovers them",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-29T16:25:12.766248+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
