@@ -1,16 +1,5 @@
 [
   {
-    "id": "2adbf81e84d4ad50",
-    "title": "拆解 Abraxas:巨鲸如何在 Hyperliquid 上开展中性策略?",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-21T00:08:41.405971+00:00",
-    "tokens": [
-      "USDC",
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "6a7a44967833b931",
     "title": "上线1小时市值达4000万美元,Solana链上Meme币Kimchi成交额达2370万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5158,6 +5147,16 @@
     "tokens": [
       "ONDO",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "af14be95162f6b01",
+    "title": "BNB Chain 公布代币化黑客松获奖名单",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-29T14:24:05.801118+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
