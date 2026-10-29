@@ -1,16 +1,5 @@
 [
   {
-    "id": "96f9f5818c75ae3c",
-    "title": "主要 Meme 市场 24 小时成交约 2.72 亿美元,环比增长 20.2%",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-21T02:44:32.827355+00:00",
-    "tokens": [
-      "BNB",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d6923b02574a1a40",
     "title": "TRUMP 获利超 4000 万美元交易员提取 643 万美元 PUMP,同名 Meme 币市值达 4000 万美元",
     "source": "吴说区块链 (中文深度)",
@@ -5159,6 +5148,16 @@
     "sent_at": "2026-10-29T16:25:12.766248+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2ba6841f28b83439",
+    "title": "17,833,333 DOGE Longs Liquidated in Market Selloff: What's Ahead?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-29T16:46:57.546030+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
