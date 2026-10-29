@@ -1,15 +1,5 @@
 [
   {
-    "id": "ca3a54f953ea044b",
-    "title": "PENGU Dumps 20% in 2 Weeks, But Analyst Predicts a Massive Rebound",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-20T18:04:07.705288+00:00",
-    "tokens": [
-      "PENGU"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7265c1125f4762f3",
     "title": "Stellar (XLM) Holders, Mark Your Calendars: Major Network Upgrade Announced",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5160,6 +5150,17 @@
     "sent_at": "2026-10-29T07:25:51.877889+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "959f4358a996e916",
+    "title": "Ripple’s RLUSD stablecoin gains Coinbase access as Moody’s awards investment-grade rating",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-29T07:45:42.907692+00:00",
+    "tokens": [
+      "RLUSD",
+      "XRP"
     ],
     "lang": "zh-CN"
   }
