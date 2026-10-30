@@ -1,15 +1,5 @@
 [
   {
-    "id": "61d0c8b2c52efc3f",
-    "title": "Beyond HODLing: How Bitcoin-Backed Loans Can Unlock New Financial Opportunities",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-21T18:04:08.272256+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "538a2222a4ac89f4",
     "title": "三家公司拟在SEC创新豁免下运营代币化证券交易场所",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5169,6 +5159,16 @@
       "HYPE",
       "XRP",
       "ADA"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e6686a59c69566e7",
+    "title": "Binance Hit by a $6.3B Security Nightmare: Nikita Bier Mocks CZ, While ZachXBT Spots a Bigger Threat",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-30T07:47:19.225606+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
