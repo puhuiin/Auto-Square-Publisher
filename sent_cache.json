@@ -1,15 +1,5 @@
 [
   {
-    "id": "dc21cb025b1fd699",
-    "title": "Ethena is bouncing – And a $1B buyback could send it to $0.30",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-21T21:04:37.448368+00:00",
-    "tokens": [
-      "ENA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9548c685d6878023",
     "title": "Stellar Ramps Up Quantum Readiness With Bell Upgrade — Why This Could Be Ultra-Bullish For XLM Price",
     "source": "ZyCrypto (新币与空投)",
@@ -5173,5 +5163,16 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d28bb2fb1d061733",
+    "title": "何一:AAVE 抵押的 6000 万 USDT 不在完全冻结范围内,黑客实际仅取走 4600 万美元 ETH",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T10:44:03.468003+00:00",
+    "tokens": [
+      "AAVE",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
