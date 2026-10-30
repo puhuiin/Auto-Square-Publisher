@@ -1,15 +1,5 @@
 [
   {
-    "id": "b4afb074610c8a15",
-    "title": "Bitcoin volatility nears 2026 lows as traders brace for Fed decision and US midterms",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-10-21T14:06:16.563157+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "45831fe3cc54384c",
     "title": "XRP Rallies on Ripple SEC Push as ETF Outflows Cloud Evernorth Debut",
     "source": "CryptoNews (全球快讯)",
@@ -5162,5 +5152,17 @@
       "UNI"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ca98676d8532c0b4",
+    "title": "Massive $5.9 Billion Binance Hack Hits XRP, BTC, ETH and Other Tokens",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-30T02:44:57.412014+00:00",
+    "tokens": [
+      "XRP",
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
