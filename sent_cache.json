@@ -1,15 +1,5 @@
 [
   {
-    "id": "538a2222a4ac89f4",
-    "title": "三家公司拟在SEC创新豁免下运营代币化证券交易场所",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-21T18:24:23.352031+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "871bf1ad90894b77",
     "title": "Chainlink, Cardano, other blockchain groups push SEC for clearer crypto rules",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5169,6 +5159,17 @@
     "sent_at": "2026-10-30T07:47:19.225606+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "14dbfc7ecb6fcc62",
+    "title": "加密市场爆仓金额超15.4亿美元,币安遭攻击引发抛售",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-30T08:04:31.036151+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
