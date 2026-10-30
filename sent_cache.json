@@ -1,15 +1,5 @@
 [
   {
-    "id": "770e361a293bc68b",
-    "title": "David Schwartz Doesn’t Know Who Sent Him This XRP Meme Coin Gift",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-22T09:05:51.700691+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "8243856bbe9e52f0",
     "title": "Gate Live将于今晚举办专题AMA:聚焦BTC反弹、Meme暴涨及贝莱德等机构布局",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5173,6 +5163,16 @@
     "sent_at": "2026-10-30T19:05:06.699162+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a9f2d8421e226d3d",
+    "title": "Canary Staked INJ ETF aims to bring regulated Injective staking to Nasdaq",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-30T19:24:45.197357+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "en"
   }
