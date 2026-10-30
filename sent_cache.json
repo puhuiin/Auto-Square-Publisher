@@ -1,15 +1,5 @@
 [
   {
-    "id": "ac3483ba0d21ab57",
-    "title": "XRP to Power New 'Ultimate' AI Stack From Ripple Founder's Venture",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-21T19:24:06.668527+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8d9db4b791d50c52",
     "title": "Alpenglow Solana upgrade begins activation, targeting 150ms transaction finality",
     "source": "AMBCrypto (技术与链上)",
@@ -5171,6 +5161,16 @@
       "ETH",
       "BTC",
       "ARB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7132a7d9b53c2a0d",
+    "title": "Pundi X 已冻结 Binance 攻击事件中全部被盗 PUNDIX,涉及约 36.55 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T09:04:48.901326+00:00",
+    "tokens": [
+      "PUNDIX"
     ],
     "lang": "zh-CN"
   }
