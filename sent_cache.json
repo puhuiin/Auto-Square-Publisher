@@ -1,17 +1,5 @@
 [
   {
-    "id": "a7d1e29a3212740f",
-    "title": "美股潮向(10 月 22 日):Meta 营收增 26%,特斯拉下调资本开支预期",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-22T01:04:35.557379+00:00",
-    "tokens": [
-      "GTC",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b2b07a75e927604d",
     "title": "Google Gemini AI Predicts an Explosive Q4 for Zcash",
     "source": "CryptoNews (全球快讯)",
@@ -5179,6 +5167,16 @@
       "USDC",
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0515973d24f8fdb8",
+    "title": "Bonk Guy:山寨币相对比特币表现强势,认为多数抛压或已释放",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-30T15:26:58.252362+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
