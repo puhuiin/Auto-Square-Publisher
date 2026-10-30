@@ -1,15 +1,5 @@
 [
   {
-    "id": "2d173ce6752c7fe1",
-    "title": "Dogecoin Labs Wants DOGE to Be More Than a Meme Coin: Here’s How",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-22T10:07:36.427113+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "993d04aae0f2b6c7",
     "title": "Solana records $5 trillion in stablecoin volume in 2026",
     "source": "Crypto Briefing (深度与研报)",
@@ -5173,6 +5163,16 @@
     "sent_at": "2026-10-30T20:06:11.612356+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c413531a0a04630b",
+    "title": "Cantor 等华尔街机构:Binance 被盗后加密股回调可买入",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T20:24:43.041701+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
