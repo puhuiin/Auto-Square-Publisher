@@ -1,15 +1,5 @@
 [
   {
-    "id": "5759f8d6523e1b6f",
-    "title": "Is Cardano About to Take Over? ChatGPT AI Predicts a Huge Move",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-21T16:07:57.126328+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "072ac6f6b83bc468",
     "title": "Bonk Guy:隐私赛道或迎来周期行情,MASK目前仍被市场严重低估",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5167,6 +5157,16 @@
       "ETH",
       "AVAX",
       "AAVE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "8515ab57438ce227",
+    "title": "观点:币安被盗的超1.8万枚BTC或短期内难以变现,潜在抛压有限",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-30T04:46:57.903047+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
