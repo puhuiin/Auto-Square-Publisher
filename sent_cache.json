@@ -1,16 +1,5 @@
 [
   {
-    "id": "871bf1ad90894b77",
-    "title": "Chainlink, Cardano, other blockchain groups push SEC for clearer crypto rules",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-21T18:43:55.987228+00:00",
-    "tokens": [
-      "LINK",
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a14d55219cca1072",
     "title": "Pudgy Penguins price prediction – Why PENGU’s 9% rally faces THIS crucial test",
     "source": "AMBCrypto (技术与链上)",
@@ -5172,5 +5161,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "882b39535b1004b8",
+    "title": "Bitwise 报告:比特币或成未来十年表现最好的主流资产",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T08:26:51.758312+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
