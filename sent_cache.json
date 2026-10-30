@@ -1,15 +1,5 @@
 [
   {
-    "id": "e52777ef771533a4",
-    "title": "Solana targets faster finality, while Wall Street cuts the cash that must move",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-22T11:10:37.802586+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0a4808293de9fff1",
     "title": "TAO crypto loses bullish momentum as $252 support nears – What’s next?",
     "source": "AMBCrypto (技术与链上)",
@@ -5175,6 +5165,16 @@
     "sent_at": "2026-10-30T21:06:26.870502+00:00",
     "tokens": [
       "RUNE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4b6b5d51ddfb3da5",
+    "title": "Viral Altcoin Pumps and Dumps, PEPE Stays Green Amid the Market Sell-Оff: Bits Recap October 30",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-30T21:22:59.219533+00:00",
+    "tokens": [
+      "PEPE"
     ],
     "lang": "en"
   }
