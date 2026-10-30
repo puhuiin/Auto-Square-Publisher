@@ -1,15 +1,5 @@
 [
   {
-    "id": "d00af025116be778",
-    "title": "Grok AI Predicts Something Big Is Brewing for XRP by Jan 1, 2027",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-21T21:44:28.768334+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2ec15c705cf4970f",
     "title": "Important Cardano News and ADA Price Update: October 21",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5174,5 +5164,17 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "9c4cc1451b78b2d2",
+    "title": "麻吉在 ETH 多单被清算后再度充值 25 万 USDC 加杠杆开多,持仓价值约 588 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T11:24:59.432365+00:00",
+    "tokens": [
+      "ETH",
+      "USDC",
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
