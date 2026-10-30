@@ -1,15 +1,5 @@
 [
   {
-    "id": "a1f858b87208d57f",
-    "title": "分析:比特币或在美联储决议前维持8.13万至8.44万美元震荡",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-21T15:05:28.804850+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f6d1e5cbc6a5430a",
     "title": "Polkadot 社区基金会:Fearless 钱包浏览器扩展存在私钥泄露风险,已有用户报告损失 17,286 枚 DOT",
     "source": "吴说区块链 (中文深度)",
@@ -5167,5 +5157,15 @@
       "PEPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "65c86904c4ac0de7",
+    "title": "Bitcoin Price Slides Below $79,000 as Binance Loses $5.8 Billion in Massive Hack",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-10-30T03:47:35.569417+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
