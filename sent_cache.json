@@ -1,15 +1,5 @@
 [
   {
-    "id": "b2b07a75e927604d",
-    "title": "Google Gemini AI Predicts an Explosive Q4 for Zcash",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-22T01:26:29.844254+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "108e8c16f6c96309",
     "title": "加密早报:美国 OCC 发布 GENIUS Act 稳定币最终实施规则,马斯克宣布 SpaceX 与特斯拉探讨合并",
     "source": "深潮TechFlow (中文/简体)",
@@ -5175,6 +5165,16 @@
     "title": "Bonk Guy:山寨币相对比特币表现强势,认为多数抛压或已释放",
     "source": "Odaily星球日报 (中文快讯)",
     "sent_at": "2026-10-30T15:26:58.252362+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "49b6e15becac1fd0",
+    "title": "Bitcoin fell after the Fed’s pause, but blaming interest rates misses the Binance shock",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-30T15:45:37.428144+00:00",
     "tokens": [
       "BTC"
     ],
