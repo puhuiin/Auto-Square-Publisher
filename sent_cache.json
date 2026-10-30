@@ -1,15 +1,5 @@
 [
   {
-    "id": "5defa3a26658651e",
-    "title": "Cardano Hits Major Milestone With 100,000 Indian Farms",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-21T23:44:34.486241+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b49dc27fa8c39714",
     "title": "Three Companies Have Notified the SEC of Intention To Start Tokenized Stocks Trading",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5180,5 +5170,15 @@
       "UNI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "bb17e71a34261489",
+    "title": "从 Binance 到 PHP2Shell:AI 时代,Web 安全的防线亟需再定义",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T13:50:45.172919+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
