@@ -1,15 +1,5 @@
 [
   {
-    "id": "bacaa60604300927",
-    "title": "QCP:霍尔木兹海峡能源风险升温,AI 融资压力加剧科技信贷市场分化",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-22T10:48:15.780499+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e52777ef771533a4",
     "title": "Solana targets faster finality, while Wall Street cuts the cash that must move",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5175,6 +5165,16 @@
       "USDC",
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "342610cca8c04180",
+    "title": "RUNE up 15% after hackers use THORChain to launder stolen funds — What next?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-30T21:06:26.870502+00:00",
+    "tokens": [
+      "RUNE"
     ],
     "lang": "en"
   }
