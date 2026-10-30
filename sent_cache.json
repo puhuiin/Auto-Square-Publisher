@@ -1,15 +1,5 @@
 [
   {
-    "id": "e8778e77e756c9e5",
-    "title": "Dogecoin price enters accumulation zone – Is DOGE nearing a rebound?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-22T00:47:11.917657+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a7d1e29a3212740f",
     "title": "美股潮向(10 月 22 日):Meta 营收增 26%,特斯拉下调资本开支预期",
     "source": "深潮TechFlow (中文/简体)",
@@ -5177,6 +5167,18 @@
     "sent_at": "2026-10-30T14:44:44.745317+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4846819342e4d630",
+    "title": "币安联席 CEO :最迟在周一发布完整的储备金证明,目标 40 小时内恢复提现",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T15:08:06.040344+00:00",
+    "tokens": [
+      "USDC",
+      "BTC",
+      "ETH"
     ],
     "lang": "en"
   }
