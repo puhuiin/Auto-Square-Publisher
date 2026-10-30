@@ -1,15 +1,5 @@
 [
   {
-    "id": "9548c685d6878023",
-    "title": "Stellar Ramps Up Quantum Readiness With Bell Upgrade — Why This Could Be Ultra-Bullish For XLM Price",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-21T21:23:59.012873+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d00af025116be778",
     "title": "Grok AI Predicts Something Big Is Brewing for XRP by Jan 1, 2027",
     "source": "CryptoNews (全球快讯)",
@@ -5174,5 +5164,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e4f0fc45dd1afb69",
+    "title": "Hyperliquid (HYPE) Adds 680% in Volume: Analyzing Record-Breaking Surge",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-30T11:04:44.416234+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
