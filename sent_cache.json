@@ -1,16 +1,5 @@
 [
   {
-    "id": "221bee3b8e3a9b42",
-    "title": "XRP and DOGE Look Undervalued by MVRV Measures, but Will Traders Take Notice?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-21T20:45:09.909427+00:00",
-    "tokens": [
-      "XRP",
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "dc21cb025b1fd699",
     "title": "Ethena is bouncing – And a $1B buyback could send it to $0.30",
     "source": "AMBCrypto (技术与链上)",
@@ -5171,6 +5160,17 @@
     "sent_at": "2026-10-30T10:04:04.827137+00:00",
     "tokens": [
       "RUNE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "fd0e1bc2ab598785",
+    "title": "Former Ripple CTO Mocks $6 Billion Binance Hack With Stellar (XLM) Joke",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-30T10:24:55.166545+00:00",
+    "tokens": [
+      "XLM",
+      "XRP"
     ],
     "lang": "zh-TW"
   }
