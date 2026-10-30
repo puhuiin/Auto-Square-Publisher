@@ -1,15 +1,5 @@
 [
   {
-    "id": "0d360bdf5d8eaef5",
-    "title": "XRP Whale Outflows Hit 5-Year Low; Here’s What’s Happening",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-21T22:25:46.707339+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "30ef5ab2c963458a",
     "title": "Dataline raises $10.6 million for decentralized data network for AI agents, plans ICO",
     "source": "The Block (机构与政策)",
@@ -5176,5 +5166,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "6c5b09eed3a8f28d",
+    "title": "CZ:比特币在传统金融市场暴跌中表现出韧性",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T12:07:17.558766+00:00",
+    "tokens": [
+      "BTC",
+      "WLFI"
+    ],
+    "lang": "zh-CN"
   }
 ]
