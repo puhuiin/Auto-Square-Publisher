@@ -1,15 +1,5 @@
 [
   {
-    "id": "9abd21553f2495e9",
-    "title": "Dogecoin Gets a Dedicated Company to Build Out Its Ecosystem",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-21T17:24:14.717117+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c1e01555cf82b534",
     "title": "Birdeye Launches Institutional Terminal as Bots Dominate Crypto",
     "source": "BeInCrypto (山寨与行情)",
@@ -5168,5 +5158,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "7a29b37ca8692a67",
+    "title": "朝鲜黑客偷了币之后,钱都去哪了?从 Bybit 到币安,一文看懂 Lazarus 的洗钱路径",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-30T06:49:33.252517+00:00",
+    "tokens": [
+      "ETH",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
