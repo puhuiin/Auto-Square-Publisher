@@ -1,17 +1,5 @@
 [
   {
-    "id": "8756044ed9104b59",
-    "title": "灰度允许拿币换份额,加密 OG 们为什么不自己持币了?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-22T02:47:39.176345+00:00",
-    "tokens": [
-      "XRP",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "dcb3ac90d589e313",
     "title": "CoinGecko API lands on API3’s AirnodeHub marketplace for AI agents",
     "source": "Crypto Briefing (深度与研报)",
@@ -5175,6 +5163,16 @@
     "sent_at": "2026-10-30T16:44:06.302540+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c4d8d56e77669a00",
+    "title": "被盗ALLO已被冻结,Allora正全额归还币安",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-30T17:06:38.814698+00:00",
+    "tokens": [
+      "ALLO"
     ],
     "lang": "en"
   }
