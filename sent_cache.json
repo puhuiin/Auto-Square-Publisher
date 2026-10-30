@@ -1,15 +1,5 @@
 [
   {
-    "id": "8085d7a8f9ebf338",
-    "title": "日吞吐达万亿Token、用户近 300 万,B.AI 如何以底层“无感化”捕获 Web2 AI 流量?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-22T03:47:36.620063+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "dabbb31ad6907235",
     "title": "Fearless Wallet 私钥泄露长达一年半,已有 8 名用户报告资产被盗",
     "source": "吴说区块链 (中文深度)",
@@ -5173,6 +5163,16 @@
     "sent_at": "2026-10-30T17:27:56.560669+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "bbbec4bdbdd0a6d0",
+    "title": "‘Our collateral resides off-exchange’ – Ethena downplays $8.8M Binance exposure",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-30T17:48:22.893927+00:00",
+    "tokens": [
+      "ENA"
     ],
     "lang": "en"
   }
