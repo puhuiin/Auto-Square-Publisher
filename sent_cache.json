@@ -1,17 +1,5 @@
 [
   {
-    "id": "108e8c16f6c96309",
-    "title": "加密早报:美国 OCC 发布 GENIUS Act 稳定币最终实施规则,马斯克宣布 SpaceX 与特斯拉探讨合并",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-22T01:47:49.579509+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "cddaac875569749b",
     "title": "Dogecoin 开始给自己搭公司架构,但 Meme 需要组织框架吗?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5175,6 +5163,16 @@
     "title": "Bitcoin fell after the Fed’s pause, but blaming interest rates misses the Binance shock",
     "source": "CryptoSlate (新赛道与代币经济)",
     "sent_at": "2026-10-30T15:45:37.428144+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "46346343235e8f32",
+    "title": "Tyler Evans: Bitcoin ETF Flows Flipped From “Highly Negative” to “Strong Accumulation”",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-10-30T16:05:23.470022+00:00",
     "tokens": [
       "BTC"
     ],
