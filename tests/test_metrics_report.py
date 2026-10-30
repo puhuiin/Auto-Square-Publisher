@@ -9614,6 +9614,65 @@ class TestR848bRichExportPaste(unittest.TestCase):
         self.assertEqual(invalid, [])
 
 
+class TestR850Preregistration(unittest.TestCase):
+    """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
+
+    ★ 分叉已定：真漏帖 31/32 的 `campaign_guidance_usable=True` ⇒ 模型有时就是不写（文案侧）。
+    ★ 形态依据（R850 的制定理由）：**52% 的漏提（15/29）用「对比站队 / 极简站队 / 多空辩论」结尾**
+      —— 这些结尾以 poll 提问收尾 ⇒ **活动句被 poll 挤掉**（提及组集中在情绪表态/灵魂拷问/仓位表白）。
+    ★ 主题假设已被**证伪**：漏提不集中在"与交易无关"的题材（行情 76%、安全 70%、监管 50%、基础设施 33%）。
+    ⚠️ 本组只钉**口径与阈值**，不钉结论（结论要等 ≥2 个部署后的夜窗）。
+    """
+
+    @staticmethod
+    def _ew():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "en_window_audit_r850",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "en_window_audit.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _win(normal, miss):
+        return {"date": "d", "n": normal, "mention": normal - miss, "normal": normal,
+                "miss": miss, "langdev": 0,
+                "mention_rate": 100.0 * (normal - miss) / normal,
+                "miss_rate": 100.0 * miss / normal}
+
+    def test_pass_line_is_integer_fraction(self):
+        """★ 阈值必须是整数分数、判定走整数交叉相乘（R832 教训）。"""
+        mod = self._ew()
+        self.assertEqual((mod.R850_PASS_NUM, mod.R850_PASS_DEN), (1, 5))
+        # 恰好落在 1/5 上（如 8/40）必须判通过，不许被浮点误差挤掉；
+        # 且必须是**两窗**（否则先被判「样本不足」）——这是有意测「判定顺序」
+        self.assertEqual(mod.r850_verdict([self._win(20, 4), self._win(20, 4)],
+                                          [self._win(20, 4)])[0], "通过")
+
+    def test_verdict_tiers(self):
+        mod = self._ew()
+        base = [self._win(22, 8), self._win(23, 7)]          # 基线 ≈ 33%
+        # 13/45 ≈ 29% ⇒ 高于通过线、但不比基线差 ⇒ 未通过（保留并标注「未被证实」）
+        self.assertEqual(mod.r850_verdict([self._win(22, 7), self._win(23, 6)], base)[0], "未通过")
+        # 8/45 ≈ 18% ⇒ ≤1/5 ⇒ 通过
+        self.assertEqual(mod.r850_verdict([self._win(22, 4), self._win(23, 4)], base)[0], "通过")
+        # 22/45 ≈ 49% ⇒ 比基线更差 ⇒ 回滚
+        self.assertEqual(mod.r850_verdict([self._win(22, 11), self._win(23, 11)], base)[0], "回滚")
+        # 单窗 11/20 = 55% ⇒ 回滚（哪怕合并还行）
+        self.assertEqual(mod.r850_verdict([self._win(20, 11), self._win(25, 3)], base)[0], "回滚")
+        # 只有 1 窗 ⇒ 样本不足
+        self.assertEqual(mod.r850_verdict([self._win(22, 4)], base)[0], "样本不足")
+
+    def test_no_float_percent_in_verdict(self):
+        """判定函数里不许出现浮点百分比比较（只许整数交叉相乘）。"""
+        import inspect
+        src = inspect.getsource(self._ew().r850_verdict)
+        self.assertNotIn("miss_rate", src, "不许拿 miss_rate（浮点%）去比阈值")
+        self.assertIn("base_miss * n", src, "必须用整数交叉相乘比基线")
+
+
 class TestR834EnLengthBudget(unittest.TestCase):
     """★★ R834：英文篇幅目标与**可发布预算**对齐 + 「顶到上限」入验收。
 

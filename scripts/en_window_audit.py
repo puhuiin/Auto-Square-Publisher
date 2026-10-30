@@ -517,6 +517,53 @@ def r844_verdict(treat_stats) -> tuple:
             % (miss, n, R844_PASS_NUM, R844_PASS_DEN, R844_BASE_MISS, R844_BASE_NORMAL))
 
 
+# ===========================================================================
+# 第五条预注册判据（R850）：**守卫式重试**——缺活动提法时带一句针对形态的强制重生成
+# ---------------------------------------------------------------------------
+# 背景与分叉（R849 前后的取证）：
+#   · 真漏帖里 31/32 的 `campaign_guidance_usable = True` ⇒ 情报给了、模型就是没写
+#     ⇒ **文案侧缺陷**（不是情报侧、也不是措辞/位置问题——R830/R844 两次 prompt 干预都被条款回滚）。
+#   · 主题诊断被**证伪**：漏提**不**集中在"与交易无关"的题材（行情/交易 76%、安全/黑客 70%、
+#     监管/法务 50%、基础设施 33%）⇒ 不是"模型按逃生阀正确判断这条新闻与交易无关"。
+#   · 形态诊断（R850 的制定依据）：**52% 的漏提（15/29）用「对比站队 / 极简站队 / 多空辩论」结尾**
+#     —— 这些结尾以 poll 提问收尾 ⇒ **活动句被 poll 挤掉**；
+#       提及组则集中在「情绪表态 / 灵魂拷问 / 仓位表白」。
+# 干预（**部署后生效**，见 main.py 的部署备注）：生成后若 `campaign_vocab.mention_in_text(正文) is False`
+#   且当轮 `campaign_guidance_usable is True` ⇒ **带一句针对形态的强制重生成指令重试一次**
+#   （示例：「若你的结尾是站队提问，请在那个提问**前后**补一句当期活动提法」）
+#   —— **不全局改措辞** ⇒ 没有 R760 那类连带伤害。
+# ⚠️ **必须等 R848 的判定③窗口关掉再部署**：重试重新生成正文 ⇒ 直接污染 R848 的长度窗口。
+# 判据（事前写死；阈值全程整数交叉相乘）：
+#   · 口径 = 英文夜窗「真漏率」（与 ① 同口径；**历史读数必须用 R849 之后的词表重算**）；
+#   · 基线 = **重试部署前的最近两个完整夜窗**（由调用方传入）；
+#   · **通过** = ≥2 窗且 n≥36 且真漏率 ≤ 1/5（20%）；
+#   · **回滚** = 真漏率**比基线更差** 或任一窗 > 50% ⇒ 撤销重试（逐字还原）；
+#   · **未通过**（介于两者）= 保留改动并标注「未被证实」，下一轮复看。
+R850_PASS_NUM, R850_PASS_DEN = 1, 5
+R850_REVERT_WINDOW_PCT = 50
+
+
+def r850_verdict(treat_stats, base_stats) -> tuple:
+    """R850 预注册判定（返回 (状态, 说明)）。"""
+    n = sum(s["normal"] for s in treat_stats)
+    miss = sum(s["miss"] for s in treat_stats)
+    base_n = sum(s["normal"] for s in (base_stats or []))
+    base_miss = sum(s["miss"] for s in (base_stats or []))
+    if len(treat_stats) < MIN_ARM_WINDOWS or n < MIN_ARM_N:
+        return ("样本不足", "需 ≥%d 窗口 / n≥%d；当前 %d 窗 / %d 篇"
+                % (MIN_ARM_WINDOWS, MIN_ARM_N, len(treat_stats), n))
+    for s in treat_stats:
+        if s["normal"] and s["miss"] * 100 > R850_REVERT_WINDOW_PCT * s["normal"]:
+            return ("回滚", "单窗真漏 %d/%d 超过 %d%%" % (s["miss"], s["normal"], R850_REVERT_WINDOW_PCT))
+    if base_miss and miss * base_n > base_miss * n:
+        return ("回滚", "合并真漏 %d/%d 比基线 %d/%d 更差" % (miss, n, base_miss, base_n))
+    if miss * R850_PASS_DEN <= R850_PASS_NUM * n:
+        return ("通过", "合并真漏 %d/%d ≤ 通过线 %d/%d（基线 %d/%d）"
+                % (miss, n, R850_PASS_NUM, R850_PASS_DEN, base_miss, base_n))
+    return ("未通过", "合并真漏 %d/%d 高于通过线 %d/%d、但不比基线 %d/%d 差 ⇒ 保留改动并标注「未被证实」"
+            % (miss, n, R850_PASS_NUM, R850_PASS_DEN, base_miss, base_n))
+
+
 def load_rows(path: str):
     rows = []
     with open(path, encoding="utf-8") as fh:
@@ -556,6 +603,9 @@ def main(argv=None) -> int:
         # ---- 第四条判据（R844）：同口径、不同的基线与阈值（干预 = 把要求挪到核心要求末条）----
         st4, why4 = r844_verdict(treat)
         print("判定④（R844 活动提法位置）：%s —— %s" % (st4, why4))
+        # ---- 第五条判据（R850）：守卫式重试；基线 = 部署前的臂（即本命令的 --baseline）----
+        st5, why5 = r850_verdict(treat, base)
+        print("判定⑤（R850 守卫式重试）：%s —— %s" % (st5, why5))
         # 归因切片（R835）：真漏与哪些既有字段相关（**诊断，不设阈值**）
         for label, dates in (("基线臂", args.baseline), ("处置臂", args.treatment)):
             _miss = []
