@@ -1,15 +1,5 @@
 [
   {
-    "id": "7d4387145b4ece23",
-    "title": "分析:比特币市场占比升至5月以来最高水平,市场等待新催化剂",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-22T11:44:48.811322+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ee43f039b4df7a3f",
     "title": "Drift 攻击者向 Tornado Cash 存入 1.22 亿美元 ETH",
     "source": "吴说区块链 (中文深度)",
@@ -5177,5 +5167,15 @@
       "INJ"
     ],
     "lang": "en"
+  },
+  {
+    "id": "d63528c773ce3ac0",
+    "title": "Stellar (XLM) Absorbs 92% of RWA Fund Inflows in Sudden Market Consolidation",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-30T22:04:39.755542+00:00",
+    "tokens": [
+      "XLM"
+    ],
+    "lang": "zh-TW"
   }
 ]
