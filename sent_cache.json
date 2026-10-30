@@ -1,15 +1,5 @@
 [
   {
-    "id": "c1e01555cf82b534",
-    "title": "Birdeye Launches Institutional Terminal as Bots Dominate Crypto",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-21T17:44:43.581378+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "61d0c8b2c52efc3f",
     "title": "Beyond HODLing: How Bitcoin-Backed Loans Can Unlock New Financial Opportunities",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5169,5 +5159,17 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "4d7317e9295fbebf",
+    "title": "Hyperliquid (HYPE), XRP, Cardano (ADA) and Zcash (ZEC) Price Analysis For October 30: Market Picture Is Distorted",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-30T07:15:58.317033+00:00",
+    "tokens": [
+      "HYPE",
+      "XRP",
+      "ADA"
+    ],
+    "lang": "zh-CN"
   }
 ]
