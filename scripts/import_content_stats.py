@@ -138,15 +138,86 @@ def read_csv(path: str) -> Dict[str, Dict[str, int]]:
 #     误算进来会伪造出"我们的爆款"（实测 12/130，其中 4 篇是最高的 78/57/44/29）。
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _parse_paste(text: str):
-    """解析粘贴文本 → [(datetime(带时区), views)]。
+_RICH_STAMP = re.compile(r"^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})(?::\d{2})?\s*已发布\s*$")
+_RICH_VIEWS_LABEL = re.compile(r"^浏览量\s*$")
+_BARE_INT = re.compile(r"^([\d,]+)\s*$")
 
-    容忍三种常见形态（用户复制出来的样子各不相同，不该让他先清洗）：
-        "2026-10-21 00:04  0"
-        "2026-10-21 00:04\t0"
-        "2026-10-21 00:04:33  12"        # 带秒
+
+def _parse_rich_export(text: str):
+    """★★ R848b：创作者中心**富导出**形态（用户实际复制出来的那种）。
+
+    形态（每帖一段，指标块在时间戳**之前**）：
+
+        <正文若干行>
+        浏览量
+        4
+        点赞量
+        0
+        回复
+        0
+        引用
+        0
+        分享量
+        0
+        2026-10-30 20:29已发布
+
+    ⇒ 取「…已发布」那行的时间为帖时间（**北京时间**，与简形同口径），
+      取**同一段里最后出现的「浏览量」**下面的数字为浏览数。
+
+    ★ 为什么必须支持：真实导出就是这个形态，而旧 `_parse_paste` 只认
+      `2026-10-21 00:04  0` 那种一行式 ⇒ **真实导出根本进不来**，
+      浏览闭环停在库里最后一次成功导入的时刻（本地那份停在 10-20）。
+    ★ 与简形**互斥**：命中任意一段就整段按富形走 —— 否则正文那几千行会被
+      逐行报成 `invalid`，把"联不上必须单独报出来"这条自校验彻底淹掉。
+    返回 `(rows, info)`；`info["invalid"]` 只收**看起来像时间戳却没配上浏览量**的行
+    （那才是真错误：转录错位/漏抄一行）。
+    """
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    tz = _tz(_td(hours=8))
+    lines = text.splitlines()
+    rows, invalid = [], []
+    pending = None          # 本段里最近一次「浏览量」的数值
+    for raw in lines:
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        m = _RICH_STAMP.match(line)
+        if m:
+            if pending is None:
+                invalid.append(line)          # 有时间戳却没有浏览量 ⇒ 真错误，别静默丢
+            else:
+                stamp = "%s %s" % (m.group(1), m.group(2))
+                try:
+                    rows.append((_dt.strptime(stamp, "%Y-%m-%d %H:%M").replace(tzinfo=tz),
+                                 pending))
+                except ValueError:
+                    invalid.append(line)
+            pending = None
+            continue
+        if _RICH_VIEWS_LABEL.match(line):
+            pending = "???"                  # 标记"看到了标签"，等下一行数值
+            continue
+        if pending == "???":
+            mm = _BARE_INT.match(line)
+            pending = int(mm.group(1).replace(",", "")) if mm else None
+    return rows, {"invalid": invalid}
+
+
+def _parse_paste(text: str):
+    """解析粘贴文本 → ([(aware_bj_dt, views)], invalid)。
+
+    两种导出形态都收（**先试富形**，见 `_parse_rich_export`）：
+      · 富形：正文 + 指标块 + 「…已发布」时间戳；
+      · 简形（R820 起、向后兼容）：
+            "2026-10-21 00:04  0"
+            "2026-10-21 00:04\t0"
+            "2026-10-21 00:04:33  12"        # 带秒
     行首 # 视为注释。无法解析的行**不静默跳过**，计入 invalid 一并返回。
     """
+    rich, info = _parse_rich_export(text)
+    if rich:
+        return rich, info["invalid"]
+
     from datetime import datetime as _dt, timedelta as _td, timezone as _tz
     tz = _tz(_td(hours=8))
     rows, invalid = [], []

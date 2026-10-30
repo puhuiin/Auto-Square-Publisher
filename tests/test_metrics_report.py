@@ -9561,6 +9561,59 @@ class TestR847BodyBeforeTags(unittest.TestCase):
         self.assertGreaterEqual(_m.EN_SHORT_WORD_MIN, 100, "下沿太低会让英文帖明显偏短")
 
 
+class TestR848bRichExportPaste(unittest.TestCase):
+    """★★★ R848b：创作者中心**富导出**形态必须能进来（旧解析器只认一行式简形）。
+
+    ★ 为什么：用户实际复制出来的是「正文 + 浏览量/点赞量/回复/引用/分享量 + `…已发布`」，
+      而旧 `_parse_paste` 只认 `2026-10-21 00:04  0` ⇒ **真实导出根本进不来**，
+      浏览闭环停在库里最后一次成功导入的时刻（本地那份停在 10-20，
+      即"触达侧唯一观测量"整段不可用）。
+    ★ 口径（与简形一致）：取「…已发布」行为帖时间（**北京时间**）；
+      取同一段里**最后出现的「浏览量」**下面的数字为浏览数。
+    ★ 两形态**互斥**（先试富形）：否则正文那几千行会被逐行报成 `invalid`，
+      把"联不上必须单独报出来"这条自校验淹掉（R612：沉默不是通过）。
+    ⚠️ 有时间戳却没有浏览量的段必须**单独报出来**，不得静默丢。
+    """
+
+    @staticmethod
+    def _mod():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "import_content_stats_r848b",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "import_content_stats.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    _RICH = ("内容信息\n仅显示已发布内容。\n币安被盗63亿美元,$BTC 只跌了3%?\n"
+             "浏览量\n4\n点赞量\n0\n回复\n0\n引用\n0\n分享量\n0\n"
+             "2026-10-30 20:29已发布\n"
+             "K线笔记｜$WLD 9连阴\n浏览量\n78\n点赞量\n0\n"
+             "2026-10-30 08:10已发布\n"
+             "某段只有时间戳没有浏览量\n2026-10-30 21:00已发布\n")
+
+    def test_rich_export_parsed_with_beijing_tz(self):
+        rows, invalid = self._mod()._parse_paste(self._RICH)
+        self.assertEqual([v for _, v in rows], [4, 78], "富导出的浏览量取值不对")
+        self.assertEqual(rows[0][0].strftime("%Y-%m-%d %H:%M"), "2026-10-30 20:29")
+        self.assertEqual(rows[0][0].utcoffset().total_seconds(), 8 * 3600,
+                         "必须按北京时间（与简形同口径）")
+
+    def test_timestamp_without_views_reported_not_dropped(self):
+        rows, invalid = self._mod()._parse_paste(self._RICH)
+        self.assertEqual(len(invalid), 1, "缺浏览量的段必须单独报出来")
+        self.assertIn("2026-10-30 21:00", invalid[0])
+
+    def test_simple_form_zero_regression(self):
+        """R820 的三行式简形必须逐字不动（老导出仍要能导入）。"""
+        rows, invalid = self._mod()._parse_paste(
+            "# 注释\n2026-10-21 00:04  0\n2026-10-21 00:05\t12\n"
+            "2026-10-21T00:06:33  7\n")
+        self.assertEqual([v for _, v in rows], [0, 12, 7])
+        self.assertEqual(invalid, [])
+
+
 class TestR834EnLengthBudget(unittest.TestCase):
     """★★ R834：英文篇幅目标与**可发布预算**对齐 + 「顶到上限」入验收。
 
