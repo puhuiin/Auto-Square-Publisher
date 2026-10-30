@@ -1,15 +1,5 @@
 [
   {
-    "id": "b49dc27fa8c39714",
-    "title": "Three Companies Have Notified the SEC of Intention To Start Tokenized Stocks Trading",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-22T00:04:43.730158+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "10f84e15eb5be28e",
     "title": "覆盖七条区块链网络,Aerodrome与Velodrome合并推出Aero",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5180,5 +5170,16 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e69c01d5c0de8422",
+    "title": "Grok AI Predicts Wild Bitcoin Price Amid $6.3Bn Binance Hack",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-30T14:09:45.234430+00:00",
+    "tokens": [
+      "BTC",
+      "USD1"
+    ],
+    "lang": "en"
   }
 ]
