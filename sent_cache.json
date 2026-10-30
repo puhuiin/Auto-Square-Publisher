@@ -1,15 +1,5 @@
 [
   {
-    "id": "8243856bbe9e52f0",
-    "title": "Gate Live将于今晚举办专题AMA:聚焦BTC反弹、Meme暴涨及贝莱德等机构布局",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-22T09:28:47.208517+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5e4d4f415fec7f94",
     "title": "Solana’s Alpenglow upgrade goes live – Why SOL’s $100 support matters",
     "source": "AMBCrypto (技术与链上)",
@@ -5173,6 +5163,16 @@
     "sent_at": "2026-10-30T19:24:45.197357+00:00",
     "tokens": [
       "INJ"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "849d2128afc7dba3",
+    "title": "Solana (SOL) Moves In on Hong Kong Banks to Scale Its $14 Billion Stablecoin Market",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-30T19:46:53.881419+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }

@@ -19,20 +19,20 @@
   "last_updated": "2026-10-30T17:24:11.991805Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-30T19:23:39.536735+00:00",
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-10-30T19:43:40.170496+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-30",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 508,
+  "_img_rot": 509,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
