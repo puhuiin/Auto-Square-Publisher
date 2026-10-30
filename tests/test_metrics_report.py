@@ -9756,6 +9756,73 @@ class TestR851AiFlavor(unittest.TestCase):
         self.assertEqual(s["hard_examples"], ["拭目以待"])
 
 
+class TestR851bRepetition(unittest.TestCase):
+    """★★ R851b：**公式化重复率**（平台社群准则把"大量发布高度相似/结构相同的内容"列为违规 ✓）。
+
+    ★ 实测（en 夜窗 257 篇）：含 top-15 重复片段的帖占 **78%** ✗（`right now` 35%、
+      `Spot Trading` 28%、`Wait for`/`you want to` 各 ~20%）⇒ 有可改进空间 ✓。
+    ⚠️ 本组只钉**口径与阈值**：降重复率要靠 prompt/模型侧改动（改变发布集合）⇒
+       必须等 R848 的 ③ 窗口关掉、并另行预注册"降重复率"的改动 ✓。
+    """
+
+    @staticmethod
+    def _ew():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "en_window_audit_r851b",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "en_window_audit.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _win(n, hit):
+        return {"date": "d", "n": n, "hit": hit, "frag_count": 5,
+                "share_pct": (100.0 * hit / n) if n else 0.0, "fragments": ["abc"]}
+
+    def test_verdict_tiers(self):
+        mod = self._ew()
+        base = [self._win(45, 36)]                     # 基线 80%
+        # 两臂各需 ≥2 窗（否则只能出「样本不足」）——这正是判定顺序要测的东西
+        drop = [self._win(22, 18), self._win(23, 4)]    # 22/45 ≈ 49% ⇒ 降 31pp
+        self.assertEqual(mod.repetition_verdict(base, drop)[0], "通过",
+                         "降 30pp 以上必须判通过")
+        worse = [self._win(22, 20), self._win(23, 18)]  # 38/45 ≈ 84% ⇒ 比基线高
+        self.assertEqual(mod.repetition_verdict(base, worse)[0], "回滚",
+                         "没降反升必须回滚")
+        slight = [self._win(22, 17), self._win(23, 14)]  # 31/45 ≈ 69% ⇒ 降 11pp
+        self.assertEqual(mod.repetition_verdict(base, slight)[0], "未通过",
+                         "降幅 <15pp 只能出「未通过」")
+        small = [self._win(20, 12), self._win(15, 8)]    # n=35 < 36
+        self.assertEqual(mod.repetition_verdict(base, small)[0], "样本不足",
+                         "n<36 只能出「样本不足」")
+
+    def test_stats_only_counts_published_en_night_ascii(self):
+        """口径：只算 en 夜窗已发布帖；只统计 ASCII n-gram；min_docs 过滤掉偶然 ✓。"""
+        mod = self._ew()
+        rows = [
+            {"outcome": "binance_published", "lang": "en",
+             "ts": "2026-10-30T15:00:00+00:00",
+             "final_text": "a right now here. a right now there."},
+            {"outcome": "binance_published", "lang": "en",
+             "ts": "2026-10-30T15:10:00+00:00",
+             "final_text": "b right now again. b right now once more."},
+            {"outcome": "llm_rejected", "lang": "en",
+             "ts": "2026-10-30T15:20:00+00:00",
+             "final_text": "a right now rejected."},
+            {"outcome": "binance_published", "lang": "zh-CN",
+             "ts": "2026-10-30T15:30:00+00:00",
+             "final_text": "看看这个。"},
+        ]
+        s = mod.formulaic_repetition_stats(rows, "2026-10-30", min_docs=2, n=9)
+        self.assertEqual(s["n"], 2, "只算 en 夜窗的已发布帖")
+        self.assertTrue(s["fragments"], "「right now」必须被重复片段抓到")
+        self.assertTrue(any("right now" in f for f in s["fragments"]),
+                        "重复片段应含 right now")
+        self.assertEqual(s["hit"], 2)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 

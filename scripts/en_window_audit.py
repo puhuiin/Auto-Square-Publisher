@@ -42,6 +42,7 @@
 from __future__ import annotations
 
 import argparse
+import collections
 import datetime as dt
 import json
 import math
@@ -365,6 +366,80 @@ def ai_flavor_stats(rows, date_utc: str, lang: str = "en") -> dict:
             "soft_any": soft_any, "residual": residual,
             "residual_pct": (100.0 * residual / n) if n else 0.0,
             "hard_examples": flags[:3]}
+
+
+def formulaic_repetition_stats(rows, date_utc: str, min_docs: int = 6, n: int = 12,
+                               topk: int = 15) -> dict:
+    """★★ R851b：**公式化重复率**（平台社群准则明确列为违规项：大量发布高度相似/结构相同）。
+
+    口径（写死，便于复现）：
+      · 样本 = 该窗口 en 已发布帖（用 `body_before_tags` 取正文，R847 修过"正文里 #2 不算标签"）✓；
+      · 空白归一后取 **ASCII n-gram（长度 n）** ✓（中文词不参与英文侧统计 ✓）；
+      · 只统计**跨帖出现 ≥ min_docs 篇**的片段 ✓ ⇒ 过滤掉偶然巧合 ✓；
+      · 指标 = 含 top-N 任一片段的帖占比 ✓（受影响面，不是片段数 ✓）。
+    ⚠️ **只度量不设门**：降低重复率要靠 prompt/模型侧改动（改变发布集合）⇒ 必须等
+      R848 的 ③ 窗口关掉，并另行预注册"降重复率"的判据 ✓。本函数只出读数 ✓。
+    """
+    def is_pub_en(r):
+        if not str(r.get("outcome", "")).startswith("binance_published"):
+            return False
+        if r.get("lang") != "en":
+            return False
+        return in_night_window(r.get("ts"), date_utc)
+
+    texts = []
+    for r in rows or []:
+        if is_pub_en(r):
+            b = body_before_tags(r.get("final_text") or "")
+            b = re.sub(r"\s+", " ", b).strip()
+            if b:
+                texts.append(b)
+    if not texts:
+        return {"date": date_utc, "n": 0, "min_docs": min_docs, "ngram": n, "topk": topk,
+                "share_pct": 0.0, "fragments": []}
+    cnt = collections.Counter()
+    for t in texts:
+        seen = set()
+        for i in range(len(t) - n + 1):
+            g = t[i:i + n]
+            if not g.isascii():
+                continue
+            seen.add(g)
+        for g in seen:
+            cnt[g] += 1
+    frags = [(g, c) for g, c in cnt.most_common() if c >= min_docs][:topk]
+    hit = sum(1 for t in texts if any(g in t for g, _ in frags))
+    return {"date": date_utc, "n": len(texts), "min_docs": min_docs, "ngram": n,
+            "topk": topk, "frag_count": len(frags), "hit": hit,
+            "share_pct": (100.0 * hit / len(texts)) if texts else 0.0,
+            "fragments": [f[0] for f in frags]}
+
+
+# ---- 第六条预注册判据（R851b）：公式化重复率 ----
+# 依据：平台社群准则把「**大量发布高度相似或结构相同的内容**」列为违规项 ✓；
+#       实测（en 夜窗 257 篇）「含 top-15 重复片段的帖」占 **78%** ✗ ⇒ 有可改进空间 ✓。
+# ⚠️ 这是**给未来那次"降重复率"改动**预注册的判据：改动本身会改变发布集合 ⇒ 必须等
+#    R848 的 ③ 窗口关掉再动 ✓。在此之前，本判据只在"基线/现状"下出读数 ✓。
+REPETITION_DROP_PP = 15          # 通过 = 处置臂比基线低 ≥15 个百分点
+
+
+def repetition_verdict(base_stats, treat_stats) -> tuple:
+    """R851b 预注册判定（返回 (状态, 说明)）。"""
+    if not treat_stats:
+        return ("样本不足", "处置臂为空")
+    n = sum(s.get("n", 0) for s in treat_stats)
+    if len(treat_stats) < MIN_ARM_WINDOWS or n < MIN_ARM_N:
+        return ("样本不足", "需 ≥%d 窗 / n≥%d；当前 %d 窗 / %d 篇"
+                % (MIN_ARM_WINDOWS, MIN_ARM_N, len(treat_stats), n))
+    base = sum(s["share_pct"] for s in base_stats or []) / max(1, len(base_stats or []))
+    treat = sum(s["share_pct"] for s in treat_stats) / len(treat_stats)
+    if treat >= base:
+        return ("回滚", "重复率 %.1f%% 未低于基线 %.1f%%（改了但没降 ⇒ 无效）"
+                % (treat, base))
+    if base - treat >= REPETITION_DROP_PP:
+        return ("通过", "重复率 %.1f%% ≤ 基线 %.1f%% − %dpp" % (treat, base, REPETITION_DROP_PP))
+    return ("未通过", "重复率 %.1f%% 低于基线 %.1f%% 但降幅 < %dpp ⇒ 保留并标注「未被证实」"
+            % (treat, base, REPETITION_DROP_PP))
 
 
 def trunc_stats(rows, date_utc: str) -> dict:
@@ -729,6 +804,27 @@ def main(argv=None) -> int:
                   % (label, tot_n, tot_res,
                      100.0 * tot_res / max(1, tot_n),
                      sum(x["soft_any"] for x in arm), sum(x["hard_hits"] for x in arm)))
+    # ---- R851b：公式化重复率（只量不设门；判据已预注册给未来的"降重复率"改动）----
+    rb = [formulaic_repetition_stats(rows, d) for d in (args.baseline or "").split(",") if d]
+    rt = [formulaic_repetition_stats(rows, d) for d in (args.treatment or "").split(",") if d]
+    if rb or rt:
+        print("\n【公式化重复率（R851b，只量不设门）】"
+              "口径：en 已发布帖正文里的 12-gram，跨帖 ≥6 篇，含 top-15 任一片段的占比")
+        for label, arm in (("基线臂", rb), ("处置臂", rt)):
+            if not arm:
+                continue
+            tot_n = sum(x["n"] for x in arm)
+            tot_hit = sum(x["hit"] for x in arm)
+            print("  %s: n=%d ｜ 受影响=%d (%.0f%%) ｜ 片段数=%d"
+                  % (label, tot_n, tot_hit,
+                     100.0 * tot_hit / max(1, tot_n),
+                     sum(x["frag_count"] for x in arm)))
+            for x in arm:
+                if x["fragments"]:
+                    print("    %s 样例: %r" % (x["date"], "、".join(x["fragments"][:5])))
+        if rb and rt:
+            st6, why6 = repetition_verdict(rb, rt)
+            print("\n判定⑥（公式化重复率）：%s —— %s" % (st6, why6))
     return 0
 
 
