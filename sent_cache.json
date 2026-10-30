@@ -1,15 +1,5 @@
 [
   {
-    "id": "8b30ff9a99b825d8",
-    "title": "Solana’s biggest network change since 2020 is live. Here’s how users benefit",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-10-22T08:24:09.225104+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "770e361a293bc68b",
     "title": "David Schwartz Doesn’t Know Who Sent Him This XRP Meme Coin Gift",
     "source": "BeInCrypto (山寨与行情)",
@@ -5173,6 +5163,16 @@
     "sent_at": "2026-10-30T18:46:19.719220+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fcfb6c8d9527e79c",
+    "title": "Binance Hack: Why Bitcoin Didn't Crash Like It Did in 2018",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-10-30T19:05:06.699162+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
