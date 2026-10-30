@@ -1,15 +1,5 @@
 [
   {
-    "id": "38db4bf292845b31",
-    "title": "Switzerland Approves First Spot Bitcoin ETF for Retail Investors After Bending Its Rules",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-21T13:44:34.454730+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b4afb074610c8a15",
     "title": "Bitcoin volatility nears 2026 lows as traders brace for Fed decision and US midterms",
     "source": "The Block (机构与政策)",
@@ -5160,5 +5150,17 @@
       "USDC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a910f0360abcdfb0",
+    "title": "分析:币安被盗期间出现链上套利窗口,单地址两小时获利约347万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-30T01:04:54.393925+00:00",
+    "tokens": [
+      "ETH",
+      "USDC",
+      "UNI"
+    ],
+    "lang": "zh-TW"
   }
 ]
