@@ -1,15 +1,5 @@
 [
   {
-    "id": "dcb3ac90d589e313",
-    "title": "CoinGecko API lands on API3’s AirnodeHub marketplace for AI agents",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-22T03:24:52.769598+00:00",
-    "tokens": [
-      "API3"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "8085d7a8f9ebf338",
     "title": "日吞吐达万亿Token、用户近 300 万,B.AI 如何以底层“无感化”捕获 Web2 AI 流量?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5173,6 +5163,16 @@
     "sent_at": "2026-10-30T17:06:38.814698+00:00",
     "tokens": [
       "ALLO"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "47468540eb4b202f",
+    "title": "How did Binance hacker leverage Aave to outsmart Tether, Circle freeze?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-30T17:27:56.560669+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "en"
   }
