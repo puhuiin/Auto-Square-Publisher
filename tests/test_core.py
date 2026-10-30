@@ -15365,6 +15365,56 @@ class TestR843TagBudget(unittest.TestCase):
         self.assertEqual(len(re.findall(r"#[^\s#]+", out)), m.SquarePublisher.MAX_HASHTAGS + 1)
 
 
+class TestR849Usd1WlfiVocab(unittest.TestCase):
+    """★★ R849：**第 10 次词表补漏**——当期活动的奖励计划叫法（`USD1` / `WLFI`）。
+
+    ★ 生产实录（10-30 英文夜窗，被判"未提及"的 11 篇里有 6 篇其实提到了活动）：
+        `…USD1 holder rewards.  Are you holding $BTC through this…`
+        `…rewards entry. Official route only, no promises…`
+        `…the USD1 hold campaign …` / `…USD1 WLFI …`
+      而 `usd1`/`wlfi` 不在词表 ⇒ 真漏率被虚报成 **11/13 = 85%**（真值 **5/13 = 38%**，
+      与基线 15/45 = 33% 同一水平）⇒ **不是 ① 急降，是词表又停在上一期措辞**。
+    ★ 窄形态纪律（R830/R842 同族）：`usd1`/`wlfi` **必须与奖励/活动类名词相邻**才算 ——
+      否则「$WLFI 现价」这类**单纯行情提及**会被误判成活动提及（那是主题标的，不是活动入口）。
+    """
+
+    @staticmethod
+    def _vocab():
+        import importlib.util
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "campaign_vocab.py")
+        spec = importlib.util.spec_from_file_location("campaign_vocab_r849", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_production_bodies_now_recognized(self):
+        """★ 生产实录原句（10-30 夜窗那 6 篇的正文片段），原句照抄。"""
+        cv = self._vocab()
+        for line in ("If you're parking USD1 anyway, the WLFI rewards and new position "
+                     "bonuses close Oct 30.",
+                     "Meanwhile the USD1 hold campaign on Binance runs until October 30.",
+                     "Park some USDC, farm the WLFI rewards, and watch those transfers land.",
+                     "Check your balance before the clock runs out for the USD1 holder rewards."):
+            self.assertTrue(cv.mention_in_text(line), "漏检（就是被虚报成真漏的那类）: %s" % line)
+
+    def test_chinese_forms_recognized(self):
+        cv = self._vocab()
+        for line in ("持USD1瓜分120万WLFI活动今天最后一天",
+                     "持 USD1 瓜分 WLFI 奖励，今天就截止",
+                     "去蹭一下 USD1 的奖励活动"):
+            self.assertTrue(cv.mention_in_text(line), "漏检: %s" % line)
+
+    def test_bare_ticker_mention_is_not_a_campaign_mention(self):
+        """★ 精度：**单纯行情提及**不算活动提及（`usd1`/`wlfi` 必须与奖励类名词相邻）。"""
+        cv = self._vocab()
+        for line in ("$WLFI is trading at $0.0213, up 4% on the day.",
+                     "USD1 报 1.0002，脱锚风险不大。",
+                     "Watch the USD1 peg and the WLFI order book.",
+                     "I hold some USD1 in my wallet."):
+            self.assertFalse(cv.mention_in_text(line), "误报: %s" % line)
+
+
 class TestR846RevertedRequirementPosition(unittest.TestCase):
     """★★★ R846：**按预注册条款回滚 R844** —— 活动要求的位置搬回 `intel_section`。
 

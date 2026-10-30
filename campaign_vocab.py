@@ -122,7 +122,23 @@ CAMPAIGN_MENTION_RE = re.compile(
     #        `TestR842AlphaVocab::test_known_pre_existing_false_positive_face`）。
     r"|axis\s+alpha"
     r"|alpha\s+(?:trading\s+)?(?:comp|contest|competition|tournament|race|event|carnival)"
-    r"|alpha\s*[（(]?\s*(?:交易)?(?:竞赛|競賽|活动|活動)",
+    r"|alpha\s*[（(]?\s*(?:交易)?(?:竞赛|競賽|活动|活動)"
+    # ★★ R849：**第 10 次补漏**——当期活动的**奖励计划叫法**（`USD1` / `WLFI`）没进表。
+    #   取证（10-30 英文夜窗）：**11 篇被判"未提及"的帖里有 6 篇正文明写着**
+    #     `…USD1 holder rewards.  Are you holding $BTC through this…`
+    #     `…USD1 WLFI pool  …` / `…rewards entry. Official route only…`
+    #   而 `usd1`/`wlfi` **不在表里** ⇒ 真漏率被虚报成 11/13 = 85%（真值 **5/13 = 38%**，
+    #   与基线 15/45 = 33% 同一水平）⇒ **又一次"词表停在上一期措辞"**（R841/R842 同族）。
+    #   ⚠️ **窄形态**（延续 R830/R842 纪律）：`usd1`/`wlfi` **只有在与奖励/活动类名词
+    #     相邻时**才算——否则 "$WLFI 现价" 这种**单纯行情提及**会被误判成活动提及
+    #     （那是主题标的，不是活动入口，正是 R842 注释里说过的陷阱）。
+    r"|(?:usd1|wlfi)[^.!?\n]{0,40}(?:reward|rewards|holder|bonus|prize|yield|pool|campaign|活动|奖励|奖池)"
+    r"|(?:reward|rewards|holder|bonus|prize|yield|pool|campaign|活动|奖励|奖池)[^.!?\n]{0,40}(?:usd1|wlfi)"
+    # ⚠️ `hold` **不能**放进上面两张通用表：实测会误中「I hold some USD1 in my wallet」✗
+    #   ⇒ 改成**方向特定**的形态（生产原句是「the **USD1 hold** campaign」）：
+    #   `usd1` **后面紧跟** hold/holding 才算，「hold USD1」这种持仓叙述不算 ✓。
+    r"|usd1\s+hold(?:ing)?"
+    r"|\busd1\s+wlfi\b|\bwlfi\s+usd1\b",
     re.IGNORECASE)
 
 # 标签形态：注入的 #TradingTournament / #Write2Earn 含 contest/tournament 字样，
