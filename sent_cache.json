@@ -1,15 +1,5 @@
 [
   {
-    "id": "45831fe3cc54384c",
-    "title": "XRP Rallies on Ripple SEC Push as ETF Outflows Cloud Evernorth Debut",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-21T14:24:38.233364+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3f8ae113e6191e96",
     "title": "Claude AI Predicts a Huge Move for Bitcoin by 2027",
     "source": "CryptoNews (全球快讯)",
@@ -5162,6 +5152,16 @@
       "XRP",
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "bc79c99c71998fab",
+    "title": "Trump’s crypto firm joins Tether, Circle, and Ripple in $2.6 billion stablecoin freeze as Binance hack outflows near $6 billion",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-30T03:01:48.228331+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
