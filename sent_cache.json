@@ -1,15 +1,5 @@
 [
   {
-    "id": "058324489aaf782d",
-    "title": "Litecoin price rebounds 5% as ETF assets double to $14M",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-21T16:44:34.014077+00:00",
-    "tokens": [
-      "LTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2652a9989478047b",
     "title": "Zcash (ZEC) Rises to a 9-Day High as Whales Bet on Further Gains: Details",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5166,6 +5156,16 @@
       "UNI",
       "PEPE",
       "USDC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "2a526ddfb3cff716",
+    "title": "星球午讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-30T05:48:02.303257+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
