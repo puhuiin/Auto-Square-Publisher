@@ -1,15 +1,5 @@
 [
   {
-    "id": "0a4808293de9fff1",
-    "title": "TAO crypto loses bullish momentum as $252 support nears – What’s next?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-22T11:27:15.456382+00:00",
-    "tokens": [
-      "TAO"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7d4387145b4ece23",
     "title": "分析:比特币市场占比升至5月以来最高水平,市场等待新催化剂",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5175,6 +5165,16 @@
     "sent_at": "2026-10-30T21:22:59.219533+00:00",
     "tokens": [
       "PEPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "860f2de9df45ed69",
+    "title": "Choice launches sLINJ, a leveraged INJ staking token targeting about 12% APY",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-30T21:44:43.824784+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "en"
   }
