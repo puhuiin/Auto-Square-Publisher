@@ -1,15 +1,5 @@
 [
   {
-    "id": "41cc49816349e720",
-    "title": "Why earning XRP yield through this wallet could actually cost you money",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-21T23:24:54.781243+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "5defa3a26658651e",
     "title": "Cardano Hits Major Milestone With 100,000 Indian Farms",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5176,6 +5166,18 @@
     "tokens": [
       "CFG",
       "ENA"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3766e6dcefe496e0",
+    "title": "币安被盗 63 亿美元:攻击流程及被盗资金流向分析",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T13:27:29.243747+00:00",
+    "tokens": [
+      "ETH",
+      "RLUSD",
+      "UNI"
     ],
     "lang": "zh-CN"
   }
