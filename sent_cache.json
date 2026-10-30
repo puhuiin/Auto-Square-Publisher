@@ -1,15 +1,5 @@
 [
   {
-    "id": "2652a9989478047b",
-    "title": "Zcash (ZEC) Rises to a 9-Day High as Whales Bet on Further Gains: Details",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-21T17:04:37.833348+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9abd21553f2495e9",
     "title": "Dogecoin Gets a Dedicated Company to Build Out Its Ecosystem",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5168,5 +5158,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f78c4c0969a87513",
+    "title": "OneKey 创始人:IBIT 可能成为朝鲜黑客攻击目标,Coinbase 单一托管模式引发安全担忧",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T06:25:20.606636+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
