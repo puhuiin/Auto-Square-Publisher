@@ -1,17 +1,5 @@
 [
   {
-    "id": "85986b0db1aeedcf",
-    "title": "灰度为 10 款加密 ETP 推出数字资产直接申购功能,投资者可用加密资产换取产品份额",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-21T13:26:46.397671+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "38db4bf292845b31",
     "title": "Switzerland Approves First Spot Bitcoin ETF for Retail Investors After Bending Its Rules",
     "source": "BeInCrypto (山寨与行情)",
@@ -5159,6 +5147,17 @@
       "BTC",
       "LUNA",
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1977717ce2be3d7b",
+    "title": "突发:币安遭黑客攻击,数十亿美元资产流出,或成历史金额最大被盗事件",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-30T00:24:07.598816+00:00",
+    "tokens": [
+      "ETH",
+      "USDC"
     ],
     "lang": "zh-CN"
   }
