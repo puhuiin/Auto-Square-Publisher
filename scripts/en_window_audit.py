@@ -282,8 +282,31 @@ TRUNC_MIN_POSTS = 40
 
 
 def body_before_tags(text: str) -> str:
-    """正文＝第一个 `#` 之前的部分（读者看到的结尾就在那里）。"""
-    return str(text or "").split("#", 1)[0].strip()
+    """正文＝**标签行之前**的部分（读者看到的结尾就在那里）。
+
+    ★★★ R847 更正：旧实现是「按**第一个** `#` 切」——正文里只要出现一个 `#`（哪怕只是
+    `#2`＝"第 2 名"），"正文"就只剩前缀、而前缀**恰好以字母结尾** ⇒ `is_truncated` 误判。
+    生产实证（10-28T18:24，`raw_chars=940`、`trimmed_chars=310`、总长 630，一看就不像"顶到
+    820 预算"那条路，逼着去读原文才发现）：正文写着
+    `…up just 0.44% to $101.41 despite being **#2** trending on CoinGecko.` —— 那篇**根本没断句**，
+    是**检测器**假阳性（R846 的"回滚"读数就是这么来的）。
+
+    判据（与 `main.py::_enforce_max_chars._is_widget_tag_line` 同源，不做第二份实现）：
+      · 先看**最后一个非空行**：若其中至少一个 token 以 `#` 开头、且**所有** token 都以
+        `#`/`$` 开头 ⇒ 它就是标签行，正文＝它之前的全部内容；
+      · 否则兜底：按「**看起来像真标签**的 `#`」切（`#` 后跟字母或汉字）——这条专为排除
+        正文里的 `#2`/`#1` 这类"井号+数字"（它不是标签，是序号）。
+    """
+    t = str(text or "").strip()
+    if not t:
+        return ""
+    lines = t.split("\n")
+    tail_toks = lines[-1].strip().split()
+    if tail_toks and any(x.startswith("#") for x in tail_toks) and all(
+            x.startswith("#") or x.startswith("$") for x in tail_toks):
+        return "\n".join(lines[:-1]).strip()
+    m = re.search(r"#[A-Za-z\u4e00-\u9fff]", t)
+    return t[:m.start()].strip() if m else t
 
 
 def is_truncated(r: dict) -> bool:
@@ -350,6 +373,9 @@ def _fmt_trunc(s: dict) -> str:
 CAP_TOTAL = 814
 CAP_PASS_PCT = 5
 CAP_REVERT_PCT = 20
+# R834（英文篇幅目标与可发布预算对齐）的**部署日**——判定③ 的基线臂必须早于它，
+# 否则两臂都在改动之后、判定根本没在测那个改动（见 main() 里的 R847 护栏）。
+R834_DEPLOY_DATE = "2026-10-25"
 
 
 def cap_stats(rows, date_utc: str, lang: str = "en") -> dict:
@@ -362,6 +388,38 @@ def cap_stats(rows, date_utc: str, lang: str = "en") -> dict:
     at = [r for r in cohort if len(r["final_text"]) >= CAP_TOTAL]
     return {"date": date_utc, "lang": lang, "n": len(cohort), "at_cap": len(at),
             "pct": (100.0 * len(at) / len(cohort)) if cohort else 0.0}
+
+
+def cap_arm_warning(base_stats) -> str:
+    """判定③ 的**配准检查**（抽成函数是为了可单测）。
+
+    ★ 为什么需要：判定③ 测的是 **R834 的篇幅目标改动** ⇒ 基线臂必须早于 R834 部署日。
+      但本脚本用同一个 `--baseline` 服务 ①②③④，而 ①②④ 要"干预前最近两窗"
+      ⇒ 一条命令不可能同时配准四条（R846 实测：基线 10-26/27 也 post-R834 ⇒ 报 25% ≥ 20%）。
+    ★ 返回非空字符串 = 没配准（调用方必须打出来）。空串 = 配准了。
+    """
+    armed = sorted({w.get("date", "") for w in (base_stats or [])
+                    if str(w.get("date", "")) >= R834_DEPLOY_DATE})
+    if not armed:
+        return ""
+    return ("   ⚠️ **这条判定没配准**：基线臂含 R834 部署日（%s）之后的窗口 %s "
+            "⇒ 两臂都在改动之后，**它没在测 R834**。请另跑一次 "
+            "`--baseline <R834 之前的窗口>` 再读本判定的档位。" % (R834_DEPLOY_DATE, "、".join(armed)))
+
+
+def cap_arm_confound_note() -> str:
+    """配准**之后**还有一层坑：pre-R834 那几窗里 **R830 还在、R840 还没上**
+    ⇒ 正确配准的对比仍然**混着两个改动**，不能把差异归因给 R834。
+
+    ★ 这条是 R847 自己纠正 R846 的：R846 曾说"③ 的回滚是配错造成的、不是真的"——
+      用正确基线（10-19~10-24）重跑后 **仍然报回滚**（25% vs 19%）⇒ 那个说法**不成立**。
+      但该对比**有混杂** ⇒ 处置既不是"忽略"，也不是"照字面回滚"，
+      而是**重新预注册一次干净的对照**（一次只动一个变量）。
+    """
+    return ("   ⚠️ 即使基线早于 %s，这组对比仍**混着 R830/R840**（pre-R834 窗口里 R830 还在、"
+            "R840 尚未上线）⇒ **不能把差异归因给 R834**。条文的「回滚」在这组臂上"
+            "**不可执行**：正确处置是重新预注册一次一次只动一个变量的干净对照。"
+            % R834_DEPLOY_DATE)
 
 
 def cap_verdict(base_stats, treat_stats) -> tuple:
@@ -518,6 +576,12 @@ def main(argv=None) -> int:
         if cb and ct:
             st3, why3 = cap_verdict(cb, ct)
             print("\n判定③（顶格占比）：%s —— %s" % (st3, why3))
+            # ★★★ R847 两道护栏（逻辑都在可单测的函数里）：
+            #   ① 配准检查：基线臂落在 R834 部署日之后 ⇒ ③ 根本没在测 R834（却照样会报"回滚"）；
+            #   ② 混杂提示：即使配准了，pre-R834 那几窗里 R830 还在、R840 还没上
+            #      ⇒ 该对比混着两个改动，**条文里的「回滚」在这组臂上不可执行**。
+            _w = cap_arm_warning(cb)
+            print(_w if _w else cap_arm_confound_note())
     return 0
 
 

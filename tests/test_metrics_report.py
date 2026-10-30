@@ -9446,6 +9446,90 @@ class TestR844Preregistration(unittest.TestCase):
         self.assertIn("R844_BASE_NORMAL", src, "必须用整数交叉相乘比基线")
 
 
+class TestR847BodyBeforeTags(unittest.TestCase):
+    """★★★ R847 更正：`body_before_tags` 不能按**第一个 `#`** 切。
+
+    ★ 这次是**检测器假阳性**，不是内容缺陷：10-28T18:24 那篇正文里写着
+      `…up just 0.44% to $101.41 despite being **#2** trending on CoinGecko.`
+      —— `#2` 是"第 2 名"，不是标签。旧实现把"正文"截成前 180 字，而**前 180 字恰好以
+      字母结尾** ⇒ `is_truncated` 误判 ⇒ 判定② 报了"回滚"（R846 已查明并撤回该读数）。
+      ★ 怎么发现的：新遥测 `raw_chars=940 / trimmed_chars=310 / 总长 630` 一看就不像
+      "顶到 820 预算"那条路 ⇒ 逼着去读原文 ⇒ 才发现是 `#2`。
+    ★ 判据（与 `main.py::_enforce_max_chars._is_widget_tag_line` 同源）：先认**标签行**
+      （最后一行、≥1 个 `#` 开头、且全部 token 都以 `#`/`$` 开头）；认不出再兜底按
+      「`#` 后跟字母/汉字」切（专为排除 `#2`/`#1` 这类"井号+数字"）。
+    """
+
+    @staticmethod
+    def _ew():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "en_window_audit_r847",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "en_window_audit.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_production_false_positive_now_recognized_as_body(self):
+        """★ 生产实录原句：`#2` 必须留在正文里，正文末尾必须是完整句号。"""
+        t = ("The Solana Foundation dropped its latest engineering roundup. $SOL barely "
+             "reacted, up just 0.44% to $101.41 despite being #2 trending on CoinGecko.\n\n"
+             "This is one of those times where not trading is the best trade.\n"
+             "#Write2Earn #BinanceSquare #SOL Futures #TradingTournament")
+        body = self._ew().body_before_tags(t)
+        self.assertIn("#2", body, "`#2` 是正文内容，不得被当成标签行起点")
+        self.assertTrue(body.rstrip().endswith("trade."), "正文应到句号结束")
+        self.assertTrue(body.endswith("."), "修后正文末尾是标点 ⇒ 不该判断句")
+        self.assertFalse(self._ew().is_truncated({"final_text": t}))
+
+    def test_tag_line_still_stripped(self):
+        """正向用例不能被修坏：标准标签行必须仍被剥掉，正文止于最后一个非标签行。"""
+        t = "正文一句结束。\n\n#Write2Earn #BinanceSquare #BTC"
+        self.assertEqual(self._ew().body_before_tags(t), "正文一句结束。")
+
+    def test_inline_tags_stripped_by_fallback(self):
+        """标签与正文同行（历史帖里有）：兜底按"像真标签的 #"切。"""
+        t = "正文收尾没标点 #Write2Earn"
+        self.assertEqual(self._ew().body_before_tags(t), "正文收尾没标点")
+
+    def test_cjk_hashtag_recognized(self):
+        t = "正文。 #加密新闻"
+        self.assertEqual(self._ew().body_before_tags(t), "正文。")
+
+    def test_number_sign_is_not_a_tag(self):
+        """`#` 后跟数字（序号/排名）一律不算标签——这是本组的核心判据。"""
+        mod = self._ew()
+        for t in ("排名 #2 的就是它。", "打 #1 抽 #3 都有奖。", "7:30 说 #10 位。"):
+            self.assertEqual(mod.body_before_tags(t), t.strip(),
+                             "井号+数字不得被当成标签：%s" % t)
+
+    # ---- 判定③ 的配准护栏（R847 追补）----
+    def test_cap_arm_warning_fires_on_post_r834_baseline(self):
+        """★ 基线落在 R834 部署日之后 ⇒ 判定③ 没在测 R834 ⇒ 必须喊出来。"""
+        mod = self._ew()
+        w = [{"date": "2026-10-26"}, {"date": "2026-10-27"}]
+        msg = mod.cap_arm_warning(w)
+        self.assertIn("没配准", msg)
+        self.assertIn(mod.R834_DEPLOY_DATE, msg)
+
+    def test_cap_arm_warning_silent_on_pre_r834_baseline(self):
+        mod = self._ew()
+        w = [{"date": "2026-10-19"}, {"date": "2026-10-24"}]
+        self.assertEqual(mod.cap_arm_warning(w), "", "配准了就不该报警")
+
+    def test_confound_note_names_r830_and_r840(self):
+        """★ R847 自纠：正确配准仍**混着 R830/R840** ⇒ 条文里的「回滚」不可执行。
+
+        （R846 曾说"③ 的回滚是配错造成的" —— 用正确基线重跑**仍报回滚** ⇒ 那个说法不成立，
+          这条测试把这个更正的结论钉住，防止下一轮又按字面回滚。）
+        """
+        mod = self._ew()
+        note = mod.cap_arm_confound_note()
+        for frag in ("R830", "R840", "不可执行", "重新预注册"):
+            self.assertIn(frag, note, "混杂提示必须写明：%s" % frag)
+
+
 class TestR834EnLengthBudget(unittest.TestCase):
     """★★ R834：英文篇幅目标与**可发布预算**对齐 + 「顶到上限」入验收。
 
