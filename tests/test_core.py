@@ -15365,13 +15365,17 @@ class TestR843TagBudget(unittest.TestCase):
         self.assertEqual(len(re.findall(r"#[^\s#]+", out)), m.SquarePublisher.MAX_HASHTAGS + 1)
 
 
-class TestR844CampaignRequirementLast(unittest.TestCase):
-    """★★ R844：活动要求的**位置**搬到了 prompt 最末一条核心要求，**措辞一个字没动**。
+class TestR846RevertedRequirementPosition(unittest.TestCase):
+    """★★★ R846：**按预注册条款回滚 R844** —— 活动要求的位置搬回 `intel_section`。
 
-    ★ 为什么只调顺序：R760 的教训——那次只把条件句改成期望句的**措辞**，正文提及率就从
-      93% 掉到 33%（模型把"换说法"读成"可以不提"）⇒ 本轮连逃生阀那句都逐字保留。
-    ★ 为什么搬：R835 归因——真漏帖的 `ending_style` 集中在「仓位表白/时间竞猜/情绪表态」，
-      而要求原先挂在结尾风格指令**之前**，被后写下的结尾风格压过。
+    ★ 判据（事前预注册在 `scripts/en_window_audit.py::r844_verdict`）：
+        通过 = 合并真漏 ≤1/10；**回滚 = 比基线更差 或 单窗 >50%**。
+    ★ 实测（处置 10-28/10-29 两窗 vs 基线 10-26/10-27）：
+        处置 **17/48 = 35%** vs 基线 **15/45 = 33%** ⇒ **比基线更差 ⇒ 回滚**（10-28 7/24=29%、
+        10-29 10/24=42%，两窗自己差 13pp）。
+    ★ 措辞必须是「**未被证实**」而非「被证伪」：方向略差，但单窗方差很大。
+    ★ 本组锁的是**回滚后的状态**：要求必须回到 `intel_section`、不再出现在核心要求列表里；
+      措辞仍必须逐字未动（R760 教训）。下次要重做这件事，先写判据、且一次只动一个变量。
     """
 
     def _eng(self):
@@ -15395,31 +15399,35 @@ class TestR844CampaignRequirementLast(unittest.TestCase):
     def _item():
         return {"title": "比特币放量突破", "summary": "BTC 涨了 3%", "tokens": ["BTC"]}
 
-    def test_requirement_is_last_core_requirement(self):
+    def test_requirement_back_before_ending_instruction(self):
+        """回滚后的顺序：要求重新排在**结尾风格指令之前**（＝R844 干预前的状态）。
+
+        ⚠️ 别断言"在 `last_intel_section` 里"——那个快照是在**要求追加之前**拍的
+        （`self.last_intel_section = intel_section` 早于 `intel_section += (...)`），
+        这是 R844 之前就有的既有行为，与本次回滚无关。
+        """
         _m, eng = self._eng()
         up, _ = eng._build_user_prompt(self._item(), self._intel(), market_context="",
                                        token_hints=["BTC"], article=False)
         i_req = up.find("本篇活动提法套路")
         i_end = up.find("本条结尾站队提问的套路")
-        i_out = up.find("直接输出正文")
-        self.assertGreater(i_req, i_end, "要求必须在结尾风格指令之后——这就是本次干预本身")
-        self.assertLess(i_req, i_out, "要求必须落在「直接输出」之前（否则不成为指令）")
-        self.assertIn("8. 【本篇活动提法套路", up, "短讯分支的要求必须是末条第 8 项")
+        self.assertGreater(i_req, 0, "要求必须仍在 prompt 里（回滚的是位置不是内容）")
+        self.assertLess(i_req, i_end, "回滚后要求应排在结尾风格指令之前")
+        self.assertNotIn("{campaign_requirement}", up, "模板里不得残留 R844 的占位符")
+        self.assertNotIn("8. 【本篇活动提法套路", up, "不得再作为核心要求末条出现")
 
-    def test_article_branch_also_last(self):
+    def test_article_branch_also_reverted(self):
         _m, eng = self._eng()
         up, _ = eng._build_user_prompt(self._item(), self._intel(), market_context="",
                                        token_hints=["BTC"], article=True)
-        self.assertIn("7. 【本篇活动提法套路", up, "长文分支编号到 6 ⇒ 要求是第 7 项")
-        self.assertLess(up.find("本篇活动提法套路"), up.find("直接输出 TITLE"))
+        self.assertNotIn("{campaign_requirement}", up)
+        self.assertNotIn("7. 【本篇活动提法套路", up)
 
-    def test_wording_unchanged(self):
-        """★ R760 守卫：措辞必须逐字未动（改措辞曾把提及率从 93% 打到 33%）。
+    def test_wording_still_verbatim(self):
+        """★ R760 守卫仍然有效：措辞必须逐字未动（含逃生阀那句）。
 
-        ⚠️ **必须比对运行时 prompt，不能比对源码**：这几句在 main.py 里是**括号内隐式拼接**
-        （`"…只有当本条新闻确实与交易活动"` + `"八竿子打不着时才可不提。"`），
-        源码文本里根本**不存在**完整句 ⇒ 拿源码做 `assertIn` 会假红（R840 踩过同型坑：
-        那种拼接对缩进不敏感，但会骗过一切"按源码文本断言"的工具）。
+        ⚠️ 必须比对**运行时 prompt**，不能比对源码：这几句在 main.py 里是括号内隐式拼接，
+        源码文本里根本不存在完整句（R840 踩过同型坑）。
         """
         _m, eng = self._eng()
         up, _ = eng._build_user_prompt(self._item(), self._intel(), market_context="",
@@ -15428,15 +15436,17 @@ class TestR844CampaignRequirementLast(unittest.TestCase):
                      "★ 别把活动提法写成「想练手/想试水」类念头与「竞赛/锦标赛」"
                      "**出现在同一句**的那个模板",
                      "只有当本条新闻确实与交易活动八竿子打不着时才可不提。"):
-            self.assertIn(frag, up, "措辞被改动了——本轮只允许搬位置：%s" % frag)
+            self.assertIn(frag, up, "回滚必须逐字还原，措辞不得顺手改：%s" % frag)
 
-    def test_guidance_stays_in_intel_section(self):
-        """只搬**要求**，不搬**情报**：guidance 必须还在 intel_section，否则模型不知道活动是什么。"""
-        _m, eng = self._eng()
-        eng._build_user_prompt(self._item(), self._intel(), market_context="",
-                               token_hints=["BTC"], article=False)
-        self.assertIn("Spot Trading Tournament Season 8", eng.last_intel_section)
-        self.assertNotIn("本篇活动提法套路", eng.last_intel_section)
+    def test_revert_taken_verbatim_from_git(self):
+        """回滚留痕：原处必须写明「为什么回滚 / 判据是什么 / 下次重做先写判据」。"""
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "main.py")
+        with open(path, encoding="utf-8") as fh:
+            src = fh.read()
+        self.assertIn("R846：**按预注册条款回滚 R844**", src)
+        self.assertIn("17/48 = 35%", src)
+        self.assertIn("一次只动一个变量", src)
 
 
 class TestR845RawTrimTelemetry(unittest.TestCase):
