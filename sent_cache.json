@@ -1,15 +1,5 @@
 [
   {
-    "id": "1b50be0e5b6bedfc",
-    "title": "Gate合约Meme专区已上线KIMCHI合约交易、交易机器人、跟单功能",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-22T08:04:39.501479+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8b30ff9a99b825d8",
     "title": "Solana’s biggest network change since 2020 is live. Here’s how users benefit",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5171,6 +5161,16 @@
     "title": "XRP Ledger Ranks Third in Stablecoin Expansion, But Who Is First?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-10-30T18:24:44.885185+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c17638d7a93c1edb",
+    "title": "Ripple Moves $389 Million of XRP Amid Aid for Binance Hack",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-30T18:46:19.719220+00:00",
     "tokens": [
       "XRP"
     ],
