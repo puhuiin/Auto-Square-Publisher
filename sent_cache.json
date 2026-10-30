@@ -1,15 +1,5 @@
 [
   {
-    "id": "f6e89d65fc90389d",
-    "title": "TechFlow 情报局:Swell 管理密钥被盗、多签升级合约可偷走 2500 ETH,Meta 盘后涨 4% 上调 AI 资本开支",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-22T12:27:32.437575+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5865c7acdff5f701",
     "title": "X Pay 完成 100 万美元融资,将扩展 AI 智能体支付基础设施",
     "source": "深潮TechFlow (中文/简体)",
@@ -5175,6 +5165,18 @@
     "sent_at": "2026-10-30T22:26:39.826795+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ae0f00118b8b360c",
+    "title": "Aave V3 冻结储备已解冻,USDT 等资产暂不可新增抵押借款",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T23:07:37.583350+00:00",
+    "tokens": [
+      "USDC",
+      "POL",
+      "PAXG"
     ],
     "lang": "zh-CN"
   }
