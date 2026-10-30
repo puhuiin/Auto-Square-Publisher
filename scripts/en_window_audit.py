@@ -442,6 +442,64 @@ def repetition_verdict(base_stats, treat_stats) -> tuple:
             % (treat, base, REPETITION_DROP_PP))
 
 
+def overwrite_stats(rows, date_utc: str, lang: str = "en", trim_threshold: int = 50) -> dict:
+    """★★ R851g/h：**过度写作率**（raw 超净化预算 ⇒ 被裁的比例）。
+
+    动机：R851e 发现"被大幅截断的帖漏提活动 50%、未截断的只有 4%" ✗；R851g 进一步定位到
+    **这是英文侧特有**（zh 侧 0/102 ✓、en 侧 52% ✗）⇒ 是英文篇幅指令没被遵守 ✓。
+    ⚠️ 本函数**只度量**：降 over-write 要靠改英文 prompt（改变发布集合）⇒ 必须等
+      R848 的 ③ 窗口关掉 + 另行预注册"降 over-write"的改动 ✓。
+
+    口径：
+      · 样本 = 该窗口该语种的已发布帖，且带 R845 的 `trimmed_chars` ✓；
+      · `trimmed_chars > trim_threshold` ⇒ 判定为"被大幅裁掉" ✓；
+      · 未知（无字段）**不计 0** ✓，单独报 `unknown` ✓。
+    """
+    known = over = unknown = 0
+    for r in rows or []:
+        if not str(r.get("outcome", "")).startswith("binance_published"):
+            continue
+        if r.get("lang") != lang:
+            continue
+        if not in_night_window(r.get("ts"), date_utc):
+            continue
+        tc = r.get("trimmed_chars")
+        if not isinstance(tc, int):
+            unknown += 1
+            continue
+        known += 1
+        if tc > trim_threshold:
+            over += 1
+    return {"date": date_utc, "lang": lang, "known": known, "unknown": unknown,
+            "over": over, "trim_threshold": trim_threshold,
+            "over_pct": (100.0 * over / known) if known else 0.0}
+
+
+# ---- 第七条预注册判据（R851h）：过度写作率 ----
+# 依据：R851g 实测 en 侧 **52%** 的帖因超预算被裁 ✗、zh 侧 **0%** ✓
+#      ⇒ 这是①（漏提）与③（顶格）共同的根 ✓。
+# ⚠️ 给"收紧英文篇幅指令"那次改动预注册 ✓ —— 改动本身会改变发布集合 ⇒ 必须等 ③ 窗口关掉 ✓。
+OVERWRITE_DROP_PP = 15          # 通过 = 处置臂比基线低 ≥15pp
+
+
+def overwrite_verdict(base_stats, treat_stats) -> tuple:
+    """R851h 预注册判定（返回 (状态, 说明)）。"""
+    if not treat_stats:
+        return ("样本不足", "处置臂为空")
+    known = sum(s["known"] for s in treat_stats)
+    if len(treat_stats) < MIN_ARM_WINDOWS or known < MIN_ARM_N:
+        return ("样本不足", "需 ≥%d 窗 / known≥%d；当前 %d 窗 / %d 篇"
+                % (MIN_ARM_WINDOWS, MIN_ARM_N, len(treat_stats), known))
+    base = sum(s["over_pct"] for s in (base_stats or [])) / max(1, len(base_stats or []))
+    treat = sum(s["over_pct"] for s in treat_stats) / len(treat_stats)
+    if treat >= base:
+        return ("回滚", "过度写作率 %.1f%% 未低于基线 %.1f%%（改了但没降 ⇒ 无效）" % (treat, base))
+    if base - treat >= OVERWRITE_DROP_PP:
+        return ("通过", "过度写作率 %.1f%% ≤ 基线 %.1f%% − %dpp" % (treat, base, OVERWRITE_DROP_PP))
+    return ("未通过", "过度写作率 %.1f%% 低于基线 %.1f%% 但降幅 < %dpp ⇒ 保留并标注「未被证实」"
+            % (treat, base, OVERWRITE_DROP_PP))
+
+
 def trunc_stats(rows, date_utc: str) -> dict:
     """单个 UTC 日的英文帖断句统计（纯函数）。"""
     cohort = [r for r in rows
@@ -825,6 +883,22 @@ def main(argv=None) -> int:
         if rb and rt:
             st6, why6 = repetition_verdict(rb, rt)
             print("\n判定⑥（公式化重复率）：%s —— %s" % (st6, why6))
+    # ---- R851g/h：过度写作率（只量不设门；判据⑦已预注册给"收紧英文篇幅指令"的改动）----
+    ob = [overwrite_stats(rows, d, "en") for d in (args.baseline or "").split(",") if d]
+    ot = [overwrite_stats(rows, d, "en") for d in (args.treatment or "").split(",") if d]
+    if ob or ot:
+        print("\n【过度写作率（R851h，只量不设门）】口径：en 已发布帖里 raw 超净化预算、被裁掉 ≥50 字符的占比")
+        for label, arm in (("基线臂", ob), ("处置臂", ot)):
+            if not arm:
+                continue
+            k = sum(x["known"] for x in arm)
+            o = sum(x["over"] for x in arm)
+            unk = sum(x["unknown"] for x in arm)
+            print("  %s: known=%d ｜ 被大幅裁掉=%d (%.0f%%) ｜ 无字段=%d"
+                  % (label, k, o, 100.0 * o / max(1, k), unk))
+        if ob and ot:
+            st7, why7 = overwrite_verdict(ob, ot)
+            print("\n判定⑦（过度写作率）：%s —— %s" % (st7, why7))
     return 0
 
 

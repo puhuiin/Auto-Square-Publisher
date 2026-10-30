@@ -9823,6 +9823,62 @@ class TestR851bRepetition(unittest.TestCase):
         self.assertEqual(s["hit"], 2)
 
 
+class TestR851hOverwrite(unittest.TestCase):
+    """★★ R851g/h：**过度写作率**（raw 超净化预算 ⇒ 被裁的比例）+ 判据⑦预注册。
+
+    ★ 依据（R851g 实测）：en 侧 **52%** 的帖被裁 ✗、zh 侧 **0/102** ✓
+      ⇒ 是英文篇幅指令没被遵守 ✓ ⇒ 且 R851e 显示"被裁的帖漏提活动 50%、未裁的 4%"✗
+      ⇒ 它是①（漏提）与③（顶格）的共同根 ✓。
+    ⚠️ 只钉**口径与阈值**：降 over-write 要改英文 prompt（改变发布集合）⇒ 等 ③ 窗口关掉 ✓。
+    """
+
+    @staticmethod
+    def _ew():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "en_window_audit_r851h",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "en_window_audit.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_stats_counts_known_and_unknown(self):
+        """已知字段按 trimmed>50 计；无字段的**不计 0** ✓（未知不是 0）。"""
+        mod = self._ew()
+        rows = [
+            {"outcome": "binance_published", "lang": "en",
+             "ts": "2026-10-30T15:00:00+00:00", "final_text": "a", "trimmed_chars": 80},
+            {"outcome": "binance_published", "lang": "en",
+             "ts": "2026-10-30T15:10:00+00:00", "final_text": "b", "trimmed_chars": 10},
+            {"outcome": "binance_published", "lang": "en",
+             "ts": "2026-10-30T15:20:00+00:00", "final_text": "c"},          # 无字段
+            {"outcome": "binance_published", "lang": "zh-CN",
+             "ts": "2026-10-30T15:30:00+00:00", "final_text": "d", "trimmed_chars": 90},
+        ]
+        s = mod.overwrite_stats(rows, "2026-10-30")
+        self.assertEqual(s["known"], 2, "只算 en 的已发布帖")
+        self.assertEqual(s["over"], 1)
+        self.assertEqual(s["unknown"], 1, "无字段的单独报，不当作 0")
+        self.assertAlmostEqual(s["over_pct"], 50.0)
+
+    def test_verdict_tiers(self):
+        mod = self._ew()
+
+        def _win(n, over):
+            return {"date": "d", "lang": "en", "known": n, "unknown": 0, "over": over,
+                    "trim_threshold": 50, "over_pct": 100.0 * over / n}
+        base = [_win(45, 24)]                                # 基线 53%
+        self.assertEqual(mod.overwrite_verdict(base, [_win(22, 6), _win(23, 6)])[0], "通过",
+                         "降 ≥15pp 必须判通过")
+        self.assertEqual(mod.overwrite_verdict(base, [_win(22, 12), _win(23, 12)])[0], "回滚",
+                         "没降反升必须回滚")
+        self.assertEqual(mod.overwrite_verdict(base, [_win(22, 9), _win(23, 9)])[0], "未通过",
+                         "降幅 <15pp 只能出「未通过」")
+        self.assertEqual(mod.overwrite_verdict(base, [_win(18, 8)])[0], "样本不足",
+                         "单窗/n<36 只能出「样本不足」")
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 
