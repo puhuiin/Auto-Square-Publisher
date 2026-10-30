@@ -63,6 +63,9 @@ import concurrent.futures
 import subprocess
 from datetime import date, datetime, timezone, timedelta
 
+# ★★★ R851：AI 腔扫描的唯一实现（门逻辑与清单都在这里，验收脚本共用同一口径）
+import ai_flavor as _ai_flavor
+
 import requests
 import feedparser
 from email.utils import parsedate_to_datetime
@@ -6060,27 +6063,11 @@ class MultiLLMEngine:
                 return False, f"中文字符过少 ({cjk_count})，疑似跑偏英文输出"
         return True, ""
 
-    # AI 腔特征清单（来源：Wikipedia "Signs of AI writing" 的中文交易语境移植）。
-    # 硬命中 = 真人交易员几乎不会写、模型却高频产出的标志性短语，出现即判废；
-    # 软特征 = 边界词/结构特征，单中不拦（防误杀），累计 ≥2 才判废。
-    # "看多的扣1"式互动问句是 prompt 自身要求，绝不能进清单。
-    # R580：用户明确反馈"帖子还有 AI 感"——本门自 R55 建成从未扩容，全史仅 1 次命中
-    #（破折号×2），远低于"AI 腔已清零"的合理预期，实为**清单太窄、机翻腔从缝里漏过去**。
-    # 补一批书面语寄存器里的强 AI 指纹（野生操盘手随手敲广场帖绝不会用的正式转折/总结词），
-    # 与 SYSTEM_PROMPT 的禁词同步；选词以"真人几乎不写"为准，可能被真人偶用的降为软特征。
-    _AI_FLAVOR_HARD = (
-        "拭目以待", "未来可期", "保驾护航", "谱写", "新篇章", "扬帆起航",
-        "值得注意的是", "值得一提的是", "综上所述", "总而言之", "让我们一起",
-        "毋庸置疑", "不言而喻", "共同见证",
-        # R580 新增：正式书面转折/总结词（口语交易员不会敲），命中即废
-        "由此可见", "众所周知", "简而言之", "简言之", "换言之",
-        "一言以蔽之", "备受瞩目",
-    )
-    _AI_FLAVOR_SOFT = (
-        "赋能", "标志着", "显而易见",
-        # R580 新增：可能被真人偶用、但 AI 高频堆叠的转场词，累计 ≥2 才拦
-        "需要注意的是", "总的来说", "总体而言", "换句话说", "备受关注",
-    )
+    # ★★★ R851：AI 腔特征清单与门逻辑**抽到 `ai_flavor` 模块作为唯一实现**
+    #   （R580 的扩容、R644 的句长节奏提示、破折号/骑墙/宏大开场等全部保留）。
+    #   为什么抽：验收脚本要量"通过了门却仍带软特征"的帖占比 ⇒ 平台 2026-07 起对纯 AI
+    #   内容算法降权，这个度量是风险对冲；另起第二份实现 ⇒ 口径必然漂移（本项目已有多次同族事故）。
+    #   ⚠️ 清单**只此一份**：改词要同时让门与度量看到 ⇒ 直接改 `ai_flavor.py` ✓。
 
     @classmethod
     def _passes_ai_flavor_gate(cls, content: str, label: str = "正文") -> Tuple[bool, str]:
@@ -6091,27 +6078,9 @@ class MultiLLMEngine:
         R357：label 区分正文/标题。长文标题与正文同源、同标准过本门（标题恰是
         AI 腔硬词重灾区），默认"正文"让既有正文调用点原样零回归。
         """
-        for pat in cls._AI_FLAVOR_HARD:
-            if pat in content:
-                return False, f"{label} AI 腔硬命中「{pat}」（真人交易员不会这么说话）"
-        if content.count("——") >= 2:
-            return False, f"{label} AI 腔硬命中：破折号出现 2 次以上（AI 写作最可靠的指纹之一）"
-        # R580：SYSTEM_PROMPT 明令"严禁一方面…另一方面骑墙"，但此前无门执行——骑墙式
-        # 面面俱到正是用户所指的"AI 感"（真人操盘手必有鲜明多空态度）。结构命中即废。
-        if re.search(r"一方面[^。！？\n]{0,40}另一方面", content):
-            return False, f"{label} AI 腔硬命中：一方面…另一方面 骑墙句式（真人交易员有鲜明态度，不和稀泥）"
-        soft_hits = [w for w in cls._AI_FLAVOR_SOFT if w in content]
-        if re.search(r"不仅[^。！？\n]{0,24}(更|还|也|而且)", content):
-            soft_hits.append("不仅…更/还 句式")
-        if "首先" in content and "其次" in content:
-            soft_hits.append("首先…其次 结构")
-        # R580：AI 最爱的"随着…（不断）…发展/推进/普及/到来"宏大开场——真人交易员
-        # 直接甩行情，不铺垫时代背景。软特征（真人偶尔写"随着行情升温"），叠加才拦。
-        if re.search(r"随着[^，。！？\n]{2,30}(的)?(不断|持续|逐步|日益)?(发展|推进|深入|普及|到来|升温|铺开|扩大)", content):
-            soft_hits.append("随着…发展 宏大开场")
-        if len(soft_hits) >= 2:
-            return False, f"{label} AI 腔软特征累计 {len(soft_hits)} 项: {'、'.join(soft_hits[:3])}"
-        return True, ""
+        # ★★★ R851：门逻辑**完整委托**给唯一实现（清单、正则、累计规则都在 `ai_flavor` 里）
+        #   ⇒ 行为与 R580/R644 版逐字一致，且验收脚本与门共用同一份口径 ✓。
+        return _ai_flavor.gate(content, label)
 
 
     # 长文 TITLE 行解析（contentType=2 硬性要求 title 字段，缺失会被 API 拒）

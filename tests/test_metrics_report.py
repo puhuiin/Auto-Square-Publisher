@@ -2215,9 +2215,20 @@ class TestQualityPatternSync(unittest.TestCase):
                          "FORCE_STRIP 清单两份不一致——改 main 必须同步 metrics_report")
 
     def test_ai_flavor_hard_in_sync(self):
-        self.assertEqual(tuple(mr._AI_FLAVOR_HARD),
-                         tuple(m.MultiLLMEngine._AI_FLAVOR_HARD),
-                         "AI 腔硬清单两份不一致——改 main 必须同步 metrics_report")
+        """★★ R851 更新（此前：main 与 metrics_report 各持一份拷贝 ⇒ 两处会漂移）。
+
+        新口径：AI 腔清单**唯一实现在 `ai_flavor`** ⇒ 三处消费者（流水线门 /
+        日报合规扫描 / 验收脚本旗标率）都必须引用同一对象 ✓。
+        ⚠️ 断言用 **身份（is）**而不是元素相等：引用同一对象 ⇒ 改词只改一处 ✓。
+        """
+        import ai_flavor
+        self.assertIs(mr._AI_FLAVOR_HARD, ai_flavor.AI_FLAVOR_HARD,
+                      "日报必须引用唯一实现 ai_flavor，不许再持第二份拷贝")
+        self.assertIs(mr._AI_FLAVOR_HARD, ai_flavor.AI_FLAVOR_HARD)
+        # 门也必须是同一份逻辑（行为级：硬命中要拦 ✓）
+        ok, why = m.MultiLLMEngine._passes_ai_flavor_gate("综上所述，拭目以待。")
+        self.assertFalse(ok, "门必须仍拦硬命中")
+        self.assertIn("硬命中", why)
 
     def test_fng_anchor_pattern_in_sync(self):
         self.assertEqual(mr._FNG_ANCHOR_RE.pattern, m._FNG_ANCHOR_RE.pattern,
@@ -9612,6 +9623,137 @@ class TestR848bRichExportPaste(unittest.TestCase):
             "2026-10-21T00:06:33  7\n")
         self.assertEqual([v for _, v in rows], [0, 12, 7])
         self.assertEqual(invalid, [])
+
+
+class TestR851AiFlavor(unittest.TestCase):
+    """★★★ R851：AI 腔扫描抽出为**唯一实现**（`ai_flavor.py`），流水线门与验收脚本共用。
+
+    为什么要抽：此前清单与门逻辑只写在 `SquarePublisher` 里 ⇒ 验收脚本无法量
+    「**过了门却仍带 AI 特征**」的帖占比；而平台 2026-07 起对纯 AI 内容算法降权
+    （官方原文："Content generated entirely by AI will be de-boosted"）⇒ 这个度量是风险对冲。
+    另起第二份实现 ⇒ 口径必然漂移（本项目已有多次同族事故）。
+    ⚠️ 本组只钉**测量与门的一致性**：不新增拒稿门（加门要另行预注册 + 等 ③ 窗口关掉）。
+    """
+
+    @staticmethod
+    def _m():
+        import main as _m
+        return _m
+
+    @staticmethod
+    def _af():
+        import ai_flavor
+        return ai_flavor
+
+    def test_scan_flags_the_documented_features(self):
+        """硬清单命中 ⇒ hard；软特征 ⇒ soft；过门但带特征 ⇒ residual ✓。"""
+        af = self._af()
+        s = af.scan("综上所述，拭目以待，让我们共同见证新篇章。")
+        self.assertTrue(s["hard"], "硬清单必须命中")
+        self.assertIn("新篇章", s["hard"])
+
+        s2 = af.scan("这波拉升其实还是要看资金承接。需要注意的是，现在量能跟不上。")
+        self.assertIn("需要注意的是", s2["soft"])
+        self.assertTrue(s2["hard"] or s2["soft"], "有特征就该被扫出来")
+
+    def test_scan_structural_signals(self):
+        """骑墙句式 / 宏大开场 / 不仅…更 / 首先…其次 都是可测信号 ✓。"""
+        af = self._af()
+        self.assertTrue(af.scan("一方面这里在涨，另一方面那边又回落。")["wall"])
+        self.assertTrue(af.scan("随着技术的不断发展，我们看到市场在扩大。")["grandiose"])
+        self.assertTrue(af.scan("这不仅是个买点，更是分批建仓的时机。")["bu_jin"])
+        self.assertTrue(af.scan("首先看量能，其次看位置。")["first_then"])
+        self.assertGreaterEqual(af.scan("看多——看空——再看看。")["dash"], 1)
+
+    def test_sentence_cv_signal(self):
+        """★ R851b：句长均匀度（CV）——语言无关的 AI 特征（prompt 明写"AI 腔最稳的信号"）。
+
+        预期：全篇长短句交错 ⇒ CV 高；清一色等长句 ⇒ CV 低 ✓。
+        ⚠️ 阈值未在此定（先量后定）：真实数据上 en/zh 全部 ≥ 0.275（见报告），
+           所以"过于均匀"这条特征在我们这边**不成立** ✓。
+        """
+        af = self._af()
+        # 确定性构造：等长四句（CV≈0）vs 长短悬殊四句（CV 高）
+        uniform = "aa aa. aa aa. aa aa. aa aa."
+        varied = "a. bbbb cc dd. eeeeeeeeeeee. fffff gg h."
+        cv_u = af.scan(uniform)["sent_cv"]
+        cv_v = af.scan(varied)["sent_cv"]
+        self.assertIsNotNone(cv_u)
+        self.assertIsNotNone(cv_v)
+        self.assertLess(cv_u, 0.05, "等长句必须给出接近 0 的 CV")
+        self.assertGreater(cv_v, 0.30, "长短悬殊的句必须给出明显更大的 CV")
+        self.assertLess(cv_u, cv_v)
+
+    def test_clean_text_has_no_flags(self):
+        """真人腔（本项目 prompt 的风格）不该命中任何硬/软 ✓——清单不能「为拦而拦」。"""
+        af = self._af()
+        s = af.scan("这波拉升我看的是承接盘，量能没跟上我就不会追。")
+        self.assertEqual(s["hard"], [])
+        self.assertEqual(s["soft"], [])
+
+    def test_gate_identical_to_shared_implementation(self):
+        """★ 门必须与唯一实现逐字一致（R851 的行为级回归钉）。
+
+        ⚠️ 门在 `MultiLLMEngine` 上（`_passes_identity_gate` 那一对），不是 `SquarePublisher`
+        —— 这是写测试时必须先确认的事（按源码文本断言会踩同类坑，见 R840）。
+        """
+        af = self._af()
+        m = self._m()
+        cases = [
+            "这个位置我不动，等回踩确认再说。",
+            "综上所述，让我们拭目以待。",
+            "破折号——这里用两次，真的不会再来了——就这样。",
+            "一方面多头在撑，另一方面空头也在打。",
+            "随着行业不断的发展，市场终将成熟。",
+            "这不仅是一个信号，更是一个买点。",
+            "首先看量能，其次看位置。",
+            "需要注意的是，这里的承接还可以。",
+        ]
+        for c in cases:
+            got_cls = m.MultiLLMEngine._passes_ai_flavor_gate(c)
+            got_af = af.gate(c)
+            self.assertEqual(got_cls, got_af, "门与唯一实现不一致: %r" % c[:30])
+
+    def test_gate_reason_formats_survive(self):
+        """门的拒绝理由文案保持（拒稿理由会进遥测/排障）✓。"""
+        ok, why = self._af().gate("综上所述，未来可期。")
+        self.assertFalse(ok)
+        self.assertIn("硬命中", why)
+        ok2, why2 = self._af().gate("破折号——多一次——够了。")
+        self.assertFalse(ok2)
+        self.assertIn("破折号", why2)
+
+
+    @staticmethod
+    def _ew():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "en_window_audit_r851",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "en_window_audit.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_flag_rate_only_counts_published_en_night_rows(self):
+        """口径：只算 en 夜窗的已发布帖；被拒稿的、别的语种的都不进 ✓。"""
+        mod = self._ew()
+        rows = [
+            {"outcome": "binance_published", "lang": "en",
+             "ts": "2026-10-30T15:00:00+00:00", "final_text": "这波我不动，等回踩。"},
+            {"outcome": "binance_published", "lang": "en",
+             "ts": "2026-10-30T15:10:00+00:00", "final_text": "综上所述，拭目以待。"},
+            {"outcome": "llm_rejected", "lang": "en",
+             "ts": "2026-10-30T15:20:00+00:00", "final_text": "综上所述。"},
+            {"outcome": "binance_published", "lang": "zh-CN",
+             "ts": "2026-10-30T15:30:00+00:00", "final_text": "综上所述。"},
+        ]
+        s = mod.ai_flavor_stats(rows, "2026-10-30")
+        self.assertEqual(s["n"], 2, "只算 en 夜窗的已发布帖")
+        self.assertEqual(s["hard_hits"], 1)
+        self.assertEqual(s["residual"], 1, "带特征的才算残余（干净的不算）")
+        # 注意：hard_examples 取的是**清单顺序**里的首个命中（拭目以待 在清单最前）
+        self.assertEqual(s["hard_examples"], ["拭目以待"])
 
 
 class TestR850Preregistration(unittest.TestCase):

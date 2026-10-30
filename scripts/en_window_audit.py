@@ -51,6 +51,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from campaign_vocab import mention_in_text  # noqa: E402  （唯一实现，R814 下沉）
+from ai_flavor import scan as ai_flavor_scan  # noqa: E402  （唯一实现，R851：流水线门与本脚本共用）
 
 NIGHT_START_H, NIGHT_END_H = 14, 22          # UTC 夜窗 = 北京 22:00–06:00
 CJK_RE = re.compile(r"[\u4e00-\u9fff]")
@@ -321,6 +322,49 @@ def is_truncated(r: dict) -> bool:
     if tail.startswith("$") or (tail.isupper() and tail.isalpha() and len(tail) <= 6):
         return False                      # $挂件 / 全大写 ticker 结尾 = 合法收尾
     return bool(re.search(r"[A-Za-z]$", body))
+
+
+def ai_flavor_stats(rows, date_utc: str, lang: str = "en") -> dict:
+    """★★ R851：**AI 味旗标率**（只量不设门）。
+
+    动机：平台 2026-07 起**对纯 AI 内容算法降权**（官方原文："Content generated entirely by
+    AI will be de-boosted"）⇒ 我们需要知道"**通过了门却仍带 AI 特征**"的帖有多少。
+    ⚠️ 本函数**只度量**：不新增任何拒稿门（加门要另行预注册 ⇒ 且会改变发布集合 ⇒ 必须等
+    R848 的 ③ 窗口关掉再谈）。
+
+    口径：
+      · 样本 = 该窗口 `binance_published` 且 `final_text` 非空、且语种匹配的行；
+      · `hard_hits` = 命中硬清单的篇数（正常应为 0——门会拦 ✓，若 >0 说明门没生效 ✗）；
+      · `soft_any` = 命中 ≥1 个软特征的篇数；
+      · `residual` = 任一（硬命中 / 软特征 / 宏大开场 / 不仅…更 / 首先…其次 / 破折号≥1）
+        命中的篇数 = **过了门但仍带 AI 味的残余** ⇒ 这才是我们要盯的数 ✓。
+    """
+    n = hard = soft_any = residual = 0
+    flags = []
+    for r in rows or []:
+        if not str(r.get("outcome", "")).startswith("binance_published"):
+            continue
+        if r.get("lang") != lang:
+            continue
+        t = r.get("final_text")
+        if not isinstance(t, str) or not t.strip():
+            continue
+        if not in_night_window(r.get("ts"), date_utc):
+            continue
+        n += 1
+        s = ai_flavor_scan(t)
+        if s["hard"]:
+            hard += 1
+            flags.append(s["hard"][0])
+        if s["soft"]:
+            soft_any += 1
+        if (s["hard"] or s["soft"] or s["grandiose"] or s["bu_jin"]
+                or s["first_then"] or s["dash"]):
+            residual += 1
+    return {"date": date_utc, "lang": lang, "n": n, "hard_hits": hard,
+            "soft_any": soft_any, "residual": residual,
+            "residual_pct": (100.0 * residual / n) if n else 0.0,
+            "hard_examples": flags[:3]}
 
 
 def trunc_stats(rows, date_utc: str) -> dict:
@@ -667,6 +711,24 @@ def main(argv=None) -> int:
             #      ⇒ 该对比混着两个改动，**条文里的「回滚」在这组臂上不可执行**。
             _w = cap_arm_warning(cb) or cap_treat_warning(ct)
             print(_w if _w else cap_arm_confound_note())
+
+    # ---- R851：AI 味旗标率（只量不设门）----
+    # 动机：平台 2026-07 起对纯 AI 内容算法降权（官方原文："Content generated entirely by AI
+    # will be de-boosted"）⇒ 要知道「过了门仍带 AI 特征」的帖有多少。
+    # ⚠️ 只度量、不加门：加门要另行预注册（且会改变发布集合 ⇒ 必须等 R848 的 ③ 窗口关掉）。
+    fa = [ai_flavor_stats(rows, d) for d in (args.baseline or "").split(",") if d]
+    fb = [ai_flavor_stats(rows, d) for d in (args.treatment or "").split(",") if d]
+    if fa or fb:
+        print("\n【AI 味旗标率（R851，只量不设门）】口径 = 已发布帖里「过了门仍带特征」的占比")
+        for label, arm in (("基线臂", fa), ("处置臂", fb)):
+            if not arm:
+                continue
+            tot_n = sum(x["n"] for x in arm)
+            tot_res = sum(x["residual"] for x in arm)
+            print("  %s: n=%d ｜ 残余=%d (%.0f%%) ｜ 软特征=%d ｜ 硬命中=%d"
+                  % (label, tot_n, tot_res,
+                     100.0 * tot_res / max(1, tot_n),
+                     sum(x["soft_any"] for x in arm), sum(x["hard_hits"] for x in arm)))
     return 0
 
 
