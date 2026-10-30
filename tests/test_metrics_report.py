@@ -9504,30 +9504,61 @@ class TestR847BodyBeforeTags(unittest.TestCase):
             self.assertEqual(mod.body_before_tags(t), t.strip(),
                              "井号+数字不得被当成标签：%s" % t)
 
-    # ---- 判定③ 的配准护栏（R847 追补）----
-    def test_cap_arm_warning_fires_on_post_r834_baseline(self):
-        """★ 基线落在 R834 部署日之后 ⇒ 判定③ 没在测 R834 ⇒ 必须喊出来。"""
+    # ---- 判定③ 的配准护栏（R847 追补 / R848 改基准）----
+    def test_cap_arm_warning_fires_on_post_change_baseline(self):
+        """★ 基线落在**被测改动**部署日之后 ⇒ 判定③ 没在测那次改动 ⇒ 必须喊出来。"""
         mod = self._ew()
-        w = [{"date": "2026-10-26"}, {"date": "2026-10-27"}]
+        w = [{"date": "2026-10-30"}, {"date": "2026-10-31"}]
         msg = mod.cap_arm_warning(w)
         self.assertIn("没配准", msg)
-        self.assertIn(mod.R834_DEPLOY_DATE, msg)
+        self.assertIn(mod.CAP_CHANGE_DEPLOY_DATE, msg)
 
-    def test_cap_arm_warning_silent_on_pre_r834_baseline(self):
+    def test_cap_arm_warning_silent_on_pre_change_baseline(self):
+        """★ R848 的预注册基线就是 10-26/27（早于 10-30）⇒ 不许报警。"""
         mod = self._ew()
-        w = [{"date": "2026-10-19"}, {"date": "2026-10-24"}]
+        w = [{"date": "2026-10-26"}, {"date": "2026-10-27"}]
         self.assertEqual(mod.cap_arm_warning(w), "", "配准了就不该报警")
 
-    def test_confound_note_names_r830_and_r840(self):
-        """★ R847 自纠：正确配准仍**混着 R830/R840** ⇒ 条文里的「回滚」不可执行。
+    def test_confound_note_points_at_comparability(self):
+        """★ 自纠结论要留着：配准之后还得确认两臂"除该改动外"可比。
 
-        （R846 曾说"③ 的回滚是配错造成的" —— 用正确基线重跑**仍报回滚** ⇒ 那个说法不成立，
-          这条测试把这个更正的结论钉住，防止下一轮又按字面回滚。）
+        （R846 曾断言"③ 的回滚是配错造成的" —— 用正确基线重跑**仍报回滚** ⇒ 不成立；
+          R834 那组对比混着 R830/R840 ⇒ 当时条文里的「回滚」不可执行。）
         """
         mod = self._ew()
         note = mod.cap_arm_confound_note()
-        for frag in ("R830", "R840", "不可执行", "重新预注册"):
+        for frag in ("R834", "R830", "R840", "不可执行", "10-26/27"):
             self.assertIn(frag, note, "混杂提示必须写明：%s" % frag)
+
+    def test_cap_treat_warning_fires_on_pre_change_treatment(self):
+        """★ 对称护栏：**处置窗**早于被测改动 ⇒ 这条读数与那次改动无关。"""
+        mod = self._ew()
+        self.assertIn("处置臂也没配准",
+                      mod.cap_treat_warning([{"date": "2026-10-28"}, {"date": "2026-10-29"}]))
+        self.assertEqual(mod.cap_treat_warning([{"date": "2026-10-31"}]), "",
+                         "处置窗在改动之后 ⇒ 不报警")
+
+    # ---- R848：词数目标与预算的等式必须被钉住 ----
+    def test_en_short_word_target_fits_cap_budget(self):
+        """★★★ R848：**目标上沿必须离"顶格线"留够余量**（否则 ③ 的通过线不可能达成）。
+
+        等式：`EN_SHORT_WORD_MAX × EN_CHARS_PER_WORD + 1 + 标签行 ≤ CAP_TOTAL − 余量`
+        ★ 这条测试就是为"常量一改就咬"而立的（R834 同族：目标与预算脱节无人报警）：
+          把上沿改回 135 词 ⇒ 135×5.5 = 742.5，+1+58 = 801.5 > 814−60 ⇒ **必须失败**。
+        """
+        import main as _m
+        mod = self._ew()
+        tagline = 58                      # 5 标签实测中位
+        slack = 60                        # 需要留的余量（字符）
+        top = _m.EN_SHORT_WORD_MAX * _m.EN_CHARS_PER_WORD
+        self.assertLessEqual(
+            top + 1 + tagline, mod.CAP_TOTAL - slack,
+            "目标上沿 %s×%s=%.1f 字符 + 标签行 %d ⇒ 距顶格线 %d 的余量不足 %d："
+            "模型按目标上沿写就会贴线甚至被截（R834 的老毛病）"
+            % (_m.EN_SHORT_WORD_MAX, _m.EN_CHARS_PER_WORD, top, tagline,
+               mod.CAP_TOTAL, slack))
+        self.assertLessEqual(_m.EN_SHORT_WORD_MIN, _m.EN_SHORT_WORD_MAX)
+        self.assertGreaterEqual(_m.EN_SHORT_WORD_MIN, 100, "下沿太低会让英文帖明显偏短")
 
 
 class TestR834EnLengthBudget(unittest.TestCase):
@@ -9603,17 +9634,28 @@ class TestR834EnLengthBudget(unittest.TestCase):
         return src[i:i + 4000]
 
     def test_en_word_target_fits_publish_budget(self):
-        """★ 短讯目标必须落在可发布预算内：110~135 words ≈ 605~745 字符（上限 760）。
+        """★ 短讯目标必须落在可发布预算内，且**上沿要留够余量**。
 
-        ⚠️ 断言必须用**指令原文的加粗形态**（`短讯 **110~170 words**`）——否则会咬到
-        `main.py` 里那段"引用旧值"的注释（本轮就踩了：`assertNotIn("110~170 words")`
-        在注释里命中，假红）。
+        R834 曾把上沿设成 135 words（≈745 字符）—— 那**恰好贴着**预算边界（761 字符 =
+        820 − 标签行），实测正文 p75 = 744、18~24% 的帖被判顶格。R848 收到 120 words
+        （≈660 字符）⇒ 距顶格线留 95 字符（等式由 `TestR847BodyBeforeTags::
+        test_en_short_word_target_fits_cap_budget` 钉住，别再靠人记）。
+
+        ⚠️ 断言必须用**指令原文的加粗形态**（`短讯 **110~120 words**`）——否则会咬到
+        `main.py` 里那段"引用旧值"的注释（R834 本轮就踩过：`assertNotIn("110~170 words")`
+        在注释里命中 ⇒ 假红）。
         """
+        import main as _m
         win = self._en_window()
-        self.assertIn("短讯 **110~135 words**", win)
-        self.assertNotIn("短讯 **110~170 words**", win,
-                         "旧目标的上半段发不出去（会被切掉）")
+        # ⚠️ prompt 里必须是**字面量**（英文分支文本会被按源码 AST 抽取的测试读，
+        #    f-string 的变量在那类工具里会丢 —— R840 同族）。一致性由下面这条断言钉住。
+        self.assertIn("短讯 **%d~%d words**" % (_m.EN_SHORT_WORD_MIN, _m.EN_SHORT_WORD_MAX),
+                      win, "prompt 的字面量必须与唯一真源常量一致（别只改一处）")
+        for old in ("短讯 **110~170 words**", "短讯 **110~135 words**"):
+            self.assertNotIn(old, win,
+                             "旧目标的上沿贴线/发不出去（会被切掉）：%s" % old)
         self.assertIn("会被**直接切掉**", win, "必须把'超了会被切'写进指令，否则模型没有理由收着")
+        self.assertGreaterEqual(_m.EN_SHORT_WORD_MIN, 100)
 
     def test_long_form_target_also_trimmed(self):
         """长文同因：500 words ≈ 2800 字符 > 2400 预算 ⇒ 收到 300~420。"""
