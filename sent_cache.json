@@ -1,15 +1,5 @@
 [
   {
-    "id": "65b3a866c46161d2",
-    "title": "Shiba Inu (SHIB) Moves Rapidly Through 87 Trillion Threshold: What to Expect?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-21T13:04:37.234423+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "85986b0db1aeedcf",
     "title": "灰度为 10 款加密 ETP 推出数字资产直接申购功能,投资者可用加密资产换取产品份额",
     "source": "深潮TechFlow (中文/简体)",
@@ -5157,6 +5147,18 @@
       "ETH",
       "PEPE",
       "UNI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3a0d6f3a63425134",
+    "title": "Pickle Cat:Binance 疑似被盗不同于 FTX,市场或再探底",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T00:06:39.679959+00:00",
+    "tokens": [
+      "BTC",
+      "LUNA",
+      "BNB"
     ],
     "lang": "zh-CN"
   }
