@@ -1,16 +1,5 @@
 [
   {
-    "id": "07ad68d460ac64cf",
-    "title": "PUMP FUN向Kraken转入12.98万枚SOL,价值1406万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-21T20:24:22.397529+00:00",
-    "tokens": [
-      "PUMP",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "221bee3b8e3a9b42",
     "title": "XRP and DOGE Look Undervalued by MVRV Measures, but Will Traders Take Notice?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5174,5 +5163,15 @@
       "WLFI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "d589eeb456236755",
+    "title": "THORChain’s RUNE jumps 13% after Binance’s record $6.3B hack",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-10-30T10:04:04.827137+00:00",
+    "tokens": [
+      "RUNE"
+    ],
+    "lang": "zh-TW"
   }
 ]
