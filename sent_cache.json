@@ -1,15 +1,5 @@
 [
   {
-    "id": "5e4d4f415fec7f94",
-    "title": "Solana’s Alpenglow upgrade goes live – Why SOL’s $100 support matters",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-22T09:50:14.102199+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2d173ce6752c7fe1",
     "title": "Dogecoin Labs Wants DOGE to Be More Than a Meme Coin: Here’s How",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5171,6 +5161,16 @@
     "title": "Solana (SOL) Moves In on Hong Kong Banks to Scale Its $14 Billion Stablecoin Market",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-10-30T19:46:53.881419+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6fedd8094fa40899",
+    "title": "Polygon Targets Solana’s $5.76T Stablecoin Market With New Payments Integration",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-30T20:06:11.612356+00:00",
     "tokens": [
       "SOL"
     ],
