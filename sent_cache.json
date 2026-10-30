@@ -1,15 +1,5 @@
 [
   {
-    "id": "60cac7a0a06ec491",
-    "title": "Cardano Foundation urges EU against expanding MiCA rules to DeFi and staking",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-21T20:04:40.320826+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "07ad68d460ac64cf",
     "title": "PUMP FUN向Kraken转入12.98万枚SOL,价值1406万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5171,6 +5161,17 @@
     "sent_at": "2026-10-30T09:24:47.429860+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "5d60587d98671578",
+    "title": "QNT crypto’s price now down 50.5% from September’s high — Should you buy now?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-30T09:46:58.311684+00:00",
+    "tokens": [
+      "QNT",
+      "WLFI"
     ],
     "lang": "zh-CN"
   }
