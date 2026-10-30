@@ -1,17 +1,5 @@
 [
   {
-    "id": "10f84e15eb5be28e",
-    "title": "覆盖七条区块链网络,Aerodrome与Velodrome合并推出Aero",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-22T00:27:09.395779+00:00",
-    "tokens": [
-      "OP",
-      "AERO",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e8778e77e756c9e5",
     "title": "Dogecoin price enters accumulation zone – Is DOGE nearing a rebound?",
     "source": "AMBCrypto (技术与链上)",
@@ -5179,6 +5167,16 @@
     "tokens": [
       "BTC",
       "USD1"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a74142b4230c5d16",
+    "title": "分析:币安黑客事件后比特币仅下跌约2%,远低于FTX事件后的26%跌幅",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-30T14:44:44.745317+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
