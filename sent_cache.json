@@ -1,15 +1,5 @@
 [
   {
-    "id": "3f8ae113e6191e96",
-    "title": "Claude AI Predicts a Huge Move for Bitcoin by 2027",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-21T14:44:04.115675+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a1f858b87208d57f",
     "title": "分析:比特币或在美联储决议前维持8.13万至8.44万美元震荡",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5162,6 +5152,19 @@
     "sent_at": "2026-10-30T03:01:48.228331+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c80c09f495908150",
+    "title": "币安黑客已抛售价值约1.58亿美元山寨币,全部兑换为70480枚ETH",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-30T03:28:37.453289+00:00",
+    "tokens": [
+      "ETH",
+      "UNI",
+      "ENA",
+      "PEPE"
     ],
     "lang": "zh-CN"
   }
