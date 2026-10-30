@@ -1,15 +1,5 @@
 [
   {
-    "id": "8f98f2e0a4c82a6d",
-    "title": "Convex Finance is up 22% – THIS data says CVX’s rally is not done",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-21T23:04:32.042454+00:00",
-    "tokens": [
-      "CVX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "41cc49816349e720",
     "title": "Why earning XRP yield through this wallet could actually cost you money",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5175,6 +5165,17 @@
     "sent_at": "2026-10-30T12:29:40.066904+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "38d59a11a28e0668",
+    "title": "Alea 研报:大户撤资后 Centrifuge 基金规模跌四成、费用收入反增,但 CFG 持有者一分钱拿不到",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-30T13:06:44.779343+00:00",
+    "tokens": [
+      "CFG",
+      "ENA"
     ],
     "lang": "zh-CN"
   }
