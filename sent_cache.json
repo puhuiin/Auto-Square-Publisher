@@ -1,15 +1,5 @@
 [
   {
-    "id": "6df8883048d7b518",
-    "title": "Can AI Hack Bitcoin? CZ Says the Real Danger Lies in Phishing and Data Leak",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-23T12:04:51.998502+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4170102b8793e175",
     "title": "From Alpenglow to Quantumglow – Inside Solana’s post-quantum plan",
     "source": "AMBCrypto (技术与链上)",
@@ -5173,6 +5163,16 @@
       "ETH",
       "BTC",
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "87bc574fb5a62fb4",
+    "title": "Shiba Inu Holder Count Drops by 2,500 Amid Prolonged Volatility",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-31T22:24:19.564598+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-TW"
   }
