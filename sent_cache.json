@@ -1,16 +1,5 @@
 [
   {
-    "id": "4a5ec52d74e47cb4",
-    "title": "Dogecoin Expands Utility as Robinhood Memecoin Boom Reveals Crypto’s Biggest Adoption Engine",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-22T23:24:01.474820+00:00",
-    "tokens": [
-      "DOGE",
-      "SHIB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "510c65957c059248",
     "title": "XRPL recovers from network slowdown as critical security upgrade faces two-week delay",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5178,6 +5167,16 @@
     "tokens": [
       "STX",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "460fb2373238d34d",
+    "title": "Chainalysis 遭网络攻击,部分客户姓名及邮箱被访问",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-31T12:46:22.353965+00:00",
+    "tokens": [
+      "ID"
     ],
     "lang": "zh-CN"
   }
