@@ -1,15 +1,5 @@
 [
   {
-    "id": "7b928b1498be287c",
-    "title": "Bitcoin to Dodge AI Crash, Analyst Says",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-23T07:28:21.963296+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4d77f1252673daaf",
     "title": "Bitcoin ETF Holders Pull $635 Million Before Price Even Hits Their Usual Breaking Point",
     "source": "BeInCrypto (山寨与行情)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-10-31T18:04:05.838341+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f0603f2736e63d64",
+    "title": "Polygon Extends Open Money Stack to Solana for Stablecoin Payment Flows",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-10-31T18:24:40.070661+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
