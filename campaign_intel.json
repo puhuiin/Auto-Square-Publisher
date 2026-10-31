@@ -4,19 +4,20 @@
     "#BinanceSquare",
     "#HalloweenPumpkinFrenzy",
     "#SpotTradingTournament",
-    "#Futures"
+    "#NewListing"
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$USD1",
-    "$WLFI",
     "$USDC",
     "$XRP",
     "$PREDICT",
+    "$APPB",
+    "$BSPB",
+    "$GEVB",
     "$RLUSD"
   ],
-  "strategy_guidance": "今日截止的USD1持仓分WLFI与USD1奖励活动为最优先追更项，建议以活动最后冲刺提醒角度切入，引导用户抓住最后窗口参与持仓互动。可联动Halloween Pumpkin Frenzy 170万奖池活动、现货交易赛S10、新上线的PREDICT代币及TradFi永续合约、新增bStocks交易对等官方动态，输出活动参与指南、交易攻略类内容，引导读者参与活动互动、交易获取Write to Earn互动奖励与交易返佣。",
-  "last_updated": "2026-10-30T17:24:11.991805Z",
+  "strategy_guidance": "优先追当日最紧迫的Halloween Pumpkin Frenzy活动热度，结合交易、邀请好友的规则做内容引导用户参与互动拿奖励；可结合新上线的$PREDICT、新增bStocks交易对及Futures新合约的官方公告，带出现货交易赛Season 10的参赛指引，引导用户参与交易活动获取返佣；还可穿插P2P商户推荐、南亚区域专属活动等玩法解析，覆盖不同区域用户需求。",
+  "last_updated": "2026-10-31T05:44:01.450461Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
       "last_fail": "2026-10-31T04:23:59.181248+00:00",
@@ -24,12 +25,12 @@
       "fails": 3
     },
     "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-10-31T05:23:29.553652+00:00",
+      "reset_at": "2026-10-31T05:49:32.177530+00:00",
       "last_fail": "2026-10-31T05:03:36.398927+00:00",
       "fails": 1
     },
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-31T05:23:30.105881+00:00",
+      "last_fail": "2026-10-31T05:49:32.747461+00:00",
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3
     }
@@ -40,15 +41,16 @@
   },
   "_llm_breaker": {
     "Preset-stepfun-flash": {
+      "cooldown_until": "2026-10-31T06:01:09.782420+00:00",
+      "last_fail": "2026-10-31T05:51:09.782444+00:00",
       "fails": 1,
-      "cooldown_until": "2026-10-31T05:35:08.791279+00:00",
-      "last_fail": "2026-10-31T05:25:08.791301+00:00"
+      "cleared_at": "2026-10-31T05:44:01.451323+00:00"
     }
   },
   "_article_sent_date": "2026-10-31",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 524,
+  "_img_rot": 525,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

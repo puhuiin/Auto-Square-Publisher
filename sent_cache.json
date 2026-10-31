@@ -1,15 +1,5 @@
 [
   {
-    "id": "d5d888ab62c6557b",
-    "title": "Dogecoin Labs Wants to Build the Economy Behind the Meme Coin’s $1 Rallying Cry",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-22T17:24:06.497435+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "55eede82d15cc8e9",
     "title": "Solana Mobile’s dApp Store passes 1,500 apps",
     "source": "Crypto Briefing (深度与研报)",
@@ -5176,6 +5166,16 @@
     "sent_at": "2026-10-31T05:26:50.691923+00:00",
     "tokens": [
       "IMX"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "e118ecb063778cc8",
+    "title": "Why AAVE crypto traders must watch $113 support after Binance hack",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-31T05:51:54.762397+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "zh-TW"
   }
