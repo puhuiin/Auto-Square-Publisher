@@ -1,15 +1,5 @@
 [
   {
-    "id": "36190726e047086a",
-    "title": "MemeCore (M) Flips Pepe (PEPE) After Pumping 25% in a Day: Details",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-22T19:04:04.121894+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6ea4649148549a54",
     "title": "Dogecoin Labs Brings MyDoge And DogeOS Together In Commercial Reset",
     "source": "NewsBTC (比特币与山寨)",
@@ -5176,6 +5166,17 @@
     "sent_at": "2026-10-31T07:50:08.437915+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1b6a5ee19469204b",
+    "title": "MetaMask adds Stellar integration, but cross-chain bridges require manual setup",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-31T08:07:06.614440+00:00",
+    "tokens": [
+      "USDC",
+      "XLM"
     ],
     "lang": "zh-CN"
   }
