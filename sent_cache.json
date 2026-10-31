@@ -1,15 +1,5 @@
 [
   {
-    "id": "7d66786a9b7fe8e2",
-    "title": "Sam Altman ChatGPT AI Predicts Something Huge on the Way for Quant (QNT)",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-22T21:05:54.574326+00:00",
-    "tokens": [
-      "QNT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "263f60989ee35671",
     "title": "JPMorgan's Tokenized Money Market Funds Go Live on Solana",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5179,5 +5169,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "7e6d66237bb6434a",
+    "title": "Rip Cars完成150万美元战略融资,DBA等参投",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-31T10:27:25.107758+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
