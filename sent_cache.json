@@ -1,15 +1,5 @@
 [
   {
-    "id": "ba6d2c94a35ad3d0",
-    "title": "历史上四次中期选举落地后,BTC 到底是怎么走的?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-23T09:48:21.496174+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8e4d9f3ccde48461",
     "title": "dYdX 金库质押规模突破 1 亿枚 DYDX:千万枚回购代币入场,5 家验证者遭清零委托",
     "source": "深潮TechFlow (中文/简体)",
@@ -5170,6 +5160,16 @@
     "tokens": [
       "USDC",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f9a810e02beb80f8",
+    "title": "How Optimism crypto’s 17% rally puts $0.11 in focus for OP bulls",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-31T20:04:12.095484+00:00",
+    "tokens": [
+      "OP"
     ],
     "lang": "en"
   }
