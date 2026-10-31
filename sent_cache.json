@@ -1,15 +1,5 @@
 [
   {
-    "id": "1dcc8f158826821f",
-    "title": "Winklevoss 兄弟与 DCG 创始人争夺 Zcash 市场,布局矿业及 ETF",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-23T11:26:12.187686+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f3a37130b1faf13d",
     "title": "一文拆解:加密货币要进「掩体模式」?AI 真能破解钱包吗?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5171,6 +5161,16 @@
     "sent_at": "2026-10-31T21:24:32.456567+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8f63e2941177c486",
+    "title": "XRP’s ‘Generational’ Setup? Analyst Targets $8, $13, and $30",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-31T21:46:33.223271+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
