@@ -1,15 +1,5 @@
 [
   {
-    "id": "6b43ef4dd96a0f8b",
-    "title": "Matt Crosby: Bitcoin Is “Primed for a Big Move Higher”",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-22T15:50:08.448135+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "66b4c9bd6d67c959",
     "title": "Is Justin Sun positioning for PEPE? A 7.2 trillion memecoin transfer sparks intrigue",
     "source": "AMBCrypto (技术与链上)",
@@ -5175,6 +5165,16 @@
     "sent_at": "2026-10-31T04:05:54.982083+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "8e865278d15014c7",
+    "title": "Why November's +80% History Is a Statistical Flaw for XRP Holders",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-31T04:25:05.026810+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }

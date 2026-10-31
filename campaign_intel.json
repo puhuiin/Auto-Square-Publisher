@@ -18,14 +18,15 @@
   "strategy_guidance": "今日截止的USD1持仓分WLFI与USD1奖励活动为最优先追更项，建议以活动最后冲刺提醒角度切入，引导用户抓住最后窗口参与持仓互动。可联动Halloween Pumpkin Frenzy 170万奖池活动、现货交易赛S10、新上线的PREDICT代币及TradFi永续合约、新增bStocks交易对等官方动态，输出活动参与指南、交易攻略类内容，引导读者参与活动互动、交易获取Write to Earn互动奖励与交易返佣。",
   "last_updated": "2026-10-30T17:24:11.991805Z",
   "_feed_health": {
-    "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-31T04:03:36.336586+00:00",
-      "fails": 3,
-      "parked_until": "2026-10-20T06:53:53.228743+00:00"
-    },
     "CoinJournal (山寨异动)": {
-      "last_fail": "2026-10-31T04:04:06.134632+00:00",
-      "fails": 2
+      "parked_until": "2026-10-31T10:23:59.181248+00:00",
+      "last_fail": "2026-10-31T04:23:59.181248+00:00",
+      "fails": 3
+    },
+    "Bitcoinist (比特币向)": {
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "last_fail": "2026-10-31T04:23:29.408710+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
@@ -36,7 +37,7 @@
   "_article_sent_date": "2026-10-31",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 521,
+  "_img_rot": 522,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
