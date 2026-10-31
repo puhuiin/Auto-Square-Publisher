@@ -1,16 +1,5 @@
 [
   {
-    "id": "9b789a528b08b69b",
-    "title": "用别家的流动性,也能烧自己的币:Uniswap 开始争夺交易入口",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-23T04:24:51.966751+00:00",
-    "tokens": [
-      "UNI",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7b928b1498be287c",
     "title": "Bitcoin to Dodge AI Crash, Analyst Says",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5169,6 +5158,16 @@
     "title": "147% XRP Burn Rate Surge at 'Uptober' Close, but Price Stays Down",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-10-31T17:45:20.884506+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8642431ab75b1c14",
+    "title": "XRP Reserves on Binance Slump to 2022 Lows — Is a Supply-Shock Rocket Surge Imminent?",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-31T18:04:05.838341+00:00",
     "tokens": [
       "XRP"
     ],
