@@ -1,17 +1,5 @@
 [
   {
-    "id": "41057d23b4517c56",
-    "title": "Blockaid:WAX 多链桥遭攻击,约 5.3 万枚 USDC 等资产被盗取",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-22T13:29:05.339491+00:00",
-    "tokens": [
-      "USDC",
-      "WBTC",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4c4b577d43927535",
     "title": "泰国SEC:多家资管机构咨询加密ETF,但尚无公司提交申请",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5178,6 +5166,16 @@
       "USDC",
       "OP",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7319f644c69111dc",
+    "title": "Ethena向币安存入1.286亿枚ENA,价值2433万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-31T00:27:07.348976+00:00",
+    "tokens": [
+      "ENA"
     ],
     "lang": "zh-CN"
   }
