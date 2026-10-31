@@ -1,15 +1,5 @@
 [
   {
-    "id": "51694113635c47b2",
-    "title": "Why Is No SHIB Burning? Anomaly in Major Shiba Inu Burn Platform Explained",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-22T14:08:48.031035+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "66a5213102f415ac",
     "title": "Circle股东起诉特朗普及WLFI指控其通过阿联酋相关加密交易牟利",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5177,5 +5167,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "52c0bdb94d794882",
+    "title": "WLFI顾问转发安全预警:Kintsu、StonkBrokers等疑遭前端攻击,连接钱包或导致资产被盗",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-31T02:47:30.923599+00:00",
+    "tokens": [
+      "WLFI"
+    ],
+    "lang": "zh-CN"
   }
 ]
