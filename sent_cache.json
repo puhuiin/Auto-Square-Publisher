@@ -1,15 +1,5 @@
 [
   {
-    "id": "ea237da538cce173",
-    "title": "CZ:AI无需破解比特币密码学,也可通过数据泄露放大钓鱼和社会工程风险",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-23T03:08:10.766989+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "29f11b6665091aee",
     "title": "Will Ethereum (ETH) Rally or Crash After the US Midterms: 3 AIs Weigh in",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5170,6 +5160,18 @@
     "sent_at": "2026-10-31T16:24:03.318939+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ce33e4aae64d089b",
+    "title": "币安:目前已补齐 90% 的被盗资产损失",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-31T16:44:31.531364+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "BNB"
     ],
     "lang": "en"
   }
