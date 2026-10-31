@@ -1,15 +1,5 @@
 [
   {
-    "id": "a2c10bb131b4914f",
-    "title": "Microsoft Copilot AI Predicts Hyperliquid to Soar to New Highs in Q4",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-22T19:44:37.418809+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "546c2d49fbd53f73",
     "title": "Reflect Money launches Create for custom yield-bearing stablecoins on Solana",
     "source": "Crypto Briefing (深度与研报)",
@@ -5179,5 +5169,15 @@
       "BNB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "353f783cc3ab3391",
+    "title": "成为MetaMask默认网络,Stellar账户自动生成地址",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-31T08:47:23.300069+00:00",
+    "tokens": [
+      "XLM"
+    ],
+    "lang": "zh-CN"
   }
 ]
