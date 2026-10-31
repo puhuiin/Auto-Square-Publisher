@@ -1,15 +1,5 @@
 [
   {
-    "id": "4199bdf4ac7e5443",
-    "title": "Analyst Warns XRP Could Lose Top 10 Ranking by 2030 “If Nothing Changes”; Details",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-22T22:23:55.825247+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "8ff215edcf5f20b7",
     "title": "Circle shareholder sues Trump, World Liberty and Steve Witkoff over crypto deals",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5179,5 +5169,16 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "cff76fa197f049ce",
+    "title": "Aave 冻结以太坊核心市场 tBTC 储备,暂停新增存款及抵押借款",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-31T11:47:02.326706+00:00",
+    "tokens": [
+      "AAVE",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
