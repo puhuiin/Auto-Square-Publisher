@@ -1,15 +1,5 @@
 [
   {
-    "id": "70a4b6c28ae515b0",
-    "title": "Gemini 創始人 Winklevoss 兄弟與 DCG 創始人爭奪 Zcash 生態佈局",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-23T11:04:45.917419+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1dcc8f158826821f",
     "title": "Winklevoss 兄弟与 DCG 创始人争夺 Zcash 市场,布局矿业及 ETF",
     "source": "吴说区块链 (中文深度)",
@@ -5171,6 +5161,16 @@
     "sent_at": "2026-10-31T21:06:11.217884+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e49266c3dca010bd",
+    "title": "Chainalysis:以太坊链重组致 THORChain 紧急暂停,意外延缓朝鲜黑客洗钱",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-31T21:24:32.456567+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
