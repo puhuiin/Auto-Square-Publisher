@@ -1,15 +1,5 @@
 [
   {
-    "id": "18483e050c5549eb",
-    "title": "XRP Holders Hit a Record 8.24 Million, So Why Is the Price Still Sliding?",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-23T08:09:20.305424+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "115e7ba28da04f5a",
     "title": "新加坡、马来西亚和泰国央行加入 BLOOM,推动跨境数字货币结算互操作",
     "source": "深潮TechFlow (中文/简体)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-10-31T18:45:27.197897+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4c8d528e12fd8abf",
+    "title": "币安被盗资金地址转出约 1.58 亿枚 TRX",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-31T19:06:21.364785+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "en"
   }
