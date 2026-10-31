@@ -1,15 +1,5 @@
 [
   {
-    "id": "b7ffd1502910fd2e",
-    "title": "美股血洗!那斯達克重挫 2%、晶片股暴跌 5%,比特幣跌破 8.2 萬美元",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-10-22T18:24:18.684203+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "bbddfcca99dec95c",
     "title": "TRON Settles $2.2T in Q3, Captures 73% of All Stablecoin Volume as First TRX ETF Launches: CoinDesk and Nansen",
     "source": "NewsBTC (比特币与山寨)",
@@ -5178,5 +5168,15 @@
       "BNB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "89657b60cd4b486f",
+    "title": "Ripple Price Analysis: Can XRP Recover After the Hack-Driven Sell-Off?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-31T07:24:00.730716+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
