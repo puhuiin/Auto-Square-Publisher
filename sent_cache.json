@@ -1,15 +1,5 @@
 [
   {
-    "id": "01eb9a524d539db4",
-    "title": "PROM’s rally has a catch – And it’s hiding in the Spot market",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-23T00:04:42.177493+00:00",
-    "tokens": [
-      "PROM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "af35534a1e2dc71c",
     "title": "New DeepSeek ban in US, Swiss-Asia crypto ties deepen: Asia Express",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-10-31T13:09:08.521511+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6177233d954147bb",
+    "title": "Chainalysis says hacker using ‘offensive agentic techniques’ accessed its customers’ names and emails",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-10-31T13:29:32.534990+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "zh-CN"
   }
