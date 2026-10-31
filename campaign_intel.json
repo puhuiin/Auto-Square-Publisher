@@ -20,8 +20,8 @@
   "last_updated": "2026-10-31T05:44:01.450461Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-31T14:03:37.265975+00:00",
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "last_fail": "2026-10-31T14:23:41.075062+00:00",
       "fails": 3
     }
   },
@@ -33,7 +33,7 @@
   "_article_sent_date": "2026-10-31",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 537,
+  "_img_rot": 538,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

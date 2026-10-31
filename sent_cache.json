@@ -1,17 +1,5 @@
 [
   {
-    "id": "5e0e91468093a754",
-    "title": "a16z 加密基金管理合伙人 Chris Dixon:我们为什么要将基金更名为 a16z Frontier?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-23T01:04:54.014740+00:00",
-    "tokens": [
-      "AR",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "559b192350db3a05",
     "title": "Aave 直播:Coinbase 代币化股票上线 V4,Aavenomics 3.0 将重启 AAVE 回购",
     "source": "深潮TechFlow (中文/简体)",
@@ -5177,6 +5165,16 @@
     "sent_at": "2026-10-31T14:06:49.654542+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "98aaa201946ad1f1",
+    "title": "+147,593 SHIB Growth in 2026: What's Behind It?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-31T14:24:46.346107+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
