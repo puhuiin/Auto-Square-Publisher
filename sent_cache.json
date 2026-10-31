@@ -1,15 +1,5 @@
 [
   {
-    "id": "6ea4649148549a54",
-    "title": "Dogecoin Labs Brings MyDoge And DogeOS Together In Commercial Reset",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-22T19:23:59.835360+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a2c10bb131b4914f",
     "title": "Microsoft Copilot AI Predicts Hyperliquid to Soar to New Highs in Q4",
     "source": "CryptoNews (全球快讯)",
@@ -5179,5 +5169,15 @@
       "XLM"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "f4746d5e41fb16ab",
+    "title": "BNB 跌破 700 美元,24 小时跌幅 1.06%",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-31T08:29:32.833444+00:00",
+    "tokens": [
+      "BNB"
+    ],
+    "lang": "zh-TW"
   }
 ]
