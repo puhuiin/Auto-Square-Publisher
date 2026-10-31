@@ -1,17 +1,5 @@
 [
   {
-    "id": "838f739a61db53b8",
-    "title": "Grayscale 公布加密资产收益率排名:HYPE 持有人收益率居首,CAKE 调整后盈利收益率最高",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-23T02:45:09.503226+00:00",
-    "tokens": [
-      "HYPE",
-      "AERO",
-      "UNI"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ea237da538cce173",
     "title": "CZ:AI无需破解比特币密码学,也可通过数据泄露放大钓鱼和社会工程风险",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5172,6 +5160,16 @@
     "sent_at": "2026-10-31T16:06:56.749797+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "51e9af94fc66c77f",
+    "title": "Dogecoin Alert: Critical Wallet Security Threat Uncovered, What's Next?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-31T16:24:03.318939+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
