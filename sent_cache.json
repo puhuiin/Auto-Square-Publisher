@@ -1,17 +1,5 @@
 [
   {
-    "id": "3e0f6eb39ac142d0",
-    "title": "星球早讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-23T02:05:02.563670+00:00",
-    "tokens": [
-      "USDC",
-      "WLFI",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "37b2ea793cea6a25",
     "title": "Base Meme Summit 全纪录:股票 Meme、社区归属感和一场没人想散的派对",
     "source": "深潮TechFlow (中文/简体)",
@@ -5173,6 +5161,17 @@
     "sent_at": "2026-10-31T15:24:30.572122+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7d38ddb3a52e23c4",
+    "title": "Anthropic Claude AI Predicts an Unbelievable XRP Q4 Move",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-10-31T15:44:23.223291+00:00",
+    "tokens": [
+      "XRP",
+      "ETH"
     ],
     "lang": "en"
   }
