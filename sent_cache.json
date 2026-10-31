@@ -1,16 +1,5 @@
 [
   {
-    "id": "1508a4c767a946cb",
-    "title": "Crypto Whale Activity: $7.2M Flows Into 9 Altcoins as PUMP and ENA Face Selling Pressure",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-23T09:08:08.919653+00:00",
-    "tokens": [
-      "PUMP",
-      "ENA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ba6d2c94a35ad3d0",
     "title": "历史上四次中期选举落地后,BTC 到底是怎么走的?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5170,6 +5159,17 @@
     "sent_at": "2026-10-31T19:26:24.352205+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d8f94e889076354b",
+    "title": "USDC Treasury 在 Solana 链上铸造 2.5 亿枚 USDC",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-31T19:44:33.800310+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
     ],
     "lang": "en"
   }
