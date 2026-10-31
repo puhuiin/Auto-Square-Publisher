@@ -1,15 +1,5 @@
 [
   {
-    "id": "8d7cb42d98ef6efb",
-    "title": "XRP Ledger’s Latest Fix Pushed to November After Voting Setback",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-23T03:44:58.819418+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a896d48b90a08716",
     "title": "Uniswap v4 上线 Aggregator Hooks:聚合竞品流动性,外部路由协议费全额用于销毁 UNI",
     "source": "深潮TechFlow (中文/简体)",
@@ -5172,6 +5162,16 @@
     "sent_at": "2026-10-31T17:04:06.193142+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7bbfbd307e3913a9",
+    "title": "Solana 联合创始人:作物增产惠及最贫困人群前不应暂停 AI",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-31T17:26:28.315388+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
