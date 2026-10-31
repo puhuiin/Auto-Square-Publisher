@@ -1,15 +1,5 @@
 [
   {
-    "id": "510c65957c059248",
-    "title": "XRPL recovers from network slowdown as critical security upgrade faces two-week delay",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-22T23:45:17.202539+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "01eb9a524d539db4",
     "title": "PROM’s rally has a catch – And it’s hiding in the Spot market",
     "source": "AMBCrypto (技术与链上)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-10-31T12:46:22.353965+00:00",
     "tokens": [
       "ID"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "444d08e7216bde18",
+    "title": "AI代理加速网络攻击,币安事件估计影响63亿美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-31T13:09:08.521511+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
