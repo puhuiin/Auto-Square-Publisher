@@ -1,15 +1,5 @@
 [
   {
-    "id": "4170102b8793e175",
-    "title": "From Alpenglow to Quantumglow – Inside Solana’s post-quantum plan",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-23T12:24:20.901468+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e998bd65144b4a52",
     "title": "JPMorgan Solana Push Brings MONY and JLTXX Into Tokenized Finance",
     "source": "CryptoNews (全球快讯)",
@@ -5175,5 +5165,15 @@
       "SHIB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "5c50aa03073ccaf3",
+    "title": "'XRP at 100'? Ripple CTO Emeritus Reveals Surprising Story Behind Iconic T-Shirt",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-31T22:45:00.186245+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
