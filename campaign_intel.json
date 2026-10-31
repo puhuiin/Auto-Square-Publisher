@@ -22,25 +22,19 @@
     "CryptoPotato (山寨币/Meme热点)": {
       "last_fail": "2026-10-31T06:27:00.294362+00:00",
       "fails": 1,
-      "reset_at": "2026-10-31T11:03:29.302447+00:00"
+      "reset_at": "2026-10-31T11:23:44.181444+00:00"
     },
     "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "last_fail": "2026-10-31T11:03:29.630761+00:00",
-      "fails": 3
+      "last_fail": "2026-10-31T11:23:44.329524+00:00",
+      "fails": 3,
+      "parked_until": "2026-10-20T06:53:53.228743+00:00"
     }
   },
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
     "date": "2026-10-18"
   },
-  "_llm_breaker": {
-    "Preset-stepfun": {
-      "fails": 1,
-      "cooldown_until": "2026-10-31T11:15:45.520394+00:00",
-      "last_fail": "2026-10-31T11:05:45.520413+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-10-31",
   "_publish_park": {},
   "_intel_refresh_fail": {},

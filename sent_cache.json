@@ -1,15 +1,5 @@
 [
   {
-    "id": "4b1813292c4c7053",
-    "title": "Shiba Inu Founder Ryoshi May Be Gone for Good, Community Veteran Says; Can the Mystery Spark a SHIB Rally?",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-22T22:04:28.067866+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "4199bdf4ac7e5443",
     "title": "Analyst Warns XRP Could Lose Top 10 Ranking by 2030 “If Nothing Changes”; Details",
     "source": "ZyCrypto (新币与空投)",
@@ -5179,5 +5169,15 @@
       "HYPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "42b02209b9fd0b05",
+    "title": "Why Ripple’s $16 trillion payment volume isn’t boosting XRP",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-31T11:24:59.517685+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
