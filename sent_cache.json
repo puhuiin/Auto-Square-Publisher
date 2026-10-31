@@ -1,15 +1,5 @@
 [
   {
-    "id": "ac47e65d32b3ecde",
-    "title": "SEI price falls despite 155% RWA volume surge – Here’s why",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-22T18:04:04.992284+00:00",
-    "tokens": [
-      "SEI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b7ffd1502910fd2e",
     "title": "美股血洗!那斯達克重挫 2%、晶片股暴跌 5%,比特幣跌破 8.2 萬美元",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5178,5 +5168,15 @@
       "BNB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4febfa90dbcb0c70",
+    "title": "何一:理解部分用户对币安偿付能力的担忧,交易量、手续费及用户规模等数据均公开可查",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-31T06:57:20.317967+00:00",
+    "tokens": [
+      "BNB"
+    ],
+    "lang": "zh-TW"
   }
 ]
