@@ -19,30 +19,30 @@
   "strategy_guidance": "优先追当日最紧迫的Halloween Pumpkin Frenzy活动热度，结合交易、邀请好友的规则做内容引导用户参与互动拿奖励；可结合新上线的$PREDICT、新增bStocks交易对及Futures新合约的官方公告，带出现货交易赛Season 10的参赛指引，引导用户参与交易活动获取返佣；还可穿插P2P商户推荐、南亚区域专属活动等玩法解析，覆盖不同区域用户需求。",
   "last_updated": "2026-10-31T05:44:01.450461Z",
   "_feed_health": {
-    "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "fails": 3,
-      "last_fail": "2026-10-31T06:56:15.000846+00:00"
+    "CryptoPotato (山寨币/Meme热点)": {
+      "last_fail": "2026-10-31T06:27:00.294362+00:00",
+      "reset_at": "2026-10-31T06:56:14.844695+00:00",
+      "fails": 1
     },
     "ZyCrypto (新币与空投)": {
+      "last_fail": "2026-10-31T05:03:36.398927+00:00",
       "reset_at": "2026-10-31T06:56:14.598858+00:00",
-      "fails": 1,
-      "last_fail": "2026-10-31T05:03:36.398927+00:00"
-    },
-    "CryptoPotato (山寨币/Meme热点)": {
-      "reset_at": "2026-10-31T06:56:14.844695+00:00",
-      "fails": 1,
-      "last_fail": "2026-10-31T06:27:00.294362+00:00"
+      "fails": 1
     },
     "CoinJournal (山寨异动)": {
+      "last_fail": "2026-10-31T04:23:59.181248+00:00",
       "parked_until": "2026-10-31T10:23:59.181248+00:00",
-      "fails": 3,
-      "last_fail": "2026-10-31T04:23:59.181248+00:00"
+      "fails": 3
+    },
+    "Bitcoinist (比特币向)": {
+      "last_fail": "2026-10-31T06:56:15.000846+00:00",
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-31",
