@@ -1,16 +1,5 @@
 [
   {
-    "id": "8ff215edcf5f20b7",
-    "title": "Circle shareholder sues Trump, World Liberty and Steve Witkoff over crypto deals",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-22T22:45:04.106911+00:00",
-    "tokens": [
-      "USD1",
-      "USDC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d1e2762a832ff640",
     "title": "Mark Zuckerberg’s Meta AI Makes Outlandish XRP Price Claim",
     "source": "CryptoNews (全球快讯)",
@@ -5180,5 +5169,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "12f37a292c010aee",
+    "title": "Chainalysis:币安 64 亿攻击黑客利用 Tron DeFi 规避稳定币冻结",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-31T12:05:18.652586+00:00",
+    "tokens": [
+      "TRX"
+    ],
+    "lang": "zh-TW"
   }
 ]
