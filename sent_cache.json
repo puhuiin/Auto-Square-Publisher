@@ -1,16 +1,5 @@
 [
   {
-    "id": "a896d48b90a08716",
-    "title": "Uniswap v4 上线 Aggregator Hooks:聚合竞品流动性,外部路由协议费全额用于销毁 UNI",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-23T04:05:03.459608+00:00",
-    "tokens": [
-      "UNI",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9b789a528b08b69b",
     "title": "用别家的流动性,也能烧自己的币:Uniswap 开始争夺交易入口",
     "source": "深潮TechFlow (中文/简体)",
@@ -5172,6 +5161,16 @@
     "sent_at": "2026-10-31T17:26:28.315388+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "861e2c92a75d626c",
+    "title": "147% XRP Burn Rate Surge at 'Uptober' Close, but Price Stays Down",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-31T17:45:20.884506+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
