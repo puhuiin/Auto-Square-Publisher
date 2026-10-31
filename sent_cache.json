@@ -1,15 +1,5 @@
 [
   {
-    "id": "d8b42328360faaaf",
-    "title": "Is the XRP Price Heading for a Major Crash? Whale Inflows Hit a 7-Month High",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-22T15:04:21.082534+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "407a91c384952045",
     "title": "SpaceX-Tesla Merger: Passive Flows ‘Hack’, Could Bring More BTC Exposure to S&P 500",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5175,6 +5165,16 @@
     "sent_at": "2026-10-31T03:04:01.555972+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "10fd50a8e0f73113",
+    "title": "3 Shiba Inu (SHIB) Indicators Paint Worrying Picture: Where Can Its Price Drop?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-31T03:45:38.033642+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-CN"
   }
