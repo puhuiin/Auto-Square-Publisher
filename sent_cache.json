@@ -1,15 +1,5 @@
 [
   {
-    "id": "af35534a1e2dc71c",
-    "title": "New DeepSeek ban in US, Swiss-Asia crypto ties deepen: Asia Express",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-23T00:30:24.886847+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5e0e91468093a754",
     "title": "a16z 加密基金管理合伙人 Chris Dixon:我们为什么要将基金更名为 a16z Frontier?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5179,5 +5169,15 @@
       "TRX"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "fda473ae001f84ae",
+    "title": "XRP Ledger hits 14M AI agent transactions, but benefits unclear",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-31T14:06:49.654542+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
   }
 ]
