@@ -1,15 +1,5 @@
 [
   {
-    "id": "6b4bed4e60768083",
-    "title": "Bitcoin Falls 3.7% to Test $81,500 ETF Cost Basis",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-22T17:04:04.636405+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d5d888ab62c6557b",
     "title": "Dogecoin Labs Wants to Build the Economy Behind the Meme Coin’s $1 Rallying Cry",
     "source": "BeInCrypto (山寨与行情)",
@@ -5176,6 +5166,16 @@
     "tokens": [
       "ENA",
       "ARB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "f7d785e26764b34d",
+    "title": "Can IMX bulls hold on after selling pressure fuels daily losses of 12%?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-31T05:26:50.691923+00:00",
+    "tokens": [
+      "IMX"
     ],
     "lang": "zh-TW"
   }
