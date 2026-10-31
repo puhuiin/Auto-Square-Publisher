@@ -1,15 +1,5 @@
 [
   {
-    "id": "1a1e54ce312053cb",
-    "title": "JPMorgan Brings MONY and JLTXX Tokenized Funds to Solana",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-22T20:24:01.334125+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "61dd4dbbeca7932f",
     "title": "Zcash Foundation Details Zebra Sync Fixes Ahead Of NU7 Release",
     "source": "NewsBTC (比特币与山寨)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-10-31T09:08:44.789329+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "945c51d2fc814e68",
+    "title": "How can PEPE traders take advantage of conflicting momentum signals?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-10-31T09:25:52.318930+00:00",
+    "tokens": [
+      "PEPE"
     ],
     "lang": "zh-CN"
   }
