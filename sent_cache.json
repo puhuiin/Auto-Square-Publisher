@@ -1,15 +1,5 @@
 [
   {
-    "id": "66b4c9bd6d67c959",
-    "title": "Is Justin Sun positioning for PEPE? A 7.2 trillion memecoin transfer sparks intrigue",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-22T16:24:39.650708+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5baf136e471218f0",
     "title": "Ripple’s XRP at $1.3: Is a 6.8X Rally Next as Ledger Transaction Volume Explodes to $49.7 Billion?",
     "source": "ZyCrypto (新币与空投)",
@@ -5175,6 +5165,16 @@
     "sent_at": "2026-10-31T04:25:05.026810+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "39870cbcef89b837",
+    "title": "Aave reopens frozen markets but blocks new collateral loans",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-10-31T04:45:06.848528+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "zh-TW"
   }
