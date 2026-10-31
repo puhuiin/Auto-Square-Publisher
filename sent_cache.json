@@ -1,15 +1,5 @@
 [
   {
-    "id": "37b2ea793cea6a25",
-    "title": "Base Meme Summit 全纪录:股票 Meme、社区归属感和一场没人想散的派对",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-23T02:27:17.500441+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "838f739a61db53b8",
     "title": "Grayscale 公布加密资产收益率排名:HYPE 持有人收益率居首,CAKE 调整后盈利收益率最高",
     "source": "深潮TechFlow (中文/简体)",
@@ -5172,6 +5162,16 @@
     "tokens": [
       "XRP",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "dac9a95efbbb8fa3",
+    "title": "Strive CEO Matt Cole:比特币表现强于预期,言底尚早",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-31T16:06:56.749797+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
