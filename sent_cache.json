@@ -1,15 +1,5 @@
 [
   {
-    "id": "61dd4dbbeca7932f",
-    "title": "Zcash Foundation Details Zebra Sync Fixes Ahead Of NU7 Release",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-22T20:44:06.025006+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7d66786a9b7fe8e2",
     "title": "Sam Altman ChatGPT AI Predicts Something Huge on the Way for Quant (QNT)",
     "source": "CryptoNews (全球快讯)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-10-31T09:25:52.318930+00:00",
     "tokens": [
       "PEPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "43cbec6cafe318ea",
+    "title": "XRP Reserves on Binance Hit Lowest Level Since 2022",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-10-31T09:51:51.813988+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
