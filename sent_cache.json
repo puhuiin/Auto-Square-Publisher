@@ -1,15 +1,5 @@
 [
   {
-    "id": "0254fb498b79466b",
-    "title": "Solana Takes a Giant Leap With Its Biggest Network Upgrade Since 2020: Why Alpenglow Has SOL Bulls Excited",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-22T21:44:20.958519+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4b1813292c4c7053",
     "title": "Shiba Inu Founder Ryoshi May Be Gone for Good, Community Veteran Says; Can the Mystery Spark a SHIB Rally?",
     "source": "ZyCrypto (新币与空投)",
@@ -5179,5 +5169,15 @@
       "ARK"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "c9152d5b0b4af2c4",
+    "title": "HYPE Targets $120 as NYSE Owner Moves to Bring Hyperliquid Perpetual Futures to Regulated U.S. Markets",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-10-31T11:05:59.301730+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
