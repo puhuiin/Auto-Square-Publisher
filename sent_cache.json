@@ -1,15 +1,5 @@
 [
   {
-    "id": "115e7ba28da04f5a",
-    "title": "新加坡、马来西亚和泰国央行加入 BLOOM,推动跨境数字货币结算互操作",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-23T08:47:46.991429+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "1508a4c767a946cb",
     "title": "Crypto Whale Activity: $7.2M Flows Into 9 Altcoins as PUMP and ENA Face Selling Pressure",
     "source": "CryptoNews (全球快讯)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-10-31T19:06:21.364785+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "84caf38afc3b6418",
+    "title": "币安 SAFU 基金转出 7,499 枚 BTC,用于弥补被盗资产缺口",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-10-31T19:26:24.352205+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
