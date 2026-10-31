@@ -18,26 +18,30 @@
   "strategy_guidance": "今日截止的USD1持仓分WLFI与USD1奖励活动为最优先追更项，建议以活动最后冲刺提醒角度切入，引导用户抓住最后窗口参与持仓互动。可联动Halloween Pumpkin Frenzy 170万奖池活动、现货交易赛S10、新上线的PREDICT代币及TradFi永续合约、新增bStocks交易对等官方动态，输出活动参与指南、交易攻略类内容，引导读者参与活动互动、交易获取Write to Earn互动奖励与交易返佣。",
   "last_updated": "2026-10-30T17:24:11.991805Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "last_fail": "2026-10-31T04:23:59.181248+00:00",
-      "parked_until": "2026-10-31T10:23:59.181248+00:00",
-      "fails": 3
+    "ZyCrypto (新币与空投)": {
+      "fails": 1,
+      "last_fail": "2026-10-31T05:03:36.398927+00:00"
     },
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-10-31T04:43:30.426480+00:00",
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "fails": 3
+      "last_fail": "2026-10-31T05:03:37.004954+00:00",
+      "fails": 3,
+      "parked_until": "2026-10-20T06:53:53.228743+00:00"
+    },
+    "CoinJournal (山寨异动)": {
+      "last_fail": "2026-10-31T04:23:59.181248+00:00",
+      "fails": 3,
+      "parked_until": "2026-10-31T10:23:59.181248+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-10-31",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 522,
+  "_img_rot": 523,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
