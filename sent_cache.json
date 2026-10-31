@@ -1,15 +1,5 @@
 [
   {
-    "id": "29f11b6665091aee",
-    "title": "Will Ethereum (ETH) Rally or Crash After the US Midterms: 3 AIs Weigh in",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-23T03:25:21.437967+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "8d7cb42d98ef6efb",
     "title": "XRP Ledger’s Latest Fix Pushed to November After Voting Setback",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5172,6 +5162,16 @@
       "BTC",
       "ETH",
       "BNB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1853559f4d68af13",
+    "title": "b14g:约 9700 万枚 CORE 遭未授权提取,已暂停相关合约",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-31T17:04:06.193142+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
