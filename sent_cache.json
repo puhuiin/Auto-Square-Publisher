@@ -1,15 +1,5 @@
 [
   {
-    "id": "d1e2762a832ff640",
-    "title": "Mark Zuckerberg’s Meta AI Makes Outlandish XRP Price Claim",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-22T23:04:16.703479+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4a5ec52d74e47cb4",
     "title": "Dogecoin Expands Utility as Robinhood Memecoin Boom Reveals Crypto’s Biggest Adoption Engine",
     "source": "CryptoNews (全球快讯)",
@@ -5179,5 +5169,16 @@
       "TRX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "9ddba26d24a071ea",
+    "title": "STX Defies Altcoin Crash With Double-Digit Surge, BTC Stabilizes at $77K: Weekend Watch",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-10-31T12:28:11.717487+00:00",
+    "tokens": [
+      "STX",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
