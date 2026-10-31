@@ -1,15 +1,5 @@
 [
   {
-    "id": "66a5213102f415ac",
-    "title": "Circle股东起诉特朗普及WLFI指控其通过阿联酋相关加密交易牟利",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-22T14:26:36.312042+00:00",
-    "tokens": [
-      "WLFI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d8b42328360faaaf",
     "title": "Is the XRP Price Heading for a Major Crash? Whale Inflows Hit a 7-Month High",
     "source": "BeInCrypto (山寨与行情)",
@@ -5175,6 +5165,16 @@
     "sent_at": "2026-10-31T02:47:30.923599+00:00",
     "tokens": [
       "WLFI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3bc7edefcfdf665d",
+    "title": "比特币白皮书发布18周年:华尔街拥抱加密资产,去中心化初心面临考验",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-31T03:04:01.555972+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
