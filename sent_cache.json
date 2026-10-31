@@ -1,15 +1,5 @@
 [
   {
-    "id": "407a91c384952045",
-    "title": "SpaceX-Tesla Merger: Passive Flows ‘Hack’, Could Bring More BTC Exposure to S&P 500",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-22T15:24:42.023720+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6b43ef4dd96a0f8b",
     "title": "Matt Crosby: Bitcoin Is “Primed for a Big Move Higher”",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5177,5 +5167,15 @@
       "SHIB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "d6d53c9c2c2d30ff",
+    "title": "120 million TRX from the Binance hack moves to an unknown wallet",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-10-31T04:05:54.982083+00:00",
+    "tokens": [
+      "TRX"
+    ],
+    "lang": "zh-TW"
   }
 ]
