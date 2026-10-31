@@ -1,15 +1,5 @@
 [
   {
-    "id": "4d77f1252673daaf",
-    "title": "Bitcoin ETF Holders Pull $635 Million Before Price Even Hits Their Usual Breaking Point",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-23T07:49:07.504977+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "18483e050c5549eb",
     "title": "XRP Holders Hit a Record 8.24 Million, So Why Is the Price Still Sliding?",
     "source": "BeInCrypto (山寨与行情)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-10-31T18:24:40.070661+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "03e28fa7fe4cf0b1",
+    "title": "THORChain暂停意外延缓币安被盗资金洗钱进程",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-10-31T18:45:27.197897+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
