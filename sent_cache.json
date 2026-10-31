@@ -1,15 +1,5 @@
 [
   {
-    "id": "55eede82d15cc8e9",
-    "title": "Solana Mobile’s dApp Store passes 1,500 apps",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-22T17:44:24.160805+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ac47e65d32b3ecde",
     "title": "SEI price falls despite 155% RWA volume surge – Here’s why",
     "source": "AMBCrypto (技术与链上)",
@@ -5178,5 +5168,15 @@
       "AAVE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "2fe6e41521cc91c1",
+    "title": "何一回应币安偿付能力质疑:交易量、手续费及用户规模等数据均公开可查",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-10-31T06:29:11.227141+00:00",
+    "tokens": [
+      "BNB"
+    ],
+    "lang": "zh-CN"
   }
 ]
