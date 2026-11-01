@@ -1,15 +1,5 @@
 [
   {
-    "id": "a5490604021192e6",
-    "title": "Zcash falls 7.34% as its rebound stalls—Can $1,200 hold?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-23T19:04:27.612939+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4c4fa4af8d3a3247",
     "title": "Billionaire Investor Chamath Palihapitiya Says Bitcoin Will Eventually Be Hacked by AI and Go to Zero",
     "source": "ZyCrypto (新币与空投)",
@@ -5179,6 +5169,16 @@
       "ETH",
       "USDC",
       "UNI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a544a6796a63f988",
+    "title": "‘Uptober’ Flopped as BTC Tanked 7%: Will November Be Any Different?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-01T08:04:52.163719+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
