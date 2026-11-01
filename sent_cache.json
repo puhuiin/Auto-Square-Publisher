@@ -1,15 +1,5 @@
 [
   {
-    "id": "4c4fa4af8d3a3247",
-    "title": "Billionaire Investor Chamath Palihapitiya Says Bitcoin Will Eventually Be Hacked by AI and Go to Zero",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-23T19:25:07.513404+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "134e68c008c5c340",
     "title": "Pepe (PEPE) Rises 11% Daily: Further Pump or Correction on the Way?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5179,6 +5169,17 @@
     "sent_at": "2026-11-01T08:04:52.163719+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "594d8ffecfad16da",
+    "title": "Aave Expands Stock-Backed USDC Loans on Base for Eligible Investors",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-01T08:24:05.598282+00:00",
+    "tokens": [
+      "USDC",
+      "AAVE"
     ],
     "lang": "zh-CN"
   }
