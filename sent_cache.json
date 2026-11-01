@@ -1,15 +1,5 @@
 [
   {
-    "id": "f9f11e15404202a1",
-    "title": "Binance Coin (BNB) Bags Major Hong Kong Listing, Founder Reacts",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-23T17:46:29.858116+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1636deaf09d99b7f",
     "title": "Evernorth’s $132 million funding option could buy more XRP while reducing XRP per share",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5178,5 +5168,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d4b30e37fab10142",
+    "title": "XRP Drops Key 2026 Support but Is Not Finished Yet",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-01T06:36:54.219128+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
