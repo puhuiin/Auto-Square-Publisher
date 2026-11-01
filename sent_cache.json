@@ -1,15 +1,5 @@
 [
   {
-    "id": "ab53c7d0d93c8ad6",
-    "title": "Hyperliquid Strategies expands stock buyback program to $100M as PURR shares fall over 30%",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-23T22:25:47.961347+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a733d651c0d1aae0",
     "title": "XRP Price May Benefit From XRPL Success, Ripple CTO Says",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5186,5 +5176,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "d3a0321e5d26aff4",
+    "title": "Why Didn't Bitcoin Drop More? Binance's CZ Credits FBI",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-01T11:46:13.279620+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
