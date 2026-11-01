@@ -1,17 +1,5 @@
 [
   {
-    "id": "ac8c7a10da23e8ae",
-    "title": "Solayer Pay Adds Five Blockchain Networks For Direct Stablecoin Card Deposits",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-24T01:27:36.057412+00:00",
-    "tokens": [
-      "BNB",
-      "SOL",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1e26a7824fc89cc4",
     "title": "Franklin Templeton Buys XRP Despite Bearish Price Reversal",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5187,6 +5175,16 @@
     "tokens": [
       "RLUSD",
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "390da7b9352a2c78",
+    "title": "499 Billion SHIB Dumped by Binance Hacker, Yet Price Absorbs It",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-01T14:50:52.081815+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
