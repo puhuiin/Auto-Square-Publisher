@@ -1,16 +1,5 @@
 [
   {
-    "id": "0e3fc92ccccf37ac",
-    "title": "Swiss Regulator Approves First Domestic Spot Bitcoin ETF Under Fund Law",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-24T07:44:47.532855+00:00",
-    "tokens": [
-      "BTC",
-      "PENGU"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b2b67a37f78af1b9",
     "title": "Bitcoin Core changes security rules as AI makes finding code bugs dangerously easy",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5188,6 +5177,16 @@
     "sent_at": "2026-11-01T18:25:21.291433+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d74ba20ab5caaf88",
+    "title": "XRP Tests Critical $1.25 Support as Liquidation Map Reveals Local Bottom",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-01T18:44:27.731142+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
