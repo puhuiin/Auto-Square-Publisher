@@ -1,15 +1,5 @@
 [
   {
-    "id": "44d093cdfc8a5bd9",
-    "title": "DOGE Launches Its Own Company, ‘Dogecoin Labs,’ to Build Beyond the Meme",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-23T20:05:56.755399+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6c18975a72fdc3ec",
     "title": "Ripple’s XRP Risks Losing Spot Among Top 10 Cryptos by 2030 Unless This Crucial Shift Happens, Pundit Warns",
     "source": "ZyCrypto (新币与空投)",
@@ -5183,5 +5173,16 @@
       "LINK"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "b9e5c7ca94e4a6cf",
+    "title": "Uphold RLUSD Earn vs. Ethena Pay Earn+: Lending and Leverage Compared",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-01T09:04:38.156963+00:00",
+    "tokens": [
+      "RLUSD",
+      "ENA"
+    ],
+    "lang": "zh-CN"
   }
 ]
