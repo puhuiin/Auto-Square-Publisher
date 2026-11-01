@@ -1,15 +1,5 @@
 [
   {
-    "id": "87ff4101bc86edc8",
-    "title": "Cardano (ADA) Eyes 20% Move as Rising Channel Pattern Faces Critical Test",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-24T12:05:13.316087+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "522a73aebddd68bf",
     "title": "Bitcoin Core Speeds Up Bug Fixes As AI Changes Disclosure Rules",
     "source": "NewsBTC (比特币与山寨)",
@@ -5188,5 +5178,16 @@
       "ZKP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "32a309de7301a739",
+    "title": "What Is RLUSD? Ripple’s Stablecoin Backing and Redemption Explained",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-01T22:25:00.455014+00:00",
+    "tokens": [
+      "RLUSD",
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
