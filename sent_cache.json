@@ -1,15 +1,5 @@
 [
   {
-    "id": "f9bb70c9eb036dc8",
-    "title": "Can DASH crypto rally further after a 77% surge in Futures volume?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-24T00:05:11.394871+00:00",
-    "tokens": [
-      "DASH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "10ca1ab456f7f144",
     "title": "Shiba Inu (SHIB), Dogecoin (DOGE), XRP and Binance Coin (BNB) Price Analysis for Oct. 24: Can Bullish Pace Be Preserved?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-01T13:06:20.391140+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6eab7b754f05a51d",
+    "title": "1.8 Billion XRP Moves in Just 24 Hours as XRP Ledger Shows Signs of Recovery",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-01T13:26:33.024349+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
