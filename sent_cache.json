@@ -1,15 +1,5 @@
 [
   {
-    "id": "bab51c5d441acc1b",
-    "title": "Arbitrum Proposal Would Reopen Stylus Activations With Foundation Sign-Off",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-23T23:44:40.043851+00:00",
-    "tokens": [
-      "ARB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f9bb70c9eb036dc8",
     "title": "Can DASH crypto rally further after a 77% surge in Futures volume?",
     "source": "AMBCrypto (技术与链上)",
@@ -5188,6 +5178,16 @@
       "ZEC",
       "SUI",
       "GRAM"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a8d1fb3ef31df5a3",
+    "title": "Zcash (ZEC) Hits $1,280 Milestone but Fight Over Grant Money Sparks Whale Revolt",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-01T13:06:20.391140+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
