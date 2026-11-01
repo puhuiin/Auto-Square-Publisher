@@ -1,16 +1,5 @@
 [
   {
-    "id": "0d48514265bad127",
-    "title": "Bitcoin steadies near $81,700 as altcoins rebound, pepe climbs 13%",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-10-23T16:27:23.338433+00:00",
-    "tokens": [
-      "BTC",
-      "PEPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "29a73ec05637c2e3",
     "title": "Shiba Inu Exchange Netflow Hits 77 Billion SHIB in 24 Hours",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5177,6 +5166,16 @@
       "BTC",
       "ETH",
       "BNB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "1445e57db966721f",
+    "title": "约40.05万美元资产被盗,Premia Labs在Arbitrum上的协议持续遭攻击",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-01T04:48:30.652094+00:00",
+    "tokens": [
+      "ARB"
     ],
     "lang": "zh-TW"
   }
