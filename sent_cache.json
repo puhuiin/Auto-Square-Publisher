@@ -1,15 +1,5 @@
 [
   {
-    "id": "05e8cee2d7d55c97",
-    "title": "HIVE commits more than $250 million to build an AI hub in Paraguay",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-24T09:28:21.787214+00:00",
-    "tokens": [
-      "HIVE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "355bacbd467fff9b",
     "title": "美国 SEC 股票代币化豁免规则引发争议,Solana、Hedera 等就公链准入标准提出不同意见",
     "source": "深潮TechFlow (中文/简体)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-01T19:44:00.657825+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7375944abf7522d8",
+    "title": "XRP 锁定(in escrow at Ripple)约 1.25 亿美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-01T20:04:11.679108+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
