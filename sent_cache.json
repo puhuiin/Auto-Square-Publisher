@@ -1,15 +1,5 @@
 [
   {
-    "id": "dc00153d5f933642",
-    "title": "56 Billion Shiba Inu (SHIB) Added in 24 Hours Amid Recovery Above $0.000005",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-24T03:25:11.201491+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "25f94482a4c06e38",
     "title": "彭博社:加密相关预测合约周名义交易量达 27 亿美元,创历史新高",
     "source": "吴说区块链 (中文深度)",
@@ -5184,6 +5174,16 @@
     "sent_at": "2026-11-01T16:44:43.566777+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6a9e4a012cad6b93",
+    "title": "何一提醒用户警惕利用GRAM转账冒充币安官方的诈骗",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-01T17:04:54.699884+00:00",
+    "tokens": [
+      "GRAM"
     ],
     "lang": "en"
   }
