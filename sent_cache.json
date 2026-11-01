@@ -1,15 +1,5 @@
 [
   {
-    "id": "a733d651c0d1aae0",
-    "title": "XRP Price May Benefit From XRPL Success, Ripple CTO Says",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-23T22:44:16.114980+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "525b1bcf84330afe",
     "title": "Aave changes USDT borrowing rules and loan costs suddenly jump",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5186,5 +5176,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "bf20f398d54e08b9",
+    "title": "Binance Resumes Crypto Withdrawals After Record Hack, 95% of Losses Covered",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-01T12:07:06.114407+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
