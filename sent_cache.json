@@ -1,16 +1,5 @@
 [
   {
-    "id": "c41cf79ee4526547",
-    "title": "Upbit 将上线 BMT 韩元交易对,今日 11:00 开放交易",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-24T02:48:27.110013+00:00",
-    "tokens": [
-      "BMT",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "dc00153d5f933642",
     "title": "56 Billion Shiba Inu (SHIB) Added in 24 Hours Amid Recovery Above $0.000005",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5183,6 +5172,16 @@
     "title": "Bitcoin ETF Investors Head for the Exits After Record Binance Hack",
     "source": "Decrypt (Web3/AI/Meme)",
     "sent_at": "2026-11-01T16:09:13.217228+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "aeeece5514dd8cc4",
+    "title": "OneKey founder warns BlackRock’s Bitcoin ETF could be a North Korean target",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-01T16:44:43.566777+00:00",
     "tokens": [
       "BTC"
     ],
