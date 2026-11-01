@@ -1,15 +1,5 @@
 [
   {
-    "id": "a69abfe8a9120ce3",
-    "title": "75% XRP Burn Rate Surge Prints Bullish Outlook for Price",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-24T11:05:07.445653+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6acc80433034d262",
     "title": "Uniswap Sees Biggest Wallet Surge in 4 Years. Will UNI Rally?",
     "source": "BeInCrypto (山寨与行情)",
@@ -5186,6 +5176,16 @@
       "USDC",
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2c6a5cb10de96056",
+    "title": "Cardano Warns of Critical Linux Flaw: Is Your ADA at Risk?",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-01T21:24:28.650739+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
