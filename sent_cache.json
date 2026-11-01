@@ -1,15 +1,5 @@
 [
   {
-    "id": "f57b1e942a780e1d",
-    "title": "Cardano Gains 1.7M New Traders Thanks to Pump.fun Integration Amid Midnight’s 2027 Block Production Shift",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-24T12:45:49.686571+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "6e682b6014de6cb5",
     "title": "持仓价值较峰值回撤约1870万美元,Bonk Guy当前持仓约890万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5189,5 +5179,15 @@
       "TRX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "789f4c0c41258d49",
+    "title": "Crypto market’s weekly winners and losers – HYPE, ANI, BTW, FUN",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-01T23:04:04.312875+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
