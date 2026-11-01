@@ -1,15 +1,5 @@
 [
   {
-    "id": "801b71d836d3f5ec",
-    "title": "马斯克以 4.46 亿美元领跑美国中期选举个人捐助者,Coinbase 等加密企业跻身主要捐助方",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-23T14:44:09.749027+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5dd08829914d9bde",
     "title": "Securitize lists Apple, Nvidia, Tesla as tokens on Solana platform",
     "source": "Crypto Briefing (深度与研报)",
@@ -5174,6 +5164,16 @@
       "BTC",
       "ETH",
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c2468bd29497edf8",
+    "title": "Bloomberg:币安遭黑客攻击后组建百人应急小组,部分员工担忧年终奖金",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-01T03:24:19.833242+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
