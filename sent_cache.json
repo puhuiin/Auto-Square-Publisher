@@ -1,15 +1,5 @@
 [
   {
-    "id": "251a90795937d2cd",
-    "title": "Bitcoin Rejected at $85K as Macro Pressure Mounts and FOMC Looms: Weekly Crypto Recap",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-23T17:06:37.239688+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3fc9fc94746604b4",
     "title": "今日加密货币市值前 100 代币涨跌:PEPE 涨 9.86%,LIT 跌 7.41%",
     "source": "深潮TechFlow (中文/简体)",
@@ -5176,6 +5166,18 @@
     "sent_at": "2026-11-01T05:08:09.016837+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "fc878e76fd961c62",
+    "title": "Premia Labs 遭攻击损失约 46 万美元,被盗资金跨链后兑换为 BTC",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-01T05:28:48.134958+00:00",
+    "tokens": [
+      "BTC",
+      "ARB",
+      "ETH"
     ],
     "lang": "zh-TW"
   }
