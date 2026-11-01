@@ -1,15 +1,5 @@
 [
   {
-    "id": "fd948f1077f74b86",
-    "title": "XRP to $2 Delayed? Why Bollinger Bands Warn Ripple Bulls to Wait 2 Years",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-24T04:24:55.137785+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "cd5de6155337b759",
     "title": "黃仁勳上台秀機器鴨,Microduck 預購已近兩萬台",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5188,6 +5178,16 @@
     "tokens": [
       "SOL",
       "TRX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7be73b20c2a28445",
+    "title": "Mark Zuckerberg’s Meta AI Predicts an XRP Explosion as Binance Resumes Withdrawals Following Hack",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-01T18:04:44.769699+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
