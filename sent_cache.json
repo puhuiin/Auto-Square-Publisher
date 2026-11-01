@@ -1,16 +1,5 @@
 [
   {
-    "id": "661b7f14a0b3d2f1",
-    "title": "JST 回购销毁机制全新升级:新增 GasFree 收入并注入 2034 万美元存量资金,JUST 三大业务共筑 JST 价值新底座",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-23T16:04:31.296523+00:00",
-    "tokens": [
-      "JST",
-      "TRX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0d48514265bad127",
     "title": "Bitcoin steadies near $81,700 as altcoins rebound, pepe climbs 13%",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5176,6 +5165,18 @@
     "tokens": [
       "USDC",
       "UNI"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "60519762dfc968de",
+    "title": "币安:计划于今日14时至17时恢复第一阶段提现服务",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-01T04:28:35.921709+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "BNB"
     ],
     "lang": "zh-TW"
   }
