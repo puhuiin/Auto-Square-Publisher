@@ -1,15 +1,5 @@
 [
   {
-    "id": "9a45269d808b2287",
-    "title": "Initia halts blockchain after exploit reportedly drains over $2.6M",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-24T04:04:35.003017+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "fd948f1077f74b86",
     "title": "XRP to $2 Delayed? Why Bollinger Bands Warn Ripple Bulls to Wait 2 Years",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5187,6 +5177,17 @@
       "TRX",
       "ETH",
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e07552bdef25663a",
+    "title": "Binance-Hack Launderers Reach Solana After Draining $500 Million on Tron, Chainalysis Says",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-01T17:44:00.471380+00:00",
+    "tokens": [
+      "SOL",
+      "TRX"
     ],
     "lang": "en"
   }
