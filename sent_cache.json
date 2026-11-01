@@ -1,15 +1,5 @@
 [
   {
-    "id": "4a0f3ab438a8da17",
-    "title": "Switzerland’s Bitcoin ETF Is More Important Than It Looks: Here’s Why",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-24T10:26:03.926718+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f5e2800c91e5e8bf",
     "title": "Initia:MoveVM 漏洞导致约 270 万美元资产被盗,正推进漏洞修复及资产追回工作",
     "source": "深潮TechFlow (中文/简体)",
@@ -5185,6 +5175,17 @@
     "sent_at": "2026-11-01T20:27:18.190508+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "68ba2a54709b2c93",
+    "title": "Chainlink Goes Live on Stellar, Unlocking DeFi Applications Across the $4B RWA Ecosystem",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-01T20:44:22.943715+00:00",
+    "tokens": [
+      "LINK",
+      "XLM"
     ],
     "lang": "en"
   }
