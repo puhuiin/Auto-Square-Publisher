@@ -1,15 +1,5 @@
 [
   {
-    "id": "cd5de6155337b759",
-    "title": "黃仁勳上台秀機器鴨,Microduck 預購已近兩萬台",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-10-24T04:44:13.850175+00:00",
-    "tokens": [
-      "GTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0e3fc92ccccf37ac",
     "title": "Swiss Regulator Approves First Domestic Spot Bitcoin ETF Under Fund Law",
     "source": "NewsBTC (比特币与山寨)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-01T18:04:44.769699+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fa41ee74bc70905e",
+    "title": "Anthropic’s Claude AI Predicts a Seismic BNB Move Post-Binance Hack",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-01T18:25:21.291433+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
