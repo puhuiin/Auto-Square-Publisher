@@ -1,15 +1,5 @@
 [
   {
-    "id": "d9726d53585a220b",
-    "title": "富兰克林邓普顿提交 8-A 注册比特币相关 ETF 拟纳市上市",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-24T02:07:34.422026+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b87bde1c05e6a242",
     "title": "Stellar (XLM) Makes History With First Repo Backed by U.S. Debt",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5185,6 +5175,16 @@
     "sent_at": "2026-11-01T15:26:50.430692+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ebeac31089162a74",
+    "title": "Solana Walks a Tightrope as ETF Outflows Persist and Spot Volume Turns “Heating”",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-01T15:47:03.357867+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
