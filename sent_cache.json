@@ -1,15 +1,5 @@
 [
   {
-    "id": "4e697628e8fa78d9",
-    "title": "XRP Once Exploded 62,000% After Two Years of Stagnation — Why Patience Could Pay Again",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-23T23:24:49.525264+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "bab51c5d441acc1b",
     "title": "Arbitrum Proposal Would Reopen Stylus Activations With Foundation Sign-Off",
     "source": "The Defiant (DeFi 深度)",
@@ -5188,5 +5178,17 @@
       "AVAX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d9a55c1e0f332210",
+    "title": "Binance 恢复 ZEC、TON 及 SUI 网络部分资产提现",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-01T12:44:48.592529+00:00",
+    "tokens": [
+      "ZEC",
+      "SUI",
+      "GRAM"
+    ],
+    "lang": "zh-CN"
   }
 ]
