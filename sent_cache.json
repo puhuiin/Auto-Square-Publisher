@@ -1,15 +1,5 @@
 [
   {
-    "id": "3ef097ae1de027af",
-    "title": "Bitwise Dogecoin ETF Reaches Scheduled Liquidation As Holders Face Cash Redemption",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-23T21:24:58.418071+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "033cb17c685ee0fe",
     "title": "Midnight crypto slips below $0.04—How much of NIGHT’s rally remains?",
     "source": "AMBCrypto (技术与链上)",
@@ -5185,5 +5175,15 @@
       "SEI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "af91f09e13e6cbe9",
+    "title": "Worldcoin is ‘squeezed tight,’ says analyst – Can WLD escape its downtrend?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-01T10:29:30.560300+00:00",
+    "tokens": [
+      "WLD"
+    ],
+    "lang": "zh-TW"
   }
 ]
