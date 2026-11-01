@@ -1,15 +1,5 @@
 [
   {
-    "id": "522a73aebddd68bf",
-    "title": "Bitcoin Core Speeds Up Bug Fixes As AI Changes Disclosure Rules",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-24T12:26:36.479758+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f57b1e942a780e1d",
     "title": "Cardano Gains 1.7M New Traders Thanks to Pump.fun Integration Amid Midnight’s 2027 Block Production Shift",
     "source": "ZyCrypto (新币与空投)",
@@ -5187,6 +5177,16 @@
     "tokens": [
       "RLUSD",
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "21c4687395f649cc",
+    "title": "Cambodia’s Casino Crackdown Hasn’t Stopped $1.07 Billion in Crypto Flows",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-01T22:46:54.242921+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "zh-TW"
   }
