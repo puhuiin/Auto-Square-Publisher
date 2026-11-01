@@ -1,15 +1,5 @@
 [
   {
-    "id": "b2b67a37f78af1b9",
-    "title": "Bitcoin Core changes security rules as AI makes finding code bugs dangerously easy",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-10-24T08:05:10.978295+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "33a25960db02ff53",
     "title": "Here’s why XRP’s price recovery faces threat from surge in whale inflows",
     "source": "AMBCrypto (技术与链上)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-01T18:44:27.731142+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fc1cd396dca32500",
+    "title": "恶意应用在Solana DApp Store展示约1小时后下架,曾索要用户助记词",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-01T19:04:32.757573+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }

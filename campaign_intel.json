@@ -19,9 +19,9 @@
   "last_updated": "2026-11-01T18:24:13.405229Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3,
-      "last_fail": "2026-11-01T18:43:30.539220+00:00"
+      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "last_fail": "2026-11-01T19:03:33.288014+00:00"
     }
   },
   "_fallback_image": {
@@ -37,7 +37,7 @@
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 584,
+  "_img_rot": 585,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
