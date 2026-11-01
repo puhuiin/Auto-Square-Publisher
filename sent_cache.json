@@ -1,15 +1,5 @@
 [
   {
-    "id": "06eaee2119aeca49",
-    "title": "Cardano Foundation Pushes Back on New MiCA Rules for DeFi and Staking",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-23T21:04:16.029450+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3ef097ae1de027af",
     "title": "Bitwise Dogecoin ETF Reaches Scheduled Liquidation As Holders Face Cash Redemption",
     "source": "NewsBTC (比特币与山寨)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-01T09:44:31.737847+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e533f74cec44504f",
+    "title": "What Are Perpetual Funding Rates? A Worked SEI Example",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-01T10:03:58.706937+00:00",
+    "tokens": [
+      "SEI"
     ],
     "lang": "zh-CN"
   }
