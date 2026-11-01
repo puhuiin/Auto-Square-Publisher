@@ -1,15 +1,5 @@
 [
   {
-    "id": "795ba6603be5f20b",
-    "title": "Swell暂停swETH与rswETH充提,待净值恢复正确值",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-24T08:53:59.376962+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "05e8cee2d7d55c97",
     "title": "HIVE commits more than $250 million to build an AI hub in Paraguay",
     "source": "Crypto Briefing (深度与研报)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-01T19:26:10.924504+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a99fa19e3e27ab11",
+    "title": "SomaXBT:币安黑客经波场洗钱约 2.42 亿美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-01T19:44:00.657825+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "en"
   }
