@@ -1,18 +1,5 @@
 [
   {
-    "id": "10ca1ab456f7f144",
-    "title": "Shiba Inu (SHIB), Dogecoin (DOGE), XRP and Binance Coin (BNB) Price Analysis for Oct. 24: Can Bullish Pace Be Preserved?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-24T00:25:07.241303+00:00",
-    "tokens": [
-      "SHIB",
-      "DOGE",
-      "XRP",
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "bebc9e824d7b431d",
     "title": "Arbitrum 宪法级提案拟恢复 One 上 Stylus 合约激活",
     "source": "吴说区块链 (中文深度)",
@@ -5188,6 +5175,17 @@
     "sent_at": "2026-11-01T13:26:33.024349+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a28211bd6690fd13",
+    "title": "Binance hacker sells 908,793 PROM worth $5M for $71 on Uniswap V2",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-01T13:47:45.035135+00:00",
+    "tokens": [
+      "PROM",
+      "UNI"
     ],
     "lang": "zh-CN"
   }
