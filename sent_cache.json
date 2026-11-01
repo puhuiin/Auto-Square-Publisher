@@ -1,15 +1,5 @@
 [
   {
-    "id": "3b652abab9ea9374",
-    "title": "JPMorgan Expands Tokenized Money Market Funds To Solana",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-23T22:06:29.368582+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ab53c7d0d93c8ad6",
     "title": "Hyperliquid Strategies expands stock buyback program to $100M as PURR shares fall over 30%",
     "source": "Crypto Briefing (深度与研报)",
@@ -5186,5 +5176,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "90d2f760fd22fa1b",
+    "title": "'Hard to Be Bearish Here': Trader Who Predicted 700% XRP Rally Breaks Down Current Setup",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-01T11:24:23.192534+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
