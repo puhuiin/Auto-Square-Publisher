@@ -1,15 +1,5 @@
 [
   {
-    "id": "bebc9e824d7b431d",
-    "title": "Arbitrum 宪法级提案拟恢复 One 上 Stylus 合约激活",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-24T00:47:26.316339+00:00",
-    "tokens": [
-      "ARB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e1466347f3c0820d",
     "title": "富兰克林邓普顿拟推出两只美股与比特币混合 ETF,95% 配置股票、5% 配置比特币",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,5 +5178,15 @@
       "UNI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "d4937f53a9d76a98",
+    "title": "“Hard To Be Bearish Here” — Analyst Who Nailed XRP’s 700% Surge Turns Giga Bullish After Spotting Rare 2022 FTX Bottom Signal",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-01T14:09:13.626002+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
   }
 ]
