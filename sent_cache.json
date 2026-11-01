@@ -1,15 +1,5 @@
 [
   {
-    "id": "134e68c008c5c340",
-    "title": "Pepe (PEPE) Rises 11% Daily: Further Pump or Correction on the Way?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-23T19:45:03.780743+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "44d093cdfc8a5bd9",
     "title": "DOGE Launches Its Own Company, ‘Dogecoin Labs,’ to Build Beyond the Meme",
     "source": "ZyCrypto (新币与空投)",
@@ -5182,5 +5172,16 @@
       "AAVE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "79ec0aad6c7c3c09",
+    "title": "Further Asset Management Taps Chainlink ACE for Abu Dhabi Compliance Platform",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-01T08:44:30.732243+00:00",
+    "tokens": [
+      "ACE",
+      "LINK"
+    ],
+    "lang": "zh-TW"
   }
 ]
