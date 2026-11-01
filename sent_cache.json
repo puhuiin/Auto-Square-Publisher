@@ -1,15 +1,5 @@
 [
   {
-    "id": "33a25960db02ff53",
-    "title": "Here’s why XRP’s price recovery faces threat from surge in whale inflows",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-24T08:25:22.583442+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "795ba6603be5f20b",
     "title": "Swell暂停swETH与rswETH充提,待净值恢复正确值",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5185,6 +5175,16 @@
     "title": "恶意应用在Solana DApp Store展示约1小时后下架,曾索要用户助记词",
     "source": "Odaily星球日报 (中文快讯)",
     "sent_at": "2026-11-01T19:04:32.757573+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "165cdef92cc27eb6",
+    "title": "Solana Mobile:恶意应用索要助记词,已从应用商店下架",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-01T19:26:10.924504+00:00",
     "tokens": [
       "SOL"
     ],
