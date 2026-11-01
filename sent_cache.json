@@ -1,15 +1,5 @@
 [
   {
-    "id": "21bcbbebeca586d2",
-    "title": "Cysic 计划销毁 720 万枚 CYS,以抵消此前未经授权增发",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-23T14:04:47.179608+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c35e6fff233f53a7",
     "title": "Shiba Inu Community Seeks Elon Musk's Attention Amid Wrong BONE Token on X",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5173,5 +5163,16 @@
       "ADA"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "8349a7ba48c46a88",
+    "title": "Will Solana expansion fuel ONDO’s price hike back above $0.50?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-01T01:10:02.389651+00:00",
+    "tokens": [
+      "ONDO",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
