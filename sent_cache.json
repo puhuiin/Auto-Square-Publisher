@@ -1,15 +1,5 @@
 [
   {
-    "id": "6c18975a72fdc3ec",
-    "title": "Ripple’s XRP Risks Losing Spot Among Top 10 Cryptos by 2030 Unless This Crucial Shift Happens, Pundit Warns",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-23T20:24:15.448564+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a066fe3e6dd33b6e",
     "title": "Ripple CEO Brad Garlinghouse Mourns Loss of Father",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5182,6 +5172,17 @@
     "tokens": [
       "RLUSD",
       "ENA"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "cda582b3185e23a0",
+    "title": "XPL闪崩引发多头连环清算,Hyperliquid HLP金库接盘并亏损55.6万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-01T09:24:10.184464+00:00",
+    "tokens": [
+      "XPL",
+      "USDC"
     ],
     "lang": "zh-CN"
   }
