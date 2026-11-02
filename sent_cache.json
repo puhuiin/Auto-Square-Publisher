@@ -1,16 +1,5 @@
 [
   {
-    "id": "3ccbe03083f9b216",
-    "title": "主要Meme市场24小时成交额降至1.68亿美元,环比下滑18.8%",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-25T02:26:44.909538+00:00",
-    "tokens": [
-      "BNB",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "adbd33678d55529f",
     "title": "Bitcoin – Why Coinbase warns BTC could fall to $75K amid macro risks",
     "source": "AMBCrypto (技术与链上)",
@@ -5200,5 +5189,15 @@
       "TIA"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "29d7c5daf5d7a31d",
+    "title": "Four Pillars 研报:美国证券清算中枢 DTCC 把美股美债搬上链,眼下只解决了抵押品全天候调拨",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T11:29:21.971743+00:00",
+    "tokens": [
+      "XLM"
+    ],
+    "lang": "zh-CN"
   }
 ]
