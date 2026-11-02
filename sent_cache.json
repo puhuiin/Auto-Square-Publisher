@@ -1,15 +1,5 @@
 [
   {
-    "id": "8128ba373891df2c",
-    "title": "Strategy、Strive等通过优先股融资支持购入135,979枚比特币,占最大供应量逾0.5%",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-24T18:46:13.787629+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1f70a9e5047ddece",
     "title": "Worldcoin price prediction — What next after $4.7M long liquidation flush fuels 13% fall?",
     "source": "AMBCrypto (技术与链上)",
@@ -5195,5 +5185,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "0852b12aa37e2bce",
+    "title": "Vitalik 的数字极简实验:100 天不用手机流量,告别算法推荐,重新夺回注意力",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T06:45:11.592651+00:00",
+    "tokens": [
+      "ETH",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]

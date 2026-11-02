@@ -4,34 +4,30 @@
     "#BinanceSquare",
     "#TradingTournament",
     "#HalloweenFrenzy",
-    "#Futures"
+    "#P2P"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$USDC",
     "$XRP",
-    "$PREDICT",
-    "$APPB",
     "$SPCXB",
-    "$SKUUB"
+    "$PREDICT",
+    "$RLUSD",
+    "$AAPLB",
+    "$NVDAB"
   ],
-  "strategy_guidance": "当前Halloween Pumpkin Frenzy活动进入最后冲刺阶段，发帖机器人优先产出活动参与技巧、战绩复盘类内容绑定活动热度。同时结合新上线的TradFi USDⓈ-Margined永续合约、新增bStocks交易对、Spot Trading Tournament Season 10及Region-Exclusive Referral Rush 2026等官方动态，引导读者参与对应品类交易互动、完成Write to Earn任务获取激励，带动交易返佣。",
-  "last_updated": "2026-11-01T18:24:13.405229Z",
+  "strategy_guidance": "当前万圣节主题的Halloween Pumpkin Frenzy因契合近期节点热度最高且临近活动尾声，建议优先输出该活动的参与复盘、冲刺技巧类内容追贴，引导用户互动评论；日常发帖可结合新上线的$PREDICT、新增bStocks交易对、新期货合约、各档Spot交易竞赛及P2P专属活动等官方热点，引导用户参与讨论互动获取Write to Earn奖励，提升内容曝光。",
+  "last_updated": "2026-11-02T06:44:17.757049Z",
   "_feed_health": {
-    "ZyCrypto (新币与空投)": {
-      "last_fail": "2026-11-02T00:43:32.313696+00:00",
-      "reset_at": "2026-11-02T06:23:29.948640+00:00",
-      "fails": 1
-    },
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-11-02T06:23:30.501578+00:00",
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "fails": 3
+      "last_fail": "2026-11-02T06:44:19.223758+00:00",
+      "fails": 3,
+      "parked_until": "2026-10-20T06:53:53.228743+00:00"
     },
     "CoinJournal (山寨异动)": {
       "last_fail": "2026-11-02T04:04:00.555806+00:00",
-      "parked_until": "2026-11-02T10:04:00.555806+00:00",
-      "fails": 3
+      "fails": 3,
+      "parked_until": "2026-11-02T10:04:00.555806+00:00"
     }
   },
   "_fallback_image": {
