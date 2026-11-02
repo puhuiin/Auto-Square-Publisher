@@ -1,16 +1,5 @@
 [
   {
-    "id": "18e1dd64d15e5175",
-    "title": "Mastercard Praises Ripple's RLUSD Stablecoin",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-25T08:44:37.625682+00:00",
-    "tokens": [
-      "RLUSD",
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5d7dfdbbd1feb190",
     "title": "Peter Schiff’s ‘$75K Bitcoin call’ meets a vital week: Fed, inflation, and ETF outflows loom",
     "source": "AMBCrypto (技术与链上)",
@@ -5201,6 +5190,16 @@
     "title": "Brazil's Largest Exchange Mercado Bitcoin Halts Withdrawals After $40 Million Hack",
     "source": "Decrypt (Web3/AI/Meme)",
     "sent_at": "2026-11-02T17:28:41.638543+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "647c3a12b92e927e",
+    "title": "3 Signals That Could Shape Bitcoin’s Next Move After Binance Hack",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-02T18:04:55.457812+00:00",
     "tokens": [
       "BTC"
     ],
