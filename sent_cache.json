@@ -1,15 +1,5 @@
 [
   {
-    "id": "4c2ea87b2855ce54",
-    "title": "$0 SHIB Burned in 24 Hours: What's Happening to Burns?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-24T14:24:07.033513+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "dc1c66c1b651e1f2",
     "title": "TechFlow 情报局:iPhone Duo 开售当日被加州团队越狱,Initia 遭攻击紧急停机",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,5 +5179,17 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e8cd3b8dbb05dc28",
+    "title": "当代币持有时间只剩几秒,什么样的加密资产还能活过下一个周期?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T01:25:06.158235+00:00",
+    "tokens": [
+      "BTC",
+      "ZEC",
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
