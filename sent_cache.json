@@ -1,15 +1,5 @@
 [
   {
-    "id": "f406ac4773f71182",
-    "title": "ElizaOS 创始人 Shaw 称已完成 Pump fun 合约约 90% 的逆向工程,计划公开研究成果",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-25T07:44:58.105531+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "19772f6b47349040",
     "title": "Bitcoin ETF Week Stays Positive After Nearly $774 Million In Late Outflows",
     "source": "NewsBTC (比特币与山寨)",
@@ -5202,6 +5192,17 @@
       "ETH",
       "BTC",
       "PEPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5407744914f795c4",
+    "title": "6.7 Million Stellar (XLM) Stolen in Massive $40 Million Mercado Bitcoin Breach",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-02T16:49:04.903254+00:00",
+    "tokens": [
+      "XLM",
+      "BTC"
     ],
     "lang": "en"
   }
