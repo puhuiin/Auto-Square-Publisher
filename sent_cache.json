@@ -1,15 +1,5 @@
 [
   {
-    "id": "db08d27aca38237b",
-    "title": "Ethereum Staking Demand Is Skyrocketing Even as Yields Sink Toward 2.5%",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-24T13:24:22.390969+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2603dac340baf127",
     "title": "Bitcoin Faces Make-or-Break Weekend as Market Crash Fears Grow",
     "source": "BeInCrypto (山寨与行情)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-02T00:04:31.476763+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9db21d5854b8ac0c",
+    "title": "Anza Urges Solana Validators to Act on Critical Linux Flaw",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-02T00:26:39.672529+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
