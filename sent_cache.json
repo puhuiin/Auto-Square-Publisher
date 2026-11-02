@@ -1,15 +1,5 @@
 [
   {
-    "id": "199d5ac6209e9baa",
-    "title": "PEPE reclaims $2B market cap – Can memecoin FOMO lift altcoins?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-25T03:04:34.592370+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "c576f989fbd0431f",
     "title": "2026年唯一获引进区块链基础设施企业,Solana Company入选香港第七批战略企业名单",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5200,5 +5190,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "fc592deb41267f50",
+    "title": "Solana validators told to act immediately as critical Linux vulnerability emerges",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-02T12:10:24.864396+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
