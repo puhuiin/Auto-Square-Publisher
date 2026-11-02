@@ -1,15 +1,5 @@
 [
   {
-    "id": "3b2be934dce8cf20",
-    "title": "Grayscale Names 3 Cryptocurrencies That Could Benefit From AI Growth",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-24T23:04:05.032966+00:00",
-    "tokens": [
-      "CHIP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3d9f0217c17df2b5",
     "title": "Analyzing why Uniswap’s network growth hit a 4-year high despite UNI’s 5.4% drop",
     "source": "AMBCrypto (技术与链上)",
@@ -5197,6 +5187,16 @@
     "sent_at": "2026-11-02T09:23:00.599544+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "28ad3a7a2ceb59d7",
+    "title": "XRP Final Move: Binance Empties Hacked Wallet of Last $101 Million",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-02T09:44:45.197512+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
