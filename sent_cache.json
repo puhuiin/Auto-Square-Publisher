@@ -1,15 +1,5 @@
 [
   {
-    "id": "8a430c2d24dc30d3",
-    "title": "Third X100 Exploit Transaction Pulls 550,000 X From Uniswap Pool",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-24T15:26:28.388578+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7282fdcf2a559e38",
     "title": "Ripple Price Analysis: XRP Faces Another Rejection as Short-Term Outlook Weakens",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5193,5 +5183,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c0616076a99d9bd8",
+    "title": "侃爷关联地址疑似加仓 470 万美元 ETH,当前抵押 21,109 枚 ETH",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T04:11:39.575520+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
