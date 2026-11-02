@@ -1,15 +1,5 @@
 [
   {
-    "id": "29d26ca405a926a3",
-    "title": "Dogecoin Foundation and House of Doge End Exclusive Brand Deal",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-25T11:46:43.433282+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fa19af0d019990c8",
     "title": "ETF Investors Pouring Millions Back Into Zcash as Bitcoin Falls",
     "source": "BeInCrypto (山寨与行情)",
@@ -5202,6 +5192,18 @@
     "sent_at": "2026-11-02T20:44:24.732391+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c83db4565163df76",
+    "title": "Binance Resumes Withdrawals After Major Hack as Michael Van De Poppe Predicts Bitcoin Crash",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-02T21:06:15.662970+00:00",
+    "tokens": [
+      "XRP",
+      "BTC",
+      "ETH"
     ],
     "lang": "en"
   }
