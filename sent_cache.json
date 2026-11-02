@@ -1,17 +1,5 @@
 [
   {
-    "id": "855a4e7ccfbb6e07",
-    "title": "ARB Touches Four-Week Low as Losses Outpace Bitcoin and Ether",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-24T17:09:18.865020+00:00",
-    "tokens": [
-      "ARB",
-      "OP",
-      "POL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ccb93e887cc8e44a",
     "title": "GRAM crypto crashes 11% as long liquidations hit $5.8M – What’s next?",
     "source": "AMBCrypto (技术与链上)",
@@ -5195,5 +5183,17 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "123a815acc265b72",
+    "title": "星球午讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-02T06:04:25.122191+00:00",
+    "tokens": [
+      "ETH",
+      "ZEC",
+      "USDC"
+    ],
+    "lang": "zh-CN"
   }
 ]
