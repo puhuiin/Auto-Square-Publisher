@@ -1,16 +1,5 @@
 [
   {
-    "id": "fa19af0d019990c8",
-    "title": "ETF Investors Pouring Millions Back Into Zcash as Bitcoin Falls",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-25T12:06:24.688173+00:00",
-    "tokens": [
-      "ZEC",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "041ca596bf26481f",
     "title": "Dogecoin (DOGE) Adds 30% in Trading Volume in 24 Hours as Spot Inflows Cross 1,000% Mark",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5204,6 +5193,16 @@
       "XRP",
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1cbf5b7f79a920e2",
+    "title": "Why Solana’s $149M whale deposits complicate SOL’s recovery",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-02T21:27:37.521802+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
