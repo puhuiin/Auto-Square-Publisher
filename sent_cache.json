@@ -1,16 +1,5 @@
 [
   {
-    "id": "dc1c66c1b651e1f2",
-    "title": "TechFlow 情报局:iPhone Duo 开售当日被加州团队越狱,Initia 遭攻击紧急停机",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-24T14:44:03.460799+00:00",
-    "tokens": [
-      "BTC",
-      "INIT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "14e47ad0acc63510",
     "title": "X100 Exploit Nets 4.85 Million USDT After Governance Takeover",
     "source": "The Defiant (DeFi 深度)",
@@ -5191,5 +5180,17 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "7463b94c3680e2cc",
+    "title": "Binance 史上最大黑客案后第一天:链上流出 36 亿、比特币 ETF 流出 6 亿",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T03:07:30.904908+00:00",
+    "tokens": [
+      "USDC",
+      "BNB",
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
