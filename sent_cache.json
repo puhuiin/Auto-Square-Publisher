@@ -1,15 +1,5 @@
 [
   {
-    "id": "1f70a9e5047ddece",
-    "title": "Worldcoin price prediction — What next after $4.7M long liquidation flush fuels 13% fall?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-24T19:04:06.503767+00:00",
-    "tokens": [
-      "WLD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6a8cf99d8fc0d4f9",
     "title": "比特币跌破8万美元,Hyperliquid两巨鲸多单遭清算并亏损27.8万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5196,5 +5186,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "9be2870192439c74",
+    "title": "4000 万枚 XRP 从标记为“Binance Hack 2026”的钱包转出",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T07:07:02.203374+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
