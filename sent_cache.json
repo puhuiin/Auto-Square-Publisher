@@ -1,15 +1,5 @@
 [
   {
-    "id": "ae6322a2229d20ef",
-    "title": "Firedancer makes bounty hunters burn 1 SOL even for duplicate bug reports",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-24T21:04:55.694112+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "69f1b561ea8d0b1e",
     "title": "AAVE whale moves $22.8M in tokens – Is $140 support at risk?",
     "source": "AMBCrypto (技术与链上)",
@@ -5199,5 +5189,15 @@
       "PENGU"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "9f065f219a57c87a",
+    "title": "Binance Attacker Splits $292 Million in XRP Across Six Wallets",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-02T09:04:08.266944+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
