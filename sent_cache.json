@@ -1,15 +1,5 @@
 [
   {
-    "id": "3dc98e7519446505",
-    "title": "XRP Ledger Fix Upgrade Faces November 4 Earliest Activation After Vote Reset",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-25T05:05:12.083433+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c5c9a1fb96c1db4a",
     "title": "Arthur Hayes 再次向 Cumberland 转入 1,400 万枚 ENA",
     "source": "吴说区块链 (中文深度)",
@@ -5200,6 +5190,16 @@
       "BTC",
       "ETH",
       "USDC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9e2d5bd290bb768f",
+    "title": "XRP Price Prediction: Ripple Re-Locks $875M as Bulls Eye $10,000",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-02T14:24:51.555665+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
