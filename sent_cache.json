@@ -1,17 +1,5 @@
 [
   {
-    "id": "6ec93912aff4f991",
-    "title": "Solana, Tether, and XRP Ledger Drive New Wave of Asset Tokenization",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-25T13:45:16.641499+00:00",
-    "tokens": [
-      "XRP",
-      "SOL",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fb9d0f90c3def514",
     "title": "代币经济学转向价值捕获:从通胀激励到收入回购",
     "source": "吴说区块链 (中文深度)",
@@ -5204,6 +5192,16 @@
     "sent_at": "2026-11-02T22:45:44.382699+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "47fd591c8b96ae3a",
+    "title": "Can TRON reclaim $0.33 after its $234M hack fueled buying spree?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-02T23:04:51.222114+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "zh-TW"
   }
