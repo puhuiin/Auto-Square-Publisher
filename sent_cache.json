@@ -1,15 +1,5 @@
 [
   {
-    "id": "5d7dfdbbd1feb190",
-    "title": "Peter Schiff’s ‘$75K Bitcoin call’ meets a vital week: Fed, inflation, and ETF outflows loom",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-25T09:04:43.490791+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "c18786cd085c284c",
     "title": "SEC clears listing of Volatility Shares’ 3x Bitcoin and Ether ETFs",
     "source": "Crypto Briefing (深度与研报)",
@@ -5200,6 +5190,16 @@
     "title": "3 Signals That Could Shape Bitcoin’s Next Move After Binance Hack",
     "source": "CryptoPotato (山寨币/Meme热点)",
     "sent_at": "2026-11-02T18:04:55.457812+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c1b514280ad4d46c",
+    "title": "Bitcoin Price Analysis: Is the September Rally Structure in Danger as BTC Hangs by a Thread?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-02T18:24:29.018571+00:00",
     "tokens": [
       "BTC"
     ],
