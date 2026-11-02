@@ -496,6 +496,35 @@ def overwrite_stats(rows, date_utc: str, lang: str = "en", trim_threshold: int =
 OVERWRITE_DROP_PP = 15          # 通过 = 处置臂比基线低 ≥15pp
 
 
+def overwrite_by_provider(rows, date_utc: str, lang: str = "en", trim_threshold: int = 50):
+    """★★ R856：**过度写作率**按**通道**拆分（观测型读数，**不设阈值**）。
+
+    ★ 为什么需要（只读诊断，en 短讯）：过度写作**几乎全是单一通道的特性** ——
+      `stepfun-flash` 在目标下调时 raw 中位反而 904 → **980**、超预算 84% → **87%** ✗；
+      对照 `stepfun` 795 → 712、超预算 25% → **7%** ✓（脚本 provider_len_compliance.py）。
+      ⇒ 要判「超写重试 / 减权」这类**通道侧**改动，必须先能看出超写**集中在谁身上**。
+    返回 `[(provider, known, over), ...]`（按 known 降序）；provider 缺失单列 `"None"`（纪律 12）；
+      无 `trimmed_chars` 的帖**不计入 known**（未知不是 0）。
+    """
+    agg = {}
+    for r in rows or []:
+        if not str(r.get("outcome", "")).startswith("binance_published"):
+            continue
+        if r.get("lang") != lang:
+            continue
+        if not in_night_window(r.get("ts"), date_utc):
+            continue
+        tc = r.get("trimmed_chars")
+        if not isinstance(tc, int):
+            continue
+        k = str(r.get("provider"))
+        a = agg.setdefault(k, [0, 0])
+        a[0] += 1
+        if tc > trim_threshold:
+            a[1] += 1
+    return sorted([(k, v[0], v[1]) for k, v in agg.items()], key=lambda x: -x[1])
+
+
 def overwrite_verdict(base_stats, treat_stats) -> tuple:
     """R851h 预注册判定（返回 (状态, 说明)）。"""
     if not treat_stats:
@@ -1005,6 +1034,21 @@ def main(argv=None) -> int:
         if ob and ot:
             st7, why7 = overwrite_verdict(ob, ot)
             print("\n判定⑦（过度写作率）：%s —— %s" % (st7, why7))
+            # ★★ R856：⑦ 的**分通道读数**（观测型，不设阈值）——超写几乎全是单一通道的特性。
+            for _lb, _dates in (("基线臂", args.baseline), ("处置臂", args.treatment)):
+                _ag = {}
+                for _d in (_dates or "").split(","):
+                    if not _d:
+                        continue
+                    for _ch, _kn, _ov in overwrite_by_provider(rows, _d, "en"):
+                        a = _ag.setdefault(_ch, [0, 0])
+                        a[0] += _kn
+                        a[1] += _ov
+                if _ag:
+                    print("   ↳ %s 过度写作**分通道**（观测型）：%s"
+                          % (_lb, " ｜ ".join(
+                              "%s=%d/%d(%.0f%%)" % (k, v[1], v[0], 100.0 * v[1] / v[0] if v[0] else 0)
+                              for k, v in sorted(_ag.items(), key=lambda kv: -kv[1][1]))))
     return 0
 
 

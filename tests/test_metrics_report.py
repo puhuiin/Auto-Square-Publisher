@@ -9969,6 +9969,27 @@ class TestR850Preregistration(unittest.TestCase):
         self.assertEqual(mod.cap_by_provider(rows, "2026-10-30"),
                          [("Preset-stepfun-flash", 2, 1), ("Preset-stepfun", 1, 0)])
         self.assertEqual(mod.cap_by_provider(rows, "2026-10-31"), [])
+
+    def test_overwrite_by_provider_splits_channels(self):
+        """★★ R856：过度写作率必须能**分通道**读（超写几乎全是 stepfun-flash 的特性）。
+
+        无 `trimmed_chars` 的帖**不计入 known**（未知不是 0）；非 en 不进本口径；
+        `None`（provider 未记录）单列（纪律 12）。
+        """
+        mod = self._ew()
+        rows = [
+            {"outcome": "binance_published", "ts": "2026-10-30T15:00:00Z", "lang": "en",
+             "provider": "Preset-stepfun-flash", "trimmed_chars": 300},
+            {"outcome": "binance_published", "ts": "2026-10-30T16:00:00Z", "lang": "en",
+             "provider": "Preset-stepfun-flash", "trimmed_chars": 10},
+            {"outcome": "binance_published", "ts": "2026-10-30T17:00:00Z", "lang": "en",
+             "provider": "Preset-stepfun", "trimmed_chars": None},
+            {"outcome": "binance_published", "ts": "2026-10-30T18:00:00Z", "lang": "zh-CN",
+             "provider": "Preset-stepfun", "trimmed_chars": 300},
+        ]
+        self.assertEqual(mod.overwrite_by_provider(rows, "2026-10-30"),
+                         [("Preset-stepfun-flash", 2, 1)])
+        self.assertEqual(mod.overwrite_by_provider(rows, "2026-10-31"), [])
         # 恰好落在 1/5 上（如 8/40）必须判通过，不许被浮点误差挤掉；
         # 且必须是**两窗**（否则先被判「样本不足」）——这是有意测「判定顺序」
         self.assertEqual(mod.r850_verdict([self._win(20, 4), self._win(20, 4)],
