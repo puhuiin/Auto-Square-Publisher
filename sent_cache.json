@@ -1,15 +1,5 @@
 [
   {
-    "id": "154d9a56982e179f",
-    "title": "Dogecoin Contributor Outlines Steps for Real DOGE Ecosystem Growth",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-25T00:25:01.148507+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "eaa24647142f9bda",
     "title": "Aave Says V3.8 Security Proposal Preserves Flash-Loan Liquidations",
     "source": "NewsBTC (比特币与山寨)",
@@ -5199,5 +5189,16 @@
       "BNB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4c63aff805973265",
+    "title": "Sam Altman Thinks Your PC’s RAM Belongs in AI Data Centers. Crypto Leaders Disagree",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-02T10:46:39.554382+00:00",
+    "tokens": [
+      "XRP",
+      "ADA"
+    ],
+    "lang": "zh-TW"
   }
 ]
