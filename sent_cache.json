@@ -1,16 +1,5 @@
 [
   {
-    "id": "7fbc4524a6496975",
-    "title": "Circle shareholder sues Trump over UAE crypto deals, citing up to $82 million in potential annual revenue",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-24T16:08:42.625356+00:00",
-    "tokens": [
-      "USDC",
-      "USD1"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a9dd2f22e547988a",
     "title": "Dogecoin ETF Sees Biggest Weekly Withdrawal in October",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5193,6 +5182,17 @@
       "TRX",
       "ETH",
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "3623c233005f45ea",
+    "title": "费用全给持有人之后,AERO 为何仍被增发拖累?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T05:04:38.730558+00:00",
+    "tokens": [
+      "AERO",
+      "UNI"
     ],
     "lang": "zh-TW"
   }
