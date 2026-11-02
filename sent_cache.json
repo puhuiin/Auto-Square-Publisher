@@ -1,15 +1,5 @@
 [
   {
-    "id": "2603dac340baf127",
-    "title": "Bitcoin Faces Make-or-Break Weekend as Market Crash Fears Grow",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-24T13:45:45.302258+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e40f2bd601b4c18c",
     "title": "吴说每日精选加密新闻 + 吴说每周精选:新闻 Top10 与热门文章",
     "source": "吴说区块链 (中文深度)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-02T00:26:39.672529+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "49e74cab58f27ec5",
+    "title": "Galaxy 研究主管:比特币连续 7 周收于 50 周均线上方",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T00:45:57.872371+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
