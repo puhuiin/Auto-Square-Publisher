@@ -9990,6 +9990,40 @@ class TestR850Preregistration(unittest.TestCase):
         self.assertEqual(mod.overwrite_by_provider(rows, "2026-10-30"),
                          [("Preset-stepfun-flash", 2, 1)])
         self.assertEqual(mod.overwrite_by_provider(rows, "2026-10-31"), [])
+
+    def test_r857_volume_guard_blocks_pretty_numbers(self):
+        """★★ R857：超写重试的判定必须带**保量护栏**（配额近满，掉产量不算通过）。
+
+        护栏由来（诊断 5）：近 7 天产量 58~60/60 ⇒ 重生成类改动可能掉总产量。
+        ⚠️ 入参是**日均**产量：两臂窗口数常不同，求和会伪造"掉产量"
+        （我第一版正是求和 ⇒ 实跑时把"处置臂只有 1 窗"读成"掉 52%"）。
+        """
+        mod = self._ew()
+        base = [{"over_pct": 75.0, "known": 40, "over": 30, "unknown": 0},
+                {"over_pct": 75.0, "known": 40, "over": 30, "unknown": 0}]
+        treat = [{"over_pct": 25.0, "known": 40, "over": 10, "unknown": 0},
+                 {"over_pct": 25.0, "known": 40, "over": 10, "unknown": 0}]
+        # 日均 60 → 53（掉 ≥10%）⇒ 即使超写率大降也判回滚（不许用"少发帖"换漂亮数字）
+        st, why = mod.r857_verdict(base, treat, 60.0, 53.0)
+        self.assertEqual(st, "回滚")
+        self.assertIn("保量约束", why)
+        # 日均持平 ⇒ 交回 ⑦ 的判定（25% ≤ 75%−15pp ⇒ 通过）
+        self.assertEqual(mod.r857_verdict(base, treat, 60.0, 59.0)[0], "通过")
+        # 掉 8.3%（60→55）⇒ 未到 10% 线，不触发回滚
+        self.assertEqual(mod.r857_verdict(base, treat, 60.0, 55.0)[0], "通过")
+
+    def test_daily_output_counts_published_summarize_only(self):
+        """★ R857：日产量只数「已发布 + stage=summarize」的行（与其它读数同口径）。"""
+        mod = self._ew()
+        rows = [
+            {"outcome": "binance_published", "stage": "summarize", "ts": "2026-10-30T15:00:00Z"},
+            {"outcome": "binance_published", "stage": "summarize", "ts": "2026-10-30T16:00:00Z"},
+            {"outcome": "llm_rejected", "stage": "summarize", "ts": "2026-10-30T17:00:00Z"},
+            {"outcome": "binance_published", "stage": "transport", "ts": "2026-10-30T18:00:00Z"},
+            {"outcome": "binance_published", "stage": "summarize", "ts": "2026-10-31T01:00:00Z"},
+        ]
+        self.assertEqual(mod.daily_output(rows, "2026-10-30")["published"], 2)
+        self.assertEqual(mod.daily_output(rows, "2026-10-31")["published"], 1)
         # 恰好落在 1/5 上（如 8/40）必须判通过，不许被浮点误差挤掉；
         # 且必须是**两窗**（否则先被判「样本不足」）——这是有意测「判定顺序」
         self.assertEqual(mod.r850_verdict([self._win(20, 4), self._win(20, 4)],

@@ -496,6 +496,55 @@ def overwrite_stats(rows, date_utc: str, lang: str = "en", trim_threshold: int =
 OVERWRITE_DROP_PP = 15          # 通过 = 处置臂比基线低 ≥15pp
 
 
+# ---- 第八条预注册判据（R857）：**超写重试**（raw 超净化预算 ⇒ 换通道重生成一次）----
+# 背景（只读诊断，2026-11-02）：
+#   · 过度写作**基本是 `stepfun-flash` 独有**：⑦ 分通道读数 86~88% vs `stepfun` 9% / `google` 0%；
+#     且目标下调时它 raw 中位反而 904 → **980**（`provider_len_compliance.py`）⇒ 它不读篇幅指令。
+#   · 它的超写**没换来浏览**（views/天 中位 4.55，四家最低；en 2.85 最低）。
+#   · ⚠️ **不能只减权**：近 7 天产量 58~60/60（配额近满），另两家份额小、失败率高
+#     ⇒ 减权很可能掉总产量（`provider_supply_diag.py`）。
+# 干预（**部署后生效**）：生成后若 `raw_chars > SHORT_FORM_MAX_CHARS − _APPEND_HEADROOM`（净化预算）
+#   ⇒ **换一个通道**、带"必须 ≤N 字符"重生成一次（与 R850 的漏提重试**共用同一套机制**）。
+# 判据（事前写死）：
+#   · 口径 = ⑦ 过度写作率（en 夜窗），**并且分通道读**；
+#   · 基线 = 部署前的两个完整夜窗；
+#   · **通过** = 合并超写率 ≤ 基线 − 15pp（沿用 `OVERWRITE_DROP_PP`）；
+#   · **回滚** = 超写率未降 **或 日产量下降 ≥10%**（保量约束 —— 诊断 5 的产物）；
+#   · **未通过** = 保留改动并标注「未被证实」。
+R857_VOLUME_DROP_PCT = 10
+
+
+def daily_output(rows, date_utc: str) -> dict:
+    """★ R857：单日**已发布**帖数（观测型；⑧ 的「保量」约束靠它读）。
+
+    ★ 为什么需要：诊断 5 显示配额近满（58~60/60）、另两家份额小且失败率高
+      ⇒ 任何"重生成 / 换通道"的改动都可能**掉总产量**，必须能读数（否则"超写率降了"
+      可能只是"帖少了"的组成假象）。
+    """
+    n = 0
+    for r in rows or []:
+        if not str(r.get("outcome", "")).startswith("binance_published"):
+            continue
+        if r.get("stage") != "summarize":
+            continue
+        if str(r.get("ts") or "").startswith(date_utc):
+            n += 1
+    return {"date": date_utc, "published": n}
+
+
+def r857_verdict(base_stats, treat_stats, vol_base: float, vol_treat: float) -> tuple:
+    """★ R857：超写重试的判定 = ⑦（超写率↓）**且 日均产量不掉 ≥10%**。
+
+    产量护栏的由来（诊断 5）：配额近满（58~60/60），重生成类改动可能掉产量
+    ⇒ 必须与"超写率下降"**同时**成立才算通过（否则是"少发帖换来的漂亮数字"）。
+    ⚠️ 入参是**日均**产量（两臂窗口数常不同 ⇒ 求和会伪造"掉产量"）。
+    """
+    if vol_base and vol_treat and vol_treat * 100 < vol_base * (100 - R857_VOLUME_DROP_PCT):
+        return ("回滚", "日均产量 %.1f → %.1f（掉 ≥%d%%）⇒ 保量约束不满足"
+                % (vol_base, vol_treat, R857_VOLUME_DROP_PCT))
+    return overwrite_verdict(base_stats, treat_stats)
+
+
 def overwrite_by_provider(rows, date_utc: str, lang: str = "en", trim_threshold: int = 50):
     """★★ R856：**过度写作率**按**通道**拆分（观测型读数，**不设阈值**）。
 
@@ -1049,6 +1098,18 @@ def main(argv=None) -> int:
                           % (_lb, " ｜ ".join(
                               "%s=%d/%d(%.0f%%)" % (k, v[1], v[0], 100.0 * v[1] / v[0] if v[0] else 0)
                               for k, v in sorted(_ag.items(), key=lambda kv: -kv[1][1]))))
+            # ★ R857：**日均**产量（观测型）—— ⑧ 的「保量」约束靠它读。
+            #   ⚠️ 必须用均值而非求和：两臂窗口数常常不同（求和会把"窗口少"当成"掉产量"，
+            #   这正是纪律里"跨臂比较窗口大小须相近"那条坑；本轮我第一版就踩了）。
+            _nb = len([d for d in (args.baseline or "").split(",") if d]) or 1
+            _nt = len([d for d in (args.treatment or "").split(",") if d]) or 1
+            _vb = sum(daily_output(rows, d)["published"]
+                      for d in (args.baseline or "").split(",") if d) / _nb
+            _vt = sum(daily_output(rows, d)["published"]
+                      for d in (args.treatment or "").split(",") if d) / _nt
+            print("   ↳ 日均产量（观测型）：基线臂 %.1f 篇/窗 ｜ 处置臂 %.1f 篇/窗" % (_vb, _vt))
+            st8, why8 = r857_verdict(ob, ot, _vb, _vt)
+            print("\n判定⑧（超写重试 · R857）：%s —— %s" % (st8, why8))
     return 0
 
 
