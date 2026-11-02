@@ -1,15 +1,5 @@
 [
   {
-    "id": "8ed60a67fe607502",
-    "title": "Worldcoin 项目方关联地址 11 小时向交易所转入 1050 万枚 WLD",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-25T03:44:37.972414+00:00",
-    "tokens": [
-      "WLD"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "6346796a64e9afab",
     "title": "Bitcoin ETF Flows Trail Price Moves, DWF Study Finds",
     "source": "NewsBTC (比特币与山寨)",
@@ -5200,5 +5190,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d757d963fabfe6e7",
+    "title": "Zcash (ZEC) Whale Builds $14 Million Long Ahead of 300% Speed Upgrade",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-02T13:01:01.485054+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
