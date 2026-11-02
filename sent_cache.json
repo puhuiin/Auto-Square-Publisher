@@ -1,15 +1,5 @@
 [
   {
-    "id": "6346796a64e9afab",
-    "title": "Bitcoin ETF Flows Trail Price Moves, DWF Study Finds",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-25T04:06:18.101220+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e01a58aea9a8e080",
     "title": "清算价格降至2181.69美元和2177.79美元,持有价值2.14亿美元ETH多单的某巨鲸追加567万美元保证金",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5196,6 +5186,16 @@
     "title": "Zcash (ZEC) Whale Builds $14 Million Long Ahead of 300% Speed Upgrade",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-11-02T13:01:01.485054+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6fa401b703ca93aa",
+    "title": "Zcash whale buys $3.8M in ZEC – 2 obstacles could slow the recovery",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-02T13:21:17.364383+00:00",
     "tokens": [
       "ZEC"
     ],
