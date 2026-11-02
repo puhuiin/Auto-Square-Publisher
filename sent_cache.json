@@ -1,15 +1,5 @@
 [
   {
-    "id": "44eec0e54a51a1b4",
-    "title": "Bitcoin’s Fed Week Starts With A Fresh Rise In US Inflation Expectations",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-25T08:26:01.872605+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "18e1dd64d15e5175",
     "title": "Mastercard Praises Ripple's RLUSD Stablecoin",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5201,6 +5191,16 @@
     "title": "Mercado Bitcoin hack losses are at $46M and growing",
     "source": "Protos (隐私与合规)",
     "sent_at": "2026-11-02T17:07:16.531168+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f8e1ea6e249b633f",
+    "title": "Brazil's Largest Exchange Mercado Bitcoin Halts Withdrawals After $40 Million Hack",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-02T17:28:41.638543+00:00",
     "tokens": [
       "BTC"
     ],
