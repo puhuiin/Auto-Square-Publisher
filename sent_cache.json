@@ -1,15 +1,5 @@
 [
   {
-    "id": "69f1b561ea8d0b1e",
-    "title": "AAVE whale moves $22.8M in tokens – Is $140 support at risk?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-24T22:04:39.004428+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3b2be934dce8cf20",
     "title": "Grayscale Names 3 Cryptocurrencies That Could Benefit From AI Growth",
     "source": "BeInCrypto (山寨与行情)",
@@ -5199,5 +5189,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "1882314584cf4756",
+    "title": "Solana 生态应用第三季度收入近 3 亿美元,环比增长 50%",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-02T09:23:00.599544+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
