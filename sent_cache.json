@@ -1,15 +1,5 @@
 [
   {
-    "id": "9a1a9148e362868b",
-    "title": "FOMO 联合创始人否认推出 Solana Launchpad,称市场已有太多代币",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-25T04:46:37.581819+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3dc98e7519446505",
     "title": "XRP Ledger Fix Upgrade Faces November 4 Earliest Activation After Vote Reset",
     "source": "NewsBTC (比特币与山寨)",
@@ -5200,5 +5190,17 @@
       "USDC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e861f4b1a222da72",
+    "title": "吴说每日精选加密新闻 - Elliptic:币安被盗 64.3 亿美元中 44%已冻结,攻击者首次使用 CoinJoin 混币",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-02T14:07:14.268341+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "USDC"
+    ],
+    "lang": "en"
   }
 ]
