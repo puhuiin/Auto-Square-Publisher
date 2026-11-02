@@ -1,15 +1,5 @@
 [
   {
-    "id": "289275f0c572a161",
-    "title": "Tether冻结9个CoinDCX安全事件关联地址,涉221.29万枚USDT",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-25T06:44:54.322765+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "cd8c15d5f1fadc88",
     "title": "币安将于 10 月 25 日上线 PREDICTUSDT 合约盘前交易",
     "source": "吴说区块链 (中文深度)",
@@ -5199,6 +5189,17 @@
     "sent_at": "2026-11-02T15:29:16.062013+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "59804fea40606a5b",
+    "title": "Shibarium's 745% Breakout Reverses: Should SHIB Holders Be Watching?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-02T15:49:14.453001+00:00",
+    "tokens": [
+      "SHIB",
+      "PENGU"
     ],
     "lang": "en"
   }
