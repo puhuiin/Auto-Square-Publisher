@@ -602,6 +602,34 @@ def cap_stats(rows, date_utc: str, lang: str = "en") -> dict:
             "pct": (100.0 * len(at) / len(cohort)) if cohort else 0.0}
 
 
+def cap_by_provider(rows, date_utc: str, lang: str = "en"):
+    """★★ R855：单个 UTC 日的「顶格」按**通道**拆分（观测型读数，**不设阈值**）。
+
+    ★ 为什么需要（只读诊断，en 短讯）：`stepfun-flash` 基本**不读篇幅指令** ——
+      R834 期（目标上沿 742）raw 中位 904、超预算 84%；
+      R848 期（上沿 660）raw 中位 **980**、超预算 **87%**（目标下调它反而写更长）✗
+      对照 `stepfun`：795 → 712、超预算 25% → **7%** ✓
+      ⇒ 该通道的**超写**与全局篇幅目标无关 —— 但它同时是**被裁**的一方
+        （raw 中位 980 ⇒ 几乎必被裁到 ≤814）⇒ **顶格未必集中在它身上**。
+        实测（10-30/31 臂）：`stepfun-flash` 顶格 2/22 = 9% ｜ `stepfun` 2/23 = 9%。
+      ⇒ 这条读数的作用是**回答"顶格集中在哪"**，**不预设"就是 stepfun-flash"**。
+    返回 `[(provider, n, at_cap), ...]`（按 n 降序）；provider 缺失单列 `"None"`（纪律 12）。
+    """
+    cohort = [r for r in rows
+              if str(r.get("outcome", "")).startswith("binance_published")
+              and str(r.get("ts") or "").startswith(date_utc)
+              and r.get("lang") == lang
+              and isinstance(r.get("final_text"), str) and r["final_text"].strip()]
+    agg = {}
+    for r in cohort:
+        k = str(r.get("provider"))
+        a = agg.setdefault(k, [0, 0])
+        a[0] += 1
+        if len(r["final_text"]) >= CAP_TOTAL:
+            a[1] += 1
+    return sorted([(k, v[0], v[1]) for k, v in agg.items()], key=lambda x: -x[1])
+
+
 def cap_arm_warning(base_stats) -> str:
     """判定③ 的**配准检查**（抽成函数是为了可单测）。
 
@@ -906,6 +934,22 @@ def main(argv=None) -> int:
             #      ⇒ 该对比混着两个改动，**条文里的「回滚」在这组臂上不可执行**。
             _w = cap_arm_warning(cb) or cap_treat_warning(ct)
             print(_w if _w else cap_arm_confound_note())
+            # ★★ R855：③ 的**分通道读数**（观测型，不设阈值）——分辨"顶格是通道结构性的
+            #   （某通道特性）还是全局目标没调够"。**只回答"顶格集中在哪"，不预设结论**。
+            for _lb, _dates in (("基线臂", args.baseline), ("处置臂", args.treatment)):
+                _ag = {}
+                for _d in (_dates or "").split(","):
+                    if not _d:
+                        continue
+                    for _ch, _n, _at in cap_by_provider(rows, _d):
+                        a = _ag.setdefault(_ch, [0, 0])
+                        a[0] += _n
+                        a[1] += _at
+                if _ag:
+                    print("   ↳ %s 顶格**分通道**（观测型）：%s"
+                          % (_lb, " ｜ ".join(
+                              "%s=%d/%d(%.0f%%)" % (k, v[1], v[0], 100.0 * v[1] / v[0] if v[0] else 0)
+                              for k, v in sorted(_ag.items(), key=lambda kv: -kv[1][1]))))
 
     # ---- R851：AI 味旗标率（只量不设门）----
     # 动机：平台 2026-07 起对纯 AI 内容算法降权（官方原文："Content generated entirely by AI

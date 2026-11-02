@@ -9947,6 +9947,28 @@ class TestR850Preregistration(unittest.TestCase):
         self.assertEqual(mod.miss_by_provider(rows),
                          {"Preset-stepfun-flash": 2, "Preset-stepfun": 1, "None": 1})
         self.assertEqual(mod.miss_by_provider([]), {})
+
+    def test_cap_by_provider_splits_channels(self):
+        """★★ R855：顶格必须能**分通道**读（回答"顶格集中在哪"，**不预设结论**）。
+
+        `None`（provider 未记录）单列，不并进任何通道桶（纪律 12）；非 en 不进本口径。
+        """
+        mod = self._ew()
+        long_text = "x" * (mod.CAP_TOTAL + 5)
+        short_text = "y" * 100
+        rows = [
+            {"outcome": "binance_published", "ts": "2026-10-30T15:00:00Z", "lang": "en",
+             "provider": "Preset-stepfun-flash", "final_text": long_text},
+            {"outcome": "binance_published", "ts": "2026-10-30T16:00:00Z", "lang": "en",
+             "provider": "Preset-stepfun-flash", "final_text": short_text},
+            {"outcome": "binance_published", "ts": "2026-10-30T17:00:00Z", "lang": "en",
+             "provider": "Preset-stepfun", "final_text": short_text},
+            {"outcome": "binance_published", "ts": "2026-10-30T18:00:00Z", "lang": "zh-CN",
+             "provider": "Preset-stepfun", "final_text": long_text},
+        ]
+        self.assertEqual(mod.cap_by_provider(rows, "2026-10-30"),
+                         [("Preset-stepfun-flash", 2, 1), ("Preset-stepfun", 1, 0)])
+        self.assertEqual(mod.cap_by_provider(rows, "2026-10-31"), [])
         # 恰好落在 1/5 上（如 8/40）必须判通过，不许被浮点误差挤掉；
         # 且必须是**两窗**（否则先被判「样本不足」）——这是有意测「判定顺序」
         self.assertEqual(mod.r850_verdict([self._win(20, 4), self._win(20, 4)],
