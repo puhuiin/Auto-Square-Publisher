@@ -1,15 +1,5 @@
 [
   {
-    "id": "eaa24647142f9bda",
-    "title": "Aave Says V3.8 Security Proposal Preserves Flash-Loan Liquidations",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-25T02:04:02.543768+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3ccbe03083f9b216",
     "title": "主要Meme市场24小时成交额降至1.68亿美元,环比下滑18.8%",
     "source": "深潮TechFlow (中文/简体)",
@@ -5198,6 +5188,16 @@
     "tokens": [
       "XRP",
       "ADA"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "cf67a8ee2d5698d4",
+    "title": "Celestia 推出 Voyager:每秒 2100 万笔交易,专为 AI 代理打造的支付链",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T11:04:40.066115+00:00",
+    "tokens": [
+      "TIA"
     ],
     "lang": "zh-TW"
   }
