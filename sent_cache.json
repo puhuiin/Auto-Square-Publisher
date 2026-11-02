@@ -1,16 +1,5 @@
 [
   {
-    "id": "7704add93b155c81",
-    "title": "Four.Meme推出Binance Agent ID Exclusive AI Agent专属发射模式,支持BNB募资",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-25T06:24:20.345291+00:00",
-    "tokens": [
-      "ID",
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "289275f0c572a161",
     "title": "Tether冻结9个CoinDCX安全事件关联地址,涉221.29万枚USDT",
     "source": "深潮TechFlow (中文/简体)",
@@ -5200,6 +5189,16 @@
     "sent_at": "2026-11-02T15:06:59.067880+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ab94e69a5aba8a6d",
+    "title": "Brazil’s Largest Crypto Exchange Mercado Bitcoin Hit by Possible $40M Hack",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-02T15:29:16.062013+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
