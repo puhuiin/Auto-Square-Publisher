@@ -1,15 +1,5 @@
 [
   {
-    "id": "5dffd8319df45788",
-    "title": "Solana co-founder Toly floats a validator stake-weighted oracle to mint SOL against tokenized collateral",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-24T20:25:30.324079+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ae6322a2229d20ef",
     "title": "Firedancer makes bounty hunters burn 1 SOL even for duplicate bug reports",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5196,6 +5186,17 @@
       "USDC",
       "ETH",
       "ZK"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c3294b461b5aac9e",
+    "title": "Bitcoin Volatility Ahead: 4 Things That Could Impact Crypto This Week",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-02T08:44:44.633020+00:00",
+    "tokens": [
+      "BTC",
+      "PENGU"
     ],
     "lang": "zh-CN"
   }
