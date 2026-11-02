@@ -1,16 +1,5 @@
 [
   {
-    "id": "fb9d0f90c3def514",
-    "title": "代币经济学转向价值捕获:从通胀激励到收入回购",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-25T14:06:07.929548+00:00",
-    "tokens": [
-      "SOL",
-      "ENA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6ad8bc94830823c3",
     "title": "Why Bitcoin's Next Market Cycle May Look Very Different – BloFin CEO",
     "source": "BeInCrypto (山寨与行情)",
@@ -5204,5 +5193,15 @@
       "TRX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "a543325d50aa70a1",
+    "title": "Wintermute:比特币跌破 8 万美元后抄底资金主要来自杠杆交易,下一关键支撑位在 7.68 万美元",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-02T23:24:12.604916+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
