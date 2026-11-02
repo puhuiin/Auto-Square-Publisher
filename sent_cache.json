@@ -1,15 +1,5 @@
 [
   {
-    "id": "e40f2bd601b4c18c",
-    "title": "吴说每日精选加密新闻 + 吴说每周精选:新闻 Top10 与热门文章",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-24T14:04:48.143284+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4c2ea87b2855ce54",
     "title": "$0 SHIB Burned in 24 Hours: What's Happening to Burns?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5185,6 +5175,16 @@
     "title": "Galaxy 研究主管:比特币连续 7 周收于 50 周均线上方",
     "source": "深潮TechFlow (中文/简体)",
     "sent_at": "2026-11-02T00:45:57.872371+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "84553f9b90cd592b",
+    "title": "美股潮向(11 月 2 日):英特尔创 50 年最惨跌幅,本周关注中期选举与苹果财报",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T01:06:38.590720+00:00",
     "tokens": [
       "BTC"
     ],
