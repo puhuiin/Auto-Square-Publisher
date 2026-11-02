@@ -1,15 +1,5 @@
 [
   {
-    "id": "6a8cf99d8fc0d4f9",
-    "title": "比特币跌破8万美元,Hyperliquid两巨鲸多单遭清算并亏损27.8万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-24T19:46:39.557295+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "22888be7e3e7c4e3",
     "title": "Bitcoin faces THREE major tests – Can BTC avoid another 17% November crash?",
     "source": "AMBCrypto (技术与链上)",
@@ -5196,5 +5186,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "b77623c18af5d412",
+    "title": "USDD 财库表现强劲:核心指标稳步增长,生态版图持续扩张",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T07:48:02.981537+00:00",
+    "tokens": [
+      "TRX"
+    ],
+    "lang": "zh-CN"
   }
 ]
