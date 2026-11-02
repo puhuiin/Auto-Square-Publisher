@@ -1,15 +1,5 @@
 [
   {
-    "id": "adbd33678d55529f",
-    "title": "Bitcoin – Why Coinbase warns BTC could fall to $75K amid macro risks",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-25T02:45:17.834259+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "199d5ac6209e9baa",
     "title": "PEPE reclaims $2B market cap – Can memecoin FOMO lift altcoins?",
     "source": "AMBCrypto (技术与链上)",
@@ -5199,5 +5189,16 @@
       "XLM"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "fc36f687742636ac",
+    "title": "分析:比特币承压回落,衍生品市场交易量激增但增量资金不足",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-02T11:49:23.394180+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
