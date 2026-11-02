@@ -1,15 +1,5 @@
 [
   {
-    "id": "c18786cd085c284c",
-    "title": "SEC clears listing of Volatility Shares’ 3x Bitcoin and Ether ETFs",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-25T09:24:02.774200+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f73f08d1882b1734",
     "title": "Ethereum’s RWA Dominance Slips as Solana, BNB Chain, Stellar, and Avalanche Gain Ground: Data",
     "source": "ZyCrypto (新币与空投)",
@@ -5202,6 +5192,16 @@
     "sent_at": "2026-11-02T18:24:29.018571+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "89bd2daa98b695a3",
+    "title": "累计PnL达720万美元的Solana老牌套利机器人King被盗约78.6万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-02T18:44:36.842324+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
