@@ -1,15 +1,5 @@
 [
   {
-    "id": "698704519dc0332b",
-    "title": "XRP Hit by 2008% Liquidation Imbalance as Market Selloff Intensifies",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-24T16:48:47.738647+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "855a4e7ccfbb6e07",
     "title": "ARB Touches Four-Week Low as Losses Outpace Bitcoin and Ether",
     "source": "The Defiant (DeFi 深度)",
@@ -5191,6 +5181,16 @@
     "title": "Pando Rings 黑客买入 7,548 枚 ETH,后将其中 4,000 枚转入 Tornado Cash",
     "source": "吴说区块链 (中文深度)",
     "sent_at": "2026-11-02T05:24:33.109093+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "f3668ab1df8d00bc",
+    "title": "Nado 链上永续合约份额升至 1.45% 创半年来新高,去中心化衍生品格局如何演变?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T05:44:46.117746+00:00",
     "tokens": [
       "ETH"
     ],
