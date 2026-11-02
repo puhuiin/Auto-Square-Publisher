@@ -1,15 +1,5 @@
 [
   {
-    "id": "aa3f5cc91d0980d4",
-    "title": "Ripple CTO Emeritus Warns Against AI Content Filters in XRP Scam Debate",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-25T10:45:23.954356+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d37fbde4ead38519",
     "title": "XRP面临巨鲸抛压?分析师称跌破1.26美元或下探0.98美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5202,6 +5192,16 @@
     "sent_at": "2026-11-02T19:42:38.908456+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b8f88dcde157b245",
+    "title": "币安罚款及黑客事件损失估算达107亿美元,相当于五年税前利润约56%",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-02T20:04:39.360945+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
