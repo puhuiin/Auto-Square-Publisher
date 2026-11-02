@@ -1,15 +1,5 @@
 [
   {
-    "id": "22888be7e3e7c4e3",
-    "title": "Bitcoin faces THREE major tests – Can BTC avoid another 17% November crash?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-24T20:03:56.448414+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5dffd8319df45788",
     "title": "Solana co-founder Toly floats a validator stake-weighted oracle to mint SOL against tokenized collateral",
     "source": "Crypto Briefing (深度与研报)",
@@ -5194,6 +5184,18 @@
     "sent_at": "2026-11-02T07:48:02.981537+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7552c204c39b4a13",
+    "title": "币安 63 亿美元被盗之后,这四家 Perp DEX 足够安全吗?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T08:07:09.578047+00:00",
+    "tokens": [
+      "USDC",
+      "ETH",
+      "ZK"
     ],
     "lang": "zh-CN"
   }
