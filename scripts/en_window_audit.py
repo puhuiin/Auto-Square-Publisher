@@ -774,6 +774,22 @@ def r850_verdict(treat_stats, base_stats) -> tuple:
             % (miss, n, R850_PASS_NUM, R850_PASS_DEN, base_miss, base_n))
 
 
+def miss_by_provider(miss_list):
+    """★★ R854：真漏按**通道**计数（观测型读数，**不设阈值**）。
+
+    ★ 为什么需要（只读诊断，en 夜窗 10-26~11-02，n=161）：
+      `stepfun-flash` 一个通道就贡献了 **98%** 的漏（51/52）——它 raw 中位 **955**、
+      超预算率 **56%**，而同门 `stepfun` 只有 **2%**（1/50）、raw 中位 **725**。
+      ⇒ 不拆通道，结构性超写会被读成"改动无效"；R850 的验收尤其需要这条。
+    ★ `None`（未知）**单列**，不并进任何通道桶（纪律 12：未知不是任何具体值）。
+    """
+    d = {}
+    for r in miss_list:
+        k = str(r.get("provider"))
+        d[k] = d.get(k, 0) + 1
+    return d
+
+
 def load_rows(path: str):
     rows = []
     with open(path, encoding="utf-8") as fh:
@@ -819,6 +835,19 @@ def main(argv=None) -> int:
     if base and treat:
         status, why = verdict(base, treat)
         print("\n判定①（活动提及）：%s —— %s" % (status, why))
+        # ★★ R854：① 的**分通道读数**（观测型，不设阈值）——分辨"漏提是通道结构性的
+        #   （stepfun-flash 超写被裁）还是能靠重试救回来"。R850 的验收必须分通道读。
+        for label, dates in (("基线臂", args.baseline), ("处置臂", args.treatment)):
+            _mr = []
+            for d in (dates or "").split(","):
+                if d:
+                    _mr += miss_rows(rows, d)
+            if _mr:
+                _d = miss_by_provider(_mr)
+                print("   ↳ %s 真漏**分通道**（观测型）：%s"
+                      % (label, " ｜ ".join("%s=%d" % (k, v)
+                                            for k, v in sorted(_d.items(),
+                                                               key=lambda kv: -kv[1]))))
         # ---- 第四条判据（R844）：同口径、不同的基线与阈值（干预 = 把要求挪到核心要求末条）----
         st4, why4 = r844_verdict(treat)
         print("判定④（R844 活动提法位置）：%s —— %s" % (st4, why4))

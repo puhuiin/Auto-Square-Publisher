@@ -9929,6 +9929,24 @@ class TestR850Preregistration(unittest.TestCase):
         """★ 阈值必须是整数分数、判定走整数交叉相乘（R832 教训）。"""
         mod = self._ew()
         self.assertEqual((mod.R850_PASS_NUM, mod.R850_PASS_DEN), (1, 5))
+
+    def test_miss_by_provider_splits_channels_and_keeps_none(self):
+        """★★ R854：真漏必须能**分通道**读（stepfun-flash 一个通道贡献 98% 的漏）。
+
+        诊断依据：en 夜窗 10-26~11-02 —— stepfun-flash 真漏 51/105 = 49%，
+        同门 stepfun 只有 1/50 = 2% ⇒ 不拆通道会把它的结构性超写读成"改动无效"。
+        `None`（provider 未记录）必须**单列**，不并进任何通道桶（纪律 12）。
+        """
+        mod = self._ew()
+        rows = [
+            {"provider": "Preset-stepfun-flash"},
+            {"provider": "Preset-stepfun-flash"},
+            {"provider": "Preset-stepfun"},
+            {"provider": None},
+        ]
+        self.assertEqual(mod.miss_by_provider(rows),
+                         {"Preset-stepfun-flash": 2, "Preset-stepfun": 1, "None": 1})
+        self.assertEqual(mod.miss_by_provider([]), {})
         # 恰好落在 1/5 上（如 8/40）必须判通过，不许被浮点误差挤掉；
         # 且必须是**两窗**（否则先被判「样本不足」）——这是有意测「判定顺序」
         self.assertEqual(mod.r850_verdict([self._win(20, 4), self._win(20, 4)],
