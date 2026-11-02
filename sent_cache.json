@@ -1,15 +1,5 @@
 [
   {
-    "id": "d36c425c2727f9b1",
-    "title": "A 20-month Polkadot wallet breach reveals the dark side of faster crypto withdrawals",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-25T11:25:00.735773+00:00",
-    "tokens": [
-      "DOT"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "29d26ca405a926a3",
     "title": "Dogecoin Foundation and House of Doge End Exclusive Brand Deal",
     "source": "The Defiant (DeFi 深度)",
@@ -5202,6 +5192,16 @@
     "sent_at": "2026-11-02T20:25:53.586532+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5776493ae05b0007",
+    "title": "Akash Stakers Approve Move From Cosmos to Solana",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-02T20:44:24.732391+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
