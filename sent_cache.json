@@ -1,15 +1,5 @@
 [
   {
-    "id": "2a7fe902b9ce61de",
-    "title": "Stellar Updates Bell Upgrade Guide Ahead Of November Votes",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-24T23:44:02.855620+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "154d9a56982e179f",
     "title": "Dogecoin Contributor Outlines Steps for Real DOGE Ecosystem Growth",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5197,6 +5187,16 @@
     "sent_at": "2026-11-02T10:04:47.675936+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7fd8d6f4fe7a29ab",
+    "title": "Bullshot 完成 770 万美元融资,由 P2 Ventures 和 Animoca Brands 联合领投",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T10:24:41.912445+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-CN"
   }
