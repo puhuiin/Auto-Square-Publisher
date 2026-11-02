@@ -1,15 +1,5 @@
 [
   {
-    "id": "c5c9a1fb96c1db4a",
-    "title": "Arthur Hayes 再次向 Cumberland 转入 1,400 万枚 ENA",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-25T05:24:56.647542+00:00",
-    "tokens": [
-      "ENA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "31bd97435d92dc4b",
     "title": "95 Billion SHIB in 24 Hours: Shiba Inu Exchange Activity Flips Bullish",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5200,6 +5190,16 @@
     "sent_at": "2026-11-02T14:24:51.555665+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "cdc59a660894bf1d",
+    "title": "Akash’s Solana plan would end current staking rewards while allowing new AKT issuance",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-02T14:45:12.115576+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
