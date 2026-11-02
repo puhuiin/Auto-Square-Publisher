@@ -60,8 +60,29 @@ def views_per_day(views, age_days):
     return float(views or 0) / age
 
 
-def join_stats(stats_rows, published_idx, export_time):
-    """按 content_id 关联，返回带 views_per_day 的记录。"""
+def _parse_iso_utc(s):
+    """ISO 字符串 → aware datetime（UTC）；不可解析返回 None（未知不是 0，纪律 12）。"""
+    try:
+        d = datetime.datetime.fromisoformat(str(s or "").replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return None
+    return d if d.tzinfo else d.replace(tzinfo=datetime.timezone.utc)
+
+
+def join_stats(stats_rows, published_idx, export_time=None):
+    """按 content_id 关联，返回带 views_per_day 的记录。
+
+    ★★★ R853：**曝光时长的口径修正**（旧版量错了东西）。
+      · 旧版：`age = export_time − content_stats.ts`。而 `content_stats.ts` 是
+        **该浏览量被观测/导入到的时刻**（快照时刻），**不是发帖时刻**
+        ⇒ 旧口径量的是「这份数据有多旧」，与帖子曝光时长无关：
+          同一篇帖，观测越晚（越接近导出）读数越高；而老批次（10-14~10-21 导入）
+          会被系统性算低 **~20×** —— 实测那句「近 2 天 6.72 vs 更早 0.27」的假象
+          就来自这里（详见 HANDOVER 的浏览量侧：`vpd_true2.py`）。
+      · 新口径：`age = content_stats.ts(观测) − metrics.ts(发帖)` —— **两端都取自数据本身**，
+        与 `--export-time` 无关（该参数降级为"仅表头展示/向后兼容"，age 不再使用它）。
+      · 观测早于发帖（时钟错位/字段串行）⇒ `age <= 0` ⇒ **跳过**，不硬算（宁少算不伪造）。
+    """
     out = []
     for s in stats_rows:
         if not isinstance(s, dict):
@@ -69,11 +90,13 @@ def join_stats(stats_rows, published_idx, export_time):
         m = published_idx.get(str(s.get("content_id") or ""))
         if not m:
             continue
-        try:
-            ts = datetime.datetime.fromisoformat(str(s.get("ts", "")).replace("Z", "+00:00"))
-        except ValueError:
+        obs = _parse_iso_utc(s.get("ts"))
+        post = _parse_iso_utc(m.get("ts"))
+        if obs is None or post is None:
             continue
-        age = (export_time - ts).total_seconds() / 86400.0
+        age = (obs - post).total_seconds() / 86400.0
+        if age <= 0:
+            continue
         out.append({
             "views": int(s.get("views") or 0),
             "likes": int(s.get("likes") or 0),
@@ -145,9 +168,9 @@ def main(argv=None):
     ap.add_argument("--stats", default="content_stats.jsonl")
     ap.add_argument("--metrics", default="metrics.jsonl")
     ap.add_argument("--days", type=float, default=0,
-                    help="只看最近 N 天发布的帖（0=全部）")
+                    help="只看曝光 ≤N 天的帖（0=全部）")
     ap.add_argument("--export-time", default="",
-                    help="数据导出时间（ISO），默认取 stats 最大 ts + 2 天")
+                    help="⚠️ R853 起**不再参与 age 计算**（曝光改为 观测−发帖）；仅向后兼容")
     args = ap.parse_args(argv)
 
     stats = load_jsonl(args.stats)
@@ -166,9 +189,9 @@ def main(argv=None):
     if args.days > 0:
         joined = [r for r in joined if r["age_days"] <= args.days]
     _youngest = min((r["age_days"] for r in joined), default=None)
-    print("stats=%d metrics=%d joined=%d 导出时间=%s%s"
-          % (len(stats), len(metrics), len(joined), export.date(),
-             (" ｜ 最年轻 %.1f 天（偏旧的浏览数据别过度解读）" % _youngest) if _youngest is not None else ""))
+    print("stats=%d metrics=%d joined=%d 曝光口径=R853（观测−发帖）%s"
+          % (len(stats), len(metrics), len(joined),
+             (" ｜ 最短曝光 %.2f 天" % _youngest) if _youngest is not None else ""))
     if not joined:
         return 0
 

@@ -34,17 +34,40 @@ class TestProfitReport(unittest.TestCase):
         self.assertEqual(set(pr.index_published(rows)), {"1"})
 
     def test_join_computes_age_and_skips_unmatched(self):
+        """★ R853：age = 观测时刻(`content_stats.ts`) − 发帖时刻(`metrics.ts`)。"""
         pr = _load()
-        export = datetime(2026, 10, 18, tzinfo=timezone.utc)
         stats = [
-            {"content_id": "1", "ts": "2026-10-16T00:00:00Z", "views": 10},
-            {"content_id": "x", "ts": "2026-10-16T00:00:00Z", "views": 99},
+            {"content_id": "1", "ts": "2026-10-18T00:00:00Z", "views": 10},
+            {"content_id": "x", "ts": "2026-10-18T00:00:00Z", "views": 99},
         ]
-        idx = {"1": {"lang": "zh-CN"}}
-        out = pr.join_stats(stats, idx, export)
+        idx = {"1": {"lang": "zh-CN", "ts": "2026-10-16T00:00:00Z"}}
+        out = pr.join_stats(stats, idx)
         self.assertEqual(len(out), 1, "未关联的 stats 行必须丢弃")
         self.assertAlmostEqual(out[0]["age_days"], 2.0)
         self.assertAlmostEqual(out[0]["vpd"], 5.0)
+
+    def test_age_ignores_export_time_staleness(self):
+        """★★ R853 回归：**数据陈旧度不得被算进曝光时长**（这才是旧口径的错）。
+
+        同一篇帖（发帖 10-16、观测 10-18、浏览 10）：无论 `export_time` 传今天还是
+        两周后，读数都必须一样。旧口径下 export_time 越晚 ⇒ age 越大 ⇒ vpd 越低
+        ⇒「老批次被系统性算低 ~20×」的假象（HANDOVER 浏览量侧记过）。
+        """
+        pr = _load()
+        stats = [{"content_id": "1", "ts": "2026-10-18T00:00:00Z", "views": 10}]
+        idx = {"1": {"ts": "2026-10-16T00:00:00Z"}}
+        a = pr.join_stats(stats, idx, datetime(2026, 10, 18, tzinfo=timezone.utc))
+        b = pr.join_stats(stats, idx, datetime(2026, 11, 2, tzinfo=timezone.utc))
+        self.assertAlmostEqual(a[0]["vpd"], 5.0)
+        self.assertAlmostEqual(a[0]["vpd"], b[0]["vpd"],
+                               "export_time 不得影响读数（旧口径的病因就在这里）")
+
+    def test_age_skips_when_observation_precedes_post(self):
+        """★ R853：观测早于发帖 ⇒ 口径不成立 ⇒ 跳过，不硬算出负 age。"""
+        pr = _load()
+        stats = [{"content_id": "1", "ts": "2026-10-15T00:00:00Z", "views": 10}]
+        idx = {"1": {"ts": "2026-10-16T00:00:00Z"}}
+        self.assertEqual(pr.join_stats(stats, idx), [])
 
     def test_engagement_quality_flags_missing_columns(self):
         """R811：95% 零互动 ⇒ 判「疑似缺列、不可测」，不是「互动为零」。"""
