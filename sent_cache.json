@@ -1,15 +1,5 @@
 [
   {
-    "id": "d37fbde4ead38519",
-    "title": "XRP面临巨鲸抛压?分析师称跌破1.26美元或下探0.98美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-25T11:05:07.395770+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d36c425c2727f9b1",
     "title": "A 20-month Polkadot wallet breach reveals the dark side of faster crypto withdrawals",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5200,6 +5190,16 @@
     "title": "币安罚款及黑客事件损失估算达107亿美元,相当于五年税前利润约56%",
     "source": "Odaily星球日报 (中文快讯)",
     "sent_at": "2026-11-02T20:04:39.360945+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3e45a9246bf2282b",
+    "title": "Mercado Bitcoin wallets show post-hack transfers after $46M theft",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-11-02T20:25:53.586532+00:00",
     "tokens": [
       "BTC"
     ],
