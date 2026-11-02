@@ -1,15 +1,5 @@
 [
   {
-    "id": "a9dd2f22e547988a",
-    "title": "Dogecoin ETF Sees Biggest Weekly Withdrawal in October",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-24T16:30:04.181229+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "698704519dc0332b",
     "title": "XRP Hit by 2008% Liquidation Imbalance as Market Selloff Intensifies",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5193,6 +5183,16 @@
     "tokens": [
       "AERO",
       "UNI"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "e17f1cabe3e24186",
+    "title": "Pando Rings 黑客买入 7,548 枚 ETH,后将其中 4,000 枚转入 Tornado Cash",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-02T05:24:33.109093+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-TW"
   }

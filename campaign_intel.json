@@ -18,20 +18,20 @@
   "strategy_guidance": "当前Halloween Pumpkin Frenzy活动进入最后冲刺阶段，发帖机器人优先产出活动参与技巧、战绩复盘类内容绑定活动热度。同时结合新上线的TradFi USDⓈ-Margined永续合约、新增bStocks交易对、Spot Trading Tournament Season 10及Region-Exclusive Referral Rush 2026等官方动态，引导读者参与对应品类交易互动、完成Write to Earn任务获取激励，带动交易返佣。",
   "last_updated": "2026-11-01T18:24:13.405229Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "fails": 3,
-      "last_fail": "2026-11-02T04:04:00.555806+00:00",
-      "parked_until": "2026-11-02T10:04:00.555806+00:00"
-    },
     "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-11-02T05:23:31.669549+00:00",
       "fails": 1,
-      "reset_at": "2026-11-02T05:03:35.286065+00:00",
       "last_fail": "2026-11-02T00:43:32.313696+00:00"
     },
     "Bitcoinist (比特币向)": {
       "fails": 3,
-      "last_fail": "2026-11-02T05:03:35.866880+00:00",
+      "last_fail": "2026-11-02T05:23:32.223423+00:00",
       "parked_until": "2026-10-20T06:53:53.228743+00:00"
+    },
+    "CoinJournal (山寨异动)": {
+      "fails": 3,
+      "last_fail": "2026-11-02T04:04:00.555806+00:00",
+      "parked_until": "2026-11-02T10:04:00.555806+00:00"
     }
   },
   "_fallback_image": {
@@ -47,7 +47,7 @@
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 596,
+  "_img_rot": 597,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
