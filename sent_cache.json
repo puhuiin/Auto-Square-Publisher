@@ -1,15 +1,5 @@
 [
   {
-    "id": "c576f989fbd0431f",
-    "title": "2026年唯一获引进区块链基础设施企业,Solana Company入选香港第七批战略企业名单",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-25T03:24:36.869699+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "8ed60a67fe607502",
     "title": "Worldcoin 项目方关联地址 11 小时向交易所转入 1050 万枚 WLD",
     "source": "吴说区块链 (中文深度)",
@@ -5200,5 +5190,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "8ed7f32047d2c244",
+    "title": "Polygon brings US banking access to Solana’s $15 billion stablecoin market",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-02T12:35:29.161551+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
