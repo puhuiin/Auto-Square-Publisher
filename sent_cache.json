@@ -1,15 +1,5 @@
 [
   {
-    "id": "d88d4d964be46cb3",
-    "title": "'Not Good for Zcash': Key Developer Josh Swihart Halts ZEC Staking Upgrade",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-25T13:25:19.705578+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6ec93912aff4f991",
     "title": "Solana, Tether, and XRP Ledger Drive New Wave of Asset Tokenization",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5206,5 +5196,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "7fd3ff5a4c9d10d7",
+    "title": "Microsoft Bearish On Ripple? Copilot AI Predicts a Huge XRP Crash Looms",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-02T22:45:44.382699+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
