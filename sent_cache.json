@@ -1,15 +1,5 @@
 [
   {
-    "id": "3d9f0217c17df2b5",
-    "title": "Analyzing why Uniswap’s network growth hit a 4-year high despite UNI’s 5.4% drop",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-24T23:24:57.656201+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2a7fe902b9ce61de",
     "title": "Stellar Updates Bell Upgrade Guide Ahead Of November Votes",
     "source": "NewsBTC (比特币与山寨)",
@@ -5197,6 +5187,16 @@
     "sent_at": "2026-11-02T09:44:45.197512+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "28624f889fee8128",
+    "title": "数分钟内协助冻结相当大一部分资产,美国特勤局称涉及币安63亿美元黑客攻击案",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-02T10:04:47.675936+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
