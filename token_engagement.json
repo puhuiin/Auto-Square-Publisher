@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-20T17:10:36.301418Z",
+  "as_of": "2026-11-02T11:55:17.042516Z",
   "min_n": 4,
   "note": "per-token avg/median Square views (creator-center export); ranking-only engagement boost (R608/R609; boost uses median_views for outlier robustness). R820: values are RAW cumulative views, NOT normalized by exposure days — per-post normalization flips 50% of token buckets (Spearman 0.494) because the 'views grow with exposure' premise fails within language/batch strata; see rebuild_token_engagement docstring for the evidence.",
   "tokens": {

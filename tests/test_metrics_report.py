@@ -9517,9 +9517,14 @@ class TestR847BodyBeforeTags(unittest.TestCase):
 
     # ---- 判定③ 的配准护栏（R847 追补 / R848 改基准）----
     def test_cap_arm_warning_fires_on_post_change_baseline(self):
-        """★ 基线落在**被测改动**部署日之后 ⇒ 判定③ 没在测那次改动 ⇒ 必须喊出来。"""
+        """★ 基线落在**被测改动**部署日之后 ⇒ 判定③ 没在测那次改动 ⇒ 必须喊出来。
+
+        ★ R852 起**从常量派生日期**（别写死 10-30）：部署日一改，写死的测试就假红。
+        """
+        from datetime import date as _d, timedelta as _td
         mod = self._ew()
-        w = [{"date": "2026-10-30"}, {"date": "2026-10-31"}]
+        dd = _d.fromisoformat(mod.CAP_CHANGE_DEPLOY_DATE)
+        w = [{"date": dd.isoformat()}, {"date": (dd + _td(days=1)).isoformat()}]
         msg = mod.cap_arm_warning(w)
         self.assertIn("没配准", msg)
         self.assertIn(mod.CAP_CHANGE_DEPLOY_DATE, msg)
@@ -9546,7 +9551,7 @@ class TestR847BodyBeforeTags(unittest.TestCase):
         mod = self._ew()
         self.assertIn("处置臂也没配准",
                       mod.cap_treat_warning([{"date": "2026-10-28"}, {"date": "2026-10-29"}]))
-        self.assertEqual(mod.cap_treat_warning([{"date": "2026-10-31"}]), "",
+        self.assertEqual(mod.cap_treat_warning([{"date": mod.CAP_CHANGE_DEPLOY_DATE}]), "",
                          "处置窗在改动之后 ⇒ 不报警")
 
     # ---- R848：词数目标与预算的等式必须被钉住 ----
@@ -9878,6 +9883,19 @@ class TestR851hOverwrite(unittest.TestCase):
         self.assertEqual(mod.overwrite_verdict(base, [_win(18, 8)])[0], "样本不足",
                          "单窗/n<36 只能出「样本不足」")
 
+    def test_night_window_closed_boundary(self):
+        """夜窗 [14:00Z, 22:00Z)：22:00Z 之前未关闭，22:00Z 起才算关闭（未关窗不得参与判定）。"""
+        mod = self._ew()
+        import datetime as dt
+        self.assertFalse(mod.night_window_closed("2026-10-31",
+                         now=dt.datetime(2026, 10, 31, 18, 38, tzinfo=dt.timezone.utc)))
+        self.assertFalse(mod.night_window_closed("2026-10-31",
+                         now=dt.datetime(2026, 10, 31, 21, 59, 59, tzinfo=dt.timezone.utc)))
+        self.assertTrue(mod.night_window_closed("2026-10-31",
+                        now=dt.datetime(2026, 10, 31, 22, 0, 0, tzinfo=dt.timezone.utc)))
+        self.assertTrue(mod.night_window_closed("2026-10-30",
+                        now=dt.datetime(2026, 10, 31, 9, 0, 0, tzinfo=dt.timezone.utc)))
+
 
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
@@ -10008,15 +10026,16 @@ class TestR834EnLengthBudget(unittest.TestCase):
         src = self._main_src()
         anchor = "【★ 输出语种（最高优先级，覆盖以上所有中文示例）】"
         i = src.index(anchor)
-        return src[i:i + 4000]
+        return src[i:i + 6000]
 
     def test_en_word_target_fits_publish_budget(self):
         """★ 短讯目标必须落在可发布预算内，且**上沿要留够余量**。
 
         R834 曾把上沿设成 135 words（≈745 字符）—— 那**恰好贴着**预算边界（761 字符 =
         820 − 标签行），实测正文 p75 = 744、18~24% 的帖被判顶格。R848 收到 120 words
-        （≈660 字符）⇒ 距顶格线留 95 字符（等式由 `TestR847BodyBeforeTags::
-        test_en_short_word_target_fits_cap_budget` 钉住，别再靠人记）。
+        （≈660 字符）⇒ 距顶格线留 95 字符；R852 再收到 110 words（≈605 字符，留 150）
+        —— 因为实测模型会**超出目标 ~28%**（raw 中位 844≈153 词）、55% 被裁。
+        （等式由 `TestR847BodyBeforeTags::test_en_short_word_target_fits_cap_budget` 钉住。）
 
         ⚠️ 断言必须用**指令原文的加粗形态**（`短讯 **110~120 words**`）——否则会咬到
         `main.py` 里那段"引用旧值"的注释（R834 本轮就踩过：`assertNotIn("110~170 words")`

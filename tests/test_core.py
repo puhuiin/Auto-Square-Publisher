@@ -23082,9 +23082,9 @@ class TestR775EnglishBranchCampaignMention(unittest.TestCase):
         所以锚点跟着新值走——整行被删掉时它照样会红。
         """
         block = self._english_block()
-        # ⚠️ R848 更新锚点：篇幅值从 `110~135` 再收到 `110~120`（上沿 745→660 字符，
-        #    距顶格线留 95 字符；`135` 那个值会让模型按目标上沿写就贴线甚至被截）。
-        for kw in ("$TOKEN", "不喊单", "数字必须来自素材", "句长节奏", "110~120"):
+        # ⚠️ R852 更新锚点：篇幅值从 `110~120` 再收到 `100~110`（上沿 605 字符，
+        #    距顶格线留 150；实测模型会超出目标 ~28%，见 EN_SHORT_WORD_* 常量旁注释）。
+        for kw in ("$TOKEN", "不喊单", "数字必须来自素材", "句长节奏", "100~110"):
             self.assertIn(kw, block, "英文分支既有规则 %s 被误删" % kw)
 
     def test_guard_has_teeth(self):

@@ -67,6 +67,13 @@ MIN_ARM_WINDOWS = 2        # 每臂最少窗口数
 MIN_ARM_N = 36             # 每臂最少「配置正常」帖数
 
 
+def night_window_closed(date_utc: str, now=None) -> bool:
+    """夜窗 [14:00Z, 22:00Z) 是否已结束。未结束的窗口只有部分数据，不得参与判定。"""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    end = dt.datetime.fromisoformat(date_utc + "T%02d:00:00+00:00" % NIGHT_END_H)
+    return now >= end
+
+
 def in_night_window(ts: str, date_utc: str) -> bool:
     """ts 是否落在 date_utc 这一天的夜窗 [14:00Z, 22:00Z)。畸形 ts → False。"""
     try:
@@ -395,8 +402,9 @@ def formulaic_repetition_stats(rows, date_utc: str, min_docs: int = 6, n: int = 
             if b:
                 texts.append(b)
     if not texts:
+        # 空窗口必须与非空分支同键，否则聚合处 x["hit"] 会 KeyError（R851b 首次实跑即踩到）
         return {"date": date_utc, "n": 0, "min_docs": min_docs, "ngram": n, "topk": topk,
-                "share_pct": 0.0, "fragments": []}
+                "frag_count": 0, "hit": 0, "share_pct": 0.0, "fragments": []}
     cnt = collections.Counter()
     for t in texts:
         seen = set()
@@ -431,6 +439,12 @@ def repetition_verdict(base_stats, treat_stats) -> tuple:
     if len(treat_stats) < MIN_ARM_WINDOWS or n < MIN_ARM_N:
         return ("样本不足", "需 ≥%d 窗 / n≥%d；当前 %d 窗 / %d 篇"
                 % (MIN_ARM_WINDOWS, MIN_ARM_N, len(treat_stats), n))
+    # 护栏（R851b 修正）：min_docs=6 是固定绝对值，相对门槛为 6/n；两臂 n 相差大时，
+    # 样本少的一臂更难凑够 6 篇共现，读数不可比。n 差超 10% 不下结论。
+    base_n = sum(s.get("n", 0) for s in (base_stats or []))
+    if base_n and abs(n - base_n) / base_n > 0.10:
+        return ("样本不足", "基线 n=%d 与处置 n=%d 相差超 10%%，固定 min_docs 下读数不可比"
+                % (base_n, n))
     base = sum(s["share_pct"] for s in base_stats or []) / max(1, len(base_stats or []))
     treat = sum(s["share_pct"] for s in treat_stats) / len(treat_stats)
     if treat >= base:
@@ -490,6 +504,10 @@ def overwrite_verdict(base_stats, treat_stats) -> tuple:
     if len(treat_stats) < MIN_ARM_WINDOWS or known < MIN_ARM_N:
         return ("样本不足", "需 ≥%d 窗 / known≥%d；当前 %d 窗 / %d 篇"
                 % (MIN_ARM_WINDOWS, MIN_ARM_N, len(treat_stats), known))
+    # 护栏（R851h 修正）：基线臂若没有 trimmed_chars 字段（known=0），over_pct 会被默认成 0，
+    # 得出的"回滚"是假结论；此时 ⑦ 只能量现状，没有可比基线。
+    if sum(s["known"] for s in (base_stats or [])) == 0:
+        return ("样本不足", "基线臂无 trimmed_chars 字段（known=0），无可比基线，⑦ 只读现状")
     base = sum(s["over_pct"] for s in (base_stats or [])) / max(1, len(base_stats or []))
     treat = sum(s["over_pct"] for s in treat_stats) / len(treat_stats)
     if treat >= base:
@@ -563,7 +581,13 @@ CAP_REVERT_PCT = 20
 #     回滚，故这两窗就是干预前状态；R843/R845 只动标签/遥测，对长度是 +1 字符级）
 #     = **7/45 = 16%**；**通过** = ≥2 窗且 n≥36 且顶格 ≤5%；**回滚** = 顶格 ≥20%
 #     （⇒ 逐字还原 110~135）；介于两者 ⇒ 保留改动并标注「未被证实」。
-CAP_CHANGE_DEPLOY_DATE = "2026-10-30"
+#   · R852（2026-11-02）把上沿再收到 110 words（≈605 字符），留 150 字符。
+#     **预注册**：基线 = **R848 臂（10-30 + 10-31 = 4/46 = 9%）**——即"上一个被测量的
+#     篇幅目标状态"，与 R852 部署前的提示词只差这一档；**通过** ≤5%；**回滚** ≥20%
+#     （⇒ 逐字还原 110~120）；介于两者 ⇒ 保留并标注「未被证实」。
+#     ★ 连带风险（R851e）：缩短篇幅与 ① 漏提正相关 ⇒ 同一批还要盯 ①，
+#       不得比该臂（10-30/31 合并真漏 37%）更差 ≥15pp。
+CAP_CHANGE_DEPLOY_DATE = "2026-11-02"
 
 
 def cap_stats(rows, date_utc: str, lang: str = "en") -> dict:
@@ -771,8 +795,17 @@ def main(argv=None) -> int:
     ap.add_argument("--treatment", default="", help="逗号分隔的 UTC 日期")
     args = ap.parse_args(argv)
     rows = load_rows(args.metrics)
-    base = [window_stats(rows, d) for d in (args.baseline or "").split(",") if d]
-    treat = [window_stats(rows, d) for d in (args.treatment or "").split(",") if d]
+    # 未关闭的夜窗只有部分数据：从两臂剔除并明说，不参与任何判定
+    for arm_name, dates in ("基线", args.baseline), ("处置", args.treatment):
+        for d in (dates or "").split(","):
+            if d and not night_window_closed(d):
+                print("⚠️ %s臂 %s 夜窗尚未关闭（UTC 22:00 才结束），已剔除，不参与判定" % (arm_name, d))
+    closed_base = [d for d in (args.baseline or "").split(",") if d and night_window_closed(d)]
+    closed_treat = [d for d in (args.treatment or "").split(",") if d and night_window_closed(d)]
+    args.baseline = ",".join(closed_base)
+    args.treatment = ",".join(closed_treat)
+    base = [window_stats(rows, d) for d in closed_base]
+    treat = [window_stats(rows, d) for d in closed_treat]
     print("【英文夜窗体检 · 预注册判据 R819】窗口 = UTC 14:00–22:00（北京夜窗）")
     print("预注册基线：10-19 夜窗 %d/%d = %.1f%%"
           % (BASELINE_MISS, BASELINE_NORMAL, 100.0 * BASELINE_MISS / BASELINE_NORMAL))
