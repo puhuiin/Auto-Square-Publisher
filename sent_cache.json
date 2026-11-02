@@ -1,15 +1,5 @@
 [
   {
-    "id": "bf3a94c2a70c1d74",
-    "title": "某巨鲸去年交易WLD获利近100万美元,今年利润已全部回吐",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-25T13:04:03.477443+00:00",
-    "tokens": [
-      "WLD"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d88d4d964be46cb3",
     "title": "'Not Good for Zcash': Key Developer Josh Swihart Halts ZEC Staking Upgrade",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5202,6 +5192,16 @@
     "title": "AI poses greater threat to Bitcoin than quantum computing, Swan founder says",
     "source": "Cointelegraph (全球综合快讯)",
     "sent_at": "2026-11-02T22:04:58.265358+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "8c1ff468ea57ee6c",
+    "title": "Swan Bitcoin创始人称AI对比特币构成更直接安全威胁",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-02T22:27:44.195265+00:00",
     "tokens": [
       "BTC"
     ],
