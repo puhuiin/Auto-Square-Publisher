@@ -20,13 +20,13 @@
   "last_updated": "2026-11-02T06:44:17.757049Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "fails": 3,
       "last_fail": "2026-11-02T09:22:26.808827+00:00",
+      "fails": 3,
       "parked_until": "2026-10-20T06:53:53.228743+00:00"
     },
     "CoinJournal (山寨异动)": {
-      "fails": 3,
       "last_fail": "2026-11-02T04:04:00.555806+00:00",
+      "fails": 3,
       "parked_until": "2026-11-02T10:04:00.555806+00:00"
     }
   },
@@ -38,8 +38,8 @@
   "_article_sent_date": "2026-11-02",
   "_publish_park": {
     "477dfefdcbe01b3e": {
-      "fails": 1,
-      "last_fail": "2026-11-02T04:10:53.368366+00:00"
+      "last_fail": "2026-11-02T04:10:53.368366+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
