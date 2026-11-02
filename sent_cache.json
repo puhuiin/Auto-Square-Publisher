@@ -1,17 +1,5 @@
 [
   {
-    "id": "f73f08d1882b1734",
-    "title": "Ethereum’s RWA Dominance Slips as Solana, BNB Chain, Stellar, and Avalanche Gain Ground: Data",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-25T09:44:41.590819+00:00",
-    "tokens": [
-      "BNB",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "1e3cd3a299e6ae4c",
     "title": "Solana联创提出验证者权益加权预言机设想",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5202,6 +5190,18 @@
     "sent_at": "2026-11-02T18:44:36.842324+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8349562b69448983",
+    "title": "BNB’s $99 million ETF inflows came almost entirely before Binance’s hack",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-02T19:07:29.047015+00:00",
+    "tokens": [
+      "BNB",
+      "XRP",
+      "NEAR"
     ],
     "lang": "en"
   }
