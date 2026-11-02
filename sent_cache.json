@@ -1,15 +1,5 @@
 [
   {
-    "id": "cd8c15d5f1fadc88",
-    "title": "币安将于 10 月 25 日上线 PREDICTUSDT 合约盘前交易",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-25T07:25:00.560112+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f406ac4773f71182",
     "title": "ElizaOS 创始人 Shaw 称已完成 Pump fun 合约约 90% 的逆向工程,计划公开研究成果",
     "source": "吴说区块链 (中文深度)",
@@ -5200,6 +5190,18 @@
     "tokens": [
       "SHIB",
       "PENGU"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "00eef123605d3551",
+    "title": "Arkham:Mercado Bitcoin 黑客持有约 4600 万美元加密资产",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-02T16:24:18.856333+00:00",
+    "tokens": [
+      "ETH",
+      "BTC",
+      "PEPE"
     ],
     "lang": "en"
   }
