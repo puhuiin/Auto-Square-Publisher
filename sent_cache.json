@@ -1,15 +1,5 @@
 [
   {
-    "id": "df5437256faa9760",
-    "title": "星球午讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-26T06:07:13.930059+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "682ed2c87beb4288",
     "title": "錢生錢的遊戲,請用三個問題問清楚你買的是什麼",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5202,6 +5192,16 @@
     "sent_at": "2026-11-03T15:05:17.127020+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d4bf06b063556a06",
+    "title": "Bitcoin Price Trades Near $77,500 as Midterm Voting Begins",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-11-03T15:24:35.268551+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
