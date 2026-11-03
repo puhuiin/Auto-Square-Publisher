@@ -1,15 +1,5 @@
 [
   {
-    "id": "e15e7369579f61ea",
-    "title": "Ripple Swell Preview: The Evidence To Watch When Finance And Developers Meet",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-26T08:27:48.645308+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "553970da62a246b5",
     "title": "Alpaca 阿布扎比实体获 ADGM 原则性批准,拟提供虚拟资产经纪及托管服务",
     "source": "吴说区块链 (中文深度)",
@@ -5202,6 +5192,16 @@
     "sent_at": "2026-11-03T17:24:59.453039+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4cff5a89d4977c3f",
+    "title": "Hyperliquid (HYPE) Risks a 30% Price Crash: What Can Prevent the Collapse?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-03T17:44:20.404228+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
