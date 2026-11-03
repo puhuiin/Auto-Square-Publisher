@@ -21,7 +21,7 @@
     "Bitcoinist (比特币向)": {
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
       "fails": 3,
-      "last_fail": "2026-11-03T15:23:39.354876+00:00"
+      "last_fail": "2026-11-03T15:43:37.530539+00:00"
     }
   },
   "_fallback_image": {
@@ -32,12 +32,12 @@
   "_article_sent_date": "2026-11-03",
   "_publish_park": {
     "9bce5062ef91936c": {
-      "last_fail": "2026-11-03T13:49:37.082218+00:00",
-      "fails": 1
+      "fails": 1,
+      "last_fail": "2026-11-03T13:49:37.082218+00:00"
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 637,
+  "_img_rot": 638,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
