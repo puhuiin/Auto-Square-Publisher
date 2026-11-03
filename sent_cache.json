@@ -1,15 +1,5 @@
 [
   {
-    "id": "4642534e43d56e45",
-    "title": "Cardano Leios Plan Makes Higher Throughput A Series Of Votes And Tests",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-25T17:06:43.320816+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "83d2ea31b599882b",
     "title": "How a DAO Vote Becomes a Treasury Transfer",
     "source": "The Defiant (DeFi 深度)",
@@ -5204,6 +5194,16 @@
     "sent_at": "2026-11-03T04:25:57.915093+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "af7a1879b2cec7d4",
+    "title": "Arm Holdings shares slide as AI chip demand worries spread",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-03T04:46:43.474117+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
