@@ -1,15 +1,5 @@
 [
   {
-    "id": "95fa0c6fefe11111",
-    "title": "分析师:散户向币安转入BTC规模创6个月新高,巨鲸流入量持续下降",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-26T00:27:56.745849+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "fe6941959102facf",
     "title": "Internet Computer tops Solana at 2323 TPS: Why is ICP still falling?",
     "source": "AMBCrypto (技术与链上)",
@@ -5207,5 +5197,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "9c59dbbc9bbf2aa1",
+    "title": "Zcash Upgrade Could Triple Transaction Speed as ZEC Faces Crypto Governance Turmoil",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-03T11:04:51.219159+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
