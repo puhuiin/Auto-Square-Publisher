@@ -18,25 +18,25 @@
   "strategy_guidance": "万圣节交易冲刺活动临近尾声，优先围绕该活动发布参与复盘、实用攻略类内容，引导读者参与评论互动拿Write2Earn奖励；同时结合新上线的$PREDICT、多赛道交易锦标赛及P2P推荐活动话题，追当期平台活动热度，合规引导用户关注参与平台活动。",
   "last_updated": "2026-11-03T07:24:14.504939Z",
   "_feed_health": {
-    "深潮TechFlow (中文/繁体)": {
-      "last_fail": "2026-11-03T18:06:39.215431+00:00",
-      "reset_at": "2026-11-03T18:46:23.867987+00:00",
-      "fails": 1
+    "深潮TechFlow (中文/简体)": {
+      "fails": 1,
+      "last_fail": "2026-11-03T18:06:39.096802+00:00",
+      "reset_at": "2026-11-03T19:09:24.034953+00:00"
     },
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-11-03T18:46:22.054131+00:00",
       "fails": 3,
+      "last_fail": "2026-11-03T19:09:23.709882+00:00",
       "parked_until": "2026-10-20T06:53:53.228743+00:00"
     },
-    "深潮TechFlow (中文/简体)": {
-      "last_fail": "2026-11-03T18:06:39.096802+00:00",
-      "reset_at": "2026-11-03T18:46:22.133598+00:00",
-      "fails": 1
+    "深潮TechFlow (中文/繁体)": {
+      "fails": 1,
+      "last_fail": "2026-11-03T18:06:39.215431+00:00",
+      "reset_at": "2026-11-03T19:09:23.842179+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-03",

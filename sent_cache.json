@@ -1,15 +1,5 @@
 [
   {
-    "id": "25777a52ed4c2eb0",
-    "title": "Shiba Inu (SHIB) to Hit 2026 Low? Price Is Too Close to It",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-26T10:04:22.016158+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "df2df9f53aea79d8",
     "title": "XRP 财库公司 Evernorth 与 Cantor 达成股权融资协议,拟筹集最多 8070 万美元",
     "source": "吴说区块链 (中文深度)",
@@ -5202,6 +5192,17 @@
     "sent_at": "2026-11-03T18:47:12.995601+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fe25fa196b256d01",
+    "title": "Investor Accuses Ripple of Leaving XRP Holders Behind for RLUSD, Demands Action to Unlock Long-Awaited $20 XRP",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-03T19:12:11.271328+00:00",
+    "tokens": [
+      "XRP",
+      "RLUSD"
     ],
     "lang": "en"
   }
