@@ -1,16 +1,5 @@
 [
   {
-    "id": "36eec76a904bf9bf",
-    "title": "反对在OKX与ICE代币化股票平台交易的企业增至22家",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-25T16:44:45.378657+00:00",
-    "tokens": [
-      "USDC",
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4642534e43d56e45",
     "title": "Cardano Leios Plan Makes Higher Throughput A Series Of Votes And Tests",
     "source": "NewsBTC (比特币与山寨)",
@@ -5207,5 +5196,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "8919409d53de2757",
+    "title": "U.S. midterm elections risk Solana: Will 5% SOL ETF outflows create more losses?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-03T04:25:57.915093+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
