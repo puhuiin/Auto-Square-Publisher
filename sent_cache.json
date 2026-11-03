@@ -1,15 +1,5 @@
 [
   {
-    "id": "eafb3d8ee84bb58b",
-    "title": "Shiba Inu: Shytoshi Kusama's X Silence Lingers Amid Quiet Developments",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-25T15:44:32.397748+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "79607f59a5435de7",
     "title": "Ripple And Arf Target The Short Funding Gap Behind Cross-Border Payments",
     "source": "NewsBTC (比特币与山寨)",
@@ -5207,5 +5197,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c81fd1244dc88589",
+    "title": "XRP’s ‘Binance Hack 2026’ wallets move 40M tokens as ETF inflows persist",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-03T01:28:17.275773+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
