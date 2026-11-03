@@ -1,15 +1,5 @@
 [
   {
-    "id": "468339f2bb729599",
-    "title": "Big Week Ahead: Ripple Heads to NYC With Wall Street Heavyweights",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-25T15:25:14.170167+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "eafb3d8ee84bb58b",
     "title": "Shiba Inu: Shytoshi Kusama's X Silence Lingers Amid Quiet Developments",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5204,6 +5194,17 @@
     "sent_at": "2026-11-03T00:50:34.444600+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "f409fee51ef8d20e",
+    "title": "Chainalysis:Mercado Bitcoin 遭攻击损失约 4900 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-03T01:08:40.137620+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
