@@ -1,15 +1,5 @@
 [
   {
-    "id": "89daf0303e003a05",
-    "title": "Lido Opens Higher-Balance Ethereum Validators With A Deliberately Small Start",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-25T20:28:08.385418+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "96f7d09535d6afb4",
     "title": "Cardano Opens Dijkstra Testnet While The Upgrade Itself Awaits Its Next Step",
     "source": "NewsBTC (比特币与山寨)",
@@ -5204,6 +5194,18 @@
     "sent_at": "2026-11-03T08:10:12.190313+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "28538b90601591a4",
+    "title": "火币 HTX 平台资产一周回顾(10.26—11.01):BEAMX 领涨,Meme 赛道表现活跃",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-03T08:47:31.379427+00:00",
+    "tokens": [
+      "BEAMX",
+      "PEPE",
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
