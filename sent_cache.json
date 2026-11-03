@@ -1,15 +1,5 @@
 [
   {
-    "id": "4083915ff851f6c2",
-    "title": "Tokenized equities on Solana hit 1.5M holders, adoption grows",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-26T11:04:40.481725+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "c41cda8f9d63f01c",
     "title": "10 Days Left: Zcash Set to Cut Block Times to 25 Seconds",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5204,6 +5194,16 @@
     "sent_at": "2026-11-03T20:04:52.990238+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "99584fd7339ec365",
+    "title": "Zcash Futures Crash 859% as Long Positions Get Wiped Out: What Next?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-03T20:26:54.971463+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
