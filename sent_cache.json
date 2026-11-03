@@ -1,17 +1,5 @@
 [
   {
-    "id": "0f3d476a82ddb592",
-    "title": "BNB Chain 披露全新高性能 L1 計劃:目標 200 毫秒出塊、20 毫秒預確認,與 BSC 並行且不另發幣",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-26T03:27:16.847366+00:00",
-    "tokens": [
-      "BNB",
-      "SOL",
-      "APT"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3d57b2ae6c38357f",
     "title": "富兰克林邓普顿将推出股息再投资比特币 ETF,目标配置 5% BTC",
     "source": "深潮TechFlow (中文/简体)",
@@ -5206,5 +5194,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0c6c844fd97e1e8c",
+    "title": "Kraken冻结涉欧洲某机构1.33亿美元疑似被盗资金相关账户,正配合执法部门追查",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-03T12:44:13.552194+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
