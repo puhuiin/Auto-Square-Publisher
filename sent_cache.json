@@ -1,15 +1,5 @@
 [
   {
-    "id": "46805e30b3d9799f",
-    "title": "累计盈利394万美元,Hyperliquid交易员以10倍杠杆做多2.6万枚HYPE并追加2.35万枚买单",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-25T23:46:54.263416+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "95fa0c6fefe11111",
     "title": "分析师:散户向币安转入BTC规模创6个月新高,巨鲸流入量持续下降",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5205,6 +5195,16 @@
     "sent_at": "2026-11-03T10:24:57.280982+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "2c387793fd1fe1d2",
+    "title": "Solana records 3.3B successful transactions in October",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-03T10:44:22.518115+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
