@@ -1,15 +1,5 @@
 [
   {
-    "id": "6f61219993152c5d",
-    "title": "Fed Week Puts Stocks, Bitcoin, and DXY on Collision Course Before $11 Billion Expiry",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-25T19:04:22.904266+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "743d35eb71427222",
     "title": "Worldcoin team deposits $4.86M in WLD to OKX – As price tests $0.45 support",
     "source": "AMBCrypto (技术与链上)",
@@ -5208,5 +5198,16 @@
       "LSK"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "33cb28086ecc96cd",
+    "title": "巨鲸近 10 日向 CEX 存入 5140 万美元 AAVE 和 WLD,持续抛售",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-03T06:48:00.324795+00:00",
+    "tokens": [
+      "AAVE",
+      "WLD"
+    ],
+    "lang": "zh-CN"
   }
 ]
