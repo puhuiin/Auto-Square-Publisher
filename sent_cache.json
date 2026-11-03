@@ -1,17 +1,5 @@
 [
   {
-    "id": "2e2ff0ff9c64dd07",
-    "title": "‘Not good for Zcash’ – ZODL founder pushes back against Crosslink upgrade",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-25T20:07:10.749901+00:00",
-    "tokens": [
-      "ZEC",
-      "BTC",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "89daf0303e003a05",
     "title": "Lido Opens Higher-Balance Ethereum Validators With A Deliberately Small Start",
     "source": "NewsBTC (比特币与山寨)",
@@ -5206,6 +5194,16 @@
     "sent_at": "2026-11-03T07:51:58.277326+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "527efca1adf65558",
+    "title": "Is an XRP Relief Rally Coming? Wallet and Sentiment Data Explained",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-03T08:10:12.190313+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
