@@ -1,15 +1,5 @@
 [
   {
-    "id": "96f7d09535d6afb4",
-    "title": "Cardano Opens Dijkstra Testnet While The Upgrade Itself Awaits Its Next Step",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-25T21:07:18.224561+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2bb641b3f8246cd2",
     "title": "Uniswap 近 30 日交易量 654.86 亿美元,v4 首超 v3 成最大版本",
     "source": "吴说区块链 (中文深度)",
@@ -5208,5 +5198,15 @@
       "HYPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a4a0b6c2793b9a16",
+    "title": "Solana study finds wider spreads outside aggregators at five of six sampled pools",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-03T09:24:58.152852+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
