@@ -1,15 +1,5 @@
 [
   {
-    "id": "0401edb3f4f9634f",
-    "title": "PHP Hack: How Bitcoin Will Respond to the “Cyber Pandemic”",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-26T13:25:55.685751+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "0fdd1016ddf44823",
     "title": "Are XRP Holders Quietly Accumulating Before the Fed? The Data Is Mixed",
     "source": "BeInCrypto (山寨与行情)",
@@ -5203,6 +5193,16 @@
     "sent_at": "2026-11-03T22:24:42.476240+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a131a2bdb3d5425a",
+    "title": "CARD纳入Coinbase上币路线图",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-03T22:44:23.325336+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
