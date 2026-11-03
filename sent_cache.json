@@ -1,15 +1,5 @@
 [
   {
-    "id": "4cdbf772246f8b98",
-    "title": "XRP Takes Over New York City Subway Advertising",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-26T07:28:15.811482+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b78738b31db7cbd5",
     "title": "Dogecoin 基金会终止与 House of Doge 独家授权协议,后者须付 40 万美元",
     "source": "吴说区块链 (中文深度)",
@@ -5201,6 +5191,17 @@
     "sent_at": "2026-11-03T16:06:57.628014+00:00",
     "tokens": [
       "WLFI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "21816163750d3cea",
+    "title": "Wall Street killed Bitcoin’s wild rallies: 10x’s Markus Thielen",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-11-03T16:26:47.260677+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "en"
   }
