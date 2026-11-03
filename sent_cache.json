@@ -1,15 +1,5 @@
 [
   {
-    "id": "136b3bf81b9b124d",
-    "title": "Video Game Giant Hit by Breach Affecting 11,774,247 Records – Email Addresses and Login Data at Risk",
-    "source": "DailyHodl (山寨异动与百倍币叙事)",
-    "sent_at": "2026-10-25T14:46:26.055708+00:00",
-    "tokens": [
-      "ID"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8cdbc4893ed486c1",
     "title": "Can the Federal Reserve Keep Rates High Without Breaking Something?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5202,6 +5192,18 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "cedf15fde9edb977",
+    "title": "与冻结赛跑:黑了币安 64 亿美金后,朝鲜黑客是如何洗钱的?",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-03T00:29:10.934883+00:00",
+    "tokens": [
+      "ETH",
+      "BTC",
+      "TRX"
     ],
     "lang": "zh-CN"
   }
