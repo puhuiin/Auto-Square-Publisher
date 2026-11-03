@@ -1,15 +1,5 @@
 [
   {
-    "id": "3b434dd4b9171e1d",
-    "title": "$29 Billion More for XRP: Aviva Partners With Ripple for Milestone RWA Deal",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-26T14:04:10.553749+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "01dee61e3e1ad826",
     "title": "Ansem 看空 BTC、ETH 及大型股,预计先回调再续涨",
     "source": "深潮TechFlow (中文/简体)",
@@ -5203,6 +5193,16 @@
     "sent_at": "2026-11-03T23:04:30.603435+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "7cd082fcfc0e2ce3",
+    "title": "Mercado Bitcoin Assures Users Won’t Lose Funds Following $38M Security Breach",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-03T23:26:00.073496+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
