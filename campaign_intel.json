@@ -18,20 +18,20 @@
   "strategy_guidance": "万圣节交易冲刺活动临近尾声，优先围绕该活动发布参与复盘、实用攻略类内容，引导读者参与评论互动拿Write2Earn奖励；同时结合新上线的$PREDICT、多赛道交易锦标赛及P2P推荐活动话题，追当期平台活动热度，合规引导用户关注参与平台活动。",
   "last_updated": "2026-11-03T07:24:14.504939Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "parked_until": "2026-11-03T12:26:38.180302+00:00",
-      "last_fail": "2026-11-03T06:26:38.180302+00:00",
-      "fails": 3
-    },
     "Bitcoinist (比特币向)": {
-      "parked_until": "2026-10-20T06:53:53.228743+00:00",
+      "fails": 3,
       "last_fail": "2026-11-03T08:09:06.848478+00:00",
-      "fails": 3
+      "parked_until": "2026-10-20T06:53:53.228743+00:00"
+    },
+    "CoinJournal (山寨异动)": {
+      "fails": 3,
+      "last_fail": "2026-11-03T06:26:38.180302+00:00",
+      "parked_until": "2026-11-03T12:26:38.180302+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-03",
