@@ -1,15 +1,5 @@
 [
   {
-    "id": "743d35eb71427222",
-    "title": "Worldcoin team deposits $4.86M in WLD to OKX – As price tests $0.45 support",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-25T19:28:33.991539+00:00",
-    "tokens": [
-      "WLD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "269e40c1dc90cc7c",
     "title": "XRP ETFs buck Bitcoin and Ethereum outflows – Can price follow?",
     "source": "AMBCrypto (技术与链上)",
@@ -5209,5 +5199,16 @@
       "WLD"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "15f129f355318d3e",
+    "title": "63.6 亿美元史上最大加密盗窃案:TRM 详解朝鲜黑客如何入侵币安热钱包签名系统",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-03T07:12:16.620495+00:00",
+    "tokens": [
+      "ETH",
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
