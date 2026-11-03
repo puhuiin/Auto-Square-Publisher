@@ -1,15 +1,5 @@
 [
   {
-    "id": "f2ba7e60bc81b4ab",
-    "title": "X100 Exploit Proceeds Split Into Four 400-ETH Wallets",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-25T16:25:28.462911+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "36eec76a904bf9bf",
     "title": "反对在OKX与ICE代币化股票平台交易的企业增至22家",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5205,6 +5195,16 @@
     "tokens": [
       "CHIP",
       "NMR"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "bf3859cd11b530b1",
+    "title": "Tom Lee calls Ethereum’s 4% post-hack fall bullish",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-03T03:33:23.361549+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
