@@ -1,15 +1,5 @@
 [
   {
-    "id": "30448f551b9242d3",
-    "title": "Bitcoin Dips Below $80,000 Ahead of Fed Decision, Midterms",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-26T13:04:07.498930+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0401edb3f4f9634f",
     "title": "PHP Hack: How Bitcoin Will Respond to the “Cyber Pandemic”",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5205,5 +5195,15 @@
       "XLM"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "0001bf54585b8cd2",
+    "title": "Justin Sun Accuses Trump-Backed World Liberty of Using UAE Ties to Escape Federal Court",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-03T22:24:42.476240+00:00",
+    "tokens": [
+      "TRX"
+    ],
+    "lang": "zh-CN"
   }
 ]
