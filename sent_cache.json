@@ -1,15 +1,5 @@
 [
   {
-    "id": "c8ddf33014f459cc",
-    "title": "Kraken Lists SFI As Saffron Puts Uniswap Trading Fees At The Center Of Its Product",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-25T18:24:50.783122+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "08acd4e0b5d4840b",
     "title": "Hydra Test Replays Midnight Claims And Finds A Smaller, More Useful Speed Gain",
     "source": "NewsBTC (比特币与山寨)",
@@ -5208,5 +5198,15 @@
       "ARB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "b9740396cd3a9dd5",
+    "title": "Solana:SK 海力士代币化股票交易量达 5 亿美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-03T06:07:39.920965+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
