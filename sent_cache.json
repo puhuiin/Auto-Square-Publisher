@@ -1,15 +1,5 @@
 [
   {
-    "id": "08acd4e0b5d4840b",
-    "title": "Hydra Test Replays Midnight Claims And Finds A Smaller, More Useful Speed Gain",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-25T18:44:02.186240+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6f61219993152c5d",
     "title": "Fed Week Puts Stocks, Bitcoin, and DXY on Collision Course Before $11 Billion Expiry",
     "source": "BeInCrypto (山寨与行情)",
@@ -5208,5 +5198,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a1e64e5f2c9ff1ce",
+    "title": "Lisk Officially Shuts Down Blockchain After 10 Years",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-03T06:28:02.191884+00:00",
+    "tokens": [
+      "LSK"
+    ],
+    "lang": "zh-TW"
   }
 ]
