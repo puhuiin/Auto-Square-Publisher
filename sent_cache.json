@@ -1,17 +1,5 @@
 [
   {
-    "id": "8f1a7587306943aa",
-    "title": "PEARL 清醒剂:供需失衡、安全预算不足,这个 AI 挖矿叙事撑得住吗?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-26T05:05:22.101138+00:00",
-    "tokens": [
-      "ETC",
-      "BTC",
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f517415fa315b4c1",
     "title": "Reflect Makes Branded Token Issuance Easier While Leaving The Collateral In Charge",
     "source": "NewsBTC (比特币与山寨)",
@@ -5205,5 +5193,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "f8088070c975fbff",
+    "title": "吴说每日精选加密新闻 - 朝鲜否认参与币安 63 亿美元被盗事件,金与正称 FBI 指控是严重政治挑衅",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-03T14:12:19.510767+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
   }
 ]
