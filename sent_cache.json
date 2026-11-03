@@ -1,15 +1,5 @@
 [
   {
-    "id": "534d97a08bf9e7eb",
-    "title": "XRP Ledger Payment Volume Soars 2,633%: What's the Drive?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-26T12:24:49.684657+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "66263a365652bfbe",
     "title": "Quant Crypto Soars 18% as QNT Charges Toward $250",
     "source": "CryptoNews (全球快讯)",
@@ -5203,6 +5193,16 @@
     "tokens": [
       "XRP",
       "RLUSD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3ee30f92af1024a6",
+    "title": "Binance sits to benefit from First Digital listing",
+    "source": "Protos (隐私与合规)",
+    "sent_at": "2026-11-03T21:46:11.600215+00:00",
+    "tokens": [
+      "FDUSD"
     ],
     "lang": "en"
   }
