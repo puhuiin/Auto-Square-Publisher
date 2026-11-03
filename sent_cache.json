@@ -1,15 +1,5 @@
 [
   {
-    "id": "83d2ea31b599882b",
-    "title": "How a DAO Vote Becomes a Treasury Transfer",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-25T17:25:41.466985+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5e53f4fcacaec30e",
     "title": "Stellar (XLM) Clocks Busiest Day of Month With 14.16 Million Transactions",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5204,6 +5194,19 @@
     "sent_at": "2026-11-03T04:46:43.474117+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "39a26625ecd080b8",
+    "title": "Near Protocol (NEAR), XRP, Zcash (ZEC) and Shiba Inu (SHIB) Price Analysis for November 3: Is Recovery Still Possible?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-03T05:07:34.796679+00:00",
+    "tokens": [
+      "XRP",
+      "ZEC",
+      "SHIB",
+      "NEAR"
     ],
     "lang": "zh-TW"
   }
