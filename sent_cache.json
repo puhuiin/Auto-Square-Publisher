@@ -1,16 +1,5 @@
 [
   {
-    "id": "3fd67b32d48c4461",
-    "title": "AI agents help rescue ETH’s Glamsterdam fork, ‘Steal My Bitcoin’ site: Hodler’s Digest",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-25T23:05:35.317187+00:00",
-    "tokens": [
-      "ETH",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "1b765925c77f30a7",
     "title": "Pump.fun app passes Fomo in daily active traders on Solana",
     "source": "Crypto Briefing (深度与研报)",
@@ -5206,6 +5195,16 @@
     "sent_at": "2026-11-03T09:44:32.132628+00:00",
     "tokens": [
       "ARB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "16b08bd18ae68232",
+    "title": "XRP Defies Bear Market: New Wallets Double Despite Price Pressure",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-03T10:05:59.216891+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
