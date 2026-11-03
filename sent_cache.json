@@ -1,15 +1,5 @@
 [
   {
-    "id": "1b765925c77f30a7",
-    "title": "Pump.fun app passes Fomo in daily active traders on Solana",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-25T23:26:34.947059+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "46805e30b3d9799f",
     "title": "累计盈利394万美元,Hyperliquid交易员以10倍杠杆做多2.6万枚HYPE并追加2.35万枚买单",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5205,6 +5195,16 @@
     "sent_at": "2026-11-03T10:05:59.216891+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "71ad22c23ed4759c",
+    "title": "Shiba Inu (SHIB) Withdrawals on Binance Are Back",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-03T10:24:57.280982+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-CN"
   }
