@@ -1,15 +1,5 @@
 [
   {
-    "id": "0fdd1016ddf44823",
-    "title": "Are XRP Holders Quietly Accumulating Before the Fed? The Data Is Mixed",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-26T13:45:18.514976+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3b434dd4b9171e1d",
     "title": "$29 Billion More for XRP: Aviva Partners With Ripple for Milestone RWA Deal",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5205,5 +5195,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "7bf793f4c5dca303",
+    "title": "Elon Musk’s Grok AI Predicts a Monster Move for Ripple XRP",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-03T23:04:30.603435+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
