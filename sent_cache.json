@@ -1,15 +1,5 @@
 [
   {
-    "id": "df2df9f53aea79d8",
-    "title": "XRP 财库公司 Evernorth 与 Cantor 达成股权融资协议,拟筹集最多 8070 万美元",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-26T10:24:39.081039+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f02cb74435787f67",
     "title": "2,633% XRP Ledger Surge: Enormous Recovery Recorded",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5203,6 +5193,17 @@
     "tokens": [
       "XRP",
       "RLUSD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e42bd7ff2f28c3ad",
+    "title": "Hylo 在 Solana 上推出 3 倍杠杆 ZEC 代币 xZEC",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-03T19:44:46.677027+00:00",
+    "tokens": [
+      "ZEC",
+      "SOL"
     ],
     "lang": "en"
   }
