@@ -20,9 +20,13 @@
   "last_updated": "2026-11-02T19:04:31.399138Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
+      "last_fail": "2026-11-03T05:46:01.877009+00:00",
       "parked_until": "2026-10-20T06:53:53.228743+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-03T05:26:02.632925+00:00"
+      "fails": 3
+    },
+    "CoinJournal (山寨异动)": {
+      "fails": 1,
+      "last_fail": "2026-11-03T05:46:31.640349+00:00"
     }
   },
   "_fallback_image": {

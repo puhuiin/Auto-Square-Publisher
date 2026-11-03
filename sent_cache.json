@@ -1,16 +1,5 @@
 [
   {
-    "id": "a775304277b841cd",
-    "title": "Circle在Solana网络新铸造2.5亿枚USDC,价值约2.5亿美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-25T18:06:15.270782+00:00",
-    "tokens": [
-      "USDC",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c8ddf33014f459cc",
     "title": "Kraken Lists SFI As Saffron Puts Uniswap Trading Fees At The Center Of Its Product",
     "source": "NewsBTC (比特币与山寨)",
@@ -5207,6 +5196,16 @@
     "sent_at": "2026-11-03T05:26:32.804507+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "1799d2ea736957a3",
+    "title": "Arbitrum’s council moved $30 million of Binance hack funds without the hacker’s key",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-03T05:47:00.672906+00:00",
+    "tokens": [
+      "ARB"
     ],
     "lang": "zh-TW"
   }
