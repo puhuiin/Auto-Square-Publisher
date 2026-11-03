@@ -1,15 +1,5 @@
 [
   {
-    "id": "66263a365652bfbe",
-    "title": "Quant Crypto Soars 18% as QNT Charges Toward $250",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-26T12:46:53.692478+00:00",
-    "tokens": [
-      "QNT"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "30448f551b9242d3",
     "title": "Bitcoin Dips Below $80,000 Ahead of Fed Decision, Midterms",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5205,5 +5195,15 @@
       "FDUSD"
     ],
     "lang": "en"
+  },
+  {
+    "id": "1972a0d87acb705c",
+    "title": "Stellar Bell升级上线测试网,主网投票随后进行",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-03T22:04:46.919293+00:00",
+    "tokens": [
+      "XLM"
+    ],
+    "lang": "zh-TW"
   }
 ]
