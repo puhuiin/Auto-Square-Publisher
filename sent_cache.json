@@ -1,15 +1,5 @@
 [
   {
-    "id": "f02cb74435787f67",
-    "title": "2,633% XRP Ledger Surge: Enormous Recovery Recorded",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-26T10:44:47.081669+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4083915ff851f6c2",
     "title": "Tokenized equities on Solana hit 1.5M holders, adoption grows",
     "source": "Crypto Briefing (深度与研报)",
@@ -5203,6 +5193,16 @@
     "sent_at": "2026-11-03T19:44:46.677027+00:00",
     "tokens": [
       "ZEC",
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "21b7ae3db5b4bedd",
+    "title": "DarcyAri:约 3,600 枚币安被盗 SOL 流入 HitBTC,呼吁配合执法调查",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-03T20:04:52.990238+00:00",
+    "tokens": [
       "SOL"
     ],
     "lang": "en"
