@@ -1,17 +1,5 @@
 [
   {
-    "id": "269e40c1dc90cc7c",
-    "title": "XRP ETFs buck Bitcoin and Ethereum outflows – Can price follow?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-25T19:49:13.944554+00:00",
-    "tokens": [
-      "XRP",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2e2ff0ff9c64dd07",
     "title": "‘Not good for Zcash’ – ZODL founder pushes back against Crosslink upgrade",
     "source": "AMBCrypto (技术与链上)",
@@ -5210,5 +5198,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d6cf185bc16e8dad",
+    "title": "币安 SAFU 基金比特币余额减半,补仓规则未设动用期限",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-03T07:51:58.277326+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
