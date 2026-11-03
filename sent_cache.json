@@ -1,16 +1,5 @@
 [
   {
-    "id": "fe6941959102facf",
-    "title": "Internet Computer tops Solana at 2323 TPS: Why is ICP still falling?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-26T02:10:27.141509+00:00",
-    "tokens": [
-      "ICP",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ef1b4ea083a96916",
     "title": "Solana stablecoin holders hit 14M as SOL falls 13% – Can adoption drive SOL?",
     "source": "AMBCrypto (技术与链上)",
@@ -5203,6 +5192,16 @@
     "title": "Zcash Upgrade Could Triple Transaction Speed as ZEC Faces Crypto Governance Turmoil",
     "source": "CryptoNews (全球快讯)",
     "sent_at": "2026-11-03T11:04:51.219159+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "96403938dc539387",
+    "title": "拆解 Zcash 扩容路线图,5 大技术升级如何将其推向高并发隐私货币?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-03T11:24:07.953733+00:00",
     "tokens": [
       "ZEC"
     ],
