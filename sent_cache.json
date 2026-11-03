@@ -1,16 +1,5 @@
 [
   {
-    "id": "c41cda8f9d63f01c",
-    "title": "10 Days Left: Zcash Set to Cut Block Times to 25 Seconds",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-26T11:24:08.203563+00:00",
-    "tokens": [
-      "ZEC",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "52a193cc4c5a72bc",
     "title": "QCP Capital:比特币跌破8万美元,关注美联储决议及科技巨头财报,关键支撑位7.8万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5204,6 +5193,16 @@
     "sent_at": "2026-11-03T20:26:54.971463+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "754f20fd8e6fd092",
+    "title": "Cardano dips below $0.19 as bearish derivatives data signals further losses",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-11-03T20:44:21.001010+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
