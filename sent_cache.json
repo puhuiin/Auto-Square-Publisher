@@ -1,15 +1,5 @@
 [
   {
-    "id": "5e53f4fcacaec30e",
-    "title": "Stellar (XLM) Clocks Busiest Day of Month With 14.16 Million Transactions",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-25T17:44:30.006032+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a775304277b841cd",
     "title": "Circle在Solana网络新铸造2.5亿枚USDC,价值约2.5亿美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5207,6 +5197,16 @@
       "ZEC",
       "SHIB",
       "NEAR"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "da7e211c48c4c105",
+    "title": "Hyperliquid’s $224M Paradigm unstaking meets buyback hopes – Can HYPE hold $80?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-03T05:26:32.804507+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-TW"
   }
