@@ -1,15 +1,5 @@
 [
   {
-    "id": "f517415fa315b4c1",
-    "title": "Reflect Makes Branded Token Issuance Easier While Leaving The Collateral In Charge",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-26T05:24:04.900364+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9bb1d43b6b48c997",
     "title": "钱生钱的游戏,请用三个问题问清楚你买的是什么",
     "source": "深潮TechFlow (中文/简体)",
@@ -5201,6 +5191,18 @@
     "sent_at": "2026-11-03T14:12:19.510767+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "735207e267be68ce",
+    "title": "币安公布黑客事件初步报告:98%受影响资产已补足,28.5亿美元资产被冻结",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-03T14:46:46.459034+00:00",
+    "tokens": [
+      "XRP",
+      "SOL",
+      "OP"
     ],
     "lang": "en"
   }
