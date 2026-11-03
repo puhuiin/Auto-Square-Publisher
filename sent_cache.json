@@ -1,15 +1,5 @@
 [
   {
-    "id": "ef1b4ea083a96916",
-    "title": "Solana stablecoin holders hit 14M as SOL falls 13% – Can adoption drive SOL?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-26T02:29:39.514862+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "01bc032cef4de562",
     "title": "Bitget UEX 日报|通胀压力回升;科技财报迎考;BTC 贴近机构成本线",
     "source": "深潮TechFlow (中文/简体)",
@@ -5206,5 +5196,15 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "32ff9c905e594a61",
+    "title": "币安被盗 63 亿美元,冷钱包也不再保险:加密资产究竟放在哪里才安全?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-03T11:46:15.404381+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
