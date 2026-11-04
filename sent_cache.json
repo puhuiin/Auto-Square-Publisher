@@ -1,15 +1,5 @@
 [
   {
-    "id": "a61a1b25d46d3362",
-    "title": "XRP Eyes $15 as Ripple Wins Final Bank Approval Ahead of Swell",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-27T10:47:41.602082+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "03f64e2918d8778e",
     "title": "慢雾:Udesk 客服脚本被植入恶意代码,可窃取用户会话数据并替换充值地址",
     "source": "深潮TechFlow (中文/简体)",
@@ -5213,6 +5203,16 @@
     "tokens": [
       "XRP",
       "RLUSD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d36e52001e43aa53",
+    "title": "Aave and Lido lose $1.7B in massive DeFi capital drop after the Binance hack",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-04T20:10:49.553319+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "en"
   }
