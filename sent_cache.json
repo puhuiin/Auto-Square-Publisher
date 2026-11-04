@@ -1,15 +1,5 @@
 [
   {
-    "id": "4cd3095245ccc08f",
-    "title": "Hyperliquid’s $95 high to $76 low: A whale deposit deepens HYPE’s bearish case",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-26T15:04:10.649417+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "770a87b7763d5ce6",
     "title": "TechFlow 情报局:比特币跌破 8 万美元被 AI 抛售潮拖累,SpaceX 为买 GPU 融资 400 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5199,6 +5189,16 @@
     "title": "Bitcoin investors could pay the price as the Federal Reserve tightens bank lending rules",
     "source": "CryptoSlate (新赛道与代币经济)",
     "sent_at": "2026-11-04T00:12:45.029083+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "f59671f504e84d77",
+    "title": "Anthropic’s Claude AI Predicts a Massive BTC USD Move",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-04T00:44:25.557859+00:00",
     "tokens": [
       "BTC"
     ],
