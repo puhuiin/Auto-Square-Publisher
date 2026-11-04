@@ -1,15 +1,5 @@
 [
   {
-    "id": "259dd59fc42867f7",
-    "title": "Elon Musk’s Grok AI Predicts When Bitcoin Will Finally Hit its Ultimate Price Target",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-27T07:04:13.464987+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e18fd36c17aa1f7b",
     "title": "以太坊开发者修复Glamsterdam升级潜在漏洞,避免质押ETH被错误划入区块构建者账户",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5210,6 +5200,16 @@
     "tokens": [
       "SOL",
       "PENGU"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e2b0642300759990",
+    "title": "Solana Microscope Offers Open-Source Monitoring for Complex On-Chain Operations",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-04T16:06:02.259118+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
