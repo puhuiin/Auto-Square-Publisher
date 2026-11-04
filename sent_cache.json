@@ -1,15 +1,5 @@
 [
   {
-    "id": "71229130dd7b637c",
-    "title": "Akash发起治理投票,拟将网络从Cosmos迁移至Solana",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-26T20:44:41.809940+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "efee6ec2127c60f1",
     "title": "Perplexity AI Predicts a Wild Finish to 2026 for XRP",
     "source": "CryptoNews (全球快讯)",
@@ -5208,6 +5198,16 @@
     "sent_at": "2026-11-04T08:24:44.721253+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4a7917ab834df087",
+    "title": "Zcash 社区资助委员会撤回将约 9.8 万枚 ZEC 转向未来矿工奖励的提案",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-04T08:50:28.866965+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
