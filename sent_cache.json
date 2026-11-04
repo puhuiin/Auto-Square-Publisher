@@ -1,16 +1,5 @@
 [
   {
-    "id": "7ac69ed1373a5985",
-    "title": "Solana 交易員再向幣安存入 1 億枚 PUMP,6 日累計存入 3 億枚約 131 萬美元",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-10-27T11:45:19.645381+00:00",
-    "tokens": [
-      "PUMP",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b46d69ea836e79cd",
     "title": "Wintermute:BTC 连续第三周下跌,FOMC 与 PCE 将决定短期方向",
     "source": "深潮TechFlow (中文/简体)",
@@ -5211,6 +5200,16 @@
     "sent_at": "2026-11-04T20:31:03.381128+00:00",
     "tokens": [
       "POL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3d12a92e901e7912",
+    "title": "Nasdaq Approves Listing of Canary’s Staked Injective ETF",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-04T20:49:19.330942+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "en"
   }
