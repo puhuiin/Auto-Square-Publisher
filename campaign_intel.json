@@ -18,15 +18,15 @@
   "strategy_guidance": "当前无明确截止日期的Halloween Pumpkin Frenzy是优先级最高的追贴方向，可围绕活动冲刺玩法输出内容；同步结合新上线代币$PREDICT、新增bStocks交易对及 ongoing 的Spot Trading Tournament Season 10等官方动态，引导读者参与官方活动互动、跟进Write2Earn规则获取奖励，贴合当期活动热度提升内容曝光。",
   "last_updated": "2026-11-04T08:04:29.033041Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "fails": 2,
-      "last_fail": "2026-11-04T07:23:33.235565+00:00",
-      "reset_at": "2026-11-04T10:43:45.147120+00:00"
-    },
     "CryptoSlate (新赛道与代币经济)": {
-      "fails": 2,
       "last_fail": "2026-11-04T09:26:18.829560+00:00",
-      "reset_at": "2026-11-04T10:43:44.742085+00:00"
+      "fails": 2,
+      "reset_at": "2026-11-04T11:03:31.642968+00:00"
+    },
+    "CoinJournal (山寨异动)": {
+      "last_fail": "2026-11-04T07:23:33.235565+00:00",
+      "fails": 2,
+      "reset_at": "2026-11-04T11:03:32.397213+00:00"
     }
   },
   "_fallback_image": {
@@ -37,7 +37,7 @@
   "_article_sent_date": "2026-11-04",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 663,
+  "_img_rot": 664,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

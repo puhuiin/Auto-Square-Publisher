@@ -1,15 +1,5 @@
 [
   {
-    "id": "9b22e76d9e672f6b",
-    "title": "Osmosis Ends OSMO Inflation, Shifting Staking Rewards to Revenue",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-26T23:48:54.997441+00:00",
-    "tokens": [
-      "OSMO"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "74230a4a25111a7c",
     "title": "Osmosis 社区通过提案,将停止 OSMO 通胀发行并转向协议收入分配",
     "source": "深潮TechFlow (中文/简体)",
@@ -5206,6 +5196,16 @@
     "title": "Solana Co-Founder Names Biggest Threat to Crypto",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-11-04T10:45:36.911723+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c13e3985b0d91d95",
+    "title": "Solana’s price drops below $100 for 4 consecutive days: Is a recovery still possible?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-04T11:04:38.999852+00:00",
     "tokens": [
       "SOL"
     ],
