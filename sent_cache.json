@@ -1,15 +1,5 @@
 [
   {
-    "id": "5db79d1588ac870e",
-    "title": "CZ pitches BNB Chain’s role in AI as BNB Standard rings Nasdaq bell",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-10-26T20:06:37.632713+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f9180f71a5d2291d",
     "title": "Solana’s Next Latency Idea Has a Geographic Trade-Off Validators Cannot Ignore",
     "source": "NewsBTC (比特币与山寨)",
@@ -5210,5 +5200,15 @@
       "TRX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "3fdca6968c97f88b",
+    "title": "a16z 合伙人:代码正在无限贬值,为什么说网络效应才是 AI 时代的终极护城河?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-04T08:05:31.220712+00:00",
+    "tokens": [
+      "UNI"
+    ],
+    "lang": "zh-CN"
   }
 ]
