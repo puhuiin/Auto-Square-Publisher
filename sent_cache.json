@@ -1,15 +1,5 @@
 [
   {
-    "id": "f9180f71a5d2291d",
-    "title": "Solana’s Next Latency Idea Has a Geographic Trade-Off Validators Cannot Ignore",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-26T20:24:07.517460+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "71229130dd7b637c",
     "title": "Akash发起治理投票,拟将网络从Cosmos迁移至Solana",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5208,6 +5198,16 @@
     "sent_at": "2026-11-04T08:05:31.220712+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4008692699a20920",
+    "title": "Ethereum reclaims $2,300 as $1.61B ETF outflows weigh on recovery",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-11-04T08:24:44.721253+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
