@@ -1,16 +1,5 @@
 [
   {
-    "id": "3e5edb7b4f2f4531",
-    "title": "Agentic Wallet 进阶指南:从自动扫盘到链上交易,手把手搭建你的 AI 交易系统",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-27T04:47:18.092163+00:00",
-    "tokens": [
-      "ID",
-      "BNB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d575ddaec502d6c8",
     "title": "Arthur Hayes 新文:美联储三杀局,鲍威尔越挣扎,加密牛市越疯狂",
     "source": "深潮TechFlow (中文/简体)",
@@ -5211,5 +5200,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "386a93f31a5080d2",
+    "title": "Why rising XRP whale counts are a fake bullish signal",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-04T14:06:19.277175+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
   }
 ]
