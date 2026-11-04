@@ -1,15 +1,5 @@
 [
   {
-    "id": "aa553c4a28480fd1",
-    "title": "Solana RWA holders reach 1.73M, adding 140,000 in one week",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-26T15:45:16.138928+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8e097540d480bf0d",
     "title": "存款额创历史新高,Aave V4突破15亿美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5197,6 +5187,16 @@
     "title": "Binance Says $6.34 Billion Hack Began With Fake Job Interview",
     "source": "Bitcoin Magazine (比特币核心)",
     "sent_at": "2026-11-04T01:03:54.527723+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "f2a57c7866c2dfb9",
+    "title": "Brazil’s Largest Crypto Exchange Goes Offline After $49,000,000 Hack",
+    "source": "DailyHodl (山寨异动与百倍币叙事)",
+    "sent_at": "2026-11-04T01:24:03.485723+00:00",
     "tokens": [
       "BTC"
     ],
