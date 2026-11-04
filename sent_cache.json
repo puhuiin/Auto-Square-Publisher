@@ -1,15 +1,5 @@
 [
   {
-    "id": "688bbfc7aa9208cb",
-    "title": "AI Agents Found a Way Into Anthropic's Business Systems in Under 12 Hours",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-26T19:45:00.958570+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5db79d1588ac870e",
     "title": "CZ pitches BNB Chain’s role in AI as BNB Standard rings Nasdaq bell",
     "source": "The Block (机构与政策)",
@@ -5208,5 +5198,17 @@
       "BNB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "699cd124492e1083",
+    "title": "总销毁金额超1.2 亿美元,波场TRON 生态四大代币价值通缩加速进化,机制升级与品牌升级双核驱动价值爆发新周期",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-04T07:26:43.504862+00:00",
+    "tokens": [
+      "JST",
+      "WIN",
+      "TRX"
+    ],
+    "lang": "zh-TW"
   }
 ]
