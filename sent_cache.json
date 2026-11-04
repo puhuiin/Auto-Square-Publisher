@@ -1,15 +1,5 @@
 [
   {
-    "id": "ea5ffc567fcfe8db",
-    "title": "Anthropic’s Claude AI Predicts a Huge Move for Solana by 2027",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-26T17:40:59.496986+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b9f035a682ae8ed6",
     "title": "SUI adds Cetus AI tools and Samsung access – Why is capital leaving?",
     "source": "AMBCrypto (技术与链上)",
@@ -5202,6 +5192,17 @@
     "sent_at": "2026-11-04T04:48:39.763757+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "7907f7b54dddfd1e",
+    "title": "质押ZKC可定期获取AI模型额度,Boundless将推出代币化推理计划",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-04T05:10:28.582643+00:00",
+    "tokens": [
+      "ZKC",
+      "ZK"
     ],
     "lang": "zh-TW"
   }
