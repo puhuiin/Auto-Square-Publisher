@@ -19,18 +19,18 @@
   "last_updated": "2026-11-04T08:04:29.033041Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "last_fail": "2026-11-04T07:23:33.235565+00:00",
       "fails": 2,
-      "reset_at": "2026-11-04T08:49:06.310948+00:00"
+      "reset_at": "2026-11-04T09:26:02.768873+00:00",
+      "last_fail": "2026-11-04T07:23:33.235565+00:00"
     },
     "CryptoSlate (新赛道与代币经济)": {
-      "last_fail": "2026-11-04T08:49:22.209102+00:00",
-      "fails": 1
+      "last_fail": "2026-11-04T09:26:18.829560+00:00",
+      "fails": 2
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-04",
