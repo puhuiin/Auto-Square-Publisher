@@ -1,15 +1,5 @@
 [
   {
-    "id": "b9f035a682ae8ed6",
-    "title": "SUI adds Cetus AI tools and Samsung access – Why is capital leaving?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-26T18:04:18.988746+00:00",
-    "tokens": [
-      "SUI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "50595a4fc41226ca",
     "title": "Elon Musk's DOGE Staffers Went From Jobless to Hacking Anthropic",
     "source": "BeInCrypto (山寨与行情)",
@@ -5203,6 +5193,18 @@
     "tokens": [
       "ZKC",
       "ZK"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "01ab29f4f951d12b",
+    "title": "价值1819万美元,Mercado Bitcoin黑客将多种山寨币兑换为ETH",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-04T05:28:39.885655+00:00",
+    "tokens": [
+      "ETH",
+      "PEPE",
+      "AAVE"
     ],
     "lang": "zh-TW"
   }
