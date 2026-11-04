@@ -1,15 +1,5 @@
 [
   {
-    "id": "920455251b68842d",
-    "title": "BNB Chain tokenized assets surge in Q3 as RWA supply reaches $4.96B",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-27T07:45:02.792282+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "640840e228ce8792",
     "title": "比特币 DEX On Nexus 遭攻击损失 8.5 枚 BTC:旧版签名漏洞成突破口,V1 平台紧急关停",
     "source": "深潮TechFlow (中文/简体)",
@@ -5210,6 +5200,16 @@
     "sent_at": "2026-11-04T16:27:12.207176+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e2559e4e43f4e8b7",
+    "title": "ZetaChain提案销毁约5500万枚ZETA,承诺2027年不出售基金会持有的新增解锁代币",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-04T16:47:39.212662+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
