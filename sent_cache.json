@@ -1,15 +1,5 @@
 [
   {
-    "id": "74230a4a25111a7c",
-    "title": "Osmosis 社区通过提案,将停止 OSMO 通胀发行并转向协议收入分配",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-27T00:31:05.978629+00:00",
-    "tokens": [
-      "OSMO"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "0cf570d644b074c6",
     "title": "BNB Chain Q3 报告:代币化股票交易额达 256 亿美元,链上日活地址降 14%",
     "source": "深潮TechFlow (中文/简体)",
@@ -5210,5 +5200,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "b0bf85281fda4bab",
+    "title": "18 New XRP Millionaires Emerge in 72 Hours: Does It Signal a Price Bottom?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-04T11:24:01.138002+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
