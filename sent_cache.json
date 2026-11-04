@@ -1,15 +1,5 @@
 [
   {
-    "id": "2a326925143d6172",
-    "title": "Firedancer 漏洞赏金新规:每份报告需销毁 1 枚 SOL,应对 AI 刷量",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-27T08:24:24.383346+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3df873c97f18bb0f",
     "title": "美国中期选举成「金钱战」:50 大金主豪掷 27.7 亿美元,马斯克领跑、加密巨头集体入局",
     "source": "深潮TechFlow (中文/简体)",
@@ -5211,6 +5201,17 @@
     "tokens": [
       "USDC",
       "AAVE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f94046dd464ad782",
+    "title": "Privacy Cash Pauses Deposits After Binance Hack",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-04T17:27:29.441213+00:00",
+    "tokens": [
+      "ETH",
+      "SOL"
     ],
     "lang": "en"
   }
