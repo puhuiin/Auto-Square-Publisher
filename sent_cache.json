@@ -1,15 +1,5 @@
 [
   {
-    "id": "4283c2be078e18f2",
-    "title": "XRP ETFs bring in $4.26M – Yet THIS whale signal raises questions",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-26T22:26:07.765873+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0a40dc3ebedd18a9",
     "title": "Tuttle提交多只细分杠杆ETF申请,包括2倍做多亚洲存储和Zcash ETF",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5210,5 +5200,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "78a570480c71c09c",
+    "title": "SUI crypto price prediction: Can bulls defend $0.84 and avoid a 21% drop?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-04T09:57:17.466367+00:00",
+    "tokens": [
+      "SUI"
+    ],
+    "lang": "zh-CN"
   }
 ]
