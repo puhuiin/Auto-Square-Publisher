@@ -1,17 +1,5 @@
 [
   {
-    "id": "0e4d8b3b60c3b262",
-    "title": "今日加密货币市值前 100 代币涨跌:QNT 涨 12.79%,GRAM 跌 2.77%",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-26T16:24:12.539493+00:00",
-    "tokens": [
-      "QNT",
-      "GRAM",
-      "NIGHT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ebe2e05cedb15835",
     "title": "Who Owns Dogecoin (DOGE)? Controversial Corporate Merger Splits Community",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5203,5 +5191,17 @@
       "ADA"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d94f2d944e173d15",
+    "title": "1.01亿美元高倍杠杆多单地址濒临爆仓,已亏损172.5万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-04T03:24:42.900568+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
