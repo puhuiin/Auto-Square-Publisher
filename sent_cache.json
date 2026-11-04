@@ -1,15 +1,5 @@
 [
   {
-    "id": "e18fd36c17aa1f7b",
-    "title": "以太坊开发者修复Glamsterdam升级潜在漏洞,避免质押ETH被错误划入区块构建者账户",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-27T07:24:46.934214+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "920455251b68842d",
     "title": "BNB Chain tokenized assets surge in Q3 as RWA supply reaches $4.96B",
     "source": "Crypto Briefing (深度与研报)",
@@ -5210,6 +5200,16 @@
     "sent_at": "2026-11-04T16:06:02.259118+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d2c9cc49c6d9548f",
+    "title": "What's Next for Crypto? Ripple Exec Shares Key Insights From BlackRock Discussion",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-04T16:27:12.207176+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
