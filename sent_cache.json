@@ -1,16 +1,5 @@
 [
   {
-    "id": "30b46971f398b0a1",
-    "title": "Ripple Treasury SVP Unveils Always-On AI Treasury: What It Means for XRP Ecosystem",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-26T17:24:17.648664+00:00",
-    "tokens": [
-      "XRP",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ea5ffc567fcfe8db",
     "title": "Anthropic’s Claude AI Predicts a Huge Move for Solana by 2027",
     "source": "CryptoNews (全球快讯)",
@@ -5203,6 +5192,16 @@
       "USDC",
       "RWUSD",
       "BFUSD"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "365af31104d452fd",
+    "title": "BitMart 关停期间遭黑客攻击,创始人称或与 Mercado Bitcoin 攻击同团伙",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-04T04:48:39.763757+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
