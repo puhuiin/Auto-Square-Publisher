@@ -1,15 +1,5 @@
 [
   {
-    "id": "8e097540d480bf0d",
-    "title": "存款额创历史新高,Aave V4突破15亿美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-26T16:06:09.615299+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0e4d8b3b60c3b262",
     "title": "今日加密货币市值前 100 代币涨跌:QNT 涨 12.79%,GRAM 跌 2.77%",
     "source": "深潮TechFlow (中文/简体)",
@@ -5201,5 +5191,17 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e7c3800cfe1661ff",
+    "title": "XRP, Near Protocol (NEAR), Zcash (ZEC) and Cardano (ADA) Price Analysis for November 4: Market Is Bleeding Heavily",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-04T01:44:27.790278+00:00",
+    "tokens": [
+      "XRP",
+      "ZEC",
+      "ADA"
+    ],
+    "lang": "zh-TW"
   }
 ]
