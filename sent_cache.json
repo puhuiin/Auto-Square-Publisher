@@ -1,15 +1,5 @@
 [
   {
-    "id": "b9ceaec4ce9f9e33",
-    "title": "Dogecoin Bulls Zero In on $0.081 as Whale Buying and a Key Buy Signal Align",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-26T14:45:16.897982+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4cd3095245ccc08f",
     "title": "Hyperliquid’s $95 high to $76 low: A whale deposit deepens HYPE’s bearish case",
     "source": "AMBCrypto (技术与链上)",
@@ -5199,6 +5189,16 @@
     "title": "毛利润同比增长22%,Block第三季度达32.4亿美元",
     "source": "Odaily星球日报 (中文快讯)",
     "sent_at": "2026-11-03T23:44:26.845680+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1accee3b7d89b2bf",
+    "title": "Bitcoin investors could pay the price as the Federal Reserve tightens bank lending rules",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-04T00:12:45.029083+00:00",
     "tokens": [
       "BTC"
     ],
