@@ -1,15 +1,5 @@
 [
   {
-    "id": "a9c125b68389ee0e",
-    "title": "约68.5万美元资金被盗,DotSwap V1遭攻击",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-27T06:24:58.829509+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "325a1b096b8137ba",
     "title": "Akash Opens Vote to Move From Cosmos to Solana",
     "source": "The Defiant (DeFi 深度)",
@@ -5209,6 +5199,16 @@
     "tokens": [
       "USDC",
       "AAVE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "cc4159a23d0d6d24",
+    "title": "Official Trump (TRUMP) Drops to a 3-Month Low Following the Democrats’ Victory: Details",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-04T15:25:27.071629+00:00",
+    "tokens": [
+      "TRUMP"
     ],
     "lang": "en"
   }
