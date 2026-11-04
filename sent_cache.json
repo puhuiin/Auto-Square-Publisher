@@ -1,17 +1,5 @@
 [
   {
-    "id": "770a87b7763d5ce6",
-    "title": "TechFlow 情报局:比特币跌破 8 万美元被 AI 抛售潮拖累,SpaceX 为买 GPU 融资 400 亿美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-26T15:25:00.019745+00:00",
-    "tokens": [
-      "GLM",
-      "ETH",
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "aa553c4a28480fd1",
     "title": "Solana RWA holders reach 1.73M, adding 140,000 in one week",
     "source": "Crypto Briefing (深度与研报)",
@@ -5199,6 +5187,16 @@
     "title": "Anthropic’s Claude AI Predicts a Massive BTC USD Move",
     "source": "CryptoNews (全球快讯)",
     "sent_at": "2026-11-04T00:44:25.557859+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "df0daa224aa471b7",
+    "title": "Binance Says $6.34 Billion Hack Began With Fake Job Interview",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-11-04T01:03:54.527723+00:00",
     "tokens": [
       "BTC"
     ],
