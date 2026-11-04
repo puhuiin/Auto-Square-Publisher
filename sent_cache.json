@@ -1,15 +1,5 @@
 [
   {
-    "id": "1607a84587d7d71d",
-    "title": "富兰克林邓普顿两只比特币分红再投资ETF预计即将推出",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-26T17:04:34.436739+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "30b46971f398b0a1",
     "title": "Ripple Treasury SVP Unveils Always-On AI Treasury: What It Means for XRP Ecosystem",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5203,5 +5193,17 @@
       "BNB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "7afc007664c10095",
+    "title": "稳定币高息争夺战",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-04T04:28:39.480075+00:00",
+    "tokens": [
+      "USDC",
+      "RWUSD",
+      "BFUSD"
+    ],
+    "lang": "zh-TW"
   }
 ]
