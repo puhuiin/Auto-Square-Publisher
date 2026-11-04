@@ -1,16 +1,5 @@
 [
   {
-    "id": "838fe9daf85a4ca0",
-    "title": "Bitget UEX 日报|Anthropic 冲刺 IPO;Meta 融资扩 AI;BTC 徘徊成本线",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-27T03:04:54.935003+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "bfa1a1d016a5e78b",
     "title": "Galaxy 研报:比特币熊市已在 6 月见底,快钱撤光、老币抛压减半,现在是加仓并持有的时机",
     "source": "深潮TechFlow (中文/简体)",
@@ -5208,5 +5197,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c4d5c6ddf2f2a9e2",
+    "title": "Zcash grants committee drops plan to redirect 98,000 ZEC to future mining rewards",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-04T12:25:16.696571+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
