@@ -1,15 +1,5 @@
 [
   {
-    "id": "50595a4fc41226ca",
-    "title": "Elon Musk's DOGE Staffers Went From Jobless to Hacking Anthropic",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-26T18:24:09.533640+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "74980d1a7ba082f9",
     "title": "XRP Ledger Gets Another Major Fund as Aviva Expands Tokenization Push",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5205,6 +5195,17 @@
       "ETH",
       "PEPE",
       "AAVE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "02f1126e3efa76a6",
+    "title": "Binance Hacker Continues Aggressive Bitcoin Buying Spree",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-04T05:49:35.757271+00:00",
+    "tokens": [
+      "BTC",
+      "SOL"
     ],
     "lang": "zh-TW"
   }
