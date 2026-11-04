@@ -1,15 +1,5 @@
 [
   {
-    "id": "14ddb6340cb2e0ea",
-    "title": "Faster Solana slots fail to stop memecoin bot snipers",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-27T04:25:39.713528+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3e5edb7b4f2f4531",
     "title": "Agentic Wallet 进阶指南:从自动扫盘到链上交易,手把手搭建你的 AI 交易系统",
     "source": "深潮TechFlow (中文/简体)",
@@ -5209,6 +5199,16 @@
       "USDC",
       "UNI",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "5f9cd4adcb681a5c",
+    "title": "TechFlow 情报局:AMD 数据中心收入近翻倍盘后大涨 9%,Binance 披露 63 亿美元被盗始于一场假面试",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-04T13:44:37.460214+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
