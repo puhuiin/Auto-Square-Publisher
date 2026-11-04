@@ -1,15 +1,5 @@
 [
   {
-    "id": "05465e0f518a9805",
-    "title": "Akash Network 宣布选择 Solana 作为区块链迁移目标",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-26T19:04:29.658499+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8428a61fb64951c0",
     "title": "$200 Million in 7 Days: Ripple's New Stablecoin Outpaces Rivals in Weekly DeFi Volume",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5208,5 +5198,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "f2e9c7cb7249024d",
+    "title": "Stablecoin supply falls $17B as Solana card spending hits $141M",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-04T06:47:17.234567+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
