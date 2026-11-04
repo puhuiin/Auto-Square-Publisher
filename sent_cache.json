@@ -1,15 +1,5 @@
 [
   {
-    "id": "325a1b096b8137ba",
-    "title": "Akash Opens Vote to Move From Cosmos to Solana",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-27T06:44:58.627243+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "259dd59fc42867f7",
     "title": "Elon Musk’s Grok AI Predicts When Bitcoin Will Finally Hit its Ultimate Price Target",
     "source": "CryptoNews (全球快讯)",
@@ -5209,6 +5199,17 @@
     "sent_at": "2026-11-04T15:25:27.071629+00:00",
     "tokens": [
       "TRUMP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3282168c6216a173",
+    "title": "Global asset manager Schroders brings emerging market bond fund to Solana",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-04T15:47:14.275329+00:00",
+    "tokens": [
+      "SOL",
+      "PENGU"
     ],
     "lang": "en"
   }
