@@ -1,15 +1,5 @@
 [
   {
-    "id": "10566af0c2213172",
-    "title": "Cardano to $4 This Year? Popular Analyst Says Parabolic ADA Breakout Is Coming Despite Frustrating Price Lull",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-26T23:28:56.255448+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9b22e76d9e672f6b",
     "title": "Osmosis Ends OSMO Inflation, Shifting Staking Rewards to Revenue",
     "source": "The Defiant (DeFi 深度)",
@@ -5208,6 +5198,16 @@
     "sent_at": "2026-11-04T10:24:56.586491+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "34a19cdbeab2d606",
+    "title": "Solana Co-Founder Names Biggest Threat to Crypto",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-04T10:45:36.911723+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
