@@ -1,15 +1,5 @@
 [
   {
-    "id": "7542e13472caf574",
-    "title": "Quant rallies 16% on renewed RWA interest – Can QNT’s $200 support hold?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-27T04:07:26.506089+00:00",
-    "tokens": [
-      "QNT"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "14ddb6340cb2e0ea",
     "title": "Faster Solana slots fail to stop memecoin bot snipers",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5209,5 +5199,17 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "bef21a0f7382a710",
+    "title": "法国网银遭穿透失窃逾 1.33 亿美元,黑客借加密通道跨链洗钱",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-04T13:25:03.833501+00:00",
+    "tokens": [
+      "USDC",
+      "UNI",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
