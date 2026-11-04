@@ -1,15 +1,5 @@
 [
   {
-    "id": "d3e93da4e8358fa5",
-    "title": "比特币 8 万美元:一场没有赢家的拉锯",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-27T10:07:28.011458+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0268b1b862c9f88f",
     "title": "Public wallet logs expose founder histories, and Zcash group demands fix",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5212,6 +5202,16 @@
     "sent_at": "2026-11-04T19:05:27.256759+00:00",
     "tokens": [
       "INJ"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4083171892759cee",
+    "title": "Gemini AI Predicts a Brutal Unwinding of the TRUMP Memecoin",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-04T19:26:56.765185+00:00",
+    "tokens": [
+      "TRUMP"
     ],
     "lang": "en"
   }
