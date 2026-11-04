@@ -1,16 +1,5 @@
 [
   {
-    "id": "5da8cc80ed89ce83",
-    "title": "Bitcoin Security Expert Jameson Lopp: Cyberattacks on “Exponential” Path",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-27T14:06:32.492678+00:00",
-    "tokens": [
-      "BTC",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a45361939ee12c99",
     "title": "吴说每日精选加密新闻 - 美国 OCC 正式批准 Ripple National Trust Bank,将支持 RLUSD 及企业数字资产托管业务",
     "source": "吴说区块链 (中文深度)",
@@ -5207,5 +5196,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "844b91c7e220a66b",
+    "title": "XRP Millionaire Wallets Hit a Yearly High: Is a Breakout Next?",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-04T23:07:37.948185+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
