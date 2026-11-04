@@ -1,15 +1,5 @@
 [
   {
-    "id": "c05941ed4c2403e6",
-    "title": "Zcash (ZEC) Rallied Hard This Year, But Is the Party Finally Over?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-27T03:47:54.417381+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7542e13472caf574",
     "title": "Quant rallies 16% on renewed RWA interest – Can QNT’s $200 support hold?",
     "source": "AMBCrypto (技术与链上)",
@@ -5207,5 +5197,17 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a0fc1c46e07f9278",
+    "title": "客户不会遭受资金损失,Crédit Mutuel Arkéa确认遭黑客攻击",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-04T13:04:59.589546+00:00",
+    "tokens": [
+      "USDC",
+      "ETH",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
