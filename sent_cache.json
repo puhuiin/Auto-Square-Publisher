@@ -1,15 +1,5 @@
 [
   {
-    "id": "26b361ee42c5625d",
-    "title": "Solana bug reports now cost 1 SOL as AI floods security teams with spam",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-10-27T09:48:00.412637+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d3e93da4e8358fa5",
     "title": "比特币 8 万美元:一场没有赢家的拉锯",
     "source": "深潮TechFlow (中文/简体)",
@@ -5212,6 +5202,16 @@
     "sent_at": "2026-11-04T18:45:12.571458+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "682d7e331046444b",
+    "title": "纳斯达克批准 Canary 质押 INJ ETF 上市申请",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-04T19:05:27.256759+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "en"
   }
