@@ -1,15 +1,5 @@
 [
   {
-    "id": "0a40dc3ebedd18a9",
-    "title": "Tuttle提交多只细分杠杆ETF申请,包括2倍做多亚洲存储和Zcash ETF",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-26T23:08:44.291479+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "10566af0c2213172",
     "title": "Cardano to $4 This Year? Popular Analyst Says Parabolic ADA Breakout Is Coming Despite Frustrating Price Lull",
     "source": "ZyCrypto (新币与空投)",
@@ -5208,6 +5198,16 @@
     "sent_at": "2026-11-04T09:57:17.466367+00:00",
     "tokens": [
       "SUI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e3db2d5c79551d28",
+    "title": "总盈利约1.42亿美元,某地址增持约1,078万美元ZEC空单",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-04T10:24:56.586491+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
