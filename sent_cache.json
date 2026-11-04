@@ -1,15 +1,5 @@
 [
   {
-    "id": "74980d1a7ba082f9",
-    "title": "XRP Ledger Gets Another Major Fund as Aviva Expands Tokenization Push",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-26T18:44:53.218573+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "05465e0f518a9805",
     "title": "Akash Network 宣布选择 Solana 作为区块链迁移目标",
     "source": "吴说区块链 (中文深度)",
@@ -5208,5 +5198,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "2ca8b7a841f8c6bf",
+    "title": "BitMart Founder Confirms Hack During Restructuring",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-04T06:12:52.061679+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
