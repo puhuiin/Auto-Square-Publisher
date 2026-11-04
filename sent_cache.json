@@ -1,17 +1,5 @@
 [
   {
-    "id": "a45361939ee12c99",
-    "title": "吴说每日精选加密新闻 - 美国 OCC 正式批准 Ripple National Trust Bank,将支持 RLUSD 及企业数字资产托管业务",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-27T14:24:29.052962+00:00",
-    "tokens": [
-      "RLUSD",
-      "USDC",
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0398ec0d000deb8f",
     "title": "OpenAI ChatGPT AI Predicts a Monumental Event for BTC by 2027",
     "source": "CryptoNews (全球快讯)",
@@ -5204,6 +5192,16 @@
     "sent_at": "2026-11-04T23:07:37.948185+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "ae1c341a4cc5df0d",
+    "title": "Schroders launches tokenized emerging markets debt fund on Solana with Centrifuge",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-04T23:28:25.778323+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
