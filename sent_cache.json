@@ -1,15 +1,5 @@
 [
   {
-    "id": "09c1637c1314c35c",
-    "title": "Zcash’s $125 million funding fight widens as Tyler Winklevoss calls to end its ‘USAID’",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-27T23:25:13.110824+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9353b9613c05def9",
     "title": "SkyAI 与主要股东达成收购支持协议,清仓约 200 万枚 SOL",
     "source": "吴说区块链 (中文深度)",
@@ -5204,6 +5194,16 @@
     "sent_at": "2026-11-05T10:04:07.874594+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9555912823876f0e",
+    "title": "Important Ripple News and XRP Price Update: November 5",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-05T10:27:07.022567+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
