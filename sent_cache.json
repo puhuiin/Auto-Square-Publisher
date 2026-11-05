@@ -1,17 +1,5 @@
 [
   {
-    "id": "c025f20f829ae9e0",
-    "title": "XRP, HYPE, and ENA Levels to Watch Before the Fed Meets Today: Analyst",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-28T14:05:58.842023+00:00",
-    "tokens": [
-      "XRP",
-      "HYPE",
-      "ENA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f72c6608c10adcf7",
     "title": "Tokenized Stock and ETF Roster: Ondo, DTCC and OKXICE",
     "source": "The Defiant (DeFi 深度)",
@@ -5201,6 +5189,16 @@
     "title": "Solana developers propose major overhaul to address hidden risk that could disrupt its network",
     "source": "CryptoSlate (新赛道与代币经济)",
     "sent_at": "2026-11-05T22:44:35.221897+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "91d6dd6b855f5a25",
+    "title": "Solana 开发团队 Anza 紧急呼吁验证者升级 Agave v4.4.1,未升级节点预计将与主网分叉",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-05T23:04:51.204932+00:00",
     "tokens": [
       "SOL"
     ],
