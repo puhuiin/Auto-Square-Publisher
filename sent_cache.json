@@ -1,15 +1,5 @@
 [
   {
-    "id": "91c2de165e2c0f2c",
-    "title": "Predict.fun 发币前夜:拆解 $PREDICT 的生息机制、空投博弈与安全账单",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-28T09:44:47.517311+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f8afe0fc87631f7f",
     "title": "PEPE日内上涨15.8%,Justin Sun关联地址持有11.8万亿枚PEPE",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5203,6 +5193,16 @@
     "sent_at": "2026-11-05T18:26:54.144832+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a82419ea6598a3a3",
+    "title": "XRP Ledger closes loophole that could let token burners mint new supply",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-05T18:48:04.393762+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
