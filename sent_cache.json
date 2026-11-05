@@ -1,16 +1,5 @@
 [
   {
-    "id": "59e8db3bd5b0a49c",
-    "title": "Ripple, Robinhood expand partnership to bring RLUSD to retail and institutional markets",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-27T20:26:23.584432+00:00",
-    "tokens": [
-      "RLUSD",
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "97d3131b31470bb7",
     "title": "Stellar Repo Test Executes 72 Hourly Rolls Using Sovereign Debt",
     "source": "NewsBTC (比特币与山寨)",
@@ -5205,5 +5194,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "747ca5b72dba8cf0",
+    "title": "Jupiter第三季度交易量位居全链DEX聚合器第一,已连续8个季度领先",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-05T08:08:56.879172+00:00",
+    "tokens": [
+      "SOL",
+      "UNI"
+    ],
+    "lang": "zh-CN"
   }
 ]
