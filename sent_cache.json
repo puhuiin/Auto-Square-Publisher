@@ -1,15 +1,5 @@
 [
   {
-    "id": "5d42424233ec2bd1",
-    "title": "Solflare Validator Stops Earning Rewards After Provider Security Incident",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-28T02:46:51.772730+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c57eac5b90de3033",
     "title": "某巨鲸1小时内从BitGo买入价值4230万美元加密资产",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5209,5 +5199,15 @@
       "INJ"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "023e271a5588314d",
+    "title": "Mercado Bitcoin hack continued hours after exchange said attack was contained, report finds",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-05T12:24:18.053275+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
