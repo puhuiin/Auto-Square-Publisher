@@ -1,15 +1,5 @@
 [
   {
-    "id": "f72c6608c10adcf7",
-    "title": "Tokenized Stock and ETF Roster: Ondo, DTCC and OKXICE",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-28T14:27:27.854530+00:00",
-    "tokens": [
-      "ONDO"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "eb85ea982ed7ceb1",
     "title": "18万枚HYPE解质押,Hyperliquid用于团队每月解锁",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5203,5 +5193,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "974e6bd5c78cac07",
+    "title": "Mark Zuckerberg’s Meta AI Predicts a Quant Crypto Explosion: How High Could QNT Go?",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-05T23:44:55.881597+00:00",
+    "tokens": [
+      "QNT"
+    ],
+    "lang": "zh-TW"
   }
 ]
