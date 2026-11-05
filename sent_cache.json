@@ -1,15 +1,5 @@
 [
   {
-    "id": "371f72b6f4510b6a",
-    "title": "以太坊现货ETF昨日总净流出6021.78万美元,仅贝莱德ETHA净流出",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-28T07:26:58.766425+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e0057e0c937fb632",
     "title": "HYPE token rises 5% as Kraken’s parent plans US perpetuals market launch",
     "source": "Crypto Briefing (深度与研报)",
@@ -5203,6 +5193,16 @@
     "sent_at": "2026-11-05T16:24:20.209082+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "20e2b9a17cea9d43",
+    "title": "Bitcoin Erases Election Rally as AI Stocks Plunge, $428 Million in Crypto Longs Get Wiped Out",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-05T16:46:44.741377+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
