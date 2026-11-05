@@ -1,15 +1,5 @@
 [
   {
-    "id": "05a8613ceb76a027",
-    "title": "加密赌场 Gamdom 遭勒索组织 Whitearmor 索要 1500 万美元比特币赎金",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-27T15:44:50.402114+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4878755fe98c4f35",
     "title": "Google Gemini AI Predicts a Pudgy Penguins (PENGU) Takeover",
     "source": "CryptoNews (全球快讯)",
@@ -5202,6 +5192,16 @@
     "tokens": [
       "BTC",
       "LTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9fa39c3ae2b0f5a4",
+    "title": "Robert Kiyosaki Can’t Wait for the Next Gold, Silver, and Bitcoin Crash",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-05T01:26:01.335341+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
