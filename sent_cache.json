@@ -1,15 +1,5 @@
 [
   {
-    "id": "bbddd2a7274b6fa2",
-    "title": "XRP Ledger Gets a New Use Case as Ripple Teams Up With C2FO",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-27T18:45:03.782360+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "01c60565c0cf8324",
     "title": "紐約梅隆銀行擴大與 Ripple 合作!XRP、RLUSD 納入託管,測試鏈上貿易融資",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5202,6 +5192,16 @@
     "sent_at": "2026-11-05T05:46:42.059894+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "6fc33f0553a9ced8",
+    "title": "Zcash to freeze $16M in its oldest privacy pool with NU7 upgrade",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-05T06:05:08.042278+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-TW"
   }

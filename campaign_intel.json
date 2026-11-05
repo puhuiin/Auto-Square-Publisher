@@ -19,20 +19,20 @@
   "strategy_guidance": "当前无明确标注截止日的紧迫活动，优先围绕仍在进行的Halloween Pumpkin Frenzy活动、第10季现货交易锦标赛、新上线的bStocks交易对及Predict代币上线等热点展开内容，可结合活动规则解读、新资产交易教程等角度发布内容，引导用户参与评论互动获取Write2Earn奖励，同时可关联新上线的交易对引导交易返佣。",
   "last_updated": "2026-11-04T20:24:25.470649Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "fails": 3,
-      "parked_until": "2026-11-05T11:24:02.713323+00:00",
-      "last_fail": "2026-11-05T05:24:02.713323+00:00"
-    },
     "Bitcoinist (比特币向)": {
-      "fails": 1,
-      "reset_at": "2026-11-05T05:43:34.166830+00:00",
-      "last_fail": "2026-11-05T02:03:37.830969+00:00"
+      "reset_at": "2026-11-05T06:03:36.710950+00:00",
+      "last_fail": "2026-11-05T02:03:37.830969+00:00",
+      "fails": 1
+    },
+    "CoinJournal (山寨异动)": {
+      "last_fail": "2026-11-05T05:24:02.713323+00:00",
+      "parked_until": "2026-11-05T11:24:02.713323+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-05",
