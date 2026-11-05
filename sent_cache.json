@@ -1,15 +1,5 @@
 [
   {
-    "id": "8b05e7d19b629d50",
-    "title": "Bitcoin Treasury Stock Crashes 50% Amid Withdrawal Trouble",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-28T07:10:00.619657+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "371f72b6f4510b6a",
     "title": "以太坊现货ETF昨日总净流出6021.78万美元,仅贝莱德ETHA净流出",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5203,6 +5193,16 @@
     "sent_at": "2026-11-05T15:52:14.171509+00:00",
     "tokens": [
       "INJ"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "68cd0fd89fa032d3",
+    "title": "Cardano Bulls Predict a 2,000% Rally, But Analysts Are Not Convinced",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-05T16:24:20.209082+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
