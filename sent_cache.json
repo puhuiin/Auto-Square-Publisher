@@ -1,16 +1,5 @@
 [
   {
-    "id": "e41f25dcdf423461",
-    "title": "$10 Million Crypto Whale Awakening Closes Market Gap Between Shiba Inu (SHIB) and PEPE",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-28T13:04:02.653184+00:00",
-    "tokens": [
-      "SHIB",
-      "PEPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c3559e05e17cc90a",
     "title": "Glassnode:比特币卖压持续减弱,美联储决议或引发下一轮行情",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5204,5 +5193,15 @@
       "SOL"
     ],
     "lang": "en"
+  },
+  {
+    "id": "fd803a20d875fc95",
+    "title": "Hyperliquid Strategies季度净利润达6.21亿美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-05T22:04:30.486855+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
