@@ -1,16 +1,5 @@
 [
   {
-    "id": "a5b97578003853d4",
-    "title": "RLUSD 将于年底前上线 Robinhood App",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-27T18:24:07.676003+00:00",
-    "tokens": [
-      "RLUSD",
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "bbddd2a7274b6fa2",
     "title": "XRP Ledger Gets a New Use Case as Ripple Teams Up With C2FO",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5203,6 +5192,16 @@
     "tokens": [
       "BTC",
       "ZEC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "bf81159c7395db50",
+    "title": "昨日以太坊现货 ETF 净流入 5,304 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-05T05:46:42.059894+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-TW"
   }
