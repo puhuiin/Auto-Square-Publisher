@@ -1,15 +1,5 @@
 [
   {
-    "id": "cd8ae87f93ab0f66",
-    "title": "从 ETF 到企业囤币,火币 HTX 将直播探讨加密市场机构化的机遇与挑战",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-28T08:06:41.544960+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ddeaae8eb8835c35",
     "title": "Zcash (ZEC) Launched 10 Years Ago, 2 Things That Made It Stand Out in 2026",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5205,6 +5195,16 @@
       "SC",
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c9d16c2c79cf28f9",
+    "title": "Solana Labs 旗下 Leap 推出代币化股票交易应用测试版",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-05T17:24:29.222023+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
