@@ -1,17 +1,5 @@
 [
   {
-    "id": "2b8b215806313431",
-    "title": "TechFlow 情报局:SK 海力士称存储芯片三年卖光,华尔街为 Anthropic 发210 亿美元债券买博通芯片",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-28T12:48:32.090723+00:00",
-    "tokens": [
-      "RLUSD",
-      "XRP",
-      "XLM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e41f25dcdf423461",
     "title": "$10 Million Crypto Whale Awakening Closes Market Gap Between Shiba Inu (SHIB) and PEPE",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5203,6 +5191,17 @@
     "tokens": [
       "TRUMP",
       "WLFI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8f9a5c0b34b2c2cc",
+    "title": "Samsung Wallet launches USDC accounts on Solana for US Galaxy users",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-05T21:45:34.697347+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
     ],
     "lang": "en"
   }
