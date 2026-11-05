@@ -1,15 +1,5 @@
 [
   {
-    "id": "97d3131b31470bb7",
-    "title": "Stellar Repo Test Executes 72 Hourly Rolls Using Sovereign Debt",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-27T20:45:02.023447+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "455d58da37ed4d86",
     "title": "Seeker phone owners keep full support as Ledger unveils Atom",
     "source": "Crypto Briefing (深度与研报)",
@@ -5203,6 +5193,16 @@
     "tokens": [
       "SOL",
       "UNI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "988c92d95c9a9cb5",
+    "title": "Soter Insure完成B轮融资第二次交割,SC Ventures与SBI集团加入",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-05T08:26:34.915943+00:00",
+    "tokens": [
+      "SC"
     ],
     "lang": "zh-CN"
   }
