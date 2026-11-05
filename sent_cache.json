@@ -1,15 +1,5 @@
 [
   {
-    "id": "33f0e9d3e1234393",
-    "title": "太子集团资产追查再推进:中国受害者或可申报债权,超9万枚比特币曾流经关联实体",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-28T03:27:19.852789+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "4a947a2f9dc5023f",
     "title": "Binance credits ASMLB holders with $1.79 per share dividend in extra tokens",
     "source": "Crypto Briefing (深度与研报)",
@@ -5208,5 +5198,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f66efb3954d69907",
+    "title": "Bubblemaps调查四名加密KOL,称钱包操作与公开叙事不完全一致",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-05T13:06:30.603683+00:00",
+    "tokens": [
+      "TRUMP"
+    ],
+    "lang": "zh-CN"
   }
 ]
