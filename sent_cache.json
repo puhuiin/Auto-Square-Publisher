@@ -1,15 +1,5 @@
 [
   {
-    "id": "f7d8b5a62982ea60",
-    "title": "428,862% Surge in 24 Hours: Shiba Inu Sees Highest Burn Rate This Month",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-28T13:44:45.117512+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c025f20f829ae9e0",
     "title": "XRP, HYPE, and ENA Levels to Watch Before the Fed Meets Today: Analyst",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5202,6 +5192,16 @@
     "tokens": [
       "BTC",
       "ETH",
+      "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "258894bb99e65514",
+    "title": "Solana developers propose major overhaul to address hidden risk that could disrupt its network",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-05T22:44:35.221897+00:00",
+    "tokens": [
       "SOL"
     ],
     "lang": "zh-CN"
