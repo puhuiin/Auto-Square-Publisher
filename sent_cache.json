@@ -1,16 +1,5 @@
 [
   {
-    "id": "8d3d6e88904eec64",
-    "title": "SUN.io 已连续完成 52 期回购销毁:累计销毁 SUN 超6.85 亿枚,SunSwap 生态集成全速推进",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-27T15:24:39.830055+00:00",
-    "tokens": [
-      "TRX",
-      "SUN"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "05a8613ceb76a027",
     "title": "加密赌场 Gamdom 遭勒索组织 Whitearmor 索要 1500 万美元比特币赎金",
     "source": "深潮TechFlow (中文/简体)",
@@ -5202,6 +5191,17 @@
     "sent_at": "2026-11-05T00:26:45.736264+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "817123f12411fd28",
+    "title": "旧版漏洞致热钱包资金被盗,BTCPay Server建议用户立即迁移",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-05T00:46:41.534475+00:00",
+    "tokens": [
+      "BTC",
+      "LTC"
     ],
     "lang": "zh-CN"
   }
