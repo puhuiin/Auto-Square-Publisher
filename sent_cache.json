@@ -1,16 +1,5 @@
 [
   {
-    "id": "304147bc1dcc6e84",
-    "title": "TAO crypto steadies near $250 after September rally fades",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-28T02:26:39.108962+00:00",
-    "tokens": [
-      "TAO",
-      "PEPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5d42424233ec2bd1",
     "title": "Solflare Validator Stops Earning Rewards After Provider Security Incident",
     "source": "The Defiant (DeFi 深度)",
@@ -5207,6 +5196,17 @@
     "tokens": [
       "ZK",
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "a130a0bceb6c1e2a",
+    "title": "Bitcoin holds above $80,000 after Wednesday’s jump as injective rallies on staked ETF listing",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-05T12:04:19.338980+00:00",
+    "tokens": [
+      "BTC",
+      "INJ"
     ],
     "lang": "zh-TW"
   }
