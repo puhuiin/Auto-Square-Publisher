@@ -1,17 +1,5 @@
 [
   {
-    "id": "bdd61ac1888f5ad3",
-    "title": "Cancore 完成 720 万美元种子轮融资,估值 6000 万美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-27T17:24:08.557620+00:00",
-    "tokens": [
-      "BNB",
-      "ETH",
-      "ARB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "44744f47b32096e1",
     "title": "余烬:疑似 UXLINK 黑客在 Hyperliquid 持有逾 7000 万美元 ETH 多单,浮盈 562 万美元",
     "source": "吴说区块链 (中文深度)",
@@ -5206,5 +5194,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c7682b113e4e4c4c",
+    "title": "Glassnode 链上周报:在支撑位蓄势停滞,短期持有者投降与 7.8 万美元成本区复盘",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-05T04:45:52.134456+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
