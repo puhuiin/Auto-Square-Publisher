@@ -1,15 +1,5 @@
 [
   {
-    "id": "b6b90f50e6c58f27",
-    "title": "Bessent:将借SEC和CFTC行动推进加密监管框架",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-27T21:26:29.269640+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6caa2e7dc4d52fb7",
     "title": "XRP’s Wall Street Push Accelerates: America’s Oldest Bank BNY Joins Ripple for Tokenized Trade Finance on XRP Ledger",
     "source": "ZyCrypto (新币与空投)",
@@ -5206,5 +5196,15 @@
       "ARB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "2c17b9cee9551e4e",
+    "title": "Polygon Crypto Gains Momentum as Binance & Polymarket Seek $7M Recovery",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-05T09:32:25.091179+00:00",
+    "tokens": [
+      "POL"
+    ],
+    "lang": "zh-TW"
   }
 ]
