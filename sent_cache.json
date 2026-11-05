@@ -1,16 +1,5 @@
 [
   {
-    "id": "47de2c682a7fe9bb",
-    "title": "近100万美元被盗,Bloom drainer使用2152个地址转移资金",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-28T10:25:52.383416+00:00",
-    "tokens": [
-      "ZEC",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5daf4202b33f0d04",
     "title": "Bloom 钓鱼工具盗取近 100 万美元,攻击者通过 2,152 个地址洗钱并跨链至 Zcash",
     "source": "深潮TechFlow (中文/简体)",
@@ -5203,6 +5192,16 @@
     "sent_at": "2026-11-05T19:08:09.070791+00:00",
     "tokens": [
       "INJ"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3b9bd560a336bfb0",
+    "title": "Ethereum Foundation sued for firing employee who opposed ‘suicide pledge’",
+    "source": "Protos (隐私与合规)",
+    "sent_at": "2026-11-05T19:29:15.779130+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
