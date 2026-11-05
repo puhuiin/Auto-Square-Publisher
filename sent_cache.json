@@ -1,15 +1,5 @@
 [
   {
-    "id": "c3559e05e17cc90a",
-    "title": "Glassnode:比特币卖压持续减弱,美联储决议或引发下一轮行情",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-28T13:24:08.902834+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f7d8b5a62982ea60",
     "title": "428,862% Surge in 24 Hours: Shiba Inu Sees Highest Burn Rate This Month",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5201,6 +5191,18 @@
     "sent_at": "2026-11-05T22:04:30.486855+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "de691b9ea071910d",
+    "title": "Strategy 董事长 Saylor:AI 黑客将瞄准薄弱软件",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-05T22:24:00.834981+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
