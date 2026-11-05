@@ -1,15 +1,5 @@
 [
   {
-    "id": "4a947a2f9dc5023f",
-    "title": "Binance credits ASMLB holders with $1.79 per share dividend in extra tokens",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-28T03:50:25.216348+00:00",
-    "tokens": [
-      "ASMLB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3be68022ea590909",
     "title": "Zilliqa:跨链桥及代理合约受损,CEO 已辞职",
     "source": "深潮TechFlow (中文/简体)",
@@ -5208,5 +5198,15 @@
       "TRUMP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e6d0db57d0780f16",
+    "title": "Bitcoin ETF Attracts $75M as Goldman Sachs Calls December Fed Rate Cut",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-05T13:27:17.763410+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
