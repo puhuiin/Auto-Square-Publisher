@@ -1,16 +1,5 @@
 [
   {
-    "id": "01c60565c0cf8324",
-    "title": "紐約梅隆銀行擴大與 Ripple 合作!XRP、RLUSD 納入託管,測試鏈上貿易融資",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-10-27T19:04:48.098947+00:00",
-    "tokens": [
-      "XRP",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1d5a5647a4740bd8",
     "title": "Charles Hoskinson’s Midnight to Hit 50,000 Transactions as Crypto Privacy Race Heats Up",
     "source": "CryptoNews (全球快讯)",
@@ -5204,5 +5193,15 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "b9d422fc525ab461",
+    "title": "Arthur Hayes: Can AI IPO Dilution Choke Bank Liquidity and Hit Bitcoin?",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-05T06:24:48.716682+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
