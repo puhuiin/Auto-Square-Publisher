@@ -1,15 +1,5 @@
 [
   {
-    "id": "fc451a921de7bb30",
-    "title": "Elon Musk’s Grok AI Predicts an Unbelievable XRP Price",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-27T16:44:22.983603+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5f21efc1d364bb78",
     "title": "SHIB Community Buzzes as Shiba Inu Unlocks New Travel Use Case",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5206,5 +5196,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "8c6d85088e799c5c",
+    "title": "Canary Staked INJ ETF 获纳斯达克批准上市,拟以 INJC 为交易代码",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-05T03:27:14.667221+00:00",
+    "tokens": [
+      "INJ"
+    ],
+    "lang": "zh-CN"
   }
 ]
