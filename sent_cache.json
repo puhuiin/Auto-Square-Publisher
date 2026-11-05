@@ -1,15 +1,5 @@
 [
   {
-    "id": "f8afe0fc87631f7f",
-    "title": "PEPE日内上涨15.8%,Justin Sun关联地址持有11.8万亿枚PEPE",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-28T10:04:49.628989+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "47de2c682a7fe9bb",
     "title": "近100万美元被盗,Bloom drainer使用2152个地址转移资金",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5203,6 +5193,16 @@
     "sent_at": "2026-11-05T18:48:04.393762+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "00158158a085260c",
+    "title": "Canary’s Injective ETF debuts on Nasdaq with exposure to staking rewards",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-05T19:08:09.070791+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "en"
   }
