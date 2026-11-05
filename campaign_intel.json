@@ -3,21 +3,20 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#AlphaTrading",
-    "#HalloweenFrenzy"
+    "#Futures",
+    "#Referral"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$USDC",
-    "$AXIS",
-    "$ON",
     "$PREDICT",
-    "$SPCXB",
-    "$WLFI",
-    "$USD1"
+    "$AAPLB",
+    "$NVDAB",
+    "$APPB",
+    "$SPCXB"
   ],
-  "strategy_guidance": "当前万圣节主题活动临近收尾，优先围绕#HalloweenFrenzy做冲刺向内容，引导读者参与评论互动获取Write2Earn奖励；同时结合新上线的$PREDICT、新增bStocks交易对及进行中的Spot Trading Tournament Season 10赛事输出快讯，引导用户参与当期活动获取返佣，严禁做出任何收益承诺。",
-  "last_updated": "2026-11-05T08:44:01.782480Z",
+  "strategy_guidance": "结合Spot Trading Tournament Season 10与Futures新上线的TradFi USDⓈ-Margined Perpetual Contracts，以'新合约上线解读+交易大赛参与攻略'角度发帖，引导读者参与评论互动获取Write2Earn奖励；同步联动November Referral Tournament及Binance Starter Carnival的bStocks交易对，发布'新交易对上线解析+邀请好友活动导流'内容，追当期活动热度，全程避免收益承诺，仅强调互动拿奖励与活动参与方式。",
+  "last_updated": "2026-11-05T21:05:05.591330Z",
   "_feed_health": {},
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",

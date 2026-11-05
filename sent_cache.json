@@ -1,15 +1,5 @@
 [
   {
-    "id": "67a2fa3a91be9fe7",
-    "title": "Live updates: Bitcoin climbs above $81,000 as majors rally ahead of Fed decision",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-10-28T11:47:42.396522+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2476447cc140b60b",
     "title": "Bitcoin Investors Beware: Analyst Warns of BTC Price Crash After Fed Meeting",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5202,6 +5192,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9d767114a4133f32",
+    "title": "Anthropic Giga Bullish on Ripple: Claude AI Predicts Near-Triple-Digit Move",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-05T21:07:52.309830+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
