@@ -1,16 +1,5 @@
 [
   {
-    "id": "a94e2f74991e6d0c",
-    "title": "赵长鹏现身纳斯达克敲钟,BNC 是什么来头?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-28T06:48:30.192744+00:00",
-    "tokens": [
-      "BNB",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8b05e7d19b629d50",
     "title": "Bitcoin Treasury Stock Crashes 50% Amid Withdrawal Trouble",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5204,6 +5193,16 @@
     "sent_at": "2026-11-05T15:30:40.837452+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b4dc36ca5fdd0120",
+    "title": "Canary’s Staked INJ ETF Begins Trading on Nasdaq",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-05T15:52:14.171509+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "en"
   }
