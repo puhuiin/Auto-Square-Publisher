@@ -1,16 +1,5 @@
 [
   {
-    "id": "48f764f0b9e76b70",
-    "title": "HIVE 旗下 BUZZ HPC 获约 1.29 亿美元固定利率融资,用于扩展主权 AI 基础设施",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-28T06:07:31.907377+00:00",
-    "tokens": [
-      "HIVE",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b020380f7a97cb2c",
     "title": "Bitcoin nears $81,000 ahead of Fed decision as ZEC jumps 8%",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5205,6 +5194,17 @@
     "sent_at": "2026-11-05T14:46:39.251828+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e874ac0b4b1fd38a",
+    "title": "Mira 推出 AI 模型验证服务 Sterling,支持 Claude、GPT 和 Gemini 低至五折调用",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-05T15:05:17.735289+00:00",
+    "tokens": [
+      "USDC",
+      "MIRA"
     ],
     "lang": "en"
   }
