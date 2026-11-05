@@ -1,15 +1,5 @@
 [
   {
-    "id": "8e854e9dc2865853",
-    "title": "Bitcoin’s next rally could trigger selling from holders of 874,000 BTC",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-27T15:04:30.269850+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8d3d6e88904eec64",
     "title": "SUN.io 已连续完成 52 期回购销毁:累计销毁 SUN 超6.85 亿枚,SunSwap 生态集成全速推进",
     "source": "深潮TechFlow (中文/简体)",
@@ -5202,6 +5192,16 @@
     "sent_at": "2026-11-04T23:46:33.547786+00:00",
     "tokens": [
       "MAGIC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4ee02fbf31309992",
+    "title": "Mark Zuckerberg’s Meta AI Predicts the Bitcoin Price: Is This Actually Possible?",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-05T00:26:45.736264+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
