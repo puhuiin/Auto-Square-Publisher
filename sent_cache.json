@@ -1,16 +1,5 @@
 [
   {
-    "id": "f46b33c2224aafa2",
-    "title": "Aave vs. Bitso USDC Prime: What Lenders Hold and What Limits Exits",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-27T18:06:41.290241+00:00",
-    "tokens": [
-      "USDC",
-      "AAVE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a5b97578003853d4",
     "title": "RLUSD 将于年底前上线 Robinhood App",
     "source": "深潮TechFlow (中文/简体)",
@@ -5203,6 +5192,17 @@
     "tokens": [
       "ZEC",
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "2b20e2e7b3ffbd72",
+    "title": "交易员 degentrading:半导体股盘前大跌,套牢盘或限制反弹,看好中国科技股与加密市场",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-05T05:27:26.675910+00:00",
+    "tokens": [
+      "BTC",
+      "ZEC"
     ],
     "lang": "zh-TW"
   }
