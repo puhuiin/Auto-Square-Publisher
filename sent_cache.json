@@ -1,15 +1,5 @@
 [
   {
-    "id": "47d61fc984d5819b",
-    "title": "USD.AI’s $1M CHIP buyback sparks 19% rally amid Elon Musk’s AI warning",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-28T00:10:06.170043+00:00",
-    "tokens": [
-      "CHIP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "86ac3e68e1fd6b04",
     "title": "Myriad Markets 遭黑客入侵,10 个预测市场被作废,资金已全额追回",
     "source": "吴说区块链 (中文深度)",
@@ -5206,6 +5196,16 @@
       "BTC",
       "ETH",
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9674e676b508f3f5",
+    "title": "SHIB Community Warned Amid Powerful iOS Spyware Exploit: What to Know",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-05T11:07:46.577384+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-CN"
   }
