@@ -1,15 +1,5 @@
 [
   {
-    "id": "d17709100129aa37",
-    "title": "沉寂27天后,某巨鲸从Wintermute买入12.3055万枚HYPE,价值1002万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-27T20:04:16.555743+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "59e8db3bd5b0a49c",
     "title": "Ripple, Robinhood expand partnership to bring RLUSD to retail and institutional markets",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5204,5 +5194,16 @@
       "ARB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "b6fc222ebb460aec",
+    "title": "BitMart founder confirms second exchange hack – Links to Mercado Bitcoin emerge",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-05T07:31:36.744940+00:00",
+    "tokens": [
+      "ETH",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
