@@ -1,15 +1,5 @@
 [
   {
-    "id": "6caa2e7dc4d52fb7",
-    "title": "XRP’s Wall Street Push Accelerates: America’s Oldest Bank BNY Joins Ripple for Tokenized Trade Finance on XRP Ledger",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-27T22:30:37.719060+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "09c1637c1314c35c",
     "title": "Zcash’s $125 million funding fight widens as Tyler Winklevoss calls to end its ‘USAID’",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5206,5 +5196,15 @@
       "POL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d7f5b07a14fa2d58",
+    "title": "Gotchi Labs 与 Vana 达成合作计划,将用户自主控制的数据基础设施整合至 Sleepagotchi",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-05T10:04:07.874594+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
