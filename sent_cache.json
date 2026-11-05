@@ -1,15 +1,5 @@
 [
   {
-    "id": "0e129438180620a4",
-    "title": "Justin Sun now holds 2.82% of PEPE supply – The biggest individual holder",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-28T09:15:04.202859+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "91c2de165e2c0f2c",
     "title": "Predict.fun 发币前夜:拆解 $PREDICT 的生息机制、空投博弈与安全账单",
     "source": "深潮TechFlow (中文/简体)",
@@ -5203,6 +5193,16 @@
     "sent_at": "2026-11-05T18:07:10.647890+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4081d350cb079880",
+    "title": "用户凭证遭暴露,Chainalysis下线监控与调查平台并要求重置密码",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-05T18:26:54.144832+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
