@@ -1,15 +1,5 @@
 [
   {
-    "id": "06957e6fd27c48e4",
-    "title": "Bitcoin Traders Are Preparing for the Fed in 2 Very Different Ways",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-10-28T11:25:19.084054+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "67a2fa3a91be9fe7",
     "title": "Live updates: Bitcoin climbs above $81,000 as majors rally ahead of Fed decision",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5201,6 +5191,17 @@
     "sent_at": "2026-11-05T20:25:29.732006+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f62b32d9aa1a09b8",
+    "title": "Bitquery:Mercado Bitcoin 宣布遏制攻击后地址仍遭清空",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-05T20:45:58.000847+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "en"
   }
