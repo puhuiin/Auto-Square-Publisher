@@ -1,15 +1,5 @@
 [
   {
-    "id": "455d58da37ed4d86",
-    "title": "Seeker phone owners keep full support as Ledger unveils Atom",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-27T21:06:31.704895+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b6b90f50e6c58f27",
     "title": "Bessent:将借SEC和CFTC行动推进加密监管框架",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5203,6 +5193,17 @@
     "sent_at": "2026-11-05T08:26:34.915943+00:00",
     "tokens": [
       "SC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "867f97599f499c53",
+    "title": "增发 50% MAGIC 代币,转向 AI 与 DePIN,老项目 Treasure DAO 的自我重写",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-05T09:04:05.056980+00:00",
+    "tokens": [
+      "MAGIC",
+      "ARB"
     ],
     "lang": "zh-CN"
   }
