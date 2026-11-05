@@ -1,15 +1,5 @@
 [
   {
-    "id": "4878755fe98c4f35",
-    "title": "Google Gemini AI Predicts a Pudgy Penguins (PENGU) Takeover",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-27T16:03:58.442615+00:00",
-    "tokens": [
-      "PENGU"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "067d8c79ae13a862",
     "title": "Akash Network leaves Cosmos for Solana – What you need to know!",
     "source": "AMBCrypto (技术与链上)",
@@ -5202,6 +5192,18 @@
     "sent_at": "2026-11-05T01:26:01.335341+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "08f8c290dfcb8f36",
+    "title": "隐私美元狂飙,Railgun 月度资金量为何创下历史新高?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-05T01:45:42.201814+00:00",
+    "tokens": [
+      "ETH",
+      "USDC",
+      "AAVE"
     ],
     "lang": "zh-CN"
   }
