@@ -1,16 +1,5 @@
 [
   {
-    "id": "dc4e8dda2e697971",
-    "title": "Strategy 面临 MSCI 指数剔除风险:11 月 11 日之前你需要关注什么",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-29T05:07:22.343052+00:00",
-    "tokens": [
-      "STRK",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "0d2e0d394ef361d9",
     "title": "代币化美股抵押贷款兴起,周末价格停摆成最大清算隐患",
     "source": "深潮TechFlow (中文/简体)",
@@ -5212,6 +5201,18 @@
       "BTC",
       "ETH",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "518293c9efac0b29",
+    "title": "TechFlow 情报局:黑客花15美元掏空币安25亿美元,美股AI板块单日蒸发2.3万亿",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-06T14:29:14.262571+00:00",
+    "tokens": [
+      "INJ",
+      "SOL",
+      "LTC"
     ],
     "lang": "en"
   }
