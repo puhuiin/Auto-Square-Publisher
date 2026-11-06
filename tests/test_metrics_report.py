@@ -10107,6 +10107,33 @@ class TestR850Preregistration(unittest.TestCase):
         self.assertEqual(mod.r850_verdict([self._win(20, 4), self._win(20, 4)],
                                           [self._win(20, 4)])[0], "通过")
 
+    def test_r859_trunc_cause_split(self):
+        """★★ R859：断句必须**分成因**（我们截的 vs 上游切的，用 `trimmed_chars`）。
+
+        裁定 R852 时 ② 报「回滚 3 篇」，查下来 **2 篇是上游切的**（trim=0 / −19、
+        分布在 google/stepfun 两个通道）⇒ 混算会把"上游给的半句"记成"我们的机械缺陷"
+        （两者修法完全不同）。判定线**不动**，只把成因如实打出来。
+        """
+        mod = self._ew()
+        bad = "hello world the"        # 末字符是字母、末 token 非 ticker ⇒ 判为断句
+        rows = [
+            {"outcome": "binance_published", "ts": "2026-11-04T15:00:00Z", "lang": "en",
+             "final_text": bad, "trimmed_chars": 100},
+            {"outcome": "binance_published", "ts": "2026-11-04T16:00:00Z", "lang": "en",
+             "final_text": bad, "trimmed_chars": 0},
+            {"outcome": "binance_published", "ts": "2026-11-04T17:00:00Z", "lang": "en",
+             "final_text": bad, "trimmed_chars": -19},
+            {"outcome": "binance_published", "ts": "2026-11-04T18:00:00Z", "lang": "en",
+             "final_text": bad, "trimmed_chars": None},
+        ]
+        s = mod.trunc_stats(rows, "2026-11-04")
+        self.assertEqual(s["trunc"], 4)
+        self.assertEqual((s["ours"], s["upstream"], s["uncat"]), (1, 2, 1))
+        st, why = mod.trunc_verdict([], [s])
+        self.assertEqual(st, "回滚", "判定线不动：仍有断句就是回滚")
+        self.assertIn("我们截的 1", why)
+        self.assertIn("上游切的 2", why)
+
     def test_verdict_tiers(self):
         mod = self._ew()
         base = [self._win(22, 8), self._win(23, 7)]          # 基线 ≈ 33%

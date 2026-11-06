@@ -596,6 +596,29 @@ def overwrite_verdict(base_stats, treat_stats) -> tuple:
             % (treat, base, OVERWRITE_DROP_PP))
 
 
+def _trunc_cause(r) -> str:
+    """★ R859：把「词中截断」按**成因**分桶 —— R845 的 `trimmed_chars` 就是为分这两者加的。
+
+    · `trimmed_chars > 50` ⇒ **ours**（我们的净化器截的 —— R831 修的就是这条机械缺陷）
+    · `trimmed_chars <= 0`（含 0 与负）⇒ **upstream**（我们没截 ⇒ 那半句是上游给的）
+    · 其余（0 < t ≤ 50）⇒ **uncat**（落在分桶阈值之间，不硬塞进任何一边）
+    · 字段缺失 ⇒ **uncat**（未知不是任何一边，纪律 12）
+
+    ★ 为什么必须分：2026-11-06 裁定 R852 时 ② 报「回滚 3 篇」，查下来
+      **2 篇是上游切的**（trim=0 / −19，分布在 google / stepfun 两个通道）⇒ 混算会把
+      "上游给的半句" 记成"我们的机械缺陷"（两者修法完全不同，见 R845 的注释）。
+    ⚠️ 本函数**只分桶**；判定线一个字不动（不分桶就该照旧判）。
+    """
+    t = r.get("trimmed_chars")
+    if not isinstance(t, int):
+        return "uncat"
+    if t > 50:
+        return "ours"
+    if t <= 0:
+        return "upstream"
+    return "uncat"
+
+
 def trunc_stats(rows, date_utc: str) -> dict:
     """单个 UTC 日的英文帖断句统计（纯函数）。"""
     cohort = [r for r in rows
@@ -604,18 +627,26 @@ def trunc_stats(rows, date_utc: str) -> dict:
               and r.get("lang") == "en"
               and isinstance(r.get("final_text"), str) and r["final_text"].strip()]
     bad = [r for r in cohort if is_truncated(r)]
+    causes = [_trunc_cause(r) for r in bad]
     return {"date": date_utc, "n": len(cohort), "trunc": len(bad),
+            "ours": causes.count("ours"), "upstream": causes.count("upstream"),
+            "uncat": causes.count("uncat"),
             "examples": ["%s…" % body_before_tags(r["final_text"])[-26:] for r in bad[:3]]}
 
 
 def trunc_verdict(base_stats, treat_stats) -> tuple:
-    """预注册判定。返回 (状态, 说明)。"""
+    """预注册判定。返回 (状态, 说明)。
+
+    ★ R859：判定线**不动**（≥1 篇即回滚）；只是把该批断句帖的**成因**如实打出来。
+    """
     n = sum(s["n"] for s in treat_stats)
     bad = sum(s["trunc"] for s in treat_stats)
     named = [s for s in treat_stats if s["trunc"]]
     if named:
-        return ("回滚", "部署后仍有断句帖 %d 篇（%s）%s"
-                % (bad, "、".join(s["date"] for s in named),
+        _ours = sum(s.get("ours", 0) for s in treat_stats)
+        _up = sum(s.get("upstream", 0) for s in treat_stats)
+        return ("回滚", "部署后仍有断句帖 %d 篇（**我们截的 %d ｜ 上游切的 %d**）（%s）%s"
+                % (bad, _ours, _up, "、".join(s["date"] for s in named),
                    "；例：%s" % " / ".join(named[0]["examples"])))
     if len(treat_stats) < TRUNC_MIN_DAYS and n < TRUNC_MIN_POSTS:
         return ("样本不足", "需 ≥%d 个完整日期或 ≥%d 篇 en 帖；当前 %d 天 / %d 篇"
@@ -628,7 +659,10 @@ def trunc_verdict(base_stats, treat_stats) -> tuple:
 
 def _fmt_trunc(s: dict) -> str:
     extra = ("  例：%s" % " / ".join(s["examples"])) if s.get("examples") else ""
-    return "%s  en %d 篇 ｜ 词中截断 %d%s" % (s["date"], s["n"], s["trunc"], extra)
+    cause = ""
+    if s.get("trunc"):
+        cause = "（我们截 %d ｜ 上游切 %d）" % (s.get("ours", 0), s.get("upstream", 0))
+    return "%s  en %d 篇 ｜ 词中截断 %d%s%s" % (s["date"], s["n"], s["trunc"], cause, extra)
 
 
 # ===========================================================================
