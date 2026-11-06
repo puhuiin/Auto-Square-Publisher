@@ -1,15 +1,5 @@
 [
   {
-    "id": "5cb280d581e304f2",
-    "title": "Bitcoin Price Faces $11B Options Expiry After FOMC Uncertainty Clears",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-29T08:24:32.245900+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5b823fa2b1f1e3cf",
     "title": "Perplexity AI Predicts Somnia Crypto Is About to Explode",
     "source": "CryptoNews (全球快讯)",
@@ -5214,6 +5204,16 @@
     "sent_at": "2026-11-06T17:10:31.020136+00:00",
     "tokens": [
       "ONDO"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "69471bd2ace980b9",
+    "title": "Zcash Activates NU7 Upgrade as Private Payments Become 3x Faster",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-06T17:29:23.938757+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
