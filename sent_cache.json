@@ -1,15 +1,5 @@
 [
   {
-    "id": "c86db125214b35d5",
-    "title": "Garlinghouse: 2026 Is Phenomenal Year for Ripple",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-29T07:05:15.686217+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9f3128a83dcbf44e",
     "title": "某巨鲸过去5天卖出102万枚SOL,价值1.04亿美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5212,6 +5202,17 @@
     "source": "深潮TechFlow (中文/繁体)",
     "sent_at": "2026-11-06T15:44:44.897076+00:00",
     "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "04e63f078fc48df1",
+    "title": "政策季候风刹车,后特朗普时代币圈向何处去",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-06T16:07:06.752379+00:00",
+    "tokens": [
+      "WLFI",
       "BTC"
     ],
     "lang": "en"
