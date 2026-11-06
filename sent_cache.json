@@ -1,16 +1,5 @@
 [
   {
-    "id": "97bc3e1334276f37",
-    "title": "Ondo 智能投资组合上线Solana,涵盖7种投资组合配置",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-29T14:07:33.099319+00:00",
-    "tokens": [
-      "ONDO",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "af14be95162f6b01",
     "title": "BNB Chain 公布代币化黑客松获奖名单",
     "source": "吴说区块链 (中文深度)",
@@ -5215,6 +5204,16 @@
     "sent_at": "2026-11-06T22:44:39.175114+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "5c224eeac818d241",
+    "title": "Zcash NU7 Upgrade Goes Live, Slashing Block Times From 75 Seconds to Just 25 Seconds",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-06T23:05:54.947300+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
