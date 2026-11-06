@@ -1,15 +1,5 @@
 [
   {
-    "id": "145812aefc86999c",
-    "title": "Solana Ships New Validator and SDK Releases After Alpenglow Upgrade",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-28T18:24:42.581677+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "dd356f3a9bd4c2e9",
     "title": "Solana Alpenglow Goes Live, Targeting 150-Millisecond Finality",
     "source": "NewsBTC (比特币与山寨)",
@@ -5210,6 +5200,17 @@
     "tokens": [
       "USDC",
       "SUI"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "3fae6ef1eeca28c6",
+    "title": "就在前天,赵长鹏在牛津,回答了 19 个问题|现场直击",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-06T05:44:07.803371+00:00",
+    "tokens": [
+      "币安人生",
+      "BNB"
     ],
     "lang": "zh-TW"
   }
