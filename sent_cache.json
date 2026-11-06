@@ -1,15 +1,5 @@
 [
   {
-    "id": "34acabd1b9f09133",
-    "title": "XRP Ledger Foundation Adds Flare to Validator List",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-28T21:04:02.888950+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "bd041818db6b4784",
     "title": "Aviva Investors tokenizes £50 million share class of Sterling Liquidity Fund on XRP Ledger",
     "source": "Crypto Briefing (深度与研报)",
@@ -5213,6 +5203,16 @@
     "sent_at": "2026-11-06T08:24:47.632938+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "51c2c80c0a902d92",
+    "title": "CryptoQuant:比特币反弹动能减弱,现货需求疲软仍制约上涨",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-06T08:44:14.083301+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
