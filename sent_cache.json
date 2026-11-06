@@ -1,15 +1,5 @@
 [
   {
-    "id": "5c784455be7e5e41",
-    "title": "某巨鲸向Coinbase转入38.7万枚HYPE,价值约3193万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-29T04:44:56.866145+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "dc4e8dda2e697971",
     "title": "Strategy 面临 MSCI 指数剔除风险:11 月 11 日之前你需要关注什么",
     "source": "深潮TechFlow (中文/简体)",
@@ -5212,5 +5202,17 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a600ce5eb9bf28b0",
+    "title": "究竟是什么在驱动 Layer 1 的价值?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-06T14:07:13.513643+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "SOL"
+    ],
+    "lang": "en"
   }
 ]
