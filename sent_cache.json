@@ -1,15 +1,5 @@
 [
   {
-    "id": "dd63d2dd99c4e33b",
-    "title": "Bitcoin Whales Are Loading BTC Again — Is a 2023-Style Mega Rally Brewing?",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-29T12:26:50.981792+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "64c8a35b29abb52b",
     "title": "Binance's CZ Denies Owning Shiba Inu (SHIB)",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5215,6 +5205,16 @@
     "sent_at": "2026-11-06T21:11:14.766333+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0636568a425fc6bf",
+    "title": "Stellar Activates Protocol 30 Bell Testnet, Begins Testing Quantum-Resistant Signatures",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-06T21:44:39.069899+00:00",
+    "tokens": [
+      "XLM"
     ],
     "lang": "en"
   }
