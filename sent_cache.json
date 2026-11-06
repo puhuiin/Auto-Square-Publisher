@@ -1,17 +1,5 @@
 [
   {
-    "id": "fa27a593dc8c7105",
-    "title": "Coinbase adds Ripple’s RLUSD stablecoin across retail, exchange and Prime platforms",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-10-28T21:44:38.012334+00:00",
-    "tokens": [
-      "RLUSD",
-      "XRP",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ddbdb72b02678e98",
     "title": "Mark Zuckerberg’s Meta AI Predicts an Astonishing XRP Price",
     "source": "CryptoNews (全球快讯)",
@@ -5215,5 +5203,16 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ae34c1767f09a933",
+    "title": "HTX DeepThink:AI 投资回报遭重估,科技股抛售中 BTC 避险属性未获验证",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-06T09:44:37.510882+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
