@@ -1,15 +1,5 @@
 [
   {
-    "id": "8d5f024ac586bf6b",
-    "title": "Uniswap Adds 13,137 New Addresses in Its Biggest Growth Spike Since 2020",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-29T09:04:49.903729+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "81f86abff9118414",
     "title": "日本 11 月 1 日起支持稳定币退税:游客可通过 Avalanche 链领取日元稳定币 JPYC",
     "source": "深潮TechFlow (中文/简体)",
@@ -5215,6 +5205,16 @@
     "tokens": [
       "HYPE",
       "LTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1394277e4e8dc972",
+    "title": "Hyperliquid Strategies posts $620.6M Q3 profit – Mostly unrealized HYPE gains",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-06T18:09:44.712424+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
