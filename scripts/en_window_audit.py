@@ -545,6 +545,48 @@ def r857_verdict(base_stats, treat_stats, vol_base: float, vol_treat: float) -> 
     return overwrite_verdict(base_stats, treat_stats)
 
 
+# ---- 第九条预注册判据（R861）：**通道侧** —— 下调 `stepfun-flash` 的调度权重 ----
+# 背景（2026-11-06 的只读诊断，全部有读数）：
+#   · `stepfun-flash` 占 ~68% 产量，却贡献 **98% 的 ① 真漏**、**94% 的 ⑦ 超写**（分通道读数）；
+#   · 它 raw 中位 980（目标下调反而写得更长）⇒ **基本不读篇幅指令**；
+#   · 它的 views/天 是四家最低（全部 4.55 ｜ en 2.85）⇒ 超写**没换来浏览**。
+#   · ⚠️ **不能一刀切减权**：近 7 天产量 58~60/60（配额近满），另两家份额小、失败率高
+#     ⇒ 单减权**很可能掉总产量**（"少发帖换来的漂亮数字"）—— 这就是本判据要有保量护栏的原因。
+# 干预（**部署后生效**；必须排在 R850/⑧ 的验收**之后**）：
+#   把 `stepfun-flash` 在**英文短讯**里的调度权重下调（其余通道顺序不变；**不做硬禁用**
+#   ⇒ 全链失败时它仍是兜底，不掉可用性）。
+# 判据（事前写死；**基线 = R850/⑧ 验收的那个处置臂**——通道侧改动必须排在它之后部署）：
+#   · 口径：① en 夜窗真漏率、⑦ en 夜窗过度写作率（**都分通道读**）、日均已发布篇数；
+#   · **回滚** = ① 升 >5pp ｜ ⑦ 升 >5pp ｜ **日均产量掉 ≥10%**（任一）；
+#   · **通过** = ① 降 ≥10pp **或** ⑦ 降 ≥15pp（且不触发上面任一回滚条件）；
+#   · **未通过** = 介于两者 ⇒ 保留并标注「未被证实」。
+R861_WORSE_PP = 5
+R861_MISS_GAIN_PP = 10
+R861_OVER_GAIN_PP = 15
+
+
+def r861_verdict(miss_base, miss_treat, over_base, over_treat,
+                 vol_base: float, vol_treat: float) -> tuple:
+    """★ R861：通道侧（下调 `stepfun-flash` 权重）的判定（纯函数，可单测）。
+
+    入参都是**合并率（百分数，浮点）**：① 真漏率、⑦ 过度写作率、日均已发布篇数。
+    护栏顺序：**先保量 → 再看是否变差 → 最后看改善够不够**（宁可保守）。
+    """
+    if vol_base and vol_treat and vol_treat * 100 < vol_base * (100 - R857_VOLUME_DROP_PCT):
+        return ("回滚", "日均产量 %.1f → %.1f（掉 ≥%d%%）⇒ 保量约束不满足"
+                % (vol_base, vol_treat, R857_VOLUME_DROP_PCT))
+    if miss_treat > miss_base + R861_WORSE_PP:
+        return ("回滚", "① 真漏率 %.1f%% → %.1f%%（升 >%dpp）" % (miss_base, miss_treat, R861_WORSE_PP))
+    if over_treat > over_base + R861_WORSE_PP:
+        return ("回滚", "⑦ 超写率 %.1f%% → %.1f%%（升 >%dpp）" % (over_base, over_treat, R861_WORSE_PP))
+    if ((miss_base - miss_treat) >= R861_MISS_GAIN_PP
+            or (over_base - over_treat) >= R861_OVER_GAIN_PP):
+        return ("通过", "① %.1f%%→%.1f%% ｜ ⑦ %.1f%%→%.1f%%（产量 %.1f→%.1f）"
+                % (miss_base, miss_treat, over_base, over_treat, vol_base, vol_treat))
+    return ("未通过", "① %.1f%%→%.1f%% ｜ ⑦ %.1f%%→%.1f%%：未变差但改善 < 门槛 ⇒ 保留并标注「未被证实」"
+            % (miss_base, miss_treat, over_base, over_treat))
+
+
 def overwrite_by_provider(rows, date_utc: str, lang: str = "en", trim_threshold: int = 50):
     """★★ R856：**过度写作率**按**通道**拆分（观测型读数，**不设阈值**）。
 
@@ -1144,6 +1186,15 @@ def main(argv=None) -> int:
             print("   ↳ 日均产量（观测型）：基线臂 %.1f 篇/窗 ｜ 处置臂 %.1f 篇/窗" % (_vb, _vt))
             st8, why8 = r857_verdict(ob, ot, _vb, _vt)
             print("\n判定⑧（超写重试 · R857）：%s —— %s" % (st8, why8))
+            # ★★ R861：**通道侧**判据的读数（部署"stepfun-flash 减权"时把**本条命令的
+            #   --baseline 当基线**跑一次，再拿部署后的窗当 --treatment 重跑）。
+            _r = lambda num, den: (100.0 * num / den) if den else 0.0
+            _mb = _r(sum(s.get("miss", 0) for s in base), sum(s.get("normal", 0) for s in base))
+            _mt = _r(sum(s.get("miss", 0) for s in treat), sum(s.get("normal", 0) for s in treat))
+            _ob = _r(sum(s.get("over", 0) for s in ob), sum(s.get("known", 0) for s in ob))
+            _ot = _r(sum(s.get("over", 0) for s in ot), sum(s.get("known", 0) for s in ot))
+            st9, why9 = r861_verdict(_mb, _mt, _ob, _ot, _vb, _vt)
+            print("判定⑨（R861 通道侧 · stepfun-flash 减权）：%s —— %s" % (st9, why9))
     return 0
 
 

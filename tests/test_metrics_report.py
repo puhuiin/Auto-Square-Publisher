@@ -10151,6 +10151,28 @@ class TestR850Preregistration(unittest.TestCase):
         self.assertFalse(cv.mention_in_text("Analysts predict a 2,000% rally for this token."),
                          "裸 predict 是行情动词，不许收进活动词表")
 
+    def test_r861_channel_side_verdict(self):
+        """★★ R861：通道侧（`stepfun-flash` 减权）的判定 —— 保量护栏优先，其后看变差/改善。
+
+        背景：该通道占 68% 产量却贡献 98% 的 ① 漏与 94% 的 ⑦ 超写，但**配额近满**
+        ⇒ 单减权很可能掉产量 ⇒ 护栏顺序必须是「先保量 → 再变差 → 后改善」。
+        """
+        mod = self._ew()
+        # 产量掉 ≥10%（60→53）⇒ 无论指标多好都回滚（不许用"少发帖"换漂亮数字）
+        st, why = mod.r861_verdict(35.0, 20.0, 39.0, 20.0, 60.0, 53.0)
+        self.assertEqual(st, "回滚")
+        self.assertIn("保量约束", why)
+        # ① 升 >5pp ⇒ 回滚
+        self.assertEqual(mod.r861_verdict(35.0, 41.0, 39.0, 39.0, 60.0, 59.0)[0], "回滚")
+        # ⑦ 升 >5pp ⇒ 回滚
+        self.assertEqual(mod.r861_verdict(35.0, 35.0, 39.0, 45.0, 60.0, 59.0)[0], "回滚")
+        # ① 降 ≥10pp ⇒ 通过
+        self.assertEqual(mod.r861_verdict(35.0, 24.0, 39.0, 38.0, 60.0, 59.0)[0], "通过")
+        # ⑦ 降 ≥15pp ⇒ 通过
+        self.assertEqual(mod.r861_verdict(35.0, 35.0, 39.0, 23.0, 60.0, 59.0)[0], "通过")
+        # 都没变差、改善也不够 ⇒ 未通过（保留+标注）
+        self.assertEqual(mod.r861_verdict(35.0, 30.0, 39.0, 38.0, 60.0, 59.0)[0], "未通过")
+
     def test_verdict_tiers(self):
         mod = self._ew()
         base = [self._win(22, 8), self._win(23, 7)]          # 基线 ≈ 33%
