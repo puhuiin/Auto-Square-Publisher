@@ -1,15 +1,5 @@
 [
   {
-    "id": "638d82d7be3d0f96",
-    "title": "Ripple and DriveWealth Link Stablecoin Settlement to Global Brokerage",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-29T04:25:18.119415+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "5c784455be7e5e41",
     "title": "某巨鲸向Coinbase转入38.7万枚HYPE,价值约3193万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5212,5 +5202,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "94a8f2566c94ac53",
+    "title": "中國人民銀行叫停 Solana 上海活動:品牌宣傳等同虛擬貨幣營銷,涉事單位將被查",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-11-06T13:49:28.259209+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
