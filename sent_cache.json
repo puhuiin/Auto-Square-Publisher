@@ -1,15 +1,5 @@
 [
   {
-    "id": "fc8095e2e6cae667",
-    "title": "太子集团资产被追查,中国电诈受害者如何才能拿回钱?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-29T02:49:34.482323+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "822f5c97fa48f283",
     "title": "Bitget UEX 日报|美联储维持利率不变;云厂商财报引发分化;AI基建股延续强势",
     "source": "深潮TechFlow (中文/简体)",
@@ -5213,5 +5203,15 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d702e1dfc2644e24",
+    "title": "Zcash holds near $1,300 as NU7 upgrade fuels bullish momentum",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-11-06T12:26:31.670095+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
