@@ -1,15 +1,5 @@
 [
   {
-    "id": "81a939e65058fac3",
-    "title": "Euronext Restarts CoinShares’ Zcash ETP After Debut-Day Halt",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-28T16:44:31.751517+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b3485c8625cb238d",
     "title": "'We Will Never Give Up on XRP': Ripple CEO Ends Speculations",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5208,5 +5198,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4df6b09ab88dfd02",
+    "title": "比特币核心开发者提出“量子地雷”方案:让量子窃贼损失自己的 BTC",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-06T02:07:02.350555+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
