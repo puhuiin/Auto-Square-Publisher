@@ -1,15 +1,5 @@
 [
   {
-    "id": "7e149cd8a7051545",
-    "title": "IREN完成3.63亿美元AI设备融资再融资,释放资金用于业务扩张",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-28T15:27:11.824907+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d18178b131c4a1f4",
     "title": "'DOGE Was Never Meant to Be Ethereum or Solana': Dogecoin Contributor Sets Record Straight",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5204,6 +5194,17 @@
       "XRP",
       "ZEC",
       "LINK"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a8629baa6362655a",
+    "title": "Loopscale Partly Restores Loan Functions, Keeps Vault Withdrawals Frozen",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-06T00:44:45.869944+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
