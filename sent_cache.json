@@ -1,15 +1,5 @@
 [
   {
-    "id": "7ab8d14cd2b6041c",
-    "title": "BNB Chain Burns $1.197B in BNB as 37th Auto-Burn Sparks Hope Amid Bull Divergence Signals",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-28T23:48:08.665187+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "96dfd62a48b3d25f",
     "title": "Near Protocol (NEAR), Shiba Inu (SHIB), Chainlink (LINK) and Ethereum (ETH) Price Analysis for October 29: Will the Market Dodge a Bullet?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5212,6 +5202,16 @@
     "sent_at": "2026-11-06T10:30:17.311747+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4e781e4a4df85aca",
+    "title": "Hyperliquid (HYPE) Volatility Might Surge as the Biggest Exchange Still Limits Withdrawals",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-06T11:08:06.645946+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
