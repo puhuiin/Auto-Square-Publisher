@@ -1,15 +1,5 @@
 [
   {
-    "id": "81f86abff9118414",
-    "title": "日本 11 月 1 日起支持稳定币退税:游客可通过 Avalanche 链领取日元稳定币 JPYC",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-29T09:23:59.335131+00:00",
-    "tokens": [
-      "AVAX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4ce40bc57566801e",
     "title": "TRX Options Launch on Blockchain.com, Expanding Global Access to the TRON Ecosystem",
     "source": "NewsBTC (比特币与山寨)",
@@ -5215,6 +5205,16 @@
     "sent_at": "2026-11-06T18:09:44.712424+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "00c3cb06adef98c3",
+    "title": "Cardano Node 11.2 brings Dijkstra closer, but why did its price fall by 6%?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-06T18:30:27.089493+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
