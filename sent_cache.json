@@ -1,15 +1,5 @@
 [
   {
-    "id": "28fdcfc27bff1e0d",
-    "title": "Z.AI’s GLM-5.3 completes 3 of 13 cyberattack scenarios in Irregular’s simulated tests",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-29T04:05:09.169389+00:00",
-    "tokens": [
-      "GLM"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "638d82d7be3d0f96",
     "title": "Ripple and DriveWealth Link Stablecoin Settlement to Global Brokerage",
     "source": "NewsBTC (比特币与山寨)",
@@ -5212,5 +5202,15 @@
       "POL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "88d3b4dd911d270c",
+    "title": "Solana's Skyline Crypto Ad Triggers Central Bank Investigation in China",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-06T13:30:30.286971+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
