@@ -1,17 +1,5 @@
 [
   {
-    "id": "96dfd62a48b3d25f",
-    "title": "Near Protocol (NEAR), Shiba Inu (SHIB), Chainlink (LINK) and Ethereum (ETH) Price Analysis for October 29: Will the Market Dodge a Bullet?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-29T00:22:46.951109+00:00",
-    "tokens": [
-      "SHIB",
-      "ETH",
-      "LINK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7701a7aa86a252ee",
     "title": "美国SOL现货ETF单日总净流出565.76万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5212,6 +5200,18 @@
     "sent_at": "2026-11-06T11:08:06.645946+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "fb0856dd8bbc5d13",
+    "title": "约5000万美元XRP,币安黑客事件相关地址兑换为比特币",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-06T11:25:20.223005+00:00",
+    "tokens": [
+      "XRP",
+      "ETH",
+      "BTC"
     ],
     "lang": "zh-CN"
   }
