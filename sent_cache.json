@@ -1,15 +1,5 @@
 [
   {
-    "id": "bca8cb0b74933a9f",
-    "title": "Wall Street Veteran Sees Bigger Returns in Crypto Than AI Stocks",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-28T16:06:23.375979+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f9ba93957a408926",
     "title": "Zcash turns 10 as privacy coin rides upgrades and ETF interest",
     "source": "Crypto Briefing (深度与研报)",
@@ -5204,6 +5194,18 @@
     "tokens": [
       "USDC",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "d05f9ccb471fd4a0",
+    "title": "Alea 研报:Optimism 靠贩卖「高可用性」吸金,超级链一半收入每月回购 OP",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-06T01:29:04.950450+00:00",
+    "tokens": [
+      "OP",
+      "STO",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
