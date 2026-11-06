@@ -660,6 +660,26 @@ METRICS_FILE = os.path.join(BASE_DIR, "metrics.jsonl")
 EN_SHORT_WORD_MIN = 100
 EN_SHORT_WORD_MAX = 110
 EN_CHARS_PER_WORD = 5.5          # 英文 ~5.5 字符/词（R834 起的换算口径，别随手改）
+# ★★★ R850 / R857b：**守卫式重试**的两条针对性指令（同一套重试机制、两个触发条件）。
+#   · R850（判据⑤，预注册在 `scripts/en_window_audit.py`）：**漏提触发** —— 英文帖、活动菜单
+#     可用、但正文没提活动。只读诊断（2026-11-02）：98% 的漏是 `stepfun-flash` 写超预算
+#     → 净化器裁尾 → 写在**文末**的活动提法被切掉 ⇒ 修法 = 把提法补在**提问之前**
+#     （平台 Hook→Value→CTA 结构；研究背书见 research-reports/）。
+#     ⚠️ poll/站队是平台功能且被奖励 ⇒ **不许删**（指令里显式要求保留）。
+#   · R857b（判据⑧）：**超写触发** —— 正文超净化预算（尾部必被裁）⇒ **换通道** + 硬长度约束。
+#     为什么要换通道：`stepfun-flash` 不读篇幅指令（目标下调它反而写更长，⑦ 分通道 86~88%）。
+#   ⚠️ 两条都**只追加、不改既有指令**（R760 教训：只改措辞反而把提及率从 93% 打到 33%）。
+R850_MENTION_RETRY_HINT = (
+    "【补充要求（本次重写）】你上一版**没有提到当期活动**，而上面的活动菜单确实可用。"
+    "请在保持原有观点与风格的前提下**补一句当期活动提法（用你自己的说法，别套固定模板）**，"
+    "并把它放在**结尾站队/提问之前**（读者先看到活动、再被提问）；"
+    "原来的那个结尾提问请**保留**（poll 是平台功能，不要删）。"
+)
+R857_OVERWRITE_RETRY_HINT = (
+    "【补充要求（本次重写）】你上一版**写得超出可发布长度**，尾部会被平台直接切掉。"
+    "请**务必把正文压到篇幅上限以内**（宁可少写一句），确保结尾完整；"
+    "若正文里提到当期活动，务必把它放在**结尾提问之前**，别放在最末。"
+)
 # R608：按币种浏览加权的小聚合表（import_content_stats.py 生成/刷新；committed 以便
 # 生产 checkout 可读）。缺失即引擎零行为变化。
 TOKEN_ENGAGEMENT_FILE = os.path.join(BASE_DIR, "token_engagement.json")
@@ -6957,6 +6977,8 @@ class MultiLLMEngine:
         token_hints: Optional[List[str]] = None,
         article: bool = False,
         out_lang: Optional[str] = None,
+        retry_hint: str = "",
+        exclude_provider: str = "",
     ) -> Optional[Dict[str, Any]]:
         """
         结合最新币安官方活动情报与实时行情进行高收益转化提炼。
@@ -7022,9 +7044,19 @@ class MultiLLMEngine:
 
         user_prompt, persona = self._build_user_prompt(news_item, campaign_intel, market_context, token_hints,
                                                        article=article)
+        if retry_hint:
+            # ★★★ R850 / R857b：守卫式重试的针对性指令 —— **追加在末尾**（模型对末尾最敏感），
+            #   且**只追加、不动既有指令**（R760 教训：只改措辞会把提及率从 93% 打到 33%）。
+            user_prompt = user_prompt.rstrip() + "\n\n" + retry_hint
 
         # 遍历提供商链进行容灾尝试（按本次运行连续失败数升序，健康节点优先）
         ordered = self._ordered_providers()
+        if exclude_provider:
+            # ★★★ R857b：**换通道重试** —— 把刚超写的那个通道**移到链尾**（其余顺序不变）。
+            #   为什么换：`stepfun-flash` 不读篇幅指令（目标下调它反而写更长）⇒ 同通道重试
+            #   大概率照旧超写。移到链尾而**不是删除**：全链都失败时它仍是兜底（不掉可用性）。
+            ordered = ([p for p in ordered if p.name != exclude_provider]
+                       + [p for p in ordered if p.name == exclude_provider])
         base_len = len(ordered)
         # R264：聚合路由通道一次调用=按可用免费模型随机抽一个后端
         # （OpenRouter 官方目录原话 "selects free models at random"），质量门
@@ -12720,6 +12752,48 @@ def _run_main():
                     for _k in ("content", "title"):
                         if isinstance(llm_result.get(_k), str) and llm_result[_k]:
                             llm_result[_k] = _to_traditional(llm_result[_k])
+            # ★★★ R850 / R857b：**守卫式重试**（共用一套机制；两个触发条件，只重试一次）
+            #   · 触发 A（R850，判据⑤）：英文帖 + 菜单可用 + 正文没提活动 ⇒ 补在"提问之前"重写；
+            #   · 触发 B（R857b，判据⑧）：正文超净化预算（尾部必被裁）⇒ **换通道** + 硬长度约束。
+            #   优先级：B 覆盖 A（B 的指令里也含"活动提法放提问之前"，一次到位）。
+            #   ⚠️ 只在**有结果**时重试；重试失败就**沿用首版**（绝不因重试把稿子弄丢）。
+            if llm_result:
+                _c0 = llm_result.get("content")
+                _raw0 = _c0 if isinstance(_c0, str) else ""
+                _hint, _excl = "", ""
+                # ⚠️ 只在**真实字符串正文**上判定：假引擎/Mock 的 content 不是 str
+                #   ⇒ 一律不触发（否则测试里会多出一次 summarize 调用，把桩计数打乱）。
+                if (_raw0.strip() and out_lang == "en"
+                        and not use_article
+                        and getattr(llm_engine, "last_campaign_guidance_usable", False) is True
+                        and mention_in_text(_raw0) is False):
+                    _hint = R850_MENTION_RETRY_HINT
+                    logger.info("R850：英文帖缺活动提法 ⇒ 带针对性指令重生成一次")
+                # ⚠️ 净化预算必须**防御式取用**：测试用的假引擎上这两个属性是 MagicMock，
+                #   `int > MagicMock` 会抛 TypeError（本轮实测把 17 个 _run_main 用例打红）
+                #   ⇒ 取不到整数就**不做超写判定**（宁可不重试，也不能抛错）。
+                _lim = getattr(llm_engine, "SHORT_FORM_MAX_CHARS", None)
+                _head = getattr(llm_engine, "_APPEND_HEADROOM", None)
+                _budget = (_lim - _head) if isinstance(_lim, int) and isinstance(_head, int) else 0
+                if _raw0 and not use_article and _budget > 0 and len(_raw0) > _budget:
+                    _hint = R857_OVERWRITE_RETRY_HINT
+                    _excl = getattr(llm_engine, "last_attempted_provider", "") or ""
+                    logger.info("R857b：正文 %d 字符超净化预算 %d ⇒ 换通道重生成一次（避开 %s）"
+                                % (len(_raw0), _budget, _excl or "?"))
+                if _hint:
+                    _t_retry = time.time()
+                    _retry = llm_engine.summarize(item, campaign_intel,
+                                                  market_context=market_context_str,
+                                                  token_hints=detected_tokens,
+                                                  article=use_article, out_lang=out_lang,
+                                                  retry_hint=_hint, exclude_provider=_excl)
+                    if _retry:
+                        if out_lang == "zh-TW":
+                            for _k in ("content", "title"):
+                                if isinstance(_retry.get(_k), str) and _retry[_k]:
+                                    _retry[_k] = _to_traditional(_retry[_k])
+                        llm_result = _retry
+                    stage_timings["llm"] += time.time() - _t_retry
             stage_timings["llm"] += time.time() - t_llm_start
             if not llm_result:
                 consecutive_llm_failures += 1
