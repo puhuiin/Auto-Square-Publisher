@@ -1,15 +1,5 @@
 [
   {
-    "id": "28bcd66329986aba",
-    "title": "Aptos Advisor Leaves Post, Moves Meme-Fueled Campaign to Meta Stock",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-28T17:44:37.618975+00:00",
-    "tokens": [
-      "APT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "621968ec55ff8a97",
     "title": "Solana co-founder tells US firms opposing tokenized stock trading to go private",
     "source": "Crypto Briefing (深度与研报)",
@@ -5209,5 +5199,17 @@
       "ARK"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "87a9e5e94054ed0b",
+    "title": "Injective (INJ), PEARL and Zcash (ZEC) Surge as Crypto Traders Return to Altcoins",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-06T04:53:28.346327+00:00",
+    "tokens": [
+      "INJ",
+      "ZEC",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
