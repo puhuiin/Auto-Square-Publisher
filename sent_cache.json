@@ -1,15 +1,5 @@
 [
   {
-    "id": "a10f69d8ea713654",
-    "title": "$200M Bitcoin hits exchanges in 24 hours – But a $903M whale buy absorbs the pressure",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-29T03:44:53.608900+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "28fdcfc27bff1e0d",
     "title": "Z.AI’s GLM-5.3 completes 3 of 13 cyberattack scenarios in Irregular’s simulated tests",
     "source": "Crypto Briefing (深度与研报)",
@@ -5212,5 +5202,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ec8f4d55f9f6bac9",
+    "title": "Binance and Polymarket Propose Polygon Hard Fork To Recover About $6,500,000 in Hacked Crypto",
+    "source": "DailyHodl (山寨异动与百倍币叙事)",
+    "sent_at": "2026-11-06T13:11:28.442075+00:00",
+    "tokens": [
+      "POL"
+    ],
+    "lang": "zh-CN"
   }
 ]
