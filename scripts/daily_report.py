@@ -642,6 +642,20 @@ def send_dingtalk(url: str, text: str) -> str:
     return resp
 
 
+def _notify_failed(msg: str) -> None:
+    """★★ R858：发送失败**不再让 workflow 判红**（用户决定，2026-11-06）。
+
+    ★ 为什么改：钉钉 webhook token 已失效（`errcode 300005 "token is not exist"`），
+      日报 workflow 从 **10-31 起每天判红 + 每天一封失败邮件**，而报告本身一直
+      正常产出在日志与 Step Summary 里 ⇒ 红的只是"传输通道"，噪音大于信号。
+    ★ **不静默**（R781 的"必须响"仍然成立）：改用 `::warning::` 打 GitHub 注解
+      （Actions 页面可见、但不判红）+ 同步写 stderr。
+    ⚠️ 配好可用通道后，把下面几处换回 `sys.exit(...)` 即可恢复硬失败（回滚同样简单）。
+    """
+    print("::warning::" + msg)
+    print("⚠️ " + msg, file=sys.stderr)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--hours", type=int, default=24)
@@ -658,7 +672,9 @@ def main():
     if a.dry_run:
         return
     if not a.url:
-        sys.exit("未配置 webhook（--url 或环境变量 DINGTALK_WEBHOOK_URL / WEBHOOK_URL）")
+        _notify_failed("未配置 webhook（--url 或环境变量 DINGTALK_WEBHOOK_URL / WEBHOOK_URL）"
+                       "——报告已打印在上方日志里，本步不再判红")
+        return
     print("\n--- 发送 ---")
     # ★★ R781：主通道（DINGTALK_WEBHOOK_URL）失败必须**兜底 + 响**。
     # 生产实证：钉钉 token 失效连续 6 天，旧实现 print  errcode 300005 但
@@ -683,14 +699,17 @@ def main():
         except Exception as e2:
             print("兜底通道也失败: %s" % e2)
     if tried_fallback:
-        sys.exit("日报发送失败（主通道与兜底通道均失败）——请检查 "
-                 "DINGTALK_WEBHOOK_URL / WEBHOOK_URL 配置")
+        _notify_failed("日报发送失败（主通道与兜底通道均失败）——请检查 "
+                       "DINGTALK_WEBHOOK_URL / WEBHOOK_URL 配置")
+        return
     if not fallback:
-        sys.exit("日报发送失败（主通道失败；环境里没有 WEBHOOK_URL，"
-                 "兜底通道根本未尝试）——请检查 DINGTALK_WEBHOOK_URL 配置，"
-                 "或在仓库 secret 补一个独立的 WEBHOOK_URL 以获得兜底能力")
-    sys.exit("日报发送失败（主通道失败；WEBHOOK_URL 与主通道是同一个地址，"
-             "无法独立兜底）——请检查 DINGTALK_WEBHOOK_URL 配置")
+        _notify_failed("日报发送失败（主通道失败；环境里没有 WEBHOOK_URL，"
+                       "兜底通道根本未尝试）——请检查 DINGTALK_WEBHOOK_URL 配置，"
+                       "或在仓库 secret 补一个独立的 WEBHOOK_URL 以获得兜底能力")
+        return
+    _notify_failed("日报发送失败（主通道失败；WEBHOOK_URL 与主通道是同一个地址，"
+                   "无法独立兜底）——请检查 DINGTALK_WEBHOOK_URL 配置")
+    return
 
 
 if __name__ == "__main__":

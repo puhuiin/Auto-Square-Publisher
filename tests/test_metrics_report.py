@@ -7329,7 +7329,12 @@ class TestR781DailyReportSendLoudly(unittest.TestCase):
         self.assertIn("html", out)
 
     def test_main_falls_back_then_exits_nonzero(self):
-        """★★★ 端到端：主通道失败→兜底尝试→全失败 exit 1（workflow 必须红）"""
+        """★★★ 端到端：主通道失败→兜底尝试→**全失败也不判红**（R858 改契约）。
+
+        ★ R858（用户决定 2026-11-06）：钉钉 token 失效 ⇒ 每天一封失败邮件，
+          而报告本身一直正常产出 ⇒ 改 `::warning::` 注解 + exit 0。
+          "要响"仍成立：注解必须出现。
+        """
         import urllib.request
         import subprocess
         import tempfile
@@ -7367,7 +7372,8 @@ class TestR781DailyReportSendLoudly(unittest.TestCase):
             os.environ.clear()
             os.environ.update(old_env)
             os.remove(tmp)
-        self.assertEqual(code, 1, "全失败必须 exit 1（否则 workflow 全绿而用户没收到）")
+        self.assertEqual(code, 0, "R858：发送全失败也不再判 workflow 红")
+        self.assertIn("::warning::", out, "失败仍须可见（注解），不是静默")
         self.assertIn("主通道", out, "要说明主通道失败了")
         self.assertIn("兜底", out, "要说明试过兜底")
 
@@ -7379,6 +7385,10 @@ class TestR798FallbackHonesty(unittest.TestCase):
     300005；因为 daily_report.yml 没透传 WEBHOOK_URL，兜底从未执行，而收尾句
     仍断言"主通道与兜底通道均失败"。修法：按 fallback 是否真的可用分三种收尾
     文案，并让"同址兜底"也被如实说出（同址 = 没有独立兜底能力）。
+
+    ★★ R858 改契约（用户决定，2026-11-06）：发送失败**不再 exit 1 判红**
+    （钉钉 token 失效 ⇒ 每天一封失败邮件，报告本身一直正常产出在日志/Summary 里），
+    改用 `::warning::` 注解 + `return`。**诚实性断言（谁试过谁没试过）全部保留**。
     """
 
     @staticmethod
@@ -7439,10 +7449,11 @@ class TestR798FallbackHonesty(unittest.TestCase):
         return code, out
 
     def test_missing_fallback_says_not_attempted(self):
-        """★★★ 无 WEBHOOK_URL 时：exit 1，且**不得**声称兜底失败过"""
+        """★★★ 无 WEBHOOK_URL 时：**不判红**（R858），且**不得**声称兜底失败过"""
         code, out = self._run_main(
             {"DINGTALK_WEBHOOK_URL": "https://main.invalid/hook"})
-        self.assertEqual(code, 1, "主通道失败必须 exit 1")
+        self.assertEqual(code, 0, "R858：发送失败不再判 workflow 红")
+        self.assertIn("::warning::", out, "失败仍须可见（注解），不是静默")
         self.assertNotIn("主通道与兜底通道均失败", out,
                          "兜底根本没跑，不许下这个结论")
         self.assertIn("兜底通道根本未尝试", out)
@@ -7452,7 +7463,8 @@ class TestR798FallbackHonesty(unittest.TestCase):
         code, out = self._run_main(
             {"DINGTALK_WEBHOOK_URL": "https://same.invalid/hook",
              "WEBHOOK_URL": "https://same.invalid/hook"})
-        self.assertEqual(code, 1)
+        self.assertEqual(code, 0, "R858：不再判红")
+        self.assertIn("::warning::", out)
         self.assertNotIn("重试", out, "同址不该真发第二遍")
         self.assertIn("同一个地址", out)
 
@@ -7461,7 +7473,8 @@ class TestR798FallbackHonesty(unittest.TestCase):
         code, out = self._run_main(
             {"DINGTALK_WEBHOOK_URL": "https://main.invalid/hook",
              "WEBHOOK_URL": "https://fb.invalid/hook"})
-        self.assertEqual(code, 1)
+        self.assertEqual(code, 0, "R858：不再判红")
+        self.assertIn("::warning::", out)
         self.assertIn("兜底通道（WEBHOOK_URL）重试", out)
         self.assertIn("主通道与兜底通道均失败", out)
 
@@ -10024,6 +10037,68 @@ class TestR850Preregistration(unittest.TestCase):
         ]
         self.assertEqual(mod.daily_output(rows, "2026-10-30")["published"], 2)
         self.assertEqual(mod.daily_output(rows, "2026-10-31")["published"], 1)
+
+    def test_r850_retry_knobs_exist_and_hints_are_safe(self):
+        """★★★ R850 / R857b：守卫式重试的两个旋钮必须存在，且指令写对位置。
+
+        · `summarize` 必须接受 `retry_hint` / `exclude_provider`（换通道重试的入口）；
+        · 两条指令都必须写明「放在**提问之前**」（平台 Hook→Value→CTA 结构）；
+        · R850 的指令必须显式**保留 poll**（站队提问是平台功能且被奖励 ⇒ 不能删）；
+        · 必须要求"别套固定模板"（社群准则把"结构相同的内容"列为违规）。
+        """
+        import inspect
+        import main as _m
+        mod = self._ew()
+        cls = next(getattr(_m, n) for n in dir(_m)
+                   if inspect.isclass(getattr(_m, n))
+                   and hasattr(getattr(_m, n), "summarize"))
+        params = inspect.signature(cls.summarize).parameters
+        self.assertIn("retry_hint", params)
+        self.assertIn("exclude_provider", params)
+        for hint in (_m.R850_MENTION_RETRY_HINT, _m.R857_OVERWRITE_RETRY_HINT):
+            self.assertIn("提问之前", hint)
+        self.assertIn("保留", _m.R850_MENTION_RETRY_HINT, "poll 不能删 ⇒ 必须显式要求保留")
+        self.assertIn("别套固定模板", _m.R850_MENTION_RETRY_HINT)
+
+    def test_r858_daily_report_send_failure_is_not_fatal(self):
+        """★★ R858：日报**发送失败不再判 workflow 红**（改用 ::warning:: 注解）。
+
+        根因：钉钉 webhook token 失效（errcode 300005）⇒ 日报从 10-31 起每天红 +
+        每天一封失败邮件，而报告本身一直在日志/Step Summary 里正常产出 ⇒ 噪音
+        大于信号。★ 但**不静默**：失败仍必须打 `::warning::`（R781 的"必须响"仍在）。
+        """
+        import importlib.util, contextlib, io, os, sys
+        mod = self._ew()          # 供紧随其后的既有断言使用（历史遗留：它落在本用例尾）
+        repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        mpath = os.path.join(repo, "metrics.jsonl")
+        if not os.path.exists(mpath):
+            self.skipTest("无 metrics.jsonl")
+        path = os.path.join(repo, "scripts", "daily_report.py")
+        spec = importlib.util.spec_from_file_location("daily_report_r858", path)
+        dr = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(dr)
+
+        def _boom(url, text):
+            raise RuntimeError("errcode 300005 token is not exist")
+
+        dr.send_dingtalk = _boom
+        old_argv, old_env = sys.argv, os.environ.get("WEBHOOK_URL")
+        os.environ["WEBHOOK_URL"] = "https://fallback.test/hook"
+        sys.argv = ["daily_report.py", "--metrics", mpath,
+                    "--url", "https://primary.test/hook"]
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                dr.main()        # 关键：不得抛 SystemExit（否则 workflow 仍判红）
+        finally:
+            sys.argv = old_argv
+            if old_env is None:
+                os.environ.pop("WEBHOOK_URL", None)
+            else:
+                os.environ["WEBHOOK_URL"] = old_env
+        out = buf.getvalue()
+        self.assertIn("::warning::", out, "失败仍须可见（注解），不许静默")
+        self.assertIn("均失败", out)
         # 恰好落在 1/5 上（如 8/40）必须判通过，不许被浮点误差挤掉；
         # 且必须是**两窗**（否则先被判「样本不足」）——这是有意测「判定顺序」
         self.assertEqual(mod.r850_verdict([self._win(20, 4), self._win(20, 4)],
