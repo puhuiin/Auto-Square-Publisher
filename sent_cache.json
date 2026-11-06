@@ -1,15 +1,5 @@
 [
   {
-    "id": "5b823fa2b1f1e3cf",
-    "title": "Perplexity AI Predicts Somnia Crypto Is About to Explode",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-29T08:47:47.182683+00:00",
-    "tokens": [
-      "SOMI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8d5f024ac586bf6b",
     "title": "Uniswap Adds 13,137 New Addresses in Its Biggest Growth Spike Since 2020",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5214,6 +5204,17 @@
     "sent_at": "2026-11-06T17:29:23.938757+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7ea2c22fa4f53040",
+    "title": "Binance Issues Crucial Update for Hyperliquid (HYPE) and Litecoin (LTC)",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-06T17:47:17.700217+00:00",
+    "tokens": [
+      "HYPE",
+      "LTC"
     ],
     "lang": "en"
   }
