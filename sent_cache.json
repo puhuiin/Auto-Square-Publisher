@@ -1,15 +1,5 @@
 [
   {
-    "id": "558822e1941f02c3",
-    "title": "10月29日公布三季度GDP与9月PCE,市场预期GDP年化增长3.2%",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-28T19:46:27.841998+00:00",
-    "tokens": [
-      "GMX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6edf053eb959c196",
     "title": "Sam Altman’s ChatGPT AI Predicts PEPE to Spark a Meme Coin Supercycle",
     "source": "CryptoNews (全球快讯)",
@@ -5214,5 +5204,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "9ee37d2dfc7c7357",
+    "title": "USDD 發佈 10 月月度透明度報告:儲備資產達 22.1 億美元,Smart Allocator 累計收益超 3359 萬美元",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-06T07:24:35.923628+00:00",
+    "tokens": [
+      "BNB"
+    ],
+    "lang": "zh-CN"
   }
 ]
