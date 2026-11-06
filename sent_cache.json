@@ -1,15 +1,5 @@
 [
   {
-    "id": "64c8a35b29abb52b",
-    "title": "Binance's CZ Denies Owning Shiba Inu (SHIB)",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-29T13:04:41.609947+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "60ff7745f045b666",
     "title": "Solana 上线 Polygon 开放货币技术栈",
     "source": "吴说区块链 (中文深度)",
@@ -5217,5 +5207,15 @@
       "XLM"
     ],
     "lang": "en"
+  },
+  {
+    "id": "a61a613014a261be",
+    "title": "ZEC升级后24小时上涨约8%,单块奖励调整为0.52083333枚",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-06T22:04:03.081188+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
