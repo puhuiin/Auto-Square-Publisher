@@ -1,15 +1,5 @@
 [
   {
-    "id": "af14be95162f6b01",
-    "title": "BNB Chain 公布代币化黑客松获奖名单",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-29T14:24:05.801118+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "cf134ea118493c2a",
     "title": "热度不等于护城河:Solana 的华尔街故事不好讲",
     "source": "深潮TechFlow (中文/简体)",
@@ -5214,6 +5204,16 @@
     "sent_at": "2026-11-06T23:05:54.947300+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b0e04d2b13a9fdec",
+    "title": "Solana Labs launches Leap iPhone beta for crypto swaps, SOL price dips 6%",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-06T23:27:51.952835+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
