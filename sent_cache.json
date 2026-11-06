@@ -1,15 +1,5 @@
 [
   {
-    "id": "dd356f3a9bd4c2e9",
-    "title": "Solana Alpenglow Goes Live, Targeting 150-Millisecond Finality",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-28T18:45:03.601013+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "186255a21345134a",
     "title": "Solana Breakpoint London Adds Revolut Chair and Former UK Leaders",
     "source": "NewsBTC (比特币与山寨)",
@@ -5211,6 +5201,16 @@
     "tokens": [
       "币安人生",
       "BNB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "5c281c89d7ac47bd",
+    "title": "亚洲股市单日蒸发逾 1 万亿美元,比特币守住 7.5 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-06T06:07:44.724396+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
