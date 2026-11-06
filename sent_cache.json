@@ -1,15 +1,5 @@
 [
   {
-    "id": "60ff7745f045b666",
-    "title": "Solana 上线 Polygon 开放货币技术栈",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-29T13:24:34.237450+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "42efa20852a2fbe2",
     "title": "Bitcoin options carried a far smaller election premium than in 2024",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5217,5 +5207,15 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d52c7825c3cd2715",
+    "title": "Solana Targets Hong Kong's Tokenization Market",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-06T22:24:36.539224+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
