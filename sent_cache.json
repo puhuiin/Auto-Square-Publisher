@@ -1,15 +1,5 @@
 [
   {
-    "id": "ae31398598689cc1",
-    "title": "Bitcoin drops to $80,000 on Fed dissent, Samsung, Alphabet earnings; AI tokens slump",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-10-29T11:28:18.287069+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f25c77d75c43fa34",
     "title": "Bitcoin’s ‘Uptober’ rally falters – Why BTC is down 4.2% in October",
     "source": "AMBCrypto (技术与链上)",
@@ -5215,6 +5205,16 @@
     "sent_at": "2026-11-06T20:28:09.002835+00:00",
     "tokens": [
       "GMT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9ecc393d9f108120",
+    "title": "Arbitrum新增Internet Meltdown永续市场,聚焦互联网安全风险",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-06T20:48:03.634522+00:00",
+    "tokens": [
+      "ARB"
     ],
     "lang": "en"
   }
