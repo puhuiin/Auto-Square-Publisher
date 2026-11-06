@@ -1,15 +1,5 @@
 [
   {
-    "id": "b3485c8625cb238d",
-    "title": "'We Will Never Give Up on XRP': Ripple CEO Ends Speculations",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-28T17:07:17.265757+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "aadca952309dfd9f",
     "title": "Shiba Inu (SHIB) Risks Losing $50 Million OI Threshold",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5208,5 +5198,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "cf8c56e6b1bb8b7e",
+    "title": "Bitget UEX 日报|比特币失守7.7万美元;纳指重挫5.52%;非农检验利率预期",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-06T03:30:24.356086+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
