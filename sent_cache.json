@@ -1,15 +1,5 @@
 [
   {
-    "id": "419b4d48633e737b",
-    "title": "Curve Finance 首次拓展至 EVM 生态外,StableSwap 已在 Stellar 主网上线",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-29T11:09:41.450721+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ae31398598689cc1",
     "title": "Bitcoin drops to $80,000 on Fed dissent, Samsung, Alphabet earnings; AI tokens slump",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5215,6 +5205,16 @@
     "sent_at": "2026-11-06T20:06:09.178825+00:00",
     "tokens": [
       "XLM"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "97f472ca0bf1f744",
+    "title": "BeInCrypto and Coinhold Wallet to Host AMA on Stablecoins and Inflation in Latin America",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-06T20:28:09.002835+00:00",
+    "tokens": [
+      "GMT"
     ],
     "lang": "en"
   }
