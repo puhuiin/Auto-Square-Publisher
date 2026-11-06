@@ -1,15 +1,5 @@
 [
   {
-    "id": "f25c77d75c43fa34",
-    "title": "Bitcoin’s ‘Uptober’ rally falters – Why BTC is down 4.2% in October",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-29T11:50:51.885508+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "dd63d2dd99c4e33b",
     "title": "Bitcoin Whales Are Loading BTC Again — Is a 2023-Style Mega Rally Brewing?",
     "source": "ZyCrypto (新币与空投)",
@@ -5215,6 +5205,16 @@
     "sent_at": "2026-11-06T20:48:03.634522+00:00",
     "tokens": [
       "ARB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e14882290d0775d1",
+    "title": "ADA Advancing Regulated Asset Tokenization as Brazil’s Petrobras Brings Sustainable Aviation Fuel Certificates to Cardano",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-06T21:11:14.766333+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
