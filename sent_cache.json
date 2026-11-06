@@ -1,15 +1,5 @@
 [
   {
-    "id": "ddbdb72b02678e98",
-    "title": "Mark Zuckerberg’s Meta AI Predicts an Astonishing XRP Price",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-28T22:45:52.408453+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "326c4b6c9b94460e",
     "title": "Shiba Inu burns 1.42M tokens as sellers tighten their grip – Can SHIB recover?",
     "source": "AMBCrypto (技术与链上)",
@@ -5214,5 +5204,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "edabf9780a9976bc",
+    "title": "最大的豪赌,最惨的输家:中期选举后,马斯克的商业帝国将走向何方?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-06T10:07:37.661948+00:00",
+    "tokens": [
+      "DOGE"
+    ],
+    "lang": "zh-CN"
   }
 ]
