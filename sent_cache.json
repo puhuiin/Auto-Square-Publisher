@@ -1,15 +1,5 @@
 [
   {
-    "id": "eb85ea982ed7ceb1",
-    "title": "18万枚HYPE解质押,Hyperliquid用于团队每月解锁",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-28T14:44:41.789788+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "91c7e07fcb2b7afc",
     "title": "Tech Investor Who Nailed AI Boom Warns of Bitcoin Collapse, Urges Shift to Super Intelligence",
     "source": "DailyHodl (山寨异动与百倍币叙事)",
@@ -5201,6 +5191,17 @@
     "sent_at": "2026-11-05T23:44:55.881597+00:00",
     "tokens": [
       "QNT"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "9bb426fa555ca127",
+    "title": "USDC Treasury在Solana网络新铸造2.5亿枚USDC,价值约2.5亿美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-06T00:04:52.871123+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
     ],
     "lang": "zh-TW"
   }
