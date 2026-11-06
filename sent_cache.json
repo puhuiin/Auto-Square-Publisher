@@ -1,16 +1,5 @@
 [
   {
-    "id": "cf134ea118493c2a",
-    "title": "热度不等于护城河:Solana 的华尔街故事不好讲",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-29T14:48:12.022667+00:00",
-    "tokens": [
-      "SOL",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4d537337fac282fb",
     "title": "Collector Crypt CEO:数字抽卡平台真正的门槛,是这四个环节",
     "source": "深潮TechFlow (中文/简体)",
@@ -5216,5 +5205,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "dd1a58ad5d195e63",
+    "title": "24小时销毁价值164万美元HYPE,Hyperliquid回购并销毁2.104万枚",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-06T23:46:52.908877+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
