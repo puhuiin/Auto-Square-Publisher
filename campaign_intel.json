@@ -3,22 +3,22 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Futures",
-    "#Referral"
+    "#ReferralRush",
+    "#SpotTaker"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$USDC",
     "$PREDICT",
-    "$AAPLB",
-    "$NVDAB",
     "$APPB",
-    "$SPCXB"
+    "$BSPB",
+    "$GEVB"
   ],
-  "strategy_guidance": "结合Spot Trading Tournament Season 10与Futures新上线的TradFi USDⓈ-Margined Perpetual Contracts，以'新合约上线解读+交易大赛参与攻略'角度发帖，引导读者参与评论互动获取Write2Earn奖励；同步联动November Referral Tournament及Binance Starter Carnival的bStocks交易对，发布'新交易对上线解析+邀请好友活动导流'内容，追当期活动热度，全程避免收益承诺，仅强调互动拿奖励与活动参与方式。",
-  "last_updated": "2026-11-05T21:05:05.591330Z",
+  "strategy_guidance": "优先追11月9日截止的限时Spot Taker Program，以活动冲刺角度切入发帖，结合当期新上线代币、交易竞赛及 referral 活动热点。引导读者参与相关话题评论互动获取Write2Earn奖励，提升帖子曝光与互动量。",
+  "last_updated": "2026-11-06T09:24:07.962835Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
+      "reset_at": "2026-11-06T09:24:08.614272+00:00",
       "last_fail": "2026-11-06T08:43:38.250168+00:00",
       "fails": 1
     }
@@ -31,13 +31,13 @@
   "_article_sent_date": "2026-11-06",
   "_publish_park": {
     "54658243f4d34b28": {
-      "fails": 2,
       "parked_until": "2026-11-06T12:30:16.030302+00:00",
-      "last_fail": "2026-11-06T06:30:16.030302+00:00"
+      "last_fail": "2026-11-06T06:30:16.030302+00:00",
+      "fails": 2
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 714,
+  "_img_rot": 715,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
