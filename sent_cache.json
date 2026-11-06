@@ -1,16 +1,5 @@
 [
   {
-    "id": "7fef243eaa05782c",
-    "title": "C2FO and Ripple Bring Instant-Pay Settlement Plans to XRP Ledger",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-28T19:24:39.111332+00:00",
-    "tokens": [
-      "XRP",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "558822e1941f02c3",
     "title": "10月29日公布三季度GDP与9月PCE,市场预期GDP年化增长3.2%",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5211,6 +5200,18 @@
     "sent_at": "2026-11-06T06:30:47.899364+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "774000aa0dd39f5c",
+    "title": "2026 年 10 月:USDD 月度透明度报告",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-06T07:04:04.879684+00:00",
+    "tokens": [
+      "BNB",
+      "TRX",
+      "ETH"
     ],
     "lang": "zh-TW"
   }
