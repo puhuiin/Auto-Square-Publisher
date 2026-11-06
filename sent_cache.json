@@ -1,15 +1,5 @@
 [
   {
-    "id": "f9ba93957a408926",
-    "title": "Zcash turns 10 as privacy coin rides upgrades and ETF interest",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-28T16:24:23.709232+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "81a939e65058fac3",
     "title": "Euronext Restarts CoinShares’ Zcash ETP After Debut-Day Halt",
     "source": "The Defiant (DeFi 深度)",
@@ -5206,6 +5196,16 @@
       "OP",
       "STO",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "54bb3e863b5ce4f2",
+    "title": "Nasdaq's XRP Treasury Crashed Nearly 50% In a Month",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-06T01:48:42.618233+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
