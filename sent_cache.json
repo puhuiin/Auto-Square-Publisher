@@ -1,15 +1,5 @@
 [
   {
-    "id": "cc309e2d5cfb0959",
-    "title": "Ripple’s Swell Blitz Continues: Coinbase Deal and $900M Revenue Run Rate Revealed",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-29T08:08:00.237497+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "5cb280d581e304f2",
     "title": "Bitcoin Price Faces $11B Options Expiry After FOMC Uncertainty Clears",
     "source": "CryptoNews (全球快讯)",
@@ -5214,6 +5204,16 @@
     "sent_at": "2026-11-06T16:48:30.465530+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8d5e7e7bbb04f0ff",
+    "title": "Ondo Plans Tokenized Anthropic Shares From IPO Day",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-06T17:10:31.020136+00:00",
+    "tokens": [
+      "ONDO"
     ],
     "lang": "en"
   }
