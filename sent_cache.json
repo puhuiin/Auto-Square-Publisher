@@ -1,15 +1,5 @@
 [
   {
-    "id": "42efa20852a2fbe2",
-    "title": "Bitcoin options carried a far smaller election premium than in 2024",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-29T13:47:42.202352+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "97bc3e1334276f37",
     "title": "Ondo 智能投资组合上线Solana,涵盖7种投资组合配置",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5213,6 +5203,16 @@
     "title": "Solana Targets Hong Kong's Tokenization Market",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-11-06T22:24:36.539224+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "2d18ea867dddcc55",
+    "title": "China central bank probes Solana after Shanghai shutdown, report",
+    "source": "Protos (隐私与合规)",
+    "sent_at": "2026-11-06T22:44:39.175114+00:00",
     "tokens": [
       "SOL"
     ],
