@@ -1,17 +1,5 @@
 [
   {
-    "id": "1e32387406630ad1",
-    "title": "Hyperliquid 原油合约幌骗疑云:1.7 亿美元幽灵订单与 DeFi 监管的灰色地带",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-29T02:29:19.504785+00:00",
-    "tokens": [
-      "USDC",
-      "ETH",
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fc8095e2e6cae667",
     "title": "太子集团资产被追查,中国电诈受害者如何才能拿回钱?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5213,6 +5201,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "17e5cb96c169e362",
+    "title": "Hyperliquid drops 4% as whales take $5 million profit",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-11-06T12:07:43.050995+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-TW"
   }
