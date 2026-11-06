@@ -1,15 +1,5 @@
 [
   {
-    "id": "621968ec55ff8a97",
-    "title": "Solana co-founder tells US firms opposing tokenized stock trading to go private",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-28T18:04:49.226372+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "145812aefc86999c",
     "title": "Solana Ships New Validator and SDK Releases After Alpenglow Upgrade",
     "source": "NewsBTC (比特币与山寨)",
@@ -5209,6 +5199,17 @@
       "INJ",
       "ZEC",
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "7c3e5ef53434fd02",
+    "title": "三星钱包将于 11 月内接入 Sui 网络 USDC,支持 Galaxy 用户在 Sui 上使用稳定币",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-06T05:27:07.412486+00:00",
+    "tokens": [
+      "USDC",
+      "SUI"
     ],
     "lang": "zh-TW"
   }
