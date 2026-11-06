@@ -1,15 +1,5 @@
 [
   {
-    "id": "1db4d196fc19416b",
-    "title": "Solflare halts SOL staking rewards after validator operator loses security keys — Details",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-29T06:12:21.166196+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0d3461a2b2a8d8d1",
     "title": "每秒处理702万笔支付,Stellar推出新执行模型Project Thruput",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5213,6 +5203,16 @@
     "sent_at": "2026-11-06T14:48:47.779312+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ee12d9f01c227654",
+    "title": "XRP bear trap alert! Bitfinex shorts surge 652% as supply tightens",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-06T15:07:45.942098+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
