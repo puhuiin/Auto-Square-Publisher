@@ -1,15 +1,5 @@
 [
   {
-    "id": "4ce40bc57566801e",
-    "title": "TRX Options Launch on Blockchain.com, Expanding Global Access to the TRON Ecosystem",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-29T09:50:00.967494+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3964ce0c88345031",
     "title": "豆包工作向企业客户推出三方模型服务",
     "source": "深潮TechFlow (中文/简体)",
@@ -5215,6 +5205,16 @@
     "sent_at": "2026-11-06T18:30:27.089493+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "54658243f4d34b28",
+    "title": "Polygon eyes hard fork to recover $6.5 mln in stolen POL – But at what cost?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-06T18:50:30.594085+00:00",
+    "tokens": [
+      "POL"
     ],
     "lang": "en"
   }
