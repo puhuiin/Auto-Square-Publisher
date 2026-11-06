@@ -10134,6 +10134,23 @@ class TestR850Preregistration(unittest.TestCase):
         self.assertIn("我们截的 1", why)
         self.assertIn("上游切的 2", why)
 
+    def test_r860_vocab_covers_current_campaign_names(self):
+        """★★★ R860：词表必须覆盖**当期**活动专名（第 11 次补漏）。
+
+        取证：`mention_in_text("Join the Spot Taker Program before Nov 9.")` 曾为 **False**
+        ⇒ 11-06 英文夜窗 10/10 全是**假漏**，而 R850 的触发 A 用的就是这个判据
+        ⇒ 会**对已经提了活动的帖反复重试**。
+        ⚠️ 窄形态纪律：不收裸 `predict`（同时是行情高频动词，IGNORECASE 下会误伤）。
+        """
+        import campaign_vocab as cv
+        for s in ("Join the Spot Taker Program before Nov 9.",
+                  "The Spot Taker Program runs until Nov 9.",
+                  "Join the Halloween Pumpkin Frenzy for rewards."):
+            self.assertTrue(cv.mention_in_text(s), "当期活动专名必须命中：%s" % s)
+        # 裸 predict 不该被当成活动提及（行情措辞）
+        self.assertFalse(cv.mention_in_text("Analysts predict a 2,000% rally for this token."),
+                         "裸 predict 是行情动词，不许收进活动词表")
+
     def test_verdict_tiers(self):
         mod = self._ew()
         base = [self._win(22, 8), self._win(23, 7)]          # 基线 ≈ 33%

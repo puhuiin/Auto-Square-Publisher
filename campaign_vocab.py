@@ -138,7 +138,23 @@ CAMPAIGN_MENTION_RE = re.compile(
     #   ⇒ 改成**方向特定**的形态（生产原句是「the **USD1 hold** campaign」）：
     #   `usd1` **后面紧跟** hold/holding 才算，「hold USD1」这种持仓叙述不算 ✓。
     r"|usd1\s+hold(?:ing)?"
-    r"|\busd1\s+wlfi\b|\bwlfi\s+usd1\b",
+    r"|\busd1\s+wlfi\b|\bwlfi\s+usd1\b"
+    # ★★ R860：**第 11 次补漏**——当期活动名又换代，词表停在上一版。
+    #   取证（2026-11-06 只读诊断，一句话即可复现）：
+    #     `mention_in_text("Join the Spot Taker Program before Nov 9.")` ⇒ **False**
+    #   表里有 Tournament / Halloween / bStocks / TradFi，却**没有 Spot Taker / Pumpkin**。
+    #   ⇒ 写得没错的帖被判「未提及」：11-06 英文夜窗 **10/10 全是假漏**
+    #     （那 10 篇正文里明写着 `Spot Taker Program` / `Spot Taker`）。
+    # ⚠️ **本轮影响面比前几次大**：R850 的守卫式重试「触发 A」用的就是这个判据
+    #   ⇒ 假阴性会**对已经提了活动的帖反复重试**（白烧 LLM 调用、还可能把好稿改坏）。
+    #   （这也是"检测器过期 → 反馈环按假信号动作"的又一例：R842 注释里
+    #    "$AXIS 差点按假数回滚" 是同一个教训的上一集。）
+    # ⚠️ 窄形态（延续 R830/R842/R849 纪律）：只收**活动专名/入口名**。
+    #   · 收 `spot taker`（=当期入口名 `Spot Taker Program`）；
+    #   · 收 `pumpkin`（=`Halloween Pumpkin Frenzy`，专名、无泛化歧义）；
+    #   · **不收裸 `predict`**：它同时是行情高频动词（"analysts predict…"），
+    #     而本正则 IGNORECASE ⇒ 收进去等于每年误报一片（宁漏不误报）。
+    r"|spot\s+taker|pumpkin",
     re.IGNORECASE)
 
 # 标签形态：注入的 #TradingTournament / #Write2Earn 含 contest/tournament 字样，
