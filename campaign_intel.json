@@ -23,22 +23,28 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
-    "Preset-stepfun": {
-      "fails": 1,
-      "cooldown_until": "2026-11-06T06:17:28.835860+00:00",
-      "last_fail": "2026-11-06T06:07:28.835879+00:00"
-    },
     "Preset-stepfun-flash": {
+      "cooldown_until": "2026-11-06T06:45:46.438494+00:00",
+      "fails": 2,
+      "last_fail": "2026-11-06T06:25:46.438519+00:00"
+    },
+    "Preset-stepfun": {
+      "cooldown_until": "2026-11-06T06:47:17.918475+00:00",
+      "fails": 2,
+      "last_fail": "2026-11-06T06:27:17.918499+00:00"
+    },
+    "Preset-openrouter": {
       "fails": 1,
-      "cooldown_until": "2026-11-06T06:15:13.029933+00:00",
-      "last_fail": "2026-11-06T06:05:13.029941+00:00"
+      "cooldown_until": "2026-11-06T06:40:15.028672+00:00",
+      "last_fail": "2026-11-06T06:30:15.028677+00:00"
     }
   },
   "_article_sent_date": "2026-11-06",
   "_publish_park": {
     "54658243f4d34b28": {
-      "fails": 1,
-      "last_fail": "2026-11-06T04:52:49.131594+00:00"
+      "fails": 2,
+      "last_fail": "2026-11-06T06:30:16.030302+00:00",
+      "parked_until": "2026-11-06T12:30:16.030302+00:00"
     }
   },
   "_intel_refresh_fail": {},

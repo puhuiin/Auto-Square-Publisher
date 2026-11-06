@@ -1,15 +1,5 @@
 [
   {
-    "id": "186255a21345134a",
-    "title": "Solana Breakpoint London Adds Revolut Chair and Former UK Leaders",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-28T19:04:27.292003+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7fef243eaa05782c",
     "title": "C2FO and Ripple Bring Instant-Pay Settlement Plans to XRP Ledger",
     "source": "NewsBTC (比特币与山寨)",
@@ -5211,6 +5201,16 @@
     "sent_at": "2026-11-06T06:07:44.724396+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "ed891b0d3480aebf",
+    "title": "Zcash’s landmark NU7 upgrade goes live, speeding up private payments",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-06T06:30:47.899364+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-TW"
   }
