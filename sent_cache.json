@@ -1,17 +1,5 @@
 [
   {
-    "id": "838fa462238cf817",
-    "title": "Binance 疑似被盗事件黑客开始在链上抛售山寨币换 ETH",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-29T23:29:55.185942+00:00",
-    "tokens": [
-      "ETH",
-      "PEPE",
-      "UNI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3a0d6f3a63425134",
     "title": "Pickle Cat:Binance 疑似被盗不同于 FTX,市场或再探底",
     "source": "深潮TechFlow (中文/简体)",
@@ -5210,6 +5198,16 @@
     "sent_at": "2026-11-07T10:10:37.151903+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "fe23212e2bc5080c",
+    "title": "Coinbase Reveals November Delisting Schedule, Issues Warning on Solana Token Listing",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-07T10:44:31.169222+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
