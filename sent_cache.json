@@ -1,16 +1,5 @@
 [
   {
-    "id": "26a4f1805f6f5734",
-    "title": "约265万美元资金兑换为POL,疑似Polymarket攻击者随后转出约2864万枚POL",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-29T19:45:47.153515+00:00",
-    "tokens": [
-      "POL",
-      "USDC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b3a660b029016795",
     "title": "Stellar Gains USDC Payment Corridor as Movantis Targets US–El Salvador Transfers",
     "source": "NewsBTC (比特币与山寨)",
@@ -5209,6 +5198,16 @@
     "sent_at": "2026-11-07T06:44:35.898361+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "02febb13b9cce84b",
+    "title": "XRP Sentiment Crashes to July Lows: Could This Be the Bullish Signal Ripple Needs?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-07T07:07:35.866042+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
