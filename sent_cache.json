@@ -1,15 +1,5 @@
 [
   {
-    "id": "a74142b4230c5d16",
-    "title": "分析:币安黑客事件后比特币仅下跌约2%,远低于FTX事件后的26%跌幅",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-30T14:44:44.745317+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4846819342e4d630",
     "title": "币安联席 CEO :最迟在周一发布完整的储备金证明,目标 40 小时内恢复提现",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-07T23:25:36.620234+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7e2e27a932ccd11b",
+    "title": "Chainlink price prediction: How LINK can avoid a breakdown below $8",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-07T23:45:16.700991+00:00",
+    "tokens": [
+      "LINK"
     ],
     "lang": "zh-CN"
   }
