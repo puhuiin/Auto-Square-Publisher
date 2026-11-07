@@ -1,15 +1,5 @@
 [
   {
-    "id": "882b39535b1004b8",
-    "title": "Bitwise 报告:比特币或成未来十年表现最好的主流资产",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T08:26:51.758312+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e0014f0148b53cf1",
     "title": "TRM 研报:朝鲜黑客如何一夜盗走币安 63.6 亿美元,还有约 24 亿美元冻不住",
     "source": "深潮TechFlow (中文/简体)",
@@ -5193,6 +5183,17 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ab359d6e6aace36e",
+    "title": "Samsung Wallet’s USDC on Solana Is Live — Here’s What the Rollout Actually Covers",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-07T17:26:41.990673+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
     ],
     "lang": "en"
   }
