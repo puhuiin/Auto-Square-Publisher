@@ -1,15 +1,5 @@
 [
   {
-    "id": "22fc3f344ec0d0e3",
-    "title": "Crypto investors refuse to sell XRP ETF tokens despite a 25% price crash",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-29T19:05:37.329443+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "64c9eb84f8cd85c6",
     "title": "Solana Hits $5 Billion in RWA Value",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5207,6 +5197,16 @@
     "title": "比特币现货ETF昨日总净流出4.12亿美元,IBIT净流出居首",
     "source": "Odaily星球日报 (中文快讯)",
     "sent_at": "2026-11-07T06:04:10.445721+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b801dad564c4116e",
+    "title": "Bitcoin ETFs Bleed $430 Million as Tech Rout Tests Wall Street Buyers",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-07T06:24:04.356664+00:00",
     "tokens": [
       "BTC"
     ],
