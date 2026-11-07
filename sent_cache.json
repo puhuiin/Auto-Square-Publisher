@@ -1,15 +1,5 @@
 [
   {
-    "id": "e6686a59c69566e7",
-    "title": "Binance Hit by a $6.3B Security Nightmare: Nikita Bier Mocks CZ, While ZachXBT Spots a Bigger Threat",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-30T07:47:19.225606+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "14dbfc7ecb6fcc62",
     "title": "加密市场爆仓金额超15.4亿美元,币安遭攻击引发抛售",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5193,6 +5183,16 @@
     "sent_at": "2026-11-07T16:11:54.548131+00:00",
     "tokens": [
       "STRK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4c8318f168b94cd6",
+    "title": "'Congratulations,' Peter Schiff Reacts as Saylor's Bitcoin Treasury Sits at Cost Basis",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-07T16:30:43.561241+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
