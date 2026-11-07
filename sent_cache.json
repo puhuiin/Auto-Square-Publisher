@@ -1,16 +1,5 @@
 [
   {
-    "id": "b3a660b029016795",
-    "title": "Stellar Gains USDC Payment Corridor as Movantis Targets US–El Salvador Transfers",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-29T20:04:00.843133+00:00",
-    "tokens": [
-      "USDC",
-      "XLM"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "da727901f6d28017",
     "title": "Celestia Unveils Voyager for AI Payments, Citing 21 Million TPS Benchmark",
     "source": "The Defiant (DeFi 深度)",
@@ -5210,5 +5199,16 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "2a92258a817f08a7",
+    "title": "Samsung teams with Stripe to bring USDC to 82M phones",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-07T07:30:22.916615+00:00",
+    "tokens": [
+      "USDC",
+      "ACH"
+    ],
+    "lang": "zh-CN"
   }
 ]
