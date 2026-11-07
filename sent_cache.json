@@ -1,15 +1,5 @@
 [
   {
-    "id": "da727901f6d28017",
-    "title": "Celestia Unveils Voyager for AI Payments, Citing 21 Million TPS Benchmark",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-10-29T20:24:37.032313+00:00",
-    "tokens": [
-      "TIA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "053c6573219513d9",
     "title": "超700名用户被盗约270万美元,Polymarket事件中交易员Car被指伪造被盗",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5210,5 +5200,17 @@
       "ACH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "40ee0006b8cd680c",
+    "title": "XRP Had the Worst Day in Ages, Hyperliquid (HYPE) Awaits Volatility, What Pushes Stellar (XLM) Down? Crypto Market Review",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-07T07:48:29.635249+00:00",
+    "tokens": [
+      "XRP",
+      "HYPE",
+      "XLM"
+    ],
+    "lang": "zh-TW"
   }
 ]
