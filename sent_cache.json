@@ -1,16 +1,5 @@
 [
   {
-    "id": "e69c01d5c0de8422",
-    "title": "Grok AI Predicts Wild Bitcoin Price Amid $6.3Bn Binance Hack",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-30T14:09:45.234430+00:00",
-    "tokens": [
-      "BTC",
-      "USD1"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a74142b4230c5d16",
     "title": "分析:币安黑客事件后比特币仅下跌约2%,远低于FTX事件后的26%跌幅",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5189,6 +5178,16 @@
     "sent_at": "2026-11-07T23:04:55.356032+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "d5ea96870d934598",
+    "title": "Uniswap whales are selling – Why $5.80 could be UNI’s next stop",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-07T23:25:36.620234+00:00",
+    "tokens": [
+      "UNI"
     ],
     "lang": "zh-CN"
   }
