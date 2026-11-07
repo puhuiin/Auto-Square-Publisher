@@ -1,15 +1,5 @@
 [
   {
-    "id": "04df8563f673eca7",
-    "title": "92 Billion Shiba Inu (SHIB) in 24 Hours: Reasons Behind the Drop Are Clear Now",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-29T17:04:52.874697+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1a6d6b80f8b3942a",
     "title": "XRP dips below the $1.30 support amid bearish positioning",
     "source": "CoinJournal (山寨异动)",
@@ -5209,5 +5199,15 @@
       "UNI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a61fb76b077466b6",
+    "title": "ARK 申报 14 只新 ETF,覆盖 AI 与代币化市场",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-07T02:24:53.287216+00:00",
+    "tokens": [
+      "ARK"
+    ],
+    "lang": "zh-TW"
   }
 ]
