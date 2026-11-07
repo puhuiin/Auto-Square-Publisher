@@ -1,15 +1,5 @@
 [
   {
-    "id": "bb17e71a34261489",
-    "title": "从 Binance 到 PHP2Shell:AI 时代,Web 安全的防线亟需再定义",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T13:50:45.172919+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e69c01d5c0de8422",
     "title": "Grok AI Predicts Wild Bitcoin Price Amid $6.3Bn Binance Hack",
     "source": "CryptoNews (全球快讯)",
@@ -5189,6 +5179,16 @@
     "sent_at": "2026-11-07T22:44:54.835974+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0f9ff69d6028f440",
+    "title": "Zcash Activates NU7 With 25-Second Block Target and New Fee Reserve",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-07T23:04:55.356032+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
