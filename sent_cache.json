@@ -1,17 +1,5 @@
 [
   {
-    "id": "3766e6dcefe496e0",
-    "title": "币安被盗 63 亿美元:攻击流程及被盗资金流向分析",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T13:27:29.243747+00:00",
-    "tokens": [
-      "ETH",
-      "RLUSD",
-      "UNI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "bb17e71a34261489",
     "title": "从 Binance 到 PHP2Shell:AI 时代,Web 安全的防线亟需再定义",
     "source": "深潮TechFlow (中文/简体)",
@@ -5191,6 +5179,16 @@
     "tokens": [
       "USDC",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c6dc1da288725627",
+    "title": "持仓价值1.06亿美元,Smartestmoney HYPE多单未实现盈利5276万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-07T22:44:54.835974+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
