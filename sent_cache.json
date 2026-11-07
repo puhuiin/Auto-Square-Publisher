@@ -1,17 +1,5 @@
 [
   {
-    "id": "ca98676d8532c0b4",
-    "title": "Massive $5.9 Billion Binance Hack Hits XRP, BTC, ETH and Other Tokens",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-30T02:44:57.412014+00:00",
-    "tokens": [
-      "XRP",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "bc79c99c71998fab",
     "title": "Trump’s crypto firm joins Tether, Circle, and Ripple in $2.6 billion stablecoin freeze as Binance hack outflows near $6 billion",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5205,6 +5193,16 @@
     "sent_at": "2026-11-07T12:04:30.139771+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "29e91a42c97263f0",
+    "title": "Zcash Price Repeats Setup Behind Its 250% Rally, Analyst Says",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-07T12:25:02.559440+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-TW"
   }
