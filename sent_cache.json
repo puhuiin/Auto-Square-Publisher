@@ -1,16 +1,5 @@
 [
   {
-    "id": "fd0e1bc2ab598785",
-    "title": "Former Ripple CTO Mocks $6 Billion Binance Hack With Stellar (XLM) Joke",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-30T10:24:55.166545+00:00",
-    "tokens": [
-      "XLM",
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d28bb2fb1d061733",
     "title": "何一:AAVE 抵押的 6000 万 USDT 不在完全冻结范围内,黑客实际仅取走 4600 万美元 ETH",
     "source": "深潮TechFlow (中文/简体)",
@@ -5193,6 +5182,16 @@
     "sent_at": "2026-11-07T19:04:36.995159+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a065145c821a3462",
+    "title": "Zcash’s new security fund is 99.7% old money",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-07T19:28:27.862168+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
