@@ -1,15 +1,5 @@
 [
   {
-    "id": "d589eeb456236755",
-    "title": "THORChain’s RUNE jumps 13% after Binance’s record $6.3B hack",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-30T10:04:04.827137+00:00",
-    "tokens": [
-      "RUNE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "fd0e1bc2ab598785",
     "title": "Former Ripple CTO Mocks $6 Billion Binance Hack With Stellar (XLM) Joke",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5193,6 +5183,16 @@
     "sent_at": "2026-11-07T18:45:24.000439+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "dea223923e9db8a4",
+    "title": "Dogecoin Contributor Flags Social Signing as Potential Wallet Security Risk",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-07T19:04:36.995159+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
