@@ -1,17 +1,5 @@
 [
   {
-    "id": "11b036597b7013e2",
-    "title": "巨鲸趁 Binance 黑客抛售引发市场下跌抄底 UNI、PEPE,5 小时获利 27 万美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T05:10:44.884208+00:00",
-    "tokens": [
-      "UNI",
-      "PEPE",
-      "USDC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2a526ddfb3cff716",
     "title": "星球午讯",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5198,6 +5186,16 @@
     "sent_at": "2026-11-07T14:24:32.346564+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8c7b976eb0368342",
+    "title": "EIP-8037 state-gas rules force Ethereum dApps to rewrite billing",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-07T14:44:13.046418+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
