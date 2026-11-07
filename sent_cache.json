@@ -1,15 +1,5 @@
 [
   {
-    "id": "0cf5fc26140ec572",
-    "title": "Strategy Q3 净利 195.3 亿美元、持币近 85 万枚,Saylor 拟借优先股融资最高 300 亿美元继续买币",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T09:24:47.429860+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5d60587d98671578",
     "title": "QNT crypto’s price now down 50.5% from September’s high — Should you buy now?",
     "source": "AMBCrypto (技术与链上)",
@@ -5193,6 +5183,16 @@
     "tokens": [
       "BTC",
       "ETH",
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "cf5cb57750ffecf8",
+    "title": "Solana’s October Upgrade Review Puts 200ms Slots and $5B in Tokenized Assets in Focus",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-07T18:25:45.186101+00:00",
+    "tokens": [
       "SOL"
     ],
     "lang": "en"
