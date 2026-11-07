@@ -1,18 +1,5 @@
 [
   {
-    "id": "c80c09f495908150",
-    "title": "币安黑客已抛售价值约1.58亿美元山寨币,全部兑换为70480枚ETH",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-30T03:28:37.453289+00:00",
-    "tokens": [
-      "ETH",
-      "UNI",
-      "ENA",
-      "PEPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "65c86904c4ac0de7",
     "title": "Bitcoin Price Slides Below $79,000 as Binance Loses $5.8 Billion in Massive Hack",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5205,5 +5192,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0edac74a26570eee",
+    "title": "赵长鹏现身纳斯达克敲钟,BNC 是什么来头?",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-07T13:07:23.071111+00:00",
+    "tokens": [
+      "BNB"
+    ],
+    "lang": "zh-TW"
   }
 ]
