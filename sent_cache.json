@@ -1,15 +1,5 @@
 [
   {
-    "id": "053c6573219513d9",
-    "title": "超700名用户被盗约270万美元,Polymarket事件中交易员Car被指伪造被盗",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-29T20:44:26.178275+00:00",
-    "tokens": [
-      "POL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4448c3d3f36cbae3",
     "title": "Polygon adds Solana support for stablecoin payments and bank payouts",
     "source": "AMBCrypto (技术与链上)",
@@ -5212,5 +5202,15 @@
       "XLM"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "a840d34f0a49d919",
+    "title": "XRP Price Trapped at $1.1799 After $30 Million Cascade Liquidation",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-07T08:07:26.015470+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
