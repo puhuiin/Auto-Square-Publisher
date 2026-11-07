@@ -1,16 +1,5 @@
 [
   {
-    "id": "6c5b09eed3a8f28d",
-    "title": "CZ:比特币在传统金融市场暴跌中表现出韧性",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T12:07:17.558766+00:00",
-    "tokens": [
-      "BTC",
-      "WLFI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8378fe460f5d8e1e",
     "title": "TechFlow 情报局:币安遭史上最大黑客攻击损失 63 亿美元,英特尔盘后暴跌 22% 带崩全球科技股",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,6 +5177,16 @@
     "title": "Ripple Veteran David Schwartz Draws the Line With XRP Spammers",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-11-07T21:05:33.249301+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "47bf1581df370c72",
+    "title": "XRP Bulls Stunned by 3,090% Liquidation Imbalance as Crypto Market Stalls",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-07T21:26:54.629539+00:00",
     "tokens": [
       "XRP"
     ],
