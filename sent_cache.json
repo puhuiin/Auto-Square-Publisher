@@ -1,15 +1,5 @@
 [
   {
-    "id": "e4f0fc45dd1afb69",
-    "title": "Hyperliquid (HYPE) Adds 680% in Volume: Analyzing Record-Breaking Surge",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-30T11:04:44.416234+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9c4cc1451b78b2d2",
     "title": "麻吉在 ETH 多单被清算后再度充值 25 万 USDC 加杠杆开多,持仓价值约 588 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5190,6 +5180,17 @@
     "source": "CryptoPotato (山寨币/Meme热点)",
     "sent_at": "2026-11-07T19:46:33.918390+00:00",
     "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9915071b15fca013",
+    "title": "RLUSD Is Not Coming for XRP: Garlinghouse Clarifies Ripple’s Bigger XRPL Vision as Trader Spots Setup Behind 71% Price Explosion",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-07T20:10:37.456687+00:00",
+    "tokens": [
+      "RLUSD",
       "XRP"
     ],
     "lang": "en"
