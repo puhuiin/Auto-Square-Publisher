@@ -1,15 +1,5 @@
 [
   {
-    "id": "263ee4ef6c690337",
-    "title": "Securitize Plans Stellar Integration as Tokenized Asset Platforms Expand",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-29T17:44:05.501382+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "de3a260f05ca6d29",
     "title": "Stellar Private Fund Liquidity Pilot Tests a New Way to Price Redemptions",
     "source": "NewsBTC (比特币与山寨)",
@@ -5207,6 +5197,18 @@
     "sent_at": "2026-11-07T03:44:11.890917+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b94bbaa3078ba73f",
+    "title": "ARK 申报代币化市场基础设施 ETF,可间接获取 ETH、SOL 等资产敞口",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-07T04:08:31.911219+00:00",
+    "tokens": [
+      "ARK",
+      "ETH",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
