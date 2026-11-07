@@ -1,15 +1,5 @@
 [
   {
-    "id": "4448c3d3f36cbae3",
-    "title": "Polygon adds Solana support for stablecoin payments and bank payouts",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-29T21:04:36.916442+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4016e7ca91531246",
     "title": "Ripple’s Futures volume hits $68B, yet XRP faces a liquidity test – Why?",
     "source": "AMBCrypto (技术与链上)",
@@ -5210,6 +5200,17 @@
     "sent_at": "2026-11-07T08:07:26.015470+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "02b255c314d39b4a",
+    "title": "Robinhood Chain 与 Uniswap v4 Hook 经济学全景实操指南",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-07T08:27:11.284273+00:00",
+    "tokens": [
+      "UNI",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
