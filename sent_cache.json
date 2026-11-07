@@ -1,15 +1,5 @@
 [
   {
-    "id": "0ab17c2c2c33fa14",
-    "title": "HTX DeepThink:安全事件叠加紧缩预期,BTC 短期或维持高波动偏弱震荡",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T11:44:44.233829+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "6c5b09eed3a8f28d",
     "title": "CZ:比特币在传统金融市场暴跌中表现出韧性",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,6 +5178,16 @@
     "title": "Ripple Joins BlackRock, Standard Chartered in New Tokenization Report",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-11-07T20:44:14.425229+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4df57394a4416be4",
+    "title": "Ripple Veteran David Schwartz Draws the Line With XRP Spammers",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-07T21:05:33.249301+00:00",
     "tokens": [
       "XRP"
     ],
