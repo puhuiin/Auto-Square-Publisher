@@ -1,17 +1,5 @@
 [
   {
-    "id": "a910f0360abcdfb0",
-    "title": "分析:币安被盗期间出现链上套利窗口,单地址两小时获利约347万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-30T01:04:54.393925+00:00",
-    "tokens": [
-      "ETH",
-      "USDC",
-      "UNI"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ca98676d8532c0b4",
     "title": "Massive $5.9 Billion Binance Hack Hits XRP, BTC, ETH and Other Tokens",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5209,5 +5197,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "99a7ecf8792ec845",
+    "title": "Bitcoin and USDT attract modest premiums in Paraguay as millions face banking crisis",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-07T12:04:30.139771+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
