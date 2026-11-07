@@ -17,8 +17,8 @@
   "last_updated": "2026-11-07T10:04:07.495150Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "reset_at": "2026-11-07T12:23:36.944067+00:00",
       "last_fail": "2026-11-07T08:06:03.646214+00:00",
+      "reset_at": "2026-11-07T12:43:35.998772+00:00",
       "fails": 1
     },
     "CoinJournal (山寨异动)": {
@@ -31,7 +31,13 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
     "date": "2026-10-18"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun-flash": {
+      "fails": 1,
+      "cooldown_until": "2026-11-07T12:55:00.334674+00:00",
+      "last_fail": "2026-11-07T12:45:00.334681+00:00"
+    }
+  },
   "_article_sent_date": "2026-11-07",
   "_publish_park": {},
   "_intel_refresh_fail": {},
