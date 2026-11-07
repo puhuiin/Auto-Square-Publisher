@@ -1,15 +1,5 @@
 [
   {
-    "id": "8378fe460f5d8e1e",
-    "title": "TechFlow 情报局:币安遭史上最大黑客攻击损失 63 亿美元,英特尔盘后暴跌 22% 带崩全球科技股",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T12:29:40.066904+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "38d59a11a28e0668",
     "title": "Alea 研报:大户撤资后 Centrifuge 基金规模跌四成、费用收入反增,但 CFG 持有者一分钱拿不到",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5179,18 @@
     "sent_at": "2026-11-07T21:26:54.629539+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1aa97b5afbaca0fa",
+    "title": "4400万枚XRP转出,币安被盗资金多数经THORChain兑换为比特币",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-07T21:46:55.288996+00:00",
+    "tokens": [
+      "XRP",
+      "BTC",
+      "ETH"
     ],
     "lang": "en"
   }
