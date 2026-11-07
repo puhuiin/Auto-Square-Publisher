@@ -1,15 +1,5 @@
 [
   {
-    "id": "65c86904c4ac0de7",
-    "title": "Bitcoin Price Slides Below $79,000 as Binance Loses $5.8 Billion in Massive Hack",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-30T03:47:35.569417+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2fdef1796cb22014",
     "title": "1kx Capital 报告:2026 年区块链收入下滑 28%,但仍有望达 1000 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5202,5 +5192,15 @@
       "BNB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "08cc7dbb4f5717dd",
+    "title": "TechFlow 情报局:OpenAI 1.25 万亿估值敲定 110 亿融资,特斯拉砍掉 Cybertruck 转产 Cybercab",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-07T13:25:03.254624+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
