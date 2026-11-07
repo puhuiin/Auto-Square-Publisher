@@ -1,15 +1,5 @@
 [
   {
-    "id": "4016e7ca91531246",
-    "title": "Ripple’s Futures volume hits $68B, yet XRP faces a liquidity test – Why?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-29T21:24:05.839128+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9005c2bc6f977f83",
     "title": "Binance 回应疑似被盗:正在调查,尚未确认影响用户资金",
     "source": "深潮TechFlow (中文/简体)",
@@ -5211,6 +5201,16 @@
     "tokens": [
       "UNI",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ecaf74522e2a2804",
+    "title": "Elliptic says Binance hackers swapped stolen tokens for $124M in bitcoin, exchange plans more withdrawal reopenings",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-07T08:47:12.587148+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
