@@ -1,16 +1,5 @@
 [
   {
-    "id": "94f3d5e847201041",
-    "title": "Blockaid:Binance 热钱包疑遭 7702 授权攻击",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-29T22:04:04.709241+00:00",
-    "tokens": [
-      "ETH",
-      "PEPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "086993e1f219c87f",
     "title": "40 分钟内约 23.7 亿美元 USDT 和 USDC 被冻结",
     "source": "深潮TechFlow (中文/简体)",
@@ -5214,5 +5203,15 @@
       "ONE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "cd86a0c3caac0733",
+    "title": "Thailand SEC Files Criminal Complaint Against Bitget Ahead of Dec. 5 Access Block",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-11-07T09:47:36.261240+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
