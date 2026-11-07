@@ -1,16 +1,5 @@
 [
   {
-    "id": "5d60587d98671578",
-    "title": "QNT crypto’s price now down 50.5% from September’s high — Should you buy now?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-30T09:46:58.311684+00:00",
-    "tokens": [
-      "QNT",
-      "WLFI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d589eeb456236755",
     "title": "THORChain’s RUNE jumps 13% after Binance’s record $6.3B hack",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5192,6 +5181,16 @@
     "title": "Solana’s October Upgrade Review Puts 200ms Slots and $5B in Tokenized Assets in Focus",
     "source": "NewsBTC (比特币与山寨)",
     "sent_at": "2026-11-07T18:25:45.186101+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "64a09d6ff0da39d8",
+    "title": "China’s Central Bank to Probe Solana’s Ad Campaign in Shanghai’s Lujiazui​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-07T18:45:24.000439+00:00",
     "tokens": [
       "SOL"
     ],
