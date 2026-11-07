@@ -1,17 +1,5 @@
 [
   {
-    "id": "e9dac915b3b80e7f",
-    "title": "五分钟加密货币涨跌预测市场登陆Polymarket美国平台",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-29T15:24:53.645851+00:00",
-    "tokens": [
-      "XRP",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "135ff95e88db721b",
     "title": "$342 Million Crypto Bloodbath as Bitcoin and XRP Longs Smashed: Main Crypto News This Morning",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5215,5 +5203,15 @@
       "ONDO"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "3bb7d8afa6c7646e",
+    "title": "Aave Labs Acquires Avon Team to Develop Fixed-Rate Lending",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-07T00:26:55.426939+00:00",
+    "tokens": [
+      "AAVE"
+    ],
+    "lang": "zh-CN"
   }
 ]
