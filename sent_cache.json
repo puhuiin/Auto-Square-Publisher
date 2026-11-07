@@ -1,15 +1,5 @@
 [
   {
-    "id": "2ba6841f28b83439",
-    "title": "17,833,333 DOGE Longs Liquidated in Market Selloff: What's Ahead?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-29T16:46:57.546030+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "04df8563f673eca7",
     "title": "92 Billion Shiba Inu (SHIB) in 24 Hours: Reasons Behind the Drop Are Clear Now",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5207,6 +5197,16 @@
     "sent_at": "2026-11-07T01:44:40.326431+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "669b61d7beaf8edf",
+    "title": "Hyperliquid 二层网络 Elysium 将支持 Uniswap V4 Hooks",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-07T02:04:30.702374+00:00",
+    "tokens": [
+      "UNI"
     ],
     "lang": "zh-CN"
   }
