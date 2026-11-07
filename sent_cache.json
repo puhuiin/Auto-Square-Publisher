@@ -1,15 +1,5 @@
 [
   {
-    "id": "4d537337fac282fb",
-    "title": "Collector Crypt CEO:数字抽卡平台真正的门槛,是这四个环节",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-29T15:06:47.216250+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "e9dac915b3b80e7f",
     "title": "五分钟加密货币涨跌预测市场登陆Polymarket美国平台",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5213,6 +5203,16 @@
     "sent_at": "2026-11-06T23:46:52.908877+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b089cf961f26d2e9",
+    "title": "Dinari Promises Anthropic dShares on IPO Day, Including for US Investors",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-07T00:07:26.414489+00:00",
+    "tokens": [
+      "ONDO"
     ],
     "lang": "zh-TW"
   }
