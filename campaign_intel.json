@@ -17,9 +17,9 @@
   "last_updated": "2026-11-07T10:04:07.495150Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "fails": 3,
-      "last_fail": "2026-11-07T14:43:36.995019+00:00",
-      "parked_until": "2026-11-07T13:26:07.611997+00:00"
+      "parked_until": "2026-11-07T13:26:07.611997+00:00",
+      "last_fail": "2026-11-07T15:03:31.120145+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
@@ -30,7 +30,7 @@
   "_article_sent_date": "2026-11-07",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 755,
+  "_img_rot": 756,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
