@@ -1,17 +1,5 @@
 [
   {
-    "id": "3a0d6f3a63425134",
-    "title": "Pickle Cat:Binance 疑似被盗不同于 FTX,市场或再探底",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T00:06:39.679959+00:00",
-    "tokens": [
-      "BTC",
-      "LUNA",
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1977717ce2be3d7b",
     "title": "突发:币安遭黑客攻击,数十亿美元资产流出,或成历史金额最大被盗事件",
     "source": "吴说区块链 (中文深度)",
@@ -5208,6 +5196,17 @@
     "sent_at": "2026-11-07T10:44:31.169222+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ecba4f57556740bf",
+    "title": "Morpho loan stress exposes cbXRP, but spares native XRP",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-07T11:24:50.361598+00:00",
+    "tokens": [
+      "XRP",
+      "USDC"
     ],
     "lang": "zh-CN"
   }

@@ -16,20 +16,20 @@
   "strategy_guidance": "优先追贴11月9日即将截止的限时现货Taker项目，输出活动冲刺攻略、规则解读内容引导用户参与评论互动拿Write to Earn奖励；同时结合11月邀请锦标赛、现货交易锦标赛S10及新上线代币$PREDICT，输出活动参与技巧、新币交易注意事项类内容，关联官方返佣活动提升转化。",
   "last_updated": "2026-11-07T10:04:07.495150Z",
   "_feed_health": {
+    "CoinJournal (山寨异动)": {
+      "parked_until": "2026-11-07T13:26:07.611997+00:00",
+      "last_fail": "2026-11-07T07:26:07.611997+00:00",
+      "fails": 3
+    },
     "Bitcoinist (比特币向)": {
       "last_fail": "2026-11-07T08:06:03.646214+00:00",
       "fails": 1,
-      "reset_at": "2026-11-07T10:43:37.360868+00:00"
-    },
-    "CoinJournal (山寨异动)": {
-      "last_fail": "2026-11-07T07:26:07.611997+00:00",
-      "fails": 3,
-      "parked_until": "2026-11-07T13:26:07.611997+00:00"
+      "reset_at": "2026-11-07T11:23:32.256957+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-07",
