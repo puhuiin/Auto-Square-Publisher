@@ -3,29 +3,28 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#SpotTrading",
-    "#ReferralRush"
+    "#ReferralTournament",
+    "#NewListing"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$USDC",
-    "$USD1",
-    "$WLFI",
+    "$USDT",
     "$PREDICT",
-    "$AXIS"
+    "$SPCXB"
   ],
-  "strategy_guidance": "优先追2026年11月9日截止的限时现货Taker计划，产出规则解读、任务冲刺类内容，同步结合正在进行的第十季现货交易竞赛、11月邀请锦标赛、新上线的$PREDICT及新增bStocks交易对等官方动态，引导用户参与官方活动、完成对应互动/交易任务获取奖励，同步植入Binance Square Write to Earn互动指引提升内容曝光与互动量。",
-  "last_updated": "2026-11-06T21:44:07.665474Z",
+  "strategy_guidance": "优先追贴11月9日即将截止的限时现货Taker项目，输出活动冲刺攻略、规则解读内容引导用户参与评论互动拿Write to Earn奖励；同时结合11月邀请锦标赛、现货交易锦标赛S10及新上线代币$PREDICT，输出活动参与技巧、新币交易注意事项类内容，关联官方返佣活动提升转化。",
+  "last_updated": "2026-11-07T10:04:07.495150Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "last_fail": "2026-11-07T07:26:07.611997+00:00",
       "parked_until": "2026-11-07T13:26:07.611997+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-11-07T07:26:07.611997+00:00"
     },
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-11-07T08:06:03.646214+00:00",
-      "reset_at": "2026-11-07T09:46:11.803308+00:00",
-      "fails": 1
+      "fails": 1,
+      "reset_at": "2026-11-07T10:09:38.256321+00:00",
+      "last_fail": "2026-11-07T08:06:03.646214+00:00"
     }
   },
   "_fallback_image": {
