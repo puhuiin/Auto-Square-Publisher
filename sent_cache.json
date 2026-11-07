@@ -1,15 +1,5 @@
 [
   {
-    "id": "9a7fce01488ffc95",
-    "title": "Key Shiba Inu (SHIB) Metric Falls to a 5-Year Low: Good News for the Bulls?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-29T18:46:54.048446+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "22fc3f344ec0d0e3",
     "title": "Crypto investors refuse to sell XRP ETF tokens despite a 25% price crash",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5209,6 +5199,16 @@
     "sent_at": "2026-11-07T05:29:35.481180+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "24872c069fbcffc4",
+    "title": "比特币现货ETF昨日总净流出4.12亿美元,IBIT净流出居首",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-07T06:04:10.445721+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
