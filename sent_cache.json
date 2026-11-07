@@ -1,17 +1,5 @@
 [
   {
-    "id": "90d07e13f8d1ffda",
-    "title": "今日加密货币市值前 100 代币涨跌:HYPE 涨 17.35%,DASH 跌 3.34%",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-29T16:04:55.405678+00:00",
-    "tokens": [
-      "HYPE",
-      "DASH",
-      "PEPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "08613b50c4f72400",
     "title": "Bitcoin developers rush to fix 3 security flaws after AI uncovers them",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5209,6 +5197,16 @@
     "sent_at": "2026-11-07T00:47:45.168723+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6fdd84fcc81600ab",
+    "title": "吴说周精选:美国中期选举结果引发市场大跌、香港通过 Crypto 报税框架、币安披露 63 亿美金被盗原因与新闻 Top10",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-07T01:11:28.977796+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
