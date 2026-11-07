@@ -1,16 +1,5 @@
 [
   {
-    "id": "d28bb2fb1d061733",
-    "title": "何一:AAVE 抵押的 6000 万 USDT 不在完全冻结范围内,黑客实际仅取走 4600 万美元 ETH",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T10:44:03.468003+00:00",
-    "tokens": [
-      "AAVE",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e4f0fc45dd1afb69",
     "title": "Hyperliquid (HYPE) Adds 680% in Volume: Analyzing Record-Breaking Surge",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5192,6 +5181,16 @@
     "sent_at": "2026-11-07T19:28:27.862168+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9de7d90ce0cfee22",
+    "title": "XRP Community Tensions Boil Over as Ripple CEO Defends Token’s Role",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-07T19:46:33.918390+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
