@@ -18,13 +18,13 @@
   "last_updated": "2026-11-06T21:44:07.665474Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "fails": 2,
-      "last_fail": "2026-11-07T07:05:49.013770+00:00"
+      "last_fail": "2026-11-07T07:05:49.013770+00:00",
+      "fails": 2
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-07",
