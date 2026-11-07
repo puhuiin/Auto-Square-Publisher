@@ -1,15 +1,5 @@
 [
   {
-    "id": "f78c4c0969a87513",
-    "title": "OneKey 创始人:IBIT 可能成为朝鲜黑客攻击目标,Coinbase 单一托管模式引发安全担忧",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T06:25:20.606636+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7a29b37ca8692a67",
     "title": "朝鲜黑客偷了币之后,钱都去哪了?从 Bybit 到币安,一文看懂 Lazarus 的洗钱路径",
     "source": "吴说区块链 (中文深度)",
@@ -5196,6 +5186,16 @@
     "sent_at": "2026-11-07T15:06:24.554968+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1f8eb7fcd18977ab",
+    "title": "交易员 Ansem:图示 ZEC 约 770 至 860 美元为入场区间",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-07T15:24:07.240844+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
