@@ -1,15 +1,5 @@
 [
   {
-    "id": "8515ab57438ce227",
-    "title": "观点:币安被盗的超1.8万枚BTC或短期内难以变现,潜在抛压有限",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-30T04:46:57.903047+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "11b036597b7013e2",
     "title": "巨鲸趁 Binance 黑客抛售引发市场下跌抄底 UNI、PEPE,5 小时获利 27 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5198,6 +5188,16 @@
     "sent_at": "2026-11-07T14:06:12.239054+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "08da599b632cd187",
+    "title": "Bitcoin withstands US regulatory pressures amid $1B ETF withdrawals",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-07T14:24:32.346564+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
