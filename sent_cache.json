@@ -1,17 +1,5 @@
 [
   {
-    "id": "4d7317e9295fbebf",
-    "title": "Hyperliquid (HYPE), XRP, Cardano (ADA) and Zcash (ZEC) Price Analysis For October 30: Market Picture Is Distorted",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-30T07:15:58.317033+00:00",
-    "tokens": [
-      "HYPE",
-      "XRP",
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e6686a59c69566e7",
     "title": "Binance Hit by a $6.3B Security Nightmare: Nikita Bier Mocks CZ, While ZachXBT Spots a Bigger Threat",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5195,6 +5183,16 @@
     "sent_at": "2026-11-07T15:48:33.334270+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3f1498485b583772",
+    "title": "STRK Slumps 57% in Four Weeks as Starknet Rally Unwinds",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-07T16:11:54.548131+00:00",
+    "tokens": [
+      "STRK"
     ],
     "lang": "en"
   }
