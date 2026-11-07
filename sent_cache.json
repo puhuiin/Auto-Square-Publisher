@@ -1,17 +1,5 @@
 [
   {
-    "id": "135ff95e88db721b",
-    "title": "$342 Million Crypto Bloodbath as Bitcoin and XRP Longs Smashed: Main Crypto News This Morning",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-29T15:44:27.712933+00:00",
-    "tokens": [
-      "XRP",
-      "BTC",
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "90d07e13f8d1ffda",
     "title": "今日加密货币市值前 100 代币涨跌:HYPE 涨 17.35%,DASH 跌 3.34%",
     "source": "深潮TechFlow (中文/简体)",
@@ -5211,6 +5199,16 @@
     "sent_at": "2026-11-07T00:26:55.426939+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9730ee4b4f8c6f53",
+    "title": "XRP Ledger Is Undisputed Leader of 2026 in Commodities Tokenization With $2.2 Billion",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-07T00:47:45.168723+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
