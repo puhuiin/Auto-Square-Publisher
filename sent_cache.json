@@ -1,15 +1,5 @@
 [
   {
-    "id": "1a6d6b80f8b3942a",
-    "title": "XRP dips below the $1.30 support amid bearish positioning",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-10-29T17:25:00.402960+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "263ee4ef6c690337",
     "title": "Securitize Plans Stellar Integration as Tokenized Asset Platforms Expand",
     "source": "NewsBTC (比特币与山寨)",
@@ -5209,5 +5199,15 @@
       "ARK"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d8c437dd411ddd14",
+    "title": "ZEC现货ETF单日净流入177.18万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-07T03:44:11.890917+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
