@@ -1,15 +1,5 @@
 [
   {
-    "id": "08613b50c4f72400",
-    "title": "Bitcoin developers rush to fix 3 security flaws after AI uncovers them",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-29T16:25:12.766248+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2ba6841f28b83439",
     "title": "17,833,333 DOGE Longs Liquidated in Market Selloff: What's Ahead?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5207,6 +5197,16 @@
     "sent_at": "2026-11-07T01:11:28.977796+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "24f12d217f8b365b",
+    "title": "Tom Lee says Ethereum is bottoming – A whale is betting $45M that he’s right",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-07T01:44:40.326431+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
