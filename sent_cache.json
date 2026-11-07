@@ -1,17 +1,5 @@
 [
   {
-    "id": "967fc338808e7df6",
-    "title": "币安热钱包遭遇重大失窃:Aave 官方联合响应与全网借贷市场紧急冻结深度复盘",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T04:27:59.909125+00:00",
-    "tokens": [
-      "ETH",
-      "AVAX",
-      "AAVE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "8515ab57438ce227",
     "title": "观点:币安被盗的超1.8万枚BTC或短期内难以变现,潜在抛压有限",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5202,5 +5190,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "280b9477acec7274",
+    "title": "US Sanctions Eight Canadian Money Firms Over Alleged Iran Crypto Links",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-07T14:06:12.239054+00:00",
+    "tokens": [
+      "TRX"
+    ],
+    "lang": "en"
   }
 ]
