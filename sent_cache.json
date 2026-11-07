@@ -1,16 +1,5 @@
 [
   {
-    "id": "7a29b37ca8692a67",
-    "title": "朝鲜黑客偷了币之后,钱都去哪了?从 Bybit 到币安,一文看懂 Lazarus 的洗钱路径",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-30T06:49:33.252517+00:00",
-    "tokens": [
-      "ETH",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "4d7317e9295fbebf",
     "title": "Hyperliquid (HYPE), XRP, Cardano (ADA) and Zcash (ZEC) Price Analysis For October 30: Market Picture Is Distorted",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5196,6 +5185,16 @@
     "sent_at": "2026-11-07T15:24:07.240844+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8c6229f96a2bd616",
+    "title": "Bitcoin Developer Proposes a Quantum Trap for Hackers",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-07T15:48:33.334270+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
