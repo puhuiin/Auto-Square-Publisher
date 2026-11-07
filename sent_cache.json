@@ -1,15 +1,5 @@
 [
   {
-    "id": "de3a260f05ca6d29",
-    "title": "Stellar Private Fund Liquidity Pilot Tests a New Way to Price Redemptions",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-29T18:04:05.953283+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "551db8426377a32c",
     "title": "From rivals to partners: Polygon and Solana team to bring stablecoin payments to banks",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5211,5 +5201,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "d78fc69573a65b3a",
+    "title": "THORChain 已完成 Monero 集成开发,上线仍待节点轮换",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-07T05:05:55.384864+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
