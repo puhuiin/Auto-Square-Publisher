@@ -1,15 +1,5 @@
 [
   {
-    "id": "64c9eb84f8cd85c6",
-    "title": "Solana Hits $5 Billion in RWA Value",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-29T19:26:38.676168+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "26a4f1805f6f5734",
     "title": "约265万美元资金兑换为POL,疑似Polymarket攻击者随后转出约2864万枚POL",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5207,6 +5197,16 @@
     "title": "Bitcoin ETFs Bleed $430 Million as Tech Rout Tests Wall Street Buyers",
     "source": "Decrypt (Web3/AI/Meme)",
     "sent_at": "2026-11-07T06:24:04.356664+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "03a9c9f29a49bc94",
+    "title": "Core Scientific to Exit Bitcoin Mining by 2027 as AI Data Center Business Takes Over",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-07T06:44:35.898361+00:00",
     "tokens": [
       "BTC"
     ],
