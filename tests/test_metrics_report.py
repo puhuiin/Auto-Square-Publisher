@@ -10219,6 +10219,16 @@ class TestR850Preregistration(unittest.TestCase):
         # 边界跨接片段（boiler↔other）不重叠活动区间 ⇒ 允许存在；但**必须至少有一部分**
         # 片段来自非活动句内部，证明口径没被改宽成"全丢"。
         self.assertTrue(any(g in other for g in frags), "非活动片段仍要被统计")
+        # ★ R862b：**同一句**里的 CTA 尾也必须被排除（只排产品名会漏掉 `' Program end'`）
+        rows2 = [{"outcome": "binance_published", "lang": "en",
+                  "ts": "2026-11-08T15:%02d:00Z" % i,
+                  "final_text": "The Spot Taker Program ends Nov 9 so go practice. %s" % other}
+                 for i in range(4)]
+        s2 = mod.formulaic_repetition_stats(rows2, "2026-11-08", min_docs=3)
+        frags2 = [str(g) for g in s2["fragments"]]
+        self.assertFalse(any("Program end" in g or "ends Nov 9" in g for g in frags2),
+                         "CTA 所在整句内的片段必须排除（R862b）")
+        self.assertTrue(any(g in other for g in frags2), "非活动句仍要被统计")
 
     def test_verdict_tiers(self):
         mod = self._ew()

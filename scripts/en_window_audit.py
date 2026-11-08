@@ -418,14 +418,27 @@ def formulaic_repetition_stats(rows, date_utc: str, min_docs: int = 6, n: int = 
     except Exception:            # 取不到就不改口径（宁保守）
         _CMRE = None
     for t in texts:
-        spans = [(m.start(), m.end()) for m in _CMRE.finditer(t)] if _CMRE else []
+        # ★ R862b：排除范围从「匹配到的**产品名**」扩到「**包含匹配的整句**」。
+        #   为什么：只排产品名会漏掉同句的 CTA 尾 —— 实测残留片段 `' Program end'`
+        #   （出自 `Spot Taker Program ends Nov 9`，产品名被排掉了、尾巴还在）✗。
+        #   整句边界 = `.!?\n`（够用且可测）；词表取不到 ⇒ spans 为空 ⇒ 不改口径 ✓。
+        spans = []
+        if _CMRE:
+            cuts = [0]
+            for _i, _c in enumerate(t):
+                if _c in ".!?\n":
+                    cuts.append(_i + 1)
+            cuts.append(len(t))
+            for _k in range(len(cuts) - 1):
+                if _CMRE.search(t[cuts[_k]:cuts[_k + 1]]):
+                    spans.append((cuts[_k], cuts[_k + 1]))
         seen = set()
         for i in range(len(t) - n + 1):
             g = t[i:i + n]
             if not g.isascii():
                 continue
             if spans and any(s < i + n and i < e for s, e in spans):
-                continue         # 与活动提法重叠 ⇒ 那是活动名，不算"公式化"
+                continue         # 落在"活动提法所在整句"内 ⇒ 那是活动导流，不算"公式化"
             seen.add(g)
         for g in seen:
             cnt[g] += 1
