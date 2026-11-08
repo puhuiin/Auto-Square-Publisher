@@ -1,15 +1,5 @@
 [
   {
-    "id": "4b9f35f707ea81c3",
-    "title": "Ripple's Sudden 310-Million XRP Transfers Ignite Mystery in Crypto Circles",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-30T22:26:39.826795+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ae0f00118b8b360c",
     "title": "Aave V3 冻结储备已解冻,USDT 等资产暂不可新增抵押借款",
     "source": "深潮TechFlow (中文/简体)",
@@ -5194,5 +5184,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4987364aa3f78dd2",
+    "title": "Solana Price Set To Catch Up After Record October, RSI Signals Reversal",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-08T10:45:00.186869+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
