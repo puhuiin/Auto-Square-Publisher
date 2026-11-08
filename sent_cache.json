@@ -1,15 +1,5 @@
 [
   {
-    "id": "52c0bdb94d794882",
-    "title": "WLFI顾问转发安全预警:Kintsu、StonkBrokers等疑遭前端攻击,连接钱包或导致资产被盗",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-31T02:47:30.923599+00:00",
-    "tokens": [
-      "WLFI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3bc7edefcfdf665d",
     "title": "比特币白皮书发布18周年:华尔街拥抱加密资产,去中心化初心面临考验",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-08T12:24:42.912729+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "82b34e492da9269f",
+    "title": "Top-10 Shiba Inu (SHIB) Wallets Slow Down Exchange Deposits to Mere 2 Billion Tokens in 24 Hours",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-08T12:49:55.395875+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-TW"
   }
