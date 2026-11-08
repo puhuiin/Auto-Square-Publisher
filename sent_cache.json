@@ -1,17 +1,5 @@
 [
   {
-    "id": "683f0134bcf25a81",
-    "title": "USDC以外ERC-20代币可通过CCTP实现跨链,Circle发布开发者指南",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-31T00:09:43.124139+00:00",
-    "tokens": [
-      "USDC",
-      "OP",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7319f644c69111dc",
     "title": "Ethena向币安存入1.286亿枚ENA,价值2433万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5189,6 +5177,16 @@
     "sent_at": "2026-11-08T11:24:38.248060+00:00",
     "tokens": [
       "ARK"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "255f008863d4bb12",
+    "title": "Ripple's XRP Ledger Lending to Receive Repayment Fix",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-08T11:45:03.872197+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
