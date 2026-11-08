@@ -1,16 +1,5 @@
 [
   {
-    "id": "a16f1aa0f8a309e9",
-    "title": "某新地址从OKX提取约600万美元LIT、ENA和ARB",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-31T05:05:20.213717+00:00",
-    "tokens": [
-      "ENA",
-      "ARB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f7d785e26764b34d",
     "title": "Can IMX bulls hold on after selling pressure fuels daily losses of 12%?",
     "source": "AMBCrypto (技术与链上)",
@@ -5188,6 +5177,17 @@
     "sent_at": "2026-11-08T14:45:29.700047+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b109b6f6798252e6",
+    "title": "Mark Zuckerberg Meta AI Predicts ‘Will Crypto Recover in November’",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-08T15:05:32.735463+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "en"
   }
