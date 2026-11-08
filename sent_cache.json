@@ -1,16 +1,5 @@
 [
   {
-    "id": "1b6a5ee19469204b",
-    "title": "MetaMask adds Stellar integration, but cross-chain bridges require manual setup",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-31T08:07:06.614440+00:00",
-    "tokens": [
-      "USDC",
-      "XLM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f4746d5e41fb16ab",
     "title": "BNB 跌破 700 美元,24 小时跌幅 1.06%",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5178,16 @@
     "sent_at": "2026-11-08T17:25:17.621446+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4712635bd0ded1a0",
+    "title": "隐私功能上线,Arbitrum用户可通过@NullMaskio私密转账、存款并查询余额",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-08T17:45:02.587528+00:00",
+    "tokens": [
+      "ARB"
     ],
     "lang": "en"
   }
