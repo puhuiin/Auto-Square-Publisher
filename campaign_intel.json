@@ -19,28 +19,17 @@
   "last_updated": "2026-11-07T22:21:51.585471Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
+      "fails": 3,
       "last_fail": "2026-11-08T06:43:58.588388+00:00",
-      "reset_at": "2026-11-08T08:01:02.408115+00:00",
-      "parked_until": "2026-11-07T13:26:07.611997+00:00",
-      "fails": 3
+      "reset_at": "2026-11-08T08:23:36.643958+00:00",
+      "parked_until": "2026-11-07T13:26:07.611997+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
-  "_llm_breaker": {
-    "Preset-stepfun": {
-      "last_fail": "2026-11-08T08:04:24.346163+00:00",
-      "cooldown_until": "2026-11-08T08:14:24.346145+00:00",
-      "fails": 1
-    },
-    "Preset-openrouter": {
-      "last_fail": "2026-11-08T08:06:43.165601+00:00",
-      "cooldown_until": "2026-11-08T08:16:43.165592+00:00",
-      "fails": 1
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-11-08",
   "_publish_park": {
     "b27e662ef8b4b330": {

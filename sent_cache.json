@@ -1,15 +1,5 @@
 [
   {
-    "id": "6fedd8094fa40899",
-    "title": "Polygon Targets Solana’s $5.76T Stablecoin Market With New Payments Integration",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-10-30T20:06:11.612356+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c413531a0a04630b",
     "title": "Cantor 等华尔街机构:Binance 被盗后加密股回调可买入",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5179,16 @@
     "title": "Ripple's Schwartz Speaks Out About His Influence Over XRP Price",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-11-08T08:07:11.183994+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b27e662ef8b4b330",
+    "title": "Ripple’s XRP Is Bleeding, but Whales Are Buying: Are Bulls Preparing for a Violent Reversal",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-08T08:25:38.298397+00:00",
     "tokens": [
       "XRP"
     ],
