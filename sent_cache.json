@@ -1,15 +1,5 @@
 [
   {
-    "id": "c17638d7a93c1edb",
-    "title": "Ripple Moves $389 Million of XRP Amid Aid for Binance Hack",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-30T18:46:19.719220+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "fcfb6c8d9527e79c",
     "title": "Binance Hack: Why Bitcoin Didn't Crash Like It Did in 2018",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5191,6 +5181,16 @@
     "tokens": [
       "USDC",
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "800d26c28caa59f0",
+    "title": "Aave Buys Avon Team to Bring More Fixed-Rate Lending Onchain",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-08T05:45:10.620051+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "zh-TW"
   }
