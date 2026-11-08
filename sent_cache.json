@@ -1,15 +1,5 @@
 [
   {
-    "id": "89657b60cd4b486f",
-    "title": "Ripple Price Analysis: Can XRP Recover After the Hack-Driven Sell-Off?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-31T07:24:00.730716+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f3b07b13708973c0",
     "title": "何一回应用户对币安赔付能力担忧,称数据均为公开信息",
     "source": "吴说区块链 (中文深度)",
@@ -5189,6 +5179,16 @@
     "sent_at": "2026-11-08T16:44:14.088742+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6c1bb486771e1e4f",
+    "title": "$200 billion lost, but here’s why Solana’s tokenized RWA market could be silver lining",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-08T17:05:04.119682+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
