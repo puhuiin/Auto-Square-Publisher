@@ -1,16 +1,5 @@
 [
   {
-    "id": "22b82a2efe8319d9",
-    "title": "CZ:币安黑客事件虽创美元金额纪录,但影响远小于Mt.Gox事件",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-30T16:27:56.788023+00:00",
-    "tokens": [
-      "BTC",
-      "BNB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "317c1b586d176b0d",
     "title": "Binance Hacked for $6.3B, Fed Holds Rates, Bitcoin Crashes to 6-Week Low: Weekly Crypto Recap",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5186,6 +5175,17 @@
     "sent_at": "2026-11-08T01:05:38.684951+00:00",
     "tokens": [
       "INJ"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "42078a313e91f779",
+    "title": "EIP-7702 是什么?为什么成为币安被盗关键一环",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-08T01:25:00.165033+00:00",
+    "tokens": [
+      "ETH",
+      "ARB"
     ],
     "lang": "zh-CN"
   }
