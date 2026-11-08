@@ -1,15 +1,5 @@
 [
   {
-    "id": "353f783cc3ab3391",
-    "title": "成为MetaMask默认网络,Stellar账户自动生成地址",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-31T08:47:23.300069+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2d8d9a0ad9dd1196",
     "title": "Why Didn’t Bitcoin Crash Harder After the Binance Hack? CZ Weighs In",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-08T18:05:48.846701+00:00",
     "tokens": [
       "ARB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "38bf4e294418d14d",
+    "title": "One BlackRock fund dominates Bitcoin’s billion-dollar ETF exodus",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-08T18:25:25.730852+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
