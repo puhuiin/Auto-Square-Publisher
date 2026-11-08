@@ -1,15 +1,5 @@
 [
   {
-    "id": "9581802d12e8592f",
-    "title": "XRP Ledger Ranks Third in Stablecoin Expansion, But Who Is First?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-30T18:24:44.885185+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c17638d7a93c1edb",
     "title": "Ripple Moves $389 Million of XRP Amid Aid for Binance Hack",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5192,5 +5182,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "3ecb276018faa34e",
+    "title": "Centrifuge在Solana上线施罗德新兴市场债券基金代币化联接基金",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-08T05:08:51.817717+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
