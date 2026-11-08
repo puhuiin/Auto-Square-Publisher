@@ -1,15 +1,5 @@
 [
   {
-    "id": "e118ecb063778cc8",
-    "title": "Why AAVE crypto traders must watch $113 support after Binance hack",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-31T05:51:54.762397+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2fe6e41521cc91c1",
     "title": "何一回应币安偿付能力质疑:交易量、手续费及用户规模等数据均公开可查",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-08T15:45:04.879484+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a45f044994556093",
+    "title": "Trump Administration Inches Closer to Opening 401(k)s to Crypto",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-08T16:05:33.027444+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
