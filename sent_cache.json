@@ -1,15 +1,5 @@
 [
   {
-    "id": "46346343235e8f32",
-    "title": "Tyler Evans: Bitcoin ETF Flows Flipped From “Highly Negative” to “Strong Accumulation”",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-10-30T16:05:23.470022+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "22b82a2efe8319d9",
     "title": "CZ:币安黑客事件虽创美元金额纪录,但影响远小于Mt.Gox事件",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5186,6 +5176,16 @@
     "sent_at": "2026-11-08T00:45:04.628414+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "f4de972b5f5cddd7",
+    "title": "Nasdaq Lists Canary’s Staked INJ ETF, Adding Another Route to Altcoin Exposure",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-08T01:05:38.684951+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "zh-CN"
   }
