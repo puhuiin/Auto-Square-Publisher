@@ -1,15 +1,5 @@
 [
   {
-    "id": "12f37a292c010aee",
-    "title": "Chainalysis:币安 64 亿攻击黑客利用 Tron DeFi 规避稳定币冻结",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-31T12:05:18.652586+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9ddba26d24a071ea",
     "title": "STX Defies Altcoin Crash With Double-Digit Surge, BTC Stabilizes at $77K: Weekend Watch",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5190,5 +5180,16 @@
       "RLUSD"
     ],
     "lang": "en"
+  },
+  {
+    "id": "e93d0fe094ea1a3e",
+    "title": "Bitcoin ETF Outflows Hit 4-Month High as Ethereum Funds Stay in the Red",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-08T22:04:41.267055+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
