@@ -1,15 +1,5 @@
 [
   {
-    "id": "49b6e15becac1fd0",
-    "title": "Bitcoin fell after the Fed’s pause, but blaming interest rates misses the Binance shock",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-30T15:45:37.428144+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "46346343235e8f32",
     "title": "Tyler Evans: Bitcoin ETF Flows Flipped From “Highly Negative” to “Strong Accumulation”",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5188,5 +5178,15 @@
       "SHIB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "5717c9e51a9d3219",
+    "title": "b14g复盘CORE被盗事件:未涉及私钥泄露,计划未来5至7天内启动资金偿还",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-08T00:45:04.628414+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
