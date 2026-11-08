@@ -10173,6 +10173,28 @@ class TestR850Preregistration(unittest.TestCase):
         # 都没变差、改善也不够 ⇒ 未通过（保留+标注）
         self.assertEqual(mod.r861_verdict(35.0, 30.0, 39.0, 38.0, 60.0, 59.0)[0], "未通过")
 
+    def test_r861_deweight_en_flash(self):
+        """★★ R861：英文短讯把 `stepfun-flash` 排到链尾（**软减权**，不做硬禁用）。
+
+        依据：该通道占 ~68% 产量却贡献 98% 的 ① 真漏与 94% 的 ⑦ 超写，且 views/天 最低。
+        移到链尾而非删除 ⇒ 全链失败时仍是兜底（池子不能变小）；非英文/长文原序不动。
+        """
+        import main as _m
+
+        class P:
+            def __init__(self, n):
+                self.name = n
+
+        pool = [P("Preset-stepfun-flash"), P("Preset-stepfun"), P("Preset-google")]
+        out = _m.deweight_en_flash(pool, "en", False)
+        self.assertEqual([p.name for p in out],
+                         ["Preset-stepfun", "Preset-google", "Preset-stepfun-flash"])
+        self.assertEqual(len(out), len(pool), "不做硬禁用：池子不能变小")
+        self.assertEqual([p.name for p in _m.deweight_en_flash(pool, "zh-CN", False)],
+                         [p.name for p in pool], "中文侧不动（那边 ⑦ 超写 0/102）")
+        self.assertEqual([p.name for p in _m.deweight_en_flash(pool, "en", True)],
+                         [p.name for p in pool], "长文不动")
+
     def test_verdict_tiers(self):
         mod = self._ew()
         base = [self._win(22, 8), self._win(23, 7)]          # 基线 ≈ 33%

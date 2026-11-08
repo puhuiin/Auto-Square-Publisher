@@ -680,6 +680,27 @@ R857_OVERWRITE_RETRY_HINT = (
     "请**务必把正文压到篇幅上限以内**（宁可少写一句），确保结尾完整；"
     "若正文里提到当期活动，务必把它放在**结尾提问之前**，别放在最末。"
 )
+# ★★★ R861：**通道侧软减权** —— 英文短讯把 `stepfun-flash` 移到调度链尾。
+#   依据（分通道读数，2026-11-06/08）：该通道占 ~68% 产量，却贡献 **98% 的 ① 真漏**、
+#   **94% 的 ⑦ 超写**（目标下调它反而写得更长：raw 中位 904→980），且 **views/天 四家最低**
+#   ⇒ 它的超写**没换来任何浏览**，纯亏损。
+#   ⚠️ **移到链尾、不是删除**（软减权）：全链都失败时它仍是兜底 ⇒ 不掉可用性，
+#     也不会因为"少发帖"把总产量打下来（判据⑨ 的保量护栏就是盯这条）。
+#   ⚠️ 只对**英文短讯**生效（中文侧 ⑦ 超写 0/102，是健康的，别动）。
+_FLASH_PROVIDER_NAME = "Preset-stepfun-flash"
+
+
+def deweight_en_flash(ordered, out_lang, article):
+    """★ R861：英文短讯把 `stepfun-flash` 排到链尾（纯函数，可单测）。
+
+    · 不改通道池、不做硬禁用 ⇒ 只是**顺序**变化；
+    · 非英文 / 长文 ⇒ 原序返回（零行为变化）。
+    """
+    if out_lang != "en" or article:
+        return list(ordered or [])
+    tail = [p for p in (ordered or []) if p.name == _FLASH_PROVIDER_NAME]
+    head = [p for p in (ordered or []) if p.name != _FLASH_PROVIDER_NAME]
+    return head + tail
 # R608：按币种浏览加权的小聚合表（import_content_stats.py 生成/刷新；committed 以便
 # 生产 checkout 可读）。缺失即引擎零行为变化。
 TOKEN_ENGAGEMENT_FILE = os.path.join(BASE_DIR, "token_engagement.json")
@@ -7051,6 +7072,10 @@ class MultiLLMEngine:
 
         # 遍历提供商链进行容灾尝试（按本次运行连续失败数升序，健康节点优先）
         ordered = self._ordered_providers()
+        # ★★★ R861：英文短讯把 `stepfun-flash` 软减权（移到链尾；不做硬禁用）。
+        #   ⚠️ 放在 `exclude_provider` 重排**之前**：这样"重试时刚超写的那个通道"
+        #   仍会被 `exclude_provider` 挪到**更后面** ⇒ 排除恒优先于减权 ✓。
+        ordered = deweight_en_flash(ordered, out_lang, article)
         if exclude_provider:
             # ★★★ R857b：**换通道重试** —— 把刚超写的那个通道**移到链尾**（其余顺序不变）。
             #   为什么换：`stepfun-flash` 不读篇幅指令（目标下调它反而写更长）⇒ 同通道重试
