@@ -1,16 +1,5 @@
 [
   {
-    "id": "f22687b63c4d7e47",
-    "title": "Chainalysis遭AI驱动网络攻击,客户姓名及邮箱等信息泄露",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-30T23:44:23.314796+00:00",
-    "tokens": [
-      "ID",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "683f0134bcf25a81",
     "title": "USDC以外ERC-20代币可通过CCTP实现跨链,Circle发布开发者指南",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5190,6 +5179,16 @@
     "sent_at": "2026-11-08T11:04:39.279229+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "af41c30fd250504d",
+    "title": "木頭姐怪 Anthropic 散播 AI 恐慌:不會有失業潮,反而是缺工",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-11-08T11:24:38.248060+00:00",
+    "tokens": [
+      "ARK"
     ],
     "lang": "zh-CN"
   }
