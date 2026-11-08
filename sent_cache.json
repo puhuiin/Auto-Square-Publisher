@@ -1,15 +1,5 @@
 [
   {
-    "id": "7319f644c69111dc",
-    "title": "Ethena向币安存入1.286亿枚ENA,价值2433万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-31T00:27:07.348976+00:00",
-    "tokens": [
-      "ENA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "38c0179d3d512af5",
     "title": "Maple locks $280M in XRP collateral and upcoming maturity dates threaten liquidations",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-08T11:45:03.872197+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "5130a490a2f2127f",
+    "title": "Tornado Cash Whale Deposits $7 Million to Hyperliquid for Massive Bitcoin Long",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-08T12:05:13.537722+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
