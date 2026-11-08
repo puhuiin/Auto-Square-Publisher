@@ -1,15 +1,5 @@
 [
   {
-    "id": "f7d785e26764b34d",
-    "title": "Can IMX bulls hold on after selling pressure fuels daily losses of 12%?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-31T05:26:50.691923+00:00",
-    "tokens": [
-      "IMX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e118ecb063778cc8",
     "title": "Why AAVE crypto traders must watch $113 support after Binance hack",
     "source": "AMBCrypto (技术与链上)",
@@ -5188,6 +5178,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "959eaf68f40893cd",
+    "title": "CZ:已下载Genius App但尚未交易,只会积累并持有主流币",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-08T15:45:04.879484+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
