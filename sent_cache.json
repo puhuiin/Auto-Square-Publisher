@@ -1,15 +1,5 @@
 [
   {
-    "id": "4febfa90dbcb0c70",
-    "title": "何一:理解部分用户对币安偿付能力的担忧,交易量、手续费及用户规模等数据均公开可查",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-31T06:57:20.317967+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "89657b60cd4b486f",
     "title": "Ripple Price Analysis: Can XRP Recover After the Hack-Driven Sell-Off?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5189,6 +5179,16 @@
     "tokens": [
       "DOGE",
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "80d2c78f8acaf673",
+    "title": "LNbits敦促所有用户立即关闭服务器,多个实例遭攻击",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-08T16:44:14.088742+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
