@@ -1,15 +1,5 @@
 [
   {
-    "id": "342610cca8c04180",
-    "title": "RUNE up 15% after hackers use THORChain to launder stolen funds — What next?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-30T21:06:26.870502+00:00",
-    "tokens": [
-      "RUNE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4b6b5d51ddfb3da5",
     "title": "Viral Altcoin Pumps and Dumps, PEPE Stays Green Amid the Market Sell-Оff: Bits Recap October 30",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5189,6 +5179,18 @@
     "sent_at": "2026-11-08T09:04:37.781860+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ea5c7020eefd4359",
+    "title": "币安已恢复HYPE、APT提现,其余资产及网络将分阶段恢复",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-08T09:24:44.050019+00:00",
+    "tokens": [
+      "HYPE",
+      "RLUSD",
+      "USD1"
     ],
     "lang": "zh-CN"
   }
