@@ -1,16 +1,5 @@
 [
   {
-    "id": "cff76fa197f049ce",
-    "title": "Aave 冻结以太坊核心市场 tBTC 储备,暂停新增存款及抵押借款",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-31T11:47:02.326706+00:00",
-    "tokens": [
-      "AAVE",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "12f37a292c010aee",
     "title": "Chainalysis:币安 64 亿攻击黑客利用 Tron DeFi 规避稳定币冻结",
     "source": "吴说区块链 (中文深度)",
@@ -5188,6 +5177,17 @@
     "sent_at": "2026-11-08T21:25:24.197058+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5dad7debc6cfd5c3",
+    "title": "XRP could double while this yield strategy leaves you far behind",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-08T21:44:51.213866+00:00",
+    "tokens": [
+      "XRP",
+      "RLUSD"
     ],
     "lang": "en"
   }
