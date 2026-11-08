@@ -1,15 +1,5 @@
 [
   {
-    "id": "38c0179d3d512af5",
-    "title": "Maple locks $280M in XRP collateral and upcoming maturity dates threaten liquidations",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-31T01:07:13.732991+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "52c0bdb94d794882",
     "title": "WLFI顾问转发安全预警:Kintsu、StonkBrokers等疑遭前端攻击,连接钱包或导致资产被盗",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5189,5 +5179,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "f80228eb47f0c682",
+    "title": "华尔街日报:隐秘的加密洗钱局,谁在协助朝鲜黑客转移币安巨额资金?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-08T12:24:42.912729+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
