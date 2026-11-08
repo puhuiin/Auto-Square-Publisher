@@ -1,15 +1,5 @@
 [
   {
-    "id": "317c1b586d176b0d",
-    "title": "Binance Hacked for $6.3B, Fed Holds Rates, Bitcoin Crashes to 6-Week Low: Weekly Crypto Recap",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-30T16:44:06.302540+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c4d8d56e77669a00",
     "title": "被盗ALLO已被冻结,Allora正全额归还币安",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5186,6 +5176,16 @@
     "tokens": [
       "ETH",
       "ARB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1c0124fe60fe3fc4",
+    "title": "Sky TVL Falls 15% in a Week as USDS Supply Contracts",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-08T01:47:30.158700+00:00",
+    "tokens": [
+      "USDS"
     ],
     "lang": "zh-CN"
   }
