@@ -1,15 +1,5 @@
 [
   {
-    "id": "47468540eb4b202f",
-    "title": "How did Binance hacker leverage Aave to outsmart Tether, Circle freeze?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-30T17:27:56.560669+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "bbbec4bdbdd0a6d0",
     "title": "‘Our collateral resides off-exchange’ – Ethena downplays $8.8M Binance exposure",
     "source": "AMBCrypto (技术与链上)",
@@ -5189,5 +5179,16 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4b6e8f7f44b86a1b",
+    "title": "Ripple Loses Dominance in Stablecoin Market Cap Growth",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-08T02:27:00.467382+00:00",
+    "tokens": [
+      "XRP",
+      "ENA"
+    ],
+    "lang": "zh-TW"
   }
 ]
