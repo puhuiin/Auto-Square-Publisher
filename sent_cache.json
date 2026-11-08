@@ -1,15 +1,5 @@
 [
   {
-    "id": "dacdbacabe4f638e",
-    "title": "Robinhood 摔 23%!ARK 逢低砸 910 萬美元抄底,加密收入年減 55%",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-10-31T10:47:24.890384+00:00",
-    "tokens": [
-      "ARK"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "c9152d5b0b4af2c4",
     "title": "HYPE Targets $120 as NYSE Owner Moves to Bring Hyperliquid Perpetual Futures to Regulated U.S. Markets",
     "source": "ZyCrypto (新币与空投)",
@@ -5186,6 +5176,16 @@
     "title": "Ripple Price Analysis: Could XRP Crash to $1.00 Next Week as Sellers Remain in Control?",
     "source": "CryptoPotato (山寨币/Meme热点)",
     "sent_at": "2026-11-08T20:05:12.081044+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "295123fdd18c51bd",
+    "title": "Flare CEO Pushes Back Against XRP 'FUD'",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-08T20:25:27.949152+00:00",
     "tokens": [
       "XRP"
     ],
