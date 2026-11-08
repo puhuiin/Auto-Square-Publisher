@@ -1,16 +1,5 @@
 [
   {
-    "id": "9ddba26d24a071ea",
-    "title": "STX Defies Altcoin Crash With Double-Digit Surge, BTC Stabilizes at $77K: Weekend Watch",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-31T12:28:11.717487+00:00",
-    "tokens": [
-      "STX",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "460fb2373238d34d",
     "title": "Chainalysis 遭网络攻击,部分客户姓名及邮箱被访问",
     "source": "深潮TechFlow (中文/简体)",
@@ -5191,5 +5180,17 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f34a67099a5eb002",
+    "title": "比特币跨链桥 tBTC 已恢复链上运行,应用仍暂停",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-08T23:24:01.859265+00:00",
+    "tokens": [
+      "BTC",
+      "AAVE",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
