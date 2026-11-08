@@ -1,15 +1,5 @@
 [
   {
-    "id": "f3b07b13708973c0",
-    "title": "何一回应用户对币安赔付能力担忧,称数据均为公开信息",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-31T07:50:08.437915+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1b6a5ee19469204b",
     "title": "MetaMask adds Stellar integration, but cross-chain bridges require manual setup",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5189,6 +5179,16 @@
     "sent_at": "2026-11-08T17:05:04.119682+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8a9b156283e8b750",
+    "title": "15周年纪念版发布,Electrum 4.8.4修复多项钱包安全问题",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-08T17:25:17.621446+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
