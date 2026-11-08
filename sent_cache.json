@@ -1,15 +1,5 @@
 [
   {
-    "id": "c413531a0a04630b",
-    "title": "Cantor 等华尔街机构:Binance 被盗后加密股回调可买入",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T20:24:43.041701+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1c5b665865bd1f12",
     "title": "约80%被盗资金已补齐,币安预计34小时内分阶段恢复提现",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5193,5 +5183,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d3aec61a4269ad81",
+    "title": "Solana Labs-Backed Leap Launches Beta App for Tokenized Stocks and Crypto",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-08T08:45:14.609258+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
