@@ -1,15 +1,5 @@
 [
   {
-    "id": "43cbec6cafe318ea",
-    "title": "XRP Reserves on Binance Hit Lowest Level Since 2022",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-31T09:51:51.813988+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7e6d66237bb6434a",
     "title": "Rip Cars完成150万美元战略融资,DBA等参投",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-08T19:05:09.418209+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "28d74a9792576677",
+    "title": "SOL 跌破 90 美元,24 小時漲幅 0.04%",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-08T19:25:03.195571+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
