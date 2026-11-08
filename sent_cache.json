@@ -1,15 +1,5 @@
 [
   {
-    "id": "39870cbcef89b837",
-    "title": "Aave reopens frozen markets but blocks new collateral loans",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-10-31T04:45:06.848528+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a16f1aa0f8a309e9",
     "title": "某新地址从OKX提取约600万美元LIT、ENA和ARB",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-08T14:26:19.236982+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9f8f7c2c48034e82",
+    "title": "Hyperliquid Recovery: Binance Reopens HYPE Withdrawals After $6.4 Billion Hack",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-08T14:45:29.700047+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
