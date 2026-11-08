@@ -1,15 +1,5 @@
 [
   {
-    "id": "fcfb6c8d9527e79c",
-    "title": "Binance Hack: Why Bitcoin Didn't Crash Like It Did in 2018",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-10-30T19:05:06.699162+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a9f2d8421e226d3d",
     "title": "Canary Staked INJ ETF aims to bring regulated Injective staking to Nasdaq",
     "source": "Crypto Briefing (深度与研报)",
@@ -5191,6 +5181,16 @@
     "sent_at": "2026-11-08T05:45:10.620051+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b90ea724870c88c3",
+    "title": "Web3Auth公布Keplr资产恢复地址,提醒相关转账并非攻击者所为",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-08T06:44:30.369118+00:00",
+    "tokens": [
+      "TIA"
     ],
     "lang": "zh-TW"
   }
