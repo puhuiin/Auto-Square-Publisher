@@ -19,30 +19,37 @@
   "last_updated": "2026-11-07T22:21:51.585471Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
+      "last_fail": "2026-11-08T09:43:34.239818+00:00",
       "fails": 1,
-      "last_fail": "2026-11-08T09:43:34.239818+00:00"
+      "reset_at": "2026-11-08T10:03:34.823879+00:00"
     },
     "CoinJournal (山寨异动)": {
       "last_fail": "2026-11-08T06:43:58.588388+00:00",
       "parked_until": "2026-11-07T13:26:07.611997+00:00",
-      "reset_at": "2026-11-08T09:43:34.456909+00:00",
-      "fails": 3
+      "fails": 3,
+      "reset_at": "2026-11-08T10:03:34.868032+00:00"
     }
   },
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
     "date": "2026-10-18"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun": {
+      "fails": 1,
+      "cooldown_until": "2026-11-08T10:16:58.066550+00:00",
+      "last_fail": "2026-11-08T10:06:58.066572+00:00"
+    }
+  },
   "_article_sent_date": "2026-11-08",
   "_publish_park": {
     "b27e662ef8b4b330": {
-      "fails": 1,
-      "last_fail": "2026-11-08T08:04:36.407426+00:00"
+      "last_fail": "2026-11-08T08:04:36.407426+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 780,
+  "_img_rot": 781,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

@@ -1,15 +1,5 @@
 [
   {
-    "id": "860f2de9df45ed69",
-    "title": "Choice launches sLINJ, a leveraged INJ staking token targeting about 12% APY",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-30T21:44:43.824784+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d63528c773ce3ac0",
     "title": "Stellar (XLM) Absorbs 92% of RWA Fund Inflows in Sudden Market Consolidation",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5194,5 +5184,15 @@
       "AAVE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a6c431dd4beca274",
+    "title": "Shibarium Network Account Goes Silent as SHIB Community Seeks Answers",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-08T10:07:31.203033+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-TW"
   }
 ]
