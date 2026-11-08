@@ -1,15 +1,5 @@
 [
   {
-    "id": "7e6d66237bb6434a",
-    "title": "Rip Cars完成150万美元战略融资,DBA等参投",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-31T10:27:25.107758+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "dacdbacabe4f638e",
     "title": "Robinhood 摔 23%!ARK 逢低砸 910 萬美元抄底,加密收入年減 55%",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-08T19:25:03.195571+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2a7e8bda25f7dba1",
+    "title": "Ripple Price Analysis: Could XRP Crash to $1.00 Next Week as Sellers Remain in Control?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-08T20:05:12.081044+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
