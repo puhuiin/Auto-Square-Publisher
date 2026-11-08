@@ -1,15 +1,5 @@
 [
   {
-    "id": "849d2128afc7dba3",
-    "title": "Solana (SOL) Moves In on Hong Kong Banks to Scale Its $14 Billion Stablecoin Market",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-30T19:46:53.881419+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6fedd8094fa40899",
     "title": "Polygon Targets Solana’s $5.76T Stablecoin Market With New Payments Integration",
     "source": "ZyCrypto (新币与空投)",
@@ -5191,6 +5181,16 @@
     "sent_at": "2026-11-08T07:05:35.354285+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "048f413d0b68a05c",
+    "title": "Ripple's Schwartz Speaks Out About His Influence Over XRP Price",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-08T08:07:11.183994+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
