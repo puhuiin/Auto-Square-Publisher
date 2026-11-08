@@ -1,15 +1,5 @@
 [
   {
-    "id": "c4d8d56e77669a00",
-    "title": "被盗ALLO已被冻结,Allora正全额归还币安",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-30T17:06:38.814698+00:00",
-    "tokens": [
-      "ALLO"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "47468540eb4b202f",
     "title": "How did Binance hacker leverage Aave to outsmart Tether, Circle freeze?",
     "source": "AMBCrypto (技术与链上)",
@@ -5186,6 +5176,17 @@
     "sent_at": "2026-11-08T01:47:30.158700+00:00",
     "tokens": [
       "USDS"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3408cfb0e5f11629",
+    "title": "主要 Meme 市场 24 小时成交约 1.36 亿美元,环比下降 15.8%",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-08T02:09:51.114468+00:00",
+    "tokens": [
+      "BNB",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
