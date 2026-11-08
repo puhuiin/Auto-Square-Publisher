@@ -1,15 +1,5 @@
 [
   {
-    "id": "d63528c773ce3ac0",
-    "title": "Stellar (XLM) Absorbs 92% of RWA Fund Inflows in Sudden Market Consolidation",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-30T22:04:39.755542+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "4b9f35f707ea81c3",
     "title": "Ripple's Sudden 310-Million XRP Transfers Ignite Mystery in Crypto Circles",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5194,5 +5184,15 @@
       "SHIB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "6156b0752c22f982",
+    "title": "Who is Satoshi Nakamoto? New Grok AI Study Tests Multiple Theories",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-08T10:25:24.248225+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
