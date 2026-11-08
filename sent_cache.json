@@ -1,15 +1,5 @@
 [
   {
-    "id": "516378cf8192fbd1",
-    "title": "Top 8 Solana APIs of October 2026",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-30T18:05:24.552892+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9581802d12e8592f",
     "title": "XRP Ledger Ranks Third in Stablecoin Expansion, But Who Is First?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5190,6 +5180,16 @@
       "SOL",
       "XRP",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c80482912e2d4b39",
+    "title": "Elliptic Traces $124M in Bitcoin Swaps From Binance Hack Funds",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-08T04:24:33.694470+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
