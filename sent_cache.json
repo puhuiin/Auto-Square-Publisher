@@ -1,15 +1,5 @@
 [
   {
-    "id": "945c51d2fc814e68",
-    "title": "How can PEPE traders take advantage of conflicting momentum signals?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-10-31T09:25:52.318930+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "43cbec6cafe318ea",
     "title": "XRP Reserves on Binance Hit Lowest Level Since 2022",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5186,6 +5176,16 @@
     "title": "Vitalik Buterin says ETH should be valued as a store of value, not a fee-burning token",
     "source": "The Block (机构与政策)",
     "sent_at": "2026-11-08T18:45:14.198061+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c945a9acd8a5aec2",
+    "title": "Vitalik:ETH 应以价值储存而非 Gas 费用销毁作为核心价值定位",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-08T19:05:09.418209+00:00",
     "tokens": [
       "ETH"
     ],
