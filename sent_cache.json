@@ -1,17 +1,5 @@
 [
   {
-    "id": "1c5b665865bd1f12",
-    "title": "约80%被盗资金已补齐,币安预计34小时内分阶段恢复提现",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-30T20:46:10.962523+00:00",
-    "tokens": [
-      "USDC",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "342610cca8c04180",
     "title": "RUNE up 15% after hackers use THORChain to launder stolen funds — What next?",
     "source": "AMBCrypto (技术与链上)",
@@ -5191,6 +5179,16 @@
     "sent_at": "2026-11-08T08:45:14.609258+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "87978301c949333b",
+    "title": "BNB 跌破 700 美元,24 小时涨幅 0.39%",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-08T09:04:37.781860+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-CN"
   }
