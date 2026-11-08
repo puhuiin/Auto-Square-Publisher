@@ -406,12 +406,26 @@ def formulaic_repetition_stats(rows, date_utc: str, min_docs: int = 6, n: int = 
         return {"date": date_utc, "n": 0, "min_docs": min_docs, "ngram": n, "topk": topk,
                 "frag_count": 0, "hit": 0, "share_pct": 0.0, "fragments": []}
     cnt = collections.Counter()
+    # ★★ R862：**口径修复** —— 与「当期活动提法」重叠的 n-gram **不计入公式化**。
+    #   取证（2026-11-08 验收时现形）：⑥ 从 45.5% 跳到 **73.9%**，而同期唯一大变化是
+    #   活动名换成 `Spot Taker Program`（R860 补的词）——它现在遍布大量帖
+    #   ⇒ 12-gram 命中数被"活动名"顶上去 ⇒ 把**平台要求的活动导流句**读成了"公式化"。 ✗
+    #   修法：用同一份词表（`CAMPAIGN_MENTION_RE`）取匹配区间，**与区间重叠的 n-gram 跳过**。
+    #   ⚠️ 这只改**度量口径**、不动判定线（⑥ 的档位重算即可）；也**不碰 ①/⑦**
+    #   ⇒ 不影响正在跑的 ⑨ 窗口（⑨ 只用 ① 与 ⑦）。
+    try:
+        from campaign_vocab import CAMPAIGN_MENTION_RE as _CMRE
+    except Exception:            # 取不到就不改口径（宁保守）
+        _CMRE = None
     for t in texts:
+        spans = [(m.start(), m.end()) for m in _CMRE.finditer(t)] if _CMRE else []
         seen = set()
         for i in range(len(t) - n + 1):
             g = t[i:i + n]
             if not g.isascii():
                 continue
+            if spans and any(s < i + n and i < e for s, e in spans):
+                continue         # 与活动提法重叠 ⇒ 那是活动名，不算"公式化"
             seen.add(g)
         for g in seen:
             cnt[g] += 1
@@ -1127,7 +1141,9 @@ def main(argv=None) -> int:
     rt = [formulaic_repetition_stats(rows, d) for d in (args.treatment or "").split(",") if d]
     if rb or rt:
         print("\n【公式化重复率（R851b，只量不设门）】"
-              "口径：en 已发布帖正文里的 12-gram，跨帖 ≥6 篇，含 top-15 任一片段的占比")
+              "口径：en 已发布帖正文里的 12-gram，跨帖 ≥6 篇，含 top-15 任一片段的占比"
+              "（★R862：与当期**活动提法**重叠的片段不计 —— 活动导流句是平台要求，"
+              "不是「公式化」）")
         for label, arm in (("基线臂", rb), ("处置臂", rt)):
             if not arm:
                 continue

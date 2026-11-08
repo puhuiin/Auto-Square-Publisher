@@ -10195,6 +10195,31 @@ class TestR850Preregistration(unittest.TestCase):
         self.assertEqual([p.name for p in _m.deweight_en_flash(pool, "en", True)],
                          [p.name for p in pool], "长文不动")
 
+    def test_r862_repetition_ignores_campaign_mentions(self):
+        """★★ R862：⑥ 重复率**不计**与当期活动提法重叠的片段（活动导流句是平台要求）。
+
+        取证：2026-11-08 验收时 ⑥ 从 45.5% 跳到 73.9%，同期唯一大变化是活动名换成
+        `Spot Taker Program`（R860 补的词）⇒ 把活动名读成了"公式化" ✗。
+        """
+        mod = self._ew()
+        # 4 篇都含同一句活动导流（≥min_docs=3）⇒ 修口径后该片段不该被算作公式化；
+        # 另加一段**与活动无关**的重复长句，它必须仍被算到（口径没被改宽）。
+        boiler = "Join the Spot Taker Program before Nov 9 and earn rewards."
+        other = "This setup is pure noise and I am staying flat until volume confirms."
+        rows = []
+        for i in range(4):
+            rows.append({"outcome": "binance_published", "lang": "en",
+                         "ts": "2026-11-08T15:%02d:00Z" % i,
+                         "final_text": "%s %s #Write2Earn" % (boiler, other)})
+        s = mod.formulaic_repetition_stats(rows, "2026-11-08", min_docs=3)
+        frags = [str(g) for g in s["fragments"]]
+        self.assertTrue(frags, "与活动无关的重复句仍须被检出（口径没放宽）")
+        self.assertFalse(any("Spot Taker" in g for g in frags),
+                         "活动提法片段必须被排除")
+        # 边界跨接片段（boiler↔other）不重叠活动区间 ⇒ 允许存在；但**必须至少有一部分**
+        # 片段来自非活动句内部，证明口径没被改宽成"全丢"。
+        self.assertTrue(any(g in other for g in frags), "非活动片段仍要被统计")
+
     def test_verdict_tiers(self):
         mod = self._ew()
         base = [self._win(22, 8), self._win(23, 7)]          # 基线 ≈ 33%
