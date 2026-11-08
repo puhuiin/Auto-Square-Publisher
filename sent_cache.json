@@ -1,17 +1,5 @@
 [
   {
-    "id": "4846819342e4d630",
-    "title": "币安联席 CEO :最迟在周一发布完整的储备金证明,目标 40 小时内恢复提现",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T15:08:06.040344+00:00",
-    "tokens": [
-      "USDC",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0515973d24f8fdb8",
     "title": "Bonk Guy:山寨币相对比特币表现强势,认为多数抛压或已释放",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5190,5 +5178,15 @@
       "LINK"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "2ec063f271a5e5f6",
+    "title": "Justin Sun Warns Quantum Threat Could Hit Crypto Within 2 Years as TRON Pursues Resistance",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-08T00:05:13.676787+00:00",
+    "tokens": [
+      "TRX"
+    ],
+    "lang": "zh-TW"
   }
 ]
