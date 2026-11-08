@@ -1,15 +1,5 @@
 [
   {
-    "id": "10fd50a8e0f73113",
-    "title": "3 Shiba Inu (SHIB) Indicators Paint Worrying Picture: Where Can Its Price Drop?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-31T03:45:38.033642+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d6d53c9c2c2d30ff",
     "title": "120 million TRX from the Binance hack moves to an unknown wallet",
     "source": "Crypto Briefing (深度与研报)",
@@ -5189,5 +5179,15 @@
       "INJ"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "130d27dc15ba3141",
+    "title": "Bitcoin price prediction — With $80K lost, is more downside ahead for BTC?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-08T13:44:18.050294+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
