@@ -1,15 +1,5 @@
 [
   {
-    "id": "0515973d24f8fdb8",
-    "title": "Bonk Guy:山寨币相对比特币表现强势,认为多数抛压或已释放",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-30T15:26:58.252362+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "49b6e15becac1fd0",
     "title": "Bitcoin fell after the Fed’s pause, but blaming interest rates misses the Binance shock",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5186,6 +5176,16 @@
     "sent_at": "2026-11-08T00:05:13.676787+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "84920090e78a40a2",
+    "title": "Shiba Inu Futures Flow Plunges 67x in Days: What Does This Mean for SHIB Price?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-08T00:25:47.797789+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-TW"
   }
