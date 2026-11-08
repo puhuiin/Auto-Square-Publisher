@@ -1,15 +1,5 @@
 [
   {
-    "id": "2d8d9a0ad9dd1196",
-    "title": "Why Didn’t Bitcoin Crash Harder After the Binance Hack? CZ Weighs In",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-31T09:08:44.789329+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "945c51d2fc814e68",
     "title": "How can PEPE traders take advantage of conflicting momentum signals?",
     "source": "AMBCrypto (技术与链上)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-08T18:25:25.730852+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0e9246df9b1bddd2",
+    "title": "Vitalik Buterin says ETH should be valued as a store of value, not a fee-burning token",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-08T18:45:14.198061+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
