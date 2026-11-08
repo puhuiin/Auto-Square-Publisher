@@ -1,17 +1,5 @@
 [
   {
-    "id": "ae0f00118b8b360c",
-    "title": "Aave V3 冻结储备已解冻,USDT 等资产暂不可新增抵押借款",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-30T23:07:37.583350+00:00",
-    "tokens": [
-      "USDC",
-      "POL",
-      "PAXG"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f22687b63c4d7e47",
     "title": "Chainalysis遭AI驱动网络攻击,客户姓名及邮箱等信息泄露",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5194,5 +5182,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "b7087297893ad0dd",
+    "title": "某交易员在HYPE价格为28.79美元时做空,目前该仓位亏损2095万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-08T11:04:39.279229+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
