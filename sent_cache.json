@@ -1,15 +1,5 @@
 [
   {
-    "id": "3bc7edefcfdf665d",
-    "title": "比特币白皮书发布18周年:华尔街拥抱加密资产,去中心化初心面临考验",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-31T03:04:01.555972+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "10fd50a8e0f73113",
     "title": "3 Shiba Inu (SHIB) Indicators Paint Worrying Picture: Where Can Its Price Drop?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-08T12:49:55.395875+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "00c28944b6e72d0e",
+    "title": "TechFlow 情报局:ChatGPT 被曝大规模封号,Binance 遭 60 亿美元黑客攻击后 CFO 火速离职",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-08T13:26:55.346163+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "zh-TW"
   }
