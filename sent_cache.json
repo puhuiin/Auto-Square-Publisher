@@ -1,15 +1,5 @@
 [
   {
-    "id": "51e9af94fc66c77f",
-    "title": "Dogecoin Alert: Critical Wallet Security Threat Uncovered, What's Next?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-31T16:24:03.318939+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ce33e4aae64d089b",
     "title": "币安:目前已补齐 90% 的被盗资产损失",
     "source": "吴说区块链 (中文深度)",
@@ -5198,5 +5188,15 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "a9741d2f86c835d6",
+    "title": "Assessing if Avalanche’s growing network activity can spur AVAX’s price recovery",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-09T03:04:50.033742+00:00",
+    "tokens": [
+      "AVAX"
+    ],
+    "lang": "zh-CN"
   }
 ]
