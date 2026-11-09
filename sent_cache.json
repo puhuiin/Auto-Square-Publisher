@@ -1,15 +1,5 @@
 [
   {
-    "id": "5c50aa03073ccaf3",
-    "title": "'XRP at 100'? Ripple CTO Emeritus Reveals Surprising Story Behind Iconic T-Shirt",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-31T22:45:00.186245+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "69feb85639d8dfc9",
     "title": "Tether-Backed FASE Foundation Targets Scams and Stablecoin Aid",
     "source": "NewsBTC (比特币与山寨)",
@@ -5196,5 +5186,17 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "9871a64732fd080c",
+    "title": "疑与 UXLINK 被盗事件有关的地址持有约 4400 万美元 ETH 多单",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-09T11:05:17.090727+00:00",
+    "tokens": [
+      "ETH",
+      "USDC",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]

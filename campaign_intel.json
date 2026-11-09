@@ -3,35 +3,37 @@
     "#Write2Earn",
     "#BinanceSquare",
     "#TradingTournament",
-    "#Futures",
-    "#Referral"
+    "#ReferralRush",
+    "#AICampaign"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$USDC",
     "$PREDICT",
+    "$SPCXB",
     "$APPB",
     "$BSPB",
     "$GEVB",
     "$SKUUB"
   ],
-  "strategy_guidance": "最紧迫的是2026-11-09即将上线的限时现货吃单者计划活动，可输出活动规则解读、参与攻略类内容追预热热度；日常发帖可绑定正在进行的11月现货交易竞赛、邀请人活动，以及新上线的$PREDICT、bStock类证券代币相关快讯，引导读者参与评论互动获取Write2Earn奖励，同时挂载对应活动的交易返佣链接提升导流转化。",
-  "last_updated": "2026-11-08T22:44:09.796223Z",
+  "strategy_guidance": "今日刚启动的限时Spot Taker Program为当前最紧迫活动，优先输出该活动的参与攻略、实操技巧类内容追热点；同时结合仍在进行中的Spot Trading Tournament Season 10、Region-Exclusive Referral Rush 2026等官方活动，引导读者参与评论互动获取Write2Earn奖励，还可结合新上线的$PREDICT、各bStock代币相关动态切入，带对应活动标签提升内容曝光。",
+  "last_updated": "2026-11-09T11:04:13.192210Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
+      "reset_at": "2026-11-09T11:04:14.066094+00:00",
       "fails": 1,
       "last_fail": "2026-11-09T10:43:37.396231+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-09",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 816,
+  "_img_rot": 817,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
