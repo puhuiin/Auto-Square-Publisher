@@ -1,15 +1,5 @@
 [
   {
-    "id": "03e28fa7fe4cf0b1",
-    "title": "THORChain暂停意外延缓币安被盗资金洗钱进程",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-31T18:45:27.197897+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4c8d528e12fd8abf",
     "title": "币安被盗资金地址转出约 1.58 亿枚 TRX",
     "source": "深潮TechFlow (中文/简体)",
@@ -5196,6 +5186,16 @@
     "sent_at": "2026-11-09T05:25:04.115634+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "f589c72cb7300597",
+    "title": "BSC 链 Meme 币牛逼市值短时突破 500 万美元,近 1 小时涨超 51.3%",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-09T05:45:40.437151+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-TW"
   }
