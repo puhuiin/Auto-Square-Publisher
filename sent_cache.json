@@ -1,17 +1,5 @@
 [
   {
-    "id": "9c5b1d90c3966616",
-    "title": "币安:已覆盖黑客攻击损失中的60亿美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-01T02:49:51.421038+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c2468bd29497edf8",
     "title": "Bloomberg:币安遭黑客攻击后组建百人应急小组,部分员工担忧年终奖金",
     "source": "吴说区块链 (中文深度)",
@@ -5197,6 +5185,16 @@
     "sent_at": "2026-11-09T12:44:38.755632+00:00",
     "tokens": [
       "ONDO"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "92f2448a461f2d09",
+    "title": "Solana set for its first tokenized stock venue under SEC framework, listing Galaxy",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-09T13:07:47.202678+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
