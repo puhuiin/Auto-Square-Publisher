@@ -1,15 +1,5 @@
 [
   {
-    "id": "84caf38afc3b6418",
-    "title": "币安 SAFU 基金转出 7,499 枚 BTC,用于弥补被盗资产缺口",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-31T19:26:24.352205+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d8f94e889076354b",
     "title": "USDC Treasury 在 Solana 链上铸造 2.5 亿枚 USDC",
     "source": "深潮TechFlow (中文/简体)",
@@ -5198,6 +5188,16 @@
       "USDC",
       "ETH",
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "1726544ec0302b1c",
+    "title": "Zcash 开发者提议将目标出块间隔从 25 秒缩短至 20 秒",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-09T06:47:11.532686+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-TW"
   }
