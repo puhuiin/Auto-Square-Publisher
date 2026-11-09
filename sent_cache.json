@@ -1,15 +1,5 @@
 [
   {
-    "id": "c2468bd29497edf8",
-    "title": "Bloomberg:币安遭黑客攻击后组建百人应急小组,部分员工担忧年终奖金",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-01T03:24:19.833242+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2bbf73a6d9bce3cd",
     "title": "Tokenomist:未来一个月代币解锁总额超 17.31 亿美元",
     "source": "吴说区块链 (中文深度)",
@@ -5195,6 +5185,16 @@
     "sent_at": "2026-11-09T13:07:47.202678+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "ace262bc20ec4d04",
+    "title": "Hyperliquid 生态 L2 网络 Elysium 主网正式上线",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-09T13:29:18.830247+00:00",
+    "tokens": [
+      "ARB"
     ],
     "lang": "zh-TW"
   }
