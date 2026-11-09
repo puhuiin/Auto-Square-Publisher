@@ -1,17 +1,5 @@
 [
   {
-    "id": "ad5a7cdd6e85223b",
-    "title": "币安黑客在 EVM 链抛售超 130 种山寨币,换得约 2.79 亿美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-01T07:45:52.031101+00:00",
-    "tokens": [
-      "ETH",
-      "USDC",
-      "UNI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a544a6796a63f988",
     "title": "‘Uptober’ Flopped as BTC Tanked 7%: Will November Be Any Different?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5190,6 +5178,16 @@
     "sent_at": "2026-11-09T16:47:03.734579+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4003648884251812",
+    "title": "Bitwise 向 Cumberland 转出约 7.317 万枚 HYPE",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-09T17:07:42.834745+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }

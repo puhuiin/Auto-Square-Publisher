@@ -20,8 +20,9 @@
   "last_updated": "2026-11-09T11:04:13.192210Z",
   "_feed_health": {
     "深潮TechFlow (中文/繁体)": {
-      "fails": 1,
-      "last_fail": "2026-11-09T16:46:17.748427+00:00"
+      "last_fail": "2026-11-09T16:46:17.748427+00:00",
+      "reset_at": "2026-11-09T17:06:10.369899+00:00",
+      "fails": 1
     }
   },
   "_fallback_image": {
@@ -32,7 +33,7 @@
   "_article_sent_date": "2026-11-09",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 824,
+  "_img_rot": 825,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
