@@ -1,15 +1,5 @@
 [
   {
-    "id": "fda473ae001f84ae",
-    "title": "XRP Ledger hits 14M AI agent transactions, but benefits unclear",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-10-31T14:06:49.654542+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "98aaa201946ad1f1",
     "title": "+147,593 SHIB Growth in 2026: What's Behind It?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5195,5 +5185,17 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "814336f9064d43b9",
+    "title": "本周 ALLO、AZTEC、CONX 等代币将迎来大额代币解锁",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-09T01:04:59.904497+00:00",
+    "tokens": [
+      "ALLO",
+      "BABY",
+      "ESP"
+    ],
+    "lang": "zh-CN"
   }
 ]
