@@ -1,15 +1,5 @@
 [
   {
-    "id": "f9bc99e8c5bd5bb6",
-    "title": "Cardano 生态组织 Intersect 警告严重 Linux 内核漏洞,敦促节点运营商尽快修复",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-01T00:45:02.638822+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8349a7ba48c46a88",
     "title": "Will Solana expansion fuel ONDO’s price hike back above $0.50?",
     "source": "AMBCrypto (技术与链上)",
@@ -5198,6 +5188,16 @@
     "sent_at": "2026-11-09T12:04:32.677598+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "434024a5aea6e29d",
+    "title": "孟买大会之后的以太坊:后量子 2028 竞速、Glamsterdam 延期与硬分叉交付困境",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-09T12:24:46.099961+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
