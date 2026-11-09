@@ -1,15 +1,5 @@
 [
   {
-    "id": "98aaa201946ad1f1",
-    "title": "+147,593 SHIB Growth in 2026: What's Behind It?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-31T14:24:46.346107+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "073ad77101b51c19",
     "title": "Bitcoin turns 18: Has the original rebel grown up?",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5195,6 +5185,17 @@
       "ALLO",
       "BABY",
       "ESP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3219b754fce1f366",
+    "title": "USDC Treasury 今日在 Solana 网络新增铸造 2.5 亿枚 USDC",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-09T01:24:03.984629+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
