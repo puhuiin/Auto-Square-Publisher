@@ -1,15 +1,5 @@
 [
   {
-    "id": "e533f74cec44504f",
-    "title": "What Are Perpetual Funding Rates? A Worked SEI Example",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-01T10:03:58.706937+00:00",
-    "tokens": [
-      "SEI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "af91f09e13e6cbe9",
     "title": "Worldcoin is ‘squeezed tight,’ says analyst – Can WLD escape its downtrend?",
     "source": "AMBCrypto (技术与链上)",
@@ -5185,6 +5175,16 @@
     "sent_at": "2026-11-09T19:25:37.454207+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "87c6f075f6e5aa1b",
+    "title": "Avalanche 将为纽交所关联代币化证券平台提供结算账本",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-09T19:45:19.855475+00:00",
+    "tokens": [
+      "AVAX"
     ],
     "lang": "en"
   }
