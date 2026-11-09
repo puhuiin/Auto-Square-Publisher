@@ -1,15 +1,5 @@
 [
   {
-    "id": "e49266c3dca010bd",
-    "title": "Chainalysis:以太坊链重组致 THORChain 紧急暂停,意外延缓朝鲜黑客洗钱",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-10-31T21:24:32.456567+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8f63e2941177c486",
     "title": "XRP’s ‘Generational’ Setup? Analyst Targets $8, $13, and $30",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5194,6 +5184,16 @@
     "title": "OKX 將上線 8 種統一代幣化股票現貨交易",
     "source": "深潮TechFlow (中文/繁体)",
     "sent_at": "2026-11-09T09:07:02.367260+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0966f254b61b16c9",
+    "title": "Solana 擬廢除 durable nonce,北韓駭客靠它偷 2.7 億美元",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-11-09T09:26:37.554498+00:00",
     "tokens": [
       "SOL"
     ],
