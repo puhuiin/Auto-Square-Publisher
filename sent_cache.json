@@ -1,15 +1,5 @@
 [
   {
-    "id": "8f63e2941177c486",
-    "title": "XRP’s ‘Generational’ Setup? Analyst Targets $8, $13, and $30",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-10-31T21:46:33.223271+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "250a310e1a3bd853",
     "title": "逾60亿美元币安虚拟资产被盗案,FBI称朝鲜负责",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5194,6 +5184,16 @@
     "title": "Solana 擬廢除 durable nonce,北韓駭客靠它偷 2.7 億美元",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
     "sent_at": "2026-11-09T09:26:37.554498+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6191ee83525d6dbf",
+    "title": "Solana Draft Would Retire Durable Nonces No Earlier Than May 2027",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-09T10:06:20.424437+00:00",
     "tokens": [
       "SOL"
     ],
