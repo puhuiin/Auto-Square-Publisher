@@ -1,15 +1,5 @@
 [
   {
-    "id": "d4b30e37fab10142",
-    "title": "XRP Drops Key 2026 Support but Is Not Finished Yet",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-01T06:36:54.219128+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fdad0048b822c7a2",
     "title": "Ondo Brings Seven Tokenized Investment Portfolios to Solana",
     "source": "NewsBTC (比特币与山寨)",
@@ -5191,6 +5181,16 @@
     "sent_at": "2026-11-09T16:08:06.429464+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b02f716b3095568d",
+    "title": "NYSE Taps Avalanche to Settle Its Planned Tokenized Stock Platform",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-09T16:28:30.602796+00:00",
+    "tokens": [
+      "AVAX"
     ],
     "lang": "en"
   }
