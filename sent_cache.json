@@ -1,17 +1,5 @@
 [
   {
-    "id": "fc878e76fd961c62",
-    "title": "Premia Labs 遭攻击损失约 46 万美元,被盗资金跨链后兑换为 BTC",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-01T05:28:48.134958+00:00",
-    "tokens": [
-      "BTC",
-      "ARB",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7ce816521dd3219a",
     "title": "Solana’s reward records leave stakers with a gap in validator fee data",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5193,6 +5181,16 @@
     "sent_at": "2026-11-09T15:08:54.440963+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3c1af2fd5f13e0bd",
+    "title": "TRON Network Integrates with Backpack Wallet, Expanding Access to Its Multichain Ecosystem",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-09T15:48:44.771934+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "en"
   }
