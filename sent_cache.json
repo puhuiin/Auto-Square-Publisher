@@ -1,15 +1,5 @@
 [
   {
-    "id": "dac9a95efbbb8fa3",
-    "title": "Strive CEO Matt Cole:比特币表现强于预期,言底尚早",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-31T16:06:56.749797+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "51e9af94fc66c77f",
     "title": "Dogecoin Alert: Critical Wallet Security Threat Uncovered, What's Next?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5198,5 +5188,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e30a478fd01a2198",
+    "title": "What is Zcash (ZEC)? How shielded transactions work",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-09T02:44:49.118821+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
