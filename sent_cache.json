@@ -1,17 +1,5 @@
 [
   {
-    "id": "9d1e4d99dbba4be2",
-    "title": "币安新增恢复Polygon及Avalanche C链部分资产提现",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-01T12:24:37.115039+00:00",
-    "tokens": [
-      "POL",
-      "USDC",
-      "AVAX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d9a55c1e0f332210",
     "title": "Binance 恢复 ZEC、TON 及 SUI 网络部分资产提现",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,5 +5176,15 @@
       "XRP"
     ],
     "lang": "en"
+  },
+  {
+    "id": "34ed87a4309736b8",
+    "title": "Can PEPE break $0.0000052 while the rest of the crypto market is falling?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-09T22:07:04.479297+00:00",
+    "tokens": [
+      "PEPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
