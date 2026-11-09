@@ -1,16 +1,5 @@
 [
   {
-    "id": "d8f94e889076354b",
-    "title": "USDC Treasury 在 Solana 链上铸造 2.5 亿枚 USDC",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-31T19:44:33.800310+00:00",
-    "tokens": [
-      "USDC",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f9a810e02beb80f8",
     "title": "How Optimism crypto’s 17% rally puts $0.11 in focus for OP bulls",
     "source": "AMBCrypto (技术与链上)",
@@ -5198,6 +5187,16 @@
     "sent_at": "2026-11-09T06:47:11.532686+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "1e1b57bf39074789",
+    "title": "Solana proposes retiring durable nonces after the Drift hack",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-09T07:07:49.390416+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
