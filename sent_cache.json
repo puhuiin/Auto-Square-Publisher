@@ -1,15 +1,5 @@
 [
   {
-    "id": "af91f09e13e6cbe9",
-    "title": "Worldcoin is ‘squeezed tight,’ says analyst – Can WLD escape its downtrend?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-01T10:29:30.560300+00:00",
-    "tokens": [
-      "WLD"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "023e6cb82f0352b6",
     "title": "币安黑客将价值9590万美元的97.05万枚SOL兑换为BTC",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5185,6 +5175,18 @@
     "sent_at": "2026-11-09T19:45:19.855475+00:00",
     "tokens": [
       "AVAX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6619a2b28aafe097",
+    "title": "Formation Securities拟依据SEC创新豁免推出Solana代币化股票交易场所",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-09T20:09:23.083331+00:00",
+    "tokens": [
+      "BNB",
+      "SOL",
+      "ETH"
     ],
     "lang": "en"
   }
