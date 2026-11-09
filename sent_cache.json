@@ -1,15 +1,5 @@
 [
   {
-    "id": "6177233d954147bb",
-    "title": "Chainalysis says hacker using ‘offensive agentic techniques’ accessed its customers’ names and emails",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-10-31T13:29:32.534990+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fda473ae001f84ae",
     "title": "XRP Ledger hits 14M AI agent transactions, but benefits unclear",
     "source": "Crypto Briefing (深度与研报)",
@@ -5193,5 +5183,17 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "3db0736ff6590eb0",
+    "title": "Shiba Inu (SHIB), Tron (TRX), Zcash (ZEC) and Near Protocol (NEAR) Price Analysis For November 9: From the Market Fear to Neutrality",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-09T00:47:16.203548+00:00",
+    "tokens": [
+      "SHIB",
+      "TRX",
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
