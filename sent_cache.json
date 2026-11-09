@@ -1,16 +1,5 @@
 [
   {
-    "id": "023e6cb82f0352b6",
-    "title": "币安黑客将价值9590万美元的97.05万枚SOL兑换为BTC",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-01T10:54:44.259624+00:00",
-    "tokens": [
-      "SOL",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "90d2f760fd22fa1b",
     "title": "'Hard to Be Bearish Here': Trader Who Predicted 700% XRP Rally Breaks Down Current Setup",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5187,6 +5176,16 @@
       "BNB",
       "SOL",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d9d5e2ccee3934a9",
+    "title": "Avalanche’s AVAX leads crypto gains following NYSE tokenization deal",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-11-09T20:28:40.133240+00:00",
+    "tokens": [
+      "AVAX"
     ],
     "lang": "en"
   }
