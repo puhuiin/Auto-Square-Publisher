@@ -1,15 +1,5 @@
 [
   {
-    "id": "073ad77101b51c19",
-    "title": "Bitcoin turns 18: Has the original rebel grown up?",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-31T14:46:34.725745+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f2a44861b4c0060e",
     "title": "85 Trillion Shiba Inu Threshold Back in Play: How Long Till SHIB Removes a Zero?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5196,6 +5186,16 @@
     "tokens": [
       "USDC",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "77504021f0101377",
+    "title": "巨鲸或机构向 FalconX 转入累计约 51.2 万枚 HYPE",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-09T01:46:32.273530+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
