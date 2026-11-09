@@ -1,16 +1,5 @@
 [
   {
-    "id": "7d38ddb3a52e23c4",
-    "title": "Anthropic Claude AI Predicts an Unbelievable XRP Q4 Move",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-10-31T15:44:23.223291+00:00",
-    "tokens": [
-      "XRP",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "dac9a95efbbb8fa3",
     "title": "Strive CEO Matt Cole:比特币表现强于预期,言底尚早",
     "source": "深潮TechFlow (中文/简体)",
@@ -5197,6 +5186,16 @@
     "tokens": [
       "ETH",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "d7f17a33362628d8",
+    "title": "Upbit weekly volume falls 20.8% to 6.7 trillion won as XRP leads trading",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-09T02:24:06.368935+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
