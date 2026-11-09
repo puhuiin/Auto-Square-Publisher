@@ -1,15 +1,5 @@
 [
   {
-    "id": "f0603f2736e63d64",
-    "title": "Polygon Extends Open Money Stack to Solana for Stablecoin Payment Flows",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-31T18:24:40.070661+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "03e28fa7fe4cf0b1",
     "title": "THORChain暂停意外延缓币安被盗资金洗钱进程",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5198,5 +5188,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "cbcbb7f02b36798e",
+    "title": "为什么 Anthropic 的 FlashProve 会提及 Mantle?零知识证明如何自证 AI 模型没有被调包",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-09T05:25:04.115634+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
