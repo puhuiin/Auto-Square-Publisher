@@ -1,15 +1,5 @@
 [
   {
-    "id": "90d2f760fd22fa1b",
-    "title": "'Hard to Be Bearish Here': Trader Who Predicted 700% XRP Rally Breaks Down Current Setup",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-01T11:24:23.192534+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d3a0321e5d26aff4",
     "title": "Why Didn't Bitcoin Drop More? Binance's CZ Credits FBI",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5186,6 +5176,16 @@
     "sent_at": "2026-11-09T20:28:40.133240+00:00",
     "tokens": [
       "AVAX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4eb0233b7fb3f160",
+    "title": "比特币在币安黑客事件后下跌6%,Fitch Ratings称市场结构趋成熟",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-09T21:08:59.380098+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
