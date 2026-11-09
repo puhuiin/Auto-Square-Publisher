@@ -1,15 +1,5 @@
 [
   {
-    "id": "8cb777335409ab03",
-    "title": "Bitcoin held up better than expected after Binance hack, Strive CEO says",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-10-31T20:46:20.684954+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4c1cb8c5995689ef",
     "title": "18 Years of Satoshi’s Paradox: Can Bitcoin Survive What Comes Next?",
     "source": "BeInCrypto (山寨与行情)",
@@ -5198,5 +5188,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e932eb21f5f6c9d8",
+    "title": "Solana moves to scrap the transaction feature used in the $270 million Drift hack",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-09T08:48:06.351974+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
