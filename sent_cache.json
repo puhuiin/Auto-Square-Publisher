@@ -1,15 +1,5 @@
 [
   {
-    "id": "5b77b8aee03999c7",
-    "title": "Dogecoin Loses to 'Uptober' With Another 20% Dip",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-31T23:48:24.503905+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7ded2c3c4f9de828",
     "title": "Ripple 两笔交易累计解锁 10 亿枚 XRP",
     "source": "深潮TechFlow (中文/简体)",
@@ -5197,6 +5187,17 @@
     "tokens": [
       "USDC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "78c4042cab1cf488",
+    "title": "Shiba Inu (SHIB) Trading Surges 71% as $1.14 Billion Selloff Rocks Market",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-09T11:47:20.939232+00:00",
+    "tokens": [
+      "SHIB",
+      "BTC"
     ],
     "lang": "zh-CN"
   }
