@@ -1,15 +1,5 @@
 [
   {
-    "id": "7ded2c3c4f9de828",
-    "title": "Ripple 两笔交易累计解锁 10 亿枚 XRP",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-01T00:26:55.861322+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f9bc99e8c5bd5bb6",
     "title": "Cardano 生态组织 Intersect 警告严重 Linux 内核漏洞,敦促节点运营商尽快修复",
     "source": "吴说区块链 (中文深度)",
@@ -5198,6 +5188,16 @@
     "tokens": [
       "SHIB",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "f3f2086a7a072c80",
+    "title": "Zcash developers want 20-second blocks just days after major speed upgrade",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-09T12:04:32.677598+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
