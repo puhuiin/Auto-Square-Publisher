@@ -1,15 +1,5 @@
 [
   {
-    "id": "f2a44861b4c0060e",
-    "title": "85 Trillion Shiba Inu Threshold Back in Play: How Long Till SHIB Removes a Zero?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-31T15:24:30.572122+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7d38ddb3a52e23c4",
     "title": "Anthropic Claude AI Predicts an Unbelievable XRP Q4 Move",
     "source": "CryptoNews (全球快讯)",
@@ -5196,6 +5186,17 @@
     "sent_at": "2026-11-09T01:46:32.273530+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9425e9fdb7c08375",
+    "title": "Drift 黑客關聯地址押注 ETH/BTC 匯率下跌,單日浮盈達 65.8 萬美元",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-09T02:04:39.261807+00:00",
+    "tokens": [
+      "ETH",
+      "BTC"
     ],
     "lang": "zh-CN"
   }
