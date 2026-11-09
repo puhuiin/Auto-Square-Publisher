@@ -1,16 +1,5 @@
 [
   {
-    "id": "79ec0aad6c7c3c09",
-    "title": "Further Asset Management Taps Chainlink ACE for Abu Dhabi Compliance Platform",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-01T08:44:30.732243+00:00",
-    "tokens": [
-      "ACE",
-      "LINK"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b9e5c7ca94e4a6cf",
     "title": "Uphold RLUSD Earn vs. Ethena Pay Earn+: Lending and Leverage Compared",
     "source": "The Defiant (DeFi 深度)",
@@ -5187,6 +5176,16 @@
     "sent_at": "2026-11-09T17:46:53.750619+00:00",
     "tokens": [
       "INJ"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fc828805a75fc431",
+    "title": "私募融资平台 FairClub 拟采用 Metaplex 许可代币标准",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-09T18:09:55.672363+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
