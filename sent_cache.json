@@ -1,15 +1,5 @@
 [
   {
-    "id": "87bc574fb5a62fb4",
-    "title": "Shiba Inu Holder Count Drops by 2,500 Amid Prolonged Volatility",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-31T22:24:19.564598+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "5c50aa03073ccaf3",
     "title": "'XRP at 100'? Ripple CTO Emeritus Reveals Surprising Story Behind Iconic T-Shirt",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5196,5 +5186,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "52cf96925b3eeed4",
+    "title": "Solana Targets Durable Nonces After $270M Drift Hack as Pump.fun Backlash Grows",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-09T10:44:44.185463+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]

@@ -17,10 +17,15 @@
   ],
   "strategy_guidance": "最紧迫的是2026-11-09即将上线的限时现货吃单者计划活动，可输出活动规则解读、参与攻略类内容追预热热度；日常发帖可绑定正在进行的11月现货交易竞赛、邀请人活动，以及新上线的$PREDICT、bStock类证券代币相关快讯，引导读者参与评论互动获取Write2Earn奖励，同时挂载对应活动的交易返佣链接提升导流转化。",
   "last_updated": "2026-11-08T22:44:09.796223Z",
-  "_feed_health": {},
+  "_feed_health": {
+    "Bitcoinist (比特币向)": {
+      "fails": 1,
+      "last_fail": "2026-11-09T10:43:37.396231+00:00"
+    }
+  },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-09",
