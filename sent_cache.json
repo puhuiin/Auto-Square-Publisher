@@ -1,17 +1,5 @@
 [
   {
-    "id": "250a310e1a3bd853",
-    "title": "逾60亿美元币安虚拟资产被盗案,FBI称朝鲜负责",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-10-31T22:06:37.508153+00:00",
-    "tokens": [
-      "ETH",
-      "BTC",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "87bc574fb5a62fb4",
     "title": "Shiba Inu Holder Count Drops by 2,500 Amid Prolonged Volatility",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5198,5 +5186,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "5d350e84c08f523c",
+    "title": "在芬兰寒冬里,他们靠挖比特币取暖",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-09T10:24:56.476059+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
