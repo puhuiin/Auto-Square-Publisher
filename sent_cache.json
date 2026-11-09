@@ -1,15 +1,5 @@
 [
   {
-    "id": "7bbfbd307e3913a9",
-    "title": "Solana 联合创始人:作物增产惠及最贫困人群前不应暂停 AI",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-10-31T17:26:28.315388+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "861e2c92a75d626c",
     "title": "147% XRP Burn Rate Surge at 'Uptober' Close, but Price Stays Down",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5196,5 +5186,16 @@
       "WLFI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "6aedaa9988323ebb",
+    "title": "BeInCrypto:INJ、PEARL 和 PEPE 面临关键阻力",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-09T04:24:52.125272+00:00",
+    "tokens": [
+      "INJ",
+      "PEPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
