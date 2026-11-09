@@ -1,17 +1,5 @@
 [
   {
-    "id": "d9a55c1e0f332210",
-    "title": "Binance 恢复 ZEC、TON 及 SUI 网络部分资产提现",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-01T12:44:48.592529+00:00",
-    "tokens": [
-      "ZEC",
-      "SUI",
-      "GRAM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a8d1fb3ef31df5a3",
     "title": "Zcash (ZEC) Hits $1,280 Milestone but Fight Over Grant Money Sparks Whale Revolt",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5186,5 +5174,15 @@
       "PEPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e45740f5c34363a8",
+    "title": "偿还7.5亿美元抵押债务,MARA批准最高5亿美元股票回购",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-09T23:24:41.441541+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
