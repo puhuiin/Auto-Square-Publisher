@@ -1,15 +1,5 @@
 [
   {
-    "id": "69feb85639d8dfc9",
-    "title": "Tether-Backed FASE Foundation Targets Scams and Stablecoin Aid",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-10-31T23:12:08.777361+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5b77b8aee03999c7",
     "title": "Dogecoin Loses to 'Uptober' With Another 20% Dip",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5198,5 +5188,16 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "20370f08f7b3febc",
+    "title": "7.5 万人排队体验「隐身稳定币」:Raycash 上线以太坊主网,USDC 转账可隐藏金额、还能赚取收益",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-09T11:22:51.290518+00:00",
+    "tokens": [
+      "USDC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
