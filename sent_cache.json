@@ -1,16 +1,5 @@
 [
   {
-    "id": "b9e5c7ca94e4a6cf",
-    "title": "Uphold RLUSD Earn vs. Ethena Pay Earn+: Lending and Leverage Compared",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-01T09:04:38.156963+00:00",
-    "tokens": [
-      "RLUSD",
-      "ENA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "cda582b3185e23a0",
     "title": "XPL闪崩引发多头连环清算,Hyperliquid HLP金库接盘并亏损55.6万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5185,6 +5174,17 @@
     "source": "深潮TechFlow (中文/简体)",
     "sent_at": "2026-11-09T18:09:55.672363+00:00",
     "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7a65cbe1441357a4",
+    "title": "North Korea launders Binance funds with Elon Musk memecoin, report",
+    "source": "Protos (隐私与合规)",
+    "sent_at": "2026-11-09T18:45:42.307184+00:00",
+    "tokens": [
+      "TRX",
       "SOL"
     ],
     "lang": "en"
