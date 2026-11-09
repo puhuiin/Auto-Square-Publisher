@@ -1,16 +1,5 @@
 [
   {
-    "id": "594d8ffecfad16da",
-    "title": "Aave Expands Stock-Backed USDC Loans on Base for Eligible Investors",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-01T08:24:05.598282+00:00",
-    "tokens": [
-      "USDC",
-      "AAVE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "79ec0aad6c7c3c09",
     "title": "Further Asset Management Taps Chainlink ACE for Abu Dhabi Compliance Platform",
     "source": "NewsBTC (比特币与山寨)",
@@ -5188,6 +5177,16 @@
     "sent_at": "2026-11-09T17:28:59.211534+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f5831906d0097deb",
+    "title": "首只美国质押型INJ ETF登陆纳斯达克,Injective回顾上线五周年进展",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-09T17:46:53.750619+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "en"
   }
