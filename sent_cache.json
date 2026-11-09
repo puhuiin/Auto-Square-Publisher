@@ -1,15 +1,5 @@
 [
   {
-    "id": "d3a0321e5d26aff4",
-    "title": "Why Didn't Bitcoin Drop More? Binance's CZ Credits FBI",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-01T11:46:13.279620+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "bf20f398d54e08b9",
     "title": "Binance Resumes Crypto Withdrawals After Record Hack, 95% of Losses Covered",
     "source": "BeInCrypto (山寨与行情)",
@@ -5186,6 +5176,16 @@
     "sent_at": "2026-11-09T21:08:59.380098+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0d560d4a2d3bbfa3",
+    "title": "Vitalik Buterin Sued in Ethereum ‘Suicide Pledge' Row",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-09T21:28:50.959433+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
