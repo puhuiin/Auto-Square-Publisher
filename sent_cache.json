@@ -1,15 +1,5 @@
 [
   {
-    "id": "861e2c92a75d626c",
-    "title": "147% XRP Burn Rate Surge at 'Uptober' Close, but Price Stays Down",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-10-31T17:45:20.884506+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8642431ab75b1c14",
     "title": "XRP Reserves on Binance Slump to 2022 Lows — Is a Supply-Shock Rocket Surge Imminent?",
     "source": "ZyCrypto (新币与空投)",
@@ -5197,5 +5187,16 @@
       "PEPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "a221c6e1d3766199",
+    "title": "Top 3 Altcoins to Watch in the Second Week of November 2026",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-09T04:44:42.471760+00:00",
+    "tokens": [
+      "INJ",
+      "PEPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
