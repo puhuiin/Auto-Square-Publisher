@@ -1,16 +1,5 @@
 [
   {
-    "id": "fdad0048b822c7a2",
-    "title": "Ondo Brings Seven Tokenized Investment Portfolios to Solana",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-01T07:04:40.893731+00:00",
-    "tokens": [
-      "ONDO",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ad5a7cdd6e85223b",
     "title": "币安黑客在 EVM 链抛售超 130 种山寨币,换得约 2.79 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5191,6 +5180,16 @@
     "sent_at": "2026-11-09T16:28:30.602796+00:00",
     "tokens": [
       "AVAX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e61c3755ba91a981",
+    "title": "Bitrue AI Maps 18 Oversold XRP Readings Since 2023 in New Research Report",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-09T16:47:03.734579+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
