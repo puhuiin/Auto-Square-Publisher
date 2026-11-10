@@ -1,16 +1,5 @@
 [
   {
-    "id": "e07552bdef25663a",
-    "title": "Binance-Hack Launderers Reach Solana After Draining $500 Million on Tron, Chainalysis Says",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-01T17:44:00.471380+00:00",
-    "tokens": [
-      "SOL",
-      "TRX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7be73b20c2a28445",
     "title": "Mark Zuckerberg’s Meta AI Predicts an XRP Explosion as Binance Resumes Withdrawals Following Hack",
     "source": "CryptoNews (全球快讯)",
@@ -5187,5 +5176,15 @@
       "SHIB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "9f55f2a6934a4d57",
+    "title": "Swarm 官方软件遭供应链攻击,黑客利用以太坊智能合约控制后门,用户私钥面临泄露风险",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-10T04:27:22.921289+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
