@@ -1,16 +1,5 @@
 [
   {
-    "id": "68ba2a54709b2c93",
-    "title": "Chainlink Goes Live on Stellar, Unlocking DeFi Applications Across the $4B RWA Ecosystem",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-01T20:44:22.943715+00:00",
-    "tokens": [
-      "LINK",
-      "XLM"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "79f9c69cc93dc8b2",
     "title": "Tracked Binance wallets record $2.5 billion in outflows as withdrawals reopen after hack",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5188,6 +5177,16 @@
     "sent_at": "2026-11-10T08:27:35.316970+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "95e497093b1b7e5f",
+    "title": "Gate WCTC S9第一阶段圆满收官,超10万人报名,600万USDT总奖池第二阶段正式开启",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-10T08:44:59.528060+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
