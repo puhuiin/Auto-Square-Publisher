@@ -1,15 +1,5 @@
 [
   {
-    "id": "2c6a5cb10de96056",
-    "title": "Cardano Warns of Critical Linux Flaw: Is Your ADA at Risk?",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-01T21:24:28.650739+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1a3c27ffbf94514b",
     "title": "Pump.fun’s 24M launches yield just 312 tokens above $100K – What gives?",
     "source": "AMBCrypto (技术与链上)",
@@ -5186,6 +5176,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "5880faf78e7f99d9",
+    "title": "全球股票基金四周流入 2660 亿美元,比特币 ETF 资金流出",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T09:24:51.270504+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
