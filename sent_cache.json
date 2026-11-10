@@ -1,16 +1,5 @@
 [
   {
-    "id": "a28211bd6690fd13",
-    "title": "Binance hacker sells 908,793 PROM worth $5M for $71 on Uniswap V2",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-01T13:47:45.035135+00:00",
-    "tokens": [
-      "PROM",
-      "UNI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d4937f53a9d76a98",
     "title": "“Hard To Be Bearish Here” — Analyst Who Nailed XRP’s 700% Surge Turns Giga Bullish After Spotting Rare 2022 FTX Bottom Signal",
     "source": "ZyCrypto (新币与空投)",
@@ -5184,5 +5173,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "5cd7d5eb3c49fabb",
+    "title": "美股潮向(11 月 10 日):道指漲超 1100 點,英偉達獨跌約 4%",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-10T00:50:28.530799+00:00",
+    "tokens": [
+      "AVAX"
+    ],
+    "lang": "zh-TW"
   }
 ]
