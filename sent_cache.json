@@ -1,15 +1,5 @@
 [
   {
-    "id": "f3668ab1df8d00bc",
-    "title": "Nado 链上永续合约份额升至 1.45% 创半年来新高,去中心化衍生品格局如何演变?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T05:44:46.117746+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "123a815acc265b72",
     "title": "星球午讯",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-10T15:05:21.131741+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0a77d5773251a51a",
+    "title": "Grayscale Pledges $1 Million in Zcash ETF Campaign",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-10T15:26:36.978867+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
