@@ -17,26 +17,26 @@
   "strategy_guidance": "优先追11月9日上线的限时现货Taker Program收尾节奏，结合当日新币PREDICT上线、新增5只bStocks交易对的利好背景，引导用户参与现货交易相关话题互动；同时关联11月仍在进行的交易竞赛、邀请活动，引导用户参与评论互动获取Write2Earn奖励。",
   "last_updated": "2026-11-10T11:44:04.095026Z",
   "_feed_health": {
-    "吴说区块链 (中文深度)": {
-      "fails": 1,
-      "reset_at": "2026-11-10T18:23:43.765033+00:00",
-      "last_fail": "2026-11-10T14:23:53.920302+00:00"
-    },
     "CryptoPotato (山寨币/Meme热点)": {
+      "reset_at": "2026-11-10T18:47:10.176338+00:00",
       "fails": 1,
-      "reset_at": "2026-11-10T18:23:42.528626+00:00",
       "last_fail": "2026-11-10T14:03:35.993086+00:00"
+    },
+    "吴说区块链 (中文深度)": {
+      "reset_at": "2026-11-10T18:47:11.386764+00:00",
+      "fails": 1,
+      "last_fail": "2026-11-10T14:23:53.920302+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-10",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 859,
+  "_img_rot": 860,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

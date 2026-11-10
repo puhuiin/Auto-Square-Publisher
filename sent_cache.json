@@ -1,15 +1,5 @@
 [
   {
-    "id": "1882314584cf4756",
-    "title": "Solana 生态应用第三季度收入近 3 亿美元,环比增长 50%",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-02T09:23:00.599544+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "28ad3a7a2ceb59d7",
     "title": "XRP Final Move: Binance Empties Hacked Wallet of Last $101 Million",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5185,6 +5175,16 @@
     "sent_at": "2026-11-10T18:25:34.650572+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b4e96aed385e1212",
+    "title": "TON 财库公司 TON Strategy 第三季度净亏损 2,398 万美元,持有约 2.35 亿枚 GRAM",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-10T18:48:45.572267+00:00",
+    "tokens": [
+      "GRAM"
     ],
     "lang": "en"
   }
