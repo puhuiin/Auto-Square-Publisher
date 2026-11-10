@@ -1,15 +1,5 @@
 [
   {
-    "id": "ce5023ba72531438",
-    "title": "币安:15条网络已恢复提现,11月1日累计净流出约36.4亿美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-01T22:08:28.314229+00:00",
-    "tokens": [
-      "ZKP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "32a309de7301a739",
     "title": "What Is RLUSD? Ripple’s Stablecoin Backing and Redemption Explained",
     "source": "The Defiant (DeFi 深度)",
@@ -5188,6 +5178,16 @@
       "ETH",
       "SOL",
       "TRX"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "68762660e314d4c1",
+    "title": "Q3 加密融資繼續降溫,資金轉向後期與戰略輪",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-10T10:10:47.339379+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
