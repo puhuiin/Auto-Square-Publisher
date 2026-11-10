@@ -1,15 +1,5 @@
 [
   {
-    "id": "098d0f34ef98dad1",
-    "title": "连续7周收于50周移动平均线上方,比特币在超60亿美元黑客事件背景下维持技术结构",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-02T00:04:31.476763+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9db21d5854b8ac0c",
     "title": "Anza Urges Solana Validators to Act on Critical Linux Flaw",
     "source": "The Defiant (DeFi 深度)",
@@ -5192,5 +5182,15 @@
       "GLM"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "c52deb20f62a116d",
+    "title": "Solana Could See Major Growth As New Stock Trading Platform Emerges",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-10T11:28:03.135322+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
