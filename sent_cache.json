@@ -1,17 +1,5 @@
 [
   {
-    "id": "7552c204c39b4a13",
-    "title": "币安 63 亿美元被盗之后,这四家 Perp DEX 足够安全吗?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T08:07:09.578047+00:00",
-    "tokens": [
-      "USDC",
-      "ETH",
-      "ZK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c3294b461b5aac9e",
     "title": "Bitcoin Volatility Ahead: 4 Things That Could Impact Crypto This Week",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5188,6 +5176,16 @@
     "sent_at": "2026-11-10T17:25:21.843521+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4eb65d214de3ba5c",
+    "title": "TON Strategy earns $13.1 million from GRAM staking in Q3 as Telegram rolls out native wallet",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-10T17:45:02.140105+00:00",
+    "tokens": [
+      "GRAM"
     ],
     "lang": "en"
   }
