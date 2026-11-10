@@ -1,15 +1,5 @@
 [
   {
-    "id": "165cdef92cc27eb6",
-    "title": "Solana Mobile:恶意应用索要助记词,已从应用商店下架",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-01T19:26:10.924504+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a99fa19e3e27ab11",
     "title": "SomaXBT:币安黑客经波场洗钱约 2.42 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-10T05:48:26.606069+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "c0a00f1268f88c03",
+    "title": "Upbit lists Hyperliquid’s HYPE token for trading on November 10",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-10T06:08:16.959230+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-TW"
   }
