@@ -1,15 +1,5 @@
 [
   {
-    "id": "ebeac31089162a74",
-    "title": "Solana Walks a Tightrope as ETF Outflows Persist and Spot Volume Turns “Heating”",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-01T15:47:03.357867+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d283ef9bcdf21828",
     "title": "Bitcoin ETF Investors Head for the Exits After Record Binance Hack",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5186,6 +5176,16 @@
     "sent_at": "2026-11-10T02:25:02.058983+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9ec5396323f3e9a0",
+    "title": "币安将于 11 月 19 日调整 BITOUSDT 永续合约数额",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T02:44:46.884223+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
