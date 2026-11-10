@@ -1,16 +1,5 @@
 [
   {
-    "id": "b9b5aad54e7e4363",
-    "title": "吴说每日精选加密新闻 + 一周热门项目动态",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-01T14:29:03.991308+00:00",
-    "tokens": [
-      "RLUSD",
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "390da7b9352a2c78",
     "title": "499 Billion SHIB Dumped by Binance Hacker, Yet Price Absorbs It",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5183,6 +5172,18 @@
       "XRP",
       "HYPE",
       "XLM"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "849462233f45480f",
+    "title": "星球早讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-10T01:44:32.683982+00:00",
+    "tokens": [
+      "ASTER",
+      "WLFI",
+      "ENA"
     ],
     "lang": "zh-CN"
   }
