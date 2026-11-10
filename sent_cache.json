@@ -1,16 +1,5 @@
 [
   {
-    "id": "c3294b461b5aac9e",
-    "title": "Bitcoin Volatility Ahead: 4 Things That Could Impact Crypto This Week",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-02T08:44:44.633020+00:00",
-    "tokens": [
-      "BTC",
-      "PENGU"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9f065f219a57c87a",
     "title": "Binance Attacker Splits $292 Million in XRP Across Six Wallets",
     "source": "The Defiant (DeFi 深度)",
@@ -5186,6 +5175,16 @@
     "sent_at": "2026-11-10T17:45:02.140105+00:00",
     "tokens": [
       "GRAM"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "739b51c689550d65",
+    "title": "Shiba Inu Heads for Recovery as Netflow Turns Red With Over 114 Billion SHIB",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-10T18:04:56.928688+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
