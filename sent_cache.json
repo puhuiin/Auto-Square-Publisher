@@ -1,15 +1,5 @@
 [
   {
-    "id": "c0616076a99d9bd8",
-    "title": "侃爷关联地址疑似加仓 470 万美元 ETH,当前抵押 21,109 枚 ETH",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T04:11:39.575520+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "41c7a760c7389973",
     "title": "链上数据拆解币安大案初期流向:被黑客洗出的 2.4 亿美元去了哪?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5190,5 +5180,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "860b847ac90cf2e5",
+    "title": "Fomo Adds Solana Token Trading Route to X Cashtags",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-10T14:04:33.103023+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
   }
 ]
