@@ -1,15 +1,5 @@
 [
   {
-    "id": "fa41ee74bc70905e",
-    "title": "Anthropic’s Claude AI Predicts a Seismic BNB Move Post-Binance Hack",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-01T18:25:21.291433+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d74ba20ab5caaf88",
     "title": "XRP Tests Critical $1.25 Support as Liquidation Map Reveals Local Bottom",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5185,6 +5175,18 @@
     "tokens": [
       "AVAX",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3881c3d812ee1c1f",
+    "title": "Four Pillars 周报:民主党掌控国会,个股永续合约放行,美国加密政策走向何方?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T05:07:39.202933+00:00",
+    "tokens": [
+      "WLFI",
+      "USD1",
+      "TRUMP"
     ],
     "lang": "zh-CN"
   }
