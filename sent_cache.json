@@ -1,15 +1,5 @@
 [
   {
-    "id": "1a3c27ffbf94514b",
-    "title": "Pump.fun’s 24M launches yield just 312 tokens above $100K – What gives?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-01T21:44:05.885251+00:00",
-    "tokens": [
-      "PUMP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ce5023ba72531438",
     "title": "币安:15条网络已恢复提现,11月1日累计净流出约36.4亿美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5186,6 +5176,18 @@
     "sent_at": "2026-11-10T09:24:51.270504+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6fe2370077c49a67",
+    "title": "Walt推出独立应用,加密交易平台首次走出Telegram",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T09:45:01.787653+00:00",
+    "tokens": [
+      "ETH",
+      "SOL",
+      "TRX"
     ],
     "lang": "zh-CN"
   }
