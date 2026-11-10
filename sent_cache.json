@@ -1,15 +1,5 @@
 [
   {
-    "id": "28624f889fee8128",
-    "title": "数分钟内协助冻结相当大一部分资产,美国特勤局称涉及币安63亿美元黑客攻击案",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-02T10:04:47.675936+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7fd8d6f4fe7a29ab",
     "title": "Bullshot 完成 770 万美元融资,由 P2 Ventures 和 Animoca Brands 联合领投",
     "source": "深潮TechFlow (中文/简体)",
@@ -5183,6 +5173,16 @@
     "title": "灰度推出 Zcash Invest 平台,承诺投入 100 万美元支持 Zcash 生态发展",
     "source": "吴说区块链 (中文深度)",
     "sent_at": "2026-11-10T19:09:41.545618+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "edddf19474a111ca",
+    "title": "Grayscale Bets $1 Million on Zcash as Privacy Coin Tumbles",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-10T19:32:41.588778+00:00",
     "tokens": [
       "ZEC"
     ],
