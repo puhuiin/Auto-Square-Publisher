@@ -1,15 +1,5 @@
 [
   {
-    "id": "29d7c5daf5d7a31d",
-    "title": "Four Pillars 研报:美国证券清算中枢 DTCC 把美股美债搬上链,眼下只解决了抵押品全天候调拨",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T11:29:21.971743+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fc36f687742636ac",
     "title": "分析:比特币承压回落,衍生品市场交易量激增但增量资金不足",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5188,6 +5178,16 @@
       "SOL",
       "AVAX",
       "LINK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "66c6c0f31e4eb549",
+    "title": "Rothschild Investment Reveals XRP ETF Stake",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-10T21:24:56.726142+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
