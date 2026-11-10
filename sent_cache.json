@@ -1,15 +1,5 @@
 [
   {
-    "id": "697d800ddaf64697",
-    "title": "美国上市公司 Next Technology 拟出售或抵押 5833 枚 BTC,称因币安被盗事件托管风险上升",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T06:24:43.292243+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "0852b12aa37e2bce",
     "title": "Vitalik 的数字极简实验:100 天不用手机流量,告别算法推荐,重新夺回注意力",
     "source": "深潮TechFlow (中文/简体)",
@@ -5186,6 +5176,16 @@
     "tokens": [
       "SOL",
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7ca4dc0d0bd6d5a6",
+    "title": "MegaETH 宣布投入 3000 万美元开发新产品,首个 AI 推理市场计划于 12 月上线",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T16:26:53.798154+00:00",
+    "tokens": [
+      "MEGA"
     ],
     "lang": "en"
   }
