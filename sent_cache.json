@@ -1,15 +1,5 @@
 [
   {
-    "id": "a8d1fb3ef31df5a3",
-    "title": "Zcash (ZEC) Hits $1,280 Milestone but Fight Over Grant Money Sparks Whale Revolt",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-01T13:06:20.391140+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6eab7b754f05a51d",
     "title": "1.8 Billion XRP Moves in Just 24 Hours as XRP Ledger Shows Signs of Recovery",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5182,6 +5172,16 @@
     "sent_at": "2026-11-09T23:24:41.441541+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c445f86868ebc768",
+    "title": "Ondo Claims $4B in Tokenized Assets as RWA Market Gains Institutional Depth",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-10T00:09:32.539065+00:00",
+    "tokens": [
+      "ONDO"
     ],
     "lang": "zh-CN"
   }
