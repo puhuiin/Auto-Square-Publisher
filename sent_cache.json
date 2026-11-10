@@ -1,15 +1,5 @@
 [
   {
-    "id": "b40ff8f9bfc27a22",
-    "title": "North Korean hackers launder $242 million of Binance loot via Tron as FBI presses THORChain: analyst",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-01T20:27:18.190508+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "68ba2a54709b2c93",
     "title": "Chainlink Goes Live on Stellar, Unlocking DeFi Applications Across the $4B RWA Ecosystem",
     "source": "ZyCrypto (新币与空投)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-10T07:09:57.284944+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "811fdffec17205e9",
+    "title": "以太坊创世巨鲸沉睡 11 年后苏醒,黑客 3 分钟内设局,460 万美元 ETH 险遭盗取",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-10T08:27:35.316970+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-TW"
   }

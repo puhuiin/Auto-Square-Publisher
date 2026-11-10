@@ -18,13 +18,13 @@
   "last_updated": "2026-11-09T23:24:07.956591Z",
   "_feed_health": {
     "吴说区块链 (中文深度)": {
-      "fails": 1,
       "last_fail": "2026-11-10T07:09:28.883620+00:00",
-      "reset_at": "2026-11-10T06:49:01.898805+00:00"
+      "fails": 1,
+      "reset_at": "2026-11-10T08:23:40.158586+00:00"
     },
     "CoinJournal (山寨异动)": {
-      "fails": 3,
       "last_fail": "2026-11-10T05:06:34.902515+00:00",
+      "fails": 3,
       "parked_until": "2026-11-10T11:06:34.902515+00:00"
     }
   },
@@ -32,11 +32,17 @@
     "date": "2026-10-18",
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun-flash": {
+      "fails": 1,
+      "cooldown_until": "2026-11-10T08:35:44.954609+00:00",
+      "last_fail": "2026-11-10T08:25:44.954618+00:00"
+    }
+  },
   "_article_sent_date": "2026-11-10",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 843,
+  "_img_rot": 844,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
