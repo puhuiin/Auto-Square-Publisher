@@ -1,15 +1,5 @@
 [
   {
-    "id": "fc592deb41267f50",
-    "title": "Solana validators told to act immediately as critical Linux vulnerability emerges",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-02T12:10:24.864396+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8ed7f32047d2c244",
     "title": "Polygon brings US banking access to Solana’s $15 billion stablecoin market",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5189,5 +5179,15 @@
       "TAO"
     ],
     "lang": "en"
+  },
+  {
+    "id": "2358a873e545f8c0",
+    "title": "Solana 客户端 Agave 公布 v4.5 升级日程",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T22:04:29.385518+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
