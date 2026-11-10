@@ -1,15 +1,5 @@
 [
   {
-    "id": "84553f9b90cd592b",
-    "title": "美股潮向(11 月 2 日):英特尔创 50 年最惨跌幅,本周关注中期选举与苹果财报",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T01:06:38.590720+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e8cd3b8dbb05dc28",
     "title": "当代币持有时间只剩几秒,什么样的加密资产还能活过下一个周期?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5191,6 +5181,16 @@
     "sent_at": "2026-11-10T12:25:08.721021+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "2a128358eef25c87",
+    "title": "Shiba Inu (SHIB) Scammers Fake 'Ryoshi' to Push 137 Scam Tokens and Dupe Investors",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-10T12:47:43.304869+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-CN"
   }
