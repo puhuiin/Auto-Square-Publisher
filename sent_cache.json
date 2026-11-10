@@ -1,15 +1,5 @@
 [
   {
-    "id": "b77623c18af5d412",
-    "title": "USDD 财库表现强劲:核心指标稳步增长,生态版图持续扩张",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T07:48:02.981537+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7552c204c39b4a13",
     "title": "币安 63 亿美元被盗之后,这四家 Perp DEX 足够安全吗?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,6 +5178,16 @@
       "BTC",
       "ETH",
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1198988c35177ba5",
+    "title": "摩根士丹利向Coinbase Prime转入48,828枚SOL,价值约401万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-10T17:25:21.843521+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
