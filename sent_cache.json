@@ -1,15 +1,5 @@
 [
   {
-    "id": "d74ba20ab5caaf88",
-    "title": "XRP Tests Critical $1.25 Support as Liquidation Map Reveals Local Bottom",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-01T18:44:27.731142+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "fc1cd396dca32500",
     "title": "恶意应用在Solana DApp Store展示约1小时后下架,曾索要用户助记词",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5189,5 +5179,16 @@
       "TRUMP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "073ce3c1a446a04d",
+    "title": "Zcash 酝酿 NU 8 升级:区块扩容 4 倍、隐私交易冲刺每秒 200 笔,抗量子方案同步推进",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T05:28:28.917689+00:00",
+    "tokens": [
+      "ID",
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
