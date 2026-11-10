@@ -1,15 +1,5 @@
 [
   {
-    "id": "789f4c0c41258d49",
-    "title": "Crypto market’s weekly winners and losers – HYPE, ANI, BTW, FUN",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-01T23:04:04.312875+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "098d0f34ef98dad1",
     "title": "连续7周收于50周移动平均线上方,比特币在超60亿美元黑客事件背景下维持技术结构",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5192,5 +5182,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "139793308ec7b139",
+    "title": "Abliteration AI launches abliterated GLM-5.3 model for red teamers",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-10T11:07:51.375657+00:00",
+    "tokens": [
+      "GLM"
+    ],
+    "lang": "zh-TW"
   }
 ]
