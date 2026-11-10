@@ -1,15 +1,5 @@
 [
   {
-    "id": "6eab7b754f05a51d",
-    "title": "1.8 Billion XRP Moves in Just 24 Hours as XRP Ledger Shows Signs of Recovery",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-01T13:26:33.024349+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a28211bd6690fd13",
     "title": "Binance hacker sells 908,793 PROM worth $5M for $71 on Uniswap V2",
     "source": "Crypto Briefing (深度与研报)",
@@ -5182,6 +5172,16 @@
     "sent_at": "2026-11-10T00:09:32.539065+00:00",
     "tokens": [
       "ONDO"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "d13a251b2bb6f8fb",
+    "title": "Hilbert 首席投資官:BTC 跌破 7.19 萬美元或下探 6.5 萬美元",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-10T00:30:05.132438+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
