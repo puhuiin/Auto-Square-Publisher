@@ -1,15 +1,5 @@
 [
   {
-    "id": "7fd8d6f4fe7a29ab",
-    "title": "Bullshot 完成 770 万美元融资,由 P2 Ventures 和 Animoca Brands 联合领投",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T10:24:41.912445+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4c63aff805973265",
     "title": "Sam Altman Thinks Your PC’s RAM Belongs in AI Data Centers. Crypto Leaders Disagree",
     "source": "BeInCrypto (山寨与行情)",
@@ -5183,6 +5173,16 @@
     "title": "Grayscale Bets $1 Million on Zcash as Privacy Coin Tumbles",
     "source": "Decrypt (Web3/AI/Meme)",
     "sent_at": "2026-11-10T19:32:41.588778+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "380c7573ce328f4f",
+    "title": "Grayscale pledges $1 million to Zcash ecosystem as ZEC slides",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-10T20:02:45.037338+00:00",
     "tokens": [
       "ZEC"
     ],
