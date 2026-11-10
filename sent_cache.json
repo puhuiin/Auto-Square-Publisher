@@ -1,15 +1,5 @@
 [
   {
-    "id": "8ed7f32047d2c244",
-    "title": "Polygon brings US banking access to Solana’s $15 billion stablecoin market",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-02T12:35:29.161551+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d757d963fabfe6e7",
     "title": "Zcash (ZEC) Whale Builds $14 Million Long Ahead of 300% Speed Upgrade",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5189,5 +5179,17 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ecd7f855efb3c51b",
+    "title": "ADA, XRP, DOGE: Gemini Names Biggest Losers of 2026",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-10T22:24:41.858060+00:00",
+    "tokens": [
+      "ADA",
+      "XRP",
+      "DOGE"
+    ],
+    "lang": "zh-TW"
   }
 ]
