@@ -1,17 +1,5 @@
 [
   {
-    "id": "79f9c69cc93dc8b2",
-    "title": "Tracked Binance wallets record $2.5 billion in outflows as withdrawals reopen after hack",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-01T21:04:35.839103+00:00",
-    "tokens": [
-      "USDC",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2c6a5cb10de96056",
     "title": "Cardano Warns of Critical Linux Flaw: Is Your ADA at Risk?",
     "source": "BeInCrypto (山寨与行情)",
@@ -5189,5 +5177,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "68a3fef42c87c186",
+    "title": "火币 HTX 发布 10 月成绩单:现货深度整体提升,赚币加息陪伴用户「暖冬同行」",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T09:04:11.757268+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
