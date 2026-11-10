@@ -1,15 +1,5 @@
 [
   {
-    "id": "d283ef9bcdf21828",
-    "title": "Bitcoin ETF Investors Head for the Exits After Record Binance Hack",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-01T16:09:13.217228+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "aeeece5514dd8cc4",
     "title": "OneKey founder warns BlackRock’s Bitcoin ETF could be a North Korean target",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5188,5 +5178,17 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "965ddf850ab47874",
+    "title": "Mark Zuckerberg Meta AI Predicts Top 3 ZK Cryptos",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-10T03:04:46.215297+00:00",
+    "tokens": [
+      "ZK",
+      "STRK",
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
