@@ -1,15 +1,5 @@
 [
   {
-    "id": "a99fa19e3e27ab11",
-    "title": "SomaXBT:币安黑客经波场洗钱约 2.42 亿美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-01T19:44:00.657825+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7375944abf7522d8",
     "title": "XRP 锁定(in escrow at Ripple)约 1.25 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-10T06:08:16.959230+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "c25be5d38609885b",
+    "title": "ICE 入股、L2 上线、千倍杠杆机制:Hyperliquid 链上金融迭代之路",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T06:51:12.193743+00:00",
+    "tokens": [
+      "ONDO"
     ],
     "lang": "zh-TW"
   }
