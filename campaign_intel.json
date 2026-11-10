@@ -19,13 +19,13 @@
   "_feed_health": {
     "吴说区块链 (中文深度)": {
       "last_fail": "2026-11-10T02:23:53.321896+00:00",
-      "fails": 1,
-      "reset_at": "2026-11-10T03:03:41.247854+00:00"
+      "reset_at": "2026-11-10T03:23:34.767802+00:00",
+      "fails": 1
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-10",
