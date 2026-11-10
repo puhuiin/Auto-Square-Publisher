@@ -1,16 +1,5 @@
 [
   {
-    "id": "4c63aff805973265",
-    "title": "Sam Altman Thinks Your PC’s RAM Belongs in AI Data Centers. Crypto Leaders Disagree",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-02T10:46:39.554382+00:00",
-    "tokens": [
-      "XRP",
-      "ADA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "cf67a8ee2d5698d4",
     "title": "Celestia 推出 Voyager:每秒 2100 万笔交易,专为 AI 代理打造的支付链",
     "source": "深潮TechFlow (中文/简体)",
@@ -5185,6 +5174,18 @@
     "sent_at": "2026-11-10T20:02:45.037338+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b8a47d008bc5843b",
+    "title": "Initia 披露攻击路径,约 327 万美元资产转入攻击者地址",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T20:25:15.668370+00:00",
+    "tokens": [
+      "TIA",
+      "USDC",
+      "INIT"
     ],
     "lang": "en"
   }
