@@ -1,17 +1,5 @@
 [
   {
-    "id": "e8cd3b8dbb05dc28",
-    "title": "当代币持有时间只剩几秒,什么样的加密资产还能活过下一个周期?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T01:25:06.158235+00:00",
-    "tokens": [
-      "BTC",
-      "ZEC",
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7463b94c3680e2cc",
     "title": "Binance 史上最大黑客案后第一天:链上流出 36 亿、比特币 ETF 流出 6 亿",
     "source": "深潮TechFlow (中文/简体)",
@@ -5193,5 +5181,17 @@
       "SHIB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "d7502bb61702a7d3",
+    "title": "Babylon 敲开 Aave 大门,比特币直接抵押就能借稳定币?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T13:07:34.969809+00:00",
+    "tokens": [
+      "AAVE",
+      "BABY",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
