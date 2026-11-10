@@ -1,15 +1,5 @@
 [
   {
-    "id": "9be2870192439c74",
-    "title": "4000 万枚 XRP 从标记为“Binance Hack 2026”的钱包转出",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T07:07:02.203374+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b77623c18af5d412",
     "title": "USDD 财库表现强劲:核心指标稳步增长,生态版图持续扩张",
     "source": "深潮TechFlow (中文/简体)",
@@ -5185,6 +5175,18 @@
     "sent_at": "2026-11-10T16:46:13.976705+00:00",
     "tokens": [
       "DOGE",
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6995bed8b672c96b",
+    "title": "$570M in Longs Liquidated as BTC, ETH, XRP Crash Again",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-10T17:05:27.714606+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
       "XRP"
     ],
     "lang": "en"
