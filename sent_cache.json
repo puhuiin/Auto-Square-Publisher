@@ -1,15 +1,5 @@
 [
   {
-    "id": "9f065f219a57c87a",
-    "title": "Binance Attacker Splits $292 Million in XRP Across Six Wallets",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-02T09:04:08.266944+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "1882314584cf4756",
     "title": "Solana 生态应用第三季度收入近 3 亿美元,环比增长 50%",
     "source": "吴说区块链 (中文深度)",
@@ -5185,6 +5175,16 @@
     "sent_at": "2026-11-10T18:04:56.928688+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c01c0a26fa307da0",
+    "title": "监测:交易员 mk4 持有约 1128 万美元 ZEC 空头仓位",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T18:25:34.650572+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
