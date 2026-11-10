@@ -1,15 +1,5 @@
 [
   {
-    "id": "28ad3a7a2ceb59d7",
-    "title": "XRP Final Move: Binance Empties Hacked Wallet of Last $101 Million",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-02T09:44:45.197512+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "28624f889fee8128",
     "title": "数分钟内协助冻结相当大一部分资产,美国特勤局称涉及币安63亿美元黑客攻击案",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5185,6 +5175,16 @@
     "sent_at": "2026-11-10T18:48:45.572267+00:00",
     "tokens": [
       "GRAM"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a8d7ca42b240c8ec",
+    "title": "灰度推出 Zcash Invest 平台,承诺投入 100 万美元支持 Zcash 生态发展",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-10T19:09:41.545618+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
