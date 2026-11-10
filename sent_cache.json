@@ -1,17 +1,5 @@
 [
   {
-    "id": "7463b94c3680e2cc",
-    "title": "Binance 史上最大黑客案后第一天:链上流出 36 亿、比特币 ETF 流出 6 亿",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T03:07:30.904908+00:00",
-    "tokens": [
-      "USDC",
-      "BNB",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e2a7a1e76eaf19b0",
     "title": "Bitget UEX 日报|AI 回报担忧重挫科技股;OPEC+ 维持产量;比特币弱势修复",
     "source": "深潮TechFlow (中文/简体)",
@@ -5191,6 +5179,16 @@
       "AAVE",
       "BABY",
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "2c6a33e38b4b824f",
+    "title": "BitGo扩大对Aptos支持,新增链上市场接入并买入APT",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-10T13:24:15.218905+00:00",
+    "tokens": [
+      "APT"
     ],
     "lang": "zh-TW"
   }
