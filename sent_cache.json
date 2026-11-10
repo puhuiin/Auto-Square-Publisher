@@ -1,15 +1,5 @@
 [
   {
-    "id": "390da7b9352a2c78",
-    "title": "499 Billion SHIB Dumped by Binance Hacker, Yet Price Absorbs It",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-01T14:50:52.081815+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4ca5afac8fcbe516",
     "title": "链上研究员:Coinbase 用 MPC 拆分私钥,黑客难下手",
     "source": "深潮TechFlow (中文/简体)",
@@ -5184,6 +5174,18 @@
       "ASTER",
       "WLFI",
       "ENA"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "03e2458b704f9c52",
+    "title": "加密板块涨跌互现,AI板块涨近3%,PayFi板块跌超2%",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-10T02:06:36.035326+00:00",
+    "tokens": [
+      "KITE",
+      "GRAM",
+      "JUP"
     ],
     "lang": "zh-CN"
   }
