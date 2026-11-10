@@ -17,19 +17,19 @@
   "strategy_guidance": "优先围绕今日刚启动的限时Spot Taker Promotion、11月交易竞赛及区域邀请活动发布参与攻略类内容，引导用户参与评论互动获取Write2Earn奖励；可结合新上线的$PREDICT、新增bStock交易对发布交易思路相关快讯，关联当期活动话题追热度。",
   "last_updated": "2026-11-09T23:24:07.956591Z",
   "_feed_health": {
-    "吴说区块链 (中文深度)": {
-      "fails": 1,
-      "reset_at": "2026-11-10T04:26:03.554865+00:00",
-      "last_fail": "2026-11-10T02:23:53.321896+00:00"
-    },
     "CoinJournal (山寨异动)": {
+      "fails": 2,
+      "last_fail": "2026-11-10T04:46:38.087774+00:00"
+    },
+    "吴说区块链 (中文深度)": {
+      "reset_at": "2026-11-10T04:46:09.429316+00:00",
       "fails": 1,
-      "last_fail": "2026-11-10T04:26:31.810646+00:00"
+      "last_fail": "2026-11-10T02:23:53.321896+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-10",
