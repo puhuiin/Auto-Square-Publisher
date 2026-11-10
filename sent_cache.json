@@ -1,15 +1,5 @@
 [
   {
-    "id": "9db21d5854b8ac0c",
-    "title": "Anza Urges Solana Validators to Act on Critical Linux Flaw",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-02T00:26:39.672529+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "49e74cab58f27ec5",
     "title": "Galaxy 研究主管:比特币连续 7 周收于 50 周均线上方",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5179,17 @@
     "source": "Bitcoinist (比特币向)",
     "sent_at": "2026-11-10T11:28:03.135322+00:00",
     "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "bc594511bada9e50",
+    "title": "Cardano (ADA) vs. Solana (SOL): 3 AIs Analyze Which Will Perform Better in Q4?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-10T11:52:06.214421+00:00",
+    "tokens": [
+      "ADA",
       "SOL"
     ],
     "lang": "zh-CN"
