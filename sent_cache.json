@@ -1,16 +1,5 @@
 [
   {
-    "id": "32a309de7301a739",
-    "title": "What Is RLUSD? Ripple’s Stablecoin Backing and Redemption Explained",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-01T22:25:00.455014+00:00",
-    "tokens": [
-      "RLUSD",
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "21c4687395f649cc",
     "title": "Cambodia’s Casino Crackdown Hasn’t Stopped $1.07 Billion in Crypto Flows",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5190,5 +5179,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "dfd919ae2e6e2f4f",
+    "title": "Upbit holds about $1.1 billion in DOGE and SHIB across 13 chains",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-10T10:27:17.478737+00:00",
+    "tokens": [
+      "DOGE",
+      "SHIB"
+    ],
+    "lang": "zh-TW"
   }
 ]
