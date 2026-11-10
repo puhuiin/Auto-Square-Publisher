@@ -1,15 +1,5 @@
 [
   {
-    "id": "49e74cab58f27ec5",
-    "title": "Galaxy 研究主管:比特币连续 7 周收于 50 周均线上方",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T00:45:57.872371+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "84553f9b90cd592b",
     "title": "美股潮向(11 月 2 日):英特尔创 50 年最惨跌幅,本周关注中期选举与苹果财报",
     "source": "深潮TechFlow (中文/简体)",
@@ -5191,6 +5181,16 @@
     "tokens": [
       "ADA",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6fdea299ba3818d4",
+    "title": "Wintermute:AI 交易失去华盛顿顺风,标普单日跌 4.4%",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T12:25:08.721021+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
