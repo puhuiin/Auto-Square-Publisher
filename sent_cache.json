@@ -1,15 +1,5 @@
 [
   {
-    "id": "cf67a8ee2d5698d4",
-    "title": "Celestia 推出 Voyager:每秒 2100 万笔交易,专为 AI 代理打造的支付链",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T11:04:40.066115+00:00",
-    "tokens": [
-      "TIA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "29d7c5daf5d7a31d",
     "title": "Four Pillars 研报:美国证券清算中枢 DTCC 把美股美债搬上链,眼下只解决了抵押品全天候调拨",
     "source": "深潮TechFlow (中文/简体)",
@@ -5186,6 +5176,18 @@
       "TIA",
       "USDC",
       "INIT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "beb00df7da6da429",
+    "title": "Charles Schwab Adds Solana, Avalanche and Chainlink to Crypto Trading Platform",
+    "source": "DailyHodl (山寨异动与百倍币叙事)",
+    "sent_at": "2026-11-10T20:44:23.114992+00:00",
+    "tokens": [
+      "SOL",
+      "AVAX",
+      "LINK"
     ],
     "lang": "en"
   }
