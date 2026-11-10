@@ -1,15 +1,5 @@
 [
   {
-    "id": "d4937f53a9d76a98",
-    "title": "“Hard To Be Bearish Here” — Analyst Who Nailed XRP’s 700% Surge Turns Giga Bullish After Spotting Rare 2022 FTX Bottom Signal",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-01T14:09:13.626002+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b9b5aad54e7e4363",
     "title": "吴说每日精选加密新闻 + 一周热门项目动态",
     "source": "吴说区块链 (中文深度)",
@@ -5183,5 +5173,17 @@
       "AVAX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "111d78657a876f04",
+    "title": "XRP, Near Protocol (NEAR), Hyperliquid (HYPE) and Stellar (XLM) Price Analysis for November 10: Market Pressure Keeps Growing",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-10T01:07:06.814227+00:00",
+    "tokens": [
+      "XRP",
+      "HYPE",
+      "XLM"
+    ],
+    "lang": "zh-CN"
   }
 ]
