@@ -18,21 +18,27 @@
   "last_updated": "2026-11-10T11:44:04.095026Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
+      "last_fail": "2026-11-10T14:03:35.993086+00:00",
       "fails": 1,
-      "reset_at": "2026-11-10T15:23:37.884083+00:00",
-      "last_fail": "2026-11-10T14:03:35.993086+00:00"
+      "reset_at": "2026-11-10T16:03:42.640917+00:00"
     },
     "吴说区块链 (中文深度)": {
+      "last_fail": "2026-11-10T14:23:53.920302+00:00",
       "fails": 1,
-      "reset_at": "2026-11-10T15:23:39.661793+00:00",
-      "last_fail": "2026-11-10T14:23:53.920302+00:00"
+      "reset_at": "2026-11-10T16:03:44.427969+00:00"
     }
   },
   "_fallback_image": {
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
     "date": "2026-10-18"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun": {
+      "fails": 1,
+      "cooldown_until": "2026-11-10T16:16:02.089104+00:00",
+      "last_fail": "2026-11-10T16:06:02.089131+00:00"
+    }
+  },
   "_article_sent_date": "2026-11-10",
   "_publish_park": {},
   "_intel_refresh_fail": {},

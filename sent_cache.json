@@ -1,17 +1,5 @@
 [
   {
-    "id": "123a815acc265b72",
-    "title": "星球午讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-02T06:04:25.122191+00:00",
-    "tokens": [
-      "ETH",
-      "ZEC",
-      "USDC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "697d800ddaf64697",
     "title": "美国上市公司 Next Technology 拟出售或抵押 5833 枚 BTC,称因币安被盗事件托管风险上升",
     "source": "深潮TechFlow (中文/简体)",
@@ -5187,6 +5175,17 @@
     "sent_at": "2026-11-10T15:26:36.978867+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "cd923b51dd601bed",
+    "title": "Solana Hits Four-Week Low as Losses Outpace Bitcoin",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-10T16:06:24.052536+00:00",
+    "tokens": [
+      "SOL",
+      "BTC"
     ],
     "lang": "en"
   }
