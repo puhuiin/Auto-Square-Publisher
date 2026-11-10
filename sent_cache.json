@@ -1,15 +1,5 @@
 [
   {
-    "id": "fc1cd396dca32500",
-    "title": "恶意应用在Solana DApp Store展示约1小时后下架,曾索要用户助记词",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-01T19:04:32.757573+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "165cdef92cc27eb6",
     "title": "Solana Mobile:恶意应用索要助记词,已从应用商店下架",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,6 +5178,16 @@
     "tokens": [
       "ID",
       "ZEC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "a00867a4efe56f29",
+    "title": "CME FedWatch:美联储 12 月加息概率升至 84.4%",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-10T05:48:26.606069+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
