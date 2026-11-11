@@ -1,15 +1,5 @@
 [
   {
-    "id": "af7a1879b2cec7d4",
-    "title": "Arm Holdings shares slide as AI chip demand worries spread",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-03T04:46:43.474117+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "39a26625ecd080b8",
     "title": "Near Protocol (NEAR), XRP, Zcash (ZEC) and Shiba Inu (SHIB) Price Analysis for November 3: Is Recovery Still Possible?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-11T14:07:56.092383+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a29260164a3023dd",
+    "title": "$284 Million of Shiba Inu (SHIB) Held by Top Korean Exchange",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-11T14:30:04.991815+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
