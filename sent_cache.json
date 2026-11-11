@@ -1,15 +1,5 @@
 [
   {
-    "id": "16b08bd18ae68232",
-    "title": "XRP Defies Bear Market: New Wallets Double Despite Price Pressure",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-03T10:05:59.216891+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "71ad22c23ed4759c",
     "title": "Shiba Inu (SHIB) Withdrawals on Binance Are Back",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5180,6 +5170,16 @@
     "title": "Solana Mobile names Helius and Jito as first independent dApp Store Guardians",
     "source": "Crypto Briefing (深度与研报)",
     "sent_at": "2026-11-11T19:05:58.341650+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a6e4f86a064ff65f",
+    "title": "Solana 交易平台 JTX 推出代币发现功能 Explore",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-11T19:25:13.939654+00:00",
     "tokens": [
       "SOL"
     ],
