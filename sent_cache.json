@@ -1,16 +1,5 @@
 [
   {
-    "id": "9ebada5a5f0c6f63",
-    "title": "VanEck 研究主管:听闻花旗比特币托管服务原定上周上线",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-03T00:07:13.213140+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "cedf15fde9edb977",
     "title": "与冻结赛跑:黑了币安 64 亿美金后,朝鲜黑客是如何洗钱的?",
     "source": "吴说区块链 (中文深度)",
@@ -5191,5 +5180,17 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "a4534d1568e1ab35",
+    "title": "TVL 暴跌 98%,Hyperliquid 生态收益协议 Hyperwave 宣布停运,12 月 16 日正式关闭",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-11T11:44:23.694722+00:00",
+    "tokens": [
+      "ARB",
+      "ETH",
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
