@@ -1,15 +1,5 @@
 [
   {
-    "id": "cb61563f83d6003a",
-    "title": "Solana Labs opens applications for Incubator Cohort 6",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-02T19:42:38.908456+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b8f88dcde157b245",
     "title": "币安罚款及黑客事件损失估算达107亿美元,相当于五年税前利润约56%",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5187,6 +5177,16 @@
     "title": "XRP Ledger Roadmap Puts Quantum-Resistant Accounts on the Agenda for 2027",
     "source": "NewsBTC (比特币与山寨)",
     "sent_at": "2026-11-11T06:07:34.623393+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "1273246075f46433",
+    "title": "Why Has XRP Plunged Harder Than Most? Analyst Blames Manipulation",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-11T06:28:45.300237+00:00",
     "tokens": [
       "XRP"
     ],
