@@ -1,15 +1,5 @@
 [
   {
-    "id": "bf3859cd11b530b1",
-    "title": "Tom Lee calls Ethereum’s 4% post-hack fall bullish",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-03T03:33:23.361549+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8919409d53de2757",
     "title": "U.S. midterm elections risk Solana: Will 5% SOL ETF outflows create more losses?",
     "source": "AMBCrypto (技术与链上)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-11T13:29:23.468737+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "583aa5e01efc37c2",
+    "title": "Injective CEO在NYSE受访,谈及iNJC质押INJ ETF上线",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-11T13:47:05.442986+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "zh-TW"
   }
