@@ -1,15 +1,5 @@
 [
   {
-    "id": "da7e211c48c4c105",
-    "title": "Hyperliquid’s $224M Paradigm unstaking meets buyback hopes – Can HYPE hold $80?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-03T05:26:32.804507+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "1799d2ea736957a3",
     "title": "Arbitrum’s council moved $30 million of Binance hack funds without the hacker’s key",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5184,6 +5174,16 @@
     "sent_at": "2026-11-11T14:48:33.858867+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0125d2978a61adf9",
+    "title": "Zcash Crashes Below $1,000 Despite Grayscale’s $1M Pledge",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-11T15:09:18.226378+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
