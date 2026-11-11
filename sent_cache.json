@@ -1,15 +1,5 @@
 [
   {
-    "id": "a543325d50aa70a1",
-    "title": "Wintermute:比特币跌破 8 万美元后抄底资金主要来自杠杆交易,下一关键支撑位在 7.68 万美元",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-02T23:24:12.604916+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9ebada5a5f0c6f63",
     "title": "VanEck 研究主管:听闻花旗比特币托管服务原定上周上线",
     "source": "深潮TechFlow (中文/简体)",
@@ -5190,5 +5180,16 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "9593079ce3c8f21d",
+    "title": "Kraken母公司Payward新增200余只英欧代币化股票",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-11T11:25:16.078340+00:00",
+    "tokens": [
+      "SOL",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
