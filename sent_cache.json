@@ -1,16 +1,5 @@
 [
   {
-    "id": "59804fea40606a5b",
-    "title": "Shibarium's 745% Breakout Reverses: Should SHIB Holders Be Watching?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-02T15:49:14.453001+00:00",
-    "tokens": [
-      "SHIB",
-      "PENGU"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "00eef123605d3551",
     "title": "Arkham:Mercado Bitcoin 黑客持有约 4600 万美元加密资产",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5178,16 @@
     "sent_at": "2026-11-11T02:27:58.783304+00:00",
     "tokens": [
       "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "41acb6fae2acca45",
+    "title": "加密世界不缺代币,缺的是信任:以太坊「人类承诺市场」新构想",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-11T02:46:44.897435+00:00",
+    "tokens": [
       "ETH"
     ],
     "lang": "zh-CN"
