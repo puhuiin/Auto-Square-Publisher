@@ -1,15 +1,5 @@
 [
   {
-    "id": "019fc2a69ccd80b4",
-    "title": "Wintermute:BTC 需守住 7.68 万美元的 50 周均线",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-03T00:50:34.444600+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f409fee51ef8d20e",
     "title": "Chainalysis:Mercado Bitcoin 遭攻击损失约 4900 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5179,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "58a5aecc904faeea",
+    "title": "CPI 全面超预期,分析师警告 BTC 7 万美元关口面临大考",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-11T12:27:05.223671+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
