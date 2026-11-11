@@ -1,17 +1,5 @@
 [
   {
-    "id": "8349562b69448983",
-    "title": "BNB’s $99 million ETF inflows came almost entirely before Binance’s hack",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-02T19:07:29.047015+00:00",
-    "tokens": [
-      "BNB",
-      "XRP",
-      "NEAR"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d11a3218bc27a6c5",
     "title": "Mercado Bitcoin wallets keep moving funds after $46M hack",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5191,5 +5179,17 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0ee3a5a4d86b5fe4",
+    "title": "星球午讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-11T05:46:47.030220+00:00",
+    "tokens": [
+      "ETH",
+      "BTC",
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
