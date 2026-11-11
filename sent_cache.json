@@ -1,15 +1,5 @@
 [
   {
-    "id": "1cbf5b7f79a920e2",
-    "title": "Why Solana’s $149M whale deposits complicate SOL’s recovery",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-02T21:27:37.521802+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8c2b43166172ad2e",
     "title": "借贷成本降低,Aave V4 Coinbase代币化股票枢纽上线USDC激励",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5190,5 +5180,15 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "4893994fbf3cb2d0",
+    "title": "Why Bitcoin, Nasdaq, AI Stocks, and Chips Move Together? The Liquidity Machine Explained",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-11T09:06:36.781084+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
