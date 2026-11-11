@@ -1,16 +1,5 @@
 [
   {
-    "id": "95f3d4ad24b91232",
-    "title": "市场看不懂的 AI 币 Numerai,规模逼近 10 亿美元后的代币回购飞轮",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-03T03:09:37.496710+00:00",
-    "tokens": [
-      "CHIP",
-      "NMR"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "bf3859cd11b530b1",
     "title": "Tom Lee calls Ethereum’s 4% post-hack fall bullish",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5188,6 +5177,16 @@
     "sent_at": "2026-11-11T13:10:13.333325+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "6bcfc79deeebd4b6",
+    "title": "QCP Capital:油价下跌缓解加息压力,但伊朗局势及央行政策仍存不确定性",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-11T13:29:23.468737+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
