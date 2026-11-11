@@ -1,15 +1,5 @@
 [
   {
-    "id": "5776493ae05b0007",
-    "title": "Akash Stakers Approve Move From Cosmos to Solana",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-02T20:44:24.732391+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c83db4565163df76",
     "title": "Binance Resumes Withdrawals After Major Hack as Michael Van De Poppe Predicts Bitcoin Crash",
     "source": "ZyCrypto (新币与空投)",
@@ -5190,6 +5180,16 @@
     "sent_at": "2026-11-11T07:24:07.150550+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "07e05ca349e2f1f6",
+    "title": "播客笔记|华尔街宏观投资老兵 Jordi Visser:信仰者放弃加密时,就是最大行情的前夜",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-11T08:30:19.042950+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
