@@ -1,15 +1,5 @@
 [
   {
-    "id": "32ff9c905e594a61",
-    "title": "币安被盗 63 亿美元,冷钱包也不再保险:加密资产究竟放在哪里才安全?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-03T11:46:15.404381+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "71505b3d8e6ac4f2",
     "title": "Binance Reopens Withdrawals for Shiba Inu (SHIB) and Major ETH-Based Assets",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5184,6 +5174,16 @@
     "tokens": [
       "XLM",
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ed2d46297fdfaaa1",
+    "title": "DogeOS ‘very, very close’ to launching DeFi features, app layer for Dogecoin: CEO",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-11T21:44:26.734419+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
