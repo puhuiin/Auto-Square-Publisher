@@ -1,15 +1,5 @@
 [
   {
-    "id": "71ad22c23ed4759c",
-    "title": "Shiba Inu (SHIB) Withdrawals on Binance Are Back",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-03T10:24:57.280982+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2c387793fd1fe1d2",
     "title": "Solana records 3.3B successful transactions in October",
     "source": "Crypto Briefing (深度与研报)",
@@ -5182,6 +5172,16 @@
     "sent_at": "2026-11-11T19:25:13.939654+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4b4125a7d2a1aa29",
+    "title": "Ripple-Backed Evernorth Plunges 40% as Insiders Move to Sell 73.7 Million Shares",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-11T19:45:18.377515+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
