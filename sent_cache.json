@@ -1,16 +1,5 @@
 [
   {
-    "id": "15f129f355318d3e",
-    "title": "63.6 亿美元史上最大加密盗窃案:TRM 详解朝鲜黑客如何入侵币安热钱包签名系统",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-03T07:12:16.620495+00:00",
-    "tokens": [
-      "ETH",
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d6cf185bc16e8dad",
     "title": "币安 SAFU 基金比特币余额减半,补仓规则未设动用期限",
     "source": "深潮TechFlow (中文/简体)",
@@ -5183,6 +5172,16 @@
     "sent_at": "2026-11-11T16:49:27.013354+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d1589777975496ea",
+    "title": "Bitcoin ‘ripe for a squeeze’ as options traders raise odds of sub-$70,000 Christmas",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-11T17:09:03.270289+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
