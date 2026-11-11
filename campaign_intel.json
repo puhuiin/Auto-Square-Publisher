@@ -4,22 +4,24 @@
     "#BinanceSquare",
     "#Futures",
     "#TradingTournament",
-    "#SpotTrading"
+    "#Megadrop"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$BTC",
-    "$USDT",
+    "$USDC",
+    "$PREDICT",
+    "$WLFI",
     "$HYPE",
-    "$TRX",
-    "$PREDICT"
+    "$TRX"
   ],
-  "strategy_guidance": "优先追更11月10日上线的限时期货Taker Program、11月9日上线的限时现货Taker Program的实时规则与参与攻略，结合11月12日即将上线的多组TradFi美元本位永续合约、11月16日将上线的HYPE与TRX永续合约的预热内容，引导读者参与官方活动互动、评论拿Write2Earn奖励，同步结合现货交易锦标赛S10、社区回馈活动等当期热点输出内容，提升曝光与互动量。",
-  "last_updated": "2026-11-11T14:24:18.980540Z",
+  "strategy_guidance": "围绕当期币安新上线的USDⓈ-Margined永续合约、Spot交易锦标赛、新币PREDICT及WLFI Megadrop活动产出内容，引导读者参与评论互动获取Write2Earn奖励，追活动热度提升曝光；若遇限时活动冲刺节点，优先以活动参与攻略角度切入跟进节奏，严禁出现收益承诺类措辞。",
+  "last_updated": "2026-11-11T16:24:20.122906Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
+      "last_fail": "2026-11-11T16:08:04.429689+00:00",
       "fails": 1,
-      "last_fail": "2026-11-11T16:08:04.429689+00:00"
+      "reset_at": "2026-11-11T16:28:50.705473+00:00"
     }
   },
   "_fallback_image": {
