@@ -1,15 +1,5 @@
 [
   {
-    "id": "6745d549eb0200f2",
-    "title": "AI poses greater threat to Bitcoin than quantum computing, Swan founder says",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-11-02T22:04:58.265358+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8c1ff468ea57ee6c",
     "title": "Swan Bitcoin创始人称AI对比特币构成更直接安全威胁",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5185,6 +5175,16 @@
     "title": "SEC enforcement actions fall 24%, crypto cases in spotlight",
     "source": "Cointelegraph (全球综合快讯)",
     "sent_at": "2026-11-11T09:27:11.719286+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "507ad51774e41202",
+    "title": "HTX Releases October Performance Report: Spot Liquidity Significantly Enhanced, APY Boosts Help Users Through a Warm Winter",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-11T09:48:06.266856+00:00",
     "tokens": [
       "BTC"
     ],
