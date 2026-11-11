@@ -1,15 +1,5 @@
 [
   {
-    "id": "d11a3218bc27a6c5",
-    "title": "Mercado Bitcoin wallets keep moving funds after $46M hack",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-11-02T19:24:01.794998+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "cb61563f83d6003a",
     "title": "Solana Labs opens applications for Incubator Cohort 6",
     "source": "Crypto Briefing (深度与研报)",
@@ -5188,6 +5178,16 @@
     "tokens": [
       "ETH",
       "BTC",
+      "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "9c125b2a72f8dd3c",
+    "title": "XRP Ledger Roadmap Puts Quantum-Resistant Accounts on the Agenda for 2027",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-11T06:07:34.623393+00:00",
+    "tokens": [
       "XRP"
     ],
     "lang": "zh-TW"
