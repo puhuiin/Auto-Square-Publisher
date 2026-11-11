@@ -1,16 +1,5 @@
 [
   {
-    "id": "71505b3d8e6ac4f2",
-    "title": "Binance Reopens Withdrawals for Shiba Inu (SHIB) and Major ETH-Based Assets",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-03T12:04:43.952754+00:00",
-    "tokens": [
-      "SHIB",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f5c1ede6352788e2",
     "title": "Liquid Network Restores Full Bitcoin Backing Two Months After $320M Exploit",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5186,5 +5175,16 @@
       "DOGE"
     ],
     "lang": "en"
+  },
+  {
+    "id": "1ffdd540b9561268",
+    "title": "Binance gives HYPE and TRX the same 75x cap – Which faces more risk?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-11T22:04:29.297317+00:00",
+    "tokens": [
+      "HYPE",
+      "TRX"
+    ],
+    "lang": "zh-CN"
   }
 ]
