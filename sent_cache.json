@@ -1,15 +1,5 @@
 [
   {
-    "id": "1799d2ea736957a3",
-    "title": "Arbitrum’s council moved $30 million of Binance hack funds without the hacker’s key",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-11-03T05:47:00.672906+00:00",
-    "tokens": [
-      "ARB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b9740396cd3a9dd5",
     "title": "Solana:SK 海力士代币化股票交易量达 5 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5184,6 +5174,16 @@
     "sent_at": "2026-11-11T15:09:18.226378+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fddfa8e14290841f",
+    "title": "$380 Million in Shiba Inu (SHIB) Held on Exchanges: Will It Bounce Here?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-11T15:30:37.924788+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
