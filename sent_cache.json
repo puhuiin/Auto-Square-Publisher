@@ -1,15 +1,5 @@
 [
   {
-    "id": "d6cf185bc16e8dad",
-    "title": "币安 SAFU 基金比特币余额减半,补仓规则未设动用期限",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-03T07:51:58.277326+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "527efca1adf65558",
     "title": "Is an XRP Relief Rally Coming? Wallet and Sentiment Data Explained",
     "source": "BeInCrypto (山寨与行情)",
@@ -5182,6 +5172,18 @@
     "sent_at": "2026-11-11T17:09:03.270289+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d442b5e7f9f7942e",
+    "title": "借貸協議 Moonwell 下調抵押係數,移除 VELO 和 wrsETH 抵押資格",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-11T17:27:59.509440+00:00",
+    "tokens": [
+      "AERO",
+      "MORPHO",
+      "OP"
     ],
     "lang": "en"
   }
