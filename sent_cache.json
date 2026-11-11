@@ -1,15 +1,5 @@
 [
   {
-    "id": "9c59dbbc9bbf2aa1",
-    "title": "Zcash Upgrade Could Triple Transaction Speed as ZEC Faces Crypto Governance Turmoil",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-03T11:04:51.219159+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "96403938dc539387",
     "title": "拆解 Zcash 扩容路线图,5 大技术升级如何将其推向高并发隐私货币?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5183,6 +5173,16 @@
     "tokens": [
       "SHIB",
       "PEPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "87aeb040b3b95fe0",
+    "title": "This New AI Music Model Is Already Better Than Suno—We Put ACE to the Test",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-11T21:04:58.264751+00:00",
+    "tokens": [
+      "ACE"
     ],
     "lang": "en"
   }
