@@ -1,15 +1,5 @@
 [
   {
-    "id": "cdc59a660894bf1d",
-    "title": "Akash’s Solana plan would end current staking rewards while allowing new AKT issuance",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-02T14:45:12.115576+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "27608e05552ca7ea",
     "title": "Bitrue Launches AI Trading Bot Referral Program For XRP And Crypto Traders",
     "source": "BeInCrypto (山寨与行情)",
@@ -5186,6 +5176,18 @@
     "sent_at": "2026-11-11T01:24:40.090064+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "59967c171e2b4754",
+    "title": "Robinhood Chain 财报拆解:Q3 揽下全网 L2 八成费用,美股代币在休市时段完成价格发现",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-11T01:48:52.913795+00:00",
+    "tokens": [
+      "OP",
+      "ETH",
+      "ARB"
     ],
     "lang": "zh-CN"
   }
