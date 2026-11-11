@@ -1,15 +1,5 @@
 [
   {
-    "id": "6fa401b703ca93aa",
-    "title": "Zcash whale buys $3.8M in ZEC – 2 obstacles could slow the recovery",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-02T13:21:17.364383+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f529468673b1c4fb",
     "title": "ZachXBT:某欧盟机构疑遭盗取超 1.06 亿美元,黑客正通过 ETH 和门罗币转移资金",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,6 +5179,16 @@
     "sent_at": "2026-11-10T23:29:08.233243+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "8f435c1200ec42c3",
+    "title": "DeepSeek AI XRP Price Prediction: Could Ripple Really Go This High?",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-11T00:24:25.268210+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
