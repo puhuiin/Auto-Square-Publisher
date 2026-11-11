@@ -2,24 +2,25 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#Futures",
-    "#TradingTournament",
-    "#SpotTaker"
+    "#FuturesTakerProgram",
+    "#SpotTradingTournament",
+    "#ReferralRush2026"
   ],
   "incentivized_tokens": [
     "$BNB",
+    "$BTC",
+    "$USDC",
     "$PREDICT",
-    "$WLFI",
-    "$USD1",
     "$SPCXB",
-    "$APPB"
+    "$GEVB",
+    "$SKUUB"
   ],
-  "strategy_guidance": "优先追11月9日上线的限时现货Taker Program收尾节奏，结合当日新币PREDICT上线、新增5只bStocks交易对的利好背景，引导用户参与现货交易相关话题互动；同时关联11月仍在进行的交易竞赛、邀请活动，引导用户参与评论互动获取Write2Earn奖励。",
-  "last_updated": "2026-11-10T11:44:04.095026Z",
+  "strategy_guidance": "优先追11月最新上线的限时Futures Taker Program、现货交易竞赛及Referral Rush 2026的活动热度，结合新上线的$PREDICT、新增bStocks交易对等官方快讯输出内容，引导用户参与官方活动互动拿奖励；其次可围绕Binance AI主题quiz、社区感谢活动等当期热点，输出操作指引类内容带动评论区互动，提升Write to Earn奖励获取概率。",
+  "last_updated": "2026-11-11T00:04:13.176376Z",
   "_feed_health": {},
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-10",
