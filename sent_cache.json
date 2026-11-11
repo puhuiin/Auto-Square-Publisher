@@ -1,15 +1,5 @@
 [
   {
-    "id": "8c1ff468ea57ee6c",
-    "title": "Swan Bitcoin创始人称AI对比特币构成更直接安全威胁",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-02T22:27:44.195265+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7fd3ff5a4c9d10d7",
     "title": "Microsoft Bearish On Ripple? Copilot AI Predicts a Huge XRP Crash Looms",
     "source": "CryptoNews (全球快讯)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-11T09:48:06.266856+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ddf313198839a0a3",
+    "title": "Pavel Durov Calls GRAM ‘Ridiculously Undervalued’ After 8% Surge",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-11T10:24:04.276794+00:00",
+    "tokens": [
+      "GRAM"
     ],
     "lang": "zh-CN"
   }
