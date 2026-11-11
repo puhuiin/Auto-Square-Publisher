@@ -1,16 +1,5 @@
 [
   {
-    "id": "f529468673b1c4fb",
-    "title": "ZachXBT:某欧盟机构疑遭盗取超 1.06 亿美元,黑客正通过 ETH 和门罗币转移资金",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T13:44:44.842534+00:00",
-    "tokens": [
-      "ETH",
-      "USDC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e861f4b1a222da72",
     "title": "吴说每日精选加密新闻 - Elliptic:币安被盗 64.3 亿美元中 44%已冻结,攻击者首次使用 CoinJoin 混币",
     "source": "吴说区块链 (中文深度)",
@@ -5189,6 +5178,16 @@
     "sent_at": "2026-11-11T00:24:25.268210+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "26e82a362ef519d0",
+    "title": "LlamaRisk 提议从 Aave V3 Core 逐步退出约 13.3 亿美元抵押品",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-11T00:47:32.815122+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "zh-CN"
   }
