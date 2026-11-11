@@ -1,15 +1,5 @@
 [
   {
-    "id": "ab94e69a5aba8a6d",
-    "title": "Brazil’s Largest Crypto Exchange Mercado Bitcoin Hit by Possible $40M Hack",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-02T15:29:16.062013+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "59804fea40606a5b",
     "title": "Shibarium's 745% Breakout Reverses: Should SHIB Holders Be Watching?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5189,6 +5179,17 @@
     "tokens": [
       "ENA",
       "AVAX"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "04920d87c86a436a",
+    "title": "Bitget UEX 日报|通胀超预期压制美股;英伟达再跌逾 5%;黄金失守 4100 美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-11T02:27:58.783304+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
