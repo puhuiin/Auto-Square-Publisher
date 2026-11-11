@@ -1,15 +1,5 @@
 [
   {
-    "id": "c1b514280ad4d46c",
-    "title": "Bitcoin Price Analysis: Is the September Rally Structure in Danger as BTC Hangs by a Thread?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-02T18:24:29.018571+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "89bd2daa98b695a3",
     "title": "累计PnL达720万美元的Solana老牌套利机器人King被盗约78.6万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5188,5 +5178,17 @@
       "TRX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "4b51d6de5b57ba4e",
+    "title": "币安将上线HYPE及TRX USDC永续合约",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-11T05:04:55.027586+00:00",
+    "tokens": [
+      "HYPE",
+      "TRX",
+      "USDC"
+    ],
+    "lang": "zh-CN"
   }
 ]
