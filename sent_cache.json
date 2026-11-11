@@ -1,17 +1,5 @@
 [
   {
-    "id": "e861f4b1a222da72",
-    "title": "吴说每日精选加密新闻 - Elliptic:币安被盗 64.3 亿美元中 44%已冻结,攻击者首次使用 CoinJoin 混币",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-02T14:07:14.268341+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "USDC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9e2d5bd290bb768f",
     "title": "XRP Price Prediction: Ripple Re-Locks $875M as Bulls Eye $10,000",
     "source": "CryptoNews (全球快讯)",
@@ -5190,5 +5178,15 @@
       "AAVE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "184b4c9a21504b30",
+    "title": "LNbits Releases 1.7.0 Urgent Security Update After November 8 Attacks Drain Funds",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-11-11T01:04:45.865049+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
