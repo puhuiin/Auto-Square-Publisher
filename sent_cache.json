@@ -1,16 +1,5 @@
 [
   {
-    "id": "5407744914f795c4",
-    "title": "6.7 Million Stellar (XLM) Stolen in Massive $40 Million Mercado Bitcoin Breach",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-02T16:49:04.903254+00:00",
-    "tokens": [
-      "XLM",
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "782979c915cbee08",
     "title": "Mercado Bitcoin hack losses are at $46M and growing",
     "source": "Protos (隐私与合规)",
@@ -5189,5 +5178,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "46a0bc21754ed8db",
+    "title": "Upbit lists HYPE – Can Hyperliquid narrow its 45x Spot trading gap?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-11T03:28:44.701127+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
