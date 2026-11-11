@@ -1,15 +1,5 @@
 [
   {
-    "id": "2c387793fd1fe1d2",
-    "title": "Solana records 3.3B successful transactions in October",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-03T10:44:22.518115+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9c59dbbc9bbf2aa1",
     "title": "Zcash Upgrade Could Triple Transaction Speed as ZEC Faces Crypto Governance Turmoil",
     "source": "CryptoNews (全球快讯)",
@@ -5182,6 +5172,17 @@
     "sent_at": "2026-11-11T19:45:18.377515+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7752fdcf1e3921d8",
+    "title": "SHIB, watch out! PEPE’s 60% rally is making the flip look possible",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-11T20:05:47.933981+00:00",
+    "tokens": [
+      "SHIB",
+      "PEPE"
     ],
     "lang": "en"
   }
