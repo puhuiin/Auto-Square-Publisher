@@ -1,15 +1,5 @@
 [
   {
-    "id": "8919409d53de2757",
-    "title": "U.S. midterm elections risk Solana: Will 5% SOL ETF outflows create more losses?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-03T04:25:57.915093+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "af7a1879b2cec7d4",
     "title": "Arm Holdings shares slide as AI chip demand worries spread",
     "source": "Crypto Briefing (深度与研报)",
@@ -5189,5 +5179,15 @@
       "INJ"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "2d858e005e5a20dd",
+    "title": "Solana could dip to $74 as Fed rate-hike odds hit 99%",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-11-11T14:07:56.092383+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
   }
 ]
