@@ -1,15 +1,5 @@
 [
   {
-    "id": "f8e1ea6e249b633f",
-    "title": "Brazil's Largest Exchange Mercado Bitcoin Halts Withdrawals After $40 Million Hack",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-02T17:28:41.638543+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "647c3a12b92e927e",
     "title": "3 Signals That Could Shape Bitcoin’s Next Move After Binance Hack",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5186,6 +5176,16 @@
     "sent_at": "2026-11-11T03:48:38.822712+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c3532aaaf1a81dee",
+    "title": "Tron Inc reports 22% rise in Q3 net income as unrealized staking revenue grows",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-11T04:10:20.581055+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "zh-CN"
   }
