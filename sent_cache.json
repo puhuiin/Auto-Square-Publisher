@@ -1,15 +1,5 @@
 [
   {
-    "id": "47fd591c8b96ae3a",
-    "title": "Can TRON reclaim $0.33 after its $234M hack fueled buying spree?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-02T23:04:51.222114+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a543325d50aa70a1",
     "title": "Wintermute:比特币跌破 8 万美元后抄底资金主要来自杠杆交易,下一关键支撑位在 7.68 万美元",
     "source": "吴说区块链 (中文深度)",
@@ -5189,5 +5179,16 @@
       "HIVE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "0bed91e493142a56",
+    "title": "稳定币平台 Reflect 在 Solana 上推出收益产品 Earn",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-11T11:04:44.883816+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]

@@ -19,19 +19,19 @@
   "last_updated": "2026-11-11T00:04:13.176376Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
+      "parked_until": "2026-11-11T11:24:01.744940+00:00",
       "last_fail": "2026-11-11T05:24:01.744940+00:00",
-      "fails": 3,
-      "parked_until": "2026-11-11T11:24:01.744940+00:00"
+      "fails": 3
     },
     "CryptoPotato (山寨币/Meme热点)": {
+      "reset_at": "2026-11-11T11:03:38.819850+00:00",
       "last_fail": "2026-11-11T08:46:04.429202+00:00",
-      "fails": 1,
-      "reset_at": "2026-11-11T10:43:35.883063+00:00"
+      "fails": 1
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-11",
@@ -42,7 +42,7 @@
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 876,
+  "_img_rot": 877,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
