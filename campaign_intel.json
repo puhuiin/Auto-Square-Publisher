@@ -19,14 +19,14 @@
   "last_updated": "2026-11-11T00:04:13.176376Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
-      "last_fail": "2026-11-11T05:23:31.271344+00:00",
       "reset_at": "2026-11-11T06:23:31.915510+00:00",
-      "fails": 1
+      "fails": 1,
+      "last_fail": "2026-11-11T05:23:31.271344+00:00"
     },
     "CoinJournal (山寨异动)": {
       "parked_until": "2026-11-11T11:24:01.744940+00:00",
-      "last_fail": "2026-11-11T05:24:01.744940+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-11-11T05:24:01.744940+00:00"
     }
   },
   "_fallback_image": {
@@ -35,26 +35,16 @@
   },
   "_llm_breaker": {
     "Preset-stepfun": {
-      "last_fail": "2026-11-11T06:25:52.155760+00:00",
       "cooldown_until": "2026-11-11T06:45:52.155738+00:00",
-      "fails": 2
-    },
-    "Preset-google": {
-      "fails": 1,
-      "cooldown_until": "2026-11-11T06:35:54.509990+00:00",
-      "last_fail": "2026-11-11T06:25:54.510003+00:00"
-    },
-    "Preset-openrouter": {
-      "fails": 1,
-      "cooldown_until": "2026-11-11T06:38:10.129386+00:00",
-      "last_fail": "2026-11-11T06:28:10.129396+00:00"
+      "fails": 2,
+      "last_fail": "2026-11-11T06:25:52.155760+00:00"
     }
   },
   "_article_sent_date": "2026-11-11",
   "_publish_park": {
     "fa0b404b8470b904": {
-      "fails": 1,
-      "last_fail": "2026-11-11T06:28:11.130736+00:00"
+      "last_fail": "2026-11-11T06:28:11.130736+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
