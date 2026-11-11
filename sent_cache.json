@@ -1,15 +1,5 @@
 [
   {
-    "id": "7fd3ff5a4c9d10d7",
-    "title": "Microsoft Bearish On Ripple? Copilot AI Predicts a Huge XRP Crash Looms",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-02T22:45:44.382699+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "47fd591c8b96ae3a",
     "title": "Can TRON reclaim $0.33 after its $234M hack fueled buying spree?",
     "source": "AMBCrypto (技术与链上)",
@@ -5189,5 +5179,15 @@
       "GRAM"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "7b5dd3c009f5df2d",
+    "title": "HIVE Reports $84.9M Revenue as AI GPU Business Grows 71% Amid Mining Pressures",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-11T10:46:24.603332+00:00",
+    "tokens": [
+      "HIVE"
+    ],
+    "lang": "zh-TW"
   }
 ]
