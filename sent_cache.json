@@ -1,15 +1,5 @@
 [
   {
-    "id": "f5c1ede6352788e2",
-    "title": "Liquid Network Restores Full Bitcoin Backing Two Months After $320M Exploit",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-03T12:24:49.724169+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0c6c844fd97e1e8c",
     "title": "Kraken冻结涉欧洲某机构1.33亿美元疑似被盗资金相关账户,正配合执法部门追查",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5184,6 +5174,16 @@
     "tokens": [
       "HYPE",
       "TRX"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "99e750ff10a9514e",
+    "title": "enter_elysium上线首日无UI支持,Hook生态成为主要分发方式",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-11T22:24:13.006735+00:00",
+    "tokens": [
+      "UNI"
     ],
     "lang": "zh-CN"
   }
