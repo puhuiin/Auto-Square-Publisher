@@ -1,16 +1,5 @@
 [
   {
-    "id": "f409fee51ef8d20e",
-    "title": "Chainalysis:Mercado Bitcoin 遭攻击损失约 4900 万美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-03T01:08:40.137620+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c81fd1244dc88589",
     "title": "XRP’s ‘Binance Hack 2026’ wallets move 40M tokens as ETF inflows persist",
     "source": "AMBCrypto (技术与链上)",
@@ -5189,6 +5178,16 @@
     "sent_at": "2026-11-11T12:27:05.223671+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6547c77b02eca243",
+    "title": "mihao市值短时突破2000万美元,24小时涨幅达2921%",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-11T12:50:00.781874+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
