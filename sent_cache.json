@@ -1,17 +1,5 @@
 [
   {
-    "id": "c83db4565163df76",
-    "title": "Binance Resumes Withdrawals After Major Hack as Michael Van De Poppe Predicts Bitcoin Crash",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-02T21:06:15.662970+00:00",
-    "tokens": [
-      "XRP",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1cbf5b7f79a920e2",
     "title": "Why Solana’s $149M whale deposits complicate SOL’s recovery",
     "source": "AMBCrypto (技术与链上)",
@@ -5190,6 +5178,16 @@
     "sent_at": "2026-11-11T08:30:19.042950+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "2995f99a1a739e60",
+    "title": "1763万美元ZEC空单亏损超280万美元,Trader 0x8742持有10倍杠杆仓位",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-11T08:46:32.896354+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-TW"
   }
