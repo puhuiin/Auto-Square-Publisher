@@ -1,15 +1,5 @@
 [
   {
-    "id": "a4a0b6c2793b9a16",
-    "title": "Solana study finds wider spreads outside aggregators at five of six sampled pools",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-03T09:24:58.152852+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "46a3292ac0a1e24a",
     "title": "Arbitrum freezes $30M in Binance hack-linked funds as ARB falls 4.5%",
     "source": "AMBCrypto (技术与链上)",
@@ -5182,6 +5172,16 @@
     "sent_at": "2026-11-11T18:08:02.264600+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e8706420a837e16e",
+    "title": "Airdrop Trap? XRP Community Gets Targeted by 11.5 Million Scam Posts",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-11T18:28:40.374866+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
