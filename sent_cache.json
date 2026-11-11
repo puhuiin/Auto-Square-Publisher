@@ -1,15 +1,5 @@
 [
   {
-    "id": "782979c915cbee08",
-    "title": "Mercado Bitcoin hack losses are at $46M and growing",
-    "source": "Protos (隐私与合规)",
-    "sent_at": "2026-11-02T17:07:16.531168+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f8e1ea6e249b633f",
     "title": "Brazil's Largest Exchange Mercado Bitcoin Halts Withdrawals After $40 Million Hack",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5184,6 +5174,16 @@
     "title": "Upbit lists HYPE – Can Hyperliquid narrow its 45x Spot trading gap?",
     "source": "AMBCrypto (技术与链上)",
     "sent_at": "2026-11-11T03:28:44.701127+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "2a287ec0b5b1fbfe",
+    "title": "Hyperliquid faces market skepticism despite claims of billions in waiting capital",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-11T03:48:38.822712+00:00",
     "tokens": [
       "HYPE"
     ],
