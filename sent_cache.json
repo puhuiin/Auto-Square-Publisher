@@ -1,15 +1,5 @@
 [
   {
-    "id": "89bd2daa98b695a3",
-    "title": "累计PnL达720万美元的Solana老牌套利机器人King被盗约78.6万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-02T18:44:36.842324+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8349562b69448983",
     "title": "BNB’s $99 million ETF inflows came almost entirely before Binance’s hack",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5188,6 +5178,17 @@
       "HYPE",
       "TRX",
       "USDC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "48e45c287f674d68",
+    "title": "Gate合约Meme专区上线MIHAO合约交易及相关功能",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-11T05:24:55.885866+00:00",
+    "tokens": [
+      "MEME",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
