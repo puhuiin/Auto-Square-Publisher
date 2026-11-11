@@ -1,17 +1,5 @@
 [
   {
-    "id": "00eef123605d3551",
-    "title": "Arkham:Mercado Bitcoin 黑客持有约 4600 万美元加密资产",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-02T16:24:18.856333+00:00",
-    "tokens": [
-      "ETH",
-      "BTC",
-      "PEPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5407744914f795c4",
     "title": "6.7 Million Stellar (XLM) Stolen in Massive $40 Million Mercado Bitcoin Breach",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5191,5 +5179,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "5ef4d1ab8da10dca",
+    "title": "加密世界不缺代幣,缺的是信任:以太坊「人類承諾市場」新構想",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-11T03:07:15.920665+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
