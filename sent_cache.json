@@ -1,15 +1,5 @@
 [
   {
-    "id": "27608e05552ca7ea",
-    "title": "Bitrue Launches AI Trading Bot Referral Program For XRP And Crypto Traders",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-02T15:06:59.067880+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ab94e69a5aba8a6d",
     "title": "Brazil’s Largest Crypto Exchange Mercado Bitcoin Hit by Possible $40M Hack",
     "source": "BeInCrypto (山寨与行情)",
@@ -5188,6 +5178,17 @@
       "OP",
       "ETH",
       "ARB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "442b57e08f844447",
+    "title": "Castle Labs 周报:Ethena Pay 撬动 8000 万美元需求,Hyperliquid 生态新机会涌现",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-11T02:09:13.540269+00:00",
+    "tokens": [
+      "ENA",
+      "AVAX"
     ],
     "lang": "zh-CN"
   }
