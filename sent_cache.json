@@ -1,15 +1,5 @@
 [
   {
-    "id": "9e2d5bd290bb768f",
-    "title": "XRP Price Prediction: Ripple Re-Locks $875M as Bulls Eye $10,000",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-02T14:24:51.555665+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "cdc59a660894bf1d",
     "title": "Akash’s Solana plan would end current staking rewards while allowing new AKT issuance",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5188,5 +5178,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e9b5c37d1db87bf5",
+    "title": "Coinbase Options Flag XRP as Top Volatility Bet With 9.7% Swing Signal: What’s Next?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-11T01:24:40.090064+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
