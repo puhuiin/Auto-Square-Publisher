@@ -1,15 +1,5 @@
 [
   {
-    "id": "c81fd1244dc88589",
-    "title": "XRP’s ‘Binance Hack 2026’ wallets move 40M tokens as ETF inflows persist",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-03T01:28:17.275773+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "95f3d4ad24b91232",
     "title": "市场看不懂的 AI 币 Numerai,规模逼近 10 亿美元后的代币回购飞轮",
     "source": "深潮TechFlow (中文/简体)",
@@ -5190,5 +5180,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "1128ac5a2dd38de1",
+    "title": "Dogecoin risks further decline as whales dump 750 million DOGE",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-11-11T13:10:13.333325+00:00",
+    "tokens": [
+      "DOGE"
+    ],
+    "lang": "zh-TW"
   }
 ]
