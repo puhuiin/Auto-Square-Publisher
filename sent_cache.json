@@ -1,15 +1,5 @@
 [
   {
-    "id": "4a7917ab834df087",
-    "title": "Zcash 社区资助委员会撤回将约 9.8 万枚 ZEC 转向未来矿工奖励的提案",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-04T08:50:28.866965+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fa9170bb3d3c2a7d",
     "title": "Binance hackers move 81% of stolen Solana, route funds via THORChain",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-12T18:07:28.320422+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "56cb5e2fb3efa63a",
+    "title": "Illinois Crypto Tax Draws Unlikely Alliance of DOJ, Banks and DeFi",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-12T18:25:55.190704+00:00",
+    "tokens": [
+      "UNI"
     ],
     "lang": "en"
   }
