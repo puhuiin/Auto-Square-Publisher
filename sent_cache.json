@@ -1,15 +1,5 @@
 [
   {
-    "id": "41d7fc60d088280e",
-    "title": "Flash-loan oracle attack inflates CoreVault redemptions 33x, drains 160.26 BNB",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-04T03:44:15.470510+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7afc007664c10095",
     "title": "稳定币高息争夺战",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,5 +5178,15 @@
       "AVAX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "007507a6b638d4fb",
+    "title": "DTCC to Bring Tokenized Stocks and Treasuries to Solana in 2027",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-12T14:06:10.315186+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
   }
 ]
