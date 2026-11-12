@@ -1,15 +1,5 @@
 [
   {
-    "id": "4cff5a89d4977c3f",
-    "title": "Hyperliquid (HYPE) Risks a 30% Price Crash: What Can Prevent the Collapse?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-03T17:44:20.404228+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "64d9d670b776c722",
     "title": "Ex-XRP Treasury Reveals Exit From $5 Million Stake in Ripple",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5189,6 +5179,16 @@
     "sent_at": "2026-11-12T04:04:26.433320+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "228925b6d0fcffca",
+    "title": "Katana 宣布 KAT 代币经济模型改革,将利用四大协议收入来源回购代币",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-12T04:24:56.062335+00:00",
+    "tokens": [
+      "KAT"
     ],
     "lang": "zh-CN"
   }
