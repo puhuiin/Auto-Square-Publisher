@@ -1,17 +1,5 @@
 [
   {
-    "id": "a0fc1c46e07f9278",
-    "title": "客户不会遭受资金损失,Crédit Mutuel Arkéa确认遭黑客攻击",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-04T13:04:59.589546+00:00",
-    "tokens": [
-      "USDC",
-      "ETH",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "bef21a0f7382a710",
     "title": "法国网银遭穿透失窃逾 1.33 亿美元,黑客借加密通道跨链洗钱",
     "source": "深潮TechFlow (中文/简体)",
@@ -5186,5 +5174,15 @@
       "TRX"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e7e751f6a5850f1d",
+    "title": "Top Hyperliquid Price Predictions as HYPE Tumbles 15% in a Week",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-12T22:48:00.633473+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
