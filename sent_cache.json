@@ -1,15 +1,5 @@
 [
   {
-    "id": "f2e9c7cb7249024d",
-    "title": "Stablecoin supply falls $17B as Solana card spending hits $141M",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-04T06:47:17.234567+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "aaee312d1a2ba664",
     "title": "SkyBridge Capital 创始人出任 BNB Standard 独立董事",
     "source": "吴说区块链 (中文深度)",
@@ -5184,6 +5174,16 @@
     "sent_at": "2026-11-12T16:25:49.451380+00:00",
     "tokens": [
       "BTC",
+      "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f90cfa1766fc77f8",
+    "title": "Unocoin发现BitGo相关以太坊地址有转出交易,已提交调查",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-12T16:44:27.630121+00:00",
+    "tokens": [
       "ETH"
     ],
     "lang": "en"
