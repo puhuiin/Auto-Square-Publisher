@@ -1,15 +1,5 @@
 [
   {
-    "id": "0001bf54585b8cd2",
-    "title": "Justin Sun Accuses Trump-Backed World Liberty of Using UAE Ties to Escape Federal Court",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-03T22:24:42.476240+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a131a2bdb3d5425a",
     "title": "CARD纳入Coinbase上币路线图",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-12T09:44:47.255522+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "bfa3fbcc2a2dfc62",
+    "title": "Why Is Zcash (ZEC) Price Falling? The Answer Isn’t the Broader Market",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-12T10:04:28.198009+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }

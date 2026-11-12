@@ -20,8 +20,8 @@
   "_feed_health": {
     "CoinJournal (山寨异动)": {
       "parked_until": "2026-11-12T11:24:00.407651+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-12T05:24:00.407651+00:00"
+      "last_fail": "2026-11-12T05:24:00.407651+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
@@ -32,8 +32,8 @@
   "_article_sent_date": "2026-11-12",
   "_publish_park": {
     "d15af1cad05d7e8f": {
-      "fails": 1,
-      "last_fail": "2026-11-12T04:48:39.057094+00:00"
+      "last_fail": "2026-11-12T04:48:39.057094+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
