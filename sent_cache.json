@@ -1,16 +1,5 @@
 [
   {
-    "id": "fe25fa196b256d01",
-    "title": "Investor Accuses Ripple of Leaving XRP Holders Behind for RLUSD, Demands Action to Unlock Long-Awaited $20 XRP",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-03T19:12:11.271328+00:00",
-    "tokens": [
-      "XRP",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "e42bd7ff2f28c3ad",
     "title": "Hylo 在 Solana 上推出 3 倍杠杆 ZEC 代币 xZEC",
     "source": "深潮TechFlow (中文/简体)",
@@ -5191,5 +5180,15 @@
       "ARK"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "790a1cd7d959b98a",
+    "title": "‘Milestone quarter’: Solana Company reports Q3 revenue growth driven by staking rewards",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-12T06:06:54.929314+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
