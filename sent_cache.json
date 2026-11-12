@@ -1,17 +1,5 @@
 [
   {
-    "id": "bef21a0f7382a710",
-    "title": "法国网银遭穿透失窃逾 1.33 亿美元,黑客借加密通道跨链洗钱",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-04T13:25:03.833501+00:00",
-    "tokens": [
-      "USDC",
-      "UNI",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5f9cd4adcb681a5c",
     "title": "TechFlow 情报局:AMD 数据中心收入近翻倍盘后大涨 9%,Binance 披露 63 亿美元被盗始于一场假面试",
     "source": "深潮TechFlow (中文/简体)",
@@ -5184,5 +5172,16 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "8040c5b0b36167aa",
+    "title": "Meta AI Predicts DOGE Vs. PEPE: Which Goes Higher in 2027?",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-12T23:47:05.898719+00:00",
+    "tokens": [
+      "DOGE",
+      "PEPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
