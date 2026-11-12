@@ -1,15 +1,5 @@
 [
   {
-    "id": "ec2f4b5c9117673c",
-    "title": "Binance 公布安全事件初查:约 28.5 亿美元资产被冻或拦截",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-03T15:05:17.127020+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d4bf06b063556a06",
     "title": "Bitcoin Price Trades Near $77,500 as Midterm Voting Begins",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5185,6 +5175,18 @@
     "sent_at": "2026-11-12T01:44:49.761691+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "fbc0f936a8087814",
+    "title": "Alea Research:Kamino Q3 代币化资产市场净流入 $1.47 亿,固定利率借贷规模破 $7370 万",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-12T02:05:00.663716+00:00",
+    "tokens": [
+      "KMNO",
+      "SOL",
+      "JUP"
     ],
     "lang": "zh-CN"
   }
