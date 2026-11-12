@@ -1,15 +1,5 @@
 [
   {
-    "id": "383a52a5b729f8ab",
-    "title": "StakerX’s AI Agent Surpasses Passes $40M Staked Assets on Solana Within 3 Months of Launch",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-03T13:50:12.289322+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f8088070c975fbff",
     "title": "吴说每日精选加密新闻 - 朝鲜否认参与币安 63 亿美元被盗事件,金与正称 FBI 指控是严重政治挑衅",
     "source": "吴说区块链 (中文深度)",
@@ -5185,6 +5175,16 @@
       "GRAM",
       "HYPE",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ec1320d4b0292460",
+    "title": "ARK 数字资产研究主管:2017 年以来加密黑客攻击损失约 269 亿美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-12T00:51:31.190381+00:00",
+    "tokens": [
+      "ARK"
     ],
     "lang": "zh-CN"
   }
