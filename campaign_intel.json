@@ -17,10 +17,15 @@
   ],
   "strategy_guidance": "围绕当期币安新上线的USDⓈ-Margined永续合约、Spot交易锦标赛、新币PREDICT及WLFI Megadrop活动产出内容，引导读者参与评论互动获取Write2Earn奖励，追活动热度提升曝光；若遇限时活动冲刺节点，优先以活动参与攻略角度切入跟进节奏，严禁出现收益承诺类措辞。",
   "last_updated": "2026-11-11T16:24:20.122906Z",
-  "_feed_health": {},
+  "_feed_health": {
+    "吴说区块链 (中文深度)": {
+      "fails": 1,
+      "last_fail": "2026-11-12T01:43:56.842415+00:00"
+    }
+  },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-12",
