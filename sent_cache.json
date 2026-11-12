@@ -1,16 +1,5 @@
 [
   {
-    "id": "02f1126e3efa76a6",
-    "title": "Binance Hacker Continues Aggressive Bitcoin Buying Spree",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-04T05:49:35.757271+00:00",
-    "tokens": [
-      "BTC",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2ca8b7a841f8c6bf",
     "title": "BitMart Founder Confirms Hack During Restructuring",
     "source": "The Defiant (DeFi 深度)",
@@ -5185,6 +5174,16 @@
     "sent_at": "2026-11-12T15:25:32.472800+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "12520b78c219dc3a",
+    "title": "Paragon tests HYPE squared Power Perps for convex trading on Hyperliquid",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-12T15:44:30.476842+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
