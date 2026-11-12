@@ -1,15 +1,5 @@
 [
   {
-    "id": "754f20fd8e6fd092",
-    "title": "Cardano dips below $0.19 as bearish derivatives data signals further losses",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-11-03T20:44:21.001010+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8bc24fc5ab255b79",
     "title": "Gemini上线Zcash和Hyperliquid预测市场",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-12T07:07:11.593264+00:00",
     "tokens": [
       "HUMA"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "385a86aec86db424",
+    "title": "Why Hyperliquid’s 17% price drop puts HYPE’s $69 support at risk",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-12T07:44:44.602792+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-TW"
   }
