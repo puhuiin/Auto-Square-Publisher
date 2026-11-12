@@ -1,15 +1,5 @@
 [
   {
-    "id": "21b7ae3db5b4bedd",
-    "title": "DarcyAri:约 3,600 枚币安被盗 SOL 流入 HitBTC,呼吁配合执法调查",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-03T20:04:52.990238+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "99584fd7339ec365",
     "title": "Zcash Futures Crash 859% as Long Positions Get Wiped Out: What Next?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5188,6 +5178,16 @@
     "tokens": [
       "GLM",
       "TRX"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "59759116d75fd5ad",
+    "title": "Zcash Plan Would Pull 50,000 ZEC From Grants Treasury",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-12T06:45:04.723128+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-TW"
   }
