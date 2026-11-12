@@ -1,16 +1,5 @@
 [
   {
-    "id": "7907f7b54dddfd1e",
-    "title": "质押ZKC可定期获取AI模型额度,Boundless将推出代币化推理计划",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-04T05:10:28.582643+00:00",
-    "tokens": [
-      "ZKC",
-      "ZK"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "01ab29f4f951d12b",
     "title": "价值1819万美元,Mercado Bitcoin黑客将多种山寨币兑换为ETH",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5188,6 +5177,16 @@
       "USDC",
       "ONDO",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "905a438dd9811e63",
+    "title": "Crypto hack losses equal 57 cents per $1 earned onchain: Ark’s Valente",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-11-12T15:05:19.006146+00:00",
+    "tokens": [
+      "ARK"
     ],
     "lang": "en"
   }
