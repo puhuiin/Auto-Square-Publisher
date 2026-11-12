@@ -1,15 +1,5 @@
 [
   {
-    "id": "aaee312d1a2ba664",
-    "title": "SkyBridge Capital 创始人出任 BNB Standard 独立董事",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-04T07:04:09.648403+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "699cd124492e1083",
     "title": "总销毁金额超1.2 亿美元,波场TRON 生态四大代币价值通缩加速进化,机制升级与品牌升级双核驱动价值爆发新周期",
     "source": "深潮TechFlow (中文/简体)",
@@ -5185,6 +5175,16 @@
     "sent_at": "2026-11-12T16:44:27.630121+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6297a16c766dd881",
+    "title": "Tron, Tether and Chainalysis Form a New Crypto-Crime Task Force—Replacing One That Just Collapsed",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-12T17:06:47.144143+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "en"
   }
