@@ -1,15 +1,5 @@
 [
   {
-    "id": "4238673b986bdd61",
-    "title": "已混合约80万美元资金,币安黑客开始使用混币器处理被盗资金",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-03T17:24:59.453039+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4cff5a89d4977c3f",
     "title": "Hyperliquid (HYPE) Risks a 30% Price Crash: What Can Prevent the Collapse?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5189,6 +5179,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a4dda7bb1de1cab5",
+    "title": "某钱包从 Binance 累计提取约 678.4 枚 ZEC",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-12T04:04:26.433320+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
