@@ -1,16 +1,5 @@
 [
   {
-    "id": "21816163750d3cea",
-    "title": "Wall Street killed Bitcoin’s wild rallies: 10x’s Markus Thielen",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-11-03T16:26:47.260677+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4b35c9168b5fa5a5",
     "title": "Salus:约3600枚币安被盗SOL流入HitBTC热钱包",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5191,5 +5180,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ebff5ce59ddecece",
+    "title": "Ethlabs提出以太坊2027年实现抗量子及抗AI升级目标,拟调整Hegotá硬分叉路线图",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-12T03:24:01.774830+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
