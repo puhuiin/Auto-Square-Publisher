@@ -1,17 +1,5 @@
 [
   {
-    "id": "d94f2d944e173d15",
-    "title": "1.01亿美元高倍杠杆多单地址濒临爆仓,已亏损172.5万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-04T03:24:42.900568+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "41d7fc60d088280e",
     "title": "Flash-loan oracle attack inflates CoreVault redemptions 33x, drains 160.26 BNB",
     "source": "Crypto Briefing (深度与研报)",
@@ -5187,6 +5175,17 @@
     "sent_at": "2026-11-12T13:24:13.848632+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "adbfe2da280b0d84",
+    "title": "TechFlow 情报局:英伟达董事会准备罢免黄仁勋盘后暴跌 9%,MSCI将 Strategy 剔除出指数或引发 88 亿美元抛售",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-12T13:48:05.356703+00:00",
+    "tokens": [
+      "BTC",
+      "AVAX"
     ],
     "lang": "zh-TW"
   }
