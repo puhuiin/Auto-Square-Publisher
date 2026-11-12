@@ -1,15 +1,5 @@
 [
   {
-    "id": "c25f99382e6f4a2f",
-    "title": "TechFlow 情报局:苹果Q4营收超预期但中国区疲软,Binance被盗63亿美元朝鲜黑客坐实",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-03T13:24:42.597726+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "383a52a5b729f8ab",
     "title": "StakerX’s AI Agent Surpasses Passes $40M Staked Assets on Solana Within 3 Months of Launch",
     "source": "AMBCrypto (技术与链上)",
@@ -5182,6 +5172,19 @@
     "sent_at": "2026-11-11T23:44:56.111489+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7d22409a0c230e22",
+    "title": "Solana (SOL), Gram (GRAM), Hyperliquid (HYPE) and Bitcoin (BTC) Price Analysis for November 12: It Is a Bloodbath on the Market",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-12T00:30:52.538199+00:00",
+    "tokens": [
+      "SOL",
+      "GRAM",
+      "HYPE",
+      "BTC"
     ],
     "lang": "zh-CN"
   }
