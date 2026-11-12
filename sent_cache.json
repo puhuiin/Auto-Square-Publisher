@@ -1,15 +1,5 @@
 [
   {
-    "id": "34a19cdbeab2d606",
-    "title": "Solana Co-Founder Names Biggest Threat to Crypto",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-04T10:45:36.911723+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c13e3985b0d91d95",
     "title": "Solana’s price drops below $100 for 4 consecutive days: Is a recovery still possible?",
     "source": "AMBCrypto (技术与链上)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-12T19:30:09.648482+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "56e937adb3645013",
+    "title": "Claude AI Predicts a Monster XRP Move Ahead of Anthropic IPO",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-12T19:48:49.880919+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
