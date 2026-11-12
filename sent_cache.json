@@ -1,16 +1,5 @@
 [
   {
-    "id": "af190793ef3a7134",
-    "title": "Ripple CEO Brad Garlinghouse Breaks Silence on XRP vs. RLUSD Debate",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-03T21:24:59.464120+00:00",
-    "tokens": [
-      "XRP",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3ee30f92af1024a6",
     "title": "Binance sits to benefit from First Digital listing",
     "source": "Protos (隐私与合规)",
@@ -5189,6 +5178,16 @@
     "tokens": [
       "HYPE",
       "USDC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "3c6d78ba98197aaf",
+    "title": "台积电遭\"勒索\"3 枚比特币,黑客暗网叫卖 6.9GB 员工数据,又是熟悉的供应链攻击?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-12T09:07:46.254208+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
