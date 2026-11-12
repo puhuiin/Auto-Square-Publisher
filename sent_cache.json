@@ -1,15 +1,5 @@
 [
   {
-    "id": "df0daa224aa471b7",
-    "title": "Binance Says $6.34 Billion Hack Began With Fake Job Interview",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-11-04T01:03:54.527723+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f2a57c7866c2dfb9",
     "title": "Brazil’s Largest Crypto Exchange Goes Offline After $49,000,000 Hack",
     "source": "DailyHodl (山寨异动与百倍币叙事)",
@@ -5187,6 +5177,16 @@
     "title": "Bitcoin dips with Nvidia as ETF outflows reach day five",
     "source": "CoinDesk (权威宏观与机构)",
     "sent_at": "2026-11-12T12:07:09.098920+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "62c58bc02abff140",
+    "title": "Why Is Crypto Crashing? Elon Musk’s Grok AI Predicts BTC to $40K",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-12T12:29:35.795254+00:00",
     "tokens": [
       "BTC"
     ],
