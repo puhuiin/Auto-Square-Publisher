@@ -1,15 +1,5 @@
 [
   {
-    "id": "3ee30f92af1024a6",
-    "title": "Binance sits to benefit from First Digital listing",
-    "source": "Protos (隐私与合规)",
-    "sent_at": "2026-11-03T21:46:11.600215+00:00",
-    "tokens": [
-      "FDUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1972a0d87acb705c",
     "title": "Stellar Bell升级上线测试网,主网投票随后进行",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5190,5 +5180,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "dbb06d5c4218f34d",
+    "title": "XRP Sharks Buy the Dip While US Funds Sell. Who Wins the Fight for $1?",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-12T09:24:37.502571+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
