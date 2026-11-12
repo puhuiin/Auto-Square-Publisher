@@ -1,15 +1,5 @@
 [
   {
-    "id": "3fdca6968c97f88b",
-    "title": "a16z 合伙人:代码正在无限贬值,为什么说网络效应才是 AI 时代的终极护城河?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-04T08:05:31.220712+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4008692699a20920",
     "title": "Ethereum reclaims $2,300 as $1.61B ETF outflows weigh on recovery",
     "source": "CoinJournal (山寨异动)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-12T17:25:48.104896+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "18c9c2f18d252f00",
+    "title": "Tether Gold Gets Clean KPMG Audit Confirming $2.2B in Physical Gold Backing",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-12T17:46:38.964675+00:00",
+    "tokens": [
+      "XAUT"
     ],
     "lang": "en"
   }
