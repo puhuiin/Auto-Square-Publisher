@@ -19,19 +19,19 @@
   "last_updated": "2026-11-12T04:44:08.459762Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "last_fail": "2026-11-12T05:24:00.407651+00:00",
       "fails": 3,
+      "last_fail": "2026-11-12T05:24:00.407651+00:00",
       "parked_until": "2026-11-12T11:24:00.407651+00:00"
     },
     "吴说区块链 (中文深度)": {
+      "fails": 2,
       "reset_at": "2026-11-12T07:06:02.736841+00:00",
-      "last_fail": "2026-11-12T02:03:38.080655+00:00",
-      "fails": 2
+      "last_fail": "2026-11-12T02:03:38.080655+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-12",
