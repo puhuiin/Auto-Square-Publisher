@@ -1,15 +1,5 @@
 [
   {
-    "id": "7cd082fcfc0e2ce3",
-    "title": "Mercado Bitcoin Assures Users Won’t Lose Funds Following $38M Security Breach",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-03T23:26:00.073496+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "64b9de65cb75ed93",
     "title": "毛利润同比增长22%,Block第三季度达32.4亿美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5190,5 +5180,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "da2ae14e9609dff5",
+    "title": "Tron、Tether 与 Chainalysis 成立数字犯罪工作组",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-12T11:07:40.568915+00:00",
+    "tokens": [
+      "TRX"
+    ],
+    "lang": "zh-CN"
   }
 ]
