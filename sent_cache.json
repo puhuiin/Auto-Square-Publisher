@@ -1,15 +1,5 @@
 [
   {
-    "id": "c4d5c6ddf2f2a9e2",
-    "title": "Zcash grants committee drops plan to redirect 98,000 ZEC to future mining rewards",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-11-04T12:25:16.696571+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "8ff89c81fb5196cd",
     "title": "XRP treasury firm Evernorth Holdings falls to new low",
     "source": "Protos (隐私与合规)",
@@ -5186,5 +5176,15 @@
       "AVAX"
     ],
     "lang": "en"
+  },
+  {
+    "id": "be1009905004abb8",
+    "title": "快速冻结提现有助降低损失,韩国拟允许交易所在疑似黑客攻击时暂停存取款",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-12T22:07:13.540543+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
