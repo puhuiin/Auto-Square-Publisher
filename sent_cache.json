@@ -1,15 +1,5 @@
 [
   {
-    "id": "9f70fb7a6f13a0a4",
-    "title": "XRP struggles below $1.30 amid growing selling pressure",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-11-04T11:44:50.443912+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d06eceb7cde89e33",
     "title": "627% XRP Burn Rate Surge Drives Bullish Expectations",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5184,6 +5174,16 @@
     "tokens": [
       "AVAX",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "60bd2adf92205ed1",
+    "title": "Bitcoin Loses Key 200-Day Average: Is $67,000 Next?",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-12T21:26:57.323414+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
