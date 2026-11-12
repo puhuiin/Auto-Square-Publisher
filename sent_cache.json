@@ -1,15 +1,5 @@
 [
   {
-    "id": "a131a2bdb3d5425a",
-    "title": "CARD纳入Coinbase上币路线图",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-03T22:44:23.325336+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7bf793f4c5dca303",
     "title": "Elon Musk’s Grok AI Predicts a Monster Move for Ripple XRP",
     "source": "CryptoNews (全球快讯)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-12T10:04:28.198009+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6ffc4f9b9e0a87cd",
+    "title": "Aave will freeze $279M in osETH, unless StakeWise wins this vote",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-12T10:28:12.745199+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "zh-CN"
   }
