@@ -1,17 +1,5 @@
 [
   {
-    "id": "e7c3800cfe1661ff",
-    "title": "XRP, Near Protocol (NEAR), Zcash (ZEC) and Cardano (ADA) Price Analysis for November 4: Market Is Bleeding Heavily",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-04T01:44:27.790278+00:00",
-    "tokens": [
-      "XRP",
-      "ZEC",
-      "ADA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d94f2d944e173d15",
     "title": "1.01亿美元高倍杠杆多单地址濒临爆仓,已亏损172.5万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5191,5 +5179,15 @@
       "HYPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "48f02d68380b8eec",
+    "title": "DTCC 拟将代币化服务接入 Solana,预计 2027 下半年上线",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-12T13:24:13.848632+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
