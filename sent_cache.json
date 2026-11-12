@@ -1,15 +1,5 @@
 [
   {
-    "id": "8ff89c81fb5196cd",
-    "title": "XRP treasury firm Evernorth Holdings falls to new low",
-    "source": "Protos (隐私与合规)",
-    "sent_at": "2026-11-04T12:44:45.874964+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a0fc1c46e07f9278",
     "title": "客户不会遭受资金损失,Crédit Mutuel Arkéa确认遭黑客攻击",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5186,5 +5176,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "b82f830cf625a663",
+    "title": "Elon Musk’s Grok AI Predicts Justin Sun’s Tron to the Moon",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-12T22:27:03.185827+00:00",
+    "tokens": [
+      "TRX"
+    ],
+    "lang": "zh-CN"
   }
 ]
