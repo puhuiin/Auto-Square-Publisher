@@ -1,15 +1,5 @@
 [
   {
-    "id": "8bc24fc5ab255b79",
-    "title": "Gemini上线Zcash和Hyperliquid预测市场",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-03T21:04:40.670980+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "af190793ef3a7134",
     "title": "Ripple CEO Brad Garlinghouse Breaks Silence on XRP vs. RLUSD Debate",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5188,6 +5178,17 @@
     "sent_at": "2026-11-12T07:44:44.602792+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "075f8219267aa1ae",
+    "title": "币安理财双币投资自11月12日起支持HYPE",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-12T08:44:41.039678+00:00",
+    "tokens": [
+      "HYPE",
+      "USDC"
     ],
     "lang": "zh-TW"
   }
