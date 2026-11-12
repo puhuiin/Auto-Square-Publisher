@@ -1,15 +1,5 @@
 [
   {
-    "id": "78a570480c71c09c",
-    "title": "SUI crypto price prediction: Can bulls defend $0.84 and avoid a 21% drop?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-04T09:57:17.466367+00:00",
-    "tokens": [
-      "SUI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e3db2d5c79551d28",
     "title": "总盈利约1.42亿美元,某地址增持约1,078万美元ZEC空单",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-12T18:46:10.149158+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "81276a44c63302b5",
+    "title": "美国司法部及加密机构支持推翻伊利诺伊州数字资产税",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-12T19:09:08.268281+00:00",
+    "tokens": [
+      "UNI"
     ],
     "lang": "en"
   }
