@@ -1,15 +1,5 @@
 [
   {
-    "id": "4008692699a20920",
-    "title": "Ethereum reclaims $2,300 as $1.61B ETF outflows weigh on recovery",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-11-04T08:24:44.721253+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4a7917ab834df087",
     "title": "Zcash 社区资助委员会撤回将约 9.8 万枚 ZEC 转向未来矿工奖励的提案",
     "source": "吴说区块链 (中文深度)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-12T17:46:38.964675+00:00",
     "tokens": [
       "XAUT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7b17d2108c97ddeb",
+    "title": "官方合约地址公布,AKT已上线Solana",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-12T18:07:28.320422+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
