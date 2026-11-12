@@ -1,15 +1,5 @@
 [
   {
-    "id": "1972a0d87acb705c",
-    "title": "Stellar Bell升级上线测试网,主网投票随后进行",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-03T22:04:46.919293+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "0001bf54585b8cd2",
     "title": "Justin Sun Accuses Trump-Backed World Liberty of Using UAE Ties to Escape Federal Court",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-12T09:24:37.502571+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c239e92225745c33",
+    "title": "Ethlabs proposes advancing Ethereum’s post-quantum to 2027, citing AI acceleration",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-12T09:44:47.255522+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
