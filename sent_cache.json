@@ -1,15 +1,5 @@
 [
   {
-    "id": "2ad8c947a5edcce6",
-    "title": "Nado 上线 kHYPE 现货并支持其作为抵押品",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-03T18:47:12.995601+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "fe25fa196b256d01",
     "title": "Investor Accuses Ripple of Leaving XRP Holders Behind for RLUSD, Demands Action to Unlock Long-Awaited $20 XRP",
     "source": "ZyCrypto (新币与空投)",
@@ -5189,6 +5179,16 @@
     "sent_at": "2026-11-12T05:24:54.667998+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e3cfa0bb1aefc66b",
+    "title": "Crypto Hack Losses Head Past On-Chain Revenue for First Time Since 2020",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-12T05:44:41.942506+00:00",
+    "tokens": [
+      "ARK"
     ],
     "lang": "zh-CN"
   }

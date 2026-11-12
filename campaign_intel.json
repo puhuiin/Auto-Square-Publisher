@@ -18,27 +18,27 @@
   "strategy_guidance": "优先围绕2026-11-12当日上线的多款TradFi美元本位永续合约、仍在进行的第10季现货交易竞赛、期货/现货吃单奖励计划及新币$PREDICT上线热点输出快讯与玩法解读，引导用户参与评论互动获取Write to Earn奖励，同时关联 referral 活动引导新用户参与平台活动。可结合当日新合约上线节点推出新币合约玩法前瞻类内容，搭配交易竞赛复盘、活动参与攻略等角度追高当期活动热度，优先引导用户参与评论互动拿奖励。",
   "last_updated": "2026-11-12T04:44:08.459762Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "fails": 3,
-      "parked_until": "2026-11-12T11:24:00.407651+00:00",
-      "last_fail": "2026-11-12T05:24:00.407651+00:00"
-    },
     "吴说区块链 (中文深度)": {
+      "reset_at": "2026-11-12T05:43:37.102897+00:00",
       "fails": 2,
-      "reset_at": "2026-11-12T05:23:32.042327+00:00",
       "last_fail": "2026-11-12T02:03:38.080655+00:00"
+    },
+    "CoinJournal (山寨异动)": {
+      "parked_until": "2026-11-12T11:24:00.407651+00:00",
+      "fails": 3,
+      "last_fail": "2026-11-12T05:24:00.407651+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-12",
   "_publish_park": {
     "d15af1cad05d7e8f": {
-      "fails": 1,
-      "last_fail": "2026-11-12T04:48:39.057094+00:00"
+      "last_fail": "2026-11-12T04:48:39.057094+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
