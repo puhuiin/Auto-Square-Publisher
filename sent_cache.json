@@ -1,17 +1,5 @@
 [
   {
-    "id": "7afc007664c10095",
-    "title": "稳定币高息争夺战",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-04T04:28:39.480075+00:00",
-    "tokens": [
-      "USDC",
-      "RWUSD",
-      "BFUSD"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "365af31104d452fd",
     "title": "BitMart 关停期间遭黑客攻击,创始人称或与 Mercado Bitcoin 攻击同团伙",
     "source": "吴说区块链 (中文深度)",
@@ -5186,6 +5174,18 @@
     "sent_at": "2026-11-12T14:06:10.315186+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "85bdaec58ff1fb43",
+    "title": "Securitize 與 Ethena 的 BUIDL 流動性設施上線",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-12T14:25:09.734786+00:00",
+    "tokens": [
+      "USDC",
+      "BNB",
+      "ENA"
     ],
     "lang": "en"
   }
