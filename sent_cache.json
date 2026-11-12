@@ -1,15 +1,5 @@
 [
   {
-    "id": "99584fd7339ec365",
-    "title": "Zcash Futures Crash 859% as Long Positions Get Wiped Out: What Next?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-03T20:26:54.971463+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "754f20fd8e6fd092",
     "title": "Cardano dips below $0.19 as bearish derivatives data signals further losses",
     "source": "CoinJournal (山寨异动)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-12T06:45:04.723128+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "9129628b2734661a",
+    "title": "Huma 联创披露早期流动性提供者钱包遭黑客攻击,约 1200 万枚 HUMA 被抛售",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-12T07:07:11.593264+00:00",
+    "tokens": [
+      "HUMA"
     ],
     "lang": "zh-TW"
   }
