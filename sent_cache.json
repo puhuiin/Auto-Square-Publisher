@@ -1,15 +1,5 @@
 [
   {
-    "id": "e3db2d5c79551d28",
-    "title": "总盈利约1.42亿美元,某地址增持约1,078万美元ZEC空单",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-04T10:24:56.586491+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "34a19cdbeab2d606",
     "title": "Solana Co-Founder Names Biggest Threat to Crypto",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-12T19:09:08.268281+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ebaaaf0ab21ed734",
+    "title": "Solana Lands Major Wall Street Boost as DTCC Targets 2027 Launch of Tokenized Assets: What It Means for SOL",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-12T19:30:09.648482+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
