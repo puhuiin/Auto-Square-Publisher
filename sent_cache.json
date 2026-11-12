@@ -1,15 +1,5 @@
 [
   {
-    "id": "f2a57c7866c2dfb9",
-    "title": "Brazil’s Largest Crypto Exchange Goes Offline After $49,000,000 Hack",
-    "source": "DailyHodl (山寨异动与百倍币叙事)",
-    "sent_at": "2026-11-04T01:24:03.485723+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e7c3800cfe1661ff",
     "title": "XRP, Near Protocol (NEAR), Zcash (ZEC) and Cardano (ADA) Price Analysis for November 4: Market Is Bleeding Heavily",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5189,6 +5179,16 @@
     "sent_at": "2026-11-12T12:29:35.795254+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "5ac53eda339a7c4b",
+    "title": "Hyperion DeFi 发布 Q3 财报,GAAP 净利润 3959 万美元",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-12T13:04:43.701234+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
