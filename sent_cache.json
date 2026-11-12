@@ -1,17 +1,5 @@
 [
   {
-    "id": "01ab29f4f951d12b",
-    "title": "价值1819万美元,Mercado Bitcoin黑客将多种山寨币兑换为ETH",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-04T05:28:39.885655+00:00",
-    "tokens": [
-      "ETH",
-      "PEPE",
-      "AAVE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "02f1126e3efa76a6",
     "title": "Binance Hacker Continues Aggressive Bitcoin Buying Spree",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5187,6 +5175,16 @@
     "sent_at": "2026-11-12T15:05:19.006146+00:00",
     "tokens": [
       "ARK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "381a6c6285eadba4",
+    "title": "Solana (SOL) at a Pivotal Moment: Buy the Dip or Brace for Another Crash?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-12T15:25:32.472800+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
