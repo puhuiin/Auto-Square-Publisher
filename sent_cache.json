@@ -1,15 +1,5 @@
 [
   {
-    "id": "f59671f504e84d77",
-    "title": "Anthropic’s Claude AI Predicts a Massive BTC USD Move",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-04T00:44:25.557859+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "df0daa224aa471b7",
     "title": "Binance Says $6.34 Billion Hack Began With Fake Job Interview",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5189,6 +5179,16 @@
     "tokens": [
       "ETH",
       "PENGU"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "eb40d7f1c2d8b49a",
+    "title": "Bitcoin dips with Nvidia as ETF outflows reach day five",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-12T12:07:09.098920+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
