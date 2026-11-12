@@ -1,15 +1,5 @@
 [
   {
-    "id": "c13e3985b0d91d95",
-    "title": "Solana’s price drops below $100 for 4 consecutive days: Is a recovery still possible?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-04T11:04:38.999852+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b0bf85281fda4bab",
     "title": "18 New XRP Millionaires Emerge in 72 Hours: Does It Signal a Price Bottom?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-12T19:48:49.880919+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "12436d764c25bd07",
+    "title": "交易员 Ansem:当前做多债券、石油及一枚 Solana 链代币",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-12T20:08:34.134331+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
