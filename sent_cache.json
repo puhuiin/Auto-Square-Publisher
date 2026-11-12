@@ -1,15 +1,5 @@
 [
   {
-    "id": "7bf793f4c5dca303",
-    "title": "Elon Musk’s Grok AI Predicts a Monster Move for Ripple XRP",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-03T23:04:30.603435+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7cd082fcfc0e2ce3",
     "title": "Mercado Bitcoin Assures Users Won’t Lose Funds Following $38M Security Breach",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5190,5 +5180,15 @@
       "AAVE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "7034e4cdcb87d293",
+    "title": "XRP Ledger on Highest Level in 4 Months, Breaks 41,000 Unique Senders Threshold",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-12T10:49:20.325959+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
