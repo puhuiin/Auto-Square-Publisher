@@ -1,15 +1,5 @@
 [
   {
-    "id": "d06eceb7cde89e33",
-    "title": "627% XRP Burn Rate Surge Drives Bullish Expectations",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-04T12:04:03.208775+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c4d5c6ddf2f2a9e2",
     "title": "Zcash grants committee drops plan to redirect 98,000 ZEC to future mining rewards",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5184,6 +5174,16 @@
     "sent_at": "2026-11-12T21:26:57.323414+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "dab3bf12820ad3b3",
+    "title": "Avalanche Owns Five Percent of Tokenized Stocks",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-12T21:47:59.470692+00:00",
+    "tokens": [
+      "AVAX"
     ],
     "lang": "en"
   }
