@@ -1,15 +1,5 @@
 [
   {
-    "id": "64d9d670b776c722",
-    "title": "Ex-XRP Treasury Reveals Exit From $5 Million Stake in Ripple",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-03T18:07:08.546509+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6040de2837e3f3a8",
     "title": "Ripple Urges SEC to End “Case-by-Case” Crypto Enforcement, Citing $150M XRP Legal Fight",
     "source": "ZyCrypto (新币与空投)",
@@ -5191,5 +5181,15 @@
       "KAT"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "3cb1669d14dc20a2",
+    "title": "XRP Unveils Quantum Security Plan That Could Cost $255,000",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-12T04:51:34.349271+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
