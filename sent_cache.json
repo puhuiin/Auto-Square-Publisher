@@ -1,15 +1,5 @@
 [
   {
-    "id": "e6d0db57d0780f16",
-    "title": "Bitcoin ETF Attracts $75M as Goldman Sachs Calls December Fed Rate Cut",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-05T13:27:17.763410+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "5c49f9b01ec40fda",
     "title": "James Wynn Doubles Down on Bitcoin Crash Call Despite Fresh ETF Inflows",
     "source": "BeInCrypto (山寨与行情)",
@@ -5180,5 +5170,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0172a4fd96782969",
+    "title": "加拿大安大略省医疗保健养老金三季度新增 HYPE 财库公司 PURR 持仓,季末市值约 3,533 万美元",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-13T23:07:01.023859+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
