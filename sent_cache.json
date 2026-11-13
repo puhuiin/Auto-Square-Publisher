@@ -1,17 +1,5 @@
 [
   {
-    "id": "1bc20a30ae81edf7",
-    "title": "币安暂停提币那一夜,流动性去了哪里?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-05T10:48:45.213606+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9674e676b508f3f5",
     "title": "SHIB Community Warned Amid Powerful iOS Spyware Exploit: What to Know",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5180,6 +5168,16 @@
     "title": "MEGA Discloses 20% Staff Cut Amid AI Product Push",
     "source": "The Defiant (DeFi 深度)",
     "sent_at": "2026-11-13T19:44:56.151392+00:00",
+    "tokens": [
+      "MEGA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3ec963c0f66a27d8",
+    "title": "MEGA cuts 20% of workforce as former MegaETH Foundation restructures",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-13T20:05:15.223375+00:00",
     "tokens": [
       "MEGA"
     ],
