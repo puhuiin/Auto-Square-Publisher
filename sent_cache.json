@@ -1,15 +1,5 @@
 [
   {
-    "id": "844b91c7e220a66b",
-    "title": "XRP Millionaire Wallets Hit a Yearly High: Is a Breakout Next?",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-04T23:07:37.948185+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ae1c341a4cc5df0d",
     "title": "Schroders launches tokenized emerging markets debt fund on Solana with Centrifuge",
     "source": "The Block (机构与政策)",
@@ -5184,5 +5174,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "838751d0015b6a28",
+    "title": "摩根大通增持 Strategy 36%,持 5.4 亿美元 IBIT",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-13T11:04:27.842688+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
