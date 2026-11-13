@@ -1,15 +1,5 @@
 [
   {
-    "id": "d36e52001e43aa53",
-    "title": "Aave and Lido lose $1.7B in massive DeFi capital drop after the Binance hack",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-04T20:10:49.553319+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "00b2537be50a66f7",
     "title": "Polygon提案拟硬分叉清零并划转约7049万枚被盗POL",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5182,6 +5172,16 @@
     "tokens": [
       "GMT",
       "HYPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "83852c0ca39044f6",
+    "title": "Solana treasury Forward Industries flashes a 30% SOL discount, with a catch",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-13T06:47:32.086869+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
