@@ -1,16 +1,5 @@
 [
   {
-    "id": "e8496857de365439",
-    "title": "播客笔记|Vitalik Buterin 孟买专访:精简以太坊路线图、交易所地堡模式与监管错位反思",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-05T11:40:05.002178+00:00",
-    "tokens": [
-      "ZK",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a130a0bceb6c1e2a",
     "title": "Bitcoin holds above $80,000 after Wednesday’s jump as injective rallies on staked ETF listing",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5180,6 +5169,16 @@
     "sent_at": "2026-11-13T20:25:50.277280+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "340af3e97a5ce7b2",
+    "title": "Solana 机密计算工具在开发网上线测试版",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-13T21:26:43.196130+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
