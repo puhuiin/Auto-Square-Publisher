@@ -1,15 +1,5 @@
 [
   {
-    "id": "4f77e5ce2373196b",
-    "title": "MetaDAO推出面向消费应用创始人的融资计划",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-05T03:47:19.948422+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c7682b113e4e4c4c",
     "title": "Glassnode 链上周报:在支撑位蓄势停滞,短期持有者投降与 7.8 万美元成本区复盘",
     "source": "深潮TechFlow (中文/简体)",
@@ -5184,5 +5174,15 @@
       "TRX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ff207b891ea2f936",
+    "title": "TON Strategy第三季度净亏损2397万美元,持有约2.35亿枚GRAM",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-13T14:10:43.823297+00:00",
+    "tokens": [
+      "GRAM"
+    ],
+    "lang": "en"
   }
 ]
