@@ -1,16 +1,5 @@
 [
   {
-    "id": "f94046dd464ad782",
-    "title": "Privacy Cash Pauses Deposits After Binance Hack",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-04T17:27:29.441213+00:00",
-    "tokens": [
-      "ETH",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "88632531ac4330d7",
     "title": "Zcash Climbs 9.5% Ahead of NU7 Network Upgrade",
     "source": "The Defiant (DeFi 深度)",
@@ -5180,6 +5169,16 @@
     "sent_at": "2026-11-13T03:50:05.652541+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "66acc98c572b06ff",
+    "title": "How Ethereum staking hit a record 36.3% despite ETH’s price drop",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-13T04:06:37.321504+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
