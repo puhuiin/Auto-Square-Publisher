@@ -1,15 +1,5 @@
 [
   {
-    "id": "9bc3229891d3b1ba",
-    "title": "Bitcoin rockets above $80,000 for first time since Binance hack despite Democrats sweep, but a historical crash looms",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-04T18:45:12.571458+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "682d7e331046444b",
     "title": "纳斯达克批准 Canary 质押 INJ ETF 上市申请",
     "source": "深潮TechFlow (中文/简体)",
@@ -5184,5 +5174,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ffaa8c1d833f2a4e",
+    "title": "付鹏万字专访:我对 BTC 没有信仰,比特币四年周期已经结束",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-13T05:27:23.963718+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
