@@ -1,16 +1,5 @@
 [
   {
-    "id": "2b20e2e7b3ffbd72",
-    "title": "交易员 degentrading:半导体股盘前大跌,套牢盘或限制反弹,看好中国科技股与加密市场",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-05T05:27:26.675910+00:00",
-    "tokens": [
-      "BTC",
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "bf81159c7395db50",
     "title": "昨日以太坊现货 ETF 净流入 5,304 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5182,6 +5171,16 @@
     "sent_at": "2026-11-13T14:48:15.715090+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "741bbbe6abbd21bf",
+    "title": "MegaETH 团队重组:MEGA 员工规模缩减 20%",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-13T15:09:34.164445+00:00",
+    "tokens": [
+      "MEGA"
     ],
     "lang": "en"
   }
