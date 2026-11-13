@@ -1,16 +1,5 @@
 [
   {
-    "id": "3a830fefa5ec7f1b",
-    "title": "Arthur Hayes:稀释即毒药,AI 巨头 IPO 如何诱发信用冰封与加密流动性反噬?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-05T05:04:45.155461+00:00",
-    "tokens": [
-      "ZEC",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2b20e2e7b3ffbd72",
     "title": "交易员 degentrading:半导体股盘前大跌,套牢盘或限制反弹,看好中国科技股与加密市场",
     "source": "深潮TechFlow (中文/简体)",
@@ -5183,6 +5172,16 @@
     "tokens": [
       "SOL",
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "94051ca746de84e4",
+    "title": "Solana Moves Closer To Wall Street As DTCC Reveals Tokenization Plans",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-13T14:48:15.715090+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
