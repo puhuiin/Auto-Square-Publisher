@@ -1,15 +1,5 @@
 [
   {
-    "id": "682d7e331046444b",
-    "title": "纳斯达克批准 Canary 质押 INJ ETF 上市申请",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-04T19:05:27.256759+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4083171892759cee",
     "title": "Gemini AI Predicts a Brutal Unwinding of the TRUMP Memecoin",
     "source": "CryptoNews (全球快讯)",
@@ -5180,6 +5170,16 @@
     "title": "付鹏万字专访:我对 BTC 没有信仰,比特币四年周期已经结束",
     "source": "深潮TechFlow (中文/简体)",
     "sent_at": "2026-11-13T05:27:23.963718+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "329ca16cf5fc79db",
+    "title": "彭博:比特币失守7万美元关口,通胀与监管压力叠加机构撤资",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-13T05:50:24.817360+00:00",
     "tokens": [
       "BTC"
     ],
