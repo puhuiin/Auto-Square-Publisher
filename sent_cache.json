@@ -1,15 +1,5 @@
 [
   {
-    "id": "6f90f568e6483827",
-    "title": "Top Zcash Price Predictions as ZEC Surges 14% Daily",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-04T18:11:34.152511+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9bc3229891d3b1ba",
     "title": "Bitcoin rockets above $80,000 for first time since Binance hack despite Democrats sweep, but a historical crash looms",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5184,5 +5174,15 @@
       "VIRTUAL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a2b5e731f61a5cc2",
+    "title": "Ave.ai联合Web3 Week Asia举办Clash of Trenchers,冠军斩获10倍收益",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-13T05:05:52.781512+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
