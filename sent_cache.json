@@ -1,15 +1,5 @@
 [
   {
-    "id": "386a93f31a5080d2",
-    "title": "Why rising XRP whale counts are a fake bullish signal",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-04T14:06:19.277175+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7c11c1d9cc5b69dc",
     "title": "吴说每日精选加密新闻 - 币安披露 63.4 亿美元黑客攻击初步调查:假招聘面试植入恶意软件,内部 AI 工具遭利用",
     "source": "吴说区块链 (中文深度)",
@@ -5181,6 +5171,16 @@
     "sent_at": "2026-11-13T00:41:39.607670+00:00",
     "tokens": [
       "HUMA"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9553e48a9494f00c",
+    "title": "DeFi 协议 Frax 上线销毁引擎,拟用收入回购并销毁 FRAX",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-13T01:04:24.312703+00:00",
+    "tokens": [
+      "FRAX"
     ],
     "lang": "zh-CN"
   }
