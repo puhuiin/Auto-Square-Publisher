@@ -1,16 +1,5 @@
 [
   {
-    "id": "747ca5b72dba8cf0",
-    "title": "Jupiter第三季度交易量位居全链DEX聚合器第一,已连续8个季度领先",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-05T08:08:56.879172+00:00",
-    "tokens": [
-      "SOL",
-      "UNI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "988c92d95c9a9cb5",
     "title": "Soter Insure完成B轮融资第二次交割,SC Ventures与SBI集团加入",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5180,6 +5169,17 @@
     "sent_at": "2026-11-13T17:29:33.468061+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "689a8fcb9e419c75",
+    "title": "Dogecoin Cofounder Makes 'I’m a Shiba Inu' Statement",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-13T17:50:18.378034+00:00",
+    "tokens": [
+      "DOGE",
+      "SHIB"
     ],
     "lang": "en"
   }
