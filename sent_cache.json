@@ -1,15 +1,5 @@
 [
   {
-    "id": "d2c9cc49c6d9548f",
-    "title": "What's Next for Crypto? Ripple Exec Shares Key Insights From BlackRock Discussion",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-04T16:27:12.207176+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "e2559e4e43f4e8b7",
     "title": "ZetaChain提案销毁约5500万枚ZETA,承诺2027年不出售基金会持有的新增解锁代币",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5179,6 +5169,16 @@
     "sent_at": "2026-11-13T02:48:56.690692+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "cdc9d69f54cdcd21",
+    "title": "Pantera 合伙人中国具身智能考察见闻:硬件供应链占优,“数据农场”堆量难解模型短板",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-13T03:07:27.688036+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
