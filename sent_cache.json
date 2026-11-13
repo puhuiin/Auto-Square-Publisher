@@ -1,15 +1,5 @@
 [
   {
-    "id": "cc4159a23d0d6d24",
-    "title": "Official Trump (TRUMP) Drops to a 3-Month Low Following the Democrats’ Victory: Details",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-04T15:25:27.071629+00:00",
-    "tokens": [
-      "TRUMP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3282168c6216a173",
     "title": "Global asset manager Schroders brings emerging market bond fund to Solana",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5179,6 +5169,17 @@
     "sent_at": "2026-11-13T01:47:57.230075+00:00",
     "tokens": [
       "PEPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "584c2fa1e97b77cb",
+    "title": "管理费上调带动 Q3 营收增长,Maple 回购迈入中档区间",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-13T02:07:17.113585+00:00",
+    "tokens": [
+      "SYRUP",
+      "AAVE"
     ],
     "lang": "zh-CN"
   }
