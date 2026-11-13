@@ -1,15 +1,5 @@
 [
   {
-    "id": "f66efb3954d69907",
-    "title": "Bubblemaps调查四名加密KOL,称钱包操作与公开叙事不完全一致",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-05T13:06:30.603683+00:00",
-    "tokens": [
-      "TRUMP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e6d0db57d0780f16",
     "title": "Bitcoin ETF Attracts $75M as Goldman Sachs Calls December Fed Rate Cut",
     "source": "CryptoNews (全球快讯)",
@@ -5180,5 +5170,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "13415228200e56f7",
+    "title": "XRP loans trigger 883 liquidations, and $53M remains at risk",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-13T22:44:04.870853+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
