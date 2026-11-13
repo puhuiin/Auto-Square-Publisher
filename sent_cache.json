@@ -1,15 +1,5 @@
 [
   {
-    "id": "cc3a6bf79acb9790",
-    "title": "XRP Ledger Activates New Amendment to Strengthen Network",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-04T22:28:22.572159+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "45c936f25744739c",
     "title": "New Project Backed by Ripple Co-Founder Faces Heavy XRP Community Backlash",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5182,6 +5172,16 @@
     "sent_at": "2026-11-13T09:46:37.661678+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "37965b1a6e458bae",
+    "title": "QCP:比特币跌破7万美元,现货ETF连续遭遇大额资金流出",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-13T10:07:25.939443+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }

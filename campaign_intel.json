@@ -18,25 +18,25 @@
   "last_updated": "2026-11-13T05:24:08.978661Z",
   "_feed_health": {
     "吴说区块链 (中文深度)": {
-      "last_fail": "2026-11-13T09:26:24.559905+00:00",
-      "reset_at": "2026-11-13T09:46:10.118322+00:00",
-      "fails": 1
+      "reset_at": "2026-11-13T10:06:16.622142+00:00",
+      "fails": 1,
+      "last_fail": "2026-11-13T09:26:24.559905+00:00"
     },
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-11-13T06:26:01.778119+00:00",
       "fails": 1,
-      "reset_at": "2026-11-13T09:46:09.228833+00:00"
+      "reset_at": "2026-11-13T10:06:15.581062+00:00",
+      "last_fail": "2026-11-13T06:26:01.778119+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-13",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 930,
+  "_img_rot": 931,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
