@@ -1,15 +1,5 @@
 [
   {
-    "id": "9674e676b508f3f5",
-    "title": "SHIB Community Warned Amid Powerful iOS Spyware Exploit: What to Know",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-05T11:07:46.577384+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e8496857de365439",
     "title": "播客笔记|Vitalik Buterin 孟买专访:精简以太坊路线图、交易所地堡模式与监管错位反思",
     "source": "深潮TechFlow (中文/简体)",
@@ -5180,6 +5170,16 @@
     "sent_at": "2026-11-13T20:05:15.223375+00:00",
     "tokens": [
       "MEGA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a7c5a09edcc63844",
+    "title": "Aave plan could cut some lenders’ share of interest by 60%",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-13T20:25:50.277280+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "en"
   }
