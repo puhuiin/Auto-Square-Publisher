@@ -1,15 +1,5 @@
 [
   {
-    "id": "6fc33f0553a9ced8",
-    "title": "Zcash to freeze $16M in its oldest privacy pool with NU7 upgrade",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-05T06:05:08.042278+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b9d422fc525ab461",
     "title": "Arthur Hayes: Can AI IPO Dilution Choke Bank Liquidity and Hit Bitcoin?",
     "source": "BeInCrypto (山寨与行情)",
@@ -5181,6 +5171,16 @@
     "sent_at": "2026-11-13T15:28:30.833422+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "093a549f469ad7af",
+    "title": "Hyperliquid (HYPE) Price Has One Line Left to Defend. The Last Test Ended in a Rally",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-13T15:49:32.846352+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
