@@ -1,16 +1,5 @@
 [
   {
-    "id": "510692a2fdff1a2b",
-    "title": "Aave V4 在 Base 上线 SpaceX 代币化股票抵押借贷",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-04T17:08:15.816976+00:00",
-    "tokens": [
-      "USDC",
-      "AAVE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f94046dd464ad782",
     "title": "Privacy Cash Pauses Deposits After Binance Hack",
     "source": "The Defiant (DeFi 深度)",
@@ -5183,5 +5172,15 @@
       "DOGE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "92e48bfa56a3ff78",
+    "title": "Upbit 将上线 SANC 韩元、BTC 及 USDT 交易对",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-13T03:50:05.652541+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
