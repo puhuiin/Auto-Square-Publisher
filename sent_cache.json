@@ -1,15 +1,5 @@
 [
   {
-    "id": "b9d422fc525ab461",
-    "title": "Arthur Hayes: Can AI IPO Dilution Choke Bank Liquidity and Hit Bitcoin?",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-05T06:24:48.716682+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9969ad4381d52ed4",
     "title": "Zcash is about to freeze $16 million in its oldest privacy pool",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5181,6 +5171,17 @@
     "sent_at": "2026-11-13T15:49:32.846352+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "36ab711e97f92d95",
+    "title": "Solo Brings Human Verification to Venmo Co-Founder’s JellyJelly App as AI Agents Beat CAPTCHA",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-13T16:29:05.910652+00:00",
+    "tokens": [
+      "ID",
+      "SOL"
     ],
     "lang": "en"
   }
