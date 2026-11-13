@@ -1,15 +1,5 @@
 [
   {
-    "id": "e2b0642300759990",
-    "title": "Solana Microscope Offers Open-Source Monitoring for Complex On-Chain Operations",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-04T16:06:02.259118+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d2c9cc49c6d9548f",
     "title": "What's Next for Crypto? Ripple Exec Shares Key Insights From BlackRock Discussion",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5179,6 +5169,16 @@
     "sent_at": "2026-11-13T02:26:30.052186+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "dda810a7ad3c8d95",
+    "title": "Here’s why Zcash could remove 50,000 ZEC from its grants treasury",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-13T02:48:56.690692+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
