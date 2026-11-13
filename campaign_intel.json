@@ -25,17 +25,10 @@
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
-  "_llm_breaker": {
-    "Preset-stepfun": {
-      "fails": 1,
-      "cleared_at": "2026-11-13T21:24:37.264185+00:00",
-      "cooldown_until": "2026-11-13T21:36:10.489946+00:00",
-      "last_fail": "2026-11-13T21:26:10.489954+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-11-13",
   "_publish_park": {},
   "_intel_refresh_fail": {},
