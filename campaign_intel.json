@@ -24,14 +24,14 @@
       "reset_at": "2026-11-13T04:26:02.019701+00:00"
     },
     "CoinJournal (山寨异动)": {
-      "fails": 3,
       "last_fail": "2026-11-13T02:06:33.014989+00:00",
+      "fails": 3,
       "parked_until": "2026-11-13T08:06:33.014989+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-13",
