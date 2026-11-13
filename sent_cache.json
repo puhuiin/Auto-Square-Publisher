@@ -1,15 +1,5 @@
 [
   {
-    "id": "2c17b9cee9551e4e",
-    "title": "Polygon Crypto Gains Momentum as Binance & Polymarket Seek $7M Recovery",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-05T09:32:25.091179+00:00",
-    "tokens": [
-      "POL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d7f5b07a14fa2d58",
     "title": "Gotchi Labs 与 Vana 达成合作计划,将用户自主控制的数据基础设施整合至 Sleepagotchi",
     "source": "深潮TechFlow (中文/简体)",
@@ -5181,6 +5171,16 @@
     "sent_at": "2026-11-13T18:29:52.694082+00:00",
     "tokens": [
       "ARB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "076c5f3b1289fbb2",
+    "title": "Helius Launches Solana Privacy Rings With Confidential Balances and Transfers",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-13T18:50:56.424720+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
