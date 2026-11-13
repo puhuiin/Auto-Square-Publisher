@@ -1,16 +1,5 @@
 [
   {
-    "id": "16653fe01ea8e80d",
-    "title": "Can XRP and RLUSD grow together? Here is Garlinghouse’s view!",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-04T19:47:40.126877+00:00",
-    "tokens": [
-      "XRP",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d36e52001e43aa53",
     "title": "Aave and Lido lose $1.7B in massive DeFi capital drop after the Binance hack",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5182,6 +5171,17 @@
     "sent_at": "2026-11-13T06:09:46.890066+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "02c838ddf609dbba",
+    "title": "Wirex Launches Navoka, an AI Agent That Pays From Its Own Bank Account and Card",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-13T06:27:23.216017+00:00",
+    "tokens": [
+      "GMT",
+      "HYPE"
     ],
     "lang": "zh-TW"
   }
