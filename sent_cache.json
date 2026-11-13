@@ -1,15 +1,5 @@
 [
   {
-    "id": "688d6d307bf5dab8",
-    "title": "Cardano Ready to Repeat Its Legendary 2,000% Rally? Pundit Reveals Two Key Price Levels for Next Bull Run",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-04T21:06:37.990502+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9f5db43eb9859dfa",
     "title": "AT&T 家庭安防系统接入 Gemini for Home",
     "source": "深潮TechFlow (中文/简体)",
@@ -5183,6 +5173,16 @@
     "tokens": [
       "USDC",
       "ONDO"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "6200b09ce9a2df65",
+    "title": "Jupiter Crypto Trading on Its Own Fundamentals: JUP USD Breaks Away From Market Sell-Off",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-13T08:47:29.709294+00:00",
+    "tokens": [
+      "JUP"
     ],
     "lang": "zh-TW"
   }
