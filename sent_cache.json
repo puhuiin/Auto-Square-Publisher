@@ -1,15 +1,5 @@
 [
   {
-    "id": "88632531ac4330d7",
-    "title": "Zcash Climbs 9.5% Ahead of NU7 Network Upgrade",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-04T17:49:46.413198+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6f90f568e6483827",
     "title": "Top Zcash Price Predictions as ZEC Surges 14% Daily",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5179,6 +5169,19 @@
     "sent_at": "2026-11-13T04:06:37.321504+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "05dc76facaec493e",
+    "title": "某鲸鱼斥资430万美元从币安买入山寨币,重仓VIRTUAL、PEPE和UNI",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-13T04:26:37.982460+00:00",
+    "tokens": [
+      "PEPE",
+      "UNI",
+      "SHIB",
+      "VIRTUAL"
     ],
     "lang": "zh-CN"
   }
