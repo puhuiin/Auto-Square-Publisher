@@ -1,16 +1,5 @@
 [
   {
-    "id": "f52272dd8e261296",
-    "title": "主要 Meme 市场 24 小时成交约 2.03 亿美元,环比增长 26.6%",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-05T02:04:13.538484+00:00",
-    "tokens": [
-      "BNB",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "8c6d85088e799c5c",
     "title": "Canary Staked INJ ETF 获纳斯达克批准上市,拟以 INJC 为交易代码",
     "source": "吴说区块链 (中文深度)",
@@ -5183,5 +5172,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "aa2c99821c3055dc",
+    "title": "15 Years Since David Schwartz First Coded XRP Ledger’s Foundation, XRPL’s First Step?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-13T13:26:43.174331+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
