@@ -1,15 +1,5 @@
 [
   {
-    "id": "e2559e4e43f4e8b7",
-    "title": "ZetaChain提案销毁约5500万枚ZETA,承诺2027年不出售基金会持有的新增解锁代币",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-04T16:47:39.212662+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "510692a2fdff1a2b",
     "title": "Aave V4 在 Base 上线 SpaceX 代币化股票抵押借贷",
     "source": "深潮TechFlow (中文/简体)",
@@ -5181,5 +5171,17 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "aafd367cc1e0b941",
+    "title": "XRP, ETH, DOGE: Tim Draper Predicts Bitcoin to Absorb Altcoins",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-13T03:27:09.992280+00:00",
+    "tokens": [
+      "XRP",
+      "ETH",
+      "DOGE"
+    ],
+    "lang": "zh-TW"
   }
 ]
