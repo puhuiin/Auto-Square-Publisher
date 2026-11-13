@@ -1,15 +1,5 @@
 [
   {
-    "id": "988c92d95c9a9cb5",
-    "title": "Soter Insure完成B轮融资第二次交割,SC Ventures与SBI集团加入",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-05T08:26:34.915943+00:00",
-    "tokens": [
-      "SC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "867f97599f499c53",
     "title": "增发 50% MAGIC 代币,转向 AI 与 DePIN,老项目 Treasure DAO 的自我重写",
     "source": "深潮TechFlow (中文/简体)",
@@ -5180,6 +5170,18 @@
     "tokens": [
       "DOGE",
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ee18d433c0495b72",
+    "title": "Jed McCaleb’s Stellar (XLM) Tops Solana and Ethereum in Daily RWA Fund Growth",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-13T18:10:32.510913+00:00",
+    "tokens": [
+      "XLM",
+      "SOL",
+      "ETH"
     ],
     "lang": "en"
   }
