@@ -1,15 +1,5 @@
 [
   {
-    "id": "9555912823876f0e",
-    "title": "Important Ripple News and XRP Price Update: November 5",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-05T10:27:07.022567+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1bc20a30ae81edf7",
     "title": "币安暂停提币那一夜,流动性去了哪里?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5182,6 +5172,16 @@
     "tokens": [
       "AAVE",
       "LINK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "cb6346b41efcc688",
+    "title": "MEGA Discloses 20% Staff Cut Amid AI Product Push",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-13T19:44:56.151392+00:00",
+    "tokens": [
+      "MEGA"
     ],
     "lang": "en"
   }
