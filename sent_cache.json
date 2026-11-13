@@ -1,15 +1,5 @@
 [
   {
-    "id": "4ee02fbf31309992",
-    "title": "Mark Zuckerberg’s Meta AI Predicts the Bitcoin Price: Is This Actually Possible?",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-05T00:26:45.736264+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "817123f12411fd28",
     "title": "旧版漏洞致热钱包资金被盗,BTCPay Server建议用户立即迁移",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5184,5 +5174,15 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "66f2922cc11418ab",
+    "title": "解绑质押暂停7天,MANTRA应对私钥泄露事件",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-13T12:04:13.849441+00:00",
+    "tokens": [
+      "MANTRA"
+    ],
+    "lang": "zh-CN"
   }
 ]
