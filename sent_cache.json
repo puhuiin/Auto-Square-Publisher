@@ -1,16 +1,5 @@
 [
   {
-    "id": "b6fc222ebb460aec",
-    "title": "BitMart founder confirms second exchange hack – Links to Mercado Bitcoin emerge",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-05T07:31:36.744940+00:00",
-    "tokens": [
-      "ETH",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "747ca5b72dba8cf0",
     "title": "Jupiter第三季度交易量位居全链DEX聚合器第一,已连续8个季度领先",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5181,6 +5170,16 @@
     "sent_at": "2026-11-13T17:10:02.621291+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5f97e7602b76f731",
+    "title": "Bitcoin Hits 12-Week Low as Fed Rate Fears Undo Most of Summer Rally",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-13T17:29:33.468061+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }

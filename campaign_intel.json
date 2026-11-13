@@ -2,22 +2,24 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#Futures",
+    "#TradingTournament",
     "#NewListing",
-    "#Referral"
+    "#BinanceAcademy"
   ],
   "incentivized_tokens": [
-    "$BNB",
-    "$BTC",
-    "$USDC",
+    "$COLLECT",
+    "$PREDICT",
     "$HYPE",
     "$TRX",
-    "$PREDICT"
+    "$BTC",
+    "$BNB",
+    "$USDC"
   ],
-  "strategy_guidance": "今日是Binance Lite Loan 50%服务费优惠活动的最后截止日，优先输出该活动的实用操作攻略贴引导用户参与评论互动拿奖励；同时结合11月16日即将上线的$HYPE、$TRX USD本位永续合约、新币$PREDICT上线动态，以及11月全期开放的Binance Academy BTC Quiz活动内容，带#Write2Earn标签引导用户参与互动，还可关联 affiliate 返佣引导用户通过专属链接参与交易获取返佣。",
-  "last_updated": "2026-11-13T05:24:08.978661Z",
+  "strategy_guidance": "优先针对今日截止的 $COLLECT 交易赛与 Lite Loan 借贷优惠发布“最后冲刺”提醒，利用时间紧迫感引导社区互动。结合 $PREDICT 新币上线与 $HYPE、$TRX 等新合约预热进行深度解析，通过分享参与攻略和热点分析来捕捉流量，最大化 Write to Earn 互动奖励。",
+  "last_updated": "2026-11-13T17:27:31.569348Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
+      "reset_at": "2026-11-13T17:27:32.430708+00:00",
       "fails": 1,
       "last_fail": "2026-11-13T17:08:06.510926+00:00"
     }
@@ -26,7 +28,13 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
     "date": "2026-10-18"
   },
-  "_llm_breaker": {},
+  "_llm_breaker": {
+    "Preset-stepfun": {
+      "fails": 1,
+      "cooldown_until": "2026-11-13T17:39:09.802447+00:00",
+      "last_fail": "2026-11-13T17:29:09.802467+00:00"
+    }
+  },
   "_article_sent_date": "2026-11-13",
   "_publish_park": {},
   "_intel_refresh_fail": {},
