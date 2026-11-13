@@ -1,15 +1,5 @@
 [
   {
-    "id": "3d12a92e901e7912",
-    "title": "Nasdaq Approves Listing of Canary’s Staked Injective ETF",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-04T20:49:19.330942+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "688d6d307bf5dab8",
     "title": "Cardano Ready to Repeat Its Legendary 2,000% Rally? Pundit Reveals Two Key Price Levels for Next Bull Run",
     "source": "ZyCrypto (新币与空投)",
@@ -5182,6 +5172,17 @@
     "sent_at": "2026-11-13T07:10:37.037779+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b06be6211f52f660",
+    "title": "2026 年加密股票市场 Q4 前瞻报告(8 月至 10 月)|RootData Research",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-13T07:49:53.604439+00:00",
+    "tokens": [
+      "USDC",
+      "ONDO"
     ],
     "lang": "zh-TW"
   }
