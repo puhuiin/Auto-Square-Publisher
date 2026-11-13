@@ -1,15 +1,5 @@
 [
   {
-    "id": "c7682b113e4e4c4c",
-    "title": "Glassnode 链上周报:在支撑位蓄势停滞,短期持有者投降与 7.8 万美元成本区复盘",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-05T04:45:52.134456+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3a830fefa5ec7f1b",
     "title": "Arthur Hayes:稀释即毒药,AI 巨头 IPO 如何诱发信用冰封与加密流动性反噬?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5182,6 +5172,17 @@
     "sent_at": "2026-11-13T14:10:43.823297+00:00",
     "tokens": [
       "GRAM"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c868121f1f4ef4b7",
+    "title": "Pi Network (PI) Hit by Volatility, Solana (SOL) Braces for Additional Sell-off: Bits Recap Nov 13",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-13T14:30:00.401371+00:00",
+    "tokens": [
+      "SOL",
+      "ZEC"
     ],
     "lang": "en"
   }
