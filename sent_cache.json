@@ -1,15 +1,5 @@
 [
   {
-    "id": "45c936f25744739c",
-    "title": "New Project Backed by Ripple Co-Founder Faces Heavy XRP Community Backlash",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-04T22:47:00.552977+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "844b91c7e220a66b",
     "title": "XRP Millionaire Wallets Hit a Yearly High: Is a Breakout Next?",
     "source": "BeInCrypto (山寨与行情)",
@@ -5180,6 +5170,16 @@
     "title": "QCP:比特币跌破7万美元,现货ETF连续遭遇大额资金流出",
     "source": "Odaily星球日报 (中文快讯)",
     "sent_at": "2026-11-13T10:07:25.939443+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "bb6fe80c460a6e75",
+    "title": "Jane Street Q3 增持富达比特币 ETF 约 691%,减持贝莱德 IBIT 约 18.7%",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-13T10:45:45.704175+00:00",
     "tokens": [
       "BTC"
     ],
