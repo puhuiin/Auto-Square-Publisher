@@ -1,15 +1,5 @@
 [
   {
-    "id": "025c9ed72a9b068e",
-    "title": "Ripple Executive Reveals Massive Growth of Company's London Hub",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-04T22:09:52.424711+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "cc3a6bf79acb9790",
     "title": "XRP Ledger Activates New Amendment to Strengthen Network",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5182,6 +5172,16 @@
     "sent_at": "2026-11-13T09:30:10.328105+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a7cd1d68b0cfcf6c",
+    "title": "链上房地产为何屡屡失败?200 亿美元住房信贷揭示 RWA 新出路",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-13T09:46:37.661678+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
