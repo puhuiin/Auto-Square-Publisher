@@ -1,16 +1,5 @@
 [
   {
-    "id": "016821b42bcd851e",
-    "title": "TechFlow 情报局:纳斯达克批准首只带质押的 INJ ETF,Arthur Hayes 警告 AI 巨头 IPO 稀释将拖垮股市",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-05T12:44:57.132805+00:00",
-    "tokens": [
-      "INJ",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "f66efb3954d69907",
     "title": "Bubblemaps调查四名加密KOL,称钱包操作与公开叙事不完全一致",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5181,5 +5170,15 @@
       "PENGU"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "fb1697c71094bfad",
+    "title": "比特币基础设施公司 Blockstream 推出机构托管方案",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-13T22:24:42.772456+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
