@@ -1,15 +1,5 @@
 [
   {
-    "id": "8c6d85088e799c5c",
-    "title": "Canary Staked INJ ETF 获纳斯达克批准上市,拟以 INJC 为交易代码",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-05T03:27:14.667221+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4f77e5ce2373196b",
     "title": "MetaDAO推出面向消费应用创始人的融资计划",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5180,6 +5170,18 @@
     "sent_at": "2026-11-13T13:26:43.174331+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "94e3f584038cdf1c",
+    "title": "XXAntiWar:今年盈利主要来自存储股抄底及HYPE波段交易,最大两笔亏损均来自ZEC空单",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-13T13:50:05.462377+00:00",
+    "tokens": [
+      "HYPE",
+      "ZEC",
+      "TRX"
     ],
     "lang": "zh-TW"
   }
