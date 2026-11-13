@@ -1,15 +1,5 @@
 [
   {
-    "id": "ae1c341a4cc5df0d",
-    "title": "Schroders launches tokenized emerging markets debt fund on Solana with Centrifuge",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-04T23:28:25.778323+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7e74b813045a83c7",
     "title": "Treasure 提议增发至多 1.73 亿枚 MAGIC",
     "source": "深潮TechFlow (中文/简体)",
@@ -5184,5 +5174,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "6cda7826a4bb3aeb",
+    "title": "Binance Reveals Final Numbers After $6.34 Billion Hack: 100.04% of Shiba Inu (SHIB) Reserves Confirmed",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-13T11:24:50.727916+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-CN"
   }
 ]
