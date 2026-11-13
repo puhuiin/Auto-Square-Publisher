@@ -1,16 +1,5 @@
 [
   {
-    "id": "03f2b46528188377",
-    "title": "Robinhood 官方盤點:Robinhood Chain 突破 10 億美元 TVL,首批生態上線與開發者資助全景",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-11-05T07:10:39.742718+00:00",
-    "tokens": [
-      "UNI",
-      "ARB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b6fc222ebb460aec",
     "title": "BitMart founder confirms second exchange hack – Links to Mercado Bitcoin emerge",
     "source": "AMBCrypto (技术与链上)",
@@ -5182,6 +5171,16 @@
     "sent_at": "2026-11-13T16:48:07.891438+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0b41be0aef64b66f",
+    "title": "日本上市房企 ASIAN STAR 將向股東分配 800 萬日元 BNB",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-13T17:10:02.621291+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
