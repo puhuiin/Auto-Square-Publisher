@@ -1,15 +1,5 @@
 [
   {
-    "id": "5c49f9b01ec40fda",
-    "title": "James Wynn Doubles Down on Bitcoin Crash Call Despite Fresh ETF Inflows",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-05T13:44:45.371656+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "75c9f09e72b67066",
     "title": "Dogecoin eyes $0.0806 breakout as DOGE recovers despite weak ETF demand",
     "source": "CoinJournal (山寨异动)",
@@ -5180,5 +5170,15 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "3fdbce517709cf7e",
+    "title": "Coinbase Institutional:比特币近期下跌主要受美联储政策预期影响,而非币安黑客事件",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-13T23:50:04.929583+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
