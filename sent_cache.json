@@ -1,15 +1,5 @@
 [
   {
-    "id": "9f5db43eb9859dfa",
-    "title": "AT&T 家庭安防系统接入 Gemini for Home",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-04T21:28:53.887992+00:00",
-    "tokens": [
-      "AT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "cfdfb46ddffa390b",
     "title": "DeFi vault regulation splits Aave, Kamino and Veda from Morpho: Details",
     "source": "AMBCrypto (技术与链上)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-13T08:47:29.709294+00:00",
     "tokens": [
       "JUP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "6616d294c967f786",
+    "title": "SUI crypto’s 26% drop sparks bottom calls – Is a ‘short‐term bounce’ next?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-13T09:10:11.402164+00:00",
+    "tokens": [
+      "SUI"
     ],
     "lang": "zh-TW"
   }

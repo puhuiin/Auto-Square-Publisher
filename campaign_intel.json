@@ -18,7 +18,7 @@
   "last_updated": "2026-11-13T05:24:08.978661Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "reset_at": "2026-11-13T08:46:02.360440+00:00",
+      "reset_at": "2026-11-13T09:09:01.023688+00:00",
       "last_fail": "2026-11-13T06:26:01.778119+00:00",
       "fails": 1
     }
@@ -31,7 +31,7 @@
   "_article_sent_date": "2026-11-13",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 928,
+  "_img_rot": 929,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
