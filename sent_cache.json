@@ -1,16 +1,5 @@
 [
   {
-    "id": "3282168c6216a173",
-    "title": "Global asset manager Schroders brings emerging market bond fund to Solana",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-11-04T15:47:14.275329+00:00",
-    "tokens": [
-      "SOL",
-      "PENGU"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "e2b0642300759990",
     "title": "Solana Microscope Offers Open-Source Monitoring for Complex On-Chain Operations",
     "source": "NewsBTC (比特币与山寨)",
@@ -5180,6 +5169,16 @@
     "tokens": [
       "SYRUP",
       "AAVE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "cb5215dfc0b9ea22",
+    "title": "Can Bitcoin Hit $1 Million? ChatGPT AI Predicts When and How",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-13T02:26:30.052186+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
