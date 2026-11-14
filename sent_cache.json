@@ -1,15 +1,5 @@
 [
   {
-    "id": "75c9f09e72b67066",
-    "title": "Dogecoin eyes $0.0806 breakout as DOGE recovers despite weak ETF demand",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-11-05T14:04:41.456800+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "89aabdf85e56b9e0",
     "title": "GoPlus:iOS 自托管钱包用户疑似遭遇攻击,已报告资产损失约 56.1 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5178,6 +5168,17 @@
     "sent_at": "2026-11-13T23:50:04.929583+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "d17197869b320ca1",
+    "title": "吴说周精选:以太坊或提前抗量子升级、美国国会紧盯泰达币安与新闻 Top10",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-14T00:46:31.194063+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
