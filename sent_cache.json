@@ -1,15 +1,5 @@
 [
   {
-    "id": "68cd0fd89fa032d3",
-    "title": "Cardano Bulls Predict a 2,000% Rally, But Analysts Are Not Convinced",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-05T16:24:20.209082+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "20e2b9a17cea9d43",
     "title": "Bitcoin Erases Election Rally as AI Stocks Plunge, $428 Million in Crypto Longs Get Wiped Out",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5180,6 +5170,16 @@
     "sent_at": "2026-11-14T02:31:07.075237+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "51f6da4fd15e0627",
+    "title": "美国SOL现货ETF单日净流出308.68万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-14T03:05:42.638807+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
