@@ -1,15 +1,5 @@
 [
   {
-    "id": "20e2b9a17cea9d43",
-    "title": "Bitcoin Erases Election Rally as AI Stocks Plunge, $428 Million in Crypto Longs Get Wiped Out",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-05T16:46:44.741377+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ccfcb0523846e5c1",
     "title": "渣打与 SBI 投资加密保险商 Soter,B 轮融资约 6600 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5180,6 +5170,17 @@
     "sent_at": "2026-11-14T03:05:42.638807+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "05996b60da562f24",
+    "title": "Key Bullish Shiba Inu (SHIB) Metric Surges by 30%: When to Expect the Reversal?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-14T03:24:01.892308+00:00",
+    "tokens": [
+      "SHIB",
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
