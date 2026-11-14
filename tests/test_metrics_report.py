@@ -10215,6 +10215,47 @@ class TestR850Preregistration(unittest.TestCase):
         # ⑦ 变差 >5pp ⇒ 回滚
         self.assertEqual(mod.r865_verdict(36.0, 10.0, 30.0, 30.0, 35.0, 41.0, 60.0, 59.0)[0], "回滚")
 
+    def test_r866_noise_band(self):
+        """★★ R866：噪声带工具（`--noise-band`）—— **设门前必看**，但它是读数不是门。
+
+        背景：本项目三次把噪声当结论（① 单窗摆动 34 点、⑥ 单日极差 57 点/双窗 18 点）
+        ⇒ 以后给比率判据设"降 N pp"之前，必须先拿到**双窗合并极差**；
+        极差 ≥ 通过线 ⇒ 该判据不可裁（放大窗口或加低位档，且另开一轮预注册）。
+        """
+        mod = self._ew()
+        days = ["2026-11-%02d" % i for i in range(1, 9)]
+        vals = [0, 0, 10, 10, 0, 0, 10, 10]     # n=20/天 ⇒ 单日 0% 或 50%
+
+        def mk(vals_):
+            def fn(rows, d, **kw):
+                v = vals_[days.index(d)]
+                return {"n": 20, "at_cap": v, "miss": v, "hit": v}
+            return fn
+
+        saved = {k: getattr(mod, k) for k in
+                 ("cap_stats", "window_stats", "formulaic_repetition_stats")}
+        try:
+            for k in saved:
+                setattr(mod, k, mk(vals))
+            txt = mod.noise_band_text([{}], days)
+            ok6 = mod.noise_band_text([{}], days[:6])   # 6 天 ⇒ 三条都该算得出
+        finally:
+            for k, v in saved.items():
+                setattr(mod, k, v)
+        # 双窗 = (0+0)=0% / (10+10)=50% 交替 ⇒ 极差 50.0；单日极差也是 50.0
+        self.assertIn("双窗", txt)
+        self.assertIn("50.0", txt, "双窗极差必须算出来（那才是两窗判据的真实噪声）")
+        self.assertIn("③ 顶格", txt)
+        self.assertIn("① 真漏", txt)
+        self.assertIn("⑥ 重复", txt)
+        # 天数不足（<4）⇒ 明说"不做噪声判读"，不许给一个假的极差
+        self.assertIn("可算天数不足", mod.noise_band_text([{}], days[:2]))
+        self.assertNotIn("可算天数不足", ok6)
+        # 早于所有函数定义的模块级引用会炸 ⇒ 三张表必须运行时按名解析
+        src = open(mod.__file__, encoding="utf-8").read()
+        self.assertNotIn("\nNOISE_BAND_METRICS = (", src, "模块级元组会 NameError（cap_stats 定义在后面）")
+        self.assertIn('globals()["cap_stats"]', src)
+
     def test_r861_channel_side_verdict(self):
         """★★ R861：通道侧（`stepfun-flash` 减权）的判定 —— 保量护栏优先，其后看变差/改善。
 

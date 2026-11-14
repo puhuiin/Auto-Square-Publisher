@@ -626,6 +626,15 @@ def r861_verdict(miss_base, miss_treat, over_base, over_treat,
 #     ⚠️ 部署前基线实测只有 **14.6%**（11-12/13），若只写"降 ≥15pp"就是**数学上不可能** ✗
 #     ⇒ 这条是**部署前**按公开规则补的，不是看完数据改的 ✓）；
 #   · **未通过** = 介于 ⇒ 保留 + 标注「未被证实」。
+# ⚠️⚠️ **2026-11-14 噪声实测（部署前，10 天）**：⑥ 的**单日**极差 **57.1 个点**
+#   （0% … 57.1%），**双窗合并**极差 **18.1 个点**（13.6% ~ 31.7%）✗
+#   ⇒ ⑩ 的"降 ≥15pp"**落在噪声带之内** ⇒ **当前 n≈20/窗 时 ⑩ 不可裁定** ✗
+#   ⇒ 处置：**降级为只读观察**（不据此宣布通过/回滚）；要当门必须先把窗口做大
+#     （≥4 窗合并 或 把 ⑥ 改成跨 3 天滚动）—— 那要另开一轮预注册 ✓。
+#   ★ 通用教训：**n≈20 的比率型判据，噪声带 ~18pp** ⇒ 任何 <20pp 的"改善"都不能当结论
+#     （判据① 同样是这个量级，见 R850 那次的 34 点摆动）。
+# ⚠️ R866：`--noise-band` 把这条教训**工具化**（见 `noise_band_text()`）——
+#   设门前先跑它，双窗极差 ≥ 你想设的通过线 ⇒ 判据不可裁 ✓。
 R865_WORSE_PP = 5
 R865_DROP_PP = 15
 R865_FLOOR_PCT = 5
@@ -646,6 +655,51 @@ def r865_verdict(rep_base, rep_treat, miss_base, miss_treat, over_base, over_tre
                 % (rep_base, rep_treat, R865_DROP_PP, R865_FLOOR_PCT))
     return ("未通过", "⑥ %.1f%% → %.1f%%：未变差但降幅 < %dpp 且 >%d%% ⇒ 保留并标注「未被证实」"
             % (rep_base, rep_treat, R865_DROP_PP, R865_FLOOR_PCT))
+
+
+def noise_band_text(rows, days) -> str:
+    """★★★ R866：**噪声带（设门前必看）** —— 给定若干 UTC 日，算出各比率判据的
+    单日极差与**双窗合并极差**。
+
+    ★ 为什么要工具化：本项目已经**三次**把噪声当结论 ——
+      · ① 一次单窗摆动 **34 点**（R850 验收那条假"回滚"）
+      · ⑥ 的单日极差 **57.1 点**、双窗 **18.1 点**（R865 的 ⑩ 因此**不可裁**）
+      · ⑦/③ 同类（都是 n≈20~40 的比率）
+      ⇒ **规则**：给任何比率判据设"降 N pp"型通过线之前，**先跑本函数**；
+        若 `双窗极差 ≥ N` ⇒ 这条判据在现有样本量下**不可裁**，要么放大窗口
+        （≥4 窗合并/滚动），要么改成"绝对低位"档，**并另开一轮预注册** ✓。
+    ⚠️ 这是**读数**不是门：本函数不参与任何判定 ✓。
+    """
+    # ⚠️ 三张表的函数都在本模块更下方定义 ⇒ **运行时按名解析**，避免模块级顺序依赖。
+    metrics = (
+        ("③ 顶格", globals()["cap_stats"], "at_cap"),
+        ("① 真漏", globals()["window_stats"], "miss"),
+        ("⑥ 重复", globals()["formulaic_repetition_stats"], "hit"),
+    )
+    out = []
+    for label, fn, num_key in metrics:
+        per = []
+        for d in days or []:
+            if not d:
+                continue
+            s = fn(rows, d)
+            n = s.get("n") or 0
+            num = s.get(num_key) or 0
+            if n >= 15:                      # 日样本太小不谈率
+                per.append((n, num, 100.0 * num / n))
+        if len(per) < 4:
+            out.append("  %-8s 可算天数不足（<4）⇒ 不做噪声判读" % label)
+            continue
+        rates = [p[2] for p in per]
+        pairs = []
+        for i in range(0, len(per) - 1, 2):
+            n = per[i][0] + per[i + 1][0]
+            num = per[i][1] + per[i + 1][1]
+            pairs.append(100.0 * num / n if n else 0.0)
+        out.append("  %-8s 单日 %.1f~%.1f%%（极差 %4.1f）｜ 双窗 %.1f~%.1f%%（极差 **%4.1f**）"
+                   % (label, min(rates), max(rates), max(rates) - min(rates),
+                      min(pairs), max(pairs), max(pairs) - min(pairs)))
+    return "\n".join(out)
 
 
 def overwrite_by_provider(rows, date_utc: str, lang: str = "en", trim_threshold: int = 50):
@@ -1052,8 +1106,19 @@ def main(argv=None) -> int:
     ap.add_argument("--metrics", required=True)
     ap.add_argument("--baseline", default="", help="逗号分隔的 UTC 日期")
     ap.add_argument("--treatment", default="", help="逗号分隔的 UTC 日期")
+    ap.add_argument("--noise-band", action="store_true",
+                    help="★ 先算 ③/①/⑥ 的噪声带（单日与双窗极差）—— 设门前的必看一步")
     args = ap.parse_args(argv)
     rows = load_rows(args.metrics)
+    if getattr(args, "noise_band", False):
+        # ★★★ R866：设门前的必看一步 —— 若「双窗极差 ≥ 你想设的通过线」，该判据**不可裁**
+        # ⚠️ 噪声带要看**全部可用日**（不是只看基线两窗，两窗算不出极差）
+        _days = sorted({str(r.get("ts") or "")[:10] for r in rows if str(r.get("ts") or "")})
+        print("【噪声带（R866，设门前必看）】这是**读数不是门**；口径：单日极差 与 **双窗合并极差**")
+        print("  样本日：%s ~ %s（%d 天，n≥15 的日才计入）" % (_days[0], _days[-1], len(_days)) if _days else "  无样本")
+        print(noise_band_text(rows, _days))
+        print("  ⇒ 判读：**双窗极差 ≥ 你的通过线** ⇒ 该判据在当前样本量下**不可裁**"
+              "（要么放大窗口，要么加绝对低位档，并另开一轮预注册 ✓）")
     # 未关闭的夜窗只有部分数据：从两臂剔除并明说，不参与任何判定
     for arm_name, dates in ("基线", args.baseline), ("处置", args.treatment):
         for d in (dates or "").split(","):
