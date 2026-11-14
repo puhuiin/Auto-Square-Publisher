@@ -1,15 +1,5 @@
 [
   {
-    "id": "43e69d351e17bdf4",
-    "title": "Zcash (ZEC) Co-Founder Issues Warning on AI Security Threat",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-05T14:46:39.251828+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "e874ac0b4b1fd38a",
     "title": "Mira 推出 AI 模型验证服务 Sterling,支持 Claude、GPT 和 Gemini 低至五折调用",
     "source": "深潮TechFlow (中文/简体)",
@@ -5181,5 +5171,15 @@
       "ICP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "09123af16e662127",
+    "title": "Pump.fun 手续费钱包向 Kraken 转入约 6.47 万枚 SOL",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-14T01:32:07.684107+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
