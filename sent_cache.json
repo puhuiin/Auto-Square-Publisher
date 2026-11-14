@@ -1,17 +1,5 @@
 [
   {
-    "id": "de691b9ea071910d",
-    "title": "Strategy 董事长 Saylor:AI 黑客将瞄准薄弱软件",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-05T22:24:00.834981+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "258894bb99e65514",
     "title": "Solana developers propose major overhaul to address hidden risk that could disrupt its network",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5177,6 +5165,16 @@
     "sent_at": "2026-11-14T09:47:31.671493+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "71949407c32e343b",
+    "title": "Aave Proposal Targets $3.5M in Added Annual Revenue Through Reserve-Factor Changes",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-14T10:04:30.136211+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "zh-CN"
   }
