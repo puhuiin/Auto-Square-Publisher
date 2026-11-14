@@ -1,17 +1,5 @@
 [
   {
-    "id": "87a9e5e94054ed0b",
-    "title": "Injective (INJ), PEARL and Zcash (ZEC) Surge as Crypto Traders Return to Altcoins",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-06T04:53:28.346327+00:00",
-    "tokens": [
-      "INJ",
-      "ZEC",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7c3e5ef53434fd02",
     "title": "三星钱包将于 11 月内接入 Sui 网络 USDC,支持 Galaxy 用户在 Sui 上使用稳定币",
     "source": "深潮TechFlow (中文/简体)",
@@ -5168,6 +5156,16 @@
     "sent_at": "2026-11-14T14:26:05.366520+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3448b93f9224dbfc",
+    "title": "KAVA token sinks 40% as exploit hits Kava Lend, exchanges halt withdrawals",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-14T14:45:59.132075+00:00",
+    "tokens": [
+      "KAVA"
     ],
     "lang": "en"
   }
