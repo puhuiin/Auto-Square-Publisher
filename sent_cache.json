@@ -1,15 +1,5 @@
 [
   {
-    "id": "83d1601f16c913f1",
-    "title": "Fed and OCC Quiz U.S. Banks After $6.3 Billion Binance Hack",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-11-05T15:30:40.837452+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b4dc36ca5fdd0120",
     "title": "Canary’s Staked INJ ETF Begins Trading on Nasdaq",
     "source": "The Defiant (DeFi 深度)",
@@ -5180,6 +5170,16 @@
       "HYPE",
       "ZEC",
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "f34e8a0613576c2a",
+    "title": "3 个 Pump fun 钱包解锁 14.58 亿枚 PUMP 转入 Coinbase Prime,价值约 501 万美元",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-14T02:11:47.848508+00:00",
+    "tokens": [
+      "PUMP"
     ],
     "lang": "zh-CN"
   }
