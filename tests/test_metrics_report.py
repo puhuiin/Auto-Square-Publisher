@@ -10195,6 +10195,26 @@ class TestR850Preregistration(unittest.TestCase):
         self.assertEqual(cv.uncovered_activity_terms(None), [])
         self.assertEqual(cv.uncovered_activity_terms(""), [])
 
+    def test_r865_formulaic_rewrite(self):
+        """★★ R865：套话重写的清单/指令 + 判定（⑥ 降 ≥15pp，且 ①/⑦ 不变差、产量不掉）。"""
+        import main as _m
+        self.assertIn("on the day", _m.R865_FORMULAIC_TEMPLATES)
+        self.assertIn("%s", _m.R865_REPHRASE_HINT, "指令必须留套话占位符")
+        self.assertIn("保持原有观点", _m.R865_REPHRASE_HINT, "重写不许丢观点/结构")
+        mod = self._ew()
+        # ⑥ 降 ≥15pp ⇒ 通过
+        self.assertEqual(mod.r865_verdict(36.0, 20.0, 30.0, 30.0, 35.0, 35.0, 60.0, 59.0)[0], "通过")
+        # 未通过（没降够且没到低位）
+        self.assertEqual(mod.r865_verdict(36.0, 30.0, 30.0, 30.0, 35.0, 35.0, 60.0, 59.0)[0], "未通过")
+        # ★ 低位也算达标：基线 14.6% → 5.0% ⇒ 通过（只写"降 15pp"会数学上不可能）
+        self.assertEqual(mod.r865_verdict(14.6, 5.0, 30.0, 30.0, 35.0, 35.0, 60.0, 59.0)[0], "通过")
+        # 产量掉 ≥10% ⇒ 回滚（哪怕 ⑥ 大降）
+        self.assertEqual(mod.r865_verdict(36.0, 5.0, 30.0, 30.0, 35.0, 35.0, 60.0, 53.0)[0], "回滚")
+        # ① 变差 \u003e5pp ⇒ 回滚
+        self.assertEqual(mod.r865_verdict(36.0, 10.0, 30.0, 37.0, 35.0, 35.0, 60.0, 59.0)[0], "回滚")
+        # ⑦ 变差 >5pp ⇒ 回滚
+        self.assertEqual(mod.r865_verdict(36.0, 10.0, 30.0, 30.0, 35.0, 41.0, 60.0, 59.0)[0], "回滚")
+
     def test_r861_channel_side_verdict(self):
         """★★ R861：通道侧（`stepfun-flash` 减权）的判定 —— 保量护栏优先，其后看变差/改善。
 

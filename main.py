@@ -688,6 +688,16 @@ R857_OVERWRITE_RETRY_HINT = (
 #     也不会因为"少发帖"把总产量打下来（判据⑨ 的保量护栏就是盯这条）。
 #   ⚠️ 只对**英文短讯**生效（中文侧 ⑦ 超写 0/102，是健康的，别动）。
 _FLASH_PROVIDER_NAME = "Preset-stepfun-flash"
+# ★★★ R865：**套话重写**的模板清单 + 指令（判据⑩ 预注册在 scripts/en_window_audit.py）。
+#   清单来自 **R862b 清干净口径后**的 ⑥ 实测片段 —— 只剩两类**作者化套话**（不是题材/术语）：
+#   `on the day` 系列（`% on the day` / ` on the day.` / `on the day. `）与 `. Sentiment `。
+#   实测：11-07 受影响 8/22 = 36%（11-04/11-06 为 0%）⇒ 这是真·措辞习惯，值得治。
+#   ⚠️ 清单**窄**（2 条）；模型换了新套话再补 —— 但**别**把"题材名/术语"写进来（会误伤）。
+R865_FORMULAIC_TEMPLATES = ("on the day", ". Sentiment ")
+R865_REPHRASE_HINT = (
+    "【补充要求（本次重写）】你上一版用了套话「%s」。请**保持原有观点、结构与结尾提问不变**，"
+    "只把这个说法**换一种表达**（同一信息、不同措辞），其余部分不要动。"
+)
 
 
 def deweight_en_flash(ordered, out_lang, article):
@@ -12805,6 +12815,13 @@ def _run_main():
                     _excl = getattr(llm_engine, "last_attempted_provider", "") or ""
                     logger.info("R857b：正文 %d 字符超净化预算 %d ⇒ 换通道重生成一次（避开 %s）"
                                 % (len(_raw0), _budget, _excl or "?"))
+                # ★★★ R865：**套话重写**（判据⑩）—— 命中"公式化措辞"就换一种说法重写一次。
+                #   只在**没有更高优先级触发**时生效（漏提/超写更重要 ⇒ `_hint` 已非空就跳过）。
+                if not _hint and _raw0 and not use_article:
+                    _tpl = next((t for t in R865_FORMULAIC_TEMPLATES if t in _raw0), "")
+                    if _tpl:
+                        _hint = R865_REPHRASE_HINT % _tpl
+                        logger.info("R865：命中套话 %r ⇒ 换说法重写一次", _tpl)
                 if _hint:
                     _t_retry = time.time()
                     _retry = llm_engine.summarize(item, campaign_intel,

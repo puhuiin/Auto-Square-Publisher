@@ -614,6 +614,40 @@ def r861_verdict(miss_base, miss_treat, over_base, over_treat,
             % (miss_base, miss_treat, over_base, over_treat))
 
 
+# ---- 第十条预注册判据（R865）：**套话重写**（命中公式化措辞 ⇒ 换说法重写一次）----
+# 背景（R862b 清干净口径后的 ⑥）：片段只剩两类**作者化套话** —— `on the day` 系列与 `. Sentiment `；
+#   11-07 受影响 8/22 = 36%（11-04/11-06 为 0%）。题材名/术语已被 R862/R862b 两层排除挡掉 ✓。
+# 干预：生成后若正文命中 `R865_FORMULAIC_TEMPLATES` ⇒ 带"同一信息换措辞"重写一次
+#   （复用 R850/R857b 的 retry 机制；**不全局改 prompt** ⇒ 无 R760 类连带伤害）。
+# 判据（事前写死；基线 = **部署前两窗**）：
+#   · 口径 = ⑥ 重复率（R862b 口径）；
+#   · **回滚** = ⑥ 未降 ｜ ① 升 >5pp ｜ ⑦ 升 >5pp ｜ **日均产量掉 ≥10%**（任一）；
+#   · **通过** = ⑥ **降 ≥15pp** 或 **≤5%**（绝对低位也算达标 —— 与判据③ 同款思路；
+#     ⚠️ 部署前基线实测只有 **14.6%**（11-12/13），若只写"降 ≥15pp"就是**数学上不可能** ✗
+#     ⇒ 这条是**部署前**按公开规则补的，不是看完数据改的 ✓）；
+#   · **未通过** = 介于 ⇒ 保留 + 标注「未被证实」。
+R865_WORSE_PP = 5
+R865_DROP_PP = 15
+R865_FLOOR_PCT = 5
+
+
+def r865_verdict(rep_base, rep_treat, miss_base, miss_treat, over_base, over_treat,
+                 vol_base: float, vol_treat: float) -> tuple:
+    """★ R865：套话重写的判定 = ⑥ 降 ≥15pp，且 ①/⑦ 不变差、产量不掉 ≥10%（纯函数）。"""
+    if vol_base and vol_treat and vol_treat * 100 < vol_base * (100 - R857_VOLUME_DROP_PCT):
+        return ("回滚", "日均产量 %.1f → %.1f（掉 ≥%d%%）⇒ 保量约束不满足"
+                % (vol_base, vol_treat, R857_VOLUME_DROP_PCT))
+    if miss_treat > miss_base + R865_WORSE_PP:
+        return ("回滚", "① 真漏率 %.1f%% → %.1f%%（升 >%dpp）" % (miss_base, miss_treat, R865_WORSE_PP))
+    if over_treat > over_base + R865_WORSE_PP:
+        return ("回滚", "⑦ 超写率 %.1f%% → %.1f%%（升 >%dpp）" % (over_base, over_treat, R865_WORSE_PP))
+    if (rep_base - rep_treat) >= R865_DROP_PP or rep_treat <= R865_FLOOR_PCT:
+        return ("通过", "⑥ 重复率 %.1f%% → %.1f%%（降 ≥%dpp 或 ≤%d%%）"
+                % (rep_base, rep_treat, R865_DROP_PP, R865_FLOOR_PCT))
+    return ("未通过", "⑥ %.1f%% → %.1f%%：未变差但降幅 < %dpp 且 >%d%% ⇒ 保留并标注「未被证实」"
+            % (rep_base, rep_treat, R865_DROP_PP, R865_FLOOR_PCT))
+
+
 def overwrite_by_provider(rows, date_utc: str, lang: str = "en", trim_threshold: int = 50):
     """★★ R856：**过度写作率**按**通道**拆分（观测型读数，**不设阈值**）。
 
@@ -1224,6 +1258,13 @@ def main(argv=None) -> int:
             _ot = _r(sum(s.get("over", 0) for s in ot), sum(s.get("known", 0) for s in ot))
             st9, why9 = r861_verdict(_mb, _mt, _ob, _ot, _vb, _vt)
             print("判定⑨（R861 通道侧 · stepfun-flash 减权）：%s —— %s" % (st9, why9))
+            # ★★ R865：**套话重写**判据的读数（部署后拿本命令的 --baseline 当基线 ✓）
+            _rb_n = sum(s.get("n", 0) for s in rb) or 1
+            _rt_n = sum(s.get("n", 0) for s in rt) or 1
+            _rb_p = 100.0 * sum(s.get("hit", 0) for s in rb) / _rb_n
+            _rt_p = 100.0 * sum(s.get("hit", 0) for s in rt) / _rt_n
+            st10, why10 = r865_verdict(_rb_p, _rt_p, _mb, _mt, _ob, _ot, _vb, _vt)
+            print("判定⑩（R865 套话重写）：%s —— %s" % (st10, why10))
     return 0
 
 
