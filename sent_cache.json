@@ -1,15 +1,5 @@
 [
   {
-    "id": "9d767114a4133f32",
-    "title": "Anthropic Giga Bullish on Ripple: Claude AI Predicts Near-Triple-Digit Move",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-05T21:07:52.309830+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7e1b01221dc3dfc9",
     "title": "Trump Crypto Tokens Crash as Democrats Take Control of Congress",
     "source": "Bitcoinist (比特币向)",
@@ -5178,6 +5168,16 @@
     "sent_at": "2026-11-14T07:24:37.902404+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "fc8efc8d36108c8b",
+    "title": "Analyzing why Celestia’s 21M TPS claim comes with THREE big catches after TIA’s 8% drop",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-14T08:04:43.034909+00:00",
+    "tokens": [
+      "TIA"
     ],
     "lang": "zh-TW"
   }
