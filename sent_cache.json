@@ -1,15 +1,5 @@
 [
   {
-    "id": "b137c8b089647392",
-    "title": "Mercado Bitcoin Said Its Hack Was Contained, But Blockchain Data Tells a Different Story",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-05T20:25:29.732006+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f62b32d9aa1a09b8",
     "title": "Bitquery:Mercado Bitcoin 宣布遏制攻击后地址仍遭清空",
     "source": "深潮TechFlow (中文/简体)",
@@ -5179,6 +5169,16 @@
     "sent_at": "2026-11-14T06:46:49.644411+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "7d560a0eb70eace2",
+    "title": "MANTRA Announces Seven-Day Pause on New Unstaking",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-14T07:04:39.327908+00:00",
+    "tokens": [
+      "MANTRA"
     ],
     "lang": "zh-TW"
   }
