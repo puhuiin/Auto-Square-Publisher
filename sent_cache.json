@@ -1,16 +1,5 @@
 [
   {
-    "id": "a05219814ecc8a36",
-    "title": "币安黑客已将约 1.24 亿美元被盗资产兑换为 BTC,主要 ETH 和 BTC 持仓尚未转移",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-06T11:46:51.968670+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "17e5cb96c169e362",
     "title": "Hyperliquid drops 4% as whales take $5 million profit",
     "source": "CoinJournal (山寨异动)",
@@ -5162,6 +5151,16 @@
     "sent_at": "2026-11-14T20:28:11.351105+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "631e82437d70a86a",
+    "title": "SOL跌破70 USDT,24H跌幅12.02%",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-14T21:29:40.410481+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
