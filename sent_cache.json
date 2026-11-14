@@ -1,16 +1,5 @@
 [
   {
-    "id": "6349e77e74176a25",
-    "title": "Loopscale 部分恢复借贷功能,金库提现仍冻结",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-06T01:04:13.398739+00:00",
-    "tokens": [
-      "USDC",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d05f9ccb471fd4a0",
     "title": "Alea 研报:Optimism 靠贩卖「高可用性」吸金,超级链一半收入每月回购 OP",
     "source": "深潮TechFlow (中文/简体)",
@@ -5170,6 +5159,16 @@
     "title": "XRP ETF Outflows Hit an 8-Month High. December Rarely Brings Relief",
     "source": "BeInCrypto (山寨与行情)",
     "sent_at": "2026-11-14T12:08:24.915397+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "64ebdeb122c143b6",
+    "title": "美国现货 XRP ETF 上周净流出 1913 万美元,创 8 个月新高",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-14T12:27:00.297803+00:00",
     "tokens": [
       "XRP"
     ],
