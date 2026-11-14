@@ -1,15 +1,5 @@
 [
   {
-    "id": "00158158a085260c",
-    "title": "Canary’s Injective ETF debuts on Nasdaq with exposure to staking rewards",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-05T19:08:09.070791+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3b9bd560a336bfb0",
     "title": "Ethereum Foundation sued for firing employee who opposed ‘suicide pledge’",
     "source": "Protos (隐私与合规)",
@@ -5177,6 +5167,16 @@
     "title": "Satoshi-era wallet served in a $260 billion lawsuit moves 75 BTC it held since 2011",
     "source": "CoinDesk (权威宏观与机构)",
     "sent_at": "2026-11-14T05:32:13.196282+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "73995c1f217cfa0f",
+    "title": "彭博社:过去一年比特币 24 小时爆仓额 13 次超过 5 亿美元",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-14T06:04:34.331104+00:00",
     "tokens": [
       "BTC"
     ],
