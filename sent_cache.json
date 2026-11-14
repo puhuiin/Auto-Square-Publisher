@@ -1,15 +1,5 @@
 [
   {
-    "id": "17e5cb96c169e362",
-    "title": "Hyperliquid drops 4% as whales take $5 million profit",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-11-06T12:07:43.050995+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d702e1dfc2644e24",
     "title": "Zcash holds near $1,300 as NU7 upgrade fuels bullish momentum",
     "source": "CoinJournal (山寨异动)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-11-14T21:29:40.410481+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9d866a945e854e61",
+    "title": "Zcash (ZEC) Price Warning? Long Liquidation Cluster Sits at $860",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-14T21:48:41.403835+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
