@@ -1,16 +1,5 @@
 [
   {
-    "id": "7e1b01221dc3dfc9",
-    "title": "Trump Crypto Tokens Crash as Democrats Take Control of Congress",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-05T21:24:24.902373+00:00",
-    "tokens": [
-      "TRUMP",
-      "WLFI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8f9a5c0b34b2c2cc",
     "title": "Samsung Wallet launches USDC accounts on Solana for US Galaxy users",
     "source": "The Block (机构与政策)",
@@ -5178,6 +5167,16 @@
     "sent_at": "2026-11-14T08:04:43.034909+00:00",
     "tokens": [
       "TIA"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "11fe894e62999610",
+    "title": "1inch Warns Delegators to Claim Rewards by Nov. 27",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-14T08:49:30.799127+00:00",
+    "tokens": [
+      "1INCH"
     ],
     "lang": "zh-TW"
   }
