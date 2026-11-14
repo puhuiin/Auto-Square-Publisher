@@ -1,17 +1,5 @@
 [
   {
-    "id": "774000aa0dd39f5c",
-    "title": "2026 年 10 月:USDD 月度透明度报告",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-06T07:04:04.879684+00:00",
-    "tokens": [
-      "BNB",
-      "TRX",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9ee37d2dfc7c7357",
     "title": "USDD 發佈 10 月月度透明度報告:儲備資產達 22.1 億美元,Smart Allocator 累計收益超 3359 萬美元",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5164,6 +5152,16 @@
     "sent_at": "2026-11-14T16:06:22.121567+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a4aa312a0ba742bc",
+    "title": "Ripple Price Analysis: Is the Worst Yet to Come as XRP Dumps to a 2-Year Low?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-14T16:46:08.059216+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
