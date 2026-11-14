@@ -1,16 +1,5 @@
 [
   {
-    "id": "a8629baa6362655a",
-    "title": "Loopscale Partly Restores Loan Functions, Keeps Vault Withdrawals Frozen",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-06T00:44:45.869944+00:00",
-    "tokens": [
-      "USDC",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6349e77e74176a25",
     "title": "Loopscale 部分恢复借贷功能,金库提现仍冻结",
     "source": "深潮TechFlow (中文/简体)",
@@ -5175,5 +5164,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "4fc03ae0019ad425",
+    "title": "XRP ETF Outflows Hit an 8-Month High. December Rarely Brings Relief",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-14T12:08:24.915397+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
