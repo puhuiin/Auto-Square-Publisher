@@ -1,15 +1,5 @@
 [
   {
-    "id": "4df6b09ab88dfd02",
-    "title": "比特币核心开发者提出“量子地雷”方案:让量子窃贼损失自己的 BTC",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-06T02:07:02.350555+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "cf8c56e6b1bb8b7e",
     "title": "Bitget UEX 日报|比特币失守7.7万美元;纳指重挫5.52%;非农检验利率预期",
     "source": "深潮TechFlow (中文/简体)",
@@ -5171,5 +5161,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "386985a7deaa0231",
+    "title": "交易员 Harley Foote 称遭攻击,资金几乎全部被盗",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-14T13:44:50.220217+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
