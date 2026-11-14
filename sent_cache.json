@@ -1,15 +1,5 @@
 [
   {
-    "id": "3b9bd560a336bfb0",
-    "title": "Ethereum Foundation sued for firing employee who opposed ‘suicide pledge’",
-    "source": "Protos (隐私与合规)",
-    "sent_at": "2026-11-05T19:29:15.779130+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5bf1f6967403609e",
     "title": "Zcash Upgrade Could Lock $16 Million in Crypto Forever",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5181,5 +5171,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "f2b42db54ff281a4",
+    "title": "熬鹰:市场下跌仍可通过做空获利,比特币每轮大涨均源于此前回调",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-14T06:24:52.920238+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
