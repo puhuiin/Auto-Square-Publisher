@@ -1,17 +1,5 @@
 [
   {
-    "id": "d05f9ccb471fd4a0",
-    "title": "Alea 研报:Optimism 靠贩卖「高可用性」吸金,超级链一半收入每月回购 OP",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-06T01:29:04.950450+00:00",
-    "tokens": [
-      "OP",
-      "STO",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "54bb3e863b5ce4f2",
     "title": "Nasdaq's XRP Treasury Crashed Nearly 50% In a Month",
     "source": "BeInCrypto (山寨与行情)",
@@ -5171,6 +5159,16 @@
     "sent_at": "2026-11-14T12:27:00.297803+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "f2e116b930fa2a12",
+    "title": "以太坊的未来、安全与 AI:Vitalik 在 Devcon 香港分会场的问答实录",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-14T12:47:02.066307+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
