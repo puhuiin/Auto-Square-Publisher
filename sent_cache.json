@@ -1,15 +1,5 @@
 [
   {
-    "id": "fd803a20d875fc95",
-    "title": "Hyperliquid Strategies季度净利润达6.21亿美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-05T22:04:30.486855+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "de691b9ea071910d",
     "title": "Strategy 董事长 Saylor:AI 黑客将瞄准薄弱软件",
     "source": "深潮TechFlow (中文/简体)",
@@ -5179,5 +5169,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "4e7a5d649f4ae27c",
+    "title": "XRP on Wall Street Turns Ugly: Evernorth’s XRPN Crashes 83% in a Month",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-14T09:47:31.671493+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
