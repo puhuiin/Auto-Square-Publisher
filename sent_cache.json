@@ -1,15 +1,5 @@
 [
   {
-    "id": "c9d16c2c79cf28f9",
-    "title": "Solana Labs 旗下 Leap 推出代币化股票交易应用测试版",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-05T17:24:29.222023+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "dc5b40451bd57e94",
     "title": "XRP Price Prediction: Wall Street’s $28 Target Hinges on Supply Shock",
     "source": "CryptoNews (全球快讯)",
@@ -5181,5 +5171,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ed53c58f8737fde0",
+    "title": "易理华:短期暂不考虑抄底,需警惕黄仁勋事件持续冲击美股",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-14T04:04:40.088527+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
