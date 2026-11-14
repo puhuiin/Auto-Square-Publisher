@@ -17,15 +17,15 @@
   "strategy_guidance": "当前最紧迫的官方动态为11月16日即将上线的HYPE、TRX USDⓈ-Margined永续合约，建议发帖机器人优先围绕新合约的上线规则、交易注意事项做预热解读内容，追上线前的流量热度。同时可联动仍在进行的Stocks交易竞赛、Academy 11月Quiz、Referral Tournament等活动，整理参与攻略类内容，引导读者参与评论互动拿Write2Earn奖励，同时关联交易返佣引导。",
   "last_updated": "2026-11-14T05:44:18.808785Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "fails": 3,
-      "last_fail": "2026-11-14T05:07:14.926021+00:00",
-      "parked_until": "2026-11-14T11:07:14.926021+00:00"
-    },
     "Bitcoinist (比特币向)": {
-      "reset_at": "2026-11-14T06:23:39.018084+00:00",
-      "fails": 1,
-      "last_fail": "2026-11-14T06:03:35.328759+00:00"
+      "reset_at": "2026-11-14T06:43:39.297372+00:00",
+      "last_fail": "2026-11-14T06:03:35.328759+00:00",
+      "fails": 1
+    },
+    "CoinJournal (山寨异动)": {
+      "parked_until": "2026-11-14T11:07:14.926021+00:00",
+      "last_fail": "2026-11-14T05:07:14.926021+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
@@ -36,7 +36,7 @@
   "_article_sent_date": "2026-11-14",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 968,
+  "_img_rot": 969,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

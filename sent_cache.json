@@ -1,15 +1,5 @@
 [
   {
-    "id": "5bf1f6967403609e",
-    "title": "Zcash Upgrade Could Lock $16 Million in Crypto Forever",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-05T19:52:00.029331+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b137c8b089647392",
     "title": "Mercado Bitcoin Said Its Hack Was Contained, But Blockchain Data Tells a Different Story",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5179,6 +5169,16 @@
     "sent_at": "2026-11-14T06:24:52.920238+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "553cf38e34c052fa",
+    "title": "TRON, Tether and Chainalysis launch task force as crypto hacks hit $8.78B",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-14T06:46:49.644411+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "zh-TW"
   }
