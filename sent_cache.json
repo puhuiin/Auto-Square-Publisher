@@ -1,15 +1,5 @@
 [
   {
-    "id": "974e6bd5c78cac07",
-    "title": "Mark Zuckerberg’s Meta AI Predicts a Quant Crypto Explosion: How High Could QNT Go?",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-05T23:44:55.881597+00:00",
-    "tokens": [
-      "QNT"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9bb426fa555ca127",
     "title": "USDC Treasury在Solana网络新铸造2.5亿枚USDC,价值约2.5亿美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5177,5 +5167,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "913b7c5fc19179b9",
+    "title": "即使比特币跌至1美分仍可存活,Strive称公司无强制出售比特币的债务",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-14T11:07:05.972103+00:00",
+    "tokens": [
+      "SATS",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
