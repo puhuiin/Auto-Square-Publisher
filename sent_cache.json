@@ -1,17 +1,5 @@
 [
   {
-    "id": "ccfcb0523846e5c1",
-    "title": "渣打与 SBI 投资加密保险商 Soter,B 轮融资约 6600 万美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-05T17:06:25.913162+00:00",
-    "tokens": [
-      "SC",
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c9d16c2c79cf28f9",
     "title": "Solana Labs 旗下 Leap 推出代币化股票交易应用测试版",
     "source": "深潮TechFlow (中文/简体)",
@@ -5183,5 +5171,15 @@
       "HYPE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0417d5334dff54c2",
+    "title": "Lido 宣布停用 GGV 金库,11 月 17 日前可赎回 wstETH",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-14T03:44:05.193659+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
