@@ -1,15 +1,5 @@
 [
   {
-    "id": "8d8cc49344979f59",
-    "title": "Solana Labs’ Leap Launches Mobile App for Trading Tokenized Stocks and Crypto",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-05T18:07:10.647890+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4081d350cb079880",
     "title": "用户凭证遭暴露,Chainalysis下线监控与调查平台并要求重置密码",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5179,6 +5169,16 @@
     "sent_at": "2026-11-14T04:27:34.267248+00:00",
     "tokens": [
       "PEPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "5fca23a9ceeebf40",
+    "title": "Pickle Cat:未来美股或持续承压,ETH仍有进一步下跌风险",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-14T04:45:43.858924+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
