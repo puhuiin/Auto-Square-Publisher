@@ -1,15 +1,5 @@
 [
   {
-    "id": "51c2c80c0a902d92",
-    "title": "CryptoQuant:比特币反弹动能减弱,现货需求疲软仍制约上涨",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-06T08:44:14.083301+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5a877e26eb174599",
     "title": "U.S. tech sell-off spills into crypto: Solana slides to $89.63 as AI spending fears mount",
     "source": "AMBCrypto (技术与链上)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-11-14T18:04:34.200241+00:00",
     "tokens": [
       "AVAX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "34d4a00f177fd08d",
+    "title": "ETH Tanks Another 5% as Ethereum Foundation Keeps Selling and Schiff Sounds the Alarm",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-14T18:26:12.457384+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
