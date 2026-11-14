@@ -1,15 +1,5 @@
 [
   {
-    "id": "54bb3e863b5ce4f2",
-    "title": "Nasdaq's XRP Treasury Crashed Nearly 50% In a Month",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-06T01:48:42.618233+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4df6b09ab88dfd02",
     "title": "比特币核心开发者提出“量子地雷”方案:让量子窃贼损失自己的 BTC",
     "source": "深潮TechFlow (中文/简体)",
@@ -5169,6 +5159,16 @@
     "sent_at": "2026-11-14T12:47:02.066307+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "dec628ab8ab91966",
+    "title": "Harley Lewis Foote遭恶意WhatsApp攻击,资金仅剩800美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-14T13:26:13.221234+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
