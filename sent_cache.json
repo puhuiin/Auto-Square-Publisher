@@ -1,16 +1,5 @@
 [
   {
-    "id": "cf8c56e6b1bb8b7e",
-    "title": "Bitget UEX 日报|比特币失守7.7万美元;纳指重挫5.52%;非农检验利率预期",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-06T03:30:24.356086+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d9367ec7af198764",
     "title": "Cathie Wood buys about $100M in Nvidia and SpaceX shares",
     "source": "Crypto Briefing (深度与研报)",
@@ -5171,5 +5160,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "714424c74493159a",
+    "title": "交易员 Ansem:HYPE 利好后未能延续上涨并非好信号",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-14T14:06:11.084940+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "en"
   }
 ]
