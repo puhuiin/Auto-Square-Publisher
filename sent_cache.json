@@ -1,15 +1,5 @@
 [
   {
-    "id": "89aabdf85e56b9e0",
-    "title": "GoPlus:iOS 自托管钱包用户疑似遭遇攻击,已报告资产损失约 56.1 万美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-05T14:27:01.126634+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "43e69d351e17bdf4",
     "title": "Zcash (ZEC) Co-Founder Issues Warning on AI Security Threat",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5179,6 +5169,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "f103de69b2e53f4b",
+    "title": "ICP 开发机构 DFINITY 开始发放主权云服务使用券",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-14T01:09:08.410130+00:00",
+    "tokens": [
+      "ICP"
     ],
     "lang": "zh-CN"
   }
