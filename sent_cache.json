@@ -1,15 +1,5 @@
 [
   {
-    "id": "ec8f4d55f9f6bac9",
-    "title": "Binance and Polymarket Propose Polygon Hard Fork To Recover About $6,500,000 in Hacked Crypto",
-    "source": "DailyHodl (山寨异动与百倍币叙事)",
-    "sent_at": "2026-11-06T13:11:28.442075+00:00",
-    "tokens": [
-      "POL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "88d3b4dd911d270c",
     "title": "Solana's Skyline Crypto Ad Triggers Central Bank Investigation in China",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5163,5 +5153,15 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "aa961cf24174c137",
+    "title": "XRP Whales Keep Loading Up Despite Heightened Retail Fear of a Drop Below $1",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-14T22:46:51.785955+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
