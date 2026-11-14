@@ -1,15 +1,5 @@
 [
   {
-    "id": "258894bb99e65514",
-    "title": "Solana developers propose major overhaul to address hidden risk that could disrupt its network",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-05T22:44:35.221897+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "91d6dd6b855f5a25",
     "title": "Solana 开发团队 Anza 紧急呼吁验证者升级 Agave v4.4.1,未升级节点预计将与主网分叉",
     "source": "吴说区块链 (中文深度)",
@@ -5175,6 +5165,16 @@
     "sent_at": "2026-11-14T10:04:30.136211+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a07f139d85625b1f",
+    "title": "Dogecoin ETFs Mark One Month of Zero Activity",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-14T10:24:31.101869+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "zh-CN"
   }
