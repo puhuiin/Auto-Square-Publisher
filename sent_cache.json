@@ -1,15 +1,5 @@
 [
   {
-    "id": "91d6dd6b855f5a25",
-    "title": "Solana 开发团队 Anza 紧急呼吁验证者升级 Agave v4.4.1,未升级节点预计将与主网分叉",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-05T23:04:51.204932+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "974e6bd5c78cac07",
     "title": "Mark Zuckerberg’s Meta AI Predicts a Quant Crypto Explosion: How High Could QNT Go?",
     "source": "CryptoNews (全球快讯)",
@@ -5175,6 +5165,16 @@
     "sent_at": "2026-11-14T10:24:31.101869+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "64cea1bfa236868b",
+    "title": "Jensen Huang Resigns: Why Nvidia’s Crisis Could Spill Further Into Bitcoin",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-14T10:49:41.827989+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
