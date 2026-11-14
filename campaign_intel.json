@@ -23,14 +23,14 @@
       "fails": 3
     },
     "Bitcoinist (比特币向)": {
-      "reset_at": "2026-11-14T08:49:01.264510+00:00",
       "last_fail": "2026-11-14T06:03:35.328759+00:00",
+      "reset_at": "2026-11-14T08:49:01.264510+00:00",
       "fails": 1
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-14",
