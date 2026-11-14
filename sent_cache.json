@@ -1,15 +1,5 @@
 [
   {
-    "id": "b4dc36ca5fdd0120",
-    "title": "Canary’s Staked INJ ETF Begins Trading on Nasdaq",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-05T15:52:14.171509+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "68cd0fd89fa032d3",
     "title": "Cardano Bulls Predict a 2,000% Rally, But Analysts Are Not Convinced",
     "source": "BeInCrypto (山寨与行情)",
@@ -5180,6 +5170,16 @@
     "sent_at": "2026-11-14T02:11:47.848508+00:00",
     "tokens": [
       "PUMP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "368263c4155dd70d",
+    "title": "某巨鲸持续抄底ZEC越跌越买,5倍杠杆多单现浮亏已达350万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-14T02:31:07.075237+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
