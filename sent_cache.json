@@ -1,15 +1,5 @@
 [
   {
-    "id": "d702e1dfc2644e24",
-    "title": "Zcash holds near $1,300 as NU7 upgrade fuels bullish momentum",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-11-06T12:26:31.670095+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e52f8e07e64ad1d5",
     "title": "加密市场 24 小时爆仓超 12.7 亿美元,多头超 11 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5163,5 +5153,15 @@
       "ZEC"
     ],
     "lang": "en"
+  },
+  {
+    "id": "31cd6513d38338dd",
+    "title": "Evernorth’s $35 million fundraising could buy 35 million XRP, but there’s a catch",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-14T22:06:31.880022+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
