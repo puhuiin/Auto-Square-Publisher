@@ -702,6 +702,65 @@ def noise_band_text(rows, days) -> str:
     return "\n".join(out)
 
 
+def _block_counts(rows, days) -> dict:
+    """把若干窗口的**计数**合并（不是先算率再平均 —— 那样会把小窗口放大）。"""
+    st = {"miss": 0, "normal": 0, "over": 0, "known": 0, "hit": 0, "fn": 0, "pub": 0}
+    for d in days or []:
+        w = window_stats(rows, d)
+        o = overwrite_stats(rows, d)
+        f = formulaic_repetition_stats(rows, d)
+        p = daily_output(rows, d)
+        st["miss"] += w.get("miss") or 0
+        st["normal"] += w.get("normal") or 0
+        st["over"] += o.get("over") or 0
+        st["known"] += o.get("known") or 0
+        st["hit"] += f.get("hit") or 0
+        st["fn"] += f.get("n") or 0
+        st["pub"] += (p.get("published") or 0) if isinstance(p, dict) else 0
+    return st
+
+
+def fisher_block_text(rows, base_days, treat_days) -> str:
+    """★★★ R867：**用计数检验，而不是"看 pp"**来判两臂差异（单侧 Fisher 精确检验）。
+
+    ★ 为什么（R866 的直接后果）：① 的双窗极差 **46.7 点**、⑥ 单日 **65 点 / 双窗 28 点**
+      ⇒ 现阶段"降 10pp / 15pp"完全在噪声里，pp 读数**根本不能当判据** ✗。
+    ★ 实测校准（11-06/07 → 11-09…11-13，跨部署日已排除）：
+      · ① 真漏 30.2% → 7.8%（-22.5pp）**p = 0.0009** ✓
+      · ⑦ 超写 34.9% → 1.0%（-33.9pp）**p < 0.0001** ✓（几乎清零：1/103）
+      · ⑥ 重复 18.6% → 18.4%（-0.2pp）**p = 0.58** ✗（R865 之前本来就没打算动它）
+      ⇒ **⑨（R861 减权）的"通过"经得起检验，不是噪声** ✓ —— 这是对既有结论的自查。
+    ★ 也用来**提前**算"要几个命中才算数"：基线 ⑥ = 6/41 时，40 帖处置窗必须 **0/40**
+      （p=0.014）才显著；1/40 就已经 p=0.058 ✗ ⇒ 两窗根本裁不动，别自欺。
+    ⚠️ 仍是**读数**：不替代预注册判据，只回答"这点差别能不能和噪声分开"。
+    """
+    b = _block_counts(rows, base_days)
+    t = _block_counts(rows, treat_days)
+
+    def _pct(num, den):
+        return (100.0 * num / den) if den else float("nan")
+
+    rows_out = []
+    for name, num_key, den_key in (("① 真漏", "miss", "normal"),
+                                   ("⑦ 超写", "over", "known"),
+                                   ("⑥ 重复", "hit", "fn")):
+        bn, bd = b[num_key], b[den_key]
+        tn, td = t[num_key], t[den_key]
+        if not bd or not td:
+            rows_out.append("  %-7s 样本不足（基线 %d/%d、处置 %d/%d）⇒ 不做检验"
+                            % (name, bn, bd, tn, td))
+            continue
+        p = fisher_improve_p(bn, bd - bn, tn, td - tn)
+        rows_out.append("  %-7s 基线 %3d/%3d = %5.1f%% → 处置 %3d/%3d = %5.1f%%"
+                        "（%+5.1fpp）  p = %.4f  %s"
+                        % (name, bn, bd, _pct(bn, bd), tn, td, _pct(tn, td),
+                           _pct(tn, td) - _pct(bn, bd), p,
+                           "显著 ✓" if p < 0.05 else "**不显著** ✗（在噪声里）"))
+    rows_out.append("  产量     基线 %d 帖 / %d 窗 → 处置 %d 帖 / %d 窗"
+                    % (b["pub"], len(base_days), t["pub"], len(treat_days)))
+    return "\n".join(rows_out)
+
+
 def overwrite_by_provider(rows, date_utc: str, lang: str = "en", trim_threshold: int = 50):
     """★★ R856：**过度写作率**按**通道**拆分（观测型读数，**不设阈值**）。
 
@@ -1108,6 +1167,8 @@ def main(argv=None) -> int:
     ap.add_argument("--treatment", default="", help="逗号分隔的 UTC 日期")
     ap.add_argument("--noise-band", action="store_true",
                     help="★ 先算 ③/①/⑥ 的噪声带（单日与双窗极差）—— 设门前的必看一步")
+    ap.add_argument("--fisher", action="store_true",
+                    help="★ 用计数（单侧 Fisher）判两臂差异 —— pp 读数在噪声里时的唯一诚实判法")
     args = ap.parse_args(argv)
     rows = load_rows(args.metrics)
     if getattr(args, "noise_band", False):
@@ -1130,6 +1191,16 @@ def main(argv=None) -> int:
     args.treatment = ",".join(closed_treat)
     base = [window_stats(rows, d) for d in closed_base]
     treat = [window_stats(rows, d) for d in closed_treat]
+    if getattr(args, "fisher", False):
+        _b = [d for d in (args.baseline or "").split(",") if d]
+        _t = [d for d in (args.treatment or "").split(",") if d]
+        print("\n【计数检验（R867，单侧 Fisher）】**读数不是判据** —— 回答"
+              "「这点差别能不能和噪声分开」")
+        if not _b or not _t:
+            print("  ⚠️ 需要同时给 --baseline 与 --treatment（逗号分隔的 UTC 日期）")
+        else:
+            print(fisher_block_text(rows, _b, _t))
+            print("  ⇒ 判读：p<0.05 才算真差异；p≥0.05 ⇒ **不可裁**（既不是通过也不是回滚）")
     print("【英文夜窗体检 · 预注册判据 R819】窗口 = UTC 14:00–22:00（北京夜窗）")
     print("预注册基线：10-19 夜窗 %d/%d = %.1f%%"
           % (BASELINE_MISS, BASELINE_NORMAL, 100.0 * BASELINE_MISS / BASELINE_NORMAL))

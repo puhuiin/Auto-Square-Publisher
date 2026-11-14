@@ -10256,6 +10256,53 @@ class TestR850Preregistration(unittest.TestCase):
         self.assertNotIn("\nNOISE_BAND_METRICS = (", src, "模块级元组会 NameError（cap_stats 定义在后面）")
         self.assertIn('globals()["cap_stats"]', src)
 
+    def test_r867_fisher_block(self):
+        """★★ R867：两臂对比用**计数检验**（单侧 Fisher），不再"看 pp"。
+
+        背景：① 双窗极差 46.7 点、⑥ 单日 65 点 ⇒ 现阶段任何 <20pp 的差别都是抽签；
+        实测 ⑨（R861 减权）在 ①/⑦ 上 p=0.0009 / <0.0001 ⇒ **既有结论经得起检验**，
+        而 ⑥ 是 p=0.58（本来就没动它）⇒ 这条读数的价值是"能分开真差异与噪声"。
+        """
+        mod = self._ew()
+        names = ("window_stats", "overwrite_stats",
+                 "formulaic_repetition_stats", "daily_output")
+        saved = {n: getattr(mod, n) for n in names}
+        BASE = ("2026-11-06", "2026-11-07")
+        TREAT = ("2026-11-09", "2026-11-10", "2026-11-11")
+        try:
+            setattr(mod, "window_stats", lambda rows, d: {
+                "n": 20, "normal": 20,
+                "miss": (10 if d in BASE else 0)})
+            setattr(mod, "overwrite_stats", lambda rows, d, **kw: {
+                "known": 20, "over": (10 if d in BASE else 0)})
+            setattr(mod, "formulaic_repetition_stats", lambda rows, d, **kw: {
+                "n": 20, "hit": 6})
+            setattr(mod, "daily_output", lambda rows, d: {"published": 20})
+            txt = mod.fisher_block_text([{}], list(BASE), list(TREAT))
+        finally:
+            for n, v in saved.items():
+                setattr(mod, n, v)
+        # ① 50%→0%、⑦ 50%→0% ⇒ 两条显著；⑥ 30%→30% ⇒ 不显著
+        self.assertEqual(txt.count("显著 ✓"), 2, "①/⑦ 应各自显著")
+        self.assertIn("不显著", txt, "⑥ 没变就不能吹成显著")
+        for k in ("① 真漏", "⑦ 超写", "⑥ 重复", "产量"):
+            self.assertIn(k, txt)
+        # 计数必须**先合并再算率**（小窗口先算率会被等权放大）
+        self.assertIn("20/ 40", txt.replace(" ", " "), "基线 ① 应是 20/40")
+
+        # 某条口径没有分母 ⇒ 明说"样本不足"，不许静默算成 0%
+        saved2 = {n: getattr(mod, n) for n in names}
+        try:
+            setattr(mod, "window_stats", lambda rows, d: {"n": 5, "normal": 0, "miss": 0})
+            setattr(mod, "overwrite_stats", lambda rows, d, **kw: {"known": 0, "over": 0})
+            setattr(mod, "formulaic_repetition_stats", lambda rows, d, **kw: {"n": 5, "hit": 0})
+            setattr(mod, "daily_output", lambda rows, d: {"published": 0})
+            txt2 = mod.fisher_block_text([{}], list(BASE), list(TREAT))
+        finally:
+            for n, v in saved2.items():
+                setattr(mod, n, v)
+        self.assertIn("样本不足", txt2)
+
     def test_r861_channel_side_verdict(self):
         """★★ R861：通道侧（`stepfun-flash` 减权）的判定 —— 保量护栏优先，其后看变差/改善。
 
