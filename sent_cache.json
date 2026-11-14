@@ -1,16 +1,5 @@
 [
   {
-    "id": "7c3e5ef53434fd02",
-    "title": "三星钱包将于 11 月内接入 Sui 网络 USDC,支持 Galaxy 用户在 Sui 上使用稳定币",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-06T05:27:07.412486+00:00",
-    "tokens": [
-      "USDC",
-      "SUI"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3fae6ef1eeca28c6",
     "title": "就在前天,赵长鹏在牛津,回答了 19 个问题|现场直击",
     "source": "深潮TechFlow (中文/简体)",
@@ -5164,6 +5153,16 @@
     "title": "KAVA token sinks 40% as exploit hits Kava Lend, exchanges halt withdrawals",
     "source": "Crypto Briefing (深度与研报)",
     "sent_at": "2026-11-14T14:45:59.132075+00:00",
+    "tokens": [
+      "KAVA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "264c433af99343b3",
+    "title": "Kava 调查生态内 dApp 异常行为,KAVA 代币 24 小时跌逾 41%",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-14T15:06:41.554232+00:00",
     "tokens": [
       "KAVA"
     ],
