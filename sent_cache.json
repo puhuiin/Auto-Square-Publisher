@@ -1,15 +1,5 @@
 [
   {
-    "id": "88d3b4dd911d270c",
-    "title": "Solana's Skyline Crypto Ad Triggers Central Bank Investigation in China",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-06T13:30:30.286971+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "94a8f2566c94ac53",
     "title": "中國人民銀行叫停 Solana 上海活動:品牌宣傳等同虛擬貨幣營銷,涉事單位將被查",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5163,5 +5153,16 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0424fd03278eae70",
+    "title": "Kava Lend loses roughly $3.8 million to hack, sending KAVA token down nearly 40%",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-14T23:09:22.782699+00:00",
+    "tokens": [
+      "KAVA",
+      "BNB"
+    ],
+    "lang": "zh-TW"
   }
 ]
