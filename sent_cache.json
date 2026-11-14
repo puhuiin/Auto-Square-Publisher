@@ -1,15 +1,5 @@
 [
   {
-    "id": "d9367ec7af198764",
-    "title": "Cathie Wood buys about $100M in Nvidia and SpaceX shares",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-06T03:50:07.701310+00:00",
-    "tokens": [
-      "ARK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "87a9e5e94054ed0b",
     "title": "Injective (INJ), PEARL and Zcash (ZEC) Surge as Crypto Traders Return to Altcoins",
     "source": "CryptoNews (全球快讯)",
@@ -5168,6 +5158,16 @@
     "sent_at": "2026-11-14T14:06:11.084940+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5e8869248641ea80",
+    "title": "XRP Ledger Activity Hits New November Highs as Batch, Ticket Usage Surge",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-14T14:26:05.366520+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
