@@ -2,26 +2,25 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
+    "#Futures",
     "#TradingTournament",
-    "#NewListing",
-    "#BinanceAcademy"
+    "#NewListing"
   ],
   "incentivized_tokens": [
-    "$COLLECT",
+    "$BNB",
+    "$BTC",
     "$PREDICT",
     "$HYPE",
     "$TRX",
-    "$BTC",
-    "$BNB",
     "$USDC"
   ],
-  "strategy_guidance": "优先针对今日截止的 $COLLECT 交易赛与 Lite Loan 借贷优惠发布“最后冲刺”提醒，利用时间紧迫感引导社区互动。结合 $PREDICT 新币上线与 $HYPE、$TRX 等新合约预热进行深度解析，通过分享参与攻略和热点分析来捕捉流量，最大化 Write to Earn 互动奖励。",
-  "last_updated": "2026-11-13T17:27:31.569348Z",
+  "strategy_guidance": "当前最紧迫的官方动态为11月16日即将上线的HYPE、TRX USDⓈ-Margined永续合约，建议发帖机器人优先围绕新合约的上线规则、交易注意事项做预热解读内容，追上线前的流量热度。同时可联动仍在进行的Stocks交易竞赛、Academy 11月Quiz、Referral Tournament等活动，整理参与攻略类内容，引导读者参与评论互动拿Write2Earn奖励，同时关联交易返佣引导。",
+  "last_updated": "2026-11-14T05:44:18.808785Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "fails": 3,
       "parked_until": "2026-11-14T11:07:14.926021+00:00",
-      "last_fail": "2026-11-14T05:07:14.926021+00:00"
+      "last_fail": "2026-11-14T05:07:14.926021+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
