@@ -1,15 +1,5 @@
 [
   {
-    "id": "5a877e26eb174599",
-    "title": "U.S. tech sell-off spills into crypto: Solana slides to $89.63 as AI spending fears mount",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-06T09:25:14.199414+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ae34c1767f09a933",
     "title": "HTX DeepThink:AI 投资回报遭重估,科技股抛售中 BTC 避险属性未获验证",
     "source": "深潮TechFlow (中文/简体)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-11-14T18:26:12.457384+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d35192f0e0b9e486",
+    "title": "Charles Hoskinson Clashes With Angry ADA Holders Over Promises of Price Gains",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-14T18:46:08.163666+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
