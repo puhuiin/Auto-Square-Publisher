@@ -1,15 +1,5 @@
 [
   {
-    "id": "9ee37d2dfc7c7357",
-    "title": "USDD 發佈 10 月月度透明度報告:儲備資產達 22.1 億美元,Smart Allocator 累計收益超 3359 萬美元",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-11-06T07:24:35.923628+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6f9cb3197918aa02",
     "title": "Trump-Backed World Liberty Financial Announces Token Buyback Program",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-11-14T16:46:08.059216+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8eb6b9b22182aed5",
+    "title": "CryptoQuant:比特币需求降至去年 4 月以来最低水平,巨鲸增持仍不足以抵消抛售压力",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-14T17:05:22.915581+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
