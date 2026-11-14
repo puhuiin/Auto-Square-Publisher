@@ -154,7 +154,20 @@ CAMPAIGN_MENTION_RE = re.compile(
     #   · 收 `pumpkin`（=`Halloween Pumpkin Frenzy`，专名、无泛化歧义）；
     #   · **不收裸 `predict`**：它同时是行情高频动词（"analysts predict…"），
     #     而本正则 IGNORECASE ⇒ 收进去等于每年误报一片（宁漏不误报）。
-    r"|spot\s+taker|pumpkin",
+    r"|spot\s+taker|pumpkin"
+    # ★★ R863：**第 12 次补漏** —— 活动又换代（实测 R861 上线后 11-12/13 的"真漏"里
+    #   **18/21 篇明写着 `Lite Loan`**，而 `mention_in_text("...Lite Loan 50% fee discount...")`
+    #   ⇒ **False** ✗ ⇒ 那条"① 升 21pp ⇒ 回滚"的判定是**假象**，真漏约 3/41 ≈ 7%）。
+    #   ⚠️ **这条已经第 12 次了** ⇒ 根因是"活动按周换代、词表靠人记" ✗
+    #   ⇒ 后续应加一条**自动对账**（拿 `campaign_intel` 的活动名去查词表覆盖率），别等判据报警。
+    #   本轮收录的**当期入口/产品名**（窄形态，延续纪律）：
+    #     `lite loan`（借贷优惠活动）｜`usds-margined` / `usds-m`（永续合约）｜
+    #     `megadrop`（空投活动）｜`binance academy`（学院 Quiz 活动）｜
+    #     `stocks (trading )?(competition|contest)`（Stocks 竞赛）
+    #   ⚠️ 不收裸 `stocks`（=股票，行情高频词）、不收裸 `collect`（=collect fees）。
+    r"|lite\s+loan|usds[\s-]?m(?:argined)?"
+    r"|megadrop|binance\s+academy"
+    r"|stocks\s+(?:trading\s+)?(?:competition|contest)",
     re.IGNORECASE)
 
 # 标签形态：注入的 #TradingTournament / #Write2Earn 含 contest/tournament 字样，

@@ -10151,6 +10151,26 @@ class TestR850Preregistration(unittest.TestCase):
         self.assertFalse(cv.mention_in_text("Analysts predict a 2,000% rally for this token."),
                          "裸 predict 是行情动词，不许收进活动词表")
 
+    def test_r863_vocab_covers_new_campaign_round(self):
+        """★★★ R863：词表第 12 次补漏 —— 新一轮活动名（Lite Loan / USDS-M / Academy…）。
+
+        取证：R861 上线后 11-12/13 被判「真漏」的 21 篇里 **18 篇明写着 `Lite Loan`**，
+        而 `mention_in_text("...Lite Loan 50% fee discount...")` ⇒ False
+        ⇒ 那条「① 升 21pp ⇒ 回滚」是**假象**（真漏 3/41 ≈ 7%）。
+        ⚠️ 窄形态：不收裸 `stocks`（=股票）、不收裸 `collect`（=collect fees）。
+        """
+        import campaign_vocab as cv
+        for s in ("Join the Lite Loan 50% fee discount today.",
+                  "HYPE and TRX USDS-Margined perps launch Nov 16.",
+                  "USDS-M 永续规则先摸清。",
+                  "Binance Academy 11月 Quiz rewards.",
+                  "The Stocks competition is running.",
+                  "Megadrop is live."):
+            self.assertTrue(cv.mention_in_text(s), "当期活动名必须命中：%s" % s)
+        for s in ("Stocks fell 3% today.", "I need to collect some fees today.",
+                  "Analysts predict a bigger move."):
+            self.assertFalse(cv.mention_in_text(s), "泛化词不许误命中：%s" % s)
+
     def test_r861_channel_side_verdict(self):
         """★★ R861：通道侧（`stepfun-flash` 减权）的判定 —— 保量护栏优先，其后看变差/改善。
 
