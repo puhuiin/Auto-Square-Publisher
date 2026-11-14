@@ -1,16 +1,5 @@
 [
   {
-    "id": "8f9a5c0b34b2c2cc",
-    "title": "Samsung Wallet launches USDC accounts on Solana for US Galaxy users",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-05T21:45:34.697347+00:00",
-    "tokens": [
-      "USDC",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "fd803a20d875fc95",
     "title": "Hyperliquid Strategies季度净利润达6.21亿美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5177,6 +5166,17 @@
     "sent_at": "2026-11-14T08:49:30.799127+00:00",
     "tokens": [
       "1INCH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "a4084f0163d369d2",
+    "title": "Ondo Backs Spout Plan for No-Interest Stock-Token Loans",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-14T09:24:33.036378+00:00",
+    "tokens": [
+      "ONDO",
+      "SOL"
     ],
     "lang": "zh-TW"
   }
