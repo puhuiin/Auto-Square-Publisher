@@ -668,6 +668,27 @@ def main():
     if not os.path.exists(a.metrics):
         sys.exit("找不到 %s" % a.metrics)
     text = build_report(load_rows(a.metrics), a.hours)
+    # ★★★ R864：**词表覆盖对账** —— 治"活动按周换代、词表靠人记"这个第 12 次故障的根。
+    #   词表过期一次就会同时制造三类假信号：① 的假回滚 / R850 的假重试 / ⑨ 的假回滚
+    #   （11-14 那次差点把有效的减权回滚掉）✗ ⇒ 每天在日报里主动报一行缺口。
+    #   ⚠️ 启发式提示、**不当门**：命中不了 ≠ 一定要加词，人工判断 ✓。
+    try:
+        _intel = os.path.join(ROOT, "campaign_intel.json")
+        if os.path.exists(_intel):
+            with open(_intel, encoding="utf-8") as _f:
+                _g = (json.load(_f) or {}).get("strategy_guidance") or ""
+            import campaign_vocab as _cv
+            _miss = _cv.uncovered_activity_terms(_g)
+            if _miss:
+                text = text.rstrip() + ("\n\n🧩 词表覆盖对账：**%d 个候选未命中** —— %s\n"
+                                        "（启发式提示，非门槛；人工判断是否补词）"
+                                        % (len(_miss), " ｜ ".join(_miss)))
+            else:
+                text = text.rstrip() + "\n\n🧩 词表覆盖对账：当期情报的活动名**全部命中** ✓"
+        else:
+            text = text.rstrip() + "\n\n🧩 词表覆盖对账：无 campaign_intel.json ⇒ 本轮不判"
+    except Exception as _e:
+        text = text.rstrip() + "\n\n🧩 词表覆盖对账：读取失败（%s）⇒ 本轮不判" % type(_e).__name__
     print(text)
     if a.dry_run:
         return

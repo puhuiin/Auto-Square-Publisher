@@ -10171,6 +10171,30 @@ class TestR850Preregistration(unittest.TestCase):
                   "Analysts predict a bigger move."):
             self.assertFalse(cv.mention_in_text(s), "泛化词不许误命中：%s" % s)
 
+    def test_r864_vocab_coverage_reconcile(self):
+        """★★★ R864：**词表覆盖对账** —— 从情报正文里报出"像活动名但没命中"的片段。
+
+        治的是第 12 次同类故障的根：词表过期一次就同时制造 ① 的假回滚 /
+        R850 的假重试 / ⑨ 的假回滚（11-14 差点回滚掉有效的减权）✗
+        ⚠️ 启发式：元话语要剔、已覆盖的不报、空值返回空表。
+        """
+        import campaign_vocab as cv
+        g = ("当前无临近截止的高优先级活动，可优先围绕 4 支 bStocks 标的、"
+             "新 USDⓈ-Margined 合约，以及 Spot Taker Program、Lite Loan 五折优惠")
+        miss = cv.uncovered_activity_terms(g)
+        self.assertTrue(all("当前" not in m for m in miss), "元话语必须被剔除")
+        self.assertNotIn("Lite Loan", " ".join(miss), "R863 已覆盖的不许再报")
+        # 未覆盖的真缺口（**整段**都不命中那一类 —— 这正是它的可靠覆盖范围）
+        g2 = "参加 FooBar 生态补贴，顺便看看 Lite Loan 五折优惠"
+        miss2 = cv.uncovered_activity_terms(g2)
+        self.assertTrue(any("FooBar" in m for m in miss2), "整段未覆盖的活动必须报出来")
+        # ⚠️ 已知局限：段内含词表已有的通用词（"竞赛"）⇒ 整段命中 ⇒ 段内新专名抓不到
+        g3 = "参加 FooBar 交易竞赛拿奖励"
+        self.assertEqual(cv.uncovered_activity_terms(g3), [],
+                         "这是已知局限（整段命中即视为已覆盖）—— 如有变化请同步文档")
+        self.assertEqual(cv.uncovered_activity_terms(None), [])
+        self.assertEqual(cv.uncovered_activity_terms(""), [])
+
     def test_r861_channel_side_verdict(self):
         """★★ R861：通道侧（`stepfun-flash` 减权）的判定 —— 保量护栏优先，其后看变差/改善。
 

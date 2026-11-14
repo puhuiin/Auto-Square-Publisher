@@ -165,7 +165,7 @@ CAMPAIGN_MENTION_RE = re.compile(
     #     `megadrop`（空投活动）｜`binance academy`（学院 Quiz 活动）｜
     #     `stocks (trading )?(competition|contest)`（Stocks 竞赛）
     #   ⚠️ 不收裸 `stocks`（=股票，行情高频词）、不收裸 `collect`（=collect fees）。
-    r"|lite\s+loan|usds[\s-]?m(?:argined)?"
+    r"|lite\s+loan|(?:usds|usdⓈ)[\s-]?m(?:argined)?"
     r"|megadrop|binance\s+academy"
     r"|stocks\s+(?:trading\s+)?(?:competition|contest)",
     re.IGNORECASE)
@@ -189,3 +189,56 @@ def mention_in_text(text) -> "bool | None":
     if not isinstance(text, str) or not text.strip():
         return None
     return bool(CAMPAIGN_MENTION_RE.search(strip_tags(text)))
+
+
+# ★★★ R864：**词表覆盖对账** —— 治"活动按周换代、词表靠人记"这个**第 12 次**故障的根。
+#   事故回顾：词表过期一次，就同时制造三类假信号 ——
+#     ① 判据① 的假"回滚"（R863）｜ R850 的**假重试**（对已提活动的帖反复重写）｜
+#     ⑨ 的假"回滚"（差点把有效的减权回滚掉，11-14 那次）✗
+#   做法：从**当期情报正文**（`campaign_intel.strategy_guidance`）里切出"像活动名"的片段，
+#     逐个丢进 `mention_in_text` ⇒ **一个都没命中的片段就是词表缺口** ⇒ 日报里报一行。
+#   ⚠️ 这是**启发式**（切段 + 活动类关键词），不是NLP ⇒ 只用来"提示人工看一眼"，**不当门**：
+#     它报出来的东西可能是行情词（如"新USDⓈ-Margined合约"里的"合约"）⇒ 读的人自行判断 ✓。
+_ACTIVITY_HINT = re.compile(
+    r"活动|活動|竞赛|競賽|大赛|大賽|赛事|賽事|任务|任務|空投|奖励|獎勵|奖池|獎池|"
+    r"合约|合約|标的|標的|计划|計劃|补贴|補貼|优惠|優惠|返佣|"
+    r"contest|competition|tournament|event|programme|program|campaign|reward|loan|"
+    r"megadrop|airdrop|challenge|quiz|carnival",
+    re.IGNORECASE,
+)
+_SPLIT = re.compile(r"[、，,。；;：:/\|（）()\[\]【】\n]+")
+
+
+def uncovered_activity_terms(guidance) -> "list":
+    """★ R864：返回**情报里像活动名、但词表命中不了**的片段（供日报"对账"一行）。
+
+    · 空/非字符串 ⇒ `[]`（未知不是缺口 ✓）；
+    · 只报**含活动类关键词**且长度 2~24 的片段（切段过长短都不可靠）；
+    · ⚠️ **已知局限（别当完整解）**：判定是"**整段**是否命中" ⇒ 若段内夹着词表已有的通用词
+      （如「参加 FooBar 交易竞赛」里的"竞赛"）⇒ 整段命中 ⇒ **段内的新专名抓不到** ✗。
+      它可靠覆盖的是"**整段一个都不命中**"那一类（`Lite Loan 五折优惠` / `新USDⓈ-Margined合约`
+      正是这一类 ✓）。要更细需按 token 切分 + 停用词表，属下一轮的事 ✓。
+    · 排序去重，最多 8 条（够人看，不刷屏）。
+    """
+    if not isinstance(guidance, str) or not guidance.strip():
+        return []
+    # 元话语（"当前无临近截止的高优先级活动"/"建议优先…"）不是活动名 ⇒ 先剔掉，减噪
+    _META = re.compile(r"当前|當前|今日|本周|建议|建議|优先|優先|注意|暂时|暫時|无临近|無臨近")
+    seen, out = set(), []
+    for seg in _SPLIT.split(guidance):
+        s = (seg or "").strip(" 　.·-—_*#")
+        if not (2 <= len(s) <= 24):
+            continue
+        if _META.search(s):
+            continue
+        if not _ACTIVITY_HINT.search(s):
+            continue
+        if mention_in_text(s) is True:
+            continue
+        if s in seen:
+            continue
+        seen.add(s)
+        out.append(s)
+        if len(out) >= 8:
+            break
+    return out
