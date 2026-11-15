@@ -1,15 +1,5 @@
 [
   {
-    "id": "6655e060aa2f6d43",
-    "title": "Zero-click iOS exploits drain $4M USDT from active TRON wallets",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-07T10:10:37.151903+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fe23212e2bc5080c",
     "title": "Coinbase Reveals November Delisting Schedule, Issues Warning on Solana Token Listing",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5164,5 +5154,15 @@
       "SOL"
     ],
     "lang": "en"
+  },
+  {
+    "id": "69d9d957cfe1fa28",
+    "title": "黑客对比特币挖矿基础设施实施新型攻击",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-15T22:04:26.886517+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
