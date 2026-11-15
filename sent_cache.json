@@ -1,15 +1,5 @@
 [
   {
-    "id": "29e91a42c97263f0",
-    "title": "Zcash Price Repeats Setup Behind Its 250% Rally, Analyst Says",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-07T12:25:02.559440+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "890dac976451b39b",
     "title": "Elon Musk’s bankruptcy warnings collide with JPMorgan’s first Bitcoin forecast",
     "source": "Crypto Briefing (深度与研报)",
@@ -5165,5 +5155,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "7e4eb8b0f3d11fe3",
+    "title": "Solana 生态流动性平台 Meteora 介绍动态流动性交易平台",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-15T23:45:24.226016+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
