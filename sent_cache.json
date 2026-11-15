@@ -1,16 +1,5 @@
 [
   {
-    "id": "ecba4f57556740bf",
-    "title": "Morpho loan stress exposes cbXRP, but spares native XRP",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-07T11:24:50.361598+00:00",
-    "tokens": [
-      "XRP",
-      "USDC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "15c402e4dace0da0",
     "title": "星球晚讯",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5162,6 +5151,16 @@
     "sent_at": "2026-11-15T22:24:01.679712+00:00",
     "tokens": [
       "KAVA"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "923bfda17ffe053c",
+    "title": "Microsoft Copilot AI Predicts a Seismic Hyperliquid Rally by 2027",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-15T22:44:23.840451+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-TW"
   }
