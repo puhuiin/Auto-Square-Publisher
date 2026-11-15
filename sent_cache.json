@@ -1,15 +1,5 @@
 [
   {
-    "id": "69471bd2ace980b9",
-    "title": "Zcash Activates NU7 Upgrade as Private Payments Become 3x Faster",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-06T17:29:23.938757+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7ea2c22fa4f53040",
     "title": "Binance Issues Crucial Update for Hyperliquid (HYPE) and Litecoin (LTC)",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5160,5 +5150,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "69ede4b562f60be0",
+    "title": "某大户向 Binance 充值约 59.3 万枚 UNI",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-15T04:24:01.030592+00:00",
+    "tokens": [
+      "UNI"
+    ],
+    "lang": "zh-CN"
   }
 ]
