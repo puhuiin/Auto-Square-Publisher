@@ -1,17 +1,5 @@
 [
   {
-    "id": "40ee0006b8cd680c",
-    "title": "XRP Had the Worst Day in Ages, Hyperliquid (HYPE) Awaits Volatility, What Pushes Stellar (XLM) Down? Crypto Market Review",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-07T07:48:29.635249+00:00",
-    "tokens": [
-      "XRP",
-      "HYPE",
-      "XLM"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a840d34f0a49d919",
     "title": "XRP Price Trapped at $1.1799 After $30 Million Cascade Liquidation",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5165,6 +5153,16 @@
     "sent_at": "2026-11-15T17:45:04.255809+00:00",
     "tokens": [
       "XAUT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "da8b40d7b51e4026",
+    "title": "Crypto Has Lost 57 Cents to Hackers for Every Dollar Earned: ARK",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-15T19:04:38.873375+00:00",
+    "tokens": [
+      "ARK"
     ],
     "lang": "en"
   }
