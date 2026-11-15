@@ -1,15 +1,5 @@
 [
   {
-    "id": "1f71b613fc904554",
-    "title": "Solana 永续合约平台 Percolator 披露两项修复",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-07T05:29:35.481180+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "24872c069fbcffc4",
     "title": "比特币现货ETF昨日总净流出4.12亿美元,IBIT净流出居首",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5165,6 +5155,16 @@
     "tokens": [
       "ACE",
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "52f6c73812ef3b31",
+    "title": "XRP crashes to its lowest since November 2024 as money leaves crypto",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-15T15:10:42.753496+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
