@@ -18,14 +18,15 @@
   "strategy_guidance": "优先追11月16日即将上线的HYPE、TRX USDⓈ-Margined永续合约热度，输出新合约规则、交易注意事项类内容；同时联动仍在进行的Stocks交易竞赛、Academy比特币答题、每日词挑战等官方活动，引导读者参与官方互动、交易对应标的参与返佣活动，最大化获取曝光与Write2Earn奖励。",
   "last_updated": "2026-11-15T06:04:22.607743Z",
   "_feed_health": {
-    "CryptoPotato (山寨币/Meme热点)": {
-      "fails": 1,
-      "last_fail": "2026-11-15T09:26:03.629942+00:00"
-    },
     "Bitcoinist (比特币向)": {
+      "reset_at": "2026-11-15T09:49:00.656882+00:00",
       "fails": 1,
-      "reset_at": "2026-11-15T09:26:03.812747+00:00",
       "last_fail": "2026-11-15T05:43:52.059215+00:00"
+    },
+    "CryptoPotato (山寨币/Meme热点)": {
+      "last_fail": "2026-11-15T09:26:03.629942+00:00",
+      "reset_at": "2026-11-15T09:49:00.662847+00:00",
+      "fails": 1
     }
   },
   "_fallback_image": {
@@ -36,7 +37,7 @@
   "_article_sent_date": "2026-11-15",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1008,
+  "_img_rot": 1009,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

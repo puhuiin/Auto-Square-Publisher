@@ -1,15 +1,5 @@
 [
   {
-    "id": "d52c7825c3cd2715",
-    "title": "Solana Targets Hong Kong's Tokenization Market",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-06T22:24:36.539224+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2d18ea867dddcc55",
     "title": "China central bank probes Solana after Shanghai shutdown, report",
     "source": "Protos (隐私与合规)",
@@ -5164,5 +5154,15 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ed2244b17db8b89a",
+    "title": "All of Shiba Inu's (SHIB) Value on the Verge of Dropping Below $300 Million",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-15T09:49:54.457681+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-CN"
   }
 ]
