@@ -1,15 +1,5 @@
 [
   {
-    "id": "cd86a0c3caac0733",
-    "title": "Thailand SEC Files Criminal Complaint Against Bitget Ahead of Dec. 5 Access Block",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-11-07T09:47:36.261240+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "6655e060aa2f6d43",
     "title": "Zero-click iOS exploits drain $4M USDT from active TRON wallets",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-11-15T21:06:03.334610+00:00",
     "tokens": [
       "QNT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "84fac58d5dd0514b",
+    "title": "Solflare Launches Private Mode for Solana Payments",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-15T21:24:13.261738+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
