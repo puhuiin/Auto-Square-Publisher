@@ -19,8 +19,8 @@
   "last_updated": "2026-11-14T17:46:28.412834Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "fails": 1,
-      "last_fail": "2026-11-15T00:04:02.143137+00:00"
+      "last_fail": "2026-11-15T00:04:02.143137+00:00",
+      "fails": 1
     }
   },
   "_fallback_image": {
