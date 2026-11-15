@@ -1,15 +1,5 @@
 [
   {
-    "id": "00c3cb06adef98c3",
-    "title": "Cardano Node 11.2 brings Dijkstra closer, but why did its price fall by 6%?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-06T18:30:27.089493+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "54658243f4d34b28",
     "title": "Polygon eyes hard fork to recover $6.5 mln in stolen POL – But at what cost?",
     "source": "AMBCrypto (技术与链上)",
@@ -5159,5 +5149,16 @@
       "DOGE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "582a3ab38f4737d4",
+    "title": "累计盈利约4126万美元地址调整多资产仓位:增持ETH、HYPE多单,反手做多CRCL",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-15T05:24:58.820807+00:00",
+    "tokens": [
+      "ETH",
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
