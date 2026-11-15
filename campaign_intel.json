@@ -4,24 +4,24 @@
     "#BinanceSquare",
     "#Futures",
     "#TradingCompetition",
-    "#NewListing"
+    "#bStocks"
   ],
   "incentivized_tokens": [
     "$BNB",
     "$BTC",
     "$USDC",
-    "$PREDICT",
     "$HYPE",
     "$TRX",
-    "$bStocks"
+    "$PREDICT",
+    "$bStock"
   ],
-  "strategy_guidance": "当前最紧迫的待跟进活动为11月16日即将上线的HYPEUSDC、TRXUSDC USDⓈ-Margined永续合约，发帖可优先围绕新合约上线规则科普、交易竞赛参与攻略等角度切入，引导读者参与评论互动获取Write2Earn奖励。此外可结合Binance Stocks交易竞赛、bStocks玩法科普等内容追当期交易类活动热度，覆盖不同受众群体的内容需求，同时关联现有交易返佣活动提升转化。",
-  "last_updated": "2026-11-14T17:46:28.412834Z",
+  "strategy_guidance": "优先追11月16日即将上线的HYPE、TRX USDⓈ-Margined永续合约热度，输出新合约规则、交易注意事项类内容；同时联动仍在进行的Stocks交易竞赛、Academy比特币答题、每日词挑战等官方活动，引导读者参与官方互动、交易对应标的参与返佣活动，最大化获取曝光与Write2Earn奖励。",
+  "last_updated": "2026-11-15T06:04:22.607743Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "last_fail": "2026-11-15T01:24:06.766043+00:00",
+      "parked_until": "2026-11-15T07:24:06.766043+00:00",
       "fails": 3,
-      "parked_until": "2026-11-15T07:24:06.766043+00:00"
+      "last_fail": "2026-11-15T01:24:06.766043+00:00"
     },
     "Bitcoinist (比特币向)": {
       "fails": 1,
