@@ -1,15 +1,5 @@
 [
   {
-    "id": "3bb7d8afa6c7646e",
-    "title": "Aave Labs Acquires Avon Team to Develop Fixed-Rate Lending",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-07T00:26:55.426939+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9730ee4b4f8c6f53",
     "title": "XRP Ledger Is Undisputed Leader of 2026 in Commodities Tokenization With $2.2 Billion",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5166,5 +5156,15 @@
       "ADA"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "42ef06abe02e2a07",
+    "title": "XRP Ledger Creates New Baseline: 1 Billion Secured",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-15T12:05:29.678385+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
