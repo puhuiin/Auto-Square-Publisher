@@ -1,17 +1,5 @@
 [
   {
-    "id": "a600ce5eb9bf28b0",
-    "title": "究竟是什么在驱动 Layer 1 的价值?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-06T14:07:13.513643+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "518293c9efac0b29",
     "title": "TechFlow 情报局:黑客花15美元掏空币安25亿美元,美股AI板块单日蒸发2.3万亿",
     "source": "深潮TechFlow (中文/简体)",
@@ -5163,6 +5151,16 @@
     "tokens": [
       "KAVA",
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "dbe940686805e56d",
+    "title": "比特币接近5.95万至6.26万美元清算密集区,Glassnode警告多头仓位风险",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-15T00:49:03.212478+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
