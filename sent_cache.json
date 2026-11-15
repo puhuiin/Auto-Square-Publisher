@@ -1,15 +1,5 @@
 [
   {
-    "id": "8d5e7e7bbb04f0ff",
-    "title": "Ondo Plans Tokenized Anthropic Shares From IPO Day",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-06T17:10:31.020136+00:00",
-    "tokens": [
-      "ONDO"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "69471bd2ace980b9",
     "title": "Zcash Activates NU7 Upgrade as Private Payments Become 3x Faster",
     "source": "Bitcoinist (比特币向)",
@@ -5160,5 +5150,15 @@
       "UNI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "b24069e479ff90cb",
+    "title": "Solana’s “retired” validators still vote with 15% of active stake",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-15T04:04:22.318233+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
