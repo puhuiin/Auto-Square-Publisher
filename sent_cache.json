@@ -1,15 +1,5 @@
 [
   {
-    "id": "6a89073c9c2810b4",
-    "title": "代币转换完成并恢复收发,Coinbase启用AERO与VELO收发功能",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-06T19:44:08.426626+00:00",
-    "tokens": [
-      "AERO"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8ed5ba6eeeabaedb",
     "title": "Why aren’t XLM crypto traders betting big before the 23 November vote?",
     "source": "AMBCrypto (技术与链上)",
@@ -5161,5 +5151,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4be67c97bec185fe",
+    "title": "JPMorgan Lifts Strategy Stake 36% and Holds $540M in BlackRock’s Bitcoin ETF",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-15T06:44:29.813908+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
