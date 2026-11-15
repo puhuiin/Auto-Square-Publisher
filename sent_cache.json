@@ -1,15 +1,5 @@
 [
   {
-    "id": "b089cf961f26d2e9",
-    "title": "Dinari Promises Anthropic dShares on IPO Day, Including for US Investors",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-07T00:07:26.414489+00:00",
-    "tokens": [
-      "ONDO"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3bb7d8afa6c7646e",
     "title": "Aave Labs Acquires Avon Team to Develop Fixed-Rate Lending",
     "source": "The Defiant (DeFi 深度)",
@@ -5166,5 +5156,15 @@
       "UNI"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "66f44ed05b519cff",
+    "title": "Cardano's Hoskinson Says Everyone Will Be Happy Next Year",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-15T11:45:23.071143+00:00",
+    "tokens": [
+      "ADA"
+    ],
+    "lang": "zh-CN"
   }
 ]
