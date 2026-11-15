@@ -1,17 +1,5 @@
 [
   {
-    "id": "b94bbaa3078ba73f",
-    "title": "ARK 申报代币化市场基础设施 ETF,可间接获取 ETH、SOL 等资产敞口",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-07T04:08:31.911219+00:00",
-    "tokens": [
-      "ARK",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d78fc69573a65b3a",
     "title": "THORChain 已完成 Monero 集成开发,上线仍待节点轮换",
     "source": "吴说区块链 (中文深度)",
@@ -5166,6 +5154,16 @@
     "tokens": [
       "SOL",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3ae808e15dba1469",
+    "title": "Why Is XRP Down Today? Three Reasons According to Onchain Data",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-15T14:29:49.228445+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
