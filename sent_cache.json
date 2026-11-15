@@ -1,15 +1,5 @@
 [
   {
-    "id": "99a7ecf8792ec845",
-    "title": "Bitcoin and USDT attract modest premiums in Paraguay as millions face banking crisis",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-07T12:04:30.139771+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "29e91a42c97263f0",
     "title": "Zcash Price Repeats Setup Behind Its 250% Rally, Analyst Says",
     "source": "Bitcoinist (比特币向)",
@@ -5162,5 +5152,18 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a2ddb73a1069fa31",
+    "title": "加密早报:SpaceX 首次用塔架接住返回的星舰飞船,要求黄仁勋复职请愿人数超 10 万",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-15T23:24:47.897567+00:00",
+    "tokens": [
+      "BTC",
+      "KAVA",
+      "BNB",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
