@@ -10303,6 +10303,88 @@ class TestR850Preregistration(unittest.TestCase):
                 setattr(mod, n, v)
         self.assertIn("样本不足", txt2)
 
+    def test_r869_slot_prereg(self):
+        """★★ R869：时段×浏览**预注册判据**（只读）—— 阈值钉死，防事后挪线。
+
+        背景：11-15 平台快照显示 UTC 00–02 中位 44 浏览 vs 02–05 中位 0（同期龄）。
+        但那是"看完才挑出来的时段"⇒ 只能在 11-16 之后的新数据上确认。
+        """
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "slot_prereg_r869",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "slot_prereg.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+        # ---- 预注册常量（改了就等于改判据 ⇒ 必须显式改测试并留痕）----
+        self.assertEqual(mod.R869_PRIMARY, ("00-02", "02-05"))
+        self.assertEqual(mod.R869_MIN_DAYS, 8, "n=8 才允许 1 天反向")
+        self.assertEqual(mod.R869_MIN_TOTAL_PER_BUCKET, 20)
+        self.assertEqual(mod.R869_MIN_POSTS_PER_BUCKET, 3)
+        self.assertAlmostEqual(mod.R869_MIN_RATIO, 1.5)
+        self.assertEqual(mod.R869_MAX_LANG_SHARE_DIFF, 0.20)
+        self.assertEqual(mod.R869_EXPOSURE_HOURS, (6.0, 72.0))
+        self.assertEqual(mod.R869_FROM_DATE, "2026-11-16", "发现样本必须整段排除")
+
+        # ---- 分桶边界 ----
+        self.assertEqual(mod.bucket_of(0), "00-02")
+        self.assertEqual(mod.bucket_of(1), "00-02")
+        self.assertEqual(mod.bucket_of(2), "02-05")
+        self.assertEqual(mod.bucket_of(4), "02-05")
+        self.assertEqual(mod.bucket_of(5), "05-08")
+        self.assertEqual(mod.bucket_of(23), "20-24")
+
+        # ---- 符号检验（纯整数，可复现）----
+        self.assertAlmostEqual(mod.sign_test_p(5, 5), 0.03125)
+        self.assertAlmostEqual(mod.sign_test_p(4, 5), 0.1875)
+        self.assertAlmostEqual(mod.sign_test_p(7, 8), 0.03515625)
+        self.assertAlmostEqual(mod.sign_test_p(6, 8), 0.14453125)
+        self.assertEqual(mod.sign_test_p(0, 0), 1.0)
+
+        def mk(days, v_hi, v_lo, lang="zh-CN"):
+            rows = []
+            for d in days:
+                for i in range(3):
+                    rows.append({"day": d, "hour": 0, "bucket": "00-02",
+                                 "lang": lang, "vpd": v_hi})
+                    rows.append({"day": d, "hour": 3, "bucket": "02-05",
+                                 "lang": lang, "vpd": v_lo})
+            return rows
+
+        days8 = ["2026-11-%02d" % i for i in range(17, 25)]
+        # ① 8 个有效日、全部 00-02 更高、比值 2× ⇒ 通过
+        st, why = mod.slot_verdict(mk(days8, 10.0, 5.0))
+        self.assertEqual(st, "通过", why)
+        # ② 只有 1 天反向（7/8）仍能通过（n=8 的容错）
+        rows = mk(days8, 10.0, 5.0)
+        for r in rows:
+            if r["day"] == days8[0] and r["bucket"] == "00-02":
+                r["vpd"] = 1.0
+        self.assertEqual(mod.slot_verdict(rows)[0], "通过")
+        # ③ 差一点点就掉出去：n=8 但只有 6 天同向 ⇒ 未通过（不许当"差不多"放过）
+        rows = mk(days8, 10.0, 5.0)
+        for d in days8[6:]:
+            for r in rows:
+                if r["day"] == d and r["bucket"] == "00-02":
+                    r["vpd"] = 1.0
+        self.assertEqual(mod.slot_verdict(rows)[0], "未通过")
+        # ④ 方向反过来 ≥4 天且占多数 ⇒ 反转
+        rows = mk(days8, 2.0, 10.0)
+        self.assertEqual(mod.slot_verdict(rows)[0], "反转")
+        # ⑤ 有效日不足（只给 5 天）⇒ 数据不足（**不等于没效果**）
+        st, why = mod.slot_verdict(mk(days8[:5], 10.0, 5.0))
+        self.assertEqual(st, "数据不足")
+        self.assertIn("不等于没效果", why)
+        # ⑥ 比值不够（1.2×）⇒ 即使天天同向也不算通过
+        self.assertEqual(mod.slot_verdict(mk(days8, 6.0, 5.0))[0], "未通过")
+        # ⑦ 语种混淆守卫：两桶 en 占比差 >20pp 的日子不算有效日
+        rows = mk(days8, 10.0, 5.0)
+        for r in rows:
+            if r["bucket"] == "00-02":
+                r["lang"] = "en"
+        self.assertEqual(mod.slot_verdict(rows)[0], "数据不足", "语种占比差过大必须作废该日")
+
     def test_r861_channel_side_verdict(self):
         """★★ R861：通道侧（`stepfun-flash` 减权）的判定 —— 保量护栏优先，其后看变差/改善。
 
