@@ -1,16 +1,5 @@
 [
   {
-    "id": "7ea2c22fa4f53040",
-    "title": "Binance Issues Crucial Update for Hyperliquid (HYPE) and Litecoin (LTC)",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-06T17:47:17.700217+00:00",
-    "tokens": [
-      "HYPE",
-      "LTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1394277e4e8dc972",
     "title": "Hyperliquid Strategies posts $620.6M Q3 profit – Mostly unrealized HYPE gains",
     "source": "AMBCrypto (技术与链上)",
@@ -5158,6 +5147,16 @@
     "sent_at": "2026-11-15T04:24:01.030592+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1bf083f3b54df0d2",
+    "title": "Solana 财库公司 Forward Industries 向 Coinbase Prime 转入约 1.23 亿美元 SOL",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-15T04:44:21.256968+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
