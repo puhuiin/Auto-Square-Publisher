@@ -20,24 +20,24 @@
   "_feed_health": {
     "CoinJournal (山寨异动)": {
       "parked_until": "2026-11-15T07:24:06.766043+00:00",
-      "last_fail": "2026-11-15T01:24:06.766043+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-11-15T01:24:06.766043+00:00"
     },
     "Bitcoinist (比特币向)": {
-      "last_fail": "2026-11-15T05:43:52.059215+00:00",
-      "reset_at": "2026-11-15T06:43:32.677822+00:00",
-      "fails": 1
+      "fails": 1,
+      "reset_at": "2026-11-15T07:03:34.303117+00:00",
+      "last_fail": "2026-11-15T05:43:52.059215+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-15",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1005,
+  "_img_rot": 1006,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
