@@ -1,15 +1,5 @@
 [
   {
-    "id": "dd1a58ad5d195e63",
-    "title": "24小时销毁价值164万美元HYPE,Hyperliquid回购并销毁2.104万枚",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-06T23:46:52.908877+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b089cf961f26d2e9",
     "title": "Dinari Promises Anthropic dShares on IPO Day, Including for US Investors",
     "source": "The Defiant (DeFi 深度)",
@@ -5164,5 +5154,17 @@
       "ZK"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "5f853842c2aca0bb",
+    "title": "链上侦探Specter:某地址被归属为以太坊基金会钱包的证据不足",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-15T11:28:18.234313+00:00",
+    "tokens": [
+      "ETH",
+      "BAT",
+      "UNI"
+    ],
+    "lang": "zh-TW"
   }
 ]
