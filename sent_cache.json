@@ -1,15 +1,5 @@
 [
   {
-    "id": "0636568a425fc6bf",
-    "title": "Stellar Activates Protocol 30 Bell Testnet, Begins Testing Quantum-Resistant Signatures",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-06T21:44:39.069899+00:00",
-    "tokens": [
-      "XLM"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a61a613014a261be",
     "title": "ZEC升级后24小时上涨约8%,单块奖励调整为0.52083333枚",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5161,6 +5151,16 @@
       "USDC",
       "MEGA",
       "KAT"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "fea8e7b1f9998e7a",
+    "title": "彭博:比特币阴跌令交易者绝望,市场信心与机构需求双双承压",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-15T09:04:35.619960+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
