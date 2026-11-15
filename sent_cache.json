@@ -1,15 +1,5 @@
 [
   {
-    "id": "8a0c7d0417796677",
-    "title": "Zcash (ZEC) OI Down 7.8% as NU7 Upgrade Goes Live",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-06T14:48:47.779312+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ee12d9f01c227654",
     "title": "XRP bear trap alert! Bitfinex shorts surge 652% as supply tightens",
     "source": "AMBCrypto (技术与链上)",
@@ -5161,5 +5151,15 @@
       "KAVA"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "7e683bb1d23dd148",
+    "title": "Tom Lee:加密市场近期承压或与AI股票抛售、Anthropic IPO资金需求及黑客事件资金释放有关",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-15T01:47:32.878899+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
