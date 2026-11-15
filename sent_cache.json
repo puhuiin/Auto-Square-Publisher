@@ -1,15 +1,5 @@
 [
   {
-    "id": "b0e04d2b13a9fdec",
-    "title": "Solana Labs launches Leap iPhone beta for crypto swaps, SOL price dips 6%",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-06T23:27:51.952835+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "dd1a58ad5d195e63",
     "title": "24小时销毁价值164万美元HYPE,Hyperliquid回购并销毁2.104万枚",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-11-15T10:44:33.431987+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9823710840ab65f5",
+    "title": "AI Agent Identity Needs Blockchain, Legal Experts Say",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-15T11:04:12.843145+00:00",
+    "tokens": [
+      "ZK"
     ],
     "lang": "zh-CN"
   }
