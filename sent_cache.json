@@ -1,15 +1,5 @@
 [
   {
-    "id": "02febb13b9cce84b",
-    "title": "XRP Sentiment Crashes to July Lows: Could This Be the Bullish Signal Ripple Needs?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-07T07:07:35.866042+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2a92258a817f08a7",
     "title": "Samsung teams with Stripe to bring USDC to 82M phones",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5166,6 +5156,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d4c77f6f3c3e2418",
+    "title": "XRP Ledger Passes 11.7 Million Sub-Dollar AI Agent Microtransactions",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-15T16:50:33.409818+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
