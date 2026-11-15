@@ -1,16 +1,5 @@
 [
   {
-    "id": "15c402e4dace0da0",
-    "title": "星球晚讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-07T11:44:50.786770+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "99a7ecf8792ec845",
     "title": "Bitcoin and USDT attract modest premiums in Paraguay as millions face banking crisis",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5163,5 +5152,15 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "390983765c73a20b",
+    "title": "Bitcoin May Never See a New ATH Again, Peter Brandt Floats Grim Scenario as Bearish Pattern Emerges",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-15T23:04:33.142379+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
