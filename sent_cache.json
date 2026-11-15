@@ -1,15 +1,5 @@
 [
   {
-    "id": "b801dad564c4116e",
-    "title": "Bitcoin ETFs Bleed $430 Million as Tech Rout Tests Wall Street Buyers",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-07T06:24:04.356664+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "03a9c9f29a49bc94",
     "title": "Core Scientific to Exit Bitcoin Mining by 2027 as AI Data Center Business Takes Over",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5165,6 +5155,16 @@
     "sent_at": "2026-11-15T15:29:30.002903+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "995cbdda3aaeba44",
+    "title": "Coinone Warns of Identity Theft After Support Breach",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-15T16:06:05.058221+00:00",
+    "tokens": [
+      "ID"
     ],
     "lang": "en"
   }
