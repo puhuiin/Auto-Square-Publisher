@@ -1,15 +1,5 @@
 [
   {
-    "id": "1394277e4e8dc972",
-    "title": "Hyperliquid Strategies posts $620.6M Q3 profit – Mostly unrealized HYPE gains",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-06T18:09:44.712424+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "00c3cb06adef98c3",
     "title": "Cardano Node 11.2 brings Dijkstra closer, but why did its price fall by 6%?",
     "source": "AMBCrypto (技术与链上)",
@@ -5157,6 +5147,16 @@
     "sent_at": "2026-11-15T04:44:21.256968+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "30803c649b8151f2",
+    "title": "‘Under pressure’ Dogecoin down by 40%, but is more downside ahead for memecoin?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-15T05:05:37.410194+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "zh-CN"
   }
