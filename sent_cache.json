@@ -1,15 +1,5 @@
 [
   {
-    "id": "03a9c9f29a49bc94",
-    "title": "Core Scientific to Exit Bitcoin Mining by 2027 as AI Data Center Business Takes Over",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-07T06:44:35.898361+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "02febb13b9cce84b",
     "title": "XRP Sentiment Crashes to July Lows: Could This Be the Bullish Signal Ripple Needs?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5165,6 +5155,17 @@
     "sent_at": "2026-11-15T16:06:05.058221+00:00",
     "tokens": [
       "ID"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4ed20f0c3d8d5969",
+    "title": "CZ:过去几天已逢低买入,币安没有抛售加密货币",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-15T16:26:46.501012+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "en"
   }
