@@ -1,15 +1,5 @@
 [
   {
-    "id": "06ef141ab810f930",
-    "title": "Zcash’s Game-Changing NU7 Upgrade Goes Live, Slashing Block Times 3X as $5,000 ZEC Rally Comes Into Focus",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-06T19:26:09.389139+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6a89073c9c2810b4",
     "title": "代币转换完成并恢复收发,Coinbase启用AERO与VELO收发功能",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5158,6 +5148,16 @@
     "sent_at": "2026-11-15T05:44:43.941786+00:00",
     "tokens": [
       "ETH",
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "29d4c6db6d4f2983",
+    "title": "Bloomberg:比特币跌至 6.2 万美元附近,多重利空令加密市场持续承压",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-15T06:20:46.228530+00:00",
+    "tokens": [
       "BTC"
     ],
     "lang": "zh-CN"
