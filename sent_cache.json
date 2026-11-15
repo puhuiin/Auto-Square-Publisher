@@ -1,15 +1,5 @@
 [
   {
-    "id": "a61a613014a261be",
-    "title": "ZEC升级后24小时上涨约8%,单块奖励调整为0.52083333枚",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-06T22:04:03.081188+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d52c7825c3cd2715",
     "title": "Solana Targets Hong Kong's Tokenization Market",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5161,6 +5151,17 @@
     "sent_at": "2026-11-15T09:04:35.619960+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "9ac8459258ecacc5",
+    "title": "AI Cyberattacks And Outages Keep Breaking Centralized Systems, But Bitcoin Keeps Running",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-15T09:27:14.324134+00:00",
+    "tokens": [
+      "BTC",
+      "HYPE"
     ],
     "lang": "zh-TW"
   }
