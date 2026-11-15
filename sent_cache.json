@@ -1,15 +1,5 @@
 [
   {
-    "id": "9730ee4b4f8c6f53",
-    "title": "XRP Ledger Is Undisputed Leader of 2026 in Commodities Tokenization With $2.2 Billion",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-07T00:47:45.168723+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6fdd84fcc81600ab",
     "title": "吴说周精选:美国中期选举结果引发市场大跌、香港通过 Crypto 报税框架、币安披露 63 亿美金被盗原因与新闻 Top10",
     "source": "吴说区块链 (中文深度)",
@@ -5166,5 +5156,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "8664047aee34fcf9",
+    "title": "Someone Moves 240 Million XRP the Exact Moment Price Hits Its $0.89 Floor",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-15T12:24:20.069759+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
