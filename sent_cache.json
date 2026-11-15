@@ -1,15 +1,5 @@
 [
   {
-    "id": "e14882290d0775d1",
-    "title": "ADA Advancing Regulated Asset Tokenization as Brazil’s Petrobras Brings Sustainable Aviation Fuel Certificates to Cardano",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-06T21:11:14.766333+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0636568a425fc6bf",
     "title": "Stellar Activates Protocol 30 Bell Testnet, Begins Testing Quantum-Resistant Signatures",
     "source": "ZyCrypto (新币与空投)",
@@ -5159,6 +5149,18 @@
     "sent_at": "2026-11-15T07:44:31.269397+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "2f4a891184930d18",
+    "title": "一周热门项目动态:CFTC 或对 Kalshi 提起指控、纽交所将使用 Avalanche 结算代币化股票、Zcash 推进 NU8 重大升级等(1108–1114)",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-15T08:09:43.242212+00:00",
+    "tokens": [
+      "USDC",
+      "MEGA",
+      "KAT"
     ],
     "lang": "zh-TW"
   }
