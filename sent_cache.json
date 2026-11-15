@@ -1,15 +1,5 @@
 [
   {
-    "id": "24872c069fbcffc4",
-    "title": "比特币现货ETF昨日总净流出4.12亿美元,IBIT净流出居首",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-07T06:04:10.445721+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b801dad564c4116e",
     "title": "Bitcoin ETFs Bleed $430 Million as Tech Rout Tests Wall Street Buyers",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5165,6 +5155,16 @@
     "sent_at": "2026-11-15T15:10:42.753496+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a6c3ced8a8db729a",
+    "title": "Solana 生态周报:Raydium 代币化股票累计交易额超 80 亿美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-15T15:29:30.002903+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
