@@ -1,15 +1,5 @@
 [
   {
-    "id": "d8c437dd411ddd14",
-    "title": "ZEC现货ETF单日净流入177.18万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-07T03:44:11.890917+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b94bbaa3078ba73f",
     "title": "ARK 申报代币化市场基础设施 ETF,可间接获取 ETH、SOL 等资产敞口",
     "source": "吴说区块链 (中文深度)",
@@ -5167,5 +5157,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "633b07ebb0d2a0d0",
+    "title": "Hyperliquid Whale Who Lost $10 Million Now Bets on Solana",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-15T14:08:48.444102+00:00",
+    "tokens": [
+      "SOL",
+      "ETH"
+    ],
+    "lang": "en"
   }
 ]
