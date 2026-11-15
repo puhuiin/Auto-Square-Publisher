@@ -1,15 +1,5 @@
 [
   {
-    "id": "fe23212e2bc5080c",
-    "title": "Coinbase Reveals November Delisting Schedule, Issues Warning on Solana Token Listing",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-07T10:44:31.169222+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ecba4f57556740bf",
     "title": "Morpho loan stress exposes cbXRP, but spares native XRP",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5164,5 +5154,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "69edc16459bd22d6",
+    "title": "Kava Lend Exploit Exposes a Dangerous Gap in DeFi Collateral Accounting",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-15T22:24:01.679712+00:00",
+    "tokens": [
+      "KAVA"
+    ],
+    "lang": "zh-TW"
   }
 ]
