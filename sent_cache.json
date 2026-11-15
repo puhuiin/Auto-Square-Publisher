@@ -1,15 +1,5 @@
 [
   {
-    "id": "2d18ea867dddcc55",
-    "title": "China central bank probes Solana after Shanghai shutdown, report",
-    "source": "Protos (隐私与合规)",
-    "sent_at": "2026-11-06T22:44:39.175114+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5c224eeac818d241",
     "title": "Zcash NU7 Upgrade Goes Live, Slashing Block Times From 75 Seconds to Just 25 Seconds",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-11-15T09:49:54.457681+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3c285d38d0c90b48",
+    "title": "Blockstream And Thales Launch Bitcoin Custody System",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-15T10:07:03.866270+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
