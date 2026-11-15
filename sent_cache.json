@@ -1,15 +1,5 @@
 [
   {
-    "id": "54658243f4d34b28",
-    "title": "Polygon eyes hard fork to recover $6.5 mln in stolen POL – But at what cost?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-06T18:50:30.594085+00:00",
-    "tokens": [
-      "POL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "06ef141ab810f930",
     "title": "Zcash’s Game-Changing NU7 Upgrade Goes Live, Slashing Block Times 3X as $5,000 ZEC Rally Comes Into Focus",
     "source": "ZyCrypto (新币与空投)",
@@ -5160,5 +5150,16 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "3698b8c22ef634d5",
+    "title": "星球午讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-15T05:44:43.941786+00:00",
+    "tokens": [
+      "ETH",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
