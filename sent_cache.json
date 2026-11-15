@@ -1,15 +1,5 @@
 [
   {
-    "id": "94a8f2566c94ac53",
-    "title": "中國人民銀行叫停 Solana 上海活動:品牌宣傳等同虛擬貨幣營銷,涉事單位將被查",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-11-06T13:49:28.259209+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a600ce5eb9bf28b0",
     "title": "究竟是什么在驱动 Layer 1 的价值?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5164,5 +5154,16 @@
       "BNB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "17a78f24c831b65c",
+    "title": "借贷协议 Kava Lend 遭攻击,约 5520 万枚 KAVA 被借出",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-15T00:06:50.647741+00:00",
+    "tokens": [
+      "KAVA",
+      "BNB"
+    ],
+    "lang": "zh-CN"
   }
 ]
