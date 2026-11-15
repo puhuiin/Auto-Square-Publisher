@@ -1,16 +1,5 @@
 [
   {
-    "id": "2a92258a817f08a7",
-    "title": "Samsung teams with Stripe to bring USDC to 82M phones",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-07T07:30:22.916615+00:00",
-    "tokens": [
-      "USDC",
-      "ACH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "40ee0006b8cd680c",
     "title": "XRP Had the Worst Day in Ages, Hyperliquid (HYPE) Awaits Volatility, What Pushes Stellar (XLM) Down? Crypto Market Review",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5166,6 +5155,16 @@
     "sent_at": "2026-11-15T16:50:33.409818+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "df3198da88f555ce",
+    "title": "Tether wants its gold token to rival ETFs",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-15T17:45:04.255809+00:00",
+    "tokens": [
+      "XAUT"
     ],
     "lang": "en"
   }
