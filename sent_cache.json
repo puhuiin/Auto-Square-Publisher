@@ -1,15 +1,5 @@
 [
   {
-    "id": "a840d34f0a49d919",
-    "title": "XRP Price Trapped at $1.1799 After $30 Million Cascade Liquidation",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-07T08:07:26.015470+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "02b255c314d39b4a",
     "title": "Robinhood Chain 与 Uniswap v4 Hook 经济学全景实操指南",
     "source": "深潮TechFlow (中文/简体)",
@@ -5163,6 +5153,17 @@
     "sent_at": "2026-11-15T19:04:38.873375+00:00",
     "tokens": [
       "ARK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6624aed4ecabfcec",
+    "title": "Elon Musk’s Grok AI Predicts a Huge XRP Crash Amid Ongoing Market Volatility",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-15T19:26:18.436284+00:00",
+    "tokens": [
+      "XRP",
+      "BTC"
     ],
     "lang": "en"
   }
