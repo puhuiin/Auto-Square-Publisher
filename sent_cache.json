@@ -1,15 +1,5 @@
 [
   {
-    "id": "ee12d9f01c227654",
-    "title": "XRP bear trap alert! Bitfinex shorts surge 652% as supply tightens",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-06T15:07:45.942098+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ca30cf9a57614c15",
     "title": "說好的脫鉤預期失效:AI 拋售潮下 BTC 為何重回美股陰影",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5161,5 +5151,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "0ef08442c63affc5",
+    "title": "日元稳定币发行一年:首个无 gas 采用者是鹌鹑蛋商家;单次 100 万成最大限制",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-15T02:04:16.349633+00:00",
+    "tokens": [
+      "UNI"
+    ],
+    "lang": "zh-CN"
   }
 ]
