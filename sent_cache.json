@@ -1,16 +1,5 @@
 [
   {
-    "id": "c62e052ec560443c",
-    "title": "Ripple's Dubai Event Presence Gets High-Profile Boost From Emirates Chairman",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-07T09:28:14.254051+00:00",
-    "tokens": [
-      "XRP",
-      "ONE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "cd86a0c3caac0733",
     "title": "Thailand SEC Files Criminal Complaint Against Bitget Ahead of Dec. 5 Access Block",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5163,6 +5152,16 @@
     "sent_at": "2026-11-15T20:45:09.249101+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "328f3af4d4fc037b",
+    "title": "Google Gemini AI Predicts an Insane Quant Crypto Reversal",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-15T21:06:03.334610+00:00",
+    "tokens": [
+      "QNT"
     ],
     "lang": "en"
   }
