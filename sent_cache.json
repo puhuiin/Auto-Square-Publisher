@@ -1,15 +1,5 @@
 [
   {
-    "id": "3f1498485b583772",
-    "title": "STRK Slumps 57% in Four Weeks as Starknet Rally Unwinds",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-07T16:11:54.548131+00:00",
-    "tokens": [
-      "STRK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4c8318f168b94cd6",
     "title": "'Congratulations,' Peter Schiff Reacts as Saylor's Bitcoin Treasury Sits at Cost Basis",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5169,6 +5159,17 @@
     "sent_at": "2026-11-16T03:05:36.967354+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7b637a1f6c6a513b",
+    "title": "火币 HTX 首席分析师 Cloud:本轮下跌中需求端并未崩塌,筹码正从 ETF 转向企业资产负债表",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-16T03:24:11.954375+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
