@@ -1,15 +1,5 @@
 [
   {
-    "id": "64a09d6ff0da39d8",
-    "title": "China’s Central Bank to Probe Solana’s Ad Campaign in Shanghai’s Lujiazui​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-07T18:45:24.000439+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "dea223923e9db8a4",
     "title": "Dogecoin Contributor Flags Social Signing as Potential Wallet Security Risk",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5171,5 +5161,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "c240940958d421cc",
+    "title": "Upbit将于11月19日暂停Polygon网络相关资产充提",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-16T06:04:34.441605+00:00",
+    "tokens": [
+      "GMT",
+      "POL"
+    ],
+    "lang": "zh-CN"
   }
 ]
