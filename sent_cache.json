@@ -1,15 +1,5 @@
 [
   {
-    "id": "b7087297893ad0dd",
-    "title": "某交易员在HYPE价格为28.79美元时做空,目前该仓位亏损2095万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-08T11:04:39.279229+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "af41c30fd250504d",
     "title": "木頭姐怪 Anthropic 散播 AI 恐慌:不會有失業潮,反而是缺工",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5168,5 +5158,16 @@
       "ADA"
     ],
     "lang": "en"
+  },
+  {
+    "id": "9850f66afbb310da",
+    "title": "Bitcoin's $2 Billion Liquidation Weekend Leaves Traders Watching $60,000",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-16T22:07:10.767791+00:00",
+    "tokens": [
+      "BTC",
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
