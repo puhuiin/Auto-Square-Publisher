@@ -1,16 +1,5 @@
 [
   {
-    "id": "4b6e8f7f44b86a1b",
-    "title": "Ripple Loses Dominance in Stablecoin Market Cap Growth",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-08T02:27:00.467382+00:00",
-    "tokens": [
-      "XRP",
-      "ENA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e0da6b2c8f87febf",
     "title": "CZ:加密行业内斗毫无意义,应保持去中心化但团结一致",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5173,5 +5162,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c545e10e1d1a0651",
+    "title": "Zcash算力格局生变:两家矿企Fortitude与Cypherpunk合计算力逼近全网三成",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-16T14:06:14.730806+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "en"
   }
 ]
