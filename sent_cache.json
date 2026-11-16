@@ -1,16 +1,5 @@
 [
   {
-    "id": "3ecb276018faa34e",
-    "title": "Centrifuge在Solana上线施罗德新兴市场债券基金代币化联接基金",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-08T05:08:51.817717+00:00",
-    "tokens": [
-      "USDC",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "800d26c28caa59f0",
     "title": "Aave Buys Avon Team to Bring More Fixed-Rate Lending Onchain",
     "source": "NewsBTC (比特币与山寨)",
@@ -5169,6 +5158,16 @@
     "sent_at": "2026-11-16T14:46:14.401182+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8f29d4f3c3881eb6",
+    "title": "Cypherpunk Technologies(CYPH)公布 2026 年第三季度财报",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-16T15:06:41.006735+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
