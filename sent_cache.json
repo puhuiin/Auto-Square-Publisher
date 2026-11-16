@@ -1,15 +1,5 @@
 [
   {
-    "id": "b27e662ef8b4b330",
-    "title": "Ripple’s XRP Is Bleeding, but Whales Are Buying: Are Bulls Preparing for a Violent Reversal",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-08T08:25:38.298397+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d3aec61a4269ad81",
     "title": "Solana Labs-Backed Leap Launches Beta App for Tokenized Stocks and Crypto",
     "source": "NewsBTC (比特币与山寨)",
@@ -5169,6 +5159,16 @@
     "tokens": [
       "SYN",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "75b11c2c6a5fa8a3",
+    "title": "Canada’s National Bank Discloses XRP Position Through Bitwise",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-16T17:04:57.007323+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
