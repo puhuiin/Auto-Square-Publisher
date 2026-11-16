@@ -1,15 +1,5 @@
 [
   {
-    "id": "9de7d90ce0cfee22",
-    "title": "XRP Community Tensions Boil Over as Ripple CEO Defends Token’s Role",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-07T19:46:33.918390+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9915071b15fca013",
     "title": "RLUSD Is Not Coming for XRP: Garlinghouse Clarifies Ripple’s Bigger XRPL Vision as Trader Spots Setup Behind 71% Price Explosion",
     "source": "ZyCrypto (新币与空投)",
@@ -5172,5 +5162,15 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "87473044c738238a",
+    "title": "今年各類資產拿到現在,比特幣 -22%回報墊底",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-16T07:04:33.897350+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
