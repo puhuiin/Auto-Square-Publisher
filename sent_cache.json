@@ -1,15 +1,5 @@
 [
   {
-    "id": "4c8318f168b94cd6",
-    "title": "'Congratulations,' Peter Schiff Reacts as Saylor's Bitcoin Treasury Sits at Cost Basis",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-07T16:30:43.561241+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d2065113ff47348f",
     "title": "币安黑客将1.75亿美元被盗山寨币兑换为约2300枚比特币",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5170,6 +5160,17 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "171a74e5ac2983c4",
+    "title": "EnaatN过去16天卖出14亿枚PUMP并买入HYPE",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-16T03:47:04.524064+00:00",
+    "tokens": [
+      "PUMP",
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
