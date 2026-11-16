@@ -1,15 +1,5 @@
 [
   {
-    "id": "2ec063f271a5e5f6",
-    "title": "Justin Sun Warns Quantum Threat Could Hit Crypto Within 2 Years as TRON Pursues Resistance",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-08T00:05:13.676787+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "84920090e78a40a2",
     "title": "Shiba Inu Futures Flow Plunges 67x in Days: What Does This Mean for SHIB Price?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5173,5 +5163,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "852ba4db65935615",
+    "title": "Why Avalanche stood out as demand for other altcoin ETFs weakened",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-16T11:45:01.097913+00:00",
+    "tokens": [
+      "AVAX"
+    ],
+    "lang": "zh-TW"
   }
 ]
