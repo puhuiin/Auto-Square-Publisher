@@ -1,15 +1,5 @@
 [
   {
-    "id": "1f8eb7fcd18977ab",
-    "title": "交易员 Ansem:图示 ZEC 约 770 至 860 美元为入场区间",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-07T15:24:07.240844+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8c6229f96a2bd616",
     "title": "Bitcoin Developer Proposes a Quantum Trap for Hackers",
     "source": "BeInCrypto (山寨与行情)",
@@ -5169,6 +5159,16 @@
     "sent_at": "2026-11-16T02:24:45.096527+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "fbab98333e66e9a8",
+    "title": "Aster CEO Blames Liquidations for ASTER's Sharp Swing",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-16T02:44:46.433237+00:00",
+    "tokens": [
+      "ASTER"
     ],
     "lang": "zh-CN"
   }
