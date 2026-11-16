@@ -1,15 +1,5 @@
 [
   {
-    "id": "1c0124fe60fe3fc4",
-    "title": "Sky TVL Falls 15% in a Week as USDS Supply Contracts",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-08T01:47:30.158700+00:00",
-    "tokens": [
-      "USDS"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3408cfb0e5f11629",
     "title": "主要 Meme 市场 24 小时成交约 1.36 亿美元,环比下降 15.8%",
     "source": "吴说区块链 (中文深度)",
@@ -5171,6 +5161,16 @@
     "tokens": [
       "BTC",
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4eca13f595d09078",
+    "title": "Bitcoin Bottom? Is the Market Preparing for a Reversal or One Final Crash?",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-16T13:24:38.010343+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
