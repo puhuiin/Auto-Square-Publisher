@@ -1,15 +1,5 @@
 [
   {
-    "id": "84920090e78a40a2",
-    "title": "Shiba Inu Futures Flow Plunges 67x in Days: What Does This Mean for SHIB Price?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-08T00:25:47.797789+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "5717c9e51a9d3219",
     "title": "b14g复盘CORE被盗事件:未涉及私钥泄露,计划未来5至7天内启动资金偿还",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5173,5 +5163,15 @@
       "AVAX"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "fd9a9badda7ca010",
+    "title": "Cardano (ADA) Price Predictions for This Week",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-16T12:06:35.403868+00:00",
+    "tokens": [
+      "ADA"
+    ],
+    "lang": "zh-CN"
   }
 ]
