@@ -1,16 +1,5 @@
 [
   {
-    "id": "3408cfb0e5f11629",
-    "title": "主要 Meme 市场 24 小时成交约 1.36 亿美元,环比下降 15.8%",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-08T02:09:51.114468+00:00",
-    "tokens": [
-      "BNB",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4b6e8f7f44b86a1b",
     "title": "Ripple Loses Dominance in Stablecoin Market Cap Growth",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5171,6 +5160,17 @@
     "sent_at": "2026-11-16T13:24:38.010343+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "99b5d54ea378c5ab",
+    "title": "Solana’s stablecoin market shrinks $919 million as USDC grows",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-16T13:45:05.993643+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
