@@ -1,16 +1,5 @@
 [
   {
-    "id": "9915071b15fca013",
-    "title": "RLUSD Is Not Coming for XRP: Garlinghouse Clarifies Ripple’s Bigger XRPL Vision as Trader Spots Setup Behind 71% Price Explosion",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-07T20:10:37.456687+00:00",
-    "tokens": [
-      "RLUSD",
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "21f626391b148b1d",
     "title": "Ripple Joins BlackRock, Standard Chartered in New Tokenization Report",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5168,6 +5157,16 @@
     "title": "今年各類資產拿到現在,比特幣 -22%回報墊底",
     "source": "深潮TechFlow (中文/繁体)",
     "sent_at": "2026-11-16T07:04:33.897350+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "224a08c2ec857476",
+    "title": "美银 Hartnett:美元正在“破坏一切”,美元下跌前保持避险",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-16T07:24:39.645283+00:00",
     "tokens": [
       "BTC"
     ],
