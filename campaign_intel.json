@@ -17,19 +17,20 @@
   "strategy_guidance": "优先追今日新上线的HYPE、TRX永续合约及PREDICT新币的热度，围绕新品特性、交易规则等角度发布内容，引导用户参与相关话题评论互动以获取Write2Earn奖励；可搭配当期Futures类活动、Binance Square热点话题提升曝光，所有内容不得出现收益承诺类表述。",
   "last_updated": "2026-11-16T19:04:05.810372Z",
   "_feed_health": {
+    "Crypto Briefing (深度与研报)": {
+      "parked_until": "2026-11-17T05:23:35.436618+00:00",
+      "fails": 3,
+      "last_fail": "2026-11-16T23:23:35.436618+00:00"
+    },
     "Bitcoinist (比特币向)": {
-      "reset_at": "2026-11-16T23:03:31.711609+00:00",
+      "reset_at": "2026-11-16T23:23:35.278489+00:00",
       "fails": 1,
       "last_fail": "2026-11-16T20:46:18.557730+00:00"
-    },
-    "Crypto Briefing (深度与研报)": {
-      "fails": 2,
-      "last_fail": "2026-11-16T23:03:31.120027+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-16",
