@@ -1,15 +1,5 @@
 [
   {
-    "id": "0f9ff69d6028f440",
-    "title": "Zcash Activates NU7 With 25-Second Block Target and New Fee Reserve",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-07T23:04:55.356032+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d5ea96870d934598",
     "title": "Uniswap whales are selling – Why $5.80 could be UNI’s next stop",
     "source": "AMBCrypto (技术与链上)",
@@ -5171,6 +5161,16 @@
     "tokens": [
       "KAVA",
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a73fa7cba8156b70",
+    "title": "哈佛和达特茅斯三季度维持贝莱德比特币 ETF 持仓不变",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-16T10:24:35.561548+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
