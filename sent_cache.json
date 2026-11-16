@@ -1,15 +1,5 @@
 [
   {
-    "id": "f4de972b5f5cddd7",
-    "title": "Nasdaq Lists Canary’s Staked INJ ETF, Adding Another Route to Altcoin Exposure",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-08T01:05:38.684951+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "42078a313e91f779",
     "title": "EIP-7702 是什么?为什么成为币安被盗关键一环",
     "source": "吴说区块链 (中文深度)",
@@ -5173,5 +5163,15 @@
       "ENA"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "9a10f8ed746610cb",
+    "title": "XRP Price Bounce: Analyzing Possibility of Relief Rally",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-16T12:44:27.746602+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
