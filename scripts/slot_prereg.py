@@ -85,7 +85,14 @@ def _parse(s):
 
 
 def collect(joined, from_date: str = R869_FROM_DATE) -> list:
-    """把 profit_report 的联表结果整理成时段样本（只读）。"""
+    """把 profit_report 的联表结果整理成时段样本（只读）。
+
+    ★ R871：额外记录 `fresh`（该帖是不是**当天该题材的第一条**）。
+      为什么必须记：实测（11-15/11-16）00-02 桶的帖**几乎全是"首发"**（题材当天第 1 条），
+      而 02-05 桶中位是第 2 条、05-08 是第 3~4 条、08-11 更高 ⇒
+      **"时段"与"题材新鲜度"天然缠在一起**（越早的时段拿到越新的故事）。
+      若不记录这个变量，就可能把"首发优势"读成"时段优势"，然后去改排程 —— 什么也拿不到 ✗。
+    """
     out = []
     lo, hi = R869_EXPOSURE_HOURS
     for r in joined or []:
@@ -99,16 +106,68 @@ def collect(joined, from_date: str = R869_FROM_DATE) -> list:
         day = post.strftime("%Y-%m-%d")
         if from_date and day < from_date:
             continue
+        toks = meta.get("tokens") or []
         out.append({
             "day": day, "hour": post.hour, "bucket": bucket_of(post.hour),
             "lang": meta.get("lang") or "?", "vpd": float(r.get("vpd") or 0.0),
             "views": int(r.get("views") or 0), "exposure_h": exp_h,
+            "token": str(toks[0]) if toks else "",
+            "impact": meta.get("impact_score"),
+            "_t": post,
         })
+    # 按时间顺序标「是否当天该题材的首发」
+    seen = {}
+    for r in sorted(out, key=lambda x: x["_t"]):
+        key = (r["day"], r["token"])
+        seen[key] = seen.get(key, 0) + 1
+        r["ordinal"] = seen[key]
+        r["fresh"] = seen[key] == 1
+    for r in out:
+        r.pop("_t", None)
     return out
 
 
+def confound_text(rows) -> str:
+    """★ R871：**混淆报告**（只读，不参与判定）。
+
+    回答："00-02 的高浏览，是时段给的，还是因为它恰好拿到当天最新鲜的故事？"
+      · 逐桶给「首发占比」与「首发帖的 vpd 中位 vs 非首发帖」；
+      · 若**首发帖内部** 00-02 仍显著高于 02-05 ⇒ 时段效应站得住；
+      · 若差距只在"首发 vs 非首发"上 ⇒ 时段只是代理，**改排程无用**，该去治"重复覆盖"。
+    ⚠️ 本报告**不改变** R869 的通过/回滚条款（改条款 = 另开一轮预注册）。
+    """
+    if not rows:
+        return "  （无样本）"
+    lines = []
+    lines.append("  桶      n  首发占比   首发 n/中位   非首发 n/中位   素材分中位")
+    for b in [x[0] for x in BUCKETS]:
+        g = [r for r in rows if r["bucket"] == b]
+        if not g:
+            continue
+        fresh = [r["vpd"] for r in g if r.get("fresh")]
+        old = [r["vpd"] for r in g if not r.get("fresh")]
+        imps = [r["impact"] for r in g if isinstance(r["impact"], (int, float))]
+        lines.append("  %-6s %3d  %4.0f%%      %2d /%7.1f    %2d /%7.1f      %s"
+                     % (b, len(g), 100.0 * len(fresh) / len(g),
+                        len(fresh), _median(fresh), len(old), _median(old),
+                        ("%5.1f" % _median(imps)) if imps else "  —"))
+    hi = [r for r in rows if r["bucket"] == R869_PRIMARY[0]]
+    lo = [r for r in rows if r["bucket"] == R869_PRIMARY[1]]
+    f_hi = [r["vpd"] for r in hi if r.get("fresh")]
+    f_lo = [r["vpd"] for r in lo if r.get("fresh")]
+    if f_hi and f_lo:
+        lines.append("  ⇒ **只看首发帖**：%s n=%d 中位 %.1f ｜ %s n=%d 中位 %.1f（%.1f×）"
+                     % (R869_PRIMARY[0], len(f_hi), _median(f_hi),
+                        R869_PRIMARY[1], len(f_lo), _median(f_lo),
+                        (_median(f_hi) / _median(f_lo)) if _median(f_lo) else float("inf")))
+    else:
+        lines.append("  ⇒ 只看首发帖：样本不足（%d / %d）⇒ 无法排除题材新鲜度混淆"
+                     % (len(f_hi), len(f_lo)))
+    return "\n".join(lines)
+
+
 def _median(xs):
-    xs = sorted(xs)
+    xs = sorted(x for x in xs if x is not None)
     if not xs:
         return 0.0
     m = len(xs) // 2
@@ -210,6 +269,8 @@ def main(argv=None):
              {l: sum(1 for r in rows if r["lang"] == l)
               for l in sorted({r["lang"] for r in rows})}))
     print(render(rows))
+    print("\n【混淆报告（R871，只读、不参与判定）】")
+    print(confound_text(rows))
     if args.json:
         st, why = slot_verdict(rows)
         print(json.dumps({"status": st, "reason": why,

@@ -10436,6 +10436,49 @@ class TestR850Preregistration(unittest.TestCase):
                 r["lang"] = "en"
         self.assertEqual(mod.slot_verdict(rows)[0], "数据不足", "语种占比差过大必须作废该日")
 
+    def test_r871_confound_report(self):
+        """★ R871：时段效应的**混淆报告**（只读，不参与判定）。
+
+        动机：00-02 的高浏览可能只是"那时正好拿到最新鲜的故事"。
+        实测（10-25~11-08，275 帖）：两桶首发率都 ~80%、素材分 02-05 还更高（36 vs 33.5），
+        而**只看首发帖**仍有 5.4×（26.6 vs 5.0）⇒ 两个混淆都排除 ✓。
+        """
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "slot_prereg_r871",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "slot_prereg.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+        def mk(ts, tok, vpd, age=0.5, lang="zh-CN"):
+            return {"views": 10, "age_days": age, "vpd": vpd,
+                    "meta": {"ts": ts, "tokens": [tok], "lang": lang,
+                             "impact_score": 30}}
+
+        joined = [
+            mk("2026-11-16T00:30:00+00:00", "AAA", 50.0),          # 首发
+            mk("2026-11-16T03:00:00+00:00", "AAA", 5.0),           # 同题材第二条
+            mk("2026-11-16T00:40:00+00:00", "BBB", 40.0),          # 首发
+            mk("2026-11-16T03:10:00+00:00", "CCC", 4.0),           # 首发
+            mk("2026-11-16T02:00:00+00:00", "DDD", 9.0, age=4.0),  # 曝光 96h ⇒ 必须被排除
+            mk("2026-11-15T12:00:00+00:00", "EEE", 9.0),           # 早于确认样本 ⇒ 排除
+        ]
+        rows = mod.collect(joined, "2026-11-16")
+        self.assertEqual(len(rows), 4, "曝光区间/样本起点过滤必须生效")
+        aaa = sorted([r for r in rows if r["token"] == "AAA"], key=lambda r: r["hour"])
+        self.assertTrue(aaa[0]["fresh"], "当天第一条应标为首发")
+        self.assertFalse(aaa[1]["fresh"], "同一题材第二条不是首发")
+        self.assertEqual(aaa[1]["ordinal"], 2)
+
+        txt = mod.confound_text(rows)
+        self.assertIn("首发", txt)
+        self.assertIn("只看首发帖", txt)
+        # 00-02 的首发中位(45) 应高于 02-05 的首发中位(4)
+        self.assertIn("11.2×", txt)
+        # 空样本不许炸
+        self.assertIn("无样本", mod.confound_text([]))
+
     def test_r861_channel_side_verdict(self):
         """★★ R861：通道侧（`stepfun-flash` 减权）的判定 —— 保量护栏优先，其后看变差/改善。
 
