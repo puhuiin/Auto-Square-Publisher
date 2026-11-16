@@ -1,17 +1,5 @@
 [
   {
-    "id": "946c2719d03e6fdf",
-    "title": "美国比特币现货 ETF 本周净流出 12.8 亿美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-07T18:05:56.979988+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "cf5cb57750ffecf8",
     "title": "Solana’s October Upgrade Review Puts 200ms Slots and $5B in Tokenized Assets in Focus",
     "source": "NewsBTC (比特币与山寨)",
@@ -5169,6 +5157,18 @@
     "sent_at": "2026-11-16T04:45:23.092292+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "742580d0e56ab163",
+    "title": "WBTC 拓展应用场景,涵盖隐私 DeFi、原生质押奖励及机构借贷",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-16T05:04:05.941115+00:00",
+    "tokens": [
+      "WBTC",
+      "STRK",
+      "TRX"
     ],
     "lang": "zh-CN"
   }
