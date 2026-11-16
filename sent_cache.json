@@ -1,15 +1,5 @@
 [
   {
-    "id": "890dac976451b39b",
-    "title": "Elon Musk’s bankruptcy warnings collide with JPMorgan’s first Bitcoin forecast",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-07T12:46:45.946708+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0edac74a26570eee",
     "title": "赵长鹏现身纳斯达克敲钟,BNC 是什么来头?",
     "source": "吴说区块链 (中文深度)",
@@ -5165,5 +5155,16 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "7f94d19fcc44613e",
+    "title": "DTCC Adds Solana to Wall Street Tokenization Plans, Targeting 2027",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-16T00:04:42.395017+00:00",
+    "tokens": [
+      "SOL",
+      "XLM"
+    ],
+    "lang": "zh-TW"
   }
 ]
