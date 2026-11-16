@@ -1,15 +1,5 @@
 [
   {
-    "id": "cf5cb57750ffecf8",
-    "title": "Solana’s October Upgrade Review Puts 200ms Slots and $5B in Tokenized Assets in Focus",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-07T18:25:45.186101+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "64a09d6ff0da39d8",
     "title": "China’s Central Bank to Probe Solana’s Ad Campaign in Shanghai’s Lujiazui​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​",
     "source": "ZyCrypto (新币与空投)",
@@ -5171,5 +5161,15 @@
       "TRX"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "b463d2fa2e24405f",
+    "title": "数据:比特币 2026 年至今跌 22%,或将首次连续两年收跌",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-16T05:44:06.246647+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
