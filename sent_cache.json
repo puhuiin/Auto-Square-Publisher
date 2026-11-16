@@ -1,15 +1,5 @@
 [
   {
-    "id": "b90ea724870c88c3",
-    "title": "Web3Auth公布Keplr资产恢复地址,提醒相关转账并非攻击者所为",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-08T06:44:30.369118+00:00",
-    "tokens": [
-      "TIA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "feb7e21ea73bd336",
     "title": "Kraken Parent Payward Takes AAVE Stake as Institutions Look Deeper Into DeFi",
     "source": "NewsBTC (比特币与山寨)",
@@ -5168,6 +5158,16 @@
     "sent_at": "2026-11-16T15:26:21.792241+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9cdab8d54fafa835",
+    "title": "Solana 生态基础设施公司 Solmate 拟拓展 GPU 算力服务",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-16T15:46:27.223942+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
