@@ -1,16 +1,5 @@
 [
   {
-    "id": "493438fd7fea76f5",
-    "title": "一周热门项目动态:Aave 将布局固定利率借贷、WLFI 计划推出代币回购、Base 主网升级 Denim 等(1101–1107)",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-08T09:44:08.560450+00:00",
-    "tokens": [
-      "WLFI",
-      "AAVE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a6c431dd4beca274",
     "title": "Shibarium Network Account Goes Silent as SHIB Community Seeks Answers",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5167,6 +5156,16 @@
     "sent_at": "2026-11-16T19:30:07.903969+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "12e211db4baea8f1",
+    "title": "Tether Capital 向巴西金融科技公司 Nomad 投资 1,500 万美元,拟拓展 USDT 和 XAUT 应用",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-16T20:08:28.157865+00:00",
+    "tokens": [
+      "XAUT"
     ],
     "lang": "en"
   }
