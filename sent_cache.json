@@ -1,15 +1,5 @@
 [
   {
-    "id": "8c6229f96a2bd616",
-    "title": "Bitcoin Developer Proposes a Quantum Trap for Hackers",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-07T15:48:33.334270+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3f1498485b583772",
     "title": "STRK Slumps 57% in Four Weeks as Starknet Rally Unwinds",
     "source": "The Defiant (DeFi 深度)",
@@ -5169,6 +5159,16 @@
     "sent_at": "2026-11-16T02:44:46.433237+00:00",
     "tokens": [
       "ASTER"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c7503f4f40fadeaa",
+    "title": "HYPE现货ETF上周净流出432.57万美元,连续六周净流出",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-16T03:05:36.967354+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
