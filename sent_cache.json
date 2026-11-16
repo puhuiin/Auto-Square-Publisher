@@ -1,15 +1,5 @@
 [
   {
-    "id": "e659bdbc91bf7787",
-    "title": "HYPE loses $80 support as team distributions, institutional selling weigh on price — Details",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-07T17:44:06.118912+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "946c2719d03e6fdf",
     "title": "美国比特币现货 ETF 本周净流出 12.8 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5171,5 +5161,15 @@
       "ID"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "2c468c381931f955",
+    "title": "Solana Company’s Q3 Revenue Jumps to $3.4M, With Staking Leading the Way",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-16T04:45:23.092292+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
