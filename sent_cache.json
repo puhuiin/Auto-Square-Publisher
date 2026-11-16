@@ -1,15 +1,5 @@
 [
   {
-    "id": "7e2e27a932ccd11b",
-    "title": "Chainlink price prediction: How LINK can avoid a breakdown below $8",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-07T23:45:16.700991+00:00",
-    "tokens": [
-      "LINK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2ec063f271a5e5f6",
     "title": "Justin Sun Warns Quantum Threat Could Hit Crypto Within 2 Years as TRON Pursues Resistance",
     "source": "ZyCrypto (新币与空投)",
@@ -5171,6 +5161,16 @@
     "sent_at": "2026-11-16T10:47:12.104866+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0825ef5a5961408d",
+    "title": "Major Wealth Advisor With $24 Billion in Assets Discloses XRP ETF Stake",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-16T11:07:06.670806+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
