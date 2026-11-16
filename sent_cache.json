@@ -1,15 +1,5 @@
 [
   {
-    "id": "21f626391b148b1d",
-    "title": "Ripple Joins BlackRock, Standard Chartered in New Tokenization Report",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-07T20:44:14.425229+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4df57394a4416be4",
     "title": "Ripple Veteran David Schwartz Draws the Line With XRP Spammers",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5169,6 +5159,16 @@
     "sent_at": "2026-11-16T07:24:39.645283+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b2dccbe501e8005c",
+    "title": "Cardano社区否决战略铜储备RWA代币化提案",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-16T07:44:30.036173+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "zh-TW"
   }
