@@ -1,15 +1,5 @@
 [
   {
-    "id": "a6c431dd4beca274",
-    "title": "Shibarium Network Account Goes Silent as SHIB Community Seeks Answers",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-08T10:07:31.203033+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "6156b0752c22f982",
     "title": "Who is Satoshi Nakamoto? New Grok AI Study Tests Multiple Theories",
     "source": "BeInCrypto (山寨与行情)",
@@ -5166,6 +5156,16 @@
     "sent_at": "2026-11-16T20:08:28.157865+00:00",
     "tokens": [
       "XAUT"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "01afc0eb08f08bb4",
+    "title": "Peraire-Bueno brothers acquitted of wire fraud in $25 million Ethereum MEV case",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-16T20:49:16.382090+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
