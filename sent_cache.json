@@ -1,15 +1,5 @@
 [
   {
-    "id": "c80482912e2d4b39",
-    "title": "Elliptic Traces $124M in Bitcoin Swaps From Binance Hack Funds",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-08T04:24:33.694470+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3ecb276018faa34e",
     "title": "Centrifuge在Solana上线施罗德新兴市场债券基金代币化联接基金",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5169,6 +5159,16 @@
     "tokens": [
       "SOL",
       "AVAX"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1da964a0bbb5df73",
+    "title": "'1 Shib Always 1 Shib': Shiba Inu Developer Responds to Rare Price Lows",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-16T14:46:14.401182+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
