@@ -1,15 +1,5 @@
 [
   {
-    "id": "255f008863d4bb12",
-    "title": "Ripple's XRP Ledger Lending to Receive Repayment Fix",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-08T11:45:03.872197+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5130a490a2f2127f",
     "title": "Tornado Cash Whale Deposits $7 Million to Hyperliquid for Massive Bitcoin Long",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5167,6 +5157,16 @@
     "sent_at": "2026-11-16T22:45:19.386288+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "dddec80f0674e727",
+    "title": "Aster rebounds 4.29% after sharp selloff",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-16T23:04:43.463743+00:00",
+    "tokens": [
+      "ASTER"
     ],
     "lang": "zh-TW"
   }
