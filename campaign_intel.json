@@ -17,14 +17,14 @@
   "strategy_guidance": "优先追11月16日即将上线的HYPE、TRX永续合约及新币PREDICT的热度，产出新品上线相关快讯，搭配当前未截止的Binance Button Game、股票大学交易竞赛、11月邀请好友活动等话题引导用户参与评论互动获取Write2Earn奖励，同时可关联交易返佣内容引导用户参与相关交易。",
   "last_updated": "2026-11-15T18:24:03.357079Z",
   "_feed_health": {
-    "Bitcoinist (比特币向)": {
-      "last_fail": "2026-11-16T00:03:33.850215+00:00",
-      "fails": 1,
-      "reset_at": "2026-11-16T04:03:30.442058+00:00"
-    },
     "CoinJournal (山寨异动)": {
+      "fails": 2,
+      "last_fail": "2026-11-16T04:24:06.002502+00:00"
+    },
+    "Bitcoinist (比特币向)": {
       "fails": 1,
-      "last_fail": "2026-11-16T04:04:00.635543+00:00"
+      "last_fail": "2026-11-16T00:03:33.850215+00:00",
+      "reset_at": "2026-11-16T04:23:35.835270+00:00"
     }
   },
   "_fallback_image": {
@@ -35,7 +35,7 @@
   "_article_sent_date": "2026-11-16",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1032,
+  "_img_rot": 1033,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
