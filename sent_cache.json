@@ -1,17 +1,5 @@
 [
   {
-    "id": "ea5c7020eefd4359",
-    "title": "币安已恢复HYPE、APT提现,其余资产及网络将分阶段恢复",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-08T09:24:44.050019+00:00",
-    "tokens": [
-      "HYPE",
-      "RLUSD",
-      "USD1"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "493438fd7fea76f5",
     "title": "一周热门项目动态:Aave 将布局固定利率借贷、WLFI 计划推出代币回购、Base 主网升级 Denim 等(1101–1107)",
     "source": "吴说区块链 (中文深度)",
@@ -5169,6 +5157,16 @@
     "sent_at": "2026-11-16T19:09:43.691333+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1722fc4d95464f51",
+    "title": "Winklevoss-backed Cypherpunk buys Zcash dip as mining debut delivers $2.6 million operating profit",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-16T19:30:07.903969+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
