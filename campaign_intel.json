@@ -2,30 +2,31 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#Futures",
+    "#FuturesTrading",
     "#NewListing",
-    "#TradingCompetition"
+    "#CommunityCampaign"
   ],
   "incentivized_tokens": [
+    "$BNB",
+    "$USDC",
+    "$PREDICT",
     "$HYPE",
     "$TRX",
-    "$PREDICT",
-    "$BNB",
     "$BTC",
-    "$USDC"
+    "$bStocks"
   ],
-  "strategy_guidance": "优先追11月16日即将上线的HYPE、TRX永续合约及新币PREDICT的热度，产出新品上线相关快讯，搭配当前未截止的Binance Button Game、股票大学交易竞赛、11月邀请好友活动等话题引导用户参与评论互动获取Write2Earn奖励，同时可关联交易返佣内容引导用户参与相关交易。",
-  "last_updated": "2026-11-15T18:24:03.357079Z",
+  "strategy_guidance": "当日新上线的HYPEUSDC、TRXUSDC永续合约及PREDICT新币为当前核心流量热点，可围绕相关产品规则、上线动态输出内容，引导用户参与评论互动获取Write2Earn奖励；同时结合Binance Community Appreciation Campaign、Button Game等 ongoing 活动设计互动向内容，匹配BinanceSquare流量倾斜提升曝光，针对11月限定的Affiliate、Referral系列活动可输出参与攻略类内容把握活动周期流量红利。",
+  "last_updated": "2026-11-16T06:44:13.067864Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "fails": 3,
       "last_fail": "2026-11-16T04:44:19.428414+00:00",
-      "parked_until": "2026-11-16T10:44:19.428414+00:00"
+      "parked_until": "2026-11-16T10:44:19.428414+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-16",

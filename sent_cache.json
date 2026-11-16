@@ -1,15 +1,5 @@
 [
   {
-    "id": "a065145c821a3462",
-    "title": "Zcash’s new security fund is 99.7% old money",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-07T19:28:27.862168+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9de7d90ce0cfee22",
     "title": "XRP Community Tensions Boil Over as Ripple CEO Defends Token’s Role",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-11-16T06:24:29.447721+00:00",
     "tokens": [
       "GLM"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0be73c7d754aefeb",
+    "title": "今年各类资产拿到现在,比特币 -22%回报垫底",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-16T06:45:22.688461+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
