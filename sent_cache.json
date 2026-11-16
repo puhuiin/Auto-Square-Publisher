@@ -1,15 +1,5 @@
 [
   {
-    "id": "800d26c28caa59f0",
-    "title": "Aave Buys Avon Team to Bring More Fixed-Rate Lending Onchain",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-08T05:45:10.620051+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b90ea724870c88c3",
     "title": "Web3Auth公布Keplr资产恢复地址,提醒相关转账并非攻击者所为",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5166,6 +5156,16 @@
     "title": "Cypherpunk Technologies(CYPH)公布 2026 年第三季度财报",
     "source": "吴说区块链 (中文深度)",
     "sent_at": "2026-11-16T15:06:41.006735+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "590dbfebd3b6516e",
+    "title": "Fortitude Mining 和 Cypherpunk Technologies 两家矿企目前合计控制约 29% 的 Zcash 网络算力",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-16T15:26:21.792241+00:00",
     "tokens": [
       "ZEC"
     ],
