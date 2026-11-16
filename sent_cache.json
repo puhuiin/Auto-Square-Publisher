@@ -1,15 +1,5 @@
 [
   {
-    "id": "af41c30fd250504d",
-    "title": "木頭姐怪 Anthropic 散播 AI 恐慌:不會有失業潮,反而是缺工",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-11-08T11:24:38.248060+00:00",
-    "tokens": [
-      "ARK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "255f008863d4bb12",
     "title": "Ripple's XRP Ledger Lending to Receive Repayment Fix",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5167,6 +5157,16 @@
     "tokens": [
       "BTC",
       "HYPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "21dc9282e82f31c6",
+    "title": "Sam Altman’s ChatGPT AI Predicts a Crazy ADA Crypto Price",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-16T22:45:19.386288+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "zh-TW"
   }
