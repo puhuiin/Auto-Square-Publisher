@@ -1,15 +1,5 @@
 [
   {
-    "id": "8c7b976eb0368342",
-    "title": "EIP-8037 state-gas rules force Ethereum dApps to rewrite billing",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-07T14:44:13.046418+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "cfbe7b8bcb2aaef1",
     "title": "BNB Chain Launches 'Red Alarm' to Combat Rising Security Risks",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5171,5 +5161,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "df63e8275ec09ae7",
+    "title": "ASTER 短时振幅超 30%,Aster CEO 回应:与做市无关,正调查高杠杆清算",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-16T02:04:34.707100+00:00",
+    "tokens": [
+      "ASTER"
+    ],
+    "lang": "zh-TW"
   }
 ]
