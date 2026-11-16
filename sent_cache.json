@@ -1,15 +1,5 @@
 [
   {
-    "id": "feb7e21ea73bd336",
-    "title": "Kraken Parent Payward Takes AAVE Stake as Institutions Look Deeper Into DeFi",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-08T07:05:35.354285+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "048f413d0b68a05c",
     "title": "Ripple's Schwartz Speaks Out About His Influence Over XRP Price",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5168,6 +5158,16 @@
     "sent_at": "2026-11-16T15:46:27.223942+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d202a9ba87e4a968",
+    "title": "上诉被拒,最高法院维持Custodia Bank主账户申请裁决",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-16T16:09:35.774954+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
