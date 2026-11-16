@@ -10303,6 +10303,57 @@ class TestR850Preregistration(unittest.TestCase):
                 setattr(mod, n, v)
         self.assertIn("样本不足", txt2)
 
+    def test_r870_poll_instruction_excluded(self):
+        """★★ R870：⑥ 的口径修复 —— **投票/互动指令句不计入"公式化重复"**。
+
+        取证：11-15 的 ⑥ 从 28.6% 跳到 **53.3%**，片段全是 `' Drop 1 for '` / `'? Drop 1 for'`
+        ⇒ 那是每帖必备的 1/2 二选一（平台要求的互动结构），不是作者化套话。
+        修后 11-15 → **0.0%**，历史日读数不变（说明只削了这类噪音）。
+        """
+        mod = self._ew()
+        # ---- 识别式：正例（指令）/ 反例（真分析句）----
+        for s in ("Drop 1 for add, 2 for waiting.",
+                  "Type 1 for catching, 2 for staying out.",
+                  "Score it 1, 2, or 3 below.",
+                  "Drop 1 or 2 in the comments."):
+            self.assertTrue(mod.POLL_INSTRUCTION_RE.search(s), s)
+        for s in ("He sold 1.2M tokens in 2 hours.",
+                  "Volume hit 2x while only 1 whale sold.",
+                  "Down 4.2% today, fear at 13."):
+            self.assertFalse(mod.POLL_INSTRUCTION_RE.search(s), s)
+
+        # ---- 整句排除：一份实现，不传 pattern 时不许改变口径 ----
+        self.assertEqual(mod._excluded_sentence_spans("Anything here.", None), [])
+        sp = mod._excluded_sentence_spans(
+            "Body claim. Drop 1 for add, 2 for wait.", mod.POLL_INSTRUCTION_RE)
+        self.assertEqual(len(sp), 1)
+        self.assertTrue("Drop 1" in "Body claim. Drop 1 for add, 2 for wait."[sp[0][0]:sp[0][1]])
+
+        # ---- 端到端：只有投票句重复 ⇒ ⑥ 必须为 0（不许把结构读成套话）----
+        # ⚠️ 夹具纪律：正文必须**逐帖不同**，否则正文自身的 n-gram 会被算成重复
+        #   （第一版就是复制粘贴正文，结果片段全是 ' body number' 之类的正文噪声 ✗）
+        _BASE = ("sol", "eth", "whale", "bid", "ask", "flow", "range", "level", "trend", "macro")
+
+        def _body(i, filler=""):
+            uniq = " ".join("%s%d" % (w, i * 11 + k) for k, w in enumerate(_BASE))
+            return uniq + filler + "\nDrop 1 for add, 2 for waiting."
+
+        rows = [{"outcome": "binance_published", "lang": "en",
+                 "ts": "2026-11-15T15:%02d:00+00:00" % i,
+                 "final_text": _body(i) + " #Write2Earn #BTC"}
+                for i in range(10)]
+        st = mod.formulaic_repetition_stats(rows, "2026-11-15", min_docs=6)
+        self.assertEqual(st["n"], 10)
+        self.assertEqual(st["hit"], 0, "投票指令句重复不该计入公式化（片段=%s）" % st["fragments"])
+
+        # ---- 端到端：真口头禅仍要被抓到（别把口径修成"什么都测不到"）----
+        rows = [{"outcome": "binance_published", "lang": "en",
+                 "ts": "2026-11-15T15:%02d:00+00:00" % i,
+                 "final_text": _body(i, " Price %d on the day." % i)}
+                for i in range(10)]
+        st = mod.formulaic_repetition_stats(rows, "2026-11-15", min_docs=6)
+        self.assertGreater(st["hit"], 0, "作者化套话必须仍然被测到")
+
     def test_r869_slot_prereg(self):
         """★★ R869：时段×浏览**预注册判据**（只读）—— 阈值钉死，防事后挪线。
 

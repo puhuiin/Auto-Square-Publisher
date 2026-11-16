@@ -375,6 +375,38 @@ def ai_flavor_stats(rows, date_utc: str, lang: str = "en") -> dict:
             "hard_examples": flags[:3]}
 
 
+# ★★★ R870：**投票/互动指令**的识别式（口径修复用，不是判定线）。
+#   为什么需要：每帖结尾都必须给 1/2 二选一（平台/运营要求），它的措辞骨架天然会重复
+#   —— 那是"结构"，不是"作者化套话"。实测 11-15 的 ⑥ 有 53.3% 全由 `' Drop 1 for '`
+#   顶起来 ⇒ 会把"平台要求的互动结构"误读成违规风险。排除后 ⑥ 才量的是真口头禅。
+#   判据要**hibit 严格**：必须①投票动词 ②60 字内先后出现 1 与 2 ⇒ 才判为指令句。
+POLL_INSTRUCTION_RE = re.compile(
+    r"\b(?:drop|type|comment|reply|tap|vote|pick|score|say|post|leave|tell)\b"
+    r"[^.!?\n]{0,60}?\b(?:1|one)\b[^.!?\n]{0,40}?\b(?:2|two)\b", re.I)
+
+
+def _excluded_sentence_spans(text: str, *patterns) -> list:
+    """按句（`.!?\\n`）切分，返回**命中任一 pattern 的整句**区间。取不到 pattern ⇒ 空。
+
+    R862b 用词表排"活动导流句"，R870 用同一机制排"投票指令句" —— **一份实现**，
+    以后再加排除类只需多传一个 pattern ✓。
+    """
+    spans = []
+    cuts = [0]
+    for _i, _c in enumerate(text):
+        if _c in ".!?\n":
+            cuts.append(_i + 1)
+    cuts.append(len(text))
+    pats = [p for p in patterns if p is not None]
+    if not pats:
+        return spans
+    for _k in range(len(cuts) - 1):
+        seg = text[cuts[_k]:cuts[_k + 1]]
+        if any(p.search(seg) for p in pats):
+            spans.append((cuts[_k], cuts[_k + 1]))
+    return spans
+
+
 def formulaic_repetition_stats(rows, date_utc: str, min_docs: int = 6, n: int = 12,
                                topk: int = 15) -> dict:
     """★★ R851b：**公式化重复率**（平台社群准则明确列为违规项：大量发布高度相似/结构相同）。
@@ -422,16 +454,16 @@ def formulaic_repetition_stats(rows, date_utc: str, min_docs: int = 6, n: int = 
         #   为什么：只排产品名会漏掉同句的 CTA 尾 —— 实测残留片段 `' Program end'`
         #   （出自 `Spot Taker Program ends Nov 9`，产品名被排掉了、尾巴还在）✗。
         #   整句边界 = `.!?\n`（够用且可测）；词表取不到 ⇒ spans 为空 ⇒ 不改口径 ✓。
-        spans = []
-        if _CMRE:
-            cuts = [0]
-            for _i, _c in enumerate(t):
-                if _c in ".!?\n":
-                    cuts.append(_i + 1)
-            cuts.append(len(t))
-            for _k in range(len(cuts) - 1):
-                if _CMRE.search(t[cuts[_k]:cuts[_k + 1]]):
-                    spans.append((cuts[_k], cuts[_k + 1]))
+        #
+        # ★★★ R870：**投票/互动指令句也不计入**（同类口径缺陷，2026-11-16 抓到）。
+        #   取证：11-15 的 ⑥ 从 28.6% 跳到 **53.3%**，而两个片段全是
+        #   `' Drop 1 for '` / `'? Drop 1 for'` ⇒ 那是**平台要求的 poll 结构**
+        #   （每帖结尾都要 1/2 二选一），不是"作者化套话" ✗。
+        #   判据：句内出现**投票动词**（drop/type/comment/reply/tap/vote/pick/score…）
+        #   且在 60 字内先后出现 1 与 2 ⇒ 只是"选项机制"，排除整句 ✓。
+        #   ⚠️ 只改**度量口径**，不动判定线、不碰 ①/⑦，也不改 R865 的重写清单
+        #      （R865 治的是 `on the day` / `. Sentiment ` 这类填充语）。
+        spans = _excluded_sentence_spans(t, _CMRE, POLL_INSTRUCTION_RE)
         seen = set()
         for i in range(len(t) - n + 1):
             g = t[i:i + n]
@@ -450,8 +482,7 @@ def formulaic_repetition_stats(rows, date_utc: str, min_docs: int = 6, n: int = 
             "fragments": [f[0] for f in frags]}
 
 
-# ---- 第六条预注册判据（R851b）：公式化重复率 ----
-# 依据：平台社群准则把「**大量发布高度相似或结构相同的内容**」列为违规项 ✓；
+# ---- 第六条预注册判据（R851b）：公式化重复率 ----# 依据：平台社群准则把「**大量发布高度相似或结构相同的内容**」列为违规项 ✓；
 #       实测（en 夜窗 257 篇）「含 top-15 重复片段的帖」占 **78%** ✗ ⇒ 有可改进空间 ✓。
 # ⚠️ 这是**给未来那次"降重复率"改动**预注册的判据：改动本身会改变发布集合 ⇒ 必须等
 #    R848 的 ③ 窗口关掉再动 ✓。在此之前，本判据只在"基线/现状"下出读数 ✓。
