@@ -1,16 +1,5 @@
 [
   {
-    "id": "42078a313e91f779",
-    "title": "EIP-7702 是什么?为什么成为币安被盗关键一环",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-08T01:25:00.165033+00:00",
-    "tokens": [
-      "ETH",
-      "ARB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1c0124fe60fe3fc4",
     "title": "Sky TVL Falls 15% in a Week as USDS Supply Contracts",
     "source": "The Defiant (DeFi 深度)",
@@ -5171,6 +5160,17 @@
     "sent_at": "2026-11-16T12:44:27.746602+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "2d4850465e276a36",
+    "title": "TechFlow 情報局:英偉達深陷出口違規風暴被白宮點名\"國家冠軍\",QDII 納指 ETF 集體停牌溢價最高39.9%",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-16T13:06:14.311509+00:00",
+    "tokens": [
+      "BTC",
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
