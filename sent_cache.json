@@ -1,16 +1,5 @@
 [
   {
-    "id": "d2065113ff47348f",
-    "title": "币安黑客将1.75亿美元被盗山寨币兑换为约2300枚比特币",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-07T17:05:46.465021+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ab359d6e6aace36e",
     "title": "Samsung Wallet’s USDC on Solana Is Live — Here’s What the Rollout Actually Covers",
     "source": "NewsBTC (比特币与山寨)",
@@ -5171,6 +5160,16 @@
     "tokens": [
       "PUMP",
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "95de0e25275fda1c",
+    "title": "XRP Scams Soar Across Social Media, Here’s What To Watch Out For",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-16T04:04:54.246309+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
