@@ -1,15 +1,5 @@
 [
   {
-    "id": "e932eb21f5f6c9d8",
-    "title": "Solana moves to scrap the transaction feature used in the $270 million Drift hack",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-11-09T08:48:06.351974+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1f9f7601a2e07f88",
     "title": "OKX 將上線 8 種統一代幣化股票現貨交易",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5182,6 +5172,17 @@
     "sent_at": "2026-11-17T17:07:24.270735+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4e49415b7789a0e1",
+    "title": "Aave App Launches on TRON, Bringing USDT Deposits to Mobile Users on Android and iOS",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-17T17:53:04.321291+00:00",
+    "tokens": [
+      "AAVE",
+      "TRX"
     ],
     "lang": "en"
   }
