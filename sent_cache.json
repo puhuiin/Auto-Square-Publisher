@@ -1,15 +1,5 @@
 [
   {
-    "id": "1726544ec0302b1c",
-    "title": "Zcash 开发者提议将目标出块间隔从 25 秒缩短至 20 秒",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-09T06:47:11.532686+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "1e1b57bf39074789",
     "title": "Solana proposes retiring durable nonces after the Drift hack",
     "source": "Crypto Briefing (深度与研报)",
@@ -5181,6 +5171,16 @@
     "sent_at": "2026-11-17T15:31:16.744315+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4d355625bd04e765",
+    "title": "Half-Year Silence: Shiba Inu Community Demands Answers From Missing Shytoshi Kusama",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-17T15:50:46.820663+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
