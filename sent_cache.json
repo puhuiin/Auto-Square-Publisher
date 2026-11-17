@@ -1,15 +1,5 @@
 [
   {
-    "id": "77504021f0101377",
-    "title": "巨鲸或机构向 FalconX 转入累计约 51.2 万枚 HYPE",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T01:46:32.273530+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9425e9fdb7c08375",
     "title": "Drift 黑客關聯地址押注 ETH/BTC 匯率下跌,單日浮盈達 65.8 萬美元",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5178,6 +5168,17 @@
     "tokens": [
       "USDC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "22b332996e9e2de8",
+    "title": "稳定币市场遭遇 Terra-Luna 崩溃以来最大撤资潮,30 天缩水 120 亿美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-17T11:09:43.471633+00:00",
+    "tokens": [
+      "USDC",
+      "BTC"
     ],
     "lang": "zh-CN"
   }
