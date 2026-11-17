@@ -1,15 +1,5 @@
 [
   {
-    "id": "febf5826c9088788",
-    "title": "91% 的代币化美股背后仅有一家经纪商:深入拆解 $46 亿 RWA 股票帝国的底层骨架",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T12:44:38.755632+00:00",
-    "tokens": [
-      "ONDO"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "92f2448a461f2d09",
     "title": "Solana set for its first tokenized stock venue under SEC framework, listing Galaxy",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5180,6 +5170,16 @@
     "sent_at": "2026-11-17T23:27:07.882169+00:00",
     "tokens": [
       "GRT"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e80b20d9737c176d",
+    "title": "Nvidia 財報前方舟資本大砍 8,480 萬美元輝達持股!轉頭買入 Block、Circle 與 Coinbase",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-11-17T23:47:36.243608+00:00",
+    "tokens": [
+      "ARK"
     ],
     "lang": "zh-CN"
   }
