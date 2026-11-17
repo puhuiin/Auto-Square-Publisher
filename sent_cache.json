@@ -1,15 +1,5 @@
 [
   {
-    "id": "d7f17a33362628d8",
-    "title": "Upbit weekly volume falls 20.8% to 6.7 trillion won as XRP leads trading",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-09T02:24:06.368935+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e30a478fd01a2198",
     "title": "What is Zcash (ZEC)? How shielded transactions work",
     "source": "The Block (机构与政策)",
@@ -5181,5 +5171,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "9f0b6267f449266e",
+    "title": "Shiba Inu (SHIB) Hits Long-Expected 1.7 Million User Milestone",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-17T12:09:25.696484+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-CN"
   }
 ]
