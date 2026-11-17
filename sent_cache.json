@@ -1,15 +1,5 @@
 [
   {
-    "id": "5d350e84c08f523c",
-    "title": "在芬兰寒冬里,他们靠挖比特币取暖",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T10:24:56.476059+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "52cf96925b3eeed4",
     "title": "Solana Targets Durable Nonces After $270M Drift Hack as Pump.fun Backlash Grows",
     "source": "CryptoNews (全球快讯)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-17T20:25:37.305832+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9ffc3c3cec6131f3",
+    "title": "Why Chainlink price faces a make-or-break test at the $8.88 level",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-17T21:05:32.797032+00:00",
+    "tokens": [
+      "LINK"
     ],
     "lang": "en"
   }
