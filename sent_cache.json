@@ -1,16 +1,5 @@
 [
   {
-    "id": "78c4042cab1cf488",
-    "title": "Shiba Inu (SHIB) Trading Surges 71% as $1.14 Billion Selloff Rocks Market",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-09T11:47:20.939232+00:00",
-    "tokens": [
-      "SHIB",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f3f2086a7a072c80",
     "title": "Zcash developers want 20-second blocks just days after major speed upgrade",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5181,6 +5170,16 @@
     "sent_at": "2026-11-17T22:10:00.512668+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "99703c9071dd17f1",
+    "title": "Three wallets hoard $52.7M on XRP’s sidechain, and nobody is trading it",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-17T22:48:05.699035+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
