@@ -1,16 +1,5 @@
 [
   {
-    "id": "9425e9fdb7c08375",
-    "title": "Drift 黑客關聯地址押注 ETH/BTC 匯率下跌,單日浮盈達 65.8 萬美元",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-11-09T02:04:39.261807+00:00",
-    "tokens": [
-      "ETH",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d7f17a33362628d8",
     "title": "Upbit weekly volume falls 20.8% to 6.7 trillion won as XRP leads trading",
     "source": "Crypto Briefing (深度与研报)",
@@ -5181,5 +5170,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ec9fa7ea6fc1e130",
+    "title": "Solana 基金会主席:TRUMP 发行及 2025 年 10 月暴跌是 Solana 的两次重大压力测试",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-17T11:47:21.056931+00:00",
+    "tokens": [
+      "TRUMP",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
