@@ -1,15 +1,5 @@
 [
   {
-    "id": "2a7e8bda25f7dba1",
-    "title": "Ripple Price Analysis: Could XRP Crash to $1.00 Next Week as Sellers Remain in Control?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-08T20:05:12.081044+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "295123fdd18c51bd",
     "title": "Flare CEO Pushes Back Against XRP 'FUD'",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5184,6 +5174,16 @@
     "sent_at": "2026-11-17T06:07:33.967302+00:00",
     "tokens": [
       "TRUMP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "df15ddb9bc7d6b3d",
+    "title": "PREDICT 推迟 TGE,Prime Sale 可申请退款",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-17T06:26:38.773378+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-CN"
   }
