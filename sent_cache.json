@@ -1,16 +1,5 @@
 [
   {
-    "id": "a221c6e1d3766199",
-    "title": "Top 3 Altcoins to Watch in the Second Week of November 2026",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-09T04:44:42.471760+00:00",
-    "tokens": [
-      "INJ",
-      "PEPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "050ad8e9f86db499",
     "title": "加密世界最被低估的资产:从资金费率到不确定性本身的金融化",
     "source": "深潮TechFlow (中文/简体)",
@@ -5182,5 +5171,17 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ac7b8ac6d05482ba",
+    "title": "吴说每日精选加密新闻 - Solana 基金会取得 CoinGecko 控股权益,具体持股比例及交易金额尚未披露",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-17T14:10:10.549031+00:00",
+    "tokens": [
+      "BTC",
+      "SOL",
+      "ETH"
+    ],
+    "lang": "en"
   }
 ]
