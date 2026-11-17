@@ -1,15 +1,5 @@
 [
   {
-    "id": "6c1bb486771e1e4f",
-    "title": "$200 billion lost, but here’s why Solana’s tokenized RWA market could be silver lining",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-08T17:05:04.119682+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8a9b156283e8b750",
     "title": "15周年纪念版发布,Electrum 4.8.4修复多项钱包安全问题",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5179,6 +5169,18 @@
       "BTC",
       "USDC",
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6452b95118d6f06f",
+    "title": "Arthur Hayes Says 4 Crypto ‘Horsemen' Will Pump, Then Usher in AI Bubble's End",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-17T03:44:08.298749+00:00",
+    "tokens": [
+      "ETH",
+      "ZEC",
+      "NEAR"
     ],
     "lang": "zh-CN"
   }
