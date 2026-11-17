@@ -1,15 +1,5 @@
 [
   {
-    "id": "050ad8e9f86db499",
-    "title": "加密世界最被低估的资产:从资金费率到不确定性本身的金融化",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T05:04:31.106165+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "cbcbb7f02b36798e",
     "title": "为什么 Anthropic 的 FlashProve 会提及 Mantle?零知识证明如何自证 AI 模型没有被调包",
     "source": "深潮TechFlow (中文/简体)",
@@ -5181,6 +5171,16 @@
       "BTC",
       "SOL",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9d67672036bb6f65",
+    "title": "Ripple-Backed Evernorth Cuts XRP Holdings by 60%",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-17T14:30:34.663644+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
