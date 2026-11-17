@@ -1,15 +1,5 @@
 [
   {
-    "id": "38bf4e294418d14d",
-    "title": "One BlackRock fund dominates Bitcoin’s billion-dollar ETF exodus",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-08T18:25:25.730852+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0e9246df9b1bddd2",
     "title": "Vitalik Buterin says ETH should be valued as a store of value, not a fee-burning token",
     "source": "The Block (机构与政策)",
@@ -5184,5 +5174,17 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "73b321e2cbb89c98",
+    "title": "Solana Meme 平台 StonkFun 累计收入近 4,000 万美元,已回购销毁逾 2,200 万美元 STONK",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-17T05:08:00.154103+00:00",
+    "tokens": [
+      "STO",
+      "SOL",
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
