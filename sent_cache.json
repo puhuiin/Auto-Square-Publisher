@@ -1,16 +1,5 @@
 [
   {
-    "id": "5dad7debc6cfd5c3",
-    "title": "XRP could double while this yield strategy leaves you far behind",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-08T21:44:51.213866+00:00",
-    "tokens": [
-      "XRP",
-      "RLUSD"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "e93d0fe094ea1a3e",
     "title": "Bitcoin ETF Outflows Hit 4-Month High as Ethereum Funds Stay in the Red",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5185,6 +5174,16 @@
     "sent_at": "2026-11-17T07:44:47.851556+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "6060d70d3e96aa24",
+    "title": "IOSG|比特币要涨到 25 万美元,挖矿才追得上 AI 收租",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-17T08:04:42.595815+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
