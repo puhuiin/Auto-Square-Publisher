@@ -1,15 +1,5 @@
 [
   {
-    "id": "e30a478fd01a2198",
-    "title": "What is Zcash (ZEC)? How shielded transactions work",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-09T02:44:49.118821+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a9741d2f86c835d6",
     "title": "Assessing if Avalanche’s growing network activity can spur AVAX’s price recovery",
     "source": "AMBCrypto (技术与链上)",
@@ -5181,5 +5171,16 @@
       "SHIB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ea28d0fa0e440543",
+    "title": "Gate将上线infiniFi (INFI) 现货交易、闪兑交易并开启Launchpool",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-17T12:29:41.897740+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
