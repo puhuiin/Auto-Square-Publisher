@@ -1,15 +1,5 @@
 [
   {
-    "id": "0e9246df9b1bddd2",
-    "title": "Vitalik Buterin says ETH should be valued as a store of value, not a fee-burning token",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-08T18:45:14.198061+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c945a9acd8a5aec2",
     "title": "Vitalik:ETH 应以价值储存而非 Gas 费用销毁作为核心价值定位",
     "source": "吴说区块链 (中文深度)",
@@ -5184,6 +5174,16 @@
       "STO",
       "SOL",
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4b50e50648c94104",
+    "title": "predict.fun上线宝可梦预测市场",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-17T05:27:03.062726+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-CN"
   }
