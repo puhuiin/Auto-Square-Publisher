@@ -1,15 +1,5 @@
 [
   {
-    "id": "00c28944b6e72d0e",
-    "title": "TechFlow 情报局:ChatGPT 被曝大规模封号,Binance 遭 60 亿美元黑客攻击后 CFO 火速离职",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-08T13:26:55.346163+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "130d27dc15ba3141",
     "title": "Bitcoin price prediction — With $80K lost, is more downside ahead for BTC?",
     "source": "AMBCrypto (技术与链上)",
@@ -5167,6 +5157,19 @@
     "sent_at": "2026-11-17T00:04:35.762781+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "9760efc5cbda3a41",
+    "title": "加密早报:Solana 正式迈入 1.0 版本,李林新平台 UMX 内部信流出",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-17T00:23:14.425177+00:00",
+    "tokens": [
+      "ETH",
+      "BTC",
+      "USDC",
+      "HYPE"
     ],
     "lang": "zh-TW"
   }
