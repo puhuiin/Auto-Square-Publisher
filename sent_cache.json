@@ -1,16 +1,5 @@
 [
   {
-    "id": "3219b754fce1f366",
-    "title": "USDC Treasury 今日在 Solana 网络新增铸造 2.5 亿枚 USDC",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-09T01:24:03.984629+00:00",
-    "tokens": [
-      "USDC",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "77504021f0101377",
     "title": "巨鲸或机构向 FalconX 转入累计约 51.2 万枚 HYPE",
     "source": "深潮TechFlow (中文/简体)",
@@ -5178,6 +5167,17 @@
     "sent_at": "2026-11-17T10:28:05.119923+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e786f808eab24814",
+    "title": "币安刚赔六十三亿,Lighter 链上自托管为何照样失守",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-17T10:53:05.535111+00:00",
+    "tokens": [
+      "USDC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
