@@ -1,17 +1,5 @@
 [
   {
-    "id": "3db0736ff6590eb0",
-    "title": "Shiba Inu (SHIB), Tron (TRX), Zcash (ZEC) and Near Protocol (NEAR) Price Analysis For November 9: From the Market Fear to Neutrality",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-09T00:47:16.203548+00:00",
-    "tokens": [
-      "SHIB",
-      "TRX",
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "814336f9064d43b9",
     "title": "本周 ALLO、AZTEC、CONX 等代币将迎来大额代币解锁",
     "source": "深潮TechFlow (中文/简体)",
@@ -5184,5 +5172,15 @@
       "SHIB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "185238244fee05ff",
+    "title": "Seven straight red weeks! Can Sui avoid a steep drop towards $0.65 lows?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-17T10:07:35.014468+00:00",
+    "tokens": [
+      "SUI"
+    ],
+    "lang": "zh-CN"
   }
 ]
