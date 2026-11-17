@@ -1,16 +1,5 @@
 [
   {
-    "id": "6aedaa9988323ebb",
-    "title": "BeInCrypto:INJ、PEARL 和 PEPE 面临关键阻力",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T04:24:52.125272+00:00",
-    "tokens": [
-      "INJ",
-      "PEPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a221c6e1d3766199",
     "title": "Top 3 Altcoins to Watch in the Second Week of November 2026",
     "source": "BeInCrypto (山寨与行情)",
@@ -5181,6 +5170,16 @@
     "tokens": [
       "ARK",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6cc84975f25773e8",
+    "title": "XRP Breaks Below $1 as Spot ETF Outflows and Market-Wide Selling Deepen",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-17T13:47:13.934607+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
