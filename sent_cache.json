@@ -1,15 +1,5 @@
 [
   {
-    "id": "9f8f7c2c48034e82",
-    "title": "Hyperliquid Recovery: Binance Reopens HYPE Withdrawals After $6.4 Billion Hack",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-08T14:45:29.700047+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b109b6f6798252e6",
     "title": "Mark Zuckerberg Meta AI Predicts ‘Will Crypto Recover in November’",
     "source": "CryptoNews (全球快讯)",
@@ -5172,5 +5162,17 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "cb8710ec442148e2",
+    "title": "Shiba Inu (SHIB) Bearish Rally is Fading, Solana (SOL) Death Cross Isn't Dangerous, Stellar (XLM) Recovery Signal Potential: Crypto Market Review",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-17T01:44:40.482440+00:00",
+    "tokens": [
+      "SHIB",
+      "SOL",
+      "XLM"
+    ],
+    "lang": "zh-TW"
   }
 ]
