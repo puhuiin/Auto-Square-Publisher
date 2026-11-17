@@ -1,15 +1,5 @@
 [
   {
-    "id": "8a9b156283e8b750",
-    "title": "15周年纪念版发布,Electrum 4.8.4修复多项钱包安全问题",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-08T17:25:17.621446+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4712635bd0ded1a0",
     "title": "隐私功能上线,Arbitrum用户可通过@NullMaskio私密转账、存款并查询余额",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5181,6 +5171,17 @@
       "ETH",
       "ZEC",
       "NEAR"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1671856d109da589",
+    "title": "Bitget 被盗资金持续转移,黑客 11 天内通过混币等方式转出 1.61 亿美元 BTC",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-17T04:04:19.057090+00:00",
+    "tokens": [
+      "BTC",
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
