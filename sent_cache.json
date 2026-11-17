@@ -1,15 +1,5 @@
 [
   {
-    "id": "0ea793f6afae4242",
-    "title": "这个比特币开发者的方案,能让量子黑客偷币反而亏钱",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T08:27:52.961669+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e932eb21f5f6c9d8",
     "title": "Solana moves to scrap the transaction feature used in the $270 million Drift hack",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5181,6 +5171,16 @@
     "sent_at": "2026-11-17T16:45:06.151825+00:00",
     "tokens": [
       "XRP",
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "bbfdac4f65998cd8",
+    "title": "Glassnode:比特币已出现历史性投降信号,但6.2万至6.6万美元支撑区仍面临考验",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-17T17:07:24.270735+00:00",
+    "tokens": [
       "BTC"
     ],
     "lang": "en"
