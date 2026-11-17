@@ -1,15 +1,5 @@
 [
   {
-    "id": "295123fdd18c51bd",
-    "title": "Flare CEO Pushes Back Against XRP 'FUD'",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-08T20:25:27.949152+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0c355b48f6cfb473",
     "title": "'We Have Big Plans for 2027': Ripple Engineering Director Teases XRP Ledger Overhaul",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5184,6 +5174,17 @@
     "sent_at": "2026-11-17T06:26:38.773378+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1b93c783e44b5770",
+    "title": "Mastercard Spotlights XRP Ledger After Groundbreaking Test",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-17T06:47:58.206396+00:00",
+    "tokens": [
+      "XRP",
+      "RLUSD"
     ],
     "lang": "zh-CN"
   }

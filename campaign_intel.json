@@ -17,36 +17,36 @@
   "strategy_guidance": "优先追今日新上线的HYPE、TRX永续合约及PREDICT新币的热度，围绕新品特性、交易规则等角度发布内容，引导用户参与相关话题评论互动以获取Write2Earn奖励；可搭配当期Futures类活动、Binance Square热点话题提升曝光，所有内容不得出现收益承诺类表述。",
   "last_updated": "2026-11-16T19:04:05.810372Z",
   "_feed_health": {
+    "ZyCrypto (新币与空投)": {
+      "last_fail": "2026-11-17T04:03:42.656638+00:00",
+      "reset_at": "2026-11-17T06:47:00.449991+00:00",
+      "fails": 1
+    },
+    "Bitcoinist (比特币向)": {
+      "last_fail": "2026-11-17T04:03:42.822998+00:00",
+      "reset_at": "2026-11-17T06:47:00.505704+00:00",
+      "fails": 1
+    },
     "CoinJournal (山寨异动)": {
       "last_fail": "2026-11-17T05:24:00.560452+00:00",
       "fails": 3,
       "parked_until": "2026-11-17T11:24:00.560452+00:00"
     },
-    "ZyCrypto (新币与空投)": {
-      "last_fail": "2026-11-17T04:03:42.656638+00:00",
-      "fails": 1,
-      "reset_at": "2026-11-17T06:25:57.515563+00:00"
-    },
     "Watcher.Guru (快讯)": {
       "last_fail": "2026-11-17T04:23:31.478522+00:00",
       "fails": 3,
       "parked_until": "2026-11-17T10:23:31.478522+00:00"
-    },
-    "Bitcoinist (比特币向)": {
-      "last_fail": "2026-11-17T04:03:42.822998+00:00",
-      "fails": 1,
-      "reset_at": "2026-11-17T06:25:57.631081+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-17",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1067,
+  "_img_rot": 1068,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
