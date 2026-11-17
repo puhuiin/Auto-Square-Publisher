@@ -1,15 +1,5 @@
 [
   {
-    "id": "434024a5aea6e29d",
-    "title": "孟买大会之后的以太坊:后量子 2028 竞速、Glamsterdam 延期与硬分叉交付困境",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T12:24:46.099961+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "febf5826c9088788",
     "title": "91% 的代币化美股背后仅有一家经纪商:深入拆解 $46 亿 RWA 股票帝国的底层骨架",
     "source": "深潮TechFlow (中文/简体)",
@@ -5182,5 +5172,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "c008545639a38855",
+    "title": "The Graph to Tie Indexer Reward Requirements to Stake",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-17T23:27:07.882169+00:00",
+    "tokens": [
+      "GRT"
+    ],
+    "lang": "zh-CN"
   }
 ]
