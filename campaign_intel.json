@@ -18,25 +18,25 @@
   "strategy_guidance": "优先追刚上线的HYPE、TRX期货合约及临近Black Friday节点的系列活动热点，以活动规则解读、参与攻略为切入点发布内容，引导用户参与评论互动获取Write2Earn奖励；结合新合约、新币种上线的动态，合规引导交易行为获取返佣，避免提及任何收益承诺。",
   "last_updated": "2026-11-17T07:24:15.828509Z",
   "_feed_health": {
+    "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-11-17T15:48:05.892387+00:00",
+      "fails": 1,
+      "last_fail": "2026-11-17T11:08:19.210205+00:00"
+    },
     "Bitcoinist (比特币向)": {
       "reset_at": "2026-11-17T15:48:05.701523+00:00",
       "fails": 1,
       "last_fail": "2026-11-17T12:08:17.561613+00:00"
     },
     "Watcher.Guru (快讯)": {
-      "fails": 3,
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-17T15:48:06.055603+00:00"
-    },
-    "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-11-17T15:48:05.892387+00:00",
-      "fails": 1,
-      "last_fail": "2026-11-17T11:08:19.210205+00:00"
+      "last_fail": "2026-11-17T15:48:06.055603+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-17",
