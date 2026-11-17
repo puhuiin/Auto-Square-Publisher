@@ -1,15 +1,5 @@
 [
   {
-    "id": "a45f044994556093",
-    "title": "Trump Administration Inches Closer to Opening 401(k)s to Crypto",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-08T16:05:33.027444+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c7c80e3db1107294",
     "title": "Dogecoin Cofounder Highlights Shiba Inu Popularity in Japan",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5176,5 +5166,17 @@
       "NEAR"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "da8877980d12e93e",
+    "title": "收入与叙事的陷阱:为什么极简主义资产更能穿越加密周期?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-17T02:45:33.556746+00:00",
+    "tokens": [
+      "UNI",
+      "AAVE",
+      "HYPE"
+    ],
+    "lang": "zh-CN"
   }
 ]
