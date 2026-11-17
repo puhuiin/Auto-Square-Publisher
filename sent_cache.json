@@ -1,15 +1,5 @@
 [
   {
-    "id": "4a8a8855c9845387",
-    "title": "Solana 生态周报:近 6 个月 RWA 净流入 26 亿美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-08T14:26:19.236982+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9f8f7c2c48034e82",
     "title": "Hyperliquid Recovery: Binance Reopens HYPE Withdrawals After $6.4 Billion Hack",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5170,6 +5160,16 @@
     "tokens": [
       "BTC",
       "TAO"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7614fd8c814b73ca",
+    "title": "富国银行第三季度 IBIT 持仓翻倍至约 4958 万股,市值达 23.5 亿美元",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-17T01:24:40.556590+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
