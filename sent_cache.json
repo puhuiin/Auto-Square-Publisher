@@ -1,17 +1,5 @@
 [
   {
-    "id": "e841d135b637d400",
-    "title": "别把钱包搬家当成巨鲸吸筹:博主用本周九个代币教你识别真实链上信号",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T06:04:55.420714+00:00",
-    "tokens": [
-      "USDC",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "1726544ec0302b1c",
     "title": "Zcash 开发者提议将目标出块间隔从 25 秒缩短至 20 秒",
     "source": "吴说区块链 (中文深度)",
@@ -5183,6 +5171,16 @@
       "KAVA",
       "BTC",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "db17e72e15009c3b",
+    "title": "Evernorth’s XRP Treasury Carries $505 Million of Write-Downs Under an Unusual Accounting Rule",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-17T15:31:16.744315+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
