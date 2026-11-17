@@ -1,15 +1,5 @@
 [
   {
-    "id": "0c355b48f6cfb473",
-    "title": "'We Have Big Plans for 2027': Ripple Engineering Director Teases XRP Ledger Overhaul",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-08T21:05:03.418213+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "798163c88c8e86ca",
     "title": "Beyond Visa's Speed? XRP Expert Explains Bigger Scaling Opportunity Ahead",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5187,5 +5177,15 @@
       "RLUSD"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "be6f9a22984901f3",
+    "title": "24小时涨超102%,Solana生态Meme币GTA6市值短时突破1500万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-17T07:07:07.634196+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
