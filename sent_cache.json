@@ -1,15 +1,5 @@
 [
   {
-    "id": "a9741d2f86c835d6",
-    "title": "Assessing if Avalanche’s growing network activity can spur AVAX’s price recovery",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-09T03:04:50.033742+00:00",
-    "tokens": [
-      "AVAX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5ced6df30bf6e79c",
     "title": "HYPE现货ETF上周净流出1561.68万美元,创历史第三高",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5182,5 +5172,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ee94c0a72bd35d95",
+    "title": "Dogecoin ETFs Haven’t Taken In a Dollar Since October. So Who Is Buying?",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-17T12:47:00.471357+00:00",
+    "tokens": [
+      "DOGE"
+    ],
+    "lang": "zh-CN"
   }
 ]
