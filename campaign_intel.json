@@ -18,14 +18,14 @@
   "last_updated": "2026-11-16T19:04:05.810372Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "fails": 1,
-      "reset_at": "2026-11-16T23:43:32.690311+00:00",
-      "last_fail": "2026-11-16T20:46:18.557730+00:00"
+      "reset_at": "2026-11-17T00:03:30.011533+00:00",
+      "last_fail": "2026-11-16T20:46:18.557730+00:00",
+      "fails": 1
     },
     "Crypto Briefing (深度与研报)": {
-      "fails": 3,
       "parked_until": "2026-11-17T05:23:35.436618+00:00",
-      "last_fail": "2026-11-16T23:23:35.436618+00:00"
+      "last_fail": "2026-11-16T23:23:35.436618+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
@@ -33,15 +33,15 @@
     "date": "2026-10-18"
   },
   "_llm_breaker": {},
-  "_article_sent_date": "2026-11-16",
+  "_article_sent_date": "2026-11-17",
   "_publish_park": {
     "d5fee764db9c4795": {
-      "fails": 1,
-      "last_fail": "2026-11-16T23:45:38.624751+00:00"
+      "last_fail": "2026-11-16T23:45:38.624751+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 1055,
+  "_img_rot": 1056,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
