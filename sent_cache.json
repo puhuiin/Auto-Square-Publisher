@@ -1,15 +1,5 @@
 [
   {
-    "id": "c945a9acd8a5aec2",
-    "title": "Vitalik:ETH 应以价值储存而非 Gas 费用销毁作为核心价值定位",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-08T19:05:09.418209+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "28d74a9792576677",
     "title": "SOL 跌破 90 美元,24 小時漲幅 0.04%",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5186,5 +5176,15 @@
       "BNB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0235f5eba74de040",
+    "title": "Ripple-backed Evernorth has written down its pre-listing XRP holdings by 60%",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-17T05:46:58.292372+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
