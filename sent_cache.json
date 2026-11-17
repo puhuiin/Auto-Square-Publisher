@@ -1,15 +1,5 @@
 [
   {
-    "id": "0966f254b61b16c9",
-    "title": "Solana 擬廢除 durable nonce,北韓駭客靠它偷 2.7 億美元",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-11-09T09:26:37.554498+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6191ee83525d6dbf",
     "title": "Solana Draft Would Retire Durable Nonces No Earlier Than May 2027",
     "source": "The Defiant (DeFi 深度)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-17T19:26:01.382298+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "0b92bc42c7228e62",
+    "title": "Jito CEO:未来两年加密开发者应放缓开发速度,优先修复安全漏洞",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-17T19:45:34.876186+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
