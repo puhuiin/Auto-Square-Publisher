@@ -1,15 +1,5 @@
 [
   {
-    "id": "80d2c78f8acaf673",
-    "title": "LNbits敦促所有用户立即关闭服务器,多个实例遭攻击",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-08T16:44:14.088742+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6c1bb486771e1e4f",
     "title": "$200 billion lost, but here’s why Solana’s tokenized RWA market could be silver lining",
     "source": "AMBCrypto (技术与链上)",
@@ -5176,6 +5166,18 @@
     "tokens": [
       "UNI",
       "AAVE",
+      "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b6dfb0128e4b734b",
+    "title": "Grayscale研究主管:加密资产估值已从超买快速转向超卖,当前价格具备吸引力",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-17T03:24:40.755854+00:00",
+    "tokens": [
+      "BTC",
+      "USDC",
       "HYPE"
     ],
     "lang": "zh-CN"
