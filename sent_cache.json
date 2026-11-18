@@ -1,15 +1,5 @@
 [
   {
-    "id": "34ed87a4309736b8",
-    "title": "Can PEPE break $0.0000052 while the rest of the crypto market is falling?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-09T22:07:04.479297+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e45740f5c34363a8",
     "title": "偿还7.5亿美元抵押债务,MARA批准最高5亿美元股票回购",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-18T08:07:49.352296+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "42cdd760007c9dd1",
+    "title": "Ripple (XRP) Price Flashes Incredibly Rare Signals: is a Rebound Coming?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-18T08:27:44.625601+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
