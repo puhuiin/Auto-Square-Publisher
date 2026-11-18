@@ -1,15 +1,5 @@
 [
   {
-    "id": "92f2448a461f2d09",
-    "title": "Solana set for its first tokenized stock venue under SEC framework, listing Galaxy",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-11-09T13:07:47.202678+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ace262bc20ec4d04",
     "title": "Hyperliquid 生态 L2 网络 Elysium 主网正式上线",
     "source": "吴说区块链 (中文深度)",
@@ -5182,5 +5172,15 @@
       "ARK"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "81a30098a291ed4e",
+    "title": "Cardano Faces a Crucial Turning Point Amid Treasury Rejection, Putting $22M ADA Proposal to Rest",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-18T00:08:04.349931+00:00",
+    "tokens": [
+      "ADA"
+    ],
+    "lang": "zh-TW"
   }
 ]
