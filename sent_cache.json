@@ -1,17 +1,5 @@
 [
   {
-    "id": "111d78657a876f04",
-    "title": "XRP, Near Protocol (NEAR), Hyperliquid (HYPE) and Stellar (XLM) Price Analysis for November 10: Market Pressure Keeps Growing",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-10T01:07:06.814227+00:00",
-    "tokens": [
-      "XRP",
-      "HYPE",
-      "XLM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "849462233f45480f",
     "title": "星球早讯",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5188,6 +5176,19 @@
     "sent_at": "2026-11-18T10:12:08.388593+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "13505aaab1374eeb",
+    "title": "不止是 Swap:PancakeSwap 在移动应用上线前更名为 Pancake",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-18T10:30:01.992087+00:00",
+    "tokens": [
+      "BNB",
+      "ARB",
+      "SOL",
+      "CAKE"
     ],
     "lang": "zh-CN"
   }
