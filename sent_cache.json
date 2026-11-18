@@ -1,15 +1,5 @@
 [
   {
-    "id": "c25be5d38609885b",
-    "title": "ICE 入股、L2 上线、千倍杠杆机制:Hyperliquid 链上金融迭代之路",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-10T06:51:12.193743+00:00",
-    "tokens": [
-      "ONDO"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a8899fa0d5710c8f",
     "title": "XRP Faces More Downside Pressure? Binance CVD Reveals Sellers Are Still in Control",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5182,6 +5172,16 @@
     "sent_at": "2026-11-18T15:46:39.123975+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1b58edd8c867ba87",
+    "title": "Bitwise Targets Texas Stock Exchange for New Zcash ETF Under ZEC Ticker",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-18T16:05:10.674510+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
