@@ -1,15 +1,5 @@
 [
   {
-    "id": "4eb0233b7fb3f160",
-    "title": "比特币在币安黑客事件后下跌6%,Fitch Ratings称市场结构趋成熟",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-09T21:08:59.380098+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0d560d4a2d3bbfa3",
     "title": "Vitalik Buterin Sued in Ethereum ‘Suicide Pledge' Row",
     "source": "BeInCrypto (山寨与行情)",
@@ -5190,5 +5180,15 @@
       "COTI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "9ce0e8ace6cb8671",
+    "title": "Binance Hack-Linked Wallet Moves 34,279 ETH, but Investigators See No Confirmed Sale",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-18T07:25:03.710528+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
