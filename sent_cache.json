@@ -1,15 +1,5 @@
 [
   {
-    "id": "ace262bc20ec4d04",
-    "title": "Hyperliquid 生态 L2 网络 Elysium 主网正式上线",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-09T13:29:18.830247+00:00",
-    "tokens": [
-      "ARB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "cbc1852dfd213cd6",
     "title": "Mercado Bitcoin Begins View-Only Reopening After Hack",
     "source": "The Defiant (DeFi 深度)",
@@ -5180,6 +5170,16 @@
     "sent_at": "2026-11-18T00:08:04.349931+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "d14ab5cebb264b10",
+    "title": "Xsolla ZK Introduces a Gas Token Designed to Let Digital Items Move Between Games and Players",
+    "source": "DailyHodl (山寨异动与百倍币叙事)",
+    "sent_at": "2026-11-18T00:24:49.519561+00:00",
+    "tokens": [
+      "ZK"
     ],
     "lang": "zh-TW"
   }
