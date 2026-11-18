@@ -1,15 +1,5 @@
 [
   {
-    "id": "fc828805a75fc431",
-    "title": "私募融资平台 FairClub 拟采用 Metaplex 许可代币标准",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T18:09:55.672363+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7a65cbe1441357a4",
     "title": "North Korea launders Binance funds with Elon Musk memecoin, report",
     "source": "Protos (隐私与合规)",
@@ -5191,5 +5181,15 @@
       "USDC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "6edb103e2be04dab",
+    "title": "PEPE price prediction — Does a mini-rebound mean much for the memecoin?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-18T05:04:47.345772+00:00",
+    "tokens": [
+      "PEPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
