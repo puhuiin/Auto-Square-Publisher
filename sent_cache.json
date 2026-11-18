@@ -1,15 +1,5 @@
 [
   {
-    "id": "87c6f075f6e5aa1b",
-    "title": "Avalanche 将为纽交所关联代币化证券平台提供结算账本",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T19:45:19.855475+00:00",
-    "tokens": [
-      "AVAX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6619a2b28aafe097",
     "title": "Formation Securities拟依据SEC创新豁免推出Solana代币化股票交易场所",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5191,5 +5181,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "46f62d21b05398d4",
+    "title": "Zcash (ZEC) Price Skyrockets 10%, Will the Rally Continue?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-18T06:25:14.417110+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
