@@ -1,15 +1,5 @@
 [
   {
-    "id": "6fdea299ba3818d4",
-    "title": "Wintermute:AI 交易失去华盛顿顺风,标普单日跌 4.4%",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-10T12:25:08.721021+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2a128358eef25c87",
     "title": "Shiba Inu (SHIB) Scammers Fake 'Ryoshi' to Push 137 Scam Tokens and Dupe Investors",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5175,6 +5165,16 @@
     "title": "XRP Price Was Worth Less Than a Penny When GTA 5 Launched: Could GTA 6 See It Hit $100?",
     "source": "CryptoNews (全球快讯)",
     "sent_at": "2026-11-18T23:04:29.454026+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "8383e56a306d5b6e",
+    "title": "XRP Ledger Scores Historic First in Global Banking Standards Review",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-18T23:24:37.184332+00:00",
     "tokens": [
       "XRP"
     ],
