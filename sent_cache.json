@@ -1,15 +1,5 @@
 [
   {
-    "id": "cbc1852dfd213cd6",
-    "title": "Mercado Bitcoin Begins View-Only Reopening After Hack",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-09T13:48:43.775069+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6d8f47c6f57ed60e",
     "title": "TechFlow 情报局:英伟达董事会调查黄仁勋涉间谍情妇,比特币跌破 7.4 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5182,5 +5172,15 @@
       "ZK"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d526b9930a29be16",
+    "title": "Curve Finance 披露遭攻击,3.82 万美元费用被盗,已禁用合约暂停兑换",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-18T00:47:09.265453+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
