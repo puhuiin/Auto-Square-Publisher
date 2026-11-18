@@ -1,15 +1,5 @@
 [
   {
-    "id": "0d560d4a2d3bbfa3",
-    "title": "Vitalik Buterin Sued in Ethereum ‘Suicide Pledge' Row",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-09T21:28:50.959433+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "87b2ce4a728fb281",
     "title": "Aravind Sviniras Perplexity AI Predicts a Mega-Bullish XRP Price Move",
     "source": "CryptoNews (全球快讯)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-18T07:25:03.710528+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "4cb6e1a8ec66d2c3",
+    "title": "逾1亿美元比特币失窃,Coinkite CEO称约0.17% Coldcard用户受影响",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-18T07:47:14.413328+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
