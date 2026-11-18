@@ -22,12 +22,7 @@
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
       "fails": 3,
-      "last_fail": "2026-11-18T13:03:32.965661+00:00"
-    },
-    "Bitcoinist (比特币向)": {
-      "reset_at": "2026-11-18T13:03:32.735067+00:00",
-      "fails": 1,
-      "last_fail": "2026-11-18T07:23:31.853939+00:00"
+      "last_fail": "2026-11-18T13:23:34.306989+00:00"
     }
   },
   "_fallback_image": {
@@ -38,7 +33,7 @@
   "_article_sent_date": "2026-11-18",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1109,
+  "_img_rot": 1110,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
