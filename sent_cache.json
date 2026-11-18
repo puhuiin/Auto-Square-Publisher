@@ -1,17 +1,5 @@
 [
   {
-    "id": "03e2458b704f9c52",
-    "title": "加密板块涨跌互现,AI板块涨近3%,PayFi板块跌超2%",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-10T02:06:36.035326+00:00",
-    "tokens": [
-      "KITE",
-      "GRAM",
-      "JUP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fd3f6eb8eae1de61",
     "title": "Elon Musk Grok AI Predicts a Wild DOGE Price: Is Dogecoin About to Explode?",
     "source": "CryptoNews (全球快讯)",
@@ -5185,6 +5173,16 @@
     "title": "Bitwise seeks Texas Stock Exchange listing for Zcash ETF",
     "source": "Crypto Briefing (深度与研报)",
     "sent_at": "2026-11-18T11:04:09.758241+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a35b04f2809d5050",
+    "title": "Bitwise 拟在得克萨斯证券交易所上市现货 Zcash ETF",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-18T11:24:53.355527+00:00",
     "tokens": [
       "ZEC"
     ],
