@@ -20,25 +20,25 @@
   "last_updated": "2026-11-18T08:04:09.944288Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "reset_at": "2026-11-18T12:23:33.279088+00:00",
+      "last_fail": "2026-11-18T07:23:31.853939+00:00",
       "fails": 1,
-      "last_fail": "2026-11-18T07:23:31.853939+00:00"
+      "reset_at": "2026-11-18T12:43:40.394407+00:00"
     },
     "Watcher.Guru (快讯)": {
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-18T12:43:40.922623+00:00",
       "fails": 3,
-      "last_fail": "2026-11-18T12:23:33.781636+00:00"
+      "parked_until": "2026-11-17T10:23:31.478522+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-18",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1107,
+  "_img_rot": 1108,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
