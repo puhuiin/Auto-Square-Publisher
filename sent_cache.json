@@ -1,16 +1,5 @@
 [
   {
-    "id": "68a3fef42c87c186",
-    "title": "火币 HTX 发布 10 月成绩单:现货深度整体提升,赚币加息陪伴用户「暖冬同行」",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-10T09:04:11.757268+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5880faf78e7f99d9",
     "title": "全球股票基金四周流入 2660 亿美元,比特币 ETF 资金流出",
     "source": "深潮TechFlow (中文/简体)",
@@ -5183,6 +5172,17 @@
     "sent_at": "2026-11-18T17:09:47.496668+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f6f76d44dc6af04c",
+    "title": "USA₮ 已在 Avalanche 上线,将为 Aave 新 RWA Hub 提供美元流动性",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-18T18:05:06.880760+00:00",
+    "tokens": [
+      "AVAX",
+      "AAVE"
     ],
     "lang": "en"
   }
