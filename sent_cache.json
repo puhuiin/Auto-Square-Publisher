@@ -1,15 +1,5 @@
 [
   {
-    "id": "d9d5e2ccee3934a9",
-    "title": "Avalanche’s AVAX leads crypto gains following NYSE tokenization deal",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-11-09T20:28:40.133240+00:00",
-    "tokens": [
-      "AVAX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4eb0233b7fb3f160",
     "title": "比特币在币安黑客事件后下跌6%,Fitch Ratings称市场结构趋成熟",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5187,6 +5177,17 @@
     "sent_at": "2026-11-18T06:44:26.032381+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b12b53a2c9591edd",
+    "title": "Cardano 生态稳定币 DJED 宣布关停:运营近四年,持有人须在元旦前完成赎回",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-18T07:04:36.939983+00:00",
+    "tokens": [
+      "ADA",
+      "COTI"
     ],
     "lang": "zh-CN"
   }
