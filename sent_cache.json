@@ -1,15 +1,5 @@
 [
   {
-    "id": "95e497093b1b7e5f",
-    "title": "Gate WCTC S9第一阶段圆满收官,超10万人报名,600万USDT总奖池第二阶段正式开启",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-10T08:44:59.528060+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "68a3fef42c87c186",
     "title": "火币 HTX 发布 10 月成绩单:现货深度整体提升,赚币加息陪伴用户「暖冬同行」",
     "source": "深潮TechFlow (中文/简体)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-18T16:48:50.008200+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c606b4b40316f314",
+    "title": "Bitcoin options flash warning as downside premiums surge ahead of Fed minutes",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-18T17:09:47.496668+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
