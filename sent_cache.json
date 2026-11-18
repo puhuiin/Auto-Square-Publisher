@@ -1,15 +1,5 @@
 [
   {
-    "id": "2a128358eef25c87",
-    "title": "Shiba Inu (SHIB) Scammers Fake 'Ryoshi' to Push 137 Scam Tokens and Dupe Investors",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-10T12:47:43.304869+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d7502bb61702a7d3",
     "title": "Babylon 敲开 Aave 大门,比特币直接抵押就能借稳定币?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5179,5 +5169,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "fc8c8b421f0c298a",
+    "title": "Bitwise offloads 23.7M XRP while silently stacking 126M more",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-18T23:44:04.348383+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
