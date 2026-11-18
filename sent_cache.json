@@ -1,15 +1,5 @@
 [
   {
-    "id": "3c1af2fd5f13e0bd",
-    "title": "TRON Network Integrates with Backpack Wallet, Expanding Access to Its Multichain Ecosystem",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-09T15:48:44.771934+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f92d6ec1aacb9501",
     "title": "86 Trillion: Shiba Inu (SHIB) Just Crossed the Line",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5183,5 +5173,17 @@
       "ZEC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ce2db34d214c9eea",
+    "title": "USD1 Supply Falls 11% in a Week to Below $3 Billion",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-18T02:27:11.655789+00:00",
+    "tokens": [
+      "USD1",
+      "BNB",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
