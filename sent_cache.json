@@ -1,17 +1,5 @@
 [
   {
-    "id": "6d8f47c6f57ed60e",
-    "title": "TechFlow 情报局:英伟达董事会调查黄仁勋涉间谍情妇,比特币跌破 7.4 万美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T14:07:32.231252+00:00",
-    "tokens": [
-      "BTC",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "bcbd47e88242ec3e",
     "title": "Elliptic:币安黑客利用自制 Meme 币转移被盗资金",
     "source": "深潮TechFlow (中文/简体)",
@@ -5179,6 +5167,17 @@
     "source": "吴说区块链 (中文深度)",
     "sent_at": "2026-11-18T00:47:09.265453+00:00",
     "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a849e62fbc7d6a8a",
+    "title": "加密早报:段永平三季度减持 63% 英伟达股份,Anthropic 获准在纳斯达克上市",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-18T01:07:28.249995+00:00",
+    "tokens": [
+      "BTC",
       "ETH"
     ],
     "lang": "zh-CN"
