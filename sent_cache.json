@@ -1,15 +1,5 @@
 [
   {
-    "id": "e61c3755ba91a981",
-    "title": "Bitrue AI Maps 18 Oversold XRP Readings Since 2023 in New Research Report",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-09T16:47:03.734579+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4003648884251812",
     "title": "Bitwise 向 Cumberland 转出约 7.317 万枚 HYPE",
     "source": "深潮TechFlow (中文/简体)",
@@ -5184,6 +5174,17 @@
     "sent_at": "2026-11-18T03:07:14.281159+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "22ac4685d37d1db8",
+    "title": "Abraxas Capital疑因Lighter账户被盗关闭链上仓位,清仓Hyperliquid约2亿美元持仓",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-18T03:26:41.040581+00:00",
+    "tokens": [
+      "USDC",
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
