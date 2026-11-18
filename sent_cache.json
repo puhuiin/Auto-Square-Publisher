@@ -1,16 +1,5 @@
 [
   {
-    "id": "073ce3c1a446a04d",
-    "title": "Zcash 酝酿 NU 8 升级:区块扩容 4 倍、隐私交易冲刺每秒 200 笔,抗量子方案同步推进",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-10T05:28:28.917689+00:00",
-    "tokens": [
-      "ID",
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a00867a4efe56f29",
     "title": "CME FedWatch:美联储 12 月加息概率升至 84.4%",
     "source": "深潮TechFlow (中文/简体)",
@@ -5183,6 +5172,16 @@
     "sent_at": "2026-11-18T14:44:57.716329+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "80f175e107ed7e85",
+    "title": "AI Will Make the Next 12 Months 'a Slaughterhouse' for Crypto Security: Anchorage Exec",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-18T15:05:20.113585+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
