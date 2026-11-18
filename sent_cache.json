@@ -1,16 +1,5 @@
 [
   {
-    "id": "7a65cbe1441357a4",
-    "title": "North Korea launders Binance funds with Elon Musk memecoin, report",
-    "source": "Protos (隐私与合规)",
-    "sent_at": "2026-11-09T18:45:42.307184+00:00",
-    "tokens": [
-      "TRX",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3944471d1f53302c",
     "title": "Mercado Bitcoin分阶段恢复账户只读访问,提现时间未定",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5191,5 +5180,15 @@
       "PEPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e7bcbd7f075b59c1",
+    "title": "Bitwise Reveals the Massive Catalyst That Could Send Solana (SOL) Price Soaring",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-18T05:25:54.563597+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
