@@ -1,15 +1,5 @@
 [
   {
-    "id": "0100daf6f576cbb2",
-    "title": "Zcash 钱包 Zodl 开始上线自营服务器并集成隐私中继",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T15:08:54.440963+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3c1af2fd5f13e0bd",
     "title": "TRON Network Integrates with Backpack Wallet, Expanding Access to Its Multichain Ecosystem",
     "source": "NewsBTC (比特币与山寨)",
@@ -5181,5 +5171,17 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "cd5467018e92498c",
+    "title": "加密市场窄幅震荡,SocialFi、PayFi板块涨超2%",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-18T02:06:40.889505+00:00",
+    "tokens": [
+      "GRAM",
+      "CHZ",
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
