@@ -1,16 +1,5 @@
 [
   {
-    "id": "23d75dc19a439f94",
-    "title": "纽交所选 Avalanche、新平台押 Solana,这波“老链新用”并不利好币价",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-10T04:49:01.547043+00:00",
-    "tokens": [
-      "AVAX",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3881c3d812ee1c1f",
     "title": "Four Pillars 周报:民主党掌控国会,个股永续合约放行,美国加密政策走向何方?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5186,6 +5175,16 @@
       "USDC",
       "ETH",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a806e6c23ed72ba9",
+    "title": "永续 DEX Variational 完成 1.1 亿美元融资,估值达 15 亿美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-18T14:25:04.677903+00:00",
+    "tokens": [
+      "ARB"
     ],
     "lang": "en"
   }
