@@ -1,15 +1,5 @@
 [
   {
-    "id": "c0a00f1268f88c03",
-    "title": "Upbit lists Hyperliquid’s HYPE token for trading on November 10",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-10T06:08:16.959230+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "c25be5d38609885b",
     "title": "ICE 入股、L2 上线、千倍杠杆机制:Hyperliquid 链上金融迭代之路",
     "source": "深潮TechFlow (中文/简体)",
@@ -5182,6 +5172,16 @@
     "sent_at": "2026-11-18T15:25:07.640078+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d79b154a5493ff23",
+    "title": "Four.Meme上线新4Stock资产RYDE4,支持创建Stock Memes",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-18T15:46:39.123975+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
