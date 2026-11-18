@@ -1,17 +1,5 @@
 [
   {
-    "id": "849462233f45480f",
-    "title": "星球早讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-10T01:44:32.683982+00:00",
-    "tokens": [
-      "ASTER",
-      "WLFI",
-      "ENA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "03e2458b704f9c52",
     "title": "加密板块涨跌互现,AI板块涨近3%,PayFi板块跌超2%",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5189,6 +5177,16 @@
       "ARB",
       "SOL",
       "CAKE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "18cee831a623f2b5",
+    "title": "Bitwise seeks Texas Stock Exchange listing for Zcash ETF",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-18T11:04:09.758241+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
