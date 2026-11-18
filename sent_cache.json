@@ -1,15 +1,5 @@
 [
   {
-    "id": "d13a251b2bb6f8fb",
-    "title": "Hilbert 首席投資官:BTC 跌破 7.19 萬美元或下探 6.5 萬美元",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-11-10T00:30:05.132438+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5cd7d5eb3c49fabb",
     "title": "美股潮向(11 月 10 日):道指漲超 1100 點,英偉達獨跌約 4%",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-18T09:28:31.097904+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "ae32afa89230343f",
+    "title": "The Graph’s Curation Burn Stays at 1% After 300,000 GRT Deposit",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-18T09:47:04.458871+00:00",
+    "tokens": [
+      "GRT"
     ],
     "lang": "zh-TW"
   }
