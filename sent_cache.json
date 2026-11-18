@@ -1,15 +1,5 @@
 [
   {
-    "id": "c52deb20f62a116d",
-    "title": "Solana Could See Major Growth As New Stock Trading Platform Emerges",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-10T11:28:03.135322+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "bc594511bada9e50",
     "title": "Cardano (ADA) vs. Solana (SOL): 3 AIs Analyze Which Will Perform Better in Q4?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5180,5 +5170,15 @@
       "XRP"
     ],
     "lang": "en"
+  },
+  {
+    "id": "44805b3f93520a89",
+    "title": "Losing Almost $3 Million in Less Than 2 Years: The Sad Story of This Crypto Trader",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-18T22:26:23.134645+00:00",
+    "tokens": [
+      "TRUMP"
+    ],
+    "lang": "zh-CN"
   }
 ]
