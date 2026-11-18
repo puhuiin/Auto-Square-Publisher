@@ -1,15 +1,5 @@
 [
   {
-    "id": "e8ce7db8dc67082e",
-    "title": "Shiba Inu price analysis — Analyzing if SHIB buyers can defend $0.00000426",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-10T04:07:13.595182+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9f55f2a6934a4d57",
     "title": "Swarm 官方软件遭供应链攻击,黑客利用以太坊智能合约控制后门,用户私钥面临泄露风险",
     "source": "吴说区块链 (中文深度)",
@@ -5184,6 +5174,16 @@
     "sent_at": "2026-11-18T13:24:39.762747+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "5a28572c0a46ae9c",
+    "title": "'Doomed From the Start': President Trump's Meme Coin Hits New Lows After Midterms",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-18T13:44:52.744756+00:00",
+    "tokens": [
+      "TRUMP"
     ],
     "lang": "zh-CN"
   }

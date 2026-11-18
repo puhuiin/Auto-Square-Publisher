@@ -20,9 +20,9 @@
   "last_updated": "2026-11-18T08:04:09.944288Z",
   "_feed_health": {
     "Watcher.Guru (快讯)": {
+      "last_fail": "2026-11-18T13:43:33.914093+00:00",
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-18T13:23:34.306989+00:00"
+      "fails": 3
     }
   },
   "_fallback_image": {
