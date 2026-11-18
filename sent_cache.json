@@ -1,15 +1,5 @@
 [
   {
-    "id": "5cd7d5eb3c49fabb",
-    "title": "美股潮向(11 月 10 日):道指漲超 1100 點,英偉達獨跌約 4%",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-11-10T00:50:28.530799+00:00",
-    "tokens": [
-      "AVAX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "111d78657a876f04",
     "title": "XRP, Near Protocol (NEAR), Hyperliquid (HYPE) and Stellar (XLM) Price Analysis for November 10: Market Pressure Keeps Growing",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5190,5 +5180,15 @@
       "GRT"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "1f383e90959c00f0",
+    "title": "四道防線全破,比特幣還有幾張底牌",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-18T10:12:08.388593+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
