@@ -1,15 +1,5 @@
 [
   {
-    "id": "c445f86868ebc768",
-    "title": "Ondo Claims $4B in Tokenized Assets as RWA Market Gains Institutional Depth",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-10T00:09:32.539065+00:00",
-    "tokens": [
-      "ONDO"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d13a251b2bb6f8fb",
     "title": "Hilbert 首席投資官:BTC 跌破 7.19 萬美元或下探 6.5 萬美元",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-18T08:47:47.142212+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "27519f44c6154ccf",
+    "title": "DeFi Development Adds 9,482 SOL as Treasury Grows for Tenth Straight Week",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-18T09:28:31.097904+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
