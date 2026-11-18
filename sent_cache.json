@@ -1,15 +1,5 @@
 [
   {
-    "id": "4003648884251812",
-    "title": "Bitwise 向 Cumberland 转出约 7.317 万枚 HYPE",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-09T17:07:42.834745+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8b8680fd25e8d260",
     "title": "North Korea Is Minting Its Own Meme Coins to Launder Binance Hack Loot",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5185,6 +5175,17 @@
     "tokens": [
       "USDC",
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e84c2b881696c384",
+    "title": "从 Canton 到 Solana:华尔街清算巨头 DTCC 为何开始拥抱公链?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-18T04:03:58.463190+00:00",
+    "tokens": [
+      "SOL",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
