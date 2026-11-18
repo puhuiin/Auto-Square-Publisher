@@ -1,15 +1,5 @@
 [
   {
-    "id": "87b2ce4a728fb281",
-    "title": "Aravind Sviniras Perplexity AI Predicts a Mega-Bullish XRP Price Move",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-09T21:46:46.833694+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "34ed87a4309736b8",
     "title": "Can PEPE break $0.0000052 while the rest of the crypto market is falling?",
     "source": "AMBCrypto (技术与链上)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-18T07:47:14.413328+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "9c13771196b1a79d",
+    "title": "Solana Foundation takes ‘majority interest’ in CoinGecko – What changes next?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-18T08:07:49.352296+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
