@@ -1,15 +1,5 @@
 [
   {
-    "id": "a8899fa0d5710c8f",
-    "title": "XRP Faces More Downside Pressure? Binance CVD Reveals Sellers Are Still in Control",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-10T07:09:57.284944+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "811fdffec17205e9",
     "title": "以太坊创世巨鲸沉睡 11 年后苏醒,黑客 3 分钟内设局,460 万美元 ETH 险遭盗取",
     "source": "吴说区块链 (中文深度)",
@@ -5182,6 +5172,17 @@
     "sent_at": "2026-11-18T16:05:10.674510+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "503bc35f99e4bada",
+    "title": "‘More Secret’ Version of Bitcoin: Zcash (ZEC) Eyes Another Wall Street ETF",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-18T16:29:17.211689+00:00",
+    "tokens": [
+      "ZEC",
+      "BTC"
     ],
     "lang": "en"
   }
