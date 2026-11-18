@@ -1,15 +1,5 @@
 [
   {
-    "id": "e45740f5c34363a8",
-    "title": "偿还7.5亿美元抵押债务,MARA批准最高5亿美元股票回购",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-09T23:24:41.441541+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c445f86868ebc768",
     "title": "Ondo Claims $4B in Tokenized Assets as RWA Market Gains Institutional Depth",
     "source": "NewsBTC (比特币与山寨)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-18T08:27:44.625601+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "2326d01547947d60",
+    "title": "Beosin:币安黑客将7.84万ETH转入7个地址",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-18T08:47:47.142212+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-TW"
   }
