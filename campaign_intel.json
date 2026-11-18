@@ -19,15 +19,15 @@
   "strategy_guidance": "优先围绕正在直播的Binance Trading Master Tournament、新上线的HYPE与TRX永续合约及ANT和NVDA合约 Carnival 等核心活动产出内容，引导用户参与话题互动以获取Write to Earn奖励；可联动Black Friday系列消费返现、P2P专属优惠等时效性活动输出操作攻略，贴合当期平台热点提升内容曝光。",
   "last_updated": "2026-11-18T08:04:09.944288Z",
   "_feed_health": {
+    "Watcher.Guru (快讯)": {
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-18T19:47:01.866750+00:00",
+      "fails": 3
+    },
     "Bitcoinist (比特币向)": {
       "last_fail": "2026-11-18T17:09:05.341753+00:00",
       "fails": 1,
-      "reset_at": "2026-11-18T19:27:09.061872+00:00"
-    },
-    "Watcher.Guru (快讯)": {
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-18T19:27:09.477375+00:00",
-      "fails": 3
+      "reset_at": "2026-11-18T19:47:01.310516+00:00"
     }
   },
   "_fallback_image": {
@@ -38,7 +38,7 @@
   "_article_sent_date": "2026-11-18",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1117,
+  "_img_rot": 1118,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
