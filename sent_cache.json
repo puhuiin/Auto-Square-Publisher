@@ -1,15 +1,5 @@
 [
   {
-    "id": "8b8680fd25e8d260",
-    "title": "North Korea Is Minting Its Own Meme Coins to Launder Binance Hack Loot",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-11-09T17:28:59.211534+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f5831906d0097deb",
     "title": "首只美国质押型INJ ETF登陆纳斯达克,Injective回顾上线五周年进展",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5186,6 +5176,18 @@
     "tokens": [
       "SOL",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "cde4b5debf2746d1",
+    "title": "These 4 Tokens Will Pump Before the AI Bubble Ends: Arthur Hayes",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-18T04:24:32.325023+00:00",
+    "tokens": [
+      "ZEC",
+      "HYPE",
+      "NEAR"
     ],
     "lang": "zh-CN"
   }
