@@ -1,15 +1,5 @@
 [
   {
-    "id": "68762660e314d4c1",
-    "title": "Q3 加密融資繼續降溫,資金轉向後期與戰略輪",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-11-10T10:10:47.339379+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "dfd919ae2e6e2f4f",
     "title": "Upbit holds about $1.1 billion in DOGE and SHIB across 13 chains",
     "source": "Crypto Briefing (深度与研报)",
@@ -5181,6 +5171,16 @@
     "sent_at": "2026-11-18T19:48:43.340038+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "75cf6a95a685f630",
+    "title": "Bitcoin Tanks Ahead of Anthropic’s IPO. Should We Really Blame AI?",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-18T20:28:58.385732+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
