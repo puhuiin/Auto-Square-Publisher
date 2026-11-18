@@ -1,15 +1,5 @@
 [
   {
-    "id": "fc4caa410e89e607",
-    "title": "Shiba Inu (SHIB) Holder Count Surges Amid Severe Price Correction",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-09T19:25:37.454207+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "87c6f075f6e5aa1b",
     "title": "Avalanche 将为纽交所关联代币化证券平台提供结算账本",
     "source": "深潮TechFlow (中文/简体)",
@@ -5190,5 +5180,16 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c681ed5b8aee0cb7",
+    "title": "星球午讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-18T06:07:28.948515+00:00",
+    "tokens": [
+      "USDC",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
