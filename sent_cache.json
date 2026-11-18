@@ -1,15 +1,5 @@
 [
   {
-    "id": "f5831906d0097deb",
-    "title": "首只美国质押型INJ ETF登陆纳斯达克,Injective回顾上线五周年进展",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-09T17:46:53.750619+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "fc828805a75fc431",
     "title": "私募融资平台 FairClub 拟采用 Metaplex 许可代币标准",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,6 +5178,17 @@
       "ZEC",
       "HYPE",
       "NEAR"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "66336779359cd5bd",
+    "title": "Abraxas Capital 被盗后清仓 2 亿美元仓位,赎回 21.9 万枚 HYPE",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-18T04:44:54.591719+00:00",
+    "tokens": [
+      "HYPE",
+      "USDC"
     ],
     "lang": "zh-CN"
   }
