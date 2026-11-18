@@ -1,17 +1,5 @@
 [
   {
-    "id": "2e164f12f14b2a34",
-    "title": "15 个曾“生不逢时”的加密构想,为何在 AI 时代值得重做?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-10T10:47:04.727836+00:00",
-    "tokens": [
-      "BAT",
-      "IOTA",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "139793308ec7b139",
     "title": "Abliteration AI launches abliterated GLM-5.3 model for red teamers",
     "source": "Crypto Briefing (深度与研报)",
@@ -5180,6 +5168,16 @@
     "sent_at": "2026-11-18T21:08:37.270075+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3f367a3fd65ed9ea",
+    "title": "Major Institutional Milestone for XRP: XRPL Becomes First Public Blockchain to Pass Global Financial Infrastructure Standards Assessment",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-18T21:29:11.395832+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
