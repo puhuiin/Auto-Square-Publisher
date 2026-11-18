@@ -19,19 +19,20 @@
   "strategy_guidance": "临近黑五档期，优先追Binance Lifestyle Black Friday新用户邀请活动、Binance x Pick n Pay黑五至新年USDC返现活动的热点，结合11月新上线的$HYPE/$TRX期货合约、$PREDICT代币上线相关内容发布，引导读者参与评论互动获取Write to Earn奖励；可联动Binance Button Game、Binance Academy每日Quiz等低门槛活动内容提升帖子互动率，同时关联期货、交易竞赛话题蹭取板块流量。",
   "last_updated": "2026-11-17T19:44:07.360102Z",
   "_feed_health": {
+    "CryptoPotato (山寨币/Meme热点)": {
+      "fails": 1,
+      "last_fail": "2026-11-17T23:26:11.508464+00:00",
+      "reset_at": "2026-11-18T02:47:06.074358+00:00"
+    },
     "Bitcoinist (比特币向)": {
+      "reset_at": "2026-11-18T02:47:06.122225+00:00",
       "fails": 1,
       "last_fail": "2026-11-18T02:26:12.202992+00:00"
     },
     "Watcher.Guru (快讯)": {
       "fails": 3,
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-18T02:26:12.586250+00:00"
-    },
-    "CryptoPotato (山寨币/Meme热点)": {
-      "reset_at": "2026-11-18T02:26:12.113262+00:00",
-      "fails": 1,
-      "last_fail": "2026-11-17T23:26:11.508464+00:00"
+      "last_fail": "2026-11-18T02:47:06.625700+00:00",
+      "parked_until": "2026-11-17T10:23:31.478522+00:00"
     }
   },
   "_fallback_image": {
@@ -42,7 +43,7 @@
   "_article_sent_date": "2026-11-18",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1094,
+  "_img_rot": 1095,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

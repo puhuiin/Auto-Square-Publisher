@@ -1,15 +1,5 @@
 [
   {
-    "id": "f92d6ec1aacb9501",
-    "title": "86 Trillion: Shiba Inu (SHIB) Just Crossed the Line",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-09T16:08:06.429464+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b02f716b3095568d",
     "title": "NYSE Taps Avalanche to Settle Its Planned Tokenized Stock Platform",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5185,5 +5175,16 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "4a3142e727077e18",
+    "title": "Bitget UEX 日報|英偉達營收翻倍,毛利率指引成新焦點;美股延續調整;比特幣守在6.5 萬美元附近(2026年11月18日)",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-18T02:49:56.903411+00:00",
+    "tokens": [
+      "ETH",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
