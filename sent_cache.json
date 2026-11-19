@@ -1,15 +1,5 @@
 [
   {
-    "id": "edddf19474a111ca",
-    "title": "Grayscale Bets $1 Million on Zcash as Privacy Coin Tumbles",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-10T19:32:41.588778+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "380c7573ce328f4f",
     "title": "Grayscale pledges $1 million to Zcash ecosystem as ZEC slides",
     "source": "Crypto Briefing (深度与研报)",
@@ -5180,5 +5170,15 @@
       "USDC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "73d201d6a31d77ef",
+    "title": "K3 Capital 遭盗 342 万美元,超半数被盗资金流向以太坊区块构建者",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-19T06:24:18.901616+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
