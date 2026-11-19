@@ -20,45 +20,45 @@
   "last_updated": "2026-11-19T08:43:52.676683Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "reset_at": "2026-11-19T10:43:31.078554+00:00",
-      "fails": 1,
-      "last_fail": "2026-11-19T10:23:40.084085+00:00"
+      "last_fail": "2026-11-19T10:23:40.084085+00:00",
+      "reset_at": "2026-11-19T11:06:02.825063+00:00",
+      "fails": 1
     },
     "Watcher.Guru (快讯)": {
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-19T11:06:03.350867+00:00",
       "fails": 3,
-      "last_fail": "2026-11-19T10:43:31.316146+00:00"
+      "parked_until": "2026-11-17T10:23:31.478522+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
     "Preset-stepfun-flash": {
-      "fails": 4,
-      "cooldown_until": "2026-11-19T11:03:40.733976+00:00",
-      "last_fail": "2026-11-19T09:43:40.733994+00:00"
+      "cooldown_until": "2026-11-19T13:46:08.436858+00:00",
+      "last_fail": "2026-11-19T11:06:08.436872+00:00",
+      "fails": 5
     },
     "Preset-stepfun": {
-      "fails": 4,
-      "cooldown_until": "2026-11-19T11:03:43.029666+00:00",
-      "last_fail": "2026-11-19T09:43:43.029683+00:00"
+      "cooldown_until": "2026-11-19T13:46:10.919830+00:00",
+      "last_fail": "2026-11-19T11:06:10.919842+00:00",
+      "fails": 5
     }
   },
   "_article_sent_date": "2026-11-19",
   "_publish_park": {
     "4e24d5f865e0269d": {
-      "fails": 1,
-      "last_fail": "2026-11-19T10:25:51.738256+00:00"
+      "last_fail": "2026-11-19T10:25:51.738256+00:00",
+      "fails": 1
     },
     "ed99292f6c3d983e": {
-      "fails": 1,
-      "last_fail": "2026-11-19T05:25:23.391948+00:00"
+      "last_fail": "2026-11-19T05:25:23.391948+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 1135,
+  "_img_rot": 1136,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
