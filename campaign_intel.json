@@ -2,32 +2,31 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#TradingTournament",
+    "#bStocks",
     "#BlackFriday",
-    "#TradFi"
+    "#TradingTournament"
   ],
   "incentivized_tokens": [
-    "$KII",
-    "$RLUSD",
-    "$XRP",
+    "$ANTB",
     "$BNB",
+    "$XRP",
     "$USDC",
     "$BTC",
     "$NVDA",
-    "$ANT"
+    "$RLUSD"
   ],
-  "strategy_guidance": "重点围绕‘黑色星期五’促销与‘交易大师赛’实时热度进行创作，解析新上线的 TradFi 永续合约及 bStocks 资产配置策略。通过分享黑五消费返现攻略或点评大师赛选手的实时操作，引导读者参与评论互动以赢取 Write to Earn 奖励。",
-  "last_updated": "2026-11-19T08:43:52.676683Z",
+  "strategy_guidance": "重点围绕今日新上线的 $ANTB bStocks 及其抵押品新规进行科普，引导用户关注 TradFi 永续合约嘉年华与 Black Friday 消费返现活动。利用 Trading Master Tournament 正在 Square 直播的实时热度，通过分析选手策略或参与 WOTD 互动来引导读者评论，优先追踪 Anthropic 上线首日的市场反应以获取高频曝光。",
+  "last_updated": "2026-11-19T21:03:51.127731Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "fails": 1,
+      "reset_at": "2026-11-19T20:43:32.826732+00:00",
       "last_fail": "2026-11-19T20:03:54.400498+00:00",
-      "reset_at": "2026-11-19T20:43:32.826732+00:00"
+      "fails": 1
     },
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-19T20:43:33.286614+00:00"
+      "last_fail": "2026-11-19T20:43:33.286614+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
@@ -36,40 +35,40 @@
   },
   "_llm_breaker": {
     "Preset-stepfun": {
+      "last_fail": "2026-11-19T20:43:46.242447+00:00",
       "cooldown_until": "2026-11-19T21:23:46.242430+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-19T20:43:46.242447+00:00"
+      "fails": 3
     }
   },
   "_article_sent_date": "2026-11-19",
   "_publish_park": {
-    "97f5ed9da2aff4fa": {
-      "parked_until": "2026-11-19T22:25:36.313244+00:00",
-      "fails": 2,
-      "last_fail": "2026-11-19T16:25:36.313244+00:00"
-    },
-    "b4bad39a2af89e50": {
-      "fails": 1,
-      "last_fail": "2026-11-19T16:43:48.679440+00:00"
-    },
-    "2c2892d558c6a96b": {
-      "fails": 1,
-      "last_fail": "2026-11-19T17:45:24.036406+00:00"
-    },
-    "86d17985da9d20f2": {
-      "parked_until": "2026-11-19T22:25:36.684994+00:00",
-      "fails": 2,
-      "last_fail": "2026-11-19T16:25:36.684994+00:00"
+    "6fcdd70c573d9ab1": {
+      "parked_until": "2026-11-19T22:43:48.346561+00:00",
+      "last_fail": "2026-11-19T16:43:48.346561+00:00",
+      "fails": 2
     },
     "c6e1e3a55ec17305": {
       "parked_until": "2026-11-19T22:43:44.803633+00:00",
-      "fails": 2,
-      "last_fail": "2026-11-19T16:43:44.803633+00:00"
+      "last_fail": "2026-11-19T16:43:44.803633+00:00",
+      "fails": 2
     },
-    "6fcdd70c573d9ab1": {
-      "parked_until": "2026-11-19T22:43:48.346561+00:00",
-      "fails": 2,
-      "last_fail": "2026-11-19T16:43:48.346561+00:00"
+    "86d17985da9d20f2": {
+      "parked_until": "2026-11-19T22:25:36.684994+00:00",
+      "last_fail": "2026-11-19T16:25:36.684994+00:00",
+      "fails": 2
+    },
+    "97f5ed9da2aff4fa": {
+      "parked_until": "2026-11-19T22:25:36.313244+00:00",
+      "last_fail": "2026-11-19T16:25:36.313244+00:00",
+      "fails": 2
+    },
+    "b4bad39a2af89e50": {
+      "last_fail": "2026-11-19T16:43:48.679440+00:00",
+      "fails": 1
+    },
+    "2c2892d558c6a96b": {
+      "last_fail": "2026-11-19T17:45:24.036406+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
