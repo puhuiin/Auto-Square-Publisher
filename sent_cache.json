@@ -1,15 +1,5 @@
 [
   {
-    "id": "26e82a362ef519d0",
-    "title": "LlamaRisk 提议从 Aave V3 Core 逐步退出约 13.3 亿美元抵押品",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-11T00:47:32.815122+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "184b4c9a21504b30",
     "title": "LNbits Releases 1.7.0 Urgent Security Update After November 8 Attacks Drain Funds",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-11-19T09:43:56.896275+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "9a6129d90d0ac7db",
+    "title": "Ripple CEO Predicts Utility-Driven Crypto Will Win — Could XRP Be The Biggest Beneficiary?",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-19T10:04:00.152199+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
