@@ -19,61 +19,67 @@
   "strategy_guidance": "重点围绕‘黑色星期五’促销与‘交易大师赛’实时热度进行创作，解析新上线的 TradFi 永续合约及 bStocks 资产配置策略。通过分享黑五消费返现攻略或点评大师赛选手的实时操作，引导读者参与评论互动以赢取 Write to Earn 奖励。",
   "last_updated": "2026-11-19T08:43:52.676683Z",
   "_feed_health": {
-    "Bitcoinist (比特币向)": {
-      "last_fail": "2026-11-19T15:03:36.106017+00:00",
-      "reset_at": "2026-11-19T16:03:39.097328+00:00",
-      "fails": 1
-    },
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-19T16:03:39.591224+00:00",
+      "last_fail": "2026-11-19T16:23:38.067586+00:00",
       "fails": 3
+    },
+    "Bitcoinist (比特币向)": {
+      "last_fail": "2026-11-19T15:03:36.106017+00:00",
+      "fails": 1,
+      "reset_at": "2026-11-19T16:23:37.531612+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {
-    "Preset-google": {
-      "cleared_at": "2026-11-19T15:43:52.351939+00:00",
-      "cooldown_until": "2026-11-19T16:23:54.019900+00:00",
-      "last_fail": "2026-11-19T16:03:54.019917+00:00",
-      "fails": 2
-    },
-    "Preset-stepfun-flash": {
-      "fails": 2,
-      "cooldown_until": "2026-11-19T16:27:10.708990+00:00",
-      "last_fail": "2026-11-19T16:07:10.709006+00:00"
+    "Preset-stepfun": {
+      "last_fail": "2026-11-19T15:23:53.319263+00:00",
+      "fails": 4,
+      "cooldown_until": "2026-11-19T16:43:53.319247+00:00"
     },
     "Preset-openrouter": {
-      "fails": 2,
-      "cooldown_until": "2026-11-19T16:27:08.001743+00:00",
-      "last_fail": "2026-11-19T16:07:08.001763+00:00"
+      "last_fail": "2026-11-19T16:25:26.782730+00:00",
+      "fails": 3,
+      "cooldown_until": "2026-11-19T17:05:26.782717+00:00"
     },
-    "Preset-stepfun": {
-      "cooldown_until": "2026-11-19T16:43:53.319247+00:00",
-      "last_fail": "2026-11-19T15:23:53.319263+00:00",
-      "fails": 4
+    "Preset-google": {
+      "last_fail": "2026-11-19T16:23:55.594960+00:00",
+      "fails": 3,
+      "cleared_at": "2026-11-19T15:43:52.351939+00:00",
+      "cooldown_until": "2026-11-19T17:03:55.594943+00:00"
+    },
+    "Preset-stepfun-flash": {
+      "last_fail": "2026-11-19T16:25:31.707099+00:00",
+      "fails": 3,
+      "cooldown_until": "2026-11-19T17:05:31.707054+00:00"
     }
   },
   "_article_sent_date": "2026-11-19",
   "_publish_park": {
-    "6fcdd70c573d9ab1": {
-      "fails": 1,
-      "last_fail": "2026-11-19T16:07:15.407883+00:00"
-    },
     "86d17985da9d20f2": {
-      "fails": 1,
-      "last_fail": "2026-11-19T16:07:11.710606+00:00"
+      "parked_until": "2026-11-19T22:25:36.684994+00:00",
+      "last_fail": "2026-11-19T16:25:36.684994+00:00",
+      "fails": 2
     },
     "4e24d5f865e0269d": {
       "fails": 1,
       "last_fail": "2026-11-19T10:25:51.738256+00:00"
     },
-    "97f5ed9da2aff4fa": {
+    "c6e1e3a55ec17305": {
       "fails": 1,
-      "last_fail": "2026-11-19T16:05:54.892253+00:00"
+      "last_fail": "2026-11-19T16:25:32.708727+00:00"
+    },
+    "6fcdd70c573d9ab1": {
+      "fails": 1,
+      "last_fail": "2026-11-19T16:07:15.407883+00:00"
+    },
+    "97f5ed9da2aff4fa": {
+      "parked_until": "2026-11-19T22:25:36.313244+00:00",
+      "last_fail": "2026-11-19T16:25:36.313244+00:00",
+      "fails": 2
     }
   },
   "_intel_refresh_fail": {},
