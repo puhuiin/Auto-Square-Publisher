@@ -1,15 +1,5 @@
 [
   {
-    "id": "9c125b2a72f8dd3c",
-    "title": "XRP Ledger Roadmap Puts Quantum-Resistant Accounts on the Agenda for 2027",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-11T06:07:34.623393+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "1273246075f46433",
     "title": "Why Has XRP Plunged Harder Than Most? Analyst Blames Manipulation",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5175,6 +5165,16 @@
     "tokens": [
       "SKY",
       "USDS"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "70d46f74a81e8ec6",
+    "title": "What’s Coming for Solana in 2027? Upgrade Planned Across Four Key Areas",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-19T15:44:41.075172+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
