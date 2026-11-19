@@ -1,15 +1,5 @@
 [
   {
-    "id": "8f435c1200ec42c3",
-    "title": "DeepSeek AI XRP Price Prediction: Could Ripple Really Go This High?",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-11T00:24:25.268210+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "26e82a362ef519d0",
     "title": "LlamaRisk 提议从 Aave V3 Core 逐步退出约 13.3 亿美元抵押品",
     "source": "深潮TechFlow (中文/简体)",
@@ -5177,6 +5167,16 @@
     "tokens": [
       "SOL",
       "ONDO"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b8d2ea72f3c5b9e4",
+    "title": "Zelle Moves $1.25 Million On Solana — Could This Be A Turning Point For SOL?",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-19T09:43:56.896275+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
