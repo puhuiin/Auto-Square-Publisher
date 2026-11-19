@@ -1,15 +1,5 @@
 [
   {
-    "id": "184b4c9a21504b30",
-    "title": "LNbits Releases 1.7.0 Urgent Security Update After November 8 Attacks Drain Funds",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-11-11T01:04:45.865049+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e9b5c37d1db87bf5",
     "title": "Coinbase Options Flag XRP as Top Volatility Bet With 9.7% Swing Signal: What’s Next?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5179,5 +5169,16 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "12c4b0aa8a32b295",
+    "title": "Charles Hoskinson Signals a New Cardano Era as Midnight Takes Center Stage Amid 23 Million ADA Treasury Return",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-19T10:26:20.363956+00:00",
+    "tokens": [
+      "ADA",
+      "NIGHT"
+    ],
+    "lang": "zh-CN"
   }
 ]
