@@ -1,15 +1,5 @@
 [
   {
-    "id": "739b51c689550d65",
-    "title": "Shiba Inu Heads for Recovery as Netflow Turns Red With Over 114 Billion SHIB",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-10T18:04:56.928688+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c01c0a26fa307da0",
     "title": "监测:交易员 mk4 持有约 1128 万美元 ZEC 空头仓位",
     "source": "深潮TechFlow (中文/简体)",
@@ -5174,6 +5164,16 @@
     "title": "金银股币全线下跌,钱都去哪了?",
     "source": "深潮TechFlow (中文/简体)",
     "sent_at": "2026-11-19T04:44:22.447153+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "abd2108e07d63126",
+    "title": "金銀股幣全線下跌,錢都去哪了?",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-19T05:03:59.501306+00:00",
     "tokens": [
       "BTC"
     ],
