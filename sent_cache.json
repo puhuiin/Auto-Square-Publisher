@@ -1,15 +1,5 @@
 [
   {
-    "id": "ddf313198839a0a3",
-    "title": "Pavel Durov Calls GRAM ‘Ridiculously Undervalued’ After 8% Surge",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-11T10:24:04.276794+00:00",
-    "tokens": [
-      "GRAM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7b5dd3c009f5df2d",
     "title": "HIVE Reports $84.9M Revenue as AI GPU Business Grows 71% Amid Mining Pressures",
     "source": "NewsBTC (比特币与山寨)",
@@ -5175,6 +5165,16 @@
     "sent_at": "2026-11-19T20:04:33.744758+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8655042a240e9775",
+    "title": "Solana Is Planning Its Next Major Upgrades: Here’s What Changes",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-19T20:44:03.137485+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
