@@ -1,15 +1,5 @@
 [
   {
-    "id": "4eb65d214de3ba5c",
-    "title": "TON Strategy earns $13.1 million from GRAM staking in Q3 as Telegram rolls out native wallet",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-10T17:45:02.140105+00:00",
-    "tokens": [
-      "GRAM"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "739b51c689550d65",
     "title": "Shiba Inu Heads for Recovery as Netflow Turns Red With Over 114 Billion SHIB",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5176,6 +5166,16 @@
       "BNB",
       "USDC",
       "ONDO"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "02494b56fc35e6c6",
+    "title": "金银股币全线下跌,钱都去哪了?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-19T04:44:22.447153+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
