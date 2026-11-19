@@ -1,15 +1,5 @@
 [
   {
-    "id": "d109eee68034d33a",
-    "title": "Bittensor gains 3% after Tencent’s AI launch – Can subnet fees lift TAO?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-10T21:45:07.828435+00:00",
-    "tokens": [
-      "TAO"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "2358a873e545f8c0",
     "title": "Solana 客户端 Agave 公布 v4.5 升级日程",
     "source": "深潮TechFlow (中文/简体)",
@@ -5177,6 +5167,16 @@
       "STRK",
       "EIGEN",
       "REQ"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "a70d760a2fb7e952",
+    "title": "播客笔记|对话连赚 30 年的投资大师 Druckenmiller:未来 12 个月看不清,最明智的策略就是彻底“不入局”",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-19T08:04:33.135434+00:00",
+    "tokens": [
+      "IQ"
     ],
     "lang": "zh-TW"
   }
