@@ -1,15 +1,5 @@
 [
   {
-    "id": "2c6a33e38b4b824f",
-    "title": "BitGo扩大对Aptos支持,新增链上市场接入并买入APT",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-10T13:24:15.218905+00:00",
-    "tokens": [
-      "APT"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "983b36e24579dd20",
     "title": "Bitcoin Opportunity Fund 联创:预计比特币 2027 年创新高",
     "source": "深潮TechFlow (中文/简体)",
@@ -5177,5 +5167,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "888083f5df84a025",
+    "title": "Ondo to launch tokenized Anthropic stock on IPO day",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-19T00:24:04.864016+00:00",
+    "tokens": [
+      "ONDO"
+    ],
+    "lang": "zh-TW"
   }
 ]
