@@ -18,52 +18,74 @@
   "strategy_guidance": "重点围绕今日新上线的 $ANTB bStocks 及其抵押品新规进行科普，引导用户关注 TradFi 永续合约嘉年华与 Black Friday 消费返现活动。利用 Trading Master Tournament 正在 Square 直播的实时热度，通过分析选手策略或参与 WOTD 互动来引导读者评论，优先追踪 Anthropic 上线首日的市场反应以获取高频曝光。",
   "last_updated": "2026-11-19T21:03:51.127731Z",
   "_feed_health": {
-    "Watcher.Guru (快讯)": {
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-19T23:06:06.664905+00:00"
-    },
-    "深潮TechFlow (中文/繁体)": {
-      "fails": 2,
-      "reset_at": "2026-11-19T23:06:13.509017+00:00",
-      "last_fail": "2026-11-19T22:28:17.536019+00:00"
-    },
     "Bitcoinist (比特币向)": {
-      "fails": 1,
-      "reset_at": "2026-11-19T22:28:00.937927+00:00",
-      "last_fail": "2026-11-19T23:06:06.248181+00:00"
+      "last_fail": "2026-11-19T23:06:06.248181+00:00",
+      "reset_at": "2026-11-19T23:26:02.064552+00:00",
+      "fails": 1
+    },
+    "Watcher.Guru (快讯)": {
+      "last_fail": "2026-11-19T23:26:02.535802+00:00",
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "fails": 3
     },
     "深潮TechFlow (中文/简体)": {
-      "fails": 2,
+      "last_fail": "2026-11-19T23:26:18.564006+00:00",
       "reset_at": "2026-11-19T23:06:11.492585+00:00",
-      "last_fail": "2026-11-19T22:28:17.508741+00:00"
+      "fails": 2
+    },
+    "深潮TechFlow (中文/繁体)": {
+      "last_fail": "2026-11-19T23:26:18.566770+00:00",
+      "reset_at": "2026-11-19T23:06:13.509017+00:00",
+      "fails": 2
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
+    "Preset-google": {
+      "fails": 2,
+      "cooldown_until": "2026-11-19T23:48:00.588371+00:00",
+      "last_fail": "2026-11-19T23:28:00.588388+00:00"
+    },
+    "Preset-openrouter": {
+      "fails": 2,
+      "cooldown_until": "2026-11-19T23:50:19.003634+00:00",
+      "last_fail": "2026-11-19T23:30:19.003644+00:00"
+    },
     "Preset-stepfun-flash": {
+      "last_fail": "2026-11-19T23:06:18.463664+00:00",
       "cooldown_until": "2026-11-19T23:46:18.463648+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-19T23:06:18.463664+00:00"
+      "fails": 3
     },
     "Preset-stepfun": {
+      "last_fail": "2026-11-19T23:06:20.248458+00:00",
       "cooldown_until": "2026-11-20T01:46:20.248441+00:00",
-      "fails": 5,
-      "last_fail": "2026-11-19T23:06:20.248458+00:00"
+      "fails": 5
     }
   },
   "_article_sent_date": "2026-11-19",
   "_publish_park": {
-    "24bc4f1f3b14a7ad": {
+    "c6e1e3a55ec17305": {
       "fails": 1,
-      "last_fail": "2026-11-19T22:05:05.686474+00:00"
+      "last_fail": "2026-11-19T23:30:20.004812+00:00"
+    },
+    "9f94be30e3b54204": {
+      "fails": 1,
+      "last_fail": "2026-11-19T23:27:41.896958+00:00"
+    },
+    "24bc4f1f3b14a7ad": {
+      "last_fail": "2026-11-19T22:05:05.686474+00:00",
+      "fails": 1
     },
     "2c2892d558c6a96b": {
+      "last_fail": "2026-11-19T17:45:24.036406+00:00",
+      "fails": 1
+    },
+    "97f5ed9da2aff4fa": {
       "fails": 1,
-      "last_fail": "2026-11-19T17:45:24.036406+00:00"
+      "last_fail": "2026-11-19T23:30:23.651448+00:00"
     }
   },
   "_intel_refresh_fail": {},
