@@ -1,16 +1,5 @@
 [
   {
-    "id": "9593079ce3c8f21d",
-    "title": "Kraken母公司Payward新增200余只英欧代币化股票",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-11T11:25:16.078340+00:00",
-    "tokens": [
-      "SOL",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a4534d1568e1ab35",
     "title": "TVL 暴跌 98%,Hyperliquid 生态收益协议 Hyperwave 宣布停运,12 月 16 日正式关闭",
     "source": "深潮TechFlow (中文/简体)",
@@ -5176,5 +5165,15 @@
       "AAVE"
     ],
     "lang": "en"
+  },
+  {
+    "id": "9b708d0f9889301f",
+    "title": "Gemini AI Predicts Which Privacy Coin Goes to the Moon in 2027? XMR Vs. Zcash",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-19T22:05:45.830965+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
