@@ -1,15 +1,5 @@
 [
   {
-    "id": "507ad51774e41202",
-    "title": "HTX Releases October Performance Report: Spot Liquidity Significantly Enhanced, APY Boosts Help Users Through a Warm Winter",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-11T09:48:06.266856+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ddf313198839a0a3",
     "title": "Pavel Durov Calls GRAM ‘Ridiculously Undervalued’ After 8% Surge",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5175,6 +5165,16 @@
     "sent_at": "2026-11-19T19:44:11.835375+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a52afb0e409193d5",
+    "title": "Winklevoss twins say Zcash could top $5,000 within five to 10 years",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-19T20:04:33.744758+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
