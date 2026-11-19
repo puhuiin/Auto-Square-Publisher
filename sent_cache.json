@@ -1,15 +1,5 @@
 [
   {
-    "id": "2d0223831b00ab4a",
-    "title": "Grayscale:Zcash 月活跃开发者数量两年翻倍,资深开发者占比达 70%",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-10T14:45:28.055917+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "435581c07952890f",
     "title": "Helius 推出 Solana Privacy Rings 隐私协议,已上线主网",
     "source": "吴说区块链 (中文深度)",
@@ -5171,6 +5161,16 @@
     "title": "XRP Whales Move $270M During Sell-Off, but Exchange Deposits Tell a Different Story",
     "source": "Bitcoinist (比特币向)",
     "sent_at": "2026-11-19T01:24:33.206431+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "984280ce7a284a2e",
+    "title": "CertiK完成GL1自评声明独立核验",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-19T01:44:39.381037+00:00",
     "tokens": [
       "XRP"
     ],
