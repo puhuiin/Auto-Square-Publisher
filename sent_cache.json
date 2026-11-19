@@ -1,15 +1,5 @@
 [
   {
-    "id": "66c6c0f31e4eb549",
-    "title": "Rothschild Investment Reveals XRP ETF Stake",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-10T21:24:56.726142+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d109eee68034d33a",
     "title": "Bittensor gains 3% after Tencent’s AI launch – Can subnet fees lift TAO?",
     "source": "AMBCrypto (技术与链上)",
@@ -5177,5 +5167,17 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "5108a3c095c6a43b",
+    "title": "韩国 Upbit 将上线 STRK、EIGEN、US 及 REQ,开放 BTC 和 USDT 交易对",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-19T07:43:51.432674+00:00",
+    "tokens": [
+      "STRK",
+      "EIGEN",
+      "REQ"
+    ],
+    "lang": "zh-TW"
   }
 ]
