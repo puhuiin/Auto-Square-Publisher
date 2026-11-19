@@ -20,14 +20,14 @@
   "last_updated": "2026-11-19T08:43:52.676683Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "fails": 1,
       "last_fail": "2026-11-19T10:23:40.084085+00:00",
-      "reset_at": "2026-11-19T11:26:02.283036+00:00"
+      "reset_at": "2026-11-19T12:03:33.792305+00:00",
+      "fails": 1
     },
     "Watcher.Guru (快讯)": {
-      "fails": 3,
-      "last_fail": "2026-11-19T11:26:02.643613+00:00",
-      "parked_until": "2026-11-17T10:23:31.478522+00:00"
+      "last_fail": "2026-11-19T12:03:34.257955+00:00",
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
@@ -36,14 +36,14 @@
   },
   "_llm_breaker": {
     "Preset-stepfun": {
-      "fails": 5,
       "last_fail": "2026-11-19T11:06:10.919842+00:00",
-      "cooldown_until": "2026-11-19T13:46:10.919830+00:00"
+      "cooldown_until": "2026-11-19T13:46:10.919830+00:00",
+      "fails": 5
     },
     "Preset-stepfun-flash": {
-      "fails": 5,
       "last_fail": "2026-11-19T11:06:08.436872+00:00",
-      "cooldown_until": "2026-11-19T13:46:08.436858+00:00"
+      "cooldown_until": "2026-11-19T13:46:08.436858+00:00",
+      "fails": 5
     }
   },
   "_article_sent_date": "2026-11-19",
@@ -54,7 +54,7 @@
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 1136,
+  "_img_rot": 1137,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
