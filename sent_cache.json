@@ -1,15 +1,5 @@
 [
   {
-    "id": "1198988c35177ba5",
-    "title": "摩根士丹利向Coinbase Prime转入48,828枚SOL,价值约401万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-10T17:25:21.843521+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4eb65d214de3ba5c",
     "title": "TON Strategy earns $13.1 million from GRAM staking in Q3 as Telegram rolls out native wallet",
     "source": "The Block (机构与政策)",
@@ -5174,6 +5164,18 @@
     "sent_at": "2026-11-19T03:44:01.970558+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "932257f1cbf43f7c",
+    "title": "CZ:Anthropic上市首日将登陆BNB Chain链上代币化交易",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-19T04:22:15.671170+00:00",
+    "tokens": [
+      "BNB",
+      "USDC",
+      "ONDO"
     ],
     "lang": "zh-CN"
   }
