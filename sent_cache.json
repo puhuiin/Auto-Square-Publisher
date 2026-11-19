@@ -1,15 +1,5 @@
 [
   {
-    "id": "435581c07952890f",
-    "title": "Helius 推出 Solana Privacy Rings 隐私协议,已上线主网",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-10T15:05:21.131741+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0a77d5773251a51a",
     "title": "Grayscale Pledges $1 Million in Zcash ETF Campaign",
     "source": "The Defiant (DeFi 深度)",
@@ -5175,5 +5165,16 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "440a48c77282095b",
+    "title": "Bitget UEX 日报|英伟达财报难撑反弹,紧缩预期压制估值;Anthropic 敲定 IPO;比特币回落至 6.3 万美元附近(2026 年 11 月 19 日)",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-19T02:04:40.059787+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
