@@ -1,15 +1,5 @@
 [
   {
-    "id": "07e05ca349e2f1f6",
-    "title": "播客笔记|华尔街宏观投资老兵 Jordi Visser:信仰者放弃加密时,就是最大行情的前夜",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-11T08:30:19.042950+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2995f99a1a739e60",
     "title": "1763万美元ZEC空单亏损超280万美元,Trader 0x8742持有10倍杠杆仓位",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5174,6 +5164,16 @@
     "sent_at": "2026-11-19T17:46:10.904536+00:00",
     "tokens": [
       "ONDO"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7641f66100856fd0",
+    "title": "Bitwise Files SEC Registration for a Zcash ETF",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-19T18:05:02.145793+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
