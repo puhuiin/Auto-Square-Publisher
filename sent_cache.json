@@ -1,15 +1,5 @@
 [
   {
-    "id": "2995f99a1a739e60",
-    "title": "1763万美元ZEC空单亏损超280万美元,Trader 0x8742持有10倍杠杆仓位",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-11T08:46:32.896354+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "4893994fbf3cb2d0",
     "title": "Why Bitcoin, Nasdaq, AI Stocks, and Chips Move Together? The Liquidity Machine Explained",
     "source": "CryptoNews (全球快讯)",
@@ -5174,6 +5164,17 @@
     "sent_at": "2026-11-19T18:05:02.145793+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d791596593a5c9dd",
+    "title": "Binance Wallet 公布 Anthropic IPO 配售补偿方案:全额退还认购资金,额外空投价值 100 万美元的 ANTB 代币",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-19T18:25:57.269597+00:00",
+    "tokens": [
+      "ANTB",
+      "USDC"
     ],
     "lang": "en"
   }
