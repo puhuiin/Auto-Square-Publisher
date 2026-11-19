@@ -1,17 +1,5 @@
 [
   {
-    "id": "b8a47d008bc5843b",
-    "title": "Initia 披露攻击路径,约 327 万美元资产转入攻击者地址",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-10T20:25:15.668370+00:00",
-    "tokens": [
-      "TIA",
-      "USDC",
-      "INIT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "beb00df7da6da429",
     "title": "Charles Schwab Adds Solana, Avalanche and Chainlink to Crypto Trading Platform",
     "source": "DailyHodl (山寨异动与百倍币叙事)",
@@ -5179,6 +5167,16 @@
     "tokens": [
       "ID",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b81f974399bbe9c1",
+    "title": "Dogecoin down by 44%, hits 2026’s lowest price — More downside ahead?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-19T07:04:00.420922+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "zh-CN"
   }
