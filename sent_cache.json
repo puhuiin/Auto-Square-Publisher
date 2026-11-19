@@ -1,15 +1,5 @@
 [
   {
-    "id": "2a287ec0b5b1fbfe",
-    "title": "Hyperliquid faces market skepticism despite claims of billions in waiting capital",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-11T03:48:38.822712+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c3532aaaf1a81dee",
     "title": "Tron Inc reports 22% rise in Q3 net income as unrealized staking revenue grows",
     "source": "The Block (机构与政策)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-11-19T13:23:59.462384+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b860ec69b10e0442",
+    "title": "XRP Out at Royal Bank of Canada: Leveraged Fund Cut to Zero",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-19T13:42:23.651265+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
