@@ -1,15 +1,5 @@
 [
   {
-    "id": "380c7573ce328f4f",
-    "title": "Grayscale pledges $1 million to Zcash ecosystem as ZEC slides",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-10T20:02:45.037338+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "b8a47d008bc5843b",
     "title": "Initia 披露攻击路径,约 327 万美元资产转入攻击者地址",
     "source": "深潮TechFlow (中文/简体)",
@@ -5180,5 +5170,16 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ba8746d5aa7f018c",
+    "title": "CZ Sounds Alarm as Japan Orders Crackdown on ID Data Storage",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-19T06:44:05.824982+00:00",
+    "tokens": [
+      "ID",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
