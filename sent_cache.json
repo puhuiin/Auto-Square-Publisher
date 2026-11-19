@@ -1,17 +1,5 @@
 [
   {
-    "id": "0ee3a5a4d86b5fe4",
-    "title": "星球午讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-11T05:46:47.030220+00:00",
-    "tokens": [
-      "ETH",
-      "BTC",
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9c125b2a72f8dd3c",
     "title": "XRP Ledger Roadmap Puts Quantum-Resistant Accounts on the Agenda for 2027",
     "source": "NewsBTC (比特币与山寨)",
@@ -5176,6 +5164,17 @@
       "USDC",
       "SOL",
       "PENGU"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ca0cd1d3da311f8d",
+    "title": "Sky社区成员提议暂停SKY-USDS质押奖励并加大SKY回购力度,以稳定代币价格",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-19T15:24:25.558526+00:00",
+    "tokens": [
+      "SKY",
+      "USDS"
     ],
     "lang": "en"
   }

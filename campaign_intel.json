@@ -22,34 +22,39 @@
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
       "fails": 3,
-      "last_fail": "2026-11-19T15:03:36.783687+00:00"
+      "last_fail": "2026-11-19T15:23:45.168724+00:00"
     },
     "Bitcoinist (比特币向)": {
       "fails": 1,
-      "reset_at": "2026-11-19T14:43:41.413443+00:00",
+      "reset_at": "2026-11-19T15:23:44.959012+00:00",
       "last_fail": "2026-11-19T15:03:36.106017+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
+    "Preset-google": {
+      "fails": 1,
+      "cooldown_until": "2026-11-19T15:33:54.464690+00:00",
+      "last_fail": "2026-11-19T15:23:54.464702+00:00"
+    },
     "Preset-stepfun": {
-      "cooldown_until": "2026-11-19T15:23:48.408720+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-19T14:43:48.408738+00:00"
+      "fails": 4,
+      "cooldown_until": "2026-11-19T16:43:53.319247+00:00",
+      "last_fail": "2026-11-19T15:23:53.319263+00:00"
     }
   },
   "_article_sent_date": "2026-11-19",
   "_publish_park": {
     "4e24d5f865e0269d": {
-      "fails": 1,
-      "last_fail": "2026-11-19T10:25:51.738256+00:00"
+      "last_fail": "2026-11-19T10:25:51.738256+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 1142,
+  "_img_rot": 1143,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
