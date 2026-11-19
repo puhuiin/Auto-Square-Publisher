@@ -1,16 +1,5 @@
 [
   {
-    "id": "442b57e08f844447",
-    "title": "Castle Labs 周报:Ethena Pay 撬动 8000 万美元需求,Hyperliquid 生态新机会涌现",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-11T02:09:13.540269+00:00",
-    "tokens": [
-      "ENA",
-      "AVAX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "04920d87c86a436a",
     "title": "Bitget UEX 日报|通胀超预期压制美股;英伟达再跌逾 5%;黄金失守 4100 美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5176,6 +5165,17 @@
     "sent_at": "2026-11-19T11:06:28.068548+00:00",
     "tokens": [
       "MMT"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "99b1514161e924f7",
+    "title": "累计转账超 1730 亿美元、用户突破 55 万:GasFree 上线 20 个月跑出稳定币支付亮眼增长曲线",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-19T11:26:27.383725+00:00",
+    "tokens": [
+      "JST",
+      "TRX"
     ],
     "lang": "zh-CN"
   }
