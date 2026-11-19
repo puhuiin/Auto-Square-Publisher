@@ -1,15 +1,5 @@
 [
   {
-    "id": "e9b5c37d1db87bf5",
-    "title": "Coinbase Options Flag XRP as Top Volatility Bet With 9.7% Swing Signal: What’s Next?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-11T01:24:40.090064+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "59967c171e2b4754",
     "title": "Robinhood Chain 财报拆解:Q3 揽下全网 L2 八成费用,美股代币在休市时段完成价格发现",
     "source": "深潮TechFlow (中文/简体)",
@@ -5178,6 +5168,16 @@
     "tokens": [
       "ADA",
       "NIGHT"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6c0495c69debadc2",
+    "title": "Ripple CEO Says Crypto Could Rally Once Anthropic’s IPO Is Done",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-19T10:43:53.124959+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
