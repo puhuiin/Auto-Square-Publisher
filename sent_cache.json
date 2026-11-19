@@ -1,17 +1,5 @@
 [
   {
-    "id": "a4534d1568e1ab35",
-    "title": "TVL 暴跌 98%,Hyperliquid 生态收益协议 Hyperwave 宣布停运,12 月 16 日正式关闭",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-11T11:44:23.694722+00:00",
-    "tokens": [
-      "ARB",
-      "ETH",
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "8384e2ddc786b306",
     "title": "Binance Research:Alpha 的分发鸿沟,为何加密行业跑通了 Beta 却卡在主动管理?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5173,6 +5161,17 @@
     "sent_at": "2026-11-19T22:05:45.830965+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "24bc4f1f3b14a7ad",
+    "title": "Bitcoin’s $2.58B ETF outflows deepen November sell-off – Is $60K next?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-19T22:30:10.914869+00:00",
+    "tokens": [
+      "BTC",
+      "ANTB"
     ],
     "lang": "zh-CN"
   }
