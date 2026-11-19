@@ -1,15 +1,5 @@
 [
   {
-    "id": "0a77d5773251a51a",
-    "title": "Grayscale Pledges $1 Million in Zcash ETF Campaign",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-10T15:26:36.978867+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "cd923b51dd601bed",
     "title": "Solana Hits Four-Week Low as Losses Outpace Bitcoin",
     "source": "The Defiant (DeFi 深度)",
@@ -5176,5 +5166,16 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "8ed196f824402b64",
+    "title": "高盛三季度比特币ETF持仓增至12.83亿美元,以太坊ETF持仓近六倍增长",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-19T02:24:29.434641+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
