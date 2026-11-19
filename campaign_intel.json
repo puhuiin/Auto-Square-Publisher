@@ -19,26 +19,31 @@
   "strategy_guidance": "重点围绕‘黑色星期五’促销与‘交易大师赛’实时热度进行创作，解析新上线的 TradFi 永续合约及 bStocks 资产配置策略。通过分享黑五消费返现攻略或点评大师赛选手的实时操作，引导读者参与评论互动以赢取 Write to Earn 奖励。",
   "last_updated": "2026-11-19T08:43:52.676683Z",
   "_feed_health": {
-    "Watcher.Guru (快讯)": {
-      "fails": 3,
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-19T13:42:00.573901+00:00"
-    },
     "Bitcoinist (比特币向)": {
       "fails": 1,
-      "reset_at": "2026-11-19T13:42:00.106990+00:00",
-      "last_fail": "2026-11-19T10:23:40.084085+00:00"
+      "last_fail": "2026-11-19T10:23:40.084085+00:00",
+      "reset_at": "2026-11-19T14:03:30.135044+00:00"
+    },
+    "Watcher.Guru (快讯)": {
+      "fails": 3,
+      "last_fail": "2026-11-19T14:03:30.308284+00:00",
+      "parked_until": "2026-11-17T10:23:31.478522+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {
-    "Preset-google": {
-      "cooldown_until": "2026-11-19T13:52:08.363202+00:00",
+    "Preset-stepfun": {
       "fails": 1,
-      "last_fail": "2026-11-19T13:42:08.363218+00:00"
+      "cooldown_until": "2026-11-19T14:13:40.022990+00:00",
+      "last_fail": "2026-11-19T14:03:40.023004+00:00"
+    },
+    "Preset-google": {
+      "fails": 2,
+      "last_fail": "2026-11-19T14:03:55.874606+00:00",
+      "cooldown_until": "2026-11-19T14:23:55.874589+00:00"
     }
   },
   "_article_sent_date": "2026-11-19",
