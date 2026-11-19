@@ -1,15 +1,5 @@
 [
   {
-    "id": "1273246075f46433",
-    "title": "Why Has XRP Plunged Harder Than Most? Analyst Blames Manipulation",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-11T06:28:45.300237+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "28f51acf90db957b",
     "title": "能借到 3000 万美元,却买不到一年的资金保障:DeFi 信贷还缺什么?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5173,6 +5163,16 @@
     "title": "What’s Coming for Solana in 2027? Upgrade Planned Across Four Key Areas",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-11-19T15:44:41.075172+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "700cb1035499a996",
+    "title": "Solana:Anthropic 代币化股票已在链上上线",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-19T17:06:27.852689+00:00",
     "tokens": [
       "SOL"
     ],
