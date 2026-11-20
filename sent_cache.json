@@ -1,15 +1,5 @@
 [
   {
-    "id": "77e4907e60234ad4",
-    "title": "Crypto Founder Drops Bombshell on XRP’s Ripple Dependency, Challenges Holders to Act as Ambitious $10 Forecast Gains Steam",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-11T23:44:56.111489+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7d22409a0c230e22",
     "title": "Solana (SOL), Gram (GRAM), Hyperliquid (HYPE) and Bitcoin (BTC) Price Analysis for November 12: It Is a Bloodbath on the Market",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5179,6 +5169,16 @@
     "sent_at": "2026-11-20T09:44:22.990600+00:00",
     "tokens": [
       "GRAM"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "bd392bdb5c2b0c36",
+    "title": "Pulsar Enables USDT Deposits on TRON, Expanding Access to Everyday Stablecoin Payments",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-20T10:03:58.276237+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "zh-TW"
   }
