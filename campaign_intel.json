@@ -26,30 +26,19 @@
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {
-    "Preset-google": {
-      "cooldown_until": "2026-11-20T16:23:40.444281+00:00",
-      "last_fail": "2026-11-20T15:03:40.444300+00:00",
-      "fails": 4
-    },
-    "Preset-stepfun-flash": {
-      "fails": 1,
-      "cooldown_until": "2026-11-20T15:18:21.949193+00:00",
-      "last_fail": "2026-11-20T15:08:21.949207+00:00"
-    },
     "Preset-stepfun": {
-      "cooldown_until": "2026-11-20T18:08:18.276791+00:00",
       "last_fail": "2026-11-20T14:08:18.276810+00:00",
-      "fails": 9
+      "fails": 9,
+      "cooldown_until": "2026-11-20T18:08:18.276791+00:00"
     },
-    "Preset-openrouter": {
-      "fails": 1,
-      "cleared_at": "2026-11-20T15:04:37.853656+00:00",
-      "cooldown_until": "2026-11-20T15:18:18.587316+00:00",
-      "last_fail": "2026-11-20T15:08:18.587325+00:00"
+    "Preset-google": {
+      "last_fail": "2026-11-20T15:03:40.444300+00:00",
+      "fails": 4,
+      "cooldown_until": "2026-11-20T16:23:40.444281+00:00"
     }
   },
   "_article_sent_date": "2026-11-20",
