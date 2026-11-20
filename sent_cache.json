@@ -1,16 +1,5 @@
 [
   {
-    "id": "123cac12de4fb6a5",
-    "title": "Elon Musk Grok AI Predicts a Parabolic Stellar Lumens Rally: Can XLM Flip XRP?",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-11T21:24:57.233399+00:00",
-    "tokens": [
-      "XLM",
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ed2d46297fdfaaa1",
     "title": "DogeOS ‘very, very close’ to launching DeFi features, app layer for Dogecoin: CEO",
     "source": "The Block (机构与政策)",
@@ -5181,6 +5170,16 @@
     "tokens": [
       "BTC",
       "ANTB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "965ce137493875d5",
+    "title": "A $2.8 million XRP yield trade is about to mature, but the next two markets are 44 times smaller",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-20T08:24:03.258925+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
