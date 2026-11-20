@@ -1,15 +1,5 @@
 [
   {
-    "id": "e3cfa0bb1aefc66b",
-    "title": "Crypto Hack Losses Head Past On-Chain Revenue for First Time Since 2020",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-12T05:44:41.942506+00:00",
-    "tokens": [
-      "ARK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "790a1cd7d959b98a",
     "title": "‘Milestone quarter’: Solana Company reports Q3 revenue growth driven by staking rewards",
     "source": "The Block (机构与政策)",
@@ -5170,6 +5160,16 @@
     "title": "為什麼在加密行業賺錢變得越來越難?",
     "source": "深潮TechFlow (中文/繁体)",
     "sent_at": "2026-11-20T15:08:33.981609+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4e29c6419aa9eebb",
+    "title": "Why is crypto down today? $582M in BTC ETF outflows, AI rotation, and more",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-20T15:45:42.443974+00:00",
     "tokens": [
       "BTC"
     ],
