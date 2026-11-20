@@ -1,15 +1,5 @@
 [
   {
-    "id": "e8706420a837e16e",
-    "title": "Airdrop Trap? XRP Community Gets Targeted by 11.5 Million Scam Posts",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-11T18:28:40.374866+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ed10c4f9a9e36b70",
     "title": "Solana Mobile names Helius and Jito as first independent dApp Store Guardians",
     "source": "Crypto Briefing (深度与研报)",
@@ -5178,6 +5168,18 @@
     "sent_at": "2026-11-20T06:03:53.105689+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6c6459fbdf759be4",
+    "title": "SKY 代币月跌超 40%,Sky 紧急启动 525 万美元回购",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-20T06:23:58.955863+00:00",
+    "tokens": [
+      "SKY",
+      "USDS",
+      "UNI"
     ],
     "lang": "zh-CN"
   }
