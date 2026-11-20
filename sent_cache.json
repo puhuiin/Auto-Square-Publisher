@@ -1,15 +1,5 @@
 [
   {
-    "id": "d1589777975496ea",
-    "title": "Bitcoin ‘ripe for a squeeze’ as options traders raise odds of sub-$70,000 Christmas",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-11T17:09:03.270289+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d442b5e7f9f7942e",
     "title": "借貸協議 Moonwell 下調抵押係數,移除 VELO 和 wrsETH 抵押資格",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5175,6 +5165,18 @@
     "source": "CryptoPotato (山寨币/Meme热点)",
     "sent_at": "2026-11-20T04:24:27.508316+00:00",
     "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0ca930670f0ead86",
+    "title": "Sky’s USDS Circulating Supply Falls 39% in One Day",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-20T04:44:21.554317+00:00",
+    "tokens": [
+      "USDS",
+      "USDC",
       "ETH"
     ],
     "lang": "zh-CN"
