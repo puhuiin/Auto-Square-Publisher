@@ -1,15 +1,5 @@
 [
   {
-    "id": "bb369877ee1714b4",
-    "title": "价值3697万美元,@solanadoomer1开立500枚BTC的40倍空单,历史累计盈利2132万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-11T16:09:35.126683+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "faf92f1c652f7e1d",
     "title": "Ripple Price Analysis: XRP Approaches Make-or-Break Demand Zone as Bears Press Harder",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5178,5 +5168,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "23bc1e28315ca1fc",
+    "title": "Bitcoin’s Current Drawdown Ahead of Anthropic IPO Mirrors SpaceX Listing — Why a $90K Rebound Could Be Coming by February",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-20T03:28:42.138411+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
