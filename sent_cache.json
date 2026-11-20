@@ -1,15 +1,5 @@
 [
   {
-    "id": "a29260164a3023dd",
-    "title": "$284 Million of Shiba Inu (SHIB) Held by Top Korean Exchange",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-11T14:30:04.991815+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "eefe871d4d65e5fa",
     "title": "This Is Why XRP May Need 3 More Years to Reach Its Next Peak: Analyst",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5174,6 +5164,17 @@
     "sent_at": "2026-11-20T01:46:52.713622+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3677314d011cbdb9",
+    "title": "‘Fall now, rally later’ – Ripple CEO sees crypto rebound after Anthropic IPO",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-20T02:03:56.659621+00:00",
+    "tokens": [
+      "XRP",
+      "ANTB"
     ],
     "lang": "zh-CN"
   }
