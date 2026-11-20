@@ -1,17 +1,5 @@
 [
   {
-    "id": "4aac36a2841bd887",
-    "title": "Pump 推出 Diamond 奖励:Meme 平台从「发币速度」转向「留存战争」",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-12T01:24:53.192174+00:00",
-    "tokens": [
-      "USDC",
-      "BNB",
-      "BONK"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "793e06e85e907a52",
     "title": "Glassnode 周报:稳定币现四年最快收缩,比特币缺“油”回调但大户已悄然吸筹",
     "source": "深潮TechFlow (中文/简体)",
@@ -5176,6 +5164,16 @@
     "sent_at": "2026-11-20T10:44:05.252484+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7743e4a94289691a",
+    "title": "XRP Ledger Breaks Vote Stall on Bank-Style Lending: What It Unlocks for XRP Holders",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-20T11:04:02.059577+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
