@@ -1,15 +1,5 @@
 [
   {
-    "id": "ebff5ce59ddecece",
-    "title": "Ethlabs提出以太坊2027年实现抗量子及抗AI升级目标,拟调整Hegotá硬分叉路线图",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-12T03:24:01.774830+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "99f26bb6c61e145d",
     "title": "28亿美元BTC、ETH期权本周五到期:BTC最大痛点7.6万美元,ETH为2200美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5173,5 +5163,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "3d11df9a34c6a5c2",
+    "title": "QCP:BTC 持续反弹或需科技股企稳及机构资金回流",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-20T13:03:57.707838+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]

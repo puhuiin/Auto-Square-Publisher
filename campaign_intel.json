@@ -20,41 +20,31 @@
   "last_updated": "2026-11-20T09:23:49.229287Z",
   "_feed_health": {
     "Watcher.Guru (快讯)": {
-      "fails": 3,
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-20T12:43:37.394991+00:00"
+      "last_fail": "2026-11-20T13:03:34.975301+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {
-    "Preset-openrouter": {
-      "fails": 1,
-      "cooldown_until": "2026-11-20T12:56:01.873892+00:00",
-      "last_fail": "2026-11-20T12:46:01.873900+00:00"
-    },
-    "Preset-stepfun-flash": {
-      "cooldown_until": "2026-11-20T13:03:48.136036+00:00",
-      "fails": 2,
-      "last_fail": "2026-11-20T12:43:48.136052+00:00"
-    },
     "Preset-stepfun": {
       "cooldown_until": "2026-11-20T14:03:42.672437+00:00",
-      "fails": 8,
-      "last_fail": "2026-11-20T10:03:42.672456+00:00"
+      "last_fail": "2026-11-20T10:03:42.672456+00:00",
+      "fails": 8
     }
   },
   "_article_sent_date": "2026-11-20",
   "_publish_park": {
     "7262ba38ab3cf6a8": {
-      "fails": 1,
-      "last_fail": "2026-11-20T12:46:02.875151+00:00"
+      "last_fail": "2026-11-20T12:46:02.875151+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 1168,
+  "_img_rot": 1169,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
