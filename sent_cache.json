@@ -1,17 +1,5 @@
 [
   {
-    "id": "d442b5e7f9f7942e",
-    "title": "借貸協議 Moonwell 下調抵押係數,移除 VELO 和 wrsETH 抵押資格",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-11-11T17:27:59.509440+00:00",
-    "tokens": [
-      "AERO",
-      "MORPHO",
-      "OP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "41659b27e4df41c3",
     "title": "What Are Solana Privacy Rings? Inside Helius’ Privacy Protocol for Solana",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5178,6 +5166,18 @@
       "USDS",
       "USDC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "eb888ac88b542915",
+    "title": "VanEck 将终止 Gemini 为其三只加密货币 ETF 提供托管及清算服务",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-20T05:03:49.867548+00:00",
+    "tokens": [
+      "BTC",
+      "ETH",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
