@@ -1,15 +1,5 @@
 [
   {
-    "id": "faf92f1c652f7e1d",
-    "title": "Ripple Price Analysis: XRP Approaches Make-or-Break Demand Zone as Bears Press Harder",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-11T16:30:50.004024+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "01387224b77d64de",
     "title": "资金池重入防护上线,Aave V3.8已覆盖15个市场",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5174,6 +5164,16 @@
     "title": "Bitcoin’s Current Drawdown Ahead of Anthropic IPO Mirrors SpaceX Listing — Why a $90K Rebound Could Be Coming by February",
     "source": "ZyCrypto (新币与空投)",
     "sent_at": "2026-11-20T03:28:42.138411+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "54b520cbe79d9c25",
+    "title": "Galaxy Research:机构 Q3 增持美国比特币 ETF 折合 49,229 枚 BTC,总持仓升至 356,491 枚创新高",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-20T04:04:23.530332+00:00",
     "tokens": [
       "BTC"
     ],
