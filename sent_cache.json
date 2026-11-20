@@ -1,15 +1,5 @@
 [
   {
-    "id": "6547c77b02eca243",
-    "title": "mihao市值短时突破2000万美元,24小时涨幅达2921%",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-11T12:50:00.781874+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1128ac5a2dd38de1",
     "title": "Dogecoin risks further decline as whales dump 750 million DOGE",
     "source": "CoinJournal (山寨异动)",
@@ -5175,5 +5165,16 @@
       "HYPE"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "97f5ed9da2aff4fa",
+    "title": "XRP and Solana ETF Plans Abruptly Scrapped After Yearlong Wait",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-20T00:04:07.882238+00:00",
+    "tokens": [
+      "XRP",
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
