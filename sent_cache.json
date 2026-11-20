@@ -1,15 +1,5 @@
 [
   {
-    "id": "a6e4f86a064ff65f",
-    "title": "Solana 交易平台 JTX 推出代币发现功能 Explore",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-11T19:25:13.939654+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4b4125a7d2a1aa29",
     "title": "Ripple-Backed Evernorth Plunges 40% as Insiders Move to Sell 73.7 Million Shares",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5182,5 +5172,15 @@
       "SHIB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "7cdae7e0b267a48e",
+    "title": "SEC Charges Eight Colorado Firms in $37 Million Fake Crypto Platform Scam",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-11-20T07:04:00.985786+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
