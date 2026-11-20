@@ -1,16 +1,5 @@
 [
   {
-    "id": "4b3bd96d69d3cc7d",
-    "title": "加密开发者整体退潮,Zcash 却两年翻倍:七成是老手,ETF 收入反哺研发",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-12T02:24:48.891480+00:00",
-    "tokens": [
-      "ZEC",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9df238cfcf6b5654",
     "title": "主要 Meme 市场 24 小时成交约 2.64 亿美元,环比增长 65.0%",
     "source": "吴说区块链 (中文深度)",
@@ -5172,6 +5161,16 @@
     "sent_at": "2026-11-20T11:44:07.915104+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "44f56c3aff584b20",
+    "title": "300% Dogecoin (DOGE) Drop: Explaining How It Is Possible",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-20T12:04:04.425333+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "zh-CN"
   }
