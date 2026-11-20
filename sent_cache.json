@@ -1,15 +1,5 @@
 [
   {
-    "id": "583aa5e01efc37c2",
-    "title": "Injective CEO在NYSE受访,谈及iNJC质押INJ ETF上线",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-11T13:47:05.442986+00:00",
-    "tokens": [
-      "INJ"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2d858e005e5a20dd",
     "title": "Solana could dip to $74 as Fed rate-hike odds hit 99%",
     "source": "CoinJournal (山寨异动)",
@@ -5176,5 +5166,15 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "c21bfbc27ad13e8a",
+    "title": "XRP Has an Institutional Edge, But Garlinghouse Believes Wall Street Is Pulling Liquidity Away",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-20T01:28:36.090676+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
