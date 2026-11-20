@@ -1,16 +1,5 @@
 [
   {
-    "id": "7752fdcf1e3921d8",
-    "title": "SHIB, watch out! PEPE’s 60% rally is making the flip look possible",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-11T20:05:47.933981+00:00",
-    "tokens": [
-      "SHIB",
-      "PEPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "87aeb040b3b95fe0",
     "title": "This New AI Music Model Is Already Better Than Suno—We Put ACE to the Test",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5180,6 +5169,17 @@
     "sent_at": "2026-11-20T07:24:33.835614+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "6e504fb4f52fa2c8",
+    "title": "Alliance DAO 联创:Pearl 是交易,Zcash 是投资",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-20T07:44:17.554297+00:00",
+    "tokens": [
+      "ZEC",
+      "ANTB"
     ],
     "lang": "zh-CN"
   }
