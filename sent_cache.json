@@ -1,15 +1,5 @@
 [
   {
-    "id": "228925b6d0fcffca",
-    "title": "Katana 宣布 KAT 代币经济模型改革,将利用四大协议收入来源回购代币",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-12T04:24:56.062335+00:00",
-    "tokens": [
-      "KAT"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3cb1669d14dc20a2",
     "title": "XRP Unveils Quantum Security Plan That Could Cost $255,000",
     "source": "BeInCrypto (山寨与行情)",
@@ -5173,5 +5163,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "844cd1ef89c6ea40",
+    "title": "TechFlow 情报局:Anthropic 上市首日涨 17% 市值破 1.7 万亿,AMD 遭做空暴跌 8% 拖垮芯片股",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-20T14:09:00.274681+00:00",
+    "tokens": [
+      "USDC",
+      "ETH"
+    ],
+    "lang": "en"
   }
 ]
