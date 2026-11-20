@@ -1,15 +1,5 @@
 [
   {
-    "id": "eefe871d4d65e5fa",
-    "title": "This Is Why XRP May Need 3 More Years to Reach Its Next Peak: Analyst",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-11T14:48:33.858867+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0125d2978a61adf9",
     "title": "Zcash Crashes Below $1,000 Despite Grayscale’s $1M Pledge",
     "source": "Bitcoinist (比特币向)",
@@ -5177,5 +5167,15 @@
       "ANTB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "54a6d8558f709c3b",
+    "title": "Whale Alert:Tether Treasury 于今日销毁 40 亿枚 USDT",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-20T02:23:58.117759+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
