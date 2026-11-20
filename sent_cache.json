@@ -1,18 +1,5 @@
 [
   {
-    "id": "7d22409a0c230e22",
-    "title": "Solana (SOL), Gram (GRAM), Hyperliquid (HYPE) and Bitcoin (BTC) Price Analysis for November 12: It Is a Bloodbath on the Market",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-12T00:30:52.538199+00:00",
-    "tokens": [
-      "SOL",
-      "GRAM",
-      "HYPE",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ec1320d4b0292460",
     "title": "ARK 数字资产研究主管:2017 年以来加密黑客攻击损失约 269 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5179,6 +5166,16 @@
     "sent_at": "2026-11-20T10:03:58.276237+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "c423a8de501411c8",
+    "title": "DeFi 能否真正为真实世界的贷款风险定价?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-20T10:24:02.797474+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-TW"
   }
