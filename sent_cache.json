@@ -1,15 +1,5 @@
 [
   {
-    "id": "ed2d46297fdfaaa1",
-    "title": "DogeOS ‘very, very close’ to launching DeFi features, app layer for Dogecoin: CEO",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-11T21:44:26.734419+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1ffdd540b9561268",
     "title": "Binance gives HYPE and TRX the same 75x cap – Which faces more risk?",
     "source": "AMBCrypto (技术与链上)",
@@ -5180,6 +5170,16 @@
     "sent_at": "2026-11-20T08:24:03.258925+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "ff8876e669eeb15f",
+    "title": "Trump Memecoin Dinner? Investors Wait for a Miracle",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-20T08:44:38.081640+00:00",
+    "tokens": [
+      "WLFI"
     ],
     "lang": "zh-TW"
   }
