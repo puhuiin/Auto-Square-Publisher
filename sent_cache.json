@@ -1,15 +1,5 @@
 [
   {
-    "id": "fddfa8e14290841f",
-    "title": "$380 Million in Shiba Inu (SHIB) Held on Exchanges: Will It Bounce Here?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-11T15:30:37.924788+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "bb369877ee1714b4",
     "title": "价值3697万美元,@solanadoomer1开立500枚BTC的40倍空单,历史累计盈利2132万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5177,5 +5167,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "45f42b8c2f08c235",
+    "title": "Is poor demand the reason behind Roundhill ditching XRP, Solana income ETF plans?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-20T03:04:34.495765+00:00",
+    "tokens": [
+      "XRP",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
