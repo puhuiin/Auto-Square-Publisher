@@ -1,16 +1,5 @@
 [
   {
-    "id": "99f26bb6c61e145d",
-    "title": "28亿美元BTC、ETH期权本周五到期:BTC最大痛点7.6万美元,ETH为2200美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-12T03:47:35.830360+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a4dda7bb1de1cab5",
     "title": "某钱包从 Binance 累计提取约 678.4 枚 ZEC",
     "source": "深潮TechFlow (中文/简体)",
@@ -5173,5 +5162,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d3ad8a17ef882f98",
+    "title": "Shiba Inu (SHIB) Stands Just $10 Million Short of Flipping Barry Silbert’s Favorite AI Token",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-20T13:26:35.494833+00:00",
+    "tokens": [
+      "SHIB",
+      "TAO"
+    ],
+    "lang": "zh-CN"
   }
 ]
