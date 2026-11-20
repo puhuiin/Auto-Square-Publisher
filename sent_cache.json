@@ -1,15 +1,5 @@
 [
   {
-    "id": "2d858e005e5a20dd",
-    "title": "Solana could dip to $74 as Fed rate-hike odds hit 99%",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-11-11T14:07:56.092383+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a29260164a3023dd",
     "title": "$284 Million of Shiba Inu (SHIB) Held by Top Korean Exchange",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5172,6 +5162,16 @@
     "title": "XRP Has an Institutional Edge, But Garlinghouse Believes Wall Street Is Pulling Liquidity Away",
     "source": "CryptoNews (全球快讯)",
     "sent_at": "2026-11-20T01:28:36.090676+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7decc41a02f11c2a",
+    "title": "Ripple’s Alderoty doubts Elizabeth Warren will ‘set crypto policy in this country,’ backs durable agency rules",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-20T01:46:52.713622+00:00",
     "tokens": [
       "XRP"
     ],
