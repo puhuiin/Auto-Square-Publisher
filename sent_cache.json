@@ -1,15 +1,5 @@
 [
   {
-    "id": "01387224b77d64de",
-    "title": "资金池重入防护上线,Aave V3.8已覆盖15个市场",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-11T16:49:27.013354+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d1589777975496ea",
     "title": "Bitcoin ‘ripe for a squeeze’ as options traders raise odds of sub-$70,000 Christmas",
     "source": "The Block (机构与政策)",
@@ -5176,6 +5166,16 @@
     "sent_at": "2026-11-20T04:04:23.530332+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3df0eaebc7299e95",
+    "title": "Ethereum Price Analysis: Is ETH About to Explode or Crash Below $1.7K?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-20T04:24:27.508316+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
