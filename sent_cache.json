@@ -1,15 +1,5 @@
 [
   {
-    "id": "ec1320d4b0292460",
-    "title": "ARK 数字资产研究主管:2017 年以来加密黑客攻击损失约 269 亿美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-12T00:51:31.190381+00:00",
-    "tokens": [
-      "ARK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4aac36a2841bd887",
     "title": "Pump 推出 Diamond 奖励:Meme 平台从「发币速度」转向「留存战争」",
     "source": "深潮TechFlow (中文/简体)",
@@ -5178,5 +5168,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e7f2e8f787354919",
+    "title": "Solana’s Next Upgrade Could Break Existing Apps As Developers Face New Warning",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-20T10:44:05.252484+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
