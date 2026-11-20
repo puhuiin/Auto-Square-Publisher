@@ -1,15 +1,5 @@
 [
   {
-    "id": "07f422a71a826e9a",
-    "title": "$1.04B out of Bitcoin ETFs – Short term holders plunge into net unrealized losses",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-12T05:24:54.667998+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e3cfa0bb1aefc66b",
     "title": "Crypto Hack Losses Head Past On-Chain Revenue for First Time Since 2020",
     "source": "BeInCrypto (山寨与行情)",
@@ -5170,6 +5160,16 @@
     "title": "为什么在加密行业赚钱变得越来越难?",
     "source": "深潮TechFlow (中文/简体)",
     "sent_at": "2026-11-20T14:31:30.786172+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "dd7556e680c1b756",
+    "title": "為什麼在加密行業賺錢變得越來越難?",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-20T15:08:33.981609+00:00",
     "tokens": [
       "BTC"
     ],
