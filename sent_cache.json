@@ -1,17 +1,5 @@
 [
   {
-    "id": "fbc0f936a8087814",
-    "title": "Alea Research:Kamino Q3 代币化资产市场净流入 $1.47 亿,固定利率借贷规模破 $7370 万",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-12T02:05:00.663716+00:00",
-    "tokens": [
-      "KMNO",
-      "SOL",
-      "JUP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4b3bd96d69d3cc7d",
     "title": "加密开发者整体退潮,Zcash 却两年翻倍:七成是老手,ETF 收入反哺研发",
     "source": "深潮TechFlow (中文/简体)",
@@ -5172,6 +5160,16 @@
     "title": "Was Anthropic’s IPO the Real Reason Behind Bitcoin’s November Crash?",
     "source": "CryptoPotato (山寨币/Meme热点)",
     "sent_at": "2026-11-20T11:24:01.260792+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a63c8eb0394b2290",
+    "title": "2027年加密市场十大预测:比特币有望再创新高,预测市场年交易量或突破1万亿美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-20T11:44:07.915104+00:00",
     "tokens": [
       "BTC"
     ],
