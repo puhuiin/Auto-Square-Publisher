@@ -1,15 +1,5 @@
 [
   {
-    "id": "ed10c4f9a9e36b70",
-    "title": "Solana Mobile names Helius and Jito as first independent dApp Store Guardians",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-11T19:05:58.341650+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a6e4f86a064ff65f",
     "title": "Solana 交易平台 JTX 推出代币发现功能 Explore",
     "source": "深潮TechFlow (中文/简体)",
@@ -5182,5 +5172,15 @@
       "UNI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c6e1e3a55ec17305",
+    "title": "Shiba Inu (SHIB) Price History Readies Early Christmas Gift for Sellers",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-20T06:43:54.866228+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-TW"
   }
 ]
