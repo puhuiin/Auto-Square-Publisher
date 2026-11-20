@@ -1,0 +1,49 @@
+name: probe-opencsg
+
+# 只读探针：验证 OPENCSG（secret）能不能打通 opencsg.com 的 OpenAI 兼容网关。
+# 不参与发帖、不写任何仓库文件；只由手动 dispatch 触发。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Probe gateway
+        env:
+          OPENCSG: ${{ secrets.OPENCSG }}
+        run: |
+          set +e
+          echo "=== key 是否存在 ==="
+          if [ -z "$OPENCSG" ]; then
+            echo "::error::secret OPENCSG 为空或未配置"
+            exit 0
+          fi
+          echo "key_len=${#OPENCSG}"
+
+          echo "=== 1) GET /models ==="
+          curl -sS -m 30 -o /tmp/models.json -w "HTTP %{http_code}\n" \
+            -H "Authorization: Bearer $OPENCSG" \
+            "https://opencsg.com/aigateway/v1/models"
+          head -c 1200 /tmp/models.json; echo
+
+          echo "=== 2) POST /chat/completions（非流式）==="
+          curl -sS -m 60 -o /tmp/chat.json -w "HTTP %{http_code}\n" \
+            -X POST "https://opencsg.com/aigateway/v1/chat/completions" \
+            -H "Authorization: Bearer $OPENCSG" \
+            -H "Content-Type: application/json" \
+            -d '{"model":"deepseek-v4.1-flash-1017","stream":false,"max_tokens":32,"messages":[{"role":"user","content":"Say OK"}]}'
+          head -c 1500 /tmp/chat.json; echo
+
+          echo "=== 3) 同样的请求，流式（生产用的是流式）==="
+          curl -sS -m 60 -N -o /tmp/chat_stream.txt -w "HTTP %{http_code}\n" \
+            -X POST "https://opencsg.com/aigateway/v1/chat/completions" \
+            -H "Authorization: Bearer $OPENCSG" \
+            -H "Content-Type: application/json" \
+            -d '{"model":"deepseek-v4.1-flash-1017","stream":true,"max_tokens":32,"messages":[{"role":"user","content":"Say OK"}]}'
+          head -c 1500 /tmp/chat_stream.txt; echo
+          echo "=== 探针结束（HTTP 200 且内容里有 choices 才算通）==="
