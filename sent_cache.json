@@ -1,15 +1,5 @@
 [
   {
-    "id": "4b4125a7d2a1aa29",
-    "title": "Ripple-Backed Evernorth Plunges 40% as Insiders Move to Sell 73.7 Million Shares",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-11T19:45:18.377515+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7752fdcf1e3921d8",
     "title": "SHIB, watch out! PEPE’s 60% rally is making the flip look possible",
     "source": "AMBCrypto (技术与链上)",
@@ -5178,6 +5168,16 @@
     "title": "SEC Charges Eight Colorado Firms in $37 Million Fake Crypto Platform Scam",
     "source": "Bitcoin Magazine (比特币核心)",
     "sent_at": "2026-11-20T07:04:00.985786+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "8dd82e4b4d36b903",
+    "title": "HTX Research 最新研报解读未来六个月加密市场:杠杆出清之后,BTC 能否企稳取决于新的买方",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-20T07:24:33.835614+00:00",
     "tokens": [
       "BTC"
     ],
