@@ -1,15 +1,5 @@
 [
   {
-    "id": "1128ac5a2dd38de1",
-    "title": "Dogecoin risks further decline as whales dump 750 million DOGE",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-11-11T13:10:13.333325+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "6bcfc79deeebd4b6",
     "title": "QCP Capital:油价下跌缓解加息压力,但伊朗局势及央行政策仍存不确定性",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5176,5 +5166,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "fb3b3190ef9f9a70",
+    "title": "Ethena:USDe 铸造与赎回始终采用白名单机制,防止非法资金及受制裁实体直接参与",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-20T00:31:28.183980+00:00",
+    "tokens": [
+      "ENA"
+    ],
+    "lang": "zh-TW"
   }
 ]
