@@ -1,15 +1,5 @@
 [
   {
-    "id": "0125d2978a61adf9",
-    "title": "Zcash Crashes Below $1,000 Despite Grayscale’s $1M Pledge",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-11T15:09:18.226378+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "fddfa8e14290841f",
     "title": "$380 Million in Shiba Inu (SHIB) Held on Exchanges: Will It Bounce Here?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5177,5 +5167,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "85df538ba28ae3c9",
+    "title": "OmenX announces $2 million in funding from Informed Ventures and launches on-demand 30-second Bitcoin predictions",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-20T02:46:40.752627+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
