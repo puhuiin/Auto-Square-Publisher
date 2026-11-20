@@ -1,15 +1,5 @@
 [
   {
-    "id": "a4dda7bb1de1cab5",
-    "title": "某钱包从 Binance 累计提取约 678.4 枚 ZEC",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-12T04:04:26.433320+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "228925b6d0fcffca",
     "title": "Katana 宣布 KAT 代币经济模型改革,将利用四大协议收入来源回购代币",
     "source": "吴说区块链 (中文深度)",
@@ -5171,6 +5161,16 @@
     "tokens": [
       "SHIB",
       "TAO"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "61ade86030c688cd",
+    "title": "研究人员:比特币钱包签名漏洞可在数秒内遭机器人利用",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-20T13:45:19.900556+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
