@@ -1,15 +1,5 @@
 [
   {
-    "id": "6bcfc79deeebd4b6",
-    "title": "QCP Capital:油价下跌缓解加息压力,但伊朗局势及央行政策仍存不确定性",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-11T13:29:23.468737+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "583aa5e01efc37c2",
     "title": "Injective CEO在NYSE受访,谈及iNJC质押INJ ETF上线",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5174,6 +5164,16 @@
     "sent_at": "2026-11-20T00:31:28.183980+00:00",
     "tokens": [
       "ENA"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "7632fb2ab5842b17",
+    "title": "Ripple’s Brad Garlinghouse Says Crypto Markets Could Rebound After Anthropic Goes Public",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-20T01:05:11.685904+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
