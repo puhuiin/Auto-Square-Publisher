@@ -1,16 +1,5 @@
 [
   {
-    "id": "1ffdd540b9561268",
-    "title": "Binance gives HYPE and TRX the same 75x cap – Which faces more risk?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-11T22:04:29.297317+00:00",
-    "tokens": [
-      "HYPE",
-      "TRX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "99e750ff10a9514e",
     "title": "enter_elysium上线首日无UI支持,Hook生态成为主要分发方式",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5180,6 +5169,16 @@
     "sent_at": "2026-11-20T08:44:38.081640+00:00",
     "tokens": [
       "WLFI"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "910c9edc86ea0ce2",
+    "title": "Anthropic Ends Debut Up 17% as Ondo Launches ANTon",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-20T09:04:35.523587+00:00",
+    "tokens": [
+      "ONDO"
     ],
     "lang": "zh-TW"
   }

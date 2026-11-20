@@ -20,49 +20,49 @@
   "_feed_health": {
     "CoinJournal (山寨异动)": {
       "parked_until": "2026-11-20T10:44:00.961005+00:00",
-      "last_fail": "2026-11-20T04:44:00.961005+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-11-20T04:44:00.961005+00:00"
     },
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-20T08:43:39.080517+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-11-20T09:03:36.911241+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
     "Preset-stepfun-flash": {
+      "fails": 3,
       "cooldown_until": "2026-11-20T09:24:06.679868+00:00",
-      "last_fail": "2026-11-20T08:44:06.679885+00:00",
-      "fails": 3
+      "last_fail": "2026-11-20T08:44:06.679885+00:00"
     },
     "Preset-stepfun": {
+      "fails": 7,
       "cooldown_until": "2026-11-20T09:44:53.249178+00:00",
-      "last_fail": "2026-11-20T05:44:53.249194+00:00",
-      "fails": 7
+      "last_fail": "2026-11-20T05:44:53.249194+00:00"
     }
   },
   "_article_sent_date": "2026-11-20",
   "_publish_park": {
-    "7c43f0e2a92d9ec4": {
-      "fails": 1,
-      "last_fail": "2026-11-20T05:46:00.366361+00:00"
-    },
     "a7ea1a3a219482e0": {
       "parked_until": "2026-11-20T09:28:24.851105+00:00",
-      "last_fail": "2026-11-20T03:28:24.851105+00:00",
-      "fails": 2
-    },
-    "f152d5ff55b4fc51": {
-      "fails": 1,
-      "last_fail": "2026-11-20T05:44:45.967860+00:00"
+      "fails": 2,
+      "last_fail": "2026-11-20T03:28:24.851105+00:00"
     },
     "5bd2929809326f96": {
-      "fails": 1,
-      "last_fail": "2026-11-20T05:46:03.732099+00:00"
+      "last_fail": "2026-11-20T05:46:03.732099+00:00",
+      "fails": 1
+    },
+    "7c43f0e2a92d9ec4": {
+      "last_fail": "2026-11-20T05:46:00.366361+00:00",
+      "fails": 1
+    },
+    "f152d5ff55b4fc51": {
+      "last_fail": "2026-11-20T05:44:45.967860+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
