@@ -1,15 +1,5 @@
 [
   {
-    "id": "3e9bd6ce9ba7c50a",
-    "title": "Tron and Tether bring in Chainalysis after T3 crime unit folds",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-11-12T11:28:03.548609+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "cffbb4343e23a922",
     "title": "Sygnum launches ETH Alpha Fund targeting 8% to 10% annual returns in ETH",
     "source": "The Block (机构与政策)",
@@ -5175,6 +5165,16 @@
     "tokens": [
       "HYPE",
       "USDC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ede685f554cda541",
+    "title": "+476 Billion Shiba Inu (SHIB) in 24 Hours: It Sets the Point",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-21T04:04:28.201678+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-CN"
   }
