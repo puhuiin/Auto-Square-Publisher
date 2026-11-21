@@ -55,7 +55,10 @@ jobs:
                     '500~800 字，先给结论再给两条依据，结尾提一个互动问题。'
                     '不要出现"作为AI"。新闻：某公链宣布主网升级，交易吞吐提升 3 倍，'
                     ' gas 费下降 40%，开发者可在测试网领取激励。')
-          for model in ('deepseek-v4.1-flash-1017', 'auto'):
+          # R876 选型：同一网关上的**候选备份模型**（目录实测可用、单价低于或接近主模型）。
+          # 目的是模型级故障转移（404/下架/超时），不是额度池冗余（同网关共用额度）。
+          for model in ('deepseek-v4.1-flash-1017', 'qwen3.8-flash', 'glm-5.3-flash',
+                        'OpenCSG/Agentic-27B'):
               body = json.dumps({'model': model, 'stream': True, 'max_tokens': 3000,
                                  'messages': [{'role': 'user', 'content': prompt}]}).encode()
               req = urllib.request.Request(url, data=body, headers={
