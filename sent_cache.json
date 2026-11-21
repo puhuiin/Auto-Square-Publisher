@@ -1,15 +1,5 @@
 [
   {
-    "id": "ffaa8c1d833f2a4e",
-    "title": "付鹏万字专访:我对 BTC 没有信仰,比特币四年周期已经结束",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-13T05:27:23.963718+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "329ca16cf5fc79db",
     "title": "彭博:比特币失守7万美元关口,通胀与监管压力叠加机构撤资",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-21T20:04:21.276613+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4682212e0e291283",
+    "title": "Dogecoin (DOGE) Flashes a Major Bullish Signal: Big Rebound Ahead?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-21T21:04:15.716116+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }

@@ -18,21 +18,10 @@
   "strategy_guidance": "优先发布USDC/USDT理财活动最后24小时倒计时贴（11-22截止），利用时间压力引导用户参与评论互动。结合Black Friday系列消费返现与新上线的TradFi代币化证券（ANTB）及NVDA合约热点，通过解析交易大师赛规则吸引读者互动，以提升Write to Earn活跃度并获取交易返佣。",
   "last_updated": "2026-11-21T14:23:50.090968Z",
   "_feed_health": {
-    "深潮TechFlow (中文/繁体)": {
-      "reset_at": "2026-11-21T14:03:42.134305+00:00",
-      "parked_until": "2026-11-21T21:04:02.395294+00:00",
-      "last_fail": "2026-11-21T15:04:02.395294+00:00",
-      "fails": 3
-    },
     "Watcher.Guru (快讯)": {
-      "last_fail": "2026-11-21T20:43:35.440694+00:00",
+      "last_fail": "2026-11-21T21:03:44.736184+00:00",
       "fails": 3,
       "parked_until": "2026-11-17T10:23:31.478522+00:00"
-    },
-    "深潮TechFlow (中文/简体)": {
-      "last_fail": "2026-11-21T15:04:02.446329+00:00",
-      "fails": 3,
-      "parked_until": "2026-11-21T21:04:02.446329+00:00"
     }
   },
   "_fallback_image": {
@@ -42,15 +31,15 @@
   "_llm_breaker": {
     "Preset-stepfun": {
       "last_fail": "2026-11-21T02:04:19.120355+00:00",
+      "permanent": true,
       "cooldown_until": "2026-11-22T02:04:19.120344+00:00",
-      "fails": 12,
-      "permanent": true
+      "fails": 12
     },
     "Preset-stepfun-flash": {
       "last_fail": "2026-11-21T02:03:39.962370+00:00",
+      "permanent": true,
       "cooldown_until": "2026-11-22T02:03:39.962357+00:00",
-      "fails": 1,
-      "permanent": true
+      "fails": 1
     }
   },
   "_article_sent_date": "2026-11-21",
