@@ -1,15 +1,5 @@
 [
   {
-    "id": "a87a861036084090",
-    "title": "孙宇晨关联地址 PEPE 浮盈缩窄至约 504.8 万美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-13T01:47:57.230075+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "584c2fa1e97b77cb",
     "title": "管理费上调带动 Q3 营收增长,Maple 回购迈入中档区间",
     "source": "深潮TechFlow (中文/简体)",
@@ -5185,6 +5175,16 @@
     "sent_at": "2026-11-21T15:23:55.770907+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7c98dd0c284c5a90",
+    "title": "XRP Price Could Have Its Worst Month in Recent History",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-21T15:44:40.854232+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
