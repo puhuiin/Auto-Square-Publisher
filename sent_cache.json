@@ -1,15 +1,5 @@
 [
   {
-    "id": "dab3bf12820ad3b3",
-    "title": "Avalanche Owns Five Percent of Tokenized Stocks",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-12T21:47:59.470692+00:00",
-    "tokens": [
-      "AVAX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "be1009905004abb8",
     "title": "快速冻结提现有助降低损失,韩国拟允许交易所在疑似黑客攻击时暂停存取款",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5185,5 +5175,16 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "9206c4cd35842196",
+    "title": "Chainflip黑客已将赃款兑换为2910枚ETH并转入Tornado Cash",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-21T13:04:01.008248+00:00",
+    "tokens": [
+      "ETH",
+      "USDC"
+    ],
+    "lang": "zh-CN"
   }
 ]
