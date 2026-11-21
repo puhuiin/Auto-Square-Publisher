@@ -10195,6 +10195,70 @@ class TestR850Preregistration(unittest.TestCase):
         self.assertEqual(cv.uncovered_activity_terms(None), [])
         self.assertEqual(cv.uncovered_activity_terms(""), [])
 
+    def test_r874_vocab_thirteenth_gap(self):
+        """★★ R874：第 13 次词表补漏 —— 当期入口名（Button Game / Black Friday /
+        HYPEUSDC·TRXUSDC 新永续 / PREDICT 新币）必须命中，泛化词仍不许误命中。
+
+        取证：11-15~18 英文夜窗 14 篇「真漏」里 12 篇正文明写这些入口，
+        把 ① 虚报成 22.2%（真值 3.2%）⇒ 判定⑨/⑩ 双双假「回滚」。
+        """
+        import campaign_vocab as cv
+        for s in (
+            "Test your read in the Binance Button Game or stock trading comp.",
+            "Then check the new PREDICT listing.",
+            "Official perps for HYPEUSDC and TRXUSDC are live, PREDICT too.",
+            "The new HYPE and TRX perps competition is live.",
+            "New HYPE and TRX perpetuals on Binance are live.",
+            "The HYPE futures launch is where you prove your read.",
+            "Skim the $TRX futures campaign rules, track the new HYPE listing.",
+            "Glance at the Black Friday promos.",
+            "The LAB trading comp and new futures pairs are live now.",
+            "Join the Binance Community Appreciation Campaign.",
+        ):
+            self.assertTrue(cv.mention_in_text(s), "当期活动提法必须命中：%s" % s)
+        for s in (
+            "Analysts predict a bigger move.",
+            "The hype claims are not backed by volume.",
+            "$TRX trades flat while the market waits.",
+            "If you play, use the official entrance. No promises.",
+            "Stocks fell 3% today.",
+        ):
+            self.assertFalse(cv.mention_in_text(s), "泛化词不许误命中：%s" % s)
+
+    def test_r874b_reconcile_catches_names_inside_long_segments(self):
+        """★★ R874b：R864 对账的盲区 —— 长段（>24 字符）里的新专名以前整段被丢，
+        11-16 那版情报明写 Button Game / HYPEUSDC / PREDICT 却报 []。
+
+        本例用**词表尚未收录**的新专名验证机制（补漏后 Button Game/HYPEUSDC
+        已覆盖，就不该再报——那正是对账该有的行为）。
+        """
+        import campaign_vocab as cv
+        g = ("当日新上线的NOVAFEST、WINTERBLAST永续合约为当前核心流量热点，"
+             "引导用户参与评论互动获取Write2Earn奖励；同时结合Binance Winter "
+             "Splash Bonanza、NovaQuest Fest等 ongoing 活动设计互动向内容")
+        joined = " ".join(cv.uncovered_activity_terms(g))
+        for name in ("NovaQuest Fest", "Binance Winter Splash Bonanza", "NOVAFEST"):
+            self.assertIn(name, joined, "长段里的新专名必须报出来：%s" % name)
+        self.assertNotIn("Write2Earn", joined, "已覆盖的不许再报")
+        self.assertNotIn("BinanceSquare", joined, "平台名不是活动名（噪声控制）")
+        # 已覆盖的当期入口不许再报（R860/R863/R874 收过的）
+        g2 = ("同时结合 Spot Taker Program、Lite Loan 五折优惠与 Button Game 等 "
+              "ongoing 活动，并关注 HYPEUSDC 新永续")
+        miss2 = " ".join(cv.uncovered_activity_terms(g2))
+        for covered in ("Spot Taker", "Lite Loan", "Button Game", "HYPEUSDC"):
+            self.assertNotIn(covered, miss2, "已覆盖的不该再报：%s" % covered)
+        # 真实历史情报（11-16T15:06Z 版）：补漏后只剩裸 PREDICT 这类未覆盖形态
+        g3 = ("当日新上线的HYPEUSDC、TRXUSDC永续合约及PREDICT新币为当前核心流量热点，"
+              "同时结合Binance Community Appreciation Campaign、Button Game等活动")
+        miss3 = cv.uncovered_activity_terms(g3)
+        self.assertIn("PREDICT", " ".join(miss3),
+                      "裸 PREDICT（无 listing 后缀）仍是缺口，应提示人工看一眼")
+        # 裸标的不应刷屏（HYPE/TRX 是行情高频词）
+        g4 = "优先追刚上线的HYPE、TRX期货合约及临近Black Friday节点的系列活动热点"
+        miss4 = cv.uncovered_activity_terms(g4)
+        self.assertNotIn("HYPE", miss4)
+        self.assertNotIn("TRX", miss4)
+
     def test_r865_formulaic_rewrite(self):
         """★★ R865：套话重写的清单/指令 + 判定（⑥ 降 ≥15pp，且 ①/⑦ 不变差、产量不掉）。"""
         import main as _m

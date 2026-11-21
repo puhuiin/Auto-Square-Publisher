@@ -4434,6 +4434,14 @@ _CREDIT_EXHAUSTED_RE = re.compile(
     r"|no[\s_]+credit[\s_]+left"
     r"|out[\s_]+of[\s_]+credit"
     r"|credit[\s_]+(?:has[\s_]+been[\s_]+)?exhausted"
+    # ★ R873：**订阅失效**（stepfun Step Plan 到期）——11-19 起生产实证 97 次
+    #   400「you have no active step plan subscription」：不含 insufficient、
+    #   也不含 R800 补的 no left credit ⇒ 旧正则不命中 ⇒ 落进限流短冷却，
+    #   每轮重撞已失效的订阅（11-20T16:46Z 起 26 轮零产出期间仍在烧这两条
+    #   死通道：停摆后 65 条 llm_failed 里 6 条还是这个 400）。与 R800 同族，
+    #   只是措辞又换了一茬。
+    #   ⚠️ 窄形态：必须有 no active + subscription，普通 429/日配额仍不命中。
+    r"|no[\s_]+active[\s_]+(?:step[\s_]+plan[\s_]+)?subscription"
     r"|余额不足|额度不足|欠费",
     re.IGNORECASE)
 

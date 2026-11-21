@@ -167,7 +167,37 @@ CAMPAIGN_MENTION_RE = re.compile(
     #   ⚠️ 不收裸 `stocks`（=股票，行情高频词）、不收裸 `collect`（=collect fees）。
     r"|lite\s+loan|(?:usds|usdⓈ)[\s-]?m(?:argined)?"
     r"|megadrop|binance\s+academy"
-    r"|stocks\s+(?:trading\s+)?(?:competition|contest)",
+    r"|stocks\s+(?:trading\s+)?(?:competition|contest)"
+    # ★★ R874：**第 13 次补漏** —— 当期活动换成「Button Game / Black Friday /
+    #   Community Appreciation Campaign + HYPEUSDC·TRXUSDC 新永续 + PREDICT 新币」。
+    #   取证（2026-11-21 只读诊断，两处互证）：
+    #     ① 情报原文：11-16T15:06Z 版 strategy_guidance 点名「HYPEUSDC、TRXUSDC
+    #       永续合约及 PREDICT 新币…Binance Community Appreciation Campaign、
+    #       Button Game」；11-17T07:24Z 版点名「HYPE、TRX 期货合约及临近
+    #       Black Friday 节点的系列活动」（active_tags 含 #BlackFriday）。
+    #     ② 已发布正文：11-15~18 英文夜窗被判「真漏」的 14 篇里 **12 篇明写这些
+    #       入口**（"Binance Button Game or stock trading comp"、"new PREDICT
+    #       listing"、"Official perps for HYPEUSDC and TRXUSDC are live"、
+    #       "Black Friday promos"、"The HYPE futures launch"）。
+    #   ⇒ 后果：① 真漏率被虚报成 14/63 = 22.2%（真值 **2/63 = 3.2%**），
+    #     直接把判定⑨（R861 减权，此前 3 对窗全通过 + R867 统计检验过）与
+    #     判定⑩（R865 套话重写）双双报成「回滚」——**又一次差点按假数回滚**
+    #     （R842/R863 同族，这是第三集）。
+    #   ⚠️ 窄形态（延续 R830/R842/R849/R860 纪律）：
+    #     · 只收活动专名（button game / black friday / community appreciation）；
+    #     · `comp` 仍**不收裸词**（R842 决策不变），只收 `trading comp`；
+    #     · `predict` 仍**不收裸词**（行情高频动词），只收 `predict listing(s)`；
+    #     · HYPE/TRX 是行情高频标的 ⇒ 必须与「新上线/官方 + 合约类名词」或
+    #       「futures/perps + campaign/competition/rules/launch」同现才算。
+    #   误报面实测：无活动可用的已发布帖 35 篇里 **0 命中**；全量命中上下文
+    #   逐条人工核过，均为真实活动导流句。
+    r"|button\s+game|black\s+friday|community\s+appreciation"
+    r"|trading\s+comp\b"
+    r"|predict\s+(?:listings?|token|coin|新币)"
+    r"|hypeusdc|trxusdc"
+    r"|(?:new|official)[^.!?\n]{0,20}(?:hype|trx)[^.!?\n]{0,24}"
+    r"(?:perps|perpetuals|futures|listings?|pairs|competition|campaign)"
+    r"|(?:hype|trx)\s+(?:futures|perps|perpetuals)\s+(?:campaign|competition|rules|launch)",
     re.IGNORECASE)
 
 # 标签形态：注入的 #TradingTournament / #Write2Earn 含 contest/tournament 字样，
@@ -208,6 +238,49 @@ _ACTIVITY_HINT = re.compile(
 )
 _SPLIT = re.compile(r"[、，,。；;：:/\|（）()\[\]【】\n]+")
 
+# ★★★ R874b：**对账的结构性盲区**（第 13 次故障为什么没被 R864 报出来）。
+#   实证：11-16 那版 guidance 里明写 Button Game / HYPEUSDC / PREDICT，
+#   而 `uncovered_activity_terms` 返回 **[]** ✗。逐段复盘原因：
+#     · 「同时结合Binance Community Appreciation Campaign」长 40 字符
+#       ⇒ 被 2~24 的长度上限**整段丢弃**；
+#     · 「Button Game等 ongoing 活动设计互动向内容」长 28 ⇒ 同样被丢弃；
+#     · 含「当前」的段被 _META 剔掉（合理），但新专名恰好长在这些段里。
+#   ⇒ 段级启发式抓不到「长段里的新专名」，而这正是活动换代的主要形态。
+#   补法（仍是启发式、仍**不当门**）：另抽**拉丁字母专名短语**逐个过词表。
+#   噪声控制（实测校准）：只收「≥2 个词」或「全大写且 ≥5 字符」的短语
+#   ⇒ HYPEUSDC(8)/TRXUSDC(7)/PREDICT(7) 收，裸 HYPE(4)/TRX(3) 不收；
+#   全由通用词组成的短语（BinanceSquare / ongoing / Write2Earn）不收。
+_LATIN_PHRASE = re.compile(
+    r"[A-Za-z][A-Za-z0-9\u24c8&.\-]*(?:[ \t]+[A-Za-z][A-Za-z0-9\u24c8&.\-]*)*")
+_GENERIC_LATIN = frozenset("""
+    binance binancesquare square ongoing write2earn write earn usdt usdc usd usds
+    btc eth bnb sol spot futures future perps perpetual perpetuals trading trade
+    campaign program programme event contest competition tournament reward rewards
+    new live the a an and or for of to in on plus also join check official free
+    quiz loan lite megadrop academy stocks stock
+""".split())
+
+
+def _uncovered_latin_names(guidance) -> "list":
+    """R874b：情报里**词表命中不了的拉丁专名**（长段也能抓到）。"""
+    out, seen = [], set()
+    for mt in _LATIN_PHRASE.finditer(guidance):
+        s = mt.group(0).strip(" .-&")
+        if not (3 <= len(s) <= 48) or s in seen:
+            continue
+        words = s.split()
+        # 噪声控制：单词短语必须是全大写专名（HYPEUSDC/PREDICT），
+        # 否则 BinanceSquare / Affiliate / ongoing 这类会刷屏。
+        if len(words) == 1 and not (s.isupper() and len(s) >= 5):
+            continue
+        if all(w.lower().strip("&.-") in _GENERIC_LATIN for w in words):
+            continue
+        if mention_in_text(s) is True:
+            continue
+        seen.add(s)
+        out.append(s)
+    return out
+
 
 def uncovered_activity_terms(guidance) -> "list":
     """★ R864：返回**情报里像活动名、但词表命中不了**的片段（供日报"对账"一行）。
@@ -239,6 +312,9 @@ def uncovered_activity_terms(guidance) -> "list":
             continue
         seen.add(s)
         out.append(s)
-        if len(out) >= 8:
-            break
-    return out
+    # R874b：段级抓不到的「长段里的新专名」由拉丁专名通道补（去重后同样 capped）
+    for s in _uncovered_latin_names(guidance):
+        if s not in seen:
+            seen.add(s)
+            out.append(s)
+    return out[:8]

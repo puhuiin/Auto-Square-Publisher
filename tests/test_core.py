@@ -23435,6 +23435,36 @@ class TestR800CreditWordingStepfun(unittest.TestCase):
             self.assertFalse(m._is_credit_exhausted(RuntimeError(msg)), msg)
 
 
+class TestR873SubscriptionExpiredWording(unittest.TestCase):
+    """★ R873：订阅失效措辞（11-19 起 97 次 400）必须按账户耗尽处理。
+
+    生产实证：11-20T16:46Z 后 26 轮零产出，stepfun/stepfun-flash 每轮仍被重撞
+    「no active step plan subscription」——旧正则只认 R800 的 no left credit，
+    这条新措辞落进限流短冷却 ⇒ 死通道反复占位、烧调用次数。
+    """
+
+    def test_subscription_expired_is_account_exhausted(self):
+        for msg in [
+            "Error code: 400 - you have no active step plan subscription",
+            "no active step plan subscription",
+            "no active subscription",
+            "NO_ACTIVE_STEP_PLAN_SUBSCRIPTION",
+        ]:
+            self.assertTrue(m._is_credit_exhausted(RuntimeError(msg)), msg)
+
+    def test_transient_errors_still_not_account_exhausted(self):
+        """反向：会自愈的错误不得被 24h 报废（否则健康通道被误杀）。"""
+        for msg in [
+            "Error code: 429 - rate limit exceeded",
+            "Error code: 429 - Rate limit exceeded: free-models-per-day",
+            "You exceeded your current quota",
+            "Error code: 503 - service unavailable",
+            "Request timed out.",
+            "subscription plan renewed",
+        ]:
+            self.assertFalse(m._is_credit_exhausted(RuntimeError(msg)), msg)
+
+
 class TestR801TradingRaceMention(unittest.TestCase):
     """★★ R801：英文活动提及的又一个真实变体 "trading race"。
 
