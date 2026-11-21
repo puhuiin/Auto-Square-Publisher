@@ -1,15 +1,5 @@
 [
   {
-    "id": "9553e48a9494f00c",
-    "title": "DeFi 协议 Frax 上线销毁引擎,拟用收入回购并销毁 FRAX",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-13T01:04:24.312703+00:00",
-    "tokens": [
-      "FRAX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9e14b6349b81db61",
     "title": "XRP Announces Major Reset on November 25 – Will Price React?",
     "source": "BeInCrypto (山寨与行情)",
@@ -5183,6 +5173,18 @@
     "sent_at": "2026-11-21T14:44:19.252012+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7a59d98609361acf",
+    "title": "Dragonfly 合伙人 Haseeb:当年 0.4 美金没投 Solana,现在押注 Ethena 和 Zcash",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-21T15:04:45.114864+00:00",
+    "tokens": [
+      "SOL",
+      "ENA",
+      "ZEC"
     ],
     "lang": "en"
   }
