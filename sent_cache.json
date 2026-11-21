@@ -1,15 +1,5 @@
 [
   {
-    "id": "66acc98c572b06ff",
-    "title": "How Ethereum staking hit a record 36.3% despite ETH’s price drop",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-13T04:06:37.321504+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "05dc76facaec493e",
     "title": "某鲸鱼斥资430万美元从币安买入山寨币,重仓VIRTUAL、PEPE和UNI",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5184,6 +5174,16 @@
     "title": "Cyber bridge exploit mints 5.21 million CYBER tokens, Upbit and Bithumb freeze transfers",
     "source": "Crypto Briefing (深度与研报)",
     "sent_at": "2026-11-21T18:44:35.309393+00:00",
+    "tokens": [
+      "CYBER"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3d3d5a4b5417998b",
+    "title": "Cyber investigating suspected $1 million bridge exploit as Upbit, Bithumb freeze transfers",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-21T19:04:13.821244+00:00",
     "tokens": [
       "CYBER"
     ],
