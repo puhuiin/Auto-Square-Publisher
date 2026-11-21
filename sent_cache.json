@@ -1,15 +1,5 @@
 [
   {
-    "id": "ebaaaf0ab21ed734",
-    "title": "Solana Lands Major Wall Street Boost as DTCC Targets 2027 Launch of Tokenized Assets: What It Means for SOL",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-12T19:30:09.648482+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "56e937adb3645013",
     "title": "Claude AI Predicts a Monster XRP Move Ahead of Anthropic IPO",
     "source": "CryptoNews (全球快讯)",
@@ -5180,6 +5170,16 @@
       "SOL",
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "657d4034af40ea5e",
+    "title": "LART完成250万美元融资,IBC Group等参投",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-21T11:23:48.856599+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-CN"
   }
