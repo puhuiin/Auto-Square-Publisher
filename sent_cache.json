@@ -1,17 +1,5 @@
 [
   {
-    "id": "aafd367cc1e0b941",
-    "title": "XRP, ETH, DOGE: Tim Draper Predicts Bitcoin to Absorb Altcoins",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-13T03:27:09.992280+00:00",
-    "tokens": [
-      "XRP",
-      "ETH",
-      "DOGE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "92e48bfa56a3ff78",
     "title": "Upbit 将上线 SANC 韩元、BTC 及 USDT 交易对",
     "source": "吴说区块链 (中文深度)",
@@ -5186,6 +5174,18 @@
     "sent_at": "2026-11-21T17:04:10.697948+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3d9c6b2b215b1a2d",
+    "title": "1.01亿美元未平仓头寸,Wintermute过去24小时亏损93.35万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-21T18:24:06.912445+00:00",
+    "tokens": [
+      "SOL",
+      "DOGE",
+      "LDO"
     ],
     "lang": "en"
   }
