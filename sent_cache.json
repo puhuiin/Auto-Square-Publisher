@@ -1,15 +1,5 @@
 [
   {
-    "id": "dbb06d5c4218f34d",
-    "title": "XRP Sharks Buy the Dip While US Funds Sell. Who Wins the Fight for $1?",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-12T09:24:37.502571+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c239e92225745c33",
     "title": "Ethlabs proposes advancing Ethereum’s post-quantum to 2027, citing AI acceleration",
     "source": "The Block (机构与政策)",
@@ -5172,6 +5162,16 @@
     "sent_at": "2026-11-21T01:43:46.741579+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ab54a4f76776eea0",
+    "title": "XRP Price Prediction: $1 Wall Breaks, What’s Next?",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-21T02:04:42.207031+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
