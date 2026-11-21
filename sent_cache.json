@@ -1,15 +1,5 @@
 [
   {
-    "id": "dda810a7ad3c8d95",
-    "title": "Here’s why Zcash could remove 50,000 ZEC from its grants treasury",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-13T02:48:56.690692+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "cdc9d69f54cdcd21",
     "title": "Pantera 合伙人中国具身智能考察见闻:硬件供应链占优,“数据农场”堆量难解模型短板",
     "source": "深潮TechFlow (中文/简体)",
@@ -5184,6 +5174,17 @@
     "source": "Odaily星球日报 (中文快讯)",
     "sent_at": "2026-11-21T16:24:25.704019+00:00",
     "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b2622b31d7ce8116",
+    "title": "Ethereum Price Analysis: Did ETH Hit Its Macro Bottom After a 30% Monthly Drop?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-21T16:45:05.089093+00:00",
+    "tokens": [
+      "ETH",
       "BTC"
     ],
     "lang": "en"
