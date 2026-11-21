@@ -1,15 +1,5 @@
 [
   {
-    "id": "385a86aec86db424",
-    "title": "Why Hyperliquid’s 17% price drop puts HYPE’s $69 support at risk",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-12T07:44:44.602792+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "075f8219267aa1ae",
     "title": "币安理财双币投资自11月12日起支持HYPE",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5175,5 +5165,15 @@
       "TRUMP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "58ffde2af6a56b8a",
+    "title": "ARK 申请撤回 ARK CoinDesk 20 Crypto ETF 注册文件",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-21T01:04:30.642072+00:00",
+    "tokens": [
+      "ARK"
+    ],
+    "lang": "zh-CN"
   }
 ]
