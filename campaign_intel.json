@@ -20,8 +20,8 @@
   "_feed_health": {
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-21T21:23:45.832227+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-11-21T21:43:37.560275+00:00"
     }
   },
   "_fallback_image": {
@@ -29,17 +29,17 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
-    "Preset-stepfun": {
-      "permanent": true,
-      "last_fail": "2026-11-21T02:04:19.120355+00:00",
-      "cooldown_until": "2026-11-22T02:04:19.120344+00:00",
-      "fails": 12
-    },
     "Preset-stepfun-flash": {
       "permanent": true,
       "last_fail": "2026-11-21T02:03:39.962370+00:00",
       "cooldown_until": "2026-11-22T02:03:39.962357+00:00",
       "fails": 1
+    },
+    "Preset-stepfun": {
+      "permanent": true,
+      "last_fail": "2026-11-21T02:04:19.120355+00:00",
+      "cooldown_until": "2026-11-22T02:04:19.120344+00:00",
+      "fails": 12
     }
   },
   "_article_sent_date": "2026-11-21",
