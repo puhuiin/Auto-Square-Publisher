@@ -1,15 +1,5 @@
 [
   {
-    "id": "bfa3fbcc2a2dfc62",
-    "title": "Why Is Zcash (ZEC) Price Falling? The Answer Isn’t the Broader Market",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-12T10:04:28.198009+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6ffc4f9b9e0a87cd",
     "title": "Aave will freeze $279M in osETH, unless StakeWise wins this vote",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5174,5 +5164,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "1c8142a6d6a7d67e",
+    "title": "ARK Invest 連續第二日增持 Anthropic,六隻 ETF 合計買入約 70.6 萬股",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-21T02:44:00.534597+00:00",
+    "tokens": [
+      "ARK",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
