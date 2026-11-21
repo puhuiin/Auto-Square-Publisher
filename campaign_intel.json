@@ -20,17 +20,17 @@
   "last_updated": "2026-11-21T02:04:09.405360Z",
   "_feed_health": {
     "Decrypt (Web3/AI/Meme)": {
-      "reset_at": "2026-11-21T13:03:38.368117+00:00",
+      "reset_at": "2026-11-21T13:23:45.378027+00:00",
       "last_fail": "2026-11-21T12:03:58.196024+00:00",
       "fails": 1
     },
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-21T13:03:39.276514+00:00",
+      "last_fail": "2026-11-21T13:23:46.161553+00:00",
       "fails": 3
     },
     "深潮TechFlow (中文/繁体)": {
-      "reset_at": "2026-11-21T13:03:41.940176+00:00",
+      "reset_at": "2026-11-21T13:23:47.590296+00:00",
       "last_fail": "2026-11-21T09:43:55.149404+00:00",
       "fails": 1
     }
@@ -41,21 +41,16 @@
   },
   "_llm_breaker": {
     "Preset-stepfun-flash": {
+      "permanent": true,
       "fails": 1,
-      "last_fail": "2026-11-21T02:03:39.962370+00:00",
       "cooldown_until": "2026-11-22T02:03:39.962357+00:00",
-      "permanent": true
-    },
-    "Preset-opencsg": {
-      "fails": 0,
-      "cooldown_until": "2026-11-21T13:04:15.701086+00:00",
-      "last_fail": "2026-11-21T13:03:45.701102+00:00"
+      "last_fail": "2026-11-21T02:03:39.962370+00:00"
     },
     "Preset-stepfun": {
+      "permanent": true,
       "fails": 12,
-      "last_fail": "2026-11-21T02:04:19.120355+00:00",
       "cooldown_until": "2026-11-22T02:04:19.120344+00:00",
-      "permanent": true
+      "last_fail": "2026-11-21T02:04:19.120355+00:00"
     }
   },
   "_article_sent_date": "2026-11-21",
