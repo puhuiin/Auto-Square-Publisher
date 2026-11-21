@@ -1,16 +1,5 @@
 [
   {
-    "id": "c2d86bb7dd94926d",
-    "title": "Bitcoin Falls Alongside Nvidia as ETF Outflows Reach $1.44 Billion",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-12T16:25:49.451380+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f90cfa1766fc77f8",
     "title": "Unocoin发现BitGo相关以太坊地址有转出交易,已提交调查",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5180,5 +5169,15 @@
       "USDC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "cc21685861d4290b",
+    "title": "Bitwise ETF clients sell $5M in XRP amid cautious market sentiment",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-21T08:24:38.107020+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
