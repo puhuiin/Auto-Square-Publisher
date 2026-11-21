@@ -8326,21 +8326,40 @@ class CampaignScanner:
             try:
                 until_dt = datetime.fromisoformat(cooldown_until)
                 if datetime.now(until_dt.tzinfo or timezone.utc) < until_dt:
-                    logger.warning(f"⏭️ 情报分析处于失败退避期（至 {cooldown_until}），本轮沿用历史/默认情报。")
-                    # R175：退避跳过留痕——生产实录 cooldown 至 15:02 而 R172 的
-                    # 4500 预算 13:07 已部署，报表此前只能看到 intel_degraded=true
-                    # 却不知「为何不刷」（配额早退 / 退避 / 刷新失败三选一）
-                    append_metrics({
-                        "stage": "campaign_intel",
-                        "outcome": "intel_cooldown_skip",
-                        "reason": f"backoff_until={cooldown_until}"[:80],
-                        "provider": None,
-                    })
-                    if usable_cache:
-                        return usable_cache
-                    # R179：静态兜底不得盖「现在」时间戳——会让 _build_user_prompt
-                    # 判定 intel_fresh=True，R83 降权路径被绕过（假新鲜）
-                    return dict(CampaignScanner.DEFAULT_INTEL)
+                    # ★ R875：退避的**理由**是「别每 20 分钟白烧付费 LLM」。若上次失败
+                    #   连试都没试（全通道冷却 ⇒ **零调用**），这个理由就不成立 ⇒
+                    #   通道一恢复就该立刻重试，而不是干等满 2h。
+                    #   生产实证（2026-11-21）：停摆期间 intel 00:01Z 失败设退避至 01:58Z，
+                    #   而 R872 在 00:29Z 已恢复出稿 ⇒ **恢复后仍降级 1.6h**
+                    #   （campaign_guidance_usable=false；活动导流是返佣生命线）。
+                    #   ⚠️ 只对「零调用」这一种因由开旁路：真烧了调用的失败（空包 /
+                    #   JSON 坏 / 形状不对）仍守满 2h，不退化成每 20 分钟连环烧。
+                    _ordered = getattr(llm_engine, "_ordered_providers", None)
+                    _pool_now = _ordered() if callable(_ordered) else []
+                    if fail_state.get("no_provider") and _pool_now:
+                        logger.info("↩️ 情报退避提前解除：上次失败因全通道冷却（零调用），现已有可用通道")
+                        append_metrics({
+                            "stage": "campaign_intel",
+                            "outcome": "intel_cooldown_bypass",
+                            "reason": f"no_provider_resolved pool={len(_pool_now)}"[:80],
+                            "provider": None,
+                        })
+                    else:
+                        logger.warning(f"⏭️ 情报分析处于失败退避期（至 {cooldown_until}），本轮沿用历史/默认情报。")
+                        # R175：退避跳过留痕——生产实录 cooldown 至 15:02 而 R172 的
+                        # 4500 预算 13:07 已部署，报表此前只能看到 intel_degraded=true
+                        # 却不知「为何不刷」（配额早退 / 退避 / 刷新失败三选一）
+                        append_metrics({
+                            "stage": "campaign_intel",
+                            "outcome": "intel_cooldown_skip",
+                            "reason": f"backoff_until={cooldown_until}"[:80],
+                            "provider": None,
+                        })
+                        if usable_cache:
+                            return usable_cache
+                        # R179：静态兜底不得盖「现在」时间戳——会让 _build_user_prompt
+                        # 判定 intel_fresh=True，R83 降权路径被绕过（假新鲜）
+                        return dict(CampaignScanner.DEFAULT_INTEL)
             except Exception:
                 pass
 
@@ -8350,6 +8369,11 @@ class CampaignScanner:
             CampaignScanner._note_empty_catalog()
         else:
             CampaignScanner._clear_empty_streak()
+        # R875：先记下「这次有没有通道可试」——失败退避要按因由区分（见上方旁路）。
+        # 必须在调用**前**取：失败本身可能把通道打进冷却，调用后取会把
+        # 「真烧了调用才失败」误标成「零调用」，旁路就会被滥用。
+        _ordered_before = getattr(llm_engine, "_ordered_providers", None)
+        _pool_before = _ordered_before() if callable(_ordered_before) else []
         intel = CampaignScanner.analyze_with_ai(llm_engine, raw_titles)
 
         if intel:
@@ -8360,6 +8384,8 @@ class CampaignScanner:
             def _mark_fail(state):
                 state = dict(state or {})
                 state["cooldown_until"] = (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
+                # R875：记下因由 —— 只有「零调用」的失败才允许通道恢复后提前解除
+                state["no_provider"] = not _pool_before
                 return state
             intel_state_update("_intel_refresh_fail", _mark_fail, default={})
 

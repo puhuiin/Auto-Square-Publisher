@@ -5974,6 +5974,114 @@ class TestCampaignBoost(unittest.TestCase):
         self.assertEqual(cands[1]["impact_score"], 9)
 
 
+class TestR875IntelBackoffCauseAware(unittest.TestCase):
+    """★ R875：情报失败退避按**因由**区分。
+
+    生产实证（2026-11-21）：全通道停摆期间 intel 00:01Z 失败 ⇒ 退避至 01:58Z；
+    R872 在 00:29Z 已恢复出稿，intel 却仍干等 1.6h（campaign_guidance_usable=false）。
+    退避的理由是「别白烧付费 LLM」，而全通道冷却时**根本没烧调用** ⇒ 理由不成立。
+    ⚠️ 真烧了调用的失败仍须守满 2h（否则退化成每 20 分钟连环烧）。
+    """
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        import json
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"active_tags": ["#历史"], "last_updated": "2026-01-01T00:00:00Z"}, f)
+        self.metrics_dir = tempfile.mkdtemp()
+        self._orig_metrics = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(self.metrics_dir, "metrics.jsonl")
+
+    def tearDown(self):
+        import shutil
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        m.METRICS_FILE = self._orig_metrics
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+        shutil.rmtree(self.metrics_dir, ignore_errors=True)
+
+    class _Engine:
+        def __init__(self, pool):
+            self._pool = pool
+
+        def _ordered_providers(self):
+            return list(self._pool)
+
+    def _rows(self):
+        import json as _json
+        if not os.path.exists(m.METRICS_FILE):
+            return []
+        with open(m.METRICS_FILE, encoding="utf-8") as f:
+            return [_json.loads(l) for l in f if l.strip()]
+
+    def _set_backoff(self, **extra):
+        state = {"cooldown_until": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()}
+        state.update(extra)
+        m.intel_state_set("_intel_refresh_fail", state)
+
+    def test_zero_call_backoff_lifts_when_channel_returns(self):
+        from unittest.mock import patch
+        self._set_backoff(no_provider=True)
+        fake = {"active_tags": ["#新"], "incentivized_tokens": ["$BTC"],
+                "strategy_guidance": "g", "last_updated": datetime.now(timezone.utc).isoformat()}
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns", return_value=["t1"]) as mf, \
+             patch.object(m.CampaignScanner, "analyze_with_ai", return_value=fake) as ma:
+            intel = m.CampaignScanner.get_campaign_intel(self._Engine(["Preset-opencsg"]))
+            mf.assert_called_once()
+            ma.assert_called_once()
+        self.assertEqual(intel.get("active_tags"), ["#新"])
+        self.assertTrue(any(r.get("outcome") == "intel_cooldown_bypass" for r in self._rows()),
+                        "提前解除必须留痕（否则报表分不清为何没守退避）")
+        self.assertFalse(m.intel_state_get("_intel_refresh_fail", {}).get("cooldown_until"))
+
+    def test_zero_call_backoff_still_holds_while_pool_empty(self):
+        from unittest.mock import patch
+        self._set_backoff(no_provider=True)
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns") as mf, \
+             patch.object(m.CampaignScanner, "analyze_with_ai") as ma:
+            intel = m.CampaignScanner.get_campaign_intel(self._Engine([]))
+            mf.assert_not_called()
+            ma.assert_not_called()
+        self.assertEqual(intel.get("active_tags"), ["#历史"])
+        self.assertTrue(any(r.get("outcome") == "intel_cooldown_skip" for r in self._rows()))
+
+    def test_burned_call_backoff_not_lifted(self):
+        """反向：真烧了调用的失败（no_provider 缺失/False）不得被旁路 ⇒ 不连环烧。"""
+        from unittest.mock import patch
+        for extra in ({}, {"no_provider": False}):
+            self._set_backoff(**extra)
+            with patch.object(m.CampaignScanner, "fetch_raw_campaigns") as mf, \
+                 patch.object(m.CampaignScanner, "analyze_with_ai") as ma:
+                intel = m.CampaignScanner.get_campaign_intel(self._Engine(["Preset-opencsg"]))
+                mf.assert_not_called()
+                ma.assert_not_called()
+            self.assertEqual(intel.get("active_tags"), ["#历史"])
+        self.assertFalse(any(r.get("outcome") == "intel_cooldown_bypass" for r in self._rows()))
+
+    def test_fail_state_records_cause_before_call(self):
+        """因由必须在调用**前**取：失败本身会把通道打进冷却，调用后取会误标。"""
+        from unittest.mock import patch
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns", return_value=["t1"]), \
+             patch.object(m.CampaignScanner, "analyze_with_ai", return_value=None):
+            m.CampaignScanner.get_campaign_intel(self._Engine([]))
+        st = m.intel_state_get("_intel_refresh_fail", {})
+        self.assertTrue(st.get("no_provider"), "零调用失败必须标 no_provider")
+        self.assertTrue(st.get("cooldown_until"))
+
+    def test_burned_failure_not_marked_zero_call(self):
+        """有通道可试却失败（真烧了调用）⇒ 不得标成零调用，否则旁路会被滥用。"""
+        from unittest.mock import patch
+        with patch.object(m.CampaignScanner, "fetch_raw_campaigns", return_value=["t1"]), \
+             patch.object(m.CampaignScanner, "analyze_with_ai", return_value=None):
+            m.CampaignScanner.get_campaign_intel(self._Engine(["Preset-opencsg"]))
+        st = m.intel_state_get("_intel_refresh_fail", {})
+        self.assertFalse(st.get("no_provider"), "有通道可试的失败不得标成零调用")
+        self.assertTrue(st.get("cooldown_until"))
+
+
 class TestIntelRefreshBackoff(unittest.TestCase):
     """情报刷新失败退避：2h 内不重复白烧 LLM"""
 
