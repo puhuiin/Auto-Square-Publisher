@@ -20,48 +20,43 @@
   "last_updated": "2026-11-21T02:04:09.405360Z",
   "_feed_health": {
     "Decrypt (Web3/AI/Meme)": {
+      "last_fail": "2026-11-21T12:03:58.196024+00:00",
       "fails": 1,
-      "reset_at": "2026-11-21T12:23:42.845326+00:00",
-      "last_fail": "2026-11-21T12:03:58.196024+00:00"
-    },
-    "CoinJournal (山寨异动)": {
-      "reset_at": "2026-11-21T12:23:43.518873+00:00",
-      "last_fail": "2026-11-21T06:44:11.320753+00:00",
-      "fails": 1
-    },
-    "深潮TechFlow (中文/繁体)": {
-      "reset_at": "2026-11-21T12:23:44.143842+00:00",
-      "last_fail": "2026-11-21T09:43:55.149404+00:00",
-      "fails": 1
+      "reset_at": "2026-11-21T12:43:34.255804+00:00"
     },
     "Watcher.Guru (快讯)": {
-      "last_fail": "2026-11-21T12:23:43.833806+00:00",
-      "fails": 3,
-      "parked_until": "2026-11-17T10:23:31.478522+00:00"
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-21T12:43:34.905973+00:00",
+      "fails": 3
+    },
+    "深潮TechFlow (中文/繁体)": {
+      "last_fail": "2026-11-21T09:43:55.149404+00:00",
+      "fails": 1,
+      "reset_at": "2026-11-21T12:43:38.258631+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {
-    "Preset-stepfun-flash": {
-      "last_fail": "2026-11-21T02:03:39.962370+00:00",
-      "fails": 1,
-      "cooldown_until": "2026-11-22T02:03:39.962357+00:00",
-      "permanent": true
-    },
     "Preset-stepfun": {
       "last_fail": "2026-11-21T02:04:19.120355+00:00",
       "fails": 12,
-      "cooldown_until": "2026-11-22T02:04:19.120344+00:00",
-      "permanent": true
+      "permanent": true,
+      "cooldown_until": "2026-11-22T02:04:19.120344+00:00"
+    },
+    "Preset-stepfun-flash": {
+      "last_fail": "2026-11-21T02:03:39.962370+00:00",
+      "fails": 1,
+      "permanent": true,
+      "cooldown_until": "2026-11-22T02:03:39.962357+00:00"
     }
   },
   "_article_sent_date": "2026-11-21",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1195,
+  "_img_rot": 1196,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

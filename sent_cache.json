@@ -1,15 +1,5 @@
 [
   {
-    "id": "60bd2adf92205ed1",
-    "title": "Bitcoin Loses Key 200-Day Average: Is $67,000 Next?",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-12T21:26:57.323414+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "dab3bf12820ad3b3",
     "title": "Avalanche Owns Five Percent of Tokenized Stocks",
     "source": "The Block (机构与政策)",
@@ -5185,5 +5175,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "2cdca90749129ab9",
+    "title": "What Happened the Last Time XRP Fell 28% in a Month",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-21T12:44:11.031341+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
