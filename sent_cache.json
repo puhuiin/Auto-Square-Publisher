@@ -1,15 +1,5 @@
 [
   {
-    "id": "92e48bfa56a3ff78",
-    "title": "Upbit 将上线 SANC 韩元、BTC 及 USDT 交易对",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-13T03:50:05.652541+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "66acc98c572b06ff",
     "title": "How Ethereum staking hit a record 36.3% despite ETH’s price drop",
     "source": "AMBCrypto (技术与链上)",
@@ -5186,6 +5176,16 @@
       "SOL",
       "DOGE",
       "LDO"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6336c32cb5fbb2fb",
+    "title": "Cyber bridge exploit mints 5.21 million CYBER tokens, Upbit and Bithumb freeze transfers",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-21T18:44:35.309393+00:00",
+    "tokens": [
+      "CYBER"
     ],
     "lang": "en"
   }
