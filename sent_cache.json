@@ -1,15 +1,5 @@
 [
   {
-    "id": "381a6c6285eadba4",
-    "title": "Solana (SOL) at a Pivotal Moment: Buy the Dip or Brace for Another Crash?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-12T15:25:32.472800+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "12520b78c219dc3a",
     "title": "Paragon tests HYPE squared Power Perps for convex trading on Hyperliquid",
     "source": "Crypto Briefing (深度与研报)",
@@ -5177,6 +5167,16 @@
       "XRP",
       "DOGE",
       "USDC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b40a2a4257f2b5a4",
+    "title": "The Largest Hyperliquid Treasury Is One Bad Day From the Red",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-21T07:43:57.696778+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
