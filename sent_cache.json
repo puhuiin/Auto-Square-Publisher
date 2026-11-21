@@ -1,15 +1,5 @@
 [
   {
-    "id": "6ffc4f9b9e0a87cd",
-    "title": "Aave will freeze $279M in osETH, unless StakeWise wins this vote",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-12T10:28:12.745199+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7034e4cdcb87d293",
     "title": "XRP Ledger on Highest Level in 4 Months, Breaks 41,000 Unique Senders Threshold",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5173,6 +5163,16 @@
     "tokens": [
       "ARK",
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "f6720fb82d1a1eed",
+    "title": "女股神連兩日掃貨 Anthropic!單日狂買 70.5 萬股 ANT,反手拋售 13.5 萬股輝達與加密 ETF",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-11-21T03:05:18.706328+00:00",
+    "tokens": [
+      "ARK"
     ],
     "lang": "zh-TW"
   }
