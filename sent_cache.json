@@ -1,15 +1,5 @@
 [
   {
-    "id": "9e14b6349b81db61",
-    "title": "XRP Announces Major Reset on November 25 – Will Price React?",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-13T01:27:27.556580+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a87a861036084090",
     "title": "孙宇晨关联地址 PEPE 浮盈缩窄至约 504.8 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5185,6 +5175,16 @@
       "SOL",
       "ENA",
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "02bc65062c9f378b",
+    "title": "$1 SHIB Sent to Dead Wallets in Shiba Inu Burn Lag",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-21T15:23:55.770907+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
