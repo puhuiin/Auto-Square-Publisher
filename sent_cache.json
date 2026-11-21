@@ -1,15 +1,5 @@
 [
   {
-    "id": "59759116d75fd5ad",
-    "title": "Zcash Plan Would Pull 50,000 ZEC From Grants Treasury",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-12T06:45:04.723128+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9129628b2734661a",
     "title": "Huma 联创披露早期流动性提供者钱包遭黑客攻击,约 1200 万枚 HUMA 被抛售",
     "source": "深潮TechFlow (中文/简体)",
@@ -5173,5 +5163,17 @@
       "ETH"
     ],
     "lang": "en"
+  },
+  {
+    "id": "b9555aa2df36993c",
+    "title": "约8.6亿美元ETH遭转移,涉币安盗窃案黑客4天转出48.8万枚",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-21T00:29:45.789309+00:00",
+    "tokens": [
+      "ETH",
+      "BTC",
+      "XRP"
+    ],
+    "lang": "zh-TW"
   }
 ]
