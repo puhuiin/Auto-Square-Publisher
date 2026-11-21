@@ -1,15 +1,5 @@
 [
   {
-    "id": "6297a16c766dd881",
-    "title": "Tron, Tether and Chainalysis Form a New Crypto-Crime Task Force—Replacing One That Just Collapsed",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-12T17:06:47.144143+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "30c28cc12add3cf5",
     "title": "Bitcoin ETFs Lose $299.8M as Five-Session Outflow Streak Reaches $1.44B",
     "source": "NewsBTC (比特币与山寨)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-11-21T08:44:07.297009+00:00",
     "tokens": [
       "TRUMP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "029644f2e95e7915",
+    "title": "VanEck ends Gemini deal for 3 crypto ETFs – What’s next for VSOL?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-21T09:04:36.442265+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
