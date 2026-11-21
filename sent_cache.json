@@ -1,15 +1,5 @@
 [
   {
-    "id": "7034e4cdcb87d293",
-    "title": "XRP Ledger on Highest Level in 4 Months, Breaks 41,000 Unique Senders Threshold",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-12T10:49:20.325959+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "da2ae14e9609dff5",
     "title": "Tron、Tether 与 Chainalysis 成立数字犯罪工作组",
     "source": "深潮TechFlow (中文/简体)",
@@ -5175,5 +5165,16 @@
       "ARK"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "7399fb12a8cdd68a",
+    "title": "主要 Meme 市场 24 小时成交约 1.44 亿美元,环比下降 36.2%,Arc 增幅最高",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-21T03:28:27.998274+00:00",
+    "tokens": [
+      "BNB",
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
