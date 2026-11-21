@@ -1,15 +1,5 @@
 [
   {
-    "id": "f90cfa1766fc77f8",
-    "title": "Unocoin发现BitGo相关以太坊地址有转出交易,已提交调查",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-12T16:44:27.630121+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6297a16c766dd881",
     "title": "Tron, Tether and Chainalysis Form a New Crypto-Crime Task Force—Replacing One That Just Collapsed",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-11-21T08:24:38.107020+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "827ecdcd8113fa5e",
+    "title": "Why TRUMP memecoin faces THESE risks ahead of Donald Trump’s exclusive dinner",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-21T08:44:07.297009+00:00",
+    "tokens": [
+      "TRUMP"
     ],
     "lang": "zh-TW"
   }
