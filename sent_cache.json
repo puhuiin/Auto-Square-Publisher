@@ -1,15 +1,5 @@
 [
   {
-    "id": "cb5215dfc0b9ea22",
-    "title": "Can Bitcoin Hit $1 Million? ChatGPT AI Predicts When and How",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-13T02:26:30.052186+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "dda810a7ad3c8d95",
     "title": "Here’s why Zcash could remove 50,000 ZEC from its grants treasury",
     "source": "AMBCrypto (技术与链上)",
@@ -5185,6 +5175,16 @@
     "tokens": [
       "LTC",
       "LINK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5b2664af0a6acd8f",
+    "title": "观点:比特币或在经历周期性“黑天鹅”二次冲击,真正洗盘尚未到来",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-21T16:24:25.704019+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
