@@ -1,18 +1,5 @@
 [
   {
-    "id": "05dc76facaec493e",
-    "title": "某鲸鱼斥资430万美元从币安买入山寨币,重仓VIRTUAL、PEPE和UNI",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-13T04:26:37.982460+00:00",
-    "tokens": [
-      "PEPE",
-      "UNI",
-      "SHIB",
-      "VIRTUAL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a2b5e731f61a5cc2",
     "title": "Ave.ai联合Web3 Week Asia举办Clash of Trenchers,冠军斩获10倍收益",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5186,6 +5173,16 @@
     "sent_at": "2026-11-21T19:04:13.821244+00:00",
     "tokens": [
       "CYBER"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "92b7f24761a8a2ab",
+    "title": "XRP Could Plunge to $0.78 First Before Staging an Explosive Rally to $18 — Analyst Explains Why",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-21T19:24:08.105048+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
