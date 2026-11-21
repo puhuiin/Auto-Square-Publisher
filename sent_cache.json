@@ -1,15 +1,5 @@
 [
   {
-    "id": "a2b5e731f61a5cc2",
-    "title": "Ave.ai联合Web3 Week Asia举办Clash of Trenchers,冠军斩获10倍收益",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-13T05:05:52.781512+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ffaa8c1d833f2a4e",
     "title": "付鹏万字专访:我对 BTC 没有信仰,比特币四年周期已经结束",
     "source": "深潮TechFlow (中文/简体)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-21T19:24:08.105048+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8df43f00d437859f",
+    "title": "算力目标翻倍、交易计算成本降80%,Solana公布2027路线图",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-21T20:04:21.276613+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
