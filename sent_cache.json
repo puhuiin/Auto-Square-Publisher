@@ -1,16 +1,5 @@
 [
   {
-    "id": "c54475daa2022436",
-    "title": "The Block:Avalanche 占代币化股票市值约 5%",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-12T21:09:12.320448+00:00",
-    "tokens": [
-      "AVAX",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "60bd2adf92205ed1",
     "title": "Bitcoin Loses Key 200-Day Average: Is $67,000 Next?",
     "source": "BeInCrypto (山寨与行情)",
@@ -5184,6 +5173,16 @@
     "tokens": [
       "DOGE",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "81516c1809343655",
+    "title": "代币化资产占 Solana 现货 DEX 单日交易量的 26%",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-21T12:23:57.166416+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
