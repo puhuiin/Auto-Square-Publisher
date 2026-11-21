@@ -19,43 +19,38 @@
   "strategy_guidance": "最紧迫的是 Binance Earn 的 USDC/USDT Flexible Products 活动（2026-11-22 截止），按1天倒计时节奏优先追贴，用活动冲刺角度切入，并配规则拆解/复盘/抄作业式内容承接 $USDC、$USDT 讨论热度。日常快讯可优先挂接 Trade Futures & Win、Trading Master Tournament、Black Friday、RLUSD 持仓分享与 ANTB 新交易对/抵押背景，把官方活动规则、合约上线和产品场景组合成快讯+解读；引导读者参与评论互动拿 Write to Earn 奖励，涉及交易返佣只讲任务与规则，按官方条款描述，不把 Write to Earn 写成交易收益。",
   "last_updated": "2026-11-21T02:04:09.405360Z",
   "_feed_health": {
-    "Watcher.Guru (快讯)": {
-      "fails": 3,
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-21T06:03:30.598874+00:00"
-    },
     "NewsBTC (比特币与山寨)": {
-      "fails": 3,
+      "last_fail": "2026-11-21T01:23:48.608189+00:00",
       "parked_until": "2026-11-21T07:23:48.608189+00:00",
-      "last_fail": "2026-11-21T01:23:48.608189+00:00"
+      "fails": 3
+    },
+    "Watcher.Guru (快讯)": {
+      "last_fail": "2026-11-21T06:23:31.734329+00:00",
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
-    "Preset-google": {
-      "fails": 1,
-      "cooldown_until": "2026-11-21T06:15:43.852809+00:00",
-      "last_fail": "2026-11-21T06:05:43.852821+00:00"
+    "Preset-stepfun": {
+      "last_fail": "2026-11-21T02:04:19.120355+00:00",
+      "permanent": true,
+      "fails": 12,
+      "cooldown_until": "2026-11-22T02:04:19.120344+00:00"
     },
     "Preset-stepfun-flash": {
-      "fails": 1,
-      "cooldown_until": "2026-11-22T02:03:39.962357+00:00",
+      "last_fail": "2026-11-21T02:03:39.962370+00:00",
       "permanent": true,
-      "last_fail": "2026-11-21T02:03:39.962370+00:00"
+      "fails": 1,
+      "cooldown_until": "2026-11-22T02:03:39.962357+00:00"
     },
     "Preset-openrouter": {
+      "last_fail": "2026-11-21T06:07:26.536849+00:00",
       "fails": 2,
-      "cooldown_until": "2026-11-21T06:27:26.536839+00:00",
-      "last_fail": "2026-11-21T06:07:26.536849+00:00"
-    },
-    "Preset-stepfun": {
-      "fails": 12,
-      "cooldown_until": "2026-11-22T02:04:19.120344+00:00",
-      "permanent": true,
-      "last_fail": "2026-11-21T02:04:19.120355+00:00"
+      "cooldown_until": "2026-11-21T06:27:26.536839+00:00"
     }
   },
   "_article_sent_date": "2026-11-21",
@@ -64,14 +59,17 @@
       "last_fail": "2026-11-21T00:46:14.993858+00:00",
       "fails": 1
     },
-    "1651c0972813f202": {
-      "last_fail": "2026-11-21T00:23:45.020835+00:00",
+    "7399fb12a8cdd68a": {
+      "last_fail": "2026-11-21T03:05:01.439478+00:00",
       "fails": 1
     },
-    "6b19321af7d89848": {
-      "fails": 2,
-      "parked_until": "2026-11-21T06:23:44.336742+00:00",
-      "last_fail": "2026-11-21T00:23:44.336742+00:00"
+    "980631e319eaeabd": {
+      "fails": 1,
+      "last_fail": "2026-11-21T06:23:52.232456+00:00"
+    },
+    "e605a6d8a2d06aca": {
+      "last_fail": "2026-11-21T06:05:43.853628+00:00",
+      "fails": 1
     },
     "ad3e94e4eaee8926": {
       "last_fail": "2026-11-21T03:28:12.891400+00:00",
@@ -80,18 +78,6 @@
     "a5882c5413b1e79c": {
       "fails": 1,
       "last_fail": "2026-11-21T06:05:41.248315+00:00"
-    },
-    "e605a6d8a2d06aca": {
-      "fails": 1,
-      "last_fail": "2026-11-21T06:05:43.853628+00:00"
-    },
-    "7399fb12a8cdd68a": {
-      "last_fail": "2026-11-21T03:05:01.439478+00:00",
-      "fails": 1
-    },
-    "249592f56bf0f5b8": {
-      "last_fail": "2026-11-21T00:23:44.664436+00:00",
-      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
