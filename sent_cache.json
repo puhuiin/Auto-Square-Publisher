@@ -1,16 +1,5 @@
 [
   {
-    "id": "02c838ddf609dbba",
-    "title": "Wirex Launches Navoka, an AI Agent That Pays From Its Own Bank Account and Card",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-13T06:27:23.216017+00:00",
-    "tokens": [
-      "GMT",
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "83852c0ca39044f6",
     "title": "Solana treasury Forward Industries flashes a 30% SOL discount, with a catch",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5183,6 +5172,16 @@
     "sent_at": "2026-11-21T22:03:59.187381+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "96de886d76a48250",
+    "title": "ARK withdraws two proposed CoinDesk 20 crypto ETFs from SEC consideration",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-21T22:43:58.534493+00:00",
+    "tokens": [
+      "ARK"
     ],
     "lang": "zh-CN"
   }
