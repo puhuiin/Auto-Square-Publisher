@@ -19,15 +19,15 @@
   "strategy_guidance": "最紧迫的是 Binance Earn 的 USDC/USDT Flexible Products 活动（2026-11-22 截止），按1天倒计时节奏优先追贴，用活动冲刺角度切入，并配规则拆解/复盘/抄作业式内容承接 $USDC、$USDT 讨论热度。日常快讯可优先挂接 Trade Futures & Win、Trading Master Tournament、Black Friday、RLUSD 持仓分享与 ANTB 新交易对/抵押背景，把官方活动规则、合约上线和产品场景组合成快讯+解读；引导读者参与评论互动拿 Write to Earn 奖励，涉及交易返佣只讲任务与规则，按官方条款描述，不把 Write to Earn 写成交易收益。",
   "last_updated": "2026-11-21T02:04:09.405360Z",
   "_feed_health": {
-    "Watcher.Guru (快讯)": {
-      "fails": 3,
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-21T05:23:41.747536+00:00"
-    },
     "NewsBTC (比特币与山寨)": {
       "fails": 3,
       "parked_until": "2026-11-21T07:23:48.608189+00:00",
       "last_fail": "2026-11-21T01:23:48.608189+00:00"
+    },
+    "Watcher.Guru (快讯)": {
+      "fails": 3,
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-21T05:43:42.716410+00:00"
     }
   },
   "_fallback_image": {
@@ -36,59 +36,54 @@
   },
   "_llm_breaker": {
     "Preset-stepfun-flash": {
-      "permanent": true,
       "last_fail": "2026-11-21T02:03:39.962370+00:00",
       "cooldown_until": "2026-11-22T02:03:39.962357+00:00",
-      "fails": 1
+      "fails": 1,
+      "permanent": true
     },
     "Preset-stepfun": {
-      "permanent": true,
       "last_fail": "2026-11-21T02:04:19.120355+00:00",
       "cooldown_until": "2026-11-22T02:04:19.120344+00:00",
-      "fails": 12
+      "fails": 12,
+      "permanent": true
     }
   },
   "_article_sent_date": "2026-11-21",
   "_publish_park": {
-    "827ecdcd8113fa5e": {
-      "fails": 2,
-      "parked_until": "2026-11-21T06:03:39.613648+00:00",
-      "last_fail": "2026-11-21T00:03:39.613648+00:00"
-    },
-    "1651c0972813f202": {
-      "last_fail": "2026-11-21T00:23:45.020835+00:00",
-      "fails": 1
-    },
-    "76cd48d421693b75": {
-      "last_fail": "2026-11-21T00:46:14.993858+00:00",
-      "fails": 1
-    },
-    "9c42edfdf22d98ac": {
-      "fails": 2,
-      "parked_until": "2026-11-21T05:43:45.823659+00:00",
-      "last_fail": "2026-11-20T23:43:45.823659+00:00"
-    },
-    "ad3e94e4eaee8926": {
-      "last_fail": "2026-11-21T03:28:12.891400+00:00",
-      "fails": 1
-    },
-    "249592f56bf0f5b8": {
-      "last_fail": "2026-11-21T00:23:44.664436+00:00",
-      "fails": 1
-    },
     "6b19321af7d89848": {
       "fails": 2,
       "parked_until": "2026-11-21T06:23:44.336742+00:00",
       "last_fail": "2026-11-21T00:23:44.336742+00:00"
     },
-    "7399fb12a8cdd68a": {
-      "last_fail": "2026-11-21T03:05:01.439478+00:00",
-      "fails": 1
+    "ad3e94e4eaee8926": {
+      "fails": 1,
+      "last_fail": "2026-11-21T03:28:12.891400+00:00"
+    },
+    "1651c0972813f202": {
+      "fails": 1,
+      "last_fail": "2026-11-21T00:23:45.020835+00:00"
+    },
+    "827ecdcd8113fa5e": {
+      "fails": 2,
+      "parked_until": "2026-11-21T06:03:39.613648+00:00",
+      "last_fail": "2026-11-21T00:03:39.613648+00:00"
     },
     "3ae85260d43ca257": {
       "fails": 2,
       "parked_until": "2026-11-21T05:58:24.925849+00:00",
       "last_fail": "2026-11-20T23:58:24.925849+00:00"
+    },
+    "76cd48d421693b75": {
+      "fails": 1,
+      "last_fail": "2026-11-21T00:46:14.993858+00:00"
+    },
+    "249592f56bf0f5b8": {
+      "fails": 1,
+      "last_fail": "2026-11-21T00:23:44.664436+00:00"
+    },
+    "7399fb12a8cdd68a": {
+      "fails": 1,
+      "last_fail": "2026-11-21T03:05:01.439478+00:00"
     }
   },
   "_intel_refresh_fail": {},

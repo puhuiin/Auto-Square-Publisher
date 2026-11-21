@@ -1,15 +1,5 @@
 [
   {
-    "id": "48f02d68380b8eec",
-    "title": "DTCC 拟将代币化服务接入 Solana,预计 2027 下半年上线",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-12T13:24:13.848632+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "adbfe2da280b0d84",
     "title": "TechFlow 情报局:英伟达董事会准备罢免黄仁勋盘后暴跌 9%,MSCI将 Strategy 剔除出指数或引发 88 亿美元抛售",
     "source": "深潮TechFlow (中文/简体)",
@@ -5175,6 +5165,16 @@
     "sent_at": "2026-11-21T05:23:56.996213+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "efb55b1fb18664cd",
+    "title": "Solana Beats Robinhood With 10x ANT Trades as Anthropic Stock Went Wild",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-21T05:44:06.436479+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
