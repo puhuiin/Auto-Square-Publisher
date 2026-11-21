@@ -11,39 +11,88 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - name: Probe gateway
         env:
           OPENCSG: ${{ secrets.OPENCSG }}
         run: |
           set +e
-          echo "=== key 是否存在 ==="
           if [ -z "$OPENCSG" ]; then
             echo "::error::secret OPENCSG 为空或未配置"
             exit 0
           fi
           echo "key_len=${#OPENCSG}"
 
-          echo "=== 1) GET /models ==="
+          echo "=== 1) 全目录（id | 可用 | 输入/输出 ¥每百万 token）==="
           curl -sS -m 30 -o /tmp/models.json -w "HTTP %{http_code}\n" \
             -H "Authorization: Bearer $OPENCSG" \
             "https://opencsg.com/aigateway/v1/models"
-          head -c 1200 /tmp/models.json; echo
+          python3 - <<'PY'
+          import json
+          d = json.load(open('/tmp/models.json'))
+          rows = []
+          for m in d.get('data', []):
+              md = m.get('metadata') or {}
+              pr = md.get('pricing') or {}
+              def p(side):
+                  x = (pr.get(side) or {}).get('price_per_million')
+                  return '-' if x is None else str(x)
+              av = (m.get('availability') or {}).get('is_available')
+              rows.append((m.get('id'), av, p('input_token_price'), p('output_token_price'),
+                           md.get('llm_type') or '', m.get('task') or ''))
+          print('模型总数', len(rows))
+          for r in sorted(rows, key=lambda x: (x[2] == '-', x[2])):
+              print('  %-34s avail=%-5s in=%-8s out=%-8s %s %s' % r)
+          PY
 
-          echo "=== 2) POST /chat/completions（非流式）==="
-          curl -sS -m 60 -o /tmp/chat.json -w "HTTP %{http_code}\n" \
-            -X POST "https://opencsg.com/aigateway/v1/chat/completions" \
-            -H "Authorization: Bearer $OPENCSG" \
-            -H "Content-Type: application/json" \
-            -d '{"model":"deepseek-v4.1-flash-1017","stream":false,"max_tokens":32,"messages":[{"role":"user","content":"Say OK"}]}'
-          head -c 1500 /tmp/chat.json; echo
-
-          echo "=== 3) 同样的请求，流式（生产用的是流式）==="
-          curl -sS -m 60 -N -o /tmp/chat_stream.txt -w "HTTP %{http_code}\n" \
-            -X POST "https://opencsg.com/aigateway/v1/chat/completions" \
-            -H "Authorization: Bearer $OPENCSG" \
-            -H "Content-Type: application/json" \
-            -d '{"model":"deepseek-v4.1-flash-1017","stream":true,"max_tokens":32,"messages":[{"role":"user","content":"Say OK"}]}'
-          head -c 1500 /tmp/chat_stream.txt; echo
-          echo "=== 探针结束（HTTP 200 且内容里有 choices 才算通）==="
+          echo "=== 2) 生产形态实测（流式 + 中文短讯 + max_tokens=3000）==="
+          python3 - <<'PY'
+          import json, os, time, urllib.request
+          key = os.environ['OPENCSG']
+          url = 'https://opencsg.com/aigateway/v1/chat/completions'
+          prompt = ('你是币安广场的加密货币作者。就下面这条新闻写一条中文短讯，'
+                    '500~800 字，先给结论再给两条依据，结尾提一个互动问题。'
+                    '不要出现"作为AI"。新闻：某公链宣布主网升级，交易吞吐提升 3 倍，'
+                    ' gas 费下降 40%，开发者可在测试网领取激励。')
+          for model in ('deepseek-v4.1-flash-1017', 'auto'):
+              body = json.dumps({'model': model, 'stream': True, 'max_tokens': 3000,
+                                 'messages': [{'role': 'user', 'content': prompt}]}).encode()
+              req = urllib.request.Request(url, data=body, headers={
+                  'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json'})
+              t0 = time.time()
+              content, reasoning, finish, usage, err = [], [], None, None, None
+              try:
+                  with urllib.request.urlopen(req, timeout=120) as r:
+                      for raw in r:
+                          line = raw.decode('utf-8', 'replace').strip()
+                          if not line.startswith('data:'):
+                              continue
+                          payload = line[5:].strip()
+                          if payload == '[DONE]':
+                              break
+                          try:
+                              d = json.loads(payload)
+                          except ValueError:
+                              continue
+                          if d.get('usage'):
+                              usage = d['usage']
+                          for ch in d.get('choices') or []:
+                              if ch.get('finish_reason'):
+                                  finish = ch['finish_reason']
+                              delta = ch.get('delta') or {}
+                              if delta.get('content'):
+                                  content.append(delta['content'])
+                              if delta.get('reasoning_content'):
+                                  reasoning.append(delta['reasoning_content'])
+              except Exception as e:
+                  err = '%s: %s' % (type(e).__name__, str(e)[:200])
+              text = ''.join(content)
+              print('--- model=%s ---' % model)
+              print('  elapsed=%.1fs finish=%s err=%s' % (time.time() - t0, finish, err))
+              print('  content_chars=%d reasoning_chars=%d' % (len(text), len(''.join(reasoning))))
+              print('  usage=%s' % json.dumps(usage, ensure_ascii=False))
+              print('  head=%s' % text[:160].replace('\n', ' '))
+              print('  tail=%s' % text[-120:].replace('\n', ' '))
+          PY
+          echo "=== 探针结束 ==="
