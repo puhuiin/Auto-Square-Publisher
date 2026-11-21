@@ -1,16 +1,5 @@
 [
   {
-    "id": "8040c5b0b36167aa",
-    "title": "Meta AI Predicts DOGE Vs. PEPE: Which Goes Higher in 2027?",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-12T23:47:05.898719+00:00",
-    "tokens": [
-      "DOGE",
-      "PEPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3ea842b0f93c0945",
     "title": "加密早报:黄仁勋即日起辞去英伟达总裁等职务,美国拟扩大英伟达 AI 芯片出口管制",
     "source": "深潮TechFlow (中文/简体)",
@@ -5184,6 +5173,16 @@
     "sent_at": "2026-11-21T14:04:22.018870+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "dde75ca5bf1ab447",
+    "title": "吴说每日精选加密新闻 + 吴说每周精选:新闻 Top10 与热门文章",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-21T14:24:33.003626+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
