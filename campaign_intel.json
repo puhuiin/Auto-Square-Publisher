@@ -20,19 +20,19 @@
   "last_updated": "2026-11-21T02:04:09.405360Z",
   "_feed_health": {
     "深潮TechFlow (中文/繁体)": {
-      "reset_at": "2026-11-21T10:43:42.248569+00:00",
+      "reset_at": "2026-11-21T11:03:36.500626+00:00",
       "last_fail": "2026-11-21T09:43:55.149404+00:00",
+      "fails": 1
+    },
+    "CoinJournal (山寨异动)": {
+      "reset_at": "2026-11-21T11:03:35.033022+00:00",
+      "last_fail": "2026-11-21T06:44:11.320753+00:00",
       "fails": 1
     },
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-21T10:43:39.476957+00:00",
+      "last_fail": "2026-11-21T11:03:35.162430+00:00",
       "fails": 3
-    },
-    "CoinJournal (山寨异动)": {
-      "reset_at": "2026-11-21T10:43:39.099271+00:00",
-      "last_fail": "2026-11-21T06:44:11.320753+00:00",
-      "fails": 1
     }
   },
   "_fallback_image": {
@@ -40,17 +40,17 @@
     "date": "2026-10-18"
   },
   "_llm_breaker": {
-    "Preset-stepfun-flash": {
-      "last_fail": "2026-11-21T02:03:39.962370+00:00",
-      "fails": 1,
-      "permanent": true,
-      "cooldown_until": "2026-11-22T02:03:39.962357+00:00"
-    },
     "Preset-stepfun": {
+      "cooldown_until": "2026-11-22T02:04:19.120344+00:00",
       "last_fail": "2026-11-21T02:04:19.120355+00:00",
       "fails": 12,
-      "permanent": true,
-      "cooldown_until": "2026-11-22T02:04:19.120344+00:00"
+      "permanent": true
+    },
+    "Preset-stepfun-flash": {
+      "cooldown_until": "2026-11-22T02:03:39.962357+00:00",
+      "last_fail": "2026-11-21T02:03:39.962370+00:00",
+      "fails": 1,
+      "permanent": true
     }
   },
   "_article_sent_date": "2026-11-21",

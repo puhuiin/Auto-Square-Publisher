@@ -1,15 +1,5 @@
 [
   {
-    "id": "81276a44c63302b5",
-    "title": "美国司法部及加密机构支持推翻伊利诺伊州数字资产税",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-12T19:09:08.268281+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ebaaaf0ab21ed734",
     "title": "Solana Lands Major Wall Street Boost as DTCC Targets 2027 Launch of Tokenized Assets: What It Means for SOL",
     "source": "ZyCrypto (新币与空投)",
@@ -5180,5 +5170,17 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "9bc762d89480134c",
+    "title": "Solana ETFs Defy Wall Street’s Big Crypto Sell-Off",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-21T11:04:12.041741+00:00",
+    "tokens": [
+      "SOL",
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
