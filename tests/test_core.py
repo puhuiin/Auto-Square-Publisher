@@ -14495,6 +14495,9 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
         # Preset-google**，R615 给它配的 90s 推理预算处于零覆盖状态。
         # 守卫漏一个通道 = 该通道的预算约定无人看守，与"探针漏一个站"同类。
         "GOOGLE_API_KEY": "k-goog",
+        # R872：OpenCSG 网关（secret OPENCSG → env OPENCSG_API_KEY）。
+        # 不进这个集合 = 下面两条守卫遍历不到它，预算约定无人看守（R618 教训）。
+        "OPENCSG_API_KEY": "k-opencsg",
         # R626：b.ai 已弃用（无免费额度，末次成功投递 09-21），但 BAI_API_KEY
         # **刻意保留在这个集合里**——这正是上面 R618 那条纪律的反向应用。
         # 守卫要能看见"它还在不在"：
@@ -14523,6 +14526,8 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
         "siliconflow": "qwen3-8b",                # ¥0 免费模型；V3 是计费模型
         "bluesminds": "glm-4-flash",              # 本地《白嫖》注册表目录
         "stepfun": "step-5-preview",              # 阶跃 Step Plan 订阅旗舰（推理型）
+        # R872：探针按真实目录选定（run 44840903549，20 模型逐条核过）
+        "opencsg": "deepseek-v4.1-flash-1017",
         # R626：b.ai 从 _EXPECTED 移除（无免费额度、已弃用）。
         # **它必须被移除，否则本用例会一直红**——但移除后"它被人加回来"就
         # 变静默了，故另立一条显式断言（见 test_bai_is_retired）双向守住。
@@ -14570,12 +14575,68 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
                      # 通道配了 90s，但此前不在本白名单——因为 GOOGLE_API_KEY
                      # 没进 _ALL_KEYS，这个 preset 压根没进遍历范围。补齐后
                      # 立刻能验它的预算约定，防止后续误降回 25s 掐死思考链。
-                     "Preset-google"}
+                     "Preset-google",
+                     # R872：探针实测 delta.reasoning_content（450 推理 token/篇）
+                     # ⇒ 思考型，按推理配给；不升预算=思考链吃空=通道报废。
+                     "Preset-opencsg"}
         for name, cfg in chain.items():
             if not name.startswith("Preset-"):
                 continue
             want = 90.0 if name in reasoning else 25.0
             self.assertEqual(cfg.timeout, want, f"{name} 超时配给漂移")
+
+
+class TestOpencsgPreset(unittest.TestCase):
+    """R872：OpenCSG AI 网关通道接入（11-20 三源同断后补的独立额度池）。
+
+    锁四条不变式（与 TestStepfunPreset 同形）：
+    1. base_url 落在 /aigateway/v1——探针实测的就是这个前缀，改了等于换端点；
+    2. 默认名 = deepseek-v4.1-flash-1017（真实目录在册），OPENCSG_MODEL 可覆盖；
+    3. 按推理通道配给 90s/3000（实测 reasoning_content，见 _is_reasoning_channel）；
+    4. 无 Key 零痕迹（不占链位、不污染其他 preset）。
+    """
+
+    def _build(self, extra=None):
+        keys = {"OPENCSG_API_KEY": "k-opencsg-x"}
+        if extra:
+            keys.update(extra)
+        saved = {k: os.environ.get(k) for k in keys}
+        os.environ.update(keys)
+        try:
+            return m.MultiLLMEngine()._build_provider_chain()
+        finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+    def test_base_url_and_defaults(self):
+        p = next(x for x in self._build() if x.name == "Preset-opencsg")
+        self.assertEqual(p.base_url, "https://opencsg.com/aigateway/v1")
+        self.assertEqual(p.model, "deepseek-v4.1-flash-1017")
+        self.assertEqual(p.timeout, 90.0)
+        self.assertEqual(
+            m._summarize_max_tokens("Preset-opencsg", "deepseek-v4.1-flash-1017"), 3000)
+
+    def test_model_env_override(self):
+        p = next(x for x in self._build({"OPENCSG_MODEL": "qwen3.8-flash"})
+                 if x.name == "Preset-opencsg")
+        self.assertEqual(p.model, "qwen3.8-flash")
+
+    def test_absent_without_key(self):
+        saved = os.environ.pop("OPENCSG_API_KEY", None)
+        try:
+            chain = m.MultiLLMEngine()._build_provider_chain()
+        finally:
+            if saved is not None:
+                os.environ["OPENCSG_API_KEY"] = saved
+        self.assertFalse(any(x.name == "Preset-opencsg" for x in chain))
+
+    def test_reasoning_predicate_covers_channel(self):
+        """谓词是唯一真源：三处预算/超时逻辑共用它，漏判=系统性空包（R218）。"""
+        self.assertTrue(m._is_reasoning_channel("Preset-opencsg", "deepseek-v4.1-flash-1017"))
+        self.assertTrue(m._is_reasoning_channel("Preset-opencsg", "glm-5.3-flash"))
 
 
 class TestStepfunPreset(unittest.TestCase):

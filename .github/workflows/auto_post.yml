@@ -77,6 +77,7 @@ jobs:
           OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GOOGLE_KEY: ${{ secrets.GOOGLE_API_KEY }}
           STEPFUN_KEY: ${{ secrets.STEPFUN_API_KEY }}
+          OPENCSG_KEY: ${{ secrets.OPENCSG }}
           LLM_KEY: ${{ secrets.LLM_API_KEY }}
           SC_KEY: ${{ secrets.SERVERCHAN_KEY }}
           PP_KEY: ${{ secrets.PUSHPLUS_TOKEN }}
@@ -90,6 +91,7 @@ jobs:
           if [ -n "$OPENROUTER_KEY" ]; then echo "✔ OPENROUTER_API_KEY: 已检测到"; fi
           if [ -n "$GOOGLE_KEY" ]; then echo "✔ GOOGLE_API_KEY: 已检测到 (Gemini 免费层，R615 独立额度池)"; fi
           if [ -n "$STEPFUN_KEY" ]; then echo "✔ STEPFUN_API_KEY (阶跃 Step Plan): 已检测到"; fi
+          if [ -n "$OPENCSG_KEY" ]; then echo "✔ OPENCSG (OpenCSG AI 网关，R872 独立额度池): 已检测到"; fi
           if [ -n "$LLM_KEY" ]; then echo "✔ LLM_API_KEY: 已检测到"; fi
           if [ -n "$SC_KEY" ]; then echo "✔ SERVERCHAN_KEY (微信推送): 已检测到"; fi
           if [ -n "$PP_KEY" ]; then echo "✔ PUSHPLUS_TOKEN (微信推送): 已检测到"; fi
@@ -189,6 +191,11 @@ jobs:
           # 按量计费的普通 API 通道，勿"修复"该 URL）
           STEPFUN_API_KEY: ${{ secrets.STEPFUN_API_KEY }}
           STEPFUN_MODEL: ${{ secrets.STEPFUN_MODEL }}
+          # R872：OpenCSG AI 网关（secret 名是 OPENCSG，注入成本池统一的
+          # <SITE>_API_KEY 约定）。11-20 三源同断后补的独立额度池；
+          # 默认名 deepseek-v4.1-flash-1017 由只读探针按真实目录选定。
+          OPENCSG_API_KEY: ${{ secrets.OPENCSG }}
+          OPENCSG_MODEL: ${{ secrets.OPENCSG_MODEL }}
           
           # 可选通知与异常报警渠道 (微信 / iOS / Telegram / 团队群)
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}

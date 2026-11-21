@@ -4846,6 +4846,13 @@ def _is_reasoning_channel(provider_name: str, model: str = "") -> bool:
         # 预算 → content 系统性None → 看起来像"Google 通道质量差"，实则是预算配错。
         # 同理按推理配给：预算是上限非下限，真不带思考时只会更早自然返回，无成本。
         return True
+    if provider_name == "Preset-opencsg":
+        # R872：OpenCSG AI 网关（用户 2026-11-20 配 OPENCSG secret）。
+        # 只读探针实测（run 44840903549）：deepseek-v4.1-flash-1017 的 SSE
+        # delta 带 reasoning_content，一条 668 字中文短讯烧 450 推理 token
+        # （completion 847 = 推理 450 + 正文 396）⇒ 思考型。按非推理配
+        # 600/25s 会复刻 R218 的系统性空包（思考链吃满预算 → content=None）。
+        return True
     ml = (model or "").lower()
     if "thinking" in ml or "reasoning" in ml:
         return True
@@ -5964,6 +5971,25 @@ class MultiLLMEngine:
                 os.getenv("STEPFUN_API_KEY", "").strip(),
                 "https://api.stepfun.com/step_plan/v1",
                 os.getenv("STEPFUN_FLASH_MODEL", "").strip() or "step-3.7-flash",
+            ),
+            # OpenCSG AI 网关（R872，2026-11-21 接入）：11-20 16:46Z 起产量归零
+            # ——stepfun/stepfun-flash 报 400「no active step plan subscription」
+            # （订阅失效）、openrouter 免费日额度打满（429 free-models-per-day）、
+            # google 429 ⇒ 三源同时断，47 轮「全部提供商处于冷却期」。
+            # 用户配了 OPENCSG secret，本条目补一条**独立额度池**。
+            # 端点/认证/默认名全部来自只读探针实测（run 44840567276 / 44840903549），
+            # 不凭文档猜名（R263 纪律）：
+            #   · GET /aigateway/v1/models 带 Bearer → 200，目录 20 个模型；
+            #   · deepseek-v4.1-flash-1017 流式与非流式均 200；生产形态请求
+            #     （中文短讯 500~800 字、max_tokens=3000）实测 8.9s、finish=stop、
+            #     正文 668 字 ⇒ **长度指令被遵守**（对照 stepfun-flash 的超写）；
+            #   · 单价 ¥1.1 / ¥4.4 每百万 token（输入/输出），目录内属低价档；
+            #   · 不取 auto 别名：实测 46.6s、completion 1731（推理 1423）更慢更贵，
+            #     且路由别名让 404 的 permanent 语义不可解释（R263/R169 教训）。
+            "opencsg": (
+                os.getenv("OPENCSG_API_KEY", "").strip(),
+                "https://opencsg.com/aigateway/v1",
+                os.getenv("OPENCSG_MODEL", "").strip() or "deepseek-v4.1-flash-1017",
             ),
         }
 
