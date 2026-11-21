@@ -22,32 +22,32 @@
       "last_fail": "2026-11-21T22:43:48.453293+00:00",
       "fails": 2
     },
-    "Watcher.Guru (快讯)": {
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-21T22:43:32.259446+00:00"
-    },
     "深潮TechFlow (中文/简体)": {
       "last_fail": "2026-11-21T22:43:48.312646+00:00",
       "fails": 2
+    },
+    "Watcher.Guru (快讯)": {
+      "fails": 3,
+      "last_fail": "2026-11-21T22:43:32.259446+00:00",
+      "parked_until": "2026-11-17T10:23:31.478522+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {
-    "Preset-stepfun": {
-      "permanent": true,
-      "fails": 12,
-      "last_fail": "2026-11-21T02:04:19.120355+00:00",
-      "cooldown_until": "2026-11-22T02:04:19.120344+00:00"
-    },
     "Preset-stepfun-flash": {
-      "permanent": true,
+      "cooldown_until": "2026-11-22T02:03:39.962357+00:00",
       "fails": 1,
-      "last_fail": "2026-11-21T02:03:39.962370+00:00",
-      "cooldown_until": "2026-11-22T02:03:39.962357+00:00"
+      "permanent": true,
+      "last_fail": "2026-11-21T02:03:39.962370+00:00"
+    },
+    "Preset-stepfun": {
+      "cooldown_until": "2026-11-22T02:04:19.120344+00:00",
+      "fails": 12,
+      "permanent": true,
+      "last_fail": "2026-11-21T02:04:19.120355+00:00"
     }
   },
   "_article_sent_date": "2026-11-21",
