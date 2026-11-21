@@ -1,15 +1,5 @@
 [
   {
-    "id": "30c28cc12add3cf5",
-    "title": "Bitcoin ETFs Lose $299.8M as Five-Session Outflow Streak Reaches $1.44B",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-12T17:25:48.104896+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "18c9c2f18d252f00",
     "title": "Tether Gold Gets Clean KPMG Audit Confirming $2.2B in Physical Gold Backing",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5176,6 +5166,17 @@
     "source": "AMBCrypto (技术与链上)",
     "sent_at": "2026-11-21T09:04:36.442265+00:00",
     "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "442aa44a21fffd86",
+    "title": "Forward Industries关联地址向币安充值4050枚ETH,若卖出将亏损827万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-21T09:24:05.793347+00:00",
+    "tokens": [
+      "ETH",
       "SOL"
     ],
     "lang": "zh-TW"
