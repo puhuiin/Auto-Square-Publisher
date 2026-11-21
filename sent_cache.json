@@ -1,15 +1,5 @@
 [
   {
-    "id": "18c9c2f18d252f00",
-    "title": "Tether Gold Gets Clean KPMG Audit Confirming $2.2B in Physical Gold Backing",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-12T17:46:38.964675+00:00",
-    "tokens": [
-      "XAUT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7b17d2108c97ddeb",
     "title": "官方合约地址公布,AKT已上线Solana",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5178,6 +5168,16 @@
     "tokens": [
       "ETH",
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "f26287992919005e",
+    "title": "Aave Voters Back Plan to Narrow V3 Core Collateral",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-21T09:44:26.714804+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "zh-TW"
   }
