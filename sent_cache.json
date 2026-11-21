@@ -1,15 +1,5 @@
 [
   {
-    "id": "7b17d2108c97ddeb",
-    "title": "官方合约地址公布,AKT已上线Solana",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-12T18:07:28.320422+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "56cb5e2fb3efa63a",
     "title": "Illinois Crypto Tax Draws Unlikely Alliance of DOJ, Banks and DeFi",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5178,6 +5168,16 @@
     "sent_at": "2026-11-21T09:44:26.714804+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "c3852b68a9331da9",
+    "title": "XRP on Track to Post Worst ETF Month Ever",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-21T10:04:09.974676+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
