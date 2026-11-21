@@ -1,15 +1,5 @@
 [
   {
-    "id": "56cb5e2fb3efa63a",
-    "title": "Illinois Crypto Tax Draws Unlikely Alliance of DOJ, Banks and DeFi",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-12T18:25:55.190704+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "68b4231b3701068d",
     "title": "DTCC adds Solana to Wall Street tokenization plans, targeting 2027 rollout",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5178,6 +5168,16 @@
     "sent_at": "2026-11-21T10:04:09.974676+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "5657205470032d28",
+    "title": "Solana’s 2027 roadmap promises faster growth, but the market wants proof",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-21T10:24:00.899498+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
