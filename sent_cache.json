@@ -1,15 +1,5 @@
 [
   {
-    "id": "c239e92225745c33",
-    "title": "Ethlabs proposes advancing Ethereum’s post-quantum to 2027, citing AI acceleration",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-12T09:44:47.255522+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "bfa3fbcc2a2dfc62",
     "title": "Why Is Zcash (ZEC) Price Falling? The Answer Isn’t the Broader Market",
     "source": "BeInCrypto (山寨与行情)",
@@ -5172,6 +5162,16 @@
     "sent_at": "2026-11-21T02:04:42.207031+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "24440b0bcb6b14ab",
+    "title": "SEC Freezes Assets in $560 Million Crypto Trading Ponzi Scheme",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-11-21T02:24:10.324220+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
