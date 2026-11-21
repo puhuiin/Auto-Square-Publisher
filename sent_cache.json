@@ -1,15 +1,5 @@
 [
   {
-    "id": "12520b78c219dc3a",
-    "title": "Paragon tests HYPE squared Power Perps for convex trading on Hyperliquid",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-12T15:44:30.476842+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c2d86bb7dd94926d",
     "title": "Bitcoin Falls Alongside Nvidia as ETF Outflows Reach $1.44 Billion",
     "source": "Bitcoinist (比特币向)",
@@ -5177,6 +5167,17 @@
     "sent_at": "2026-11-21T07:43:57.696778+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1ac0e7e1212ee9aa",
+    "title": "Chainflip以太坊金库遭攻击,约486万美元资产被盗",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-21T08:04:01.078618+00:00",
+    "tokens": [
+      "ETH",
+      "USDC"
     ],
     "lang": "zh-CN"
   }
