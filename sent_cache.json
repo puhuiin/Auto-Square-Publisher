@@ -1,15 +1,5 @@
 [
   {
-    "id": "b82f830cf625a663",
-    "title": "Elon Musk’s Grok AI Predicts Justin Sun’s Tron to the Moon",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-12T22:27:03.185827+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e7e751f6a5850f1d",
     "title": "Top Hyperliquid Price Predictions as HYPE Tumbles 15% in a Week",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5186,5 +5176,15 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ee7ce1112b841077",
+    "title": "XRP’s Volatility Puts $0.7 Retest in View: Kalshi",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-21T13:44:10.819354+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
