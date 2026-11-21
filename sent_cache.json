@@ -1,15 +1,5 @@
 [
   {
-    "id": "2bdc3188b6dfc7e8",
-    "title": "Solana Company Reports $3.4M Quarterly Revenue as Staking Business Expands",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-13T06:09:46.890066+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "02c838ddf609dbba",
     "title": "Wirex Launches Navoka, an AI Agent That Pays From Its Own Bank Account and Card",
     "source": "BeInCrypto (山寨与行情)",
@@ -5185,5 +5175,15 @@
       "BNB"
     ],
     "lang": "en"
+  },
+  {
+    "id": "66ac6415b4e6ebbf",
+    "title": "Just 18 Billion SHIB: Shiba Inu Netflow Signals Market Ease",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-21T22:03:59.187381+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-CN"
   }
 ]
