@@ -1,15 +1,5 @@
 [
   {
-    "id": "eb40d7f1c2d8b49a",
-    "title": "Bitcoin dips with Nvidia as ETF outflows reach day five",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-11-12T12:07:09.098920+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "62c58bc02abff140",
     "title": "Why Is Crypto Crashing? Elon Musk’s Grok AI Predicts BTC to $40K",
     "source": "CryptoNews (全球快讯)",
@@ -5175,6 +5165,16 @@
     "tokens": [
       "ADA",
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "d5a439d3a2c39d06",
+    "title": "摩根大通:比特币价格跌破 6 万美元,低于约 8.6 万美元的估算挖矿成本,矿企抛售压力加剧",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-21T04:44:33.037419+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
