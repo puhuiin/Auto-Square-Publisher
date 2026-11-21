@@ -1,15 +1,5 @@
 [
   {
-    "id": "56e937adb3645013",
-    "title": "Claude AI Predicts a Monster XRP Move Ahead of Anthropic IPO",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-12T19:48:49.880919+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "12436d764c25bd07",
     "title": "交易员 Ansem:当前做多债券、石油及一枚 Solana 链代币",
     "source": "深潮TechFlow (中文/简体)",
@@ -5180,6 +5170,19 @@
     "sent_at": "2026-11-21T11:23:48.856599+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0285b8cf95d6d476",
+    "title": "TRON ECO × BBW 2026 感恩节巡游第三站开启,四大项目回购销毁探索挑战上线",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-21T11:44:23.129426+00:00",
+    "tokens": [
+      "JST",
+      "WIN",
+      "TRX",
+      "BTC"
     ],
     "lang": "zh-CN"
   }
