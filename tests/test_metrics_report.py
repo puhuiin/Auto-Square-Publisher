@@ -10251,6 +10251,35 @@ class TestR883ZhWindowPrereg(unittest.TestCase):
         self.assertTrue(res["rollback"])
         self.assertIn("回滚", res["verdict"])
 
+    def test_confounds_cover_subsets(self):
+        """★ 拆解必须覆盖 全部/去长文/去当天首发 三个子样本（少一个就会漏掉一类假象）"""
+        zw = self._zw()
+        joined = [self._rec("2026-11-23", 0, "zh-CN", 10.0),
+                  self._rec("2026-11-23", 6, "zh-CN", 2.0)]
+        cf = zw.confound_breakdown(joined)
+        self.assertEqual([c["subset"] for c in cf], ["全部", "去长文", "去当天首发"])
+
+    def test_confound_flags_article_driven_effect(self):
+        """窗口优势全由长文造成时，去长文子样本必须塌掉（并触发告警文案）。
+
+        这是本轮的真实风险：8 篇长文 100% 落在窗口。若不拆，会把"长文好"
+        记成"时段好"，然后把 6 篇普通稿搬进去白费。
+        """
+        zw = self._zw()
+        joined = []
+        # 窗内：3 篇长文(高 vpd) + 2 篇短讯(低)；窗外：10 篇短讯(同低)
+        for i in range(3):
+            r = self._rec("2026-11-23", 0, "zh-CN", 40.0, views=80)
+            r["meta"]["article"] = True
+            joined.append(r)
+        for i in range(2):
+            joined.append(self._rec("2026-11-23", 1, "zh-CN", 3.0, views=6))
+        for i in range(10):
+            joined.append(self._rec("2026-11-23", 8 + i, "zh-CN", 3.0, views=6))
+        cf = {c["subset"]: c for c in zw.confound_breakdown(joined)}
+        self.assertGreater(cf["全部"]["ratio"], 2.0, "全样本会被长文抬起来")
+        self.assertLess(cf["去长文"]["ratio"] or 0, 1.5, "去长文后优势应消失（真·子集驱动）")
+
     def test_age_unit_conversion_in_main(self):
         """防回归：`age_days` 是**天**，曝光阈值是**小时** ⇒ 必须换算。
 

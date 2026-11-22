@@ -85,6 +85,47 @@ def _is_zh(lang):
     return (lang or "zh-CN") in ZW_LANGS
 
 
+def confound_breakdown(joined):
+    """★ 把「窗内 vs 窗外」在**去长文**与**去当日首发**两个子样本上各算一遍。
+
+    为什么必须固化（2026-11-22 实测）：原始读数 12.1 vs 2.2（5.4×）可能是
+    「长文集中在窗口」或「当天首发落在窗口」撑起来的假象——
+      去长文：12.5(n=16) vs 2.2(n=121) ⇒ 5.7×
+      去首发：11.7(n=4)  vs 2.2(n=76)  ⇒ 5.3×
+    两条都成立 ⇒ 效应不是子集驱动。少算一遍，6 天后就可能把别人的功劳记到时段头上。
+    """
+    def _med(rs):
+        return st.median([r["vpd"] for r in rs]) if rs else None
+
+    by_day = collections.defaultdict(list)
+    for r in joined:
+        by_day[str(r["meta"].get("ts", ""))[:10]].append(r)
+    first_ids = set()
+    for _d, rs in by_day.items():
+        seen = set()
+        for r in sorted(rs, key=lambda x: str(x["meta"].get("ts", ""))):
+            tok = (r["meta"].get("tokens") or ["?"])[0]
+            if tok not in seen:
+                seen.add(tok)
+                first_ids.add(id(r))
+
+    subs = {
+        "全部": lambda r: True,
+        "去长文": lambda r: not r["meta"].get("article"),
+        "去当天首发": lambda r: id(r) not in first_ids,
+    }
+    out = []
+    for name, keep in subs.items():
+        rs = [r for r in joined if keep(r)]
+        w = [r for r in rs if _in_window(r["meta"].get("ts"))]
+        o = [r for r in rs if not _in_window(r["meta"].get("ts"))]
+        wm, om = _med(w), _med(o)
+        out.append({"subset": name, "win_n": len(w), "out_n": len(o),
+                    "win_med": wm, "out_med": om,
+                    "ratio": (wm / om) if (wm is not None and om) else None})
+    return out
+
+
 def hour_profile_tvd(rows_a, rows_b):
     """两组发布行的 3 小时桶分布 TVD（确认 en 夜窗没被带跑）。"""
     def prof(rows):
@@ -196,6 +237,7 @@ def evaluate(joined, pub_rows):
         "win_med_pool": win_med_pool, "out_med_pool": out_med_pool,
         "ratio": ratio, "en_tvd": en_tvd, "checks": checks,
         "rollback": rollback, "verdict": verdict,
+        "confounds": confound_breakdown(joined),
     }
 
 
@@ -210,10 +252,29 @@ def render(res):
     L.append("  基线臂 %s~%s（%d 天）：窗内 zh 帖/天 中位 %s（全量口径）｜ 总发布/天 中位 %s"
              % (ZW_BASELINE_FROM, ZW_BASELINE_TO, len(res["baseline_days"]),
                 res["base_win_posts_med"], res["base_total_med"]))
+
+    # 混淆拆解**永远先打**（没有处置样本时也要看：它是判据可信度的前置检查）
+    cf = res.get("confounds") or []
+    if cf:
+        L.append("  混淆拆解（同一口径，逐子样本；看窗内外比是否在每个子集里都成立）：")
+        for c in cf:
+            L.append("     %-8s 窗内 n=%-2d 中位 %-6s ｜ 窗外 n=%-3d 中位 %-6s ｜ %s"
+                     % (c["subset"], c["win_n"], f(c["win_med"], "%.1f"),
+                        c["out_n"], f(c["out_med"], "%.1f"),
+                        (f(c["ratio"]) + "×") if c["ratio"] else "-"))
+        subs = [c for c in cf if c["subset"] != "全部"]
+        if subs and all((c["ratio"] or 0) >= 1.5 for c in subs):
+            L.append("     ↳ 子样本 **都成立** ⇒ 不是长文/首发等其他子集驱动的假象")
+        elif subs:
+            L.append("     ↳ ⚠️ 有子样本不成立 ⇒ **先查是不是子集驱动**，别急着解读主读数（R809）")
+
     if not res["rows"]:
-        L.append("  处置期（≥%s）**还没有样本** ⇒ 闸门打开后（`ZH_OFFWIN_CAP=32`）"
+        L.append("")
+        L.append("  处置期（≥%s）**还没有样本** ⇒ 闸门已在跑（`ZH_OFFWIN_CAP=32`），"
                  "每 2 天导出一次再来跑。" % ZW_FROM_DATE)
         return "\n".join(L)
+
+    L.append("")
     L.append("  日期         窗内(vpd)           窗外(vpd)        窗内篇数  有效  窗好于外")
     for r in res["rows"]:
         L.append("  %s  n=%-2d 中位 %-6s  n=%-2d 中位 %-6s  %-6d    %s     %s"
