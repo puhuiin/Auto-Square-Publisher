@@ -1,15 +1,5 @@
 [
   {
-    "id": "6200b09ce9a2df65",
-    "title": "Jupiter Crypto Trading on Its Own Fundamentals: JUP USD Breaks Away From Market Sell-Off",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-13T08:47:29.709294+00:00",
-    "tokens": [
-      "JUP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "6616d294c967f786",
     "title": "SUI crypto’s 26% drop sparks bottom calls – Is a ‘short‐term bounce’ next?",
     "source": "AMBCrypto (技术与链上)",
@@ -5183,5 +5173,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e23f58e3068acf92",
+    "title": "3 Altcoins Defy the Market Crash as Bitcoin Hits a Two-Year Low",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-22T02:45:07.937469+00:00",
+    "tokens": [
+      "BNB",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
