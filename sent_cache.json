@@ -1,15 +1,5 @@
 [
   {
-    "id": "741bbbe6abbd21bf",
-    "title": "MegaETH 团队重组:MEGA 员工规模缩减 20%",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-13T15:09:34.164445+00:00",
-    "tokens": [
-      "MEGA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f11f9c22e01ff0ba",
     "title": "Japanese Giant Rakuten Joins Institutional XRP ETF Holders",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5183,6 +5173,16 @@
     "title": "IOSG:矿企转向 AI 数据中心,电力接口取代比特币成为核心资产",
     "source": "吴说区块链 (中文深度)",
     "sent_at": "2026-11-22T11:23:49.713127+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1a5ef2805069d655",
+    "title": "星球晚讯",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-22T11:44:09.201114+00:00",
     "tokens": [
       "BTC"
     ],
