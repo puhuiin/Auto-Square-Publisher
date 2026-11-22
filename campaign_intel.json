@@ -19,36 +19,32 @@
   "last_updated": "2026-11-21T14:23:50.090968Z",
   "_feed_health": {
     "Watcher.Guru (快讯)": {
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-22T01:41:52.024886+00:00",
-      "fails": 3
-    },
-    "深潮TechFlow (中文/繁体)": {
-      "reset_at": "2026-11-22T01:23:37.469021+00:00",
-      "last_fail": "2026-11-22T01:42:08.218310+00:00",
-      "fails": 2
+      "fails": 3,
+      "last_fail": "2026-11-22T02:03:41.378487+00:00",
+      "parked_until": "2026-11-17T10:23:31.478522+00:00"
     },
     "深潮TechFlow (中文/简体)": {
-      "reset_at": "2026-11-22T01:23:35.630784+00:00",
-      "last_fail": "2026-11-22T01:42:08.160473+00:00",
-      "fails": 2
+      "fails": 3,
+      "last_fail": "2026-11-22T02:03:57.703408+00:00",
+      "parked_until": "2026-11-22T08:03:57.703408+00:00",
+      "reset_at": "2026-11-22T01:23:35.630784+00:00"
+    },
+    "深潮TechFlow (中文/繁体)": {
+      "fails": 3,
+      "last_fail": "2026-11-22T02:03:57.787986+00:00",
+      "parked_until": "2026-11-22T08:03:57.787986+00:00",
+      "reset_at": "2026-11-22T01:23:37.469021+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
     "Preset-stepfun": {
-      "cooldown_until": "2026-11-22T02:04:19.120344+00:00",
-      "last_fail": "2026-11-21T02:04:19.120355+00:00",
       "fails": 12,
-      "permanent": true
-    },
-    "Preset-stepfun-flash": {
-      "cooldown_until": "2026-11-22T02:03:39.962357+00:00",
-      "last_fail": "2026-11-21T02:03:39.962370+00:00",
-      "fails": 1,
+      "last_fail": "2026-11-21T02:04:19.120355+00:00",
+      "cooldown_until": "2026-11-22T02:04:19.120344+00:00",
       "permanent": true
     }
   },
