@@ -1,15 +1,5 @@
 [
   {
-    "id": "1d372c20fab9a31e",
-    "title": "HYPE up 1% as Hyperliquid OI hitting record $18.1b",
-    "source": "CoinJournal (山寨异动)",
-    "sent_at": "2026-11-13T11:47:17.094547+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "66f2922cc11418ab",
     "title": "解绑质押暂停7天,MANTRA应对私钥泄露事件",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5184,6 +5174,17 @@
     "sent_at": "2026-11-22T05:43:54.897039+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "397ebd5cb4e39ea5",
+    "title": "Popular Commentator Slams Cardano as a ‘Largely Failed Blockchain’ as Solana Leaves ADA in the Dust on Adoption Metrics",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-22T06:03:56.425372+00:00",
+    "tokens": [
+      "ADA",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
