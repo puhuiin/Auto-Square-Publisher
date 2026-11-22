@@ -4475,33 +4475,28 @@ class TestTimeoutBudgetCoupling(unittest.TestCase):
                 else:
                     os.environ[k] = v
 
-    def test_stepfun_preview_gets_long_timeout(self):
-        """推理通道 Preset-stepfun 应与 Reasonix 同级 90s。
+    def test_stepfun_channels_are_removed(self):
+        """⛔ 2026-11-22：用户决定**不续订 Step Plan** ⇒ stepfun / stepfun-flash 退出池。
 
-        （R626 前此用例名为 test_reasoning_preset_gets_long_timeout，样本是
-        已弃用的 Preset-b.ai。）
+        为什么删条目而不是只靠 R873 的 permanent 冷却：订阅不会再续，冷却只会把
+        「每 24h 白撞一次 400」变成常态噪音，还让探针/日报永远挂着两条僵尸站。
+        **反向守卫**：即便 STEPFUN_API_KEY 仍在，也不得进链——将来续订时把
+        extra_keys 两条按原文加回，并同步改这条测试（显式失败好过静默恢复）。
         """
-        chain = self._build({"STEPFUN_API_KEY": "k1"})
-        sf = next(p for p in chain if p.name == "Preset-stepfun")
-        self.assertEqual(sf.timeout, 90.0, "推理通道 Preset-stepfun 应与 Reasonix 同级 90s")
+        chain = self._build({"STEPFUN_API_KEY": "k-sf-dead"})
+        self.assertFalse([p for p in chain if p.name.startswith("Preset-stepfun")],
+                         "Step Plan 已停用，即便 key 存在也不该进 provider 链")
 
-    def test_bai_channel_is_removed(self):
-        """R626：b.ai 已弃用，**即便 BAI_API_KEY 存在也不该进链**。
+    def test_stepfun_wording_still_recognized(self):
+        """历史行必须仍可解读：11-22 前的遥测里有大量 `Preset-stepfun*` 通道行。
 
-        这是弃用的守卫——若有人把 extra_keys 的 b.ai 条目加回来却忘了改
-        workflow（反向的不一致），或反过来想"偷偷恢复"而没走完整流程，
-        这个用例会立刻暴露。
+        故只删「进池」这一层，识别与预算档**保留**——否则旧数据会被读成
+        "非推理通道"，回看历次验收时会得出相反结论。
         """
-        chain = self._build({"BAI_API_KEY": "k1", "STEPFUN_API_KEY": "k-sf"})
-        self.assertFalse([p for p in chain if p.name == "Preset-b.ai"],
-                         "b.ai 已弃用，不该出现在 provider 链里")
-
-    def test_stepfun_preset_gets_long_timeout(self):
-        """R279：step-5-preview 官方文档带 reasoning_effort 思考档，与 b.ai 同型
-        ——按非推理配 25s/600 会复刻 R218 的系统性空包，故按推理通道同级 90s。"""
-        chain = self._build({"STEPFUN_API_KEY": "k-sf2"})
-        sf = next(p for p in chain if p.name == "Preset-stepfun")
-        self.assertEqual(sf.timeout, 90.0, "推理通道 Preset-stepfun 应与 Preset-b.ai 同级 90s")
+        self.assertTrue(m._is_reasoning_channel("Preset-stepfun", "step-5-preview"))
+        self.assertEqual(m._summarize_max_tokens("Preset-stepfun", "step-5-preview"), 3000)
+        self.assertEqual(m._summarize_max_tokens("Preset-stepfun-flash",
+                                                 "step-3.7-flash"), 3000)
 
     def test_non_reasoning_preset_keeps_short_timeout(self):
         # R218：openrouter 默认模型 openrouter/free 是聚合路由别名（落地模型
@@ -14818,7 +14813,9 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
         "tokenrouter": "nemotron-3-nano-omni",    # 原 glm-5.3-free/minimax-3 已失效
         "siliconflow": "qwen3-8b",                # ¥0 免费模型；V3 是计费模型
         "bluesminds": "glm-4-flash",              # 本地《白嫖》注册表目录
-        "stepfun": "step-5-preview",              # 阶跃 Step Plan 订阅旗舰（推理型）
+        # ⛔ 2026-11-22：stepfun / stepfun-flash 已停用（用户不续订 Step Plan），
+        # 从 _EXPECTED 移除；"被偷偷加回来"由 test_stepfun_is_retired 双向守住
+        #（同 b.ai 的弃用守卫，两者方向相反、缺一不可）。
         # R872：探针按真实目录选定（run 44840903549，20 模型逐条核过）
         "opencsg": "deepseek-v4.1-flash-1017",
         # R876：备份模型通道（探针 run 44846139133 实测 finish=stop）
@@ -14827,6 +14824,18 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
         # **它必须被移除，否则本用例会一直红**——但移除后"它被人加回来"就
         # 变静默了，故另立一条显式断言（见 test_bai_is_retired）双向守住。
     }
+
+    def test_stepfun_is_retired(self):
+        """⛔ 2026-11-22：用户决定不续订 Step Plan ⇒ 两条 stepfun 通道不得回到链里。
+
+        与 test_bai_is_retired 同型：单从 _EXPECTED 删掉只能防"它缺默认名"，
+        这条防的是"**它被加回来了**"。即便 STEPFUN_API_KEY 仍在 _ALL_KEYS 里
+        （刻意保留，正是为了让本守卫有东西可看），链里也不许出现。
+        """
+        chain = {p.name: p for p in self._build()}
+        for dead in ("Preset-stepfun", "Preset-stepfun-flash"):
+            self.assertNotIn(dead, chain,
+                             f"{dead} 已停用（Step Plan 不续订），不该再进 provider 链")
 
     def test_bai_is_retired(self):
         """R626：b.ai 已弃用，**即便 BAI_API_KEY 存在也不该进链**。
@@ -15038,116 +15047,18 @@ class TestR876OpencsgBackupChannel(unittest.TestCase):
 
 
 class TestStepfunPreset(unittest.TestCase):
-    """R279：阶跃星辰 Step Plan 订阅通道接入（用户指定稳定源）。
+    """⛔ 2026-11-22：Step Plan 停用（用户决定不续订），本类原锁的六条"配置不变式"
+    （base_url / 默认模型 / 双模型同 key 共存 / priority 置顶顺序）**随配置一起退役**。
 
-    锁四条不变式：
-    1. base_url 必须落在 /step_plan/v1——官方文档明示删掉前缀会静默切换到
-       按量计费的普通 API 通道（另一套计费体系），属于"看起来修好了其实在
-       花另一笔钱"的陷阱，写死防手滑；
-    2. 默认模型 = step-5-preview，STEPFUN_MODEL 可覆盖；
-    3. 按推理通道配给 90s/3000（R783 起点校准，reasoning_effort 思考档，见
-       test_stepfun_preset_gets_long_timeout 与谓词测试）；
-    4. 无 Key 零痕迹（不占链位、不污染其他 preset）。
+    ★ 为什么删而不是留着：它们锁的是一段**已经不存在的 extra_keys 配置**。留着会在
+      将来"续订恢复"时制造假红，把一次正常的配置恢复报成回归（R626 弃用 b.ai 时
+      踩过同型：旧断言对象消失后，守卫以"看起来像回归"的形式误导排查）。
+    ★ 覆盖没有丢，只是挪到了**真正还在生效**的语义上：
+      · 进池守卫：`TestTimeoutBudgetCoupling::test_stepfun_channels_are_removed`
+      · 历史行可解读：`TestTimeoutBudgetCoupling::test_stepfun_wording_still_recognized`
+    ★ `STEPFUN_PRIORITY` / `_flash_soft_demote` 等纯函数**保留**（历史行解读用），
+      但它们的"置顶效果"只有在配置恢复时才有意义，故不再用链构建来断言。
     """
-
-    def _build(self, extra=None):
-        keys = {"STEPFUN_API_KEY": "k-stepfun-x"}
-        if extra:
-            keys.update(extra)
-        saved = {k: os.environ.get(k) for k in keys}
-        os.environ.update(keys)
-        try:
-            return m.MultiLLMEngine()._build_provider_chain()
-        finally:
-            for k, v in saved.items():
-                if v is None:
-                    os.environ.pop(k, None)
-                else:
-                    os.environ[k] = v
-
-    def test_base_url_and_defaults(self):
-        sf = next(p for p in self._build() if p.name == "Preset-stepfun")
-        self.assertEqual(sf.base_url, "https://api.stepfun.com/step_plan/v1",
-                         "/step_plan 前缀丢失会静默落入按量计费通道，勿删")
-        self.assertEqual(sf.model, "step-5-preview")
-        self.assertEqual(sf.timeout, 90.0)
-        # ★ R783：1500 → 3000（stepfun 成功稿 p50=3878，99% >1500）
-        self.assertEqual(m._summarize_max_tokens("Preset-stepfun", "step-5-preview"), 3000)
-
-    def test_model_env_override(self):
-        sf = next(p for p in self._build({"STEPFUN_MODEL": "step-3.7-flash"})
-                  if p.name == "Preset-stepfun")
-        self.assertEqual(sf.model, "step-3.7-flash")
-
-    def test_absent_without_key(self):
-        saved = os.environ.pop("STEPFUN_API_KEY", None)
-        try:
-            chain = m.MultiLLMEngine()._build_provider_chain()
-        finally:
-            if saved is not None:
-                os.environ["STEPFUN_API_KEY"] = saved
-        self.assertFalse(any(p.name == "Preset-stepfun" for p in chain))
-        self.assertFalse(any(p.name == "Preset-stepfun-flash" for p in chain))
-
-    def test_flash_coexists_on_shared_key(self):
-        """R338：step-3.7-flash 与 step-5-preview 共用 STEPFUN_API_KEY，去重键放宽到
-        (key, model) 后两条通道必须并存——旧的纯 api_key 去重会静默吞掉第二条。"""
-        chain = self._build()
-        sf = [p for p in chain if p.name.startswith("Preset-stepfun")]
-        names = {p.name for p in sf}
-        self.assertEqual(names, {"Preset-stepfun", "Preset-stepfun-flash"},
-                         f"同 key 双模型应各成一条独立通道，实际 {names}")
-        # 同 key、同端点、异模型
-        self.assertEqual({p.api_key for p in sf}, {"k-stepfun-x"})
-        self.assertEqual({p.base_url for p in sf},
-                         {"https://api.stepfun.com/step_plan/v1"})
-        flash = next(p for p in sf if p.name == "Preset-stepfun-flash")
-        self.assertEqual(flash.model, "step-3.7-flash")
-        # flash 同属订阅通道 → 推理配给（startswith 覆盖，误升无成本）
-        self.assertEqual(flash.timeout, 90.0)
-        # ★ R783：1500 → 3000（stepfun-flash 成功稿 p50=2705，99% >1500）
-        self.assertEqual(m._summarize_max_tokens("Preset-stepfun-flash", "step-3.7-flash"), 3000)
-
-    def test_flash_model_env_override(self):
-        flash = next(p for p in self._build({"STEPFUN_FLASH_MODEL": "step-3.7-turbo"})
-                     if p.name == "Preset-stepfun-flash")
-        self.assertEqual(flash.model, "step-3.7-turbo")
-
-    def test_flash_ranked_before_step5_by_default(self):
-        """R338：用户 2026-09-23 指定"多用 step5、稍微快一点"。默认 STEPFUN_PRIORITY=1
-        把订阅通道抬到免费池之上，且 flash 比 step-5-preview 再高一档——冷启动
-        （无延迟遥测=+inf 成本分）时也先试 flash 而非 80s 的 step-5。
-
-        R626：末行的排序参照从 b.ai 换成 openrouter（b.ai 已弃用、不再进链）。
-        断言的**语义未变**：step-5 必须排在所有 prio=0 的免费池通道之前——
-        这正是 R338 锁的"订阅通道整体抬到免费池之上"。
-        """
-        chain = self._build({"OPENROUTER_API_KEY": "k-or"})
-        flash = next(p for p in chain if p.name == "Preset-stepfun-flash")
-        step5 = next(p for p in chain if p.name == "Preset-stepfun")
-        self.assertGreater(flash.priority, step5.priority, "flash 应排在 step-5 之前")
-        self.assertGreater(step5.priority, 0, "step-5 应被抬到免费池之上（多用 step5）")
-        # 冷启动实序：flash → step-5 → 免费池（无遥测时按 -priority 主导排序）
-        eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
-        eng._fail_counts, eng._clients = {}, {}
-        eng.providers = chain
-        with patch.object(eng, "_breaker_state", return_value={}), \
-             patch.object(eng, "_provider_cost_latency_scores", return_value={}), \
-             patch.object(eng, "_quality_fails", return_value={}):
-            order = [p.name for p in eng._ordered_providers()]
-        self.assertLess(order.index("Preset-stepfun-flash"), order.index("Preset-stepfun"))
-        # R626：参照通道从 b.ai 换成 openrouter（b.ai 已弃用、不再进链）——
-        # 语义不变：step-5 必须排在所有 prio=0 免费池通道之前（R338 的核心）。
-        self.assertLess(order.index("Preset-stepfun"), order.index("Preset-openrouter"))
-
-    def test_priority_zero_disables_promotion(self):
-        """STEPFUN_PRIORITY=0 = 退回纯延迟排序（不促销），两条通道 priority 归 0。"""
-        chain = self._build({"STEPFUN_PRIORITY": "0"})
-        for name in ("Preset-stepfun", "Preset-stepfun-flash"):
-            p = next(x for x in chain if x.name == name)
-            self.assertEqual(p.priority, 0, f"{name} 关闭促销后不应带 priority")
-
-
 class TestProviderPriorityOrdering(unittest.TestCase):
     """R8：配置层"置顶"必须经得起成本排序，但不得越过健康度"""
 

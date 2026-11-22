@@ -76,7 +76,6 @@ jobs:
           SQUARE_KEY: ${{ secrets.SQUARE_API_KEY }}
           OPENROUTER_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GOOGLE_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          STEPFUN_KEY: ${{ secrets.STEPFUN_API_KEY }}
           OPENCSG_KEY: ${{ secrets.OPENCSG }}
           LLM_KEY: ${{ secrets.LLM_API_KEY }}
           SC_KEY: ${{ secrets.SERVERCHAN_KEY }}
@@ -90,7 +89,6 @@ jobs:
           if [ -n "$SQUARE_KEY" ]; then echo "✔ SQUARE_API_KEY: 已检测到"; else echo "❌ SQUARE_API_KEY: 未检测到 (请在 Repository Secrets 中配置)"; fi
           if [ -n "$OPENROUTER_KEY" ]; then echo "✔ OPENROUTER_API_KEY: 已检测到"; fi
           if [ -n "$GOOGLE_KEY" ]; then echo "✔ GOOGLE_API_KEY: 已检测到 (Gemini 免费层，R615 独立额度池)"; fi
-          if [ -n "$STEPFUN_KEY" ]; then echo "✔ STEPFUN_API_KEY (阶跃 Step Plan): 已检测到"; fi
           if [ -n "$OPENCSG_KEY" ]; then echo "✔ OPENCSG (OpenCSG AI 网关，R872 独立额度池): 已检测到"; fi
           if [ -n "$LLM_KEY" ]; then echo "✔ LLM_API_KEY: 已检测到"; fi
           if [ -n "$SC_KEY" ]; then echo "✔ SERVERCHAN_KEY (微信推送): 已检测到"; fi
@@ -186,11 +184,8 @@ jobs:
           INFERERA_API_KEY: ${{ secrets.INFERERA_API_KEY }}
           TOKENROUTER_API_KEY: ${{ secrets.TOKENROUTER_API_KEY }}
           SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
-          # 阶跃星辰 Step Plan 订阅通道：OpenAI 协议端点与 Anthropic 的
-          # /step_plan/v1/messages 同订阅额度（删 /step_plan 前缀会静默落入
-          # 按量计费的普通 API 通道，勿"修复"该 URL）
-          STEPFUN_API_KEY: ${{ secrets.STEPFUN_API_KEY }}
-          STEPFUN_MODEL: ${{ secrets.STEPFUN_MODEL }}
+          # ⛔ 2026-11-22：Step Plan 停用（用户不续订）⇒ 不再注入 STEPFUN_*；
+          # main.py 也已从 extra_keys 摘除两条通道（续订恢复步骤见 README）。
           # R872：OpenCSG AI 网关（secret 名是 OPENCSG，注入成本池统一的
           # <SITE>_API_KEY 约定）。11-20 三源同断后补的独立额度池；
           # 默认名 deepseek-v4.1-flash-1017 由只读探针按真实目录选定。

@@ -99,8 +99,12 @@ class TestExtractPool(unittest.TestCase):
         self.assertGreaterEqual(len(pool), 11,
                                 f"实际解析到 {len(pool)} 站，期望 ≥11：{sorted(sites)}")
         for must in ("openrouter", "google", "xkiro", "tokenrouter",
-                     "inferera", "stepfun"):
+                     "inferera", "opencsg"):
             self.assertIn(must, sites, f"{must} 站未纳入探针覆盖")
+        # ⛔ 2026-11-22：Step Plan 停用（用户不续订）⇒ 两条 stepfun 站必须退出覆盖。
+        #    同 b.ai 的弃用守卫：若它们以任何方式回到池里，这里要响。
+        self.assertNotIn("stepfun", sites, "Step Plan 已停用，不该在探针覆盖里")
+        self.assertNotIn("stepfun-flash", sites, "Step Plan 已停用，不该在探针覆盖里")
         # R626：b.ai 必须已退出池——若它回来，说明有人恢复了条目却没配套
         # 改workflow（反向不一致），或"偷偷恢复"绕过了弃用决策。
         self.assertNotIn("b.ai", sites, "b.ai 已弃用，不该在探针覆盖里")

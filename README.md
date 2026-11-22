@@ -166,7 +166,7 @@
 | **SiliconFlow (硅基流动)** | `https://api.siliconflow.cn/v1` | `qwen3-8b`（¥0 免实名后免费）<br>`glm-4-9b-0414`<br>`StepFun-xing4.0-29b` | `SILICONFLOW_API_KEY` |
 | **bluesminds** | `https://api.bluesminds.com/v1` | `glm-4-flash`（注册赠试用额度）<br>`kimi-k2`<br>`deepseek-chat` | `BLUESMINDS_API_KEY` |
 | **🏠 Reasonix 本地网关** ⭐ 本地首选 | `http://localhost:20140/v1` | `auto/best-fast`（自动路由） | **无需 Key**（本地自动发现） |
-| **阶跃星辰 Step Plan** 💳 订阅制 | `https://api.stepfun.com/step_plan/v1` | `step-5-preview`（默认，旗舰推理）<br>`step-3.7-flash`<br>`step-3.5-flash` | `STEPFUN_API_KEY` |
+| **阶跃星辰 Step Plan** ⛔ **已停用（2026-11-22 用户决定不续订）** | ~~`https://api.stepfun.com/step_plan/v1`~~ | 原 `step-5-preview` / `step-3.7-flash`（已退出 provider 池） | ~~`STEPFUN_API_KEY`~~ |
 | **OpenCSG AI 网关** 💳 独立额度池 | `https://opencsg.com/aigateway/v1` | `deepseek-v4.1-flash-1017`（默认，思考型）<br>备份 `OpenCSG/Agentic-27B`（R876，同 key 同端点，模型级故障转移）<br>目录共 20 个模型；`auto` 是聚合路由（实测慢 5 倍，不选） | `OPENCSG_API_KEY` |
 
 ### 🏠 Reasonix 本地免费模型网关（本地开发首选）
@@ -213,7 +213,7 @@
   secret 不影响运行，但删掉它可以让「哪些通道在用」与仓库配置保持一致。
 - `ZAI_API_KEY`: 智谱 Z.ai Key（自动使用 `glm-4.7-flash` 免费层）
 - `BLUESMINDS_API_KEY`: bluesminds Key（注册赠试用额度，自动使用 `glm-4-flash`）
-- `STEPFUN_API_KEY`: 阶跃星辰 Step Plan 订阅 Key（自动使用 `step-5-preview`，见下方订阅说明）
+- ~~`STEPFUN_API_KEY`~~: ⛔ **已停用（2026-11-22 不续订）**，配了也不会进链；见下方订阅说明（留作续订后恢复参考）
 - `OPENCSG_API_KEY`: OpenCSG AI 网关 Key（自动使用 `deepseek-v4.1-flash-1017`，见下方说明）。
   仓库里实际配的 Secret 名是 **`OPENCSG`**，workflow 映射成 `OPENCSG_API_KEY`。
 - `LLM_API_KEY`: 你的 DeepSeek / 其他 OpenAI 兼容 API Key
@@ -245,17 +245,20 @@
 ]
 ```
 
-#### 💳 阶跃星辰 Step Plan 订阅通道（`STEPFUN_API_KEY`）
+#### ⛔ 阶跃星辰 Step Plan —— **已停用（2026-11-22）**
 
-Step Plan 是阶跃星辰的**订阅制**服务（¥49~699/月 Credit 池，与按量计费的普通 API 额度独立）：
-
-1. 在 [platform.stepfun.com](https://platform.stepfun.com) 订阅 Step Plan 并创建 **Step API Key**（中国区 key 配 `.com` 域名；国际版 key 配 `.ai`，两者不通用）。
-2. 仓库 Secret 添加 `STEPFUN_API_KEY` = 该 Key；`STEPFUN_MODEL` 可选覆盖旗舰通道（默认 `step-5-preview`）。
-3. 同一把订阅 Key 会自动再开一条 **`step-3.7-flash` 快速通道**（与 `step-5-preview` 共用 Credit 池、共用 `/step_plan/v1` 端点）：`STEPFUN_FLASH_MODEL` 可选覆盖该模型（默认 `step-3.7-flash`），想固定到 `step-3.5-flash` 等其它同订阅模型时设置。
-4. `STEPFUN_PRIORITY`（默认 `1`）把两条订阅通道整体抬到免费池之上——`step-3.7-flash` 再高一档，故冷启动（无延迟遥测）时**先试更快的 flash、再落 step-5、最后才免费池**；设 `0` 关闭促销、退回纯延迟成本排序。
-5. 本项目走 OpenAI 协议端点 `https://api.stepfun.com/step_plan/v1`——与 Claude Code 等工具用的 Anthropic 端点 `https://api.stepfun.com/step_plan/v1/messages` 是**同一订阅额度的另一协议面**，计费口径相同。
-6. ⚠️ **URL 里的 `/step_plan` 不可删除**：删掉会静默切换到按量计费的普通 API 通道（另一套计费体系，调用成功也不代表在花订阅 Credit）。
-7. 本地运行：`$env:STEPFUN_API_KEY="sk-xxxx"; python main.py`。实弹验证 flash 通道可跑 `$env:STEPFUN_API_KEY="sk-xxxx"; python scripts/probe_stepfun.py`（对比 step-5-preview 与 step-3.7-flash 的时延/首句/用量）。
+> 用户 2026-11-22 明确决定**不再续订 Step Plan**，`stepfun` / `stepfun-flash` 已从 provider 池
+> 摘除（不再尝试、不再进探针与日报的僵尸名单）。之后统一使用 **OpenCSG**
+> （`deepseek-v4.1-flash-1017` 主力 + `OpenCSG/Agentic-27B` 备份）。
+>
+> **续订后如何恢复**：把 `main.py` `extra_keys` 里被摘掉的两条条目（`stepfun` / `stepfun-flash`，
+> 原端点 `https://api.stepfun.com/step_plan/v1`、默认模型 `step-5-preview` / `step-3.7-flash`）
+> 按原文加回，并在仓库 Secret 配 `STEPFUN_API_KEY`（**已停用，仅续订时**）；同时改
+> `tests/test_core.py::TestTimeoutBudgetCoupling::test_stepfun_channels_are_removed`
+> （那条守卫故意锁住"即便 key 在也不进链"，恢复必须显式放行）。
+> `STEPFUN_PRIORITY`（默认 `1`）—— **已停用**：原用于把两条订阅通道抬到免费池之上（flash 再高一档）；池里没有它们时该旋钮不起作用，仅续订恢复后有含义。
+> 端点仍走 OpenAI 协议面（`/step_plan/v1/chat/completions`），**`/step_plan` 前缀不可省**——
+> 删掉会静默落入按量计费通道。
 
 #### 💳 OpenCSG AI 网关通道（`OPENCSG_API_KEY`，R872）
 
@@ -399,7 +402,7 @@ python scripts/metrics_report.py --days 1
   | `FETCH_DEADLINE_SEC` | `300` | 单轮 RSS 抓取的全局 deadline（秒）：到点放弃迟到源、用已完成候选继续，避免卡住的源拖满 workflow 并挤掉后续 cron |
   | `LOG_LEVEL` | `INFO` | 日志级别（排障时可设 `DEBUG`） |
   | `MAX_POSTS_PER_RUN` | `2` | 单次运行最大发帖数（workflow 运行参数；配额剩余不足时自动收敛） |
-- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `ZAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL` / `STEPFUN_MODEL` / `STEPFUN_FLASH_MODEL` / `OPENCSG_MODEL` / `OPENCSG_BACKUP_MODEL` / `BLUESMINDS_MODEL` / `GOOGLE_MODEL`——想把某平台固定到指定模型时设置。
+- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `ZAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL` / ~~`STEPFUN_MODEL` / `STEPFUN_FLASH_MODEL`~~（Step Plan 已停用） / `OPENCSG_MODEL` / `OPENCSG_BACKUP_MODEL` / `BLUESMINDS_MODEL` / `GOOGLE_MODEL`——想把某平台固定到指定模型时设置。
   ⚠️ `BAI_MODEL` / `BAI_API_KEY` 已随 b.ai 于 R626 弃用而失效，配置它们不会有任何效果（R638：此前本行仍列着 `BAI_MODEL`，会让读者以为改它能换模型）。
 - **报警通知渠道**（全部可选，多渠道并发）：`SERVERCHAN_KEY`（Server酱微信）/ `PUSHPLUS_TOKEN`（PushPlus 微信）/ `BARK_KEY`（iOS Bark）/ `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`（Telegram）/ `WEBHOOK_URL`（钉钉/飞书/企微/Discord 通用）。同一错误报警 12 小时同题节流，投递成功才计额度。
 - **CI 回归防线**：`tests/test_core.py` 内置百余个离线回归测试（含断路器/源停放/报错分类/通知编码/跨语言去重/行情缓存/同步契约），`.github/workflows/ci.yml` 在每次 push/PR 时自动编译、校验 workflow 语法并跑测试，防止守护逻辑被后续改动悄悄破坏。

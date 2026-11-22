@@ -6010,28 +6010,17 @@ class MultiLLMEngine:
                 "https://api.bluesminds.com/v1",
                 os.getenv("BLUESMINDS_MODEL", "").strip() or "glm-4-flash",
             ),
-            # 阶跃星辰 Step Plan 订阅通道（2026-09-20 接入，用户指定稳定源）。
-            # 订阅制（¥49~699/月 Credit 池），与 anthropic 格式端点
-            # api.stepfun.com/step_plan/v1/messages 是同一订阅额度的另一协议面
-            # ——官方文档双协议并列，本引擎全走 OpenAI SDK，故取同通道的
-            # OpenAI 端点（step_plan/v1/chat/completions），两者同计 Credit 池。
-            # ⚠️ /step_plan 前缀不可删：官方文档明示删掉它会静默落入按量计费的
-            # 普通 API 通道（独立计费体系，调用成功也不代表消耗订阅额度）。
-            # key 需中国区 key（.com 域；.ai 域为国际版）。
-            "stepfun": (
-                os.getenv("STEPFUN_API_KEY", "").strip(),
-                "https://api.stepfun.com/step_plan/v1",
-                os.getenv("STEPFUN_MODEL", "").strip() or "step-5-preview",
-            ),
-            # 同一订阅 Credit 池的更快模型（用户 2026-09-23 指定"多用 step5、让
-            # step-3.7-flash 也能用、稍微快一点"）：走同 key、同 /step_plan/v1 端点，
-            # 与 step-5-preview 同计订阅额度，仅模型名不同。去重键已放宽到 (key, model)，
-            # 故同一订阅 key 的双模型可并存（见下方 append 循环注释）。
-            "stepfun-flash": (
-                os.getenv("STEPFUN_API_KEY", "").strip(),
-                "https://api.stepfun.com/step_plan/v1",
-                os.getenv("STEPFUN_FLASH_MODEL", "").strip() or "step-3.7-flash",
-            ),
+            # ⛔ 阶跃星辰 Step Plan（stepfun / stepfun-flash）**已停用**。
+            #   用户 2026-11-22 明确决定**不再续订** Step Plan，之后统一用 OpenCSG。
+            #   为什么是"删条目"而不是"靠 R873 的 permanent 冷却兜"：订阅不会再续，
+            #   冷却只会把"每 24h 白撞一次 400 no active step plan subscription"
+            #   变成常态噪音，并让探针/日报永远挂着两条僵尸站，稀释真报警。
+            #   ★ 只删「进池」这一层：`_is_reasoning_provider` 的 stepfun 分支、
+            #     `STEPFUN_PRIORITY` 与 R861 的 flash 软减权**全部保留**——
+            #     11-22 之前的历史遥测里有大量 `Preset-stepfun*` 行，删了逻辑就解读不了；
+            #     将来若续订，把两条条目按原文加回即可（无需改任何判定逻辑）。
+            #   ⚠️ 反向守卫：tests/test_core.py::test_stepfun_channels_are_removed
+            #     锁住"即使 STEPFUN_API_KEY 存在也不进链"——偷偷恢复必须显式改测试。
             # OpenCSG AI 网关（R872，2026-11-21 接入）：11-20 16:46Z 起产量归零
             # ——stepfun/stepfun-flash 报 400「no active step plan subscription」
             # （订阅失效）、openrouter 免费日额度打满（429 free-models-per-day）、

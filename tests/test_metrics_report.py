@@ -4010,8 +4010,11 @@ class TestR623PoolCoverageBlindSpot(unittest.TestCase):
         pool = mr._provider_pool_from_main()
         self.assertGreaterEqual(len(pool), 10,
                                 "池定义解析异常，池内通道数远低于预期")
-        for name in ("stepfun", "stepfun-flash", "openrouter", "google"):
+        for name in ("openrouter", "google", "opencsg", "opencsg-agentic"):
             self.assertIn(name, pool)
+        # ⛔ 2026-11-22：Step Plan 停用 ⇒ 池里不该再有两条 stepfun（同 b.ai 弃用守卫）
+        for dead in ("stepfun", "stepfun-flash"):
+            self.assertNotIn(dead, pool, f"{dead} 已停用，不该再出现在池解析结果里")
 
     def test_pool_parse_failure_returns_empty_not_all_passed(self):
         """解析失败必须返回空（让渲染层报"失明"），绝不能退化成"全部已覆盖"
