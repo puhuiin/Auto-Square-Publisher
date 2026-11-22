@@ -1,15 +1,5 @@
 [
   {
-    "id": "7f3b294a2cfad47a",
-    "title": "Here’s how PEPE is quietly beating every big memecoin this year!",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-14T04:27:34.267248+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5fca23a9ceeebf40",
     "title": "Pickle Cat:未来美股或持续承压,ETH仍有进一步下跌风险",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5184,6 +5174,16 @@
     "tokens": [
       "ACE",
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3ffa99ff8143d25e",
+    "title": "Fusionist’s ACE bridge exploited, leading to $4M loss",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-22T23:43:43.857188+00:00",
+    "tokens": [
+      "ACE"
     ],
     "lang": "zh-CN"
   }
