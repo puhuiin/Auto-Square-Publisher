@@ -1,15 +1,5 @@
 [
   {
-    "id": "04f7dd8c617ee7da",
-    "title": "慢雾:DEX 聚合器 Pennysia 遭黑客攻击,曾授权合约的用户资产面临被盗风险",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-13T07:10:37.037779+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b06be6211f52f660",
     "title": "2026 年加密股票市场 Q4 前瞻报告(8 月至 10 月)|RootData Research",
     "source": "深潮TechFlow (中文/简体)",
@@ -5182,6 +5172,16 @@
     "sent_at": "2026-11-22T00:44:09.871840+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "8fce87736887539d",
+    "title": "XRP Major 2026 Death Cross Completes After 1-Year Wait, What Comes Next?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-22T01:04:00.198551+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
