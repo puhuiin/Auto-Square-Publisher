@@ -20,14 +20,14 @@
   "last_updated": "2026-11-22T15:03:54.739735Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "parked_until": "2026-11-22T11:24:04.008594+00:00",
       "fails": 3,
-      "last_fail": "2026-11-22T17:43:33.118944+00:00"
+      "parked_until": "2026-11-22T11:24:04.008594+00:00",
+      "last_fail": "2026-11-22T18:03:43.482794+00:00"
     },
     "Watcher.Guru (快讯)": {
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
       "fails": 3,
-      "last_fail": "2026-11-22T17:43:32.590078+00:00"
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-22T18:03:43.092599+00:00"
     }
   },
   "_fallback_image": {
@@ -35,17 +35,17 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
-    "Preset-stepfun": {
-      "cooldown_until": "2026-11-23T02:43:50.430277+00:00",
-      "last_fail": "2026-11-22T02:43:50.430291+00:00",
-      "permanent": true,
-      "fails": 1
-    },
     "Preset-stepfun-flash": {
-      "cooldown_until": "2026-11-23T02:43:46.516859+00:00",
       "last_fail": "2026-11-22T02:43:46.516873+00:00",
-      "permanent": true,
-      "fails": 1
+      "fails": 1,
+      "cooldown_until": "2026-11-23T02:43:46.516859+00:00",
+      "permanent": true
+    },
+    "Preset-stepfun": {
+      "last_fail": "2026-11-22T02:43:50.430291+00:00",
+      "fails": 1,
+      "cooldown_until": "2026-11-23T02:43:50.430277+00:00",
+      "permanent": true
     }
   },
   "_article_sent_date": "2026-11-22",

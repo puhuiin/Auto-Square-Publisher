@@ -1,15 +1,5 @@
 [
   {
-    "id": "13415228200e56f7",
-    "title": "XRP loans trigger 883 liquidations, and $53M remains at risk",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-13T22:44:04.870853+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0172a4fd96782969",
     "title": "加拿大安大略省医疗保健养老金三季度新增 HYPE 财库公司 PURR 持仓,季末市值约 3,533 万美元",
     "source": "吴说区块链 (中文深度)",
@@ -5185,6 +5175,17 @@
     "sent_at": "2026-11-22T17:44:00.528563+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "67cd608f7fbe0e90",
+    "title": "XRP’s institutional adoption story has a catch that investors may be overlooking",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-22T18:04:25.763668+00:00",
+    "tokens": [
+      "XRP",
+      "RLUSD"
     ],
     "lang": "en"
   }
