@@ -1,15 +1,5 @@
 [
   {
-    "id": "83852c0ca39044f6",
-    "title": "Solana treasury Forward Industries flashes a 30% SOL discount, with a catch",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-13T06:47:32.086869+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "04f7dd8c617ee7da",
     "title": "慢雾:DEX 聚合器 Pennysia 遭黑客攻击,曾授权合约的用户资产面临被盗风险",
     "source": "吴说区块链 (中文深度)",
@@ -5184,5 +5174,15 @@
       "ARK"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "e5dc82d2ba7e7309",
+    "title": "Onchain Lens:过去 24 小时约 4.09 万枚 HYPE 被回购并销毁",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-22T00:44:09.871840+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
