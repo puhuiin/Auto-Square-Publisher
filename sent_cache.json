@@ -1,15 +1,5 @@
 [
   {
-    "id": "ff207b891ea2f936",
-    "title": "TON Strategy第三季度净亏损2397万美元,持有约2.35亿枚GRAM",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-13T14:10:43.823297+00:00",
-    "tokens": [
-      "GRAM"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c868121f1f4ef4b7",
     "title": "Pi Network (PI) Hit by Volatility, Solana (SOL) Braces for Additional Sell-off: Bits Recap Nov 13",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5182,6 +5172,16 @@
     "title": "Shiba Inu Team Makes Key GitHub Clarification for ShibaSwap, Shibarium",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-11-22T10:24:00.291226+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "a15c80e73c422353",
+    "title": "All of Shiba Inu's (SHIB) Five-Year Rally Comes Down to One 2021 Price",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-22T10:44:06.028726+00:00",
     "tokens": [
       "SHIB"
     ],
