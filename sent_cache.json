@@ -1,15 +1,5 @@
 [
   {
-    "id": "a7c5a09edcc63844",
-    "title": "Aave plan could cut some lenders’ share of interest by 60%",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-13T20:25:50.277280+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "340af3e97a5ce7b2",
     "title": "Solana 机密计算工具在开发网上线测试版",
     "source": "深潮TechFlow (中文/简体)",
@@ -5185,6 +5175,16 @@
     "tokens": [
       "RLUSD",
       "USDC",
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4b7aad4dcc2ed02d",
+    "title": "XRP on Track for Worst November in History as December Data Points to Smaller Losses",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-22T16:24:00.611170+00:00",
+    "tokens": [
       "XRP"
     ],
     "lang": "en"

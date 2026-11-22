@@ -19,15 +19,15 @@
   "strategy_guidance": "优先围绕仍在进行的 Trade Futures & Win（200 BNB）、RLUSD 持币分享 XRP、ANTB/NVDA TradFi 合约与 Black Friday 系列做快讯拆解，把日常行情/上线公告落到具体活动规则、参与路径和风险提示上。发帖时用“活动冲刺/规则复盘/抄作业清单”角度引导读者参与评论与互动拿奖励并追当期活动热度，避免任何收益承诺；对 Black Friday 到新年的限时活动保持高频跟贴，先发参与入口和任务清单，再发复盘。将 Binance Earn 的 USDC/USDT 活期与 BTC Yield 活动作为产品背景补充，不暗示参加活动会带来交易收益。",
   "last_updated": "2026-11-22T15:03:54.739735Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "parked_until": "2026-11-22T11:24:04.008594+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-22T16:03:37.489791+00:00"
-    },
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
       "fails": 3,
-      "last_fail": "2026-11-22T16:03:36.867715+00:00"
+      "last_fail": "2026-11-22T16:23:28.453232+00:00"
+    },
+    "CoinJournal (山寨异动)": {
+      "parked_until": "2026-11-22T11:24:04.008594+00:00",
+      "fails": 3,
+      "last_fail": "2026-11-22T16:23:28.929259+00:00"
     }
   },
   "_fallback_image": {
@@ -35,23 +35,23 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
-    "Preset-stepfun-flash": {
-      "last_fail": "2026-11-22T02:43:46.516873+00:00",
-      "permanent": true,
-      "fails": 1,
-      "cooldown_until": "2026-11-23T02:43:46.516859+00:00"
-    },
     "Preset-stepfun": {
       "last_fail": "2026-11-22T02:43:50.430291+00:00",
       "permanent": true,
       "fails": 1,
       "cooldown_until": "2026-11-23T02:43:50.430277+00:00"
+    },
+    "Preset-stepfun-flash": {
+      "last_fail": "2026-11-22T02:43:46.516873+00:00",
+      "permanent": true,
+      "fails": 1,
+      "cooldown_until": "2026-11-23T02:43:46.516859+00:00"
     }
   },
   "_article_sent_date": "2026-11-22",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1229,
+  "_img_rot": 1230,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
