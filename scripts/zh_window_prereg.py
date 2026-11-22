@@ -126,6 +126,38 @@ def confound_breakdown(joined):
     return out
 
 
+def density_breakdown(joined, pub_rows):
+    """★ 处置期**窗内**：同一 20 分钟槽里发了几篇 vs vpd 中位。
+
+    为什么要它：历史实测 `MAX_POSTS_PER_RUN=2` 但**每轮最多只发过 1 篇**
+    ⇒ "同一槽 2 篇是否互相抢量"在实验开始前**无法验证**。而实验正是要把窗口
+    从 ~1 篇/轮压到 ~2 篇/轮；若存在抢量，"量级"读数会系统性偏低，需要打折看。
+    ⇒ 只能在实验内观察（不参与判定；没有 2 篇样本时如实报"暂无"）。
+    """
+    def _med(rs):
+        return st.median([r["vpd"] for r in rs]) if rs else None
+
+    bin_count = collections.Counter()
+    for m in pub_rows:
+        if not str(m.get("outcome", "")).startswith("binance_published"):
+            continue
+        if not _is_zh(m.get("lang")):
+            continue
+        bin_count[str(m.get("ts", ""))[:16]] += 1      # YYYY-MM-DDTHH:MM
+
+    groups = collections.defaultdict(list)
+    for r in joined:
+        if not _in_window(r["meta"].get("ts")):
+            continue
+        k = bin_count.get(str(r["meta"].get("ts", ""))[:16], 1)
+        groups[min(k, 3)].append(r)
+    out = []
+    for k in sorted(groups):
+        label = {1: "1 篇/槽", 2: "2 篇/槽", 3: "≥3 篇/槽"}.get(k, "%d 篇/槽" % k)
+        out.append({"slots": label, "n": len(groups[k]), "med": _med(groups[k])})
+    return out
+
+
 def hour_profile_tvd(rows_a, rows_b):
     """两组发布行的 3 小时桶分布 TVD（确认 en 夜窗没被带跑）。"""
     def prof(rows):
@@ -238,6 +270,7 @@ def evaluate(joined, pub_rows):
         "ratio": ratio, "en_tvd": en_tvd, "checks": checks,
         "rollback": rollback, "verdict": verdict,
         "confounds": confound_breakdown(joined),
+        "density": density_breakdown(joined, pub_rows),
     }
 
 
@@ -267,6 +300,22 @@ def render(res):
             L.append("     ↳ 子样本 **都成立** ⇒ 不是长文/首发等其他子集驱动的假象")
         elif subs:
             L.append("     ↳ ⚠️ 有子样本不成立 ⇒ **先查是不是子集驱动**，别急着解读主读数（R809）")
+
+    # 同槽密度（观测项，不参与判定）
+    dens = res.get("density") or []
+    if dens:
+        L.append("  同槽密度（**观测**，不参与判定）：" + " ｜ ".join(
+            "%s n=%d 中位 %s" % (x["slots"], x["n"], f(x["med"], "%.1f")) for x in dens))
+        d1 = next((x["med"] for x in dens if x["slots"].startswith("1")), None)
+        d2 = next((x["med"] for x in dens if x["slots"].startswith("2")), None)
+        if d1 and d2 is not None:
+            if d2 < d1 * 0.6:
+                L.append("     ↳ ⚠️ **2 篇/槽明显低于 1 篇/槽** ⇒ 存在自我抢量，"
+                         "「量级」读数要打折看（别把它读成时段效应变弱）")
+            else:
+                L.append("     ↳ 2 篇/槽与 1 篇/槽相当 ⇒ 未观察到明显抢量")
+        elif d2 is None:
+            L.append("     ↳ 暂无 2 篇/槽样本（历史每轮最多 1 篇）⇒ 实验跑起来后再看")
 
     if not res["rows"]:
         L.append("")

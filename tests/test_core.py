@@ -10857,6 +10857,95 @@ class TestRunMainSemantics(unittest.TestCase):
         self.assertFalse(m._in_zh_output_hours(_Now(22).dt))
         self.assertFalse(m._in_zh_output_hours(_Now(5).dt))
 
+    def _cache_minutes_ago(self, paths, minutes, lang="zh-CN"):
+        import json
+        from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+        t = (_dt.now(_tz.utc) - _td(minutes=minutes)).isoformat()
+        with open(paths["cache"], "w", encoding="utf-8") as f:
+            json.dump([{"id": "prev", "title": "t", "source": "s",
+                        "sent_at": t, "tokens": ["BTC"], "lang": lang}], f)
+
+    def _two_cands(self):
+        """两条**不同标题**的候选——同标题会被同批近似去重挡掉（首版就踩了）"""
+        return [dict(self._candidate(), id="n-a", title="Alpha ETF inflow hits record high",
+                     impact_score=40, base_impact_score=40),
+                dict(self._candidate(), id="n-b", title="Beta chain halts withdrawals after exploit",
+                     impact_score=39, base_impact_score=39)]
+
+    def test_window_allows_two_per_round(self):
+        """★ R888：窗口内一轮可发 **2 篇**（否则中文窗实验结构上不可能生效）。
+
+        实测 1566 轮 published 分布 {0:382, 1:1184} ⇒ 从未有 2 篇；
+        根因是循环内 `MIN_POST_GAP_MIN` 在发出第 1 篇后 gap≈0 ⇒ break。
+        """
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False, max_posts="2",
+                                     candidates=self._two_cands())
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq = patch.object(m, "SquarePublisher", return_value=pub)
+        sq.start()
+        patches.append(sq)
+        try:
+            self._cache_minutes_ago(paths, 20)
+            with patch.object(m, "_in_zh_target_window", return_value=True), \
+                 patch.object(m, "ZH_WINDOW_DOUBLE_PER_RUN", 1), \
+                 patch.object(m, "ZH_WINDOW_MAX_PER_RUN", 2), \
+                 patch.object(m, "MIN_POST_GAP_MIN", 15), \
+                 patch.object(m, "MAX_DAILY_POSTS", 60):
+                m._run_main()
+            self.assertEqual(pub.publish.call_count, 2,
+                             "窗口内应放行到 2 篇/轮")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_gap_gate_still_caps_outside_window(self):
+        """窗外不放宽：第 1 篇后 gap≈0 ⇒ 仍按 15min 门停下（只发 1 篇）"""
+        tmpdir, paths = self._iso_files()
+        patches = self._base_patches(tmpdir, paths, dry=False, max_posts="2",
+                                     candidates=self._two_cands())
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq = patch.object(m, "SquarePublisher", return_value=pub)
+        sq.start()
+        patches.append(sq)
+        try:
+            self._cache_minutes_ago(paths, 20)
+            with patch.object(m, "_in_zh_target_window", return_value=False), \
+                 patch.object(m, "ZH_WINDOW_DOUBLE_PER_RUN", 1), \
+                 patch.object(m, "MIN_POST_GAP_MIN", 15), \
+                 patch.object(m, "MAX_DAILY_POSTS", 60):
+                m._run_main()
+            self.assertEqual(pub.publish.call_count, 1,
+                             "窗外必须保持原节奏（第 2 篇被间隔门挡下）")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_gap_gate_still_holds_outside_window(self):
+        """窗外必须保持原样：5 分钟前发过 ⇒ 仍按 15min 门拦下"""
+        tmpdir, paths = self._iso_files()
+        cand = dict(self._candidate(), impact_score=40, base_impact_score=40)
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[cand])
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            self._cache_minutes_ago(paths, 5)
+            with patch.object(m, "_in_zh_target_window", return_value=False), \
+                 patch.object(m, "ZH_WINDOW_DOUBLE_PER_RUN", 1), \
+                 patch.object(m, "MIN_POST_GAP_MIN", 15), \
+                 patch.object(m, "MAX_DAILY_POSTS", 60):
+                m._run_main()
+            self.assertFalse(pub.publish.called,
+                             "窗外不得放宽：节奏保护是全局的")
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_zh_window_gate_off_by_default(self):
         """默认 0 = 关：同样的缓存（32 条窗外）也不拦（未开闸的仓库行为不变）"""
         tmpdir, paths = self._iso_files()

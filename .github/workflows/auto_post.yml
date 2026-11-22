@@ -247,6 +247,10 @@ jobs:
           # ★ R883：中文帖窗口倾斜（预注册实验，默认空 = 关闭）。
           #   启用 = 仓库 Variable ZH_OFFWIN_CAP=32；回滚 = 删变量或设 0。
           ZH_OFFWIN_CAP: ${{ vars.ZH_OFFWIN_CAP }}
+          # ★ R888：与 ZH_OFFWIN_CAP **配套**——窗口内允许一轮两篇（否则只砍量不加量）。
+          ZH_WINDOW_DOUBLE_PER_RUN: ${{ vars.ZH_WINDOW_DOUBLE_PER_RUN }}
+          ZH_WINDOW_GAP_MIN: ${{ vars.ZH_WINDOW_GAP_MIN }}
+          ZH_WINDOW_MAX_PER_RUN: ${{ vars.ZH_WINDOW_MAX_PER_RUN }}
 
           # CI 环境无 localhost，显式关闭 Reasonix 本地网关探测（本地跑时自动启用）
           REASONIX_GW_OFF: "1"

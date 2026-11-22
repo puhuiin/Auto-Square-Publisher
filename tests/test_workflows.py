@@ -718,7 +718,8 @@ class TestR883ExperimentSwitchWiring(unittest.TestCase):
 
     def test_switches_are_injected(self):
         wf = self._wf()
-        for key in ("ZH_OFFWIN_CAP", "LOW_HOUR_CAP"):
+        for key in ("ZH_OFFWIN_CAP", "LOW_HOUR_CAP", "ZH_WINDOW_DOUBLE_PER_RUN",
+                    "ZH_WINDOW_GAP_MIN", "ZH_WINDOW_MAX_PER_RUN"):
             self.assertIn("%s: ${{ vars.%s }}" % (key, key), wf,
                           f"{key} 没接 vars ⇒ 设仓库变量也不生效")
 

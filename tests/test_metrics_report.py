@@ -10280,6 +10280,38 @@ class TestR883ZhWindowPrereg(unittest.TestCase):
         self.assertGreater(cf["全部"]["ratio"], 2.0, "全样本会被长文抬起来")
         self.assertLess(cf["去长文"]["ratio"] or 0, 1.5, "去长文后优势应消失（真·子集驱动）")
 
+    def test_density_splits_single_vs_double_slot(self):
+        """★ 同一 20 分钟槽发 2 篇时，必须能按"槽内篇数"分开看 vpd。
+
+        历史每轮最多 1 篇 ⇒ 抢量无法事后验证；只能在实验内测。
+        """
+        zw = self._zw()
+        joined, pubs = [], []
+        # 槽 A：1 篇（vpd 12）；槽 B：2 篇（各 vpd 4，模拟抢量）
+        joined.append(self._rec("2026-11-23", 0, "zh-CN", 12.0))
+        pubs.append({"outcome": "binance_published", "ts": "2026-11-23T00:10:00+00:00",
+                     "lang": "zh-CN"})
+        for i in range(2):
+            joined.append(self._rec("2026-11-23", 1, "zh-CN", 4.0, views=5))
+            pubs.append({"outcome": "binance_published",
+                         "ts": "2026-11-23T01:10:0%d+00:00" % i, "lang": "zh-CN"})
+        dens = {d["slots"]: d for d in zw.density_breakdown(joined, pubs)}
+        self.assertEqual(dens["1 篇/槽"]["n"], 1)
+        self.assertEqual(dens["2 篇/槽"]["n"], 2)
+        self.assertAlmostEqual(dens["1 篇/槽"]["med"], 12.0)
+        self.assertAlmostEqual(dens["2 篇/槽"]["med"], 4.0)
+
+    def test_density_ignores_out_of_window_and_en(self):
+        """密度只看**窗内 zh**：窗外与 en 不得混进来"""
+        zw = self._zw()
+        joined = [self._rec("2026-11-23", 9, "zh-CN", 2.0),
+                  self._rec("2026-11-23", 15, "en", 1.0)]
+        pubs = [{"outcome": "binance_published", "ts": "2026-11-23T09:10:00+00:00",
+                 "lang": "zh-CN"},
+                {"outcome": "binance_published", "ts": "2026-11-23T15:10:00+00:00",
+                 "lang": "en"}]
+        self.assertEqual(zw.density_breakdown(joined, pubs), [])
+
     def test_age_unit_conversion_in_main(self):
         """防回归：`age_days` 是**天**，曝光阈值是**小时** ⇒ 必须换算。
 

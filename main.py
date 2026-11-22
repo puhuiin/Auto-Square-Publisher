@@ -1031,6 +1031,20 @@ ZH_WINDOW_UTC = (0, 2)                    # 目标窗（UTC）：00–02 = 北�
 ZH_WINDOW_LANGS = ("zh-CN", "zh-TW")      # 只动中文帖；英文夜窗（R710）不碰
 ZH_OFFWIN_CAP = _env_int("ZH_OFFWIN_CAP", 0)
 
+# ★★ R888：窗口内「一轮两篇」——否则中文窗实验**结构上不可能生效**。
+#   实测（1566 轮 run_summary）：published 分布 = {0: 382, 1: 1184} ⇒ **从未有 2 篇**。
+#   根因：循环内的 `MIN_POST_GAP_MIN`（默认 15）在发出第 1 篇后 gap≈0 ⇒ 立刻 break。
+#   ⇒ 只有"窗外限量"的闸门时，结果是**窗外砍掉 ~5 篇、窗口一篇也不多** = 净损失。
+#   ⚠️ 代价必须说清：窗口内会出现「3 分钟内连发 2 篇」，每天最多 6 对（6 轮 × 1 对）。
+#      这正是 R578 当初要压的"连发刷屏感"，所以**默认关**、且只在目标窗内放宽。
+ZH_WINDOW_DOUBLE_PER_RUN = _env_int("ZH_WINDOW_DOUBLE_PER_RUN", 0)
+ZH_WINDOW_GAP_MIN = _env_int("ZH_WINDOW_GAP_MIN", 0)
+# ⚠️ 必须为 0：同轮发第 2 篇时 `minutes_since_last_sent()` ≈ **0**（上一行记录刚落盘），
+#    任何 >0 的下限都会继续拦（首版试 2 就被自己的读数挡住）。
+# ⚠️ 因此必须配一个**每轮硬顶**（见 `ZH_WINDOW_MAX_PER_RUN`），否则 workflow_dispatch
+#    把 max_posts 调到 50 时会在一轮里连发。
+ZH_WINDOW_MAX_PER_RUN = _env_int("ZH_WINDOW_MAX_PER_RUN", 2)
+
 # ★★ R886：闸门只能作用在**中文输出时段**（北京 06–22，与 R710 的 `LANG_DAY_START/END` 同源）。
 #   为什么必须限定：闸门在配额层按轮拦，**语种要到后面 pick_output_lang() 才定**
 #   ⇒ 不限定的话，zh 计数在下午达上限后会把**整个英文夜窗（北京 22–06）**也静默，
@@ -12895,10 +12909,23 @@ def _run_main():
         # 与 cron 心跳对齐后自然形成 ~20min 稳定节奏；间隔未到则本轮不发（槽位留给下轮）。
         if MIN_POST_GAP_MIN > 0:
             gap = cache_mgr.minutes_since_last_sent()
-            if gap is not None and gap < MIN_POST_GAP_MIN:
-                logger.info(f"⏱️ 距上一篇仅 {gap:.0f} 分钟（< {MIN_POST_GAP_MIN}min 最小间隔），"
+            # ★ R888：窗口内允许「一轮两篇」——把间隔下限压到 ZH_WINDOW_GAP_MIN。
+            #   为什么必须与 ZH_OFFWIN_CAP 配套：只限量不放宽 ⇒ 窗口篇数不涨（见常量注释）。
+            _gap_floor = MIN_POST_GAP_MIN
+            _relax_now = (ZH_WINDOW_DOUBLE_PER_RUN > 0 and _in_zh_target_window())
+            if _relax_now:
+                _gap_floor = min(_gap_floor, ZH_WINDOW_GAP_MIN)
+                # 每轮硬顶：放宽后不能再靠 max_posts 兜底（dispatch 可调到 50）
+                if posted_count >= ZH_WINDOW_MAX_PER_RUN:
+                    logger.info(f"★ 窗口内每轮上限 {ZH_WINDOW_MAX_PER_RUN} 篇已满，本轮收手")
+                    break
+            if gap is not None and gap < _gap_floor:
+                logger.info(f"⏱️ 距上一篇仅 {gap:.0f} 分钟（< {_gap_floor}min 最小间隔），"
                             f"本轮不发，保持节奏稳定")
                 break
+            if _relax_now and posted_count > 0:
+                logger.info(f"★ 窗口内放行第 {posted_count + 1} 篇（间隔下限 "
+                            f"{_gap_floor}min，间隔 {gap if gap is not None else 'n/a'}min）")
 
         news_id = item["id"]
         title = item["title"]
