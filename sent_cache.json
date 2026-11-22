@@ -1,15 +1,5 @@
 [
   {
-    "id": "37965b1a6e458bae",
-    "title": "QCP:比特币跌破7万美元,现货ETF连续遭遇大额资金流出",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-13T10:07:25.939443+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "bb6fe80c460a6e75",
     "title": "Jane Street Q3 增持富达比特币 ETF 约 691%,减持贝莱德 IBIT 约 18.7%",
     "source": "吴说区块链 (中文深度)",
@@ -5184,6 +5174,16 @@
     "tokens": [
       "USDC",
       "AAVE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "af538844228e6455",
+    "title": "Cysic Bridge Exploit Minted 10 Million Tokens on BNB",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-22T04:23:53.472513+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-CN"
   }
