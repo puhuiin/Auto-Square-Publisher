@@ -1,15 +1,5 @@
 [
   {
-    "id": "5f97e7602b76f731",
-    "title": "Bitcoin Hits 12-Week Low as Fed Rate Fears Undo Most of Summer Rally",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-13T17:29:33.468061+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "689a8fcb9e419c75",
     "title": "Dogecoin Cofounder Makes 'I’m a Shiba Inu' Statement",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5187,5 +5177,17 @@
       "ANTB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "dd106ac70dffd025",
+    "title": "Ansem:ZEC、HYPE和PUMP或于周一或周二触底,随后迎来反弹",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-22T13:43:43.975655+00:00",
+    "tokens": [
+      "ZEC",
+      "HYPE",
+      "PUMP"
+    ],
+    "lang": "zh-TW"
   }
 ]
