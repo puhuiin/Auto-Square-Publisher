@@ -1,15 +1,5 @@
 [
   {
-    "id": "0172a4fd96782969",
-    "title": "加拿大安大略省医疗保健养老金三季度新增 HYPE 财库公司 PURR 持仓,季末市值约 3,533 万美元",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-13T23:07:01.023859+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3fdbce517709cf7e",
     "title": "Coinbase Institutional:比特币近期下跌主要受美联储政策预期影响,而非币安黑客事件",
     "source": "吴说区块链 (中文深度)",
@@ -5186,6 +5176,16 @@
     "tokens": [
       "XRP",
       "RLUSD"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4077cbb3311fa9c9",
+    "title": "XRP Dumps to Key Zone: Is This the ‘Painful Opportunity’ Bulls Were Waiting For?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-22T18:24:34.023288+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }

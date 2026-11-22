@@ -22,12 +22,12 @@
     "CoinJournal (山寨异动)": {
       "fails": 3,
       "parked_until": "2026-11-22T11:24:04.008594+00:00",
-      "last_fail": "2026-11-22T18:03:43.482794+00:00"
+      "last_fail": "2026-11-22T18:23:31.474820+00:00"
     },
     "Watcher.Guru (快讯)": {
       "fails": 3,
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-22T18:03:43.092599+00:00"
+      "last_fail": "2026-11-22T18:23:31.157712+00:00"
     }
   },
   "_fallback_image": {
@@ -36,16 +36,16 @@
   },
   "_llm_breaker": {
     "Preset-stepfun-flash": {
-      "last_fail": "2026-11-22T02:43:46.516873+00:00",
       "fails": 1,
+      "permanent": true,
       "cooldown_until": "2026-11-23T02:43:46.516859+00:00",
-      "permanent": true
+      "last_fail": "2026-11-22T02:43:46.516873+00:00"
     },
     "Preset-stepfun": {
-      "last_fail": "2026-11-22T02:43:50.430291+00:00",
       "fails": 1,
+      "permanent": true,
       "cooldown_until": "2026-11-23T02:43:50.430277+00:00",
-      "permanent": true
+      "last_fail": "2026-11-22T02:43:50.430291+00:00"
     }
   },
   "_article_sent_date": "2026-11-22",
