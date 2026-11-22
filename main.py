@@ -1010,6 +1010,47 @@ TIME_PREF_PENALTY = 2
 #   （R653 已证候选不因配额消失）⇒ 不是丢稿，只是延后。
 LOW_HOUR_CAP = _env_int("LOW_HOUR_CAP", 0)
 
+# ══════════════════════════════════════════════════════════════
+# ★★★ R883：**中文帖窗口倾斜**（预注册实验，默认关闭）
+#
+# 依据（2026-11-22 浏览导出，423 篇联表，**已按曝光 24~72h 匹配**）：
+#   zh 帖 vpd 中位：UTC 00–02 = **12.1**（n=19） vs 窗外 = **2.2**（n=121）⇒ **5.4×**
+#   ⚠️ 不做年龄匹配会读到 10.9/24.7 vs 1.5~4.3（4~16×）——那是**当天新帖曝光短**
+#      把 vpd 抬高的假象（vpd=views/age，年轻帖系统性偏高）。
+#   ⚠️ 也不选"北京 09–12"（R706 的高窗）：那窗口 = UTC 01–04，含 UTC 02–04，
+#      而 02 点起 vpd 就塌到 1.7/0.8 ⇒ 会把量投进**次优**时段。
+#
+# 机制：滚动 24h 内，**中文帖**在目标窗之外发布达 `ZH_OFFWIN_CAP` 后，
+#   窗外轮次静默退出 ⇒ 把额度留给窗内轮次（与 R662 同型，但**按语种**且窗口更窄）。
+#   容量：窗 = 2h = 6 轮/天 × 每轮 ≤2 篇 ⇒ 窗内上限 **12 篇/天**；
+#   基线 zh ≈ 43 篇/天、窗内已有 5~6 ⇒ 设 cap=32 时总量不变（32 + ≤12 + en 16 ≈ 60），
+#   只是把 ~6 篇从次优时段搬进窗口。**这是"搬家"不是"加量"**。
+#
+# ⚠️ 默认 0 = 关闭；未设变量的仓库行为逐条不变。回滚 = 设回 0（或删变量）。
+ZH_WINDOW_UTC = (0, 2)                    # 目标窗（UTC）：00–02 = 北京 08–10
+ZH_WINDOW_LANGS = ("zh-CN", "zh-TW")      # 只动中文帖；英文夜窗（R710）不碰
+ZH_OFFWIN_CAP = _env_int("ZH_OFFWIN_CAP", 0)
+
+
+def _utc_hour_now(now: Optional[datetime] = None) -> int:
+    """当前 UTC 小时（可注入，便于确定性单测）。"""
+    return (now or datetime.now(timezone.utc)).hour
+
+
+def _bj_hour_now(now: Optional[datetime] = None) -> int:
+    """当前北京时间小时（可注入）。窗口判定共用一份，避免各写一遍（R643）。"""
+    return (_utc_hour_now(now) + 8) % 24
+
+
+def _in_zh_target_window(now: Optional[datetime] = None) -> bool:
+    """★ R883：是否落在中文帖目标窗（UTC 00–02 = 北京 08–10）。"""
+    return ZH_WINDOW_UTC[0] <= _utc_hour_now(now) < ZH_WINDOW_UTC[1]
+
+
+def _in_low_hour_pref_window(now: Optional[datetime] = None) -> bool:
+    """R706：是否在高浏览窗（北京 09–12）。抽成函数是为了可注入测试。"""
+    return 9 <= _bj_hour_now(now) < 12
+
 # R666：配额饱和轮是否也跑**观测扫描**（构建候选 + 加权，**不生成不发布**）。
 # ★ 为什么要它（打破观测死锁）：
 #   配额检查在候选构建**之前**（main.py:9216 vs 9354）⇒ 饱和时 `sys.exit(0)`。
@@ -2487,6 +2528,38 @@ class CacheManager:
                 bj_hour = (ts.hour + 8) % 24
                 if (6 <= bj_hour < 12) != bool(in_pref):
                     continue
+            count += 1
+        return count
+
+    def count_lang_outside_window(self, hours: float, utc_window, langs) -> int:
+        """★★ R883：滚动 N 小时内、语种 ∈ `langs`、且**不在** UTC 窗口里的发布条数。
+
+        与 `_count_since` 同一内核口径（跳过视频帖、`sent_at` 解析失败即跳过），
+        只把时段判定换成「UTC 小时窗口 + 语种」。
+        ⚠️ 未知语种（历史行 `lang=None`）按 `count_by_lang` 的同一约定归 zh-CN——
+        两处若不一致，陈旧记录会从闸门里漏出去（R643 教训：两套口径必然漂移）。
+        """
+        cutoff = datetime.now(timezone.utc).timestamp() - hours * 3600
+        lo, hi = int(utc_window[0]), int(utc_window[1])
+        wanted = {str(x) for x in langs}
+        count = 0
+        for item in self.cached_items:
+            if self._is_video_entry(item):
+                continue
+            try:
+                ts = datetime.fromisoformat(
+                    str(item.get("sent_at", "")).replace("Z", "+00:00"))
+            except Exception:
+                continue
+            if ts.timestamp() < cutoff:
+                continue
+            lg = str(item.get("lang") or "zh-CN")
+            if lg not in OUTPUT_LANGS:
+                lg = "zh-CN"
+            if lg not in wanted:
+                continue
+            if lo <= ts.hour < hi:
+                continue
             count += 1
         return count
 
@@ -12249,6 +12322,13 @@ def _run_main():
     # 教训同 R646/R655：**新加的可变状态要在使用点之前就有确定的默认值**。
     low_hour_blocked = False
     low_hour_sent = 0
+    # ★ R883：中文窗闸门 + **两个闸门共用的退出原因**。
+    #   为什么要有这个共用变量：R662 的 LOW_HOUR_CAP 只置标志 + 落遥测、**从不退出**
+    #   ⇒ 日志写"本轮静默"而实际照发（有遥测无消费面，R672 同族）。两个闸门都
+    #   走同一个 exit，才不会再出现"只记不退"。
+    zh_window_blocked = False
+    zh_window_sent = 0
+    window_blocked_reason = None
     # R182：情报刷新挪到配额检查之前——生产实录 intel 陈放 16.5h、冷却 15:02Z
     # 已过期，但 15:03/15:07 等饱和轮在 get_campaign_intel 之前就 exit，
     # 刷新被饿死到下一配额槽（18:04Z）。get_campaign_intel 自带新鲜/退避短路，
@@ -12324,11 +12404,11 @@ def _run_main():
         # ⚠️ `low_hour_blocked` / `low_hour_sent` 已在**配额检查之外**初始化
         #    （dry_run 路径不经过这里，见上方注释），此处**不要**重复初始化。
         if LOW_HOUR_CAP > 0:
-            _now_bj = (datetime.now(timezone.utc).hour + 8) % 24
+            _now_bj = _bj_hour_now()
             # ★ R706：与 `apply_hour_preference_boost` **同一口径** 09-12
             #   （原为 06-12）。两处若不一致就会漂移（R643 教训），
             #   ⇒ 06-09 实测中位 53（全时段最低），不该算高浏览窗。
-            _in_pref = 9 <= _now_bj < 12
+            _in_pref = _in_low_hour_pref_window()
             if not _in_pref:
                 low_hour_sent = cache_mgr.count_since_in_window(24, False)
                 if low_hour_sent >= LOW_HOUR_CAP:
@@ -12355,7 +12435,35 @@ def _run_main():
                         low_hour_sent=low_hour_sent,
                         low_hour_bj_hour=_now_bj,
                     )
-        if not low_hour_blocked and sent_24h >= MAX_DAILY_POSTS:
+                    window_blocked_reason = "low_hour"      # ★ R883：真的退出
+        # ★★★ R883：中文帖窗口倾斜闸门（预注册实验，默认关）
+        #   与 R662 同型但**按语种 + 更窄窗口**：只在窗外拦中文帖，
+        #   英文夜窗（北京 22–06）完全不受影响（那是另一批受众的活跃时段）。
+        if ZH_OFFWIN_CAP > 0 and not window_blocked_reason:
+            _now_utc_h = _utc_hour_now()
+            _in_zh_window = _in_zh_target_window()
+            if not _in_zh_window:
+                zh_window_sent = cache_mgr.count_lang_outside_window(
+                    24, ZH_WINDOW_UTC, ZH_WINDOW_LANGS)
+                if zh_window_sent >= ZH_OFFWIN_CAP:
+                    zh_window_blocked = True
+                    window_blocked_reason = "zh_offwindow"
+                    logger.info(
+                        f"⏸️ 中文帖窗外额度已用尽（{zh_window_sent}/{ZH_OFFWIN_CAP}，"
+                        f"UTC {_now_utc_h:02d}:00 不在目标窗 "
+                        f"{ZH_WINDOW_UTC[0]:02d}–{ZH_WINDOW_UTC[1]:02d}）⇒ 本轮静默，"
+                        f"把额度留给北京 08–10 的窗口轮次")
+                    append_run_summary(
+                        quota_blocked=True,
+                        sent_24h=sent_24h,
+                        sent_24h_all=cache_mgr.count_all_since(24),
+                        max_daily_posts=MAX_DAILY_POSTS,
+                        zh_window_blocked=True,
+                        zh_window_cap=ZH_OFFWIN_CAP,
+                        zh_window_sent=zh_window_sent,
+                        zh_window_utc_hour=_now_utc_h,
+                    )
+        if not window_blocked_reason and sent_24h >= MAX_DAILY_POSTS:
             logger.warning(f"🛑 24 小时内已发布 {sent_24h} 篇，达到配额上限 ({MAX_DAILY_POSTS})，本轮自动静默以保护账号权重。")
             # R112：配额释放估算（R129 提为公共函数，发帖轮同样写入）
             next_frees_iso, next_frees_min = _quota_next_slot_estimate(cache_mgr)
@@ -12481,6 +12589,14 @@ def _run_main():
                         f"加权标记 {_tagc or '无'}（**不发布**）")
                 except Exception as _obs_err:
                     logger.info(f"观测扫描异常（不影响配额饱和退出）: {_obs_err}")
+            sys.exit(0)
+        # ★★★ R883：**子配额闸门必须真的退出**。
+        #   缺陷实录（本轮代码审查）：R662 的 LOW_HOUR_CAP 分支只置标志 + 落遥测，
+        #   随后流程照常抓取/生成/发布 ⇒ 日志说"本轮静默"，实际在发。
+        #   ⇒ 两个闸门（low_hour / zh_offwindow）统一在这里退出。
+        if window_blocked_reason:
+            logger.info(f"⏸️ 本轮按子配额闸门静默（{window_blocked_reason}），"
+                        f"额度留给目标时段。")
             sys.exit(0)
         remaining_quota = MAX_DAILY_POSTS - sent_24h
         if remaining_quota < max_posts:
@@ -13988,6 +14104,11 @@ def _run_main():
         # 报表会误判成"未启用"（R612：沉默不是通过）。
         "low_hour_blocked": bool(low_hour_blocked),
         "low_hour_cap": LOW_HOUR_CAP,
+        # ★ R883：中文窗闸门**每轮都落**（同 R662 的理由：只落阻断轮会让
+        # "已启用但零阻断"在遥测上没有任何证据，报表会误判成"未启用"）。
+        "zh_window_blocked": bool(zh_window_blocked),
+        "zh_window_cap": ZH_OFFWIN_CAP,
+        "zh_window_sent": zh_window_sent,
         # R201：off-pool 活动币——Alpha 上新等未入 SPOT 池的竞赛标的
         "campaign_off_pool": " ".join(fetcher.stats.get("campaign_off_pool") or []) or None,
         # R126：单轮总耗时（秒）——20 分钟外部回调节奏下的堆积预警指标

@@ -10750,6 +10750,119 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def _cache_at_utc_hour(self, paths, n, utc_hour=12, lang="zh-CN"):
+        """写 n 条「最近 24h 内、指定 UTC 小时」的发帖记录（确定性构造）。"""
+        import json
+        from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+        now = _dt.now(_tz.utc)
+        d = now.replace(hour=utc_hour, minute=5, second=0, microsecond=0)
+        if d > now:
+            d -= _td(days=1)
+        items = [{"id": "old%d" % i, "title": "t", "source": "s",
+                  "sent_at": d.isoformat(), "tokens": ["BTC"], "lang": lang}
+                 for i in range(n)]
+        with open(paths["cache"], "w", encoding="utf-8") as f:
+            json.dump(items, f)
+        return d
+
+    def test_zh_window_gate_blocks_outside_window(self):
+        """★ R883：窗外且中文帖已达上限 ⇒ **真的不发**（并落 zh_window_blocked）。
+
+        这条同时是「闸门必须退出」的回归锁：R662 的 LOW_HOUR_CAP 当年只置标志、
+        不退出，日志说"本轮静默"而实际照发。
+        """
+        tmpdir, paths = self._iso_files()
+        cand = dict(self._candidate(), impact_score=40, base_impact_score=40)
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[cand])
+        try:
+            self._cache_at_utc_hour(paths, 32, utc_hour=12)
+            with patch.object(m, "ZH_OFFWIN_CAP", 32), \
+                 patch.object(m, "_in_zh_target_window", return_value=False), \
+                 patch.object(m, "MAX_DAILY_POSTS", 60):
+                with self.assertRaises(SystemExit):
+                    m._run_main()
+            self.assertEqual(self._engine.summarize.call_count, 0,
+                             "窗外额度用尽后不得再调用 LLM 生成")
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertIs(row.get("zh_window_blocked"), True)
+            self.assertEqual(row.get("zh_window_cap"), 32)
+            self.assertEqual(row.get("zh_window_sent"), 32)
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_zh_window_gate_inside_window_publishes(self):
+        """窗内轮次不受闸门约束（额度就是留给它的）"""
+        tmpdir, paths = self._iso_files()
+        cand = dict(self._candidate(), impact_score=40, base_impact_score=40)
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[cand])
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            self._cache_at_utc_hour(paths, 32, utc_hour=12)
+            with patch.object(m, "ZH_OFFWIN_CAP", 32), \
+                 patch.object(m, "_in_zh_target_window", return_value=True), \
+                 patch.object(m, "MAX_DAILY_POSTS", 60):
+                m._run_main()
+            self.assertEqual(self._engine.summarize.call_count, 1, "窗内必须正常生成")
+            self.assertTrue(pub.publish.called, "窗内必须正常发布")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_zh_window_gate_off_by_default(self):
+        """默认 0 = 关：同样的缓存（32 条窗外）也不拦（未开闸的仓库行为不变）"""
+        tmpdir, paths = self._iso_files()
+        cand = dict(self._candidate(), impact_score=40, base_impact_score=40)
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[cand])
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            self._cache_at_utc_hour(paths, 32, utc_hour=12)
+            with patch.object(m, "ZH_OFFWIN_CAP", 0), \
+                 patch.object(m, "_in_zh_target_window", return_value=False), \
+                 patch.object(m, "MAX_DAILY_POSTS", 60):
+                m._run_main()
+            self.assertTrue(pub.publish.called, "默认关闭时不得拦")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_low_hour_cap_now_actually_exits(self):
+        """★ R883 回归锁：R662 的 LOW_HOUR_CAP 从"只记不退"改成**真退出**。
+
+        缺陷实录：旧实现置 low_hour_blocked 后没有 exit，流程照常抓取/生成/发布，
+        日志却写"本轮静默"——比没有机制更糟（读日志的人会以为产量被让渡了）。
+        """
+        tmpdir, paths = self._iso_files()
+        cand = dict(self._candidate(), impact_score=40, base_impact_score=40)
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[cand])
+        try:
+            # 1 条低窗（北京 20 点 = UTC 12）发帖，LOW_HOUR_CAP=1 ⇒ 已达上限
+            self._cache_at_utc_hour(paths, 1, utc_hour=12)
+            with patch.object(m, "LOW_HOUR_CAP", 1), \
+                 patch.object(m, "_in_low_hour_pref_window", return_value=False), \
+                 patch.object(m, "MAX_DAILY_POSTS", 60):
+                with self.assertRaises(SystemExit):
+                    m._run_main()
+            self.assertEqual(self._engine.summarize.call_count, 0,
+                             "低窗让渡必须真的不发（旧实现会照发）")
+            import json as _json
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [_json.loads(l) for l in f if l.strip()]
+            row = next(r for r in rows if r.get("outcome") == "run_summary")
+            self.assertIs(row.get("low_hour_blocked"), True)
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_published_row_carries_base_impact_score(self):
         """R617：发布回执必须落 base_impact_score（准入分）。
 
@@ -18559,9 +18672,12 @@ class TestR650HourPreferenceBoost(unittest.TestCase):
         """
         import inspect
         src = inspect.getsource(m)
-        # ② 的口径应该是 9 <= _now_bj < 12
-        self.assertIn("9 <= _now_bj < 12", src,
-                      "LOW_HOUR_CAP 的窗口未同步为 09-12")
+        # ② 的口径：R883 把「9 <= 北京小时 < 12」收进**单点函数** `_in_low_hour_pref_window`
+        #    ——两个调用点都走它，比"两处各写一份字面量"更不容易漂移（R643 的加强版）。
+        self.assertIn("9 <= _bj_hour_now(now) < 12", src,
+                      "低窗口径必须仍是北京 09-12（现收在 _in_low_hour_pref_window）")
+        self.assertIn("_in_pref = _in_low_hour_pref_window()", src,
+                      "闸门必须调用同一个窗口函数，不许再各写一份")
         # ① 的口径：UTC 01-04
         i = src.find("in_pref = 1 <= now_utc.hour < 4")
         self.assertGreater(i, 0, "排序加权的窗口未同步为 UTC 01-04")

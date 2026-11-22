@@ -10160,6 +10160,106 @@ class TestR881LowHourEraGuard(unittest.TestCase):
         self.assertIn("本窗口饱和 100%", out)
 
 
+class TestR883ZhWindowPrereg(unittest.TestCase):
+    """★ R883：预注册常量与判定逻辑必须**写死且可复跑**（改常量 = 另开一轮）。"""
+
+    @staticmethod
+    def _zw():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "zh_window_prereg_r883",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "zh_window_prereg.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_constants_locked(self):
+        zw = self._zw()
+        self.assertEqual(zw.ZW_WINDOW_UTC, (0, 2), "窗口是预注册的一部分，不许事后改")
+        self.assertEqual(zw.ZW_LANGS, ("zh-CN", "zh-TW"))
+        self.assertEqual(zw.ZW_MIN_VALID_DAYS, 6)
+        self.assertEqual(zw.ZW_MIN_RATIO, 2.0)
+        self.assertEqual(zw.ZW_MIN_WINDOW_POSTS, 10.0)
+        self.assertEqual(zw.ZW_MAX_EN_TVD, 0.25)
+        self.assertEqual(zw.ZW_ROLLBACK_TOTAL_BELOW, 50)
+        self.assertEqual(zw.ZW_EXPOSURE_HOURS, (24.0, 72.0))
+
+    def test_sign_test_tail(self):
+        zw = self._zw()
+        self.assertAlmostEqual(zw.sign_test_p(6, 6), 0.015625, places=6)
+        self.assertAlmostEqual(zw.sign_test_p(5, 6), 0.109375, places=6)
+        self.assertEqual(zw.sign_test_p(0, 0), 1.0)
+
+    def _rec(self, day, hour, lang, vpd, views=10):
+        return {"vpd": vpd, "views": views, "age_days": 2.0,
+                "meta": {"ts": "%sT%02d:10:00+00:00" % (day, hour), "lang": lang}}
+
+    def _pub(self, day, hour, lang):
+        return {"outcome": "binance_published",
+                "ts": "%sT%02d:10:00+00:00" % (day, hour), "lang": lang}
+
+    def _days(self, zw, n, start_from_treat=True):
+        from datetime import date, timedelta
+        base = date.fromisoformat(zw.ZW_FROM_DATE)
+        return [str(base + timedelta(days=i)) for i in range(n)]
+
+    def _day_rows(self, d, win_n, out_n, en_hours, win_vpd=12.0, out_vpd=1.5):
+        rows, pubs = [], []
+        for _ in range(win_n):
+            rows.append(self._rec(d, 0, "zh-CN", win_vpd))
+            pubs.append(self._pub(d, 0, "zh-CN"))
+        for i in range(out_n):
+            h = 3 + (i % 18)
+            rows.append(self._rec(d, h, "zh-CN", out_vpd))
+            pubs.append(self._pub(d, h, "zh-CN"))
+        for h in en_hours:
+            rows.append(self._rec(d, h, "en", 1.0))
+            pubs.append(self._pub(d, h, "en"))
+        return rows, pubs
+
+    def test_verdict_pass_when_all_checks_hold(self):
+        zw = self._zw()
+        from datetime import date, timedelta
+        joined, pubs = [], []
+        b0 = date.fromisoformat(zw.ZW_BASELINE_FROM)
+        for i in range(4):           # 基线：窗内 5、窗外 50、en 5（共 60/天）
+            j, p = self._day_rows(str(b0 + timedelta(days=i)), 5, 50,
+                                  (15, 17, 19, 21, 23))
+            joined += j
+            pubs += p
+        for d in self._days(zw, 6):  # 处置：窗内 12、窗外 44、en 4（共 60/天）
+            j, p = self._day_rows(d, 12, 44, (15, 17, 19, 21))
+            joined += j
+            pubs += p
+        res = zw.evaluate(joined, pubs)
+        self.assertEqual(res["total_med"], 60, "护栏口径必须是全量发布行")
+        self.assertEqual(res["verdict"], "通过", res)
+        self.assertTrue(all(res["checks"].values()), res["checks"])
+
+    def test_rollback_when_volume_drops(self):
+        zw = self._zw()
+        joined, pubs = [], []
+        for d in self._days(zw, 3):
+            for h in (0, 1):
+                for _ in range(6):
+                    joined.append(self._rec(d, h, "zh-CN", 12.0))
+                    pubs.append(self._pub(d, h, "zh-CN"))
+            joined.append(self._rec(d, 9, "zh-CN", 1.0))
+            pubs.append(self._pub(d, 9, "zh-CN"))
+        res = zw.evaluate(joined, pubs)
+        self.assertTrue(res["rollback"])
+        self.assertIn("回滚", res["verdict"])
+
+    def test_age_unit_conversion_in_main(self):
+        """防回归：`age_days` 是**天**，曝光阈值是**小时** ⇒ 必须换算。
+
+        初版直接 `24 <= age_days <= 72` 把样本全滤光，脚本还"正常"打印"无样本"。
+        """
+        src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                "scripts", "zh_window_prereg.py"), encoding="utf-8").read()
+        self.assertIn('r["age_days"] * 24.0', src, "必须把 age_days 换算成小时再比")
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 

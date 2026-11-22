@@ -458,7 +458,8 @@ class TestImportHealth(unittest.TestCase):
         offenders = []
         for root, dirs, files in os.walk(REPO_ROOT):
             dirs[:] = [d for d in dirs
-                       if d not in (".git", "__pycache__", "drafts", ".workbuddy")]
+                       if d not in (".git", "__pycache__", "drafts", ".workbuddy",
+                                     ".tmp_analysis")]
             for fn in files:
                 if not fn.endswith(".py"):
                     continue
@@ -700,6 +701,26 @@ class TestDailyReportSecretWiring(unittest.TestCase):
             v = str(env.get(k, ""))
             self.assertIn("secrets.", v, f"{k} 必须走 secret（R619 教训）")
             self.assertNotIn("http", v, f"{k} 不得写明文 URL")
+
+
+class TestR883ExperimentSwitchWiring(unittest.TestCase):
+    """★ R883：实验开关必须"接线到 workflow"，否则设仓库 Variables 也不会生效。
+
+    缺陷实录：`LOW_HOUR_CAP` 在 main.py 里读了、README 也写了"设 Variables 即可启用"，
+    但 `auto_post.yml` **从来没有注入过它** ⇒ 那句操作指引是空头支票。
+    """
+
+    def _wf(self):
+        import os
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        return open(os.path.join(root, ".github", "workflows", "auto_post.yml"),
+                    encoding="utf-8").read()
+
+    def test_switches_are_injected(self):
+        wf = self._wf()
+        for key in ("ZH_OFFWIN_CAP", "LOW_HOUR_CAP"):
+            self.assertIn("%s: ${{ vars.%s }}" % (key, key), wf,
+                          f"{key} 没接 vars ⇒ 设仓库变量也不生效")
 
 
 class TestReadmeEnvCoverage(unittest.TestCase):
