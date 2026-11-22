@@ -1,16 +1,5 @@
 [
   {
-    "id": "689a8fcb9e419c75",
-    "title": "Dogecoin Cofounder Makes 'I’m a Shiba Inu' Statement",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-13T17:50:18.378034+00:00",
-    "tokens": [
-      "DOGE",
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ee18d433c0495b72",
     "title": "Jed McCaleb’s Stellar (XLM) Tops Solana and Ethereum in Daily RWA Fund Growth",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5189,5 +5178,15 @@
       "PUMP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d8ed1f1f9a4aa058",
+    "title": "Anthropic Token Debuts on Solana With $135M in Reported Trading Volume",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-22T14:03:58.979998+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "en"
   }
 ]
