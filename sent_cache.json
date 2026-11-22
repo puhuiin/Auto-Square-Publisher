@@ -1,16 +1,5 @@
 [
   {
-    "id": "508ab235f31287d6",
-    "title": "Aave 风险管理机构提出动态借款上限方案",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-13T19:25:09.141200+00:00",
-    "tokens": [
-      "AAVE",
-      "LINK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "cb6346b41efcc688",
     "title": "MEGA Discloses 20% Staff Cut Amid AI Product Push",
     "source": "The Defiant (DeFi 深度)",
@@ -5185,6 +5174,16 @@
     "tokens": [
       "DOGE",
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b49d1cd46281d965",
+    "title": "Three XRP Features Race for Last-Minute 2026 Activation: What Remains",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-22T15:24:09.028697+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
