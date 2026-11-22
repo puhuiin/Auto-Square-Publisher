@@ -10289,6 +10289,52 @@ class TestR883ZhWindowPrereg(unittest.TestCase):
                                 "scripts", "zh_window_prereg.py"), encoding="utf-8").read()
         self.assertIn('r["age_days"] * 24.0', src, "必须把 age_days 换算成小时再比")
 
+class TestR884YieldNotSaturation(unittest.TestCase):
+    """★ R884：子配额闸门的**让额轮**不得被算成「配额饱和」。
+
+    病因：两个闸门（低窗/中文窗）为了不被误读成"零候选"也落 `quota_blocked=True`；
+    报表只看这个字段 ⇒ 把"主动让额"显示成"额度用完了"。两者处置完全相反。
+    """
+
+    def test_yield_rows_not_counted_as_saturation(self):
+        rows = [
+            {"outcome": "run_summary", "ts": _ago(2), "quota_blocked": True,
+             "zh_window_blocked": True, "zh_window_cap": 32, "zh_window_sent": 32},
+            {"outcome": "run_summary", "ts": _ago(3), "quota_blocked": True,
+             "low_hour_blocked": True},
+            {"outcome": "run_summary", "ts": _ago(4), "quota_blocked": True},  # 真饱和
+        ]
+        s = mr.summarize(rows)
+        self.assertEqual(s["runs"]["zh_window_blocked"], 1)
+        self.assertEqual(s["runs"]["quota_blocked"], 1,
+                         "让额轮（中文窗/低窗）不得计入饱和，只剩真饱和那 1 轮")
+
+    def test_yield_line_is_rendered(self):
+        rows = [{"outcome": "run_summary", "ts": _ago(2), "quota_blocked": True,
+                 "zh_window_blocked": True, "zh_window_cap": 32, "zh_window_sent": 32}]
+        out = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("中文窗让额", out)
+        self.assertIn("zh_window_prereg.py", out, "必须指向判据脚本，别让人用产量口径代替")
+
+    def test_enabled_but_zero_block_is_visible(self):
+        """★ R612：**已启用但零阻断**必须可见——否则"机制无效"与"还没触发"看起来一样。
+
+        （上限 0 = 从未启用 ⇒ 不打印，避免给所有未参与的仓库刷噪音。）
+        """
+        rows = [{"outcome": "run_summary", "ts": _ago(2), "zh_window_cap": 32,
+                 "zh_window_sent": 5, "zh_window_blocked": False}]
+        out = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("中文窗", out)
+        self.assertIn("上限 32", out)
+        self.assertIn("0/1 轮", out, "零阻断也要印出 0/N，不能整行消失")
+
+    def test_never_enabled_stays_silent(self):
+        """上限 0 = 从未启用 ⇒ 不打扰（默认关闭的仓库不该看到这一行）"""
+        rows = [{"outcome": "run_summary", "ts": _ago(2), "zh_window_cap": 0}]
+        out = mr.render_text(mr.summarize(rows), rows)
+        self.assertNotIn("中文窗让额", out)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 

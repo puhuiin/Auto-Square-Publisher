@@ -1501,6 +1501,8 @@ def summarize(rows):
         # R662：低浏览窗子配额阻断（`LOW_HOUR_CAP`）——必须与"配额饱和"分开记，
         # 否则两者在遥测上都是"没发帖"，**无法回答"额度到底被谁吃了"**
         "low_hour_blocked": 0, "low_hour_cap": None,
+        # ★ R884：中文窗让额（与"配额饱和"必须分开计数，见下方聚合处注释）
+        "zh_window_blocked": 0, "zh_window_cap": None, "zh_window_sent_last": None,
         # R666：配额饱和轮的**观测扫描**——打破"配额饱和 ⇒ 观测面零增长"。
         # `observe_gap_median` 是**全候选池**的真实分差 ⇒ R665 的"下界估计"
         # 可升级为真值。
@@ -2168,7 +2170,14 @@ def summarize(rows):
                 runs_tmp["elapsed"].append(_el)
             quota_blocked = r.get("quota_blocked") is True
             hours_blocked = r.get("active_hours_blocked") is True
-            if quota_blocked:
+            # ★ R884：**让额轮不是饱和**。两个子配额闸门（低窗 / 中文窗）为了不被
+            #   误读成"零候选"也落 quota_blocked=True；若直接计入饱和，报表会把
+            #   "额度被主动让出"显示成"额度用完了"——两者处置完全相反。
+            _zh_win = r.get("zh_window_blocked") is True
+            _lh_win = r.get("low_hour_blocked") is True
+            if _zh_win:
+                runs_tmp["zh_window_blocked"] += 1
+            if quota_blocked and not (_zh_win or _lh_win):
                 runs_tmp["quota_blocked"] += 1
             # R113/R6：配额释放估算取"最近一条带该字段的 run_summary"（行按时间序
             # 追加，后写覆盖先写 = 最新值）。**不能只在 quota_blocked 行里找**：
@@ -2199,6 +2208,10 @@ def summarize(rows):
             # ⚠️ `low_hour_cap` 必须**每轮都落**（不只阻断轮）——
             # 否则"已启用但零阻断"这一状态**没有任何证据**，
             # 护栏会误判为"未启用"（R612：沉默不是通过）。
+            if r.get("zh_window_cap") is not None:
+                runs_tmp["zh_window_cap"] = r.get("zh_window_cap")
+            if r.get("zh_window_sent") is not None:
+                runs_tmp["zh_window_sent_last"] = r.get("zh_window_sent")
             if r.get("low_hour_cap") is not None:
                 _lc = r.get("low_hour_cap")
                 if isinstance(_lc, (int, float)):
@@ -3233,6 +3246,18 @@ def render_text(s, rows=None):
         # 混在一个数字里就无法回答"额度到底被谁吃了"，
         # 而两者处置完全相反（调 LOW_HOUR_CAP vs 调 MAX_DAILY_POSTS）。
         _lhb = runs.get("low_hour_blocked", 0)
+        # ★ R884：中文窗（R883 实验）——阻断轮单列，且"已启用但零阻断"也要可见
+        _zwb = runs.get("zh_window_blocked", 0)
+        _zwc = runs.get("zh_window_cap")
+        if _zwb or (_zwc is not None and _zwc):
+            lines.append(
+                f"  ⏸️ **中文窗让额 {_zwb}/{runs['n']} 轮**"
+                + (f"（上限 {_zwc}，末次窗外 zh={runs.get('zh_window_sent_last')}）"
+                   if _zwc else "（**未启用**）")
+                + "：窗外轮次主动静默，把额度留给 UTC 00–02（北京 08–10）")
+            lines.append(
+                "     ↳ 判读：这是 R883 **预注册实验**的处置臂；判定与回滚见 "
+                "`scripts/zh_window_prereg.py`（**别用饱和/产量口径替代它**）")
         if _lhb:
             _lc2 = runs.get("low_hour_cap")
             _lsl = runs.get("low_hour_sent_last")
