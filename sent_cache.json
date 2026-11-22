@@ -1,15 +1,5 @@
 [
   {
-    "id": "093a549f469ad7af",
-    "title": "Hyperliquid (HYPE) Price Has One Line Left to Defend. The Last Test Ended in a Rally",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-13T15:49:32.846352+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "36ab711e97f92d95",
     "title": "Solo Brings Human Verification to Venmo Co-Founder’s JellyJelly App as AI Agents Beat CAPTCHA",
     "source": "NewsBTC (比特币与山寨)",
@@ -5183,6 +5173,16 @@
     "title": "本周比特币市场关注 PCE 数据及 66 亿美元期权到期",
     "source": "深潮TechFlow (中文/简体)",
     "sent_at": "2026-11-22T12:00:09.829778+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "88f0f1f3ce39bf57",
+    "title": "3 Events That Could Shake Bitcoin Prices During Thanksgiving Week",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-22T12:23:57.065482+00:00",
     "tokens": [
       "BTC"
     ],
