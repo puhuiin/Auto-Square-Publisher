@@ -19,25 +19,25 @@
   "strategy_guidance": "重点围绕“黑色星期五”系列限时活动与“交易大师赛”进行高频发帖，结合 Anthropic (ANTB) 等 TradFi 代币化证券上线热点，引导用户参与评论互动以分享奖池。针对黑五活动进入冲刺阶段，应以“活动攻略”和“互动领福利”为切入点，提醒读者抓紧最后时机参与官方任务以提升 Write to Earn 收益权重。",
   "last_updated": "2026-11-22T02:44:40.994308Z",
   "_feed_health": {
-    "Watcher.Guru (快讯)": {
-      "last_fail": "2026-11-22T11:43:32.028600+00:00",
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "fails": 3
+    "Bitcoinist (比特币向)": {
+      "fails": 1,
+      "last_fail": "2026-11-22T07:57:29.916367+00:00",
+      "reset_at": "2026-11-22T11:59:56.213931+00:00"
     },
     "CoinJournal (山寨异动)": {
-      "last_fail": "2026-11-22T11:43:32.318338+00:00",
+      "fails": 3,
       "parked_until": "2026-11-22T11:24:04.008594+00:00",
-      "fails": 3
-    },
-    "Bitcoinist (比特币向)": {
-      "last_fail": "2026-11-22T07:57:29.916367+00:00",
-      "reset_at": "2026-11-22T11:43:31.908016+00:00",
-      "fails": 1
+      "last_fail": "2026-11-22T11:59:57.142124+00:00"
     },
     "CryptoPotato (山寨币/Meme热点)": {
+      "fails": 1,
       "last_fail": "2026-11-22T07:57:29.755775+00:00",
-      "reset_at": "2026-11-22T11:43:31.533494+00:00",
-      "fails": 1
+      "reset_at": "2026-11-22T11:59:56.064719+00:00"
+    },
+    "Watcher.Guru (快讯)": {
+      "fails": 3,
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-22T11:59:56.790761+00:00"
     }
   },
   "_fallback_image": {
@@ -45,23 +45,23 @@
     "date": "2026-10-18"
   },
   "_llm_breaker": {
-    "Preset-stepfun": {
-      "last_fail": "2026-11-22T02:43:50.430291+00:00",
-      "cooldown_until": "2026-11-23T02:43:50.430277+00:00",
-      "fails": 1,
-      "permanent": true
-    },
     "Preset-stepfun-flash": {
-      "last_fail": "2026-11-22T02:43:46.516873+00:00",
-      "cooldown_until": "2026-11-23T02:43:46.516859+00:00",
       "fails": 1,
-      "permanent": true
+      "permanent": true,
+      "last_fail": "2026-11-22T02:43:46.516873+00:00",
+      "cooldown_until": "2026-11-23T02:43:46.516859+00:00"
+    },
+    "Preset-stepfun": {
+      "fails": 1,
+      "permanent": true,
+      "last_fail": "2026-11-22T02:43:50.430291+00:00",
+      "cooldown_until": "2026-11-23T02:43:50.430277+00:00"
     }
   },
   "_article_sent_date": "2026-11-22",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1219,
+  "_img_rot": 1220,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
