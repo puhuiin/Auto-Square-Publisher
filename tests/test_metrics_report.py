@@ -8755,6 +8755,28 @@ class TestR804StoryLevelLoss(unittest.TestCase):
         self.assertEqual(f["lost_causes"].get("语种跑偏"), 1)
         self.assertNotIn("其他", f["lost_causes"])
 
+    def test_r877_moderation_is_content_side_cause(self):
+        """★ R877：网关审核拒稿必须单独归类为「网关审核」，不得落进「其他」或
+        被误读成通道故障——它不进断路器，冷却面板里看不到它。"""
+        pr = self._mr()
+        rows = [
+            {"outcome": "binance_published", "stage": "summarize", "title": "A",
+             "platforms": ["binance"], "ts": _ago(8)},
+            {"outcome": "llm_rejected", "stage": "moderation", "title": "B",
+             "ts": _ago(7),
+             "reason": "[moderation 1连击] Error code: 400 - Output data may contain inappropriate content."},
+            {"outcome": "llm_rejected", "stage": "transport", "title": "C",
+             "ts": _ago(6), "reason": "Request timed out."},
+        ]
+        f = pr.funnel(rows)
+        self.assertEqual(f["lost"], 2)
+        self.assertEqual(f["lost_causes"].get("网关审核"), 1)
+        self.assertEqual(f["lost_causes"].get("超时"), 1,
+                         "对照：通道侧拒因仍须归自己的类，不能被审核标签抢走")
+        self.assertNotIn("其他", f["lost_causes"])
+
+
+
 
 class TestR815DailyReportCaliber(unittest.TestCase):
     """★★ R815：日报 ②/③ 三处**口径不自洽**修复。

@@ -167,7 +167,7 @@
 | **bluesminds** | `https://api.bluesminds.com/v1` | `glm-4-flash`（注册赠试用额度）<br>`kimi-k2`<br>`deepseek-chat` | `BLUESMINDS_API_KEY` |
 | **🏠 Reasonix 本地网关** ⭐ 本地首选 | `http://localhost:20140/v1` | `auto/best-fast`（自动路由） | **无需 Key**（本地自动发现） |
 | **阶跃星辰 Step Plan** 💳 订阅制 | `https://api.stepfun.com/step_plan/v1` | `step-5-preview`（默认，旗舰推理）<br>`step-3.7-flash`<br>`step-3.5-flash` | `STEPFUN_API_KEY` |
-| **OpenCSG AI 网关** 💳 独立额度池 | `https://opencsg.com/aigateway/v1` | `deepseek-v4.1-flash-1017`（默认，思考型）<br>目录共 20 个模型；`auto` 是聚合路由（实测慢 5 倍，不选） | `OPENCSG_API_KEY` |
+| **OpenCSG AI 网关** 💳 独立额度池 | `https://opencsg.com/aigateway/v1` | `deepseek-v4.1-flash-1017`（默认，思考型）<br>备份 `OpenCSG/Agentic-27B`（R876，同 key 同端点，模型级故障转移）<br>目录共 20 个模型；`auto` 是聚合路由（实测慢 5 倍，不选） | `OPENCSG_API_KEY` |
 
 ### 🏠 Reasonix 本地免费模型网关（本地开发首选）
 
@@ -259,13 +259,15 @@ Step Plan 是阶跃星辰的**订阅制**服务（¥49~699/月 Credit 池，与�
 
 #### 💳 OpenCSG AI 网关通道（`OPENCSG_API_KEY`，R872）
 
-**为什么加这条**：2026-11-20T16:46Z 起生产连续 47 轮零产出——三条在用通道同时失效
+**为什么加这条**：2026-11-20T16:46Z 起生产连续 26 轮零产出（末篇 16:06Z → 恢复首篇
+00:29Z，帖间隔 8.4 小时）——三条在用通道同时失效
 （stepfun / stepfun-flash 订阅到期报 400 `no active step plan subscription`、
 openrouter 免费层日配额 429、google 429）。OpenCSG 是**另一个独立额度池**，
 接入即恢复产量；它不是「多一个模型」，而是「多一份额度」。
 
 1. 仓库 Secret `OPENCSG` = 网关 Key；`auto_post.yml` 映射成 `OPENCSG_API_KEY`。
-2. `OPENCSG_MODEL` *(可选)* 覆盖模型，默认 `deepseek-v4.1-flash-1017`。
+2. `OPENCSG_MODEL` *(可选)* 覆盖主模型，默认 `deepseek-v4.1-flash-1017`；
+   `OPENCSG_BACKUP_MODEL` *(可选)* 覆盖备份模型，默认 `OpenCSG/Agentic-27B`（见第 5 条）。
    **选型是实测的、不是猜的**（只读探针 run 44840903549：`workflow_dispatch` 手动触发、
    只打印 key 长度、不发帖、不写仓库文件）：目录 20 个模型；该模型按**生产形态**
    （中文 500~800 字短讯 + `stream=True` + `max_tokens=3000`）实测 **8.9s、
@@ -276,7 +278,24 @@ openrouter 免费层日配额 429、google 429）。OpenCSG 是**另一个独立
    超时 90s、`max_tokens` 1600。按非推理配 600 / 25s 会复刻 R218 的系统性空包
    （思考链吃满预算 → `content=None`）。
 4. 模型名纪律（R263）：写**具体模型名**而非路由别名，这样 404 才能被断路器判成
-   「模型下架 → 永久冷却」，而不是当成临时故障反复重试。
+   「模型下架 → 永久冷却」，而不是当成临时故障反复重试。备份名里的 `/` 不影响这一点
+   （`_is_router_model` 只认 `auto`/`router` 路径段）。
+5. **备份模型通道（R876）**：同一个 Key、同一个端点再挂一条 `OpenCSG/Agentic-27B`，
+   用于**模型级**故障转移（主力 404 下架 / 改名 / 超时）。选型是实测的：只读探针
+   run 44846139133 对目录内 4 个模型跑同一生产形态请求，全部 `finish_reason=stop`——
+   主力 8.9s / 正文 680 字 / 推理 664 tok，`qwen3.8-flash` 21.8s / 654 字 / 1417 tok，
+   `glm-5.3-flash` 22.7s / 669 字 / 1307 tok，`OpenCSG/Agentic-27B` **17.3s / 879 字 /
+   267 tok**，单价 ¥0.35 / ¥1.0（约主力 1/4）。取推理开销最小、正文最长、最便宜的那条。
+   ⚠️ **它救不了账户级死亡**：同网关共用额度与审核策略，欠费/封号时两条一起死。
+   ⚠️ 备份也按**思考型**配预算：它 SSE 不吐 `reasoning_content`，但 usage 里
+   `reasoning_tokens=267`、`completion=830` > 非推理预算 600 ⇒ 不升预算会系统性截断。
+   排序不需要新开关：调度分由**历史延迟**主导，主力实测更快 ⇒ 自然保持主力在前，
+   备份只在主力失败时接手。
+6. **网关内容审核（R877）**：OpenCSG 会对输出做内容审核，命中返回
+   `400 - Output data may contain inappropriate content.`（生产首证 2026-11-21T00:46:14Z，
+   题材是温和的 ETF 监管新闻，同通道 19 秒后另一条正常发布）。这类拒稿按**内容侧**
+   处置：不冷却通道、不占通道失败计数，只换下一条通道/下一条故事；日报里单独归类为
+   「网关审核」。同一运行内零成功连挂 6 次才进断路器（有界，防网关整体改审核策略）。
 
 ---
 
@@ -380,7 +399,7 @@ python scripts/metrics_report.py --days 1
   | `FETCH_DEADLINE_SEC` | `300` | 单轮 RSS 抓取的全局 deadline（秒）：到点放弃迟到源、用已完成候选继续，避免卡住的源拖满 workflow 并挤掉后续 cron |
   | `LOG_LEVEL` | `INFO` | 日志级别（排障时可设 `DEBUG`） |
   | `MAX_POSTS_PER_RUN` | `2` | 单次运行最大发帖数（workflow 运行参数；配额剩余不足时自动收敛） |
-- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `ZAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL` / `STEPFUN_MODEL` / `STEPFUN_FLASH_MODEL` / `OPENCSG_MODEL` / `BLUESMINDS_MODEL` / `GOOGLE_MODEL`——想把某平台固定到指定模型时设置。
+- **模型覆盖变量**（可选，默认用各平台的聚合路由模型）：`OPENROUTER_MODEL` / `ZAI_MODEL` / `XKIRO_MODEL` / `AIHUBMIX_MODEL` / `INFERERA_MODEL` / `TOKENROUTER_MODEL` / `SILICONFLOW_MODEL` / `STEPFUN_MODEL` / `STEPFUN_FLASH_MODEL` / `OPENCSG_MODEL` / `OPENCSG_BACKUP_MODEL` / `BLUESMINDS_MODEL` / `GOOGLE_MODEL`——想把某平台固定到指定模型时设置。
   ⚠️ `BAI_MODEL` / `BAI_API_KEY` 已随 b.ai 于 R626 弃用而失效，配置它们不会有任何效果（R638：此前本行仍列着 `BAI_MODEL`，会让读者以为改它能换模型）。
 - **报警通知渠道**（全部可选，多渠道并发）：`SERVERCHAN_KEY`（Server酱微信）/ `PUSHPLUS_TOKEN`（PushPlus 微信）/ `BARK_KEY`（iOS Bark）/ `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`（Telegram）/ `WEBHOOK_URL`（钉钉/飞书/企微/Discord 通用）。同一错误报警 12 小时同题节流，投递成功才计额度。
 - **CI 回归防线**：`tests/test_core.py` 内置百余个离线回归测试（含断路器/源停放/报错分类/通知编码/跨语言去重/行情缓存/同步契约），`.github/workflows/ci.yml` 在每次 push/PR 时自动编译、校验 workflow 语法并跑测试，防止守护逻辑被后续改动悄悄破坏。

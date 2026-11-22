@@ -3775,6 +3775,144 @@ class TestLLMBreaker(unittest.TestCase):
                            "冷却不得短于 Retry-After 下限")
 
 
+class TestR877ModerationNotChannelFailure(unittest.TestCase):
+    """★ R877：网关内容审核拒稿按**内容侧**处置，不得冷却通道。
+
+    生产首证 2026-11-21T00:46:14Z：Preset-opencsg 报
+    `400 - Output data may contain inappropriate content.`（题材：ARK 撤回 ETF 注册），
+    同通道 19s 后另一条故事正常发布 ⇒ 通道健康。旧实现走兜底
+    `_breaker_record_failure` ⇒ 首次即 10min 冷却、连击升级封顶 240min；
+    R872 后只剩一条健康通道时，这等于自造停摆。
+    """
+
+    _MSG = "Error code: 400 - Output data may contain inappropriate content."
+
+    def setUp(self):
+        import tempfile, json
+        self.tmp = tempfile.mktemp(suffix=".json")
+        self._orig = m.CAMPAIGN_INTEL_FILE
+        m.CAMPAIGN_INTEL_FILE = self.tmp
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump({"active_tags": []}, f)
+        self.mdir = tempfile.mkdtemp()
+        self._orig_metrics = m.METRICS_FILE
+        m.METRICS_FILE = os.path.join(self.mdir, "metrics.jsonl")
+        self.eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+        self.eng._fail_counts = {}
+        self.eng._clients = {}
+        self.eng.providers = [
+            m.LLMProviderConfig("Preset-opencsg", "https://opencsg.com/aigateway/v1",
+                                "k", "deepseek-v4.1-flash-1017")]
+
+    def tearDown(self):
+        import shutil
+        m.CAMPAIGN_INTEL_FILE = self._orig
+        m.METRICS_FILE = self._orig_metrics
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+        shutil.rmtree(self.mdir, ignore_errors=True)
+
+    def _item(self):
+        return {"title": "ARK 申请撤回 ARK CoinDesk 20 Crypto ETF 注册文件",
+                "summary": "s", "source": "X"}
+
+    def _run(self, msg, times=1):
+        client = MagicMock()
+        client.chat.completions.create.side_effect = RuntimeError(msg)
+        with patch.object(self.eng, "_get_client", return_value=client), \
+             patch.object(self.eng, "_ordered_providers", return_value=self.eng.providers[:1]), \
+             patch.object(m, "append_metrics"):
+            for _ in range(times):
+                self.assertIsNone(self.eng.summarize(self._item(), None,
+                                                     market_context="", token_hints=["BTC"]))
+
+    def test_predicate_matches_production_wording(self):
+        self.assertTrue(m._is_output_moderation(RuntimeError(self._MSG)))
+        self.assertTrue(m._is_output_moderation(RuntimeError(
+            "Error code: 400 - Input data may contain inappropriate content.")))
+        self.assertTrue(m._is_output_moderation(RuntimeError("data_inspection_failed")))
+
+    def test_predicate_rejects_channel_faults(self):
+        """变异守卫：真通道故障不得被当成审核放过（否则修审核变成掩盖故障）。"""
+        for msg in ("Error code: 400 - you have no active step plan subscription",
+                    "Error code: 400 - credit insufficient balance: 0",
+                    "Error code: 404 - This model is unavailable for free.",
+                    "Error code: 429 - rate limited",
+                    "Error code: 500 - internal error",
+                    "Request timed out.",
+                    "Error code: 400 - invalid max_tokens"):
+            self.assertFalse(m._is_output_moderation(RuntimeError(msg)), msg)
+
+    def test_moderation_does_not_cool_channel(self):
+        self._run(self._MSG)
+        st = m.intel_state_get("_llm_breaker", {}) or {}
+        self.assertNotIn("Preset-opencsg", st, "审核拒稿不得写跨运行断路器")
+        self.assertEqual(self.eng._fail_counts.get("Preset-opencsg", 0), 0,
+                         "不得占用通道失败计数（R6 口径）")
+        self.assertEqual(self.eng._quality_fails().get("Preset-opencsg"), 1,
+                         "应记进质量计数，参与运行内让位")
+
+    def test_channel_fault_still_cools(self):
+        """对照守卫：普通 400（参数非法）仍须进断路器。"""
+        self._run("Error code: 400 - invalid max_tokens")
+        st = m.intel_state_get("_llm_breaker", {}) or {}
+        self.assertIn("Preset-opencsg", st)
+        self.assertTrue(st["Preset-opencsg"].get("cooldown_until"))
+        self.assertEqual(self.eng._fail_counts.get("Preset-opencsg"), 1)
+
+    def test_credit_exhausted_keeps_permanent_priority(self):
+        self._run("Error code: 400 - credit insufficient balance: 0")
+        st = m.intel_state_get("_llm_breaker", {})["Preset-opencsg"]
+        self.assertTrue(st.get("permanent"), "余额耗尽仍须 permanent 24h")
+
+    def test_bounded_escalation_at_preregistered_threshold(self):
+        n = m.MultiLLMEngine._MODERATION_BREAKER_STRIKES
+        self.assertEqual(n, 6, "阈值是预注册值，改它必须连带改 HANDOVER 的回滚条件")
+        self._run(self._MSG, times=n - 1)
+        self.assertNotIn("Preset-opencsg", m.intel_state_get("_llm_breaker", {}) or {},
+                         "阈值以下不得冷却")
+        self._run(self._MSG, times=1)
+        st = m.intel_state_get("_llm_breaker", {})["Preset-opencsg"]
+        self.assertTrue(st.get("cooldown_until"), "达阈值仍须有界冷却（防网关整体审核策略）")
+        self.assertFalse(st.get("permanent"), "审核不是账户级死亡，不得 permanent")
+
+    def test_success_resets_moderation_streak(self):
+        good = ("比特币今日围绕六万关口震荡，多空拉锯明显，链上活跃地址稳步回升。"
+                "短线看震荡偏强，回踩不破可轻仓试多，上方压力先看前高。仓位管理第一，"
+                "跌破支撑果断离场。本周关注宏观数据与币安活动动向。")
+        resp = MagicMock()
+        resp.choices = [MagicMock(message=MagicMock(content=good))]
+        resp.usage = None
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [RuntimeError(self._MSG), resp]
+        with patch.object(self.eng, "_get_client", return_value=client), \
+             patch.object(self.eng, "_ordered_providers", return_value=self.eng.providers[:1]), \
+             patch.object(m, "append_metrics"):
+            self.assertIsNone(self.eng.summarize(self._item(), None,
+                                                 market_context="", token_hints=["BTC"]))
+            self.assertEqual(self.eng._moderation_fails().get("Preset-opencsg"), 1)
+            out = self.eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        self.assertIsNotNone(out, "前置：第二次调用应成功")
+        self.assertEqual(self.eng._moderation_fails().get("Preset-opencsg", 0), 0,
+                         "成功必须清零审核连击，否则跨故事累积会误触发有界升级")
+
+    def test_reject_telemetry_stage_and_reason(self):
+        """新行型必须可归因：stage=moderation + reason 前缀带连击数。"""
+        import json as _json
+        client = MagicMock()
+        client.chat.completions.create.side_effect = RuntimeError(self._MSG)
+        with patch.object(self.eng, "_get_client", return_value=client), \
+             patch.object(self.eng, "_ordered_providers", return_value=self.eng.providers[:1]):
+            self.eng.summarize(self._item(), None, market_context="", token_hints=["BTC"])
+        with open(m.METRICS_FILE, encoding="utf-8") as f:
+            rows = [_json.loads(l) for l in f if l.strip()]
+        rej = [r for r in rows if r.get("outcome") == "llm_rejected"]
+        self.assertTrue(rej, "审核拒稿应落一条 llm_rejected 遥测")
+        self.assertEqual(rej[-1].get("stage"), "moderation")
+        self.assertTrue(str(rej[-1].get("reason")).startswith("[moderation "),
+                        f"reason 应带连击标签，实得 {rej[-1].get('reason')!r}")
+
+
 class TestFeedParking(unittest.TestCase):
     """RSS 源连续失败自动停放"""
 
@@ -14636,6 +14774,8 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
         "stepfun": "step-5-preview",              # 阶跃 Step Plan 订阅旗舰（推理型）
         # R872：探针按真实目录选定（run 44840903549，20 模型逐条核过）
         "opencsg": "deepseek-v4.1-flash-1017",
+        # R876：备份模型通道（探针 run 44846139133 实测 finish=stop）
+        "opencsg-agentic": "OpenCSG/Agentic-27B",
         # R626：b.ai 从 _EXPECTED 移除（无免费额度、已弃用）。
         # **它必须被移除，否则本用例会一直红**——但移除后"它被人加回来"就
         # 变静默了，故另立一条显式断言（见 test_bai_is_retired）双向守住。
@@ -14686,7 +14826,10 @@ class TestPresetFreeModelDefaults(unittest.TestCase):
                      "Preset-google",
                      # R872：探针实测 delta.reasoning_content（450 推理 token/篇）
                      # ⇒ 思考型，按推理配给；不升预算=思考链吃空=通道报废。
-                     "Preset-opencsg"}
+                     "Preset-opencsg",
+                     # R876：备份通道 SSE 不吐 reasoning_content，但 usage 里
+                     # reasoning_tokens=267、completion=830 > 600 ⇒ 同样必须升预算。
+                     "Preset-opencsg-agentic"}
         for name, cfg in chain.items():
             if not name.startswith("Preset-"):
                 continue
@@ -14739,12 +14882,112 @@ class TestOpencsgPreset(unittest.TestCase):
         finally:
             if saved is not None:
                 os.environ["OPENCSG_API_KEY"] = saved
-        self.assertFalse(any(x.name == "Preset-opencsg" for x in chain))
+        self.assertFalse(any(x.name.startswith("Preset-opencsg") for x in chain),
+                         "R876：无 Key 时主/备两条通道都不该进链")
 
     def test_reasoning_predicate_covers_channel(self):
         """谓词是唯一真源：三处预算/超时逻辑共用它，漏判=系统性空包（R218）。"""
         self.assertTrue(m._is_reasoning_channel("Preset-opencsg", "deepseek-v4.1-flash-1017"))
         self.assertTrue(m._is_reasoning_channel("Preset-opencsg", "glm-5.3-flash"))
+
+
+class TestR876OpencsgBackupChannel(unittest.TestCase):
+    """R876：OpenCSG 同网关第二条模型通道（**模型级**故障转移）。
+
+    动机：R872 恢复产量后只剩一条可用通道，模型级故障（404 下架/改名/超时）会再次
+    停摆。选型来自只读探针 run 44846139133（4 个候选全部 finish=stop）。
+    ⚠️ 它救不了账户级死亡：同网关共用额度与审核策略。
+    """
+
+    def _build(self, extra=None):
+        keys = {"OPENCSG_API_KEY": "k-opencsg-r876"}
+        if extra:
+            keys.update(extra)
+        saved = {k: os.environ.get(k) for k in keys}
+        os.environ.update(keys)
+        try:
+            return m.MultiLLMEngine()._build_provider_chain()
+        finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+    def test_both_models_coexist_on_one_key(self):
+        chain = self._build()
+        a = next(x for x in chain if x.name == "Preset-opencsg")
+        b = next(x for x in chain if x.name == "Preset-opencsg-agentic")
+        self.assertEqual(a.api_key, b.api_key)
+        self.assertEqual(a.base_url, b.base_url)
+        self.assertNotEqual(a.model, b.model, "去重键 (key, model) 必须让双模型并存")
+
+    def test_backup_default_name_and_override(self):
+        b = next(x for x in self._build() if x.name == "Preset-opencsg-agentic")
+        self.assertEqual(b.model, "OpenCSG/Agentic-27B")
+        b2 = next(x for x in self._build({"OPENCSG_BACKUP_MODEL": "qwen3.8-flash"})
+                  if x.name == "Preset-opencsg-agentic")
+        self.assertEqual(b2.model, "qwen3.8-flash")
+
+    def test_backup_gets_reasoning_budget(self):
+        """SSE 不吐 reasoning_content ≠ 非思考模型：usage.reasoning_tokens=267、
+        completion=830 > 非推理预算 600 ⇒ 按非推理配给会系统性截断（R218 形状）。"""
+        b = next(x for x in self._build() if x.name == "Preset-opencsg-agentic")
+        self.assertEqual(b.timeout, 90.0)
+        self.assertTrue(m._is_reasoning_channel("Preset-opencsg-agentic", b.model))
+        self.assertEqual(m._summarize_max_tokens("Preset-opencsg-agentic", b.model), 3000)
+
+    def test_slash_in_name_is_not_router_alias(self):
+        """名字带 "/" 不得被误判成聚合路由：否则模型下架 404 会退化成 10 分钟重试
+        而不是 permanent，R263/R169 的可解释性就没了。"""
+        self.assertFalse(m._is_router_model("OpenCSG/Agentic-27B"))
+        self.assertTrue(m._is_router_model("openrouter/free"), "对照：真路由别名仍须命中")
+        self.assertTrue(m._is_router_model("omni/auto/best-free"), "对照：auto 路径段仍须命中")
+
+    def test_absent_without_key(self):
+        saved = os.environ.pop("OPENCSG_API_KEY", None)
+        try:
+            chain = m.MultiLLMEngine()._build_provider_chain()
+        finally:
+            if saved is not None:
+                os.environ["OPENCSG_API_KEY"] = saved
+        self.assertFalse(any(x.name.startswith("Preset-opencsg") for x in chain))
+
+    def test_primary_precedes_backup_at_cold_start(self):
+        """冷启动无遥测 ⇒ 两者同分 +inf，稳定排序保持配置序（主模型先登记）。
+        这条守住「备份只在主力失败时接手」，避免主力被静默换掉。"""
+        names = [x.name for x in self._build() if x.name.startswith("Preset-opencsg")]
+        self.assertEqual(names, ["Preset-opencsg", "Preset-opencsg-agentic"])
+
+    def test_latency_keeps_primary_first_even_if_backup_cheaper(self):
+        """调度分 = 平均延迟 + 0.001×(平均token/1000)：**延迟主导**，token 只是微弱
+        次键 ⇒ 更省 token 的备份不会靠成本篡位（实测主力 10.1~14.3s < 备份 17.3s）。
+        这条是「实验窗口内不换主力模型」的机制保证，不是口头承诺。"""
+        import tempfile, json as _json, shutil
+        tmp = tempfile.mkdtemp()
+        orig_m, orig_ci = m.METRICS_FILE, m.CAMPAIGN_INTEL_FILE
+        m.METRICS_FILE = os.path.join(tmp, "metrics.jsonl")
+        m.CAMPAIGN_INTEL_FILE = os.path.join(tmp, "ci.json")
+        m._METRICS_AGG_CACHE.update({"key": None, "ts": 0.0, "val": {}})
+        try:
+            with open(m.CAMPAIGN_INTEL_FILE, "w", encoding="utf-8") as f:
+                _json.dump({}, f)
+            with open(m.METRICS_FILE, "w", encoding="utf-8") as f:
+                for name, lat, tok in (("Preset-opencsg", 10.0, 9000),
+                                       ("Preset-opencsg-agentic", 30.0, 1000)):
+                    f.write(_json.dumps({"ts": "2026-11-21T00:00:00+00:00", "provider": name,
+                                         "outcome": "llm_success", "stage": "summarize",
+                                         "llm_latency_sec": lat, "tokens_used": tok}) + "\n")
+            eng = m.MultiLLMEngine.__new__(m.MultiLLMEngine)
+            eng._fail_counts = {}
+            eng._clients = {}
+            eng.providers = [p for p in self._build() if p.name.startswith("Preset-opencsg")]
+            ordered = [p.name for p in eng._ordered_providers()]
+            self.assertEqual(ordered, ["Preset-opencsg", "Preset-opencsg-agentic"])
+        finally:
+            m.METRICS_FILE, m.CAMPAIGN_INTEL_FILE = orig_m, orig_ci
+            m._METRICS_AGG_CACHE.update({"key": None, "ts": 0.0, "val": {}})
+            shutil.rmtree(tmp, ignore_errors=True)
 
 
 class TestStepfunPreset(unittest.TestCase):

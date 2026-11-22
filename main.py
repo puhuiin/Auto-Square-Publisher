@@ -4478,6 +4478,26 @@ def _is_credit_exhausted(exc: BaseException) -> bool:
     return bool(_CREDIT_EXHAUSTED_RE.search(str(exc or "")))
 
 
+# ★★ R877：网关**内容审核**拒稿。生产首证 2026-11-21T00:46:14Z（Preset-opencsg）：
+#   `Error code: 400 - Output data may contain inappropriate content.`
+#   题材是「ARK 申请撤回 ARK CoinDesk 20 Crypto ETF 注册文件」——温和的监管新闻，
+#   而**同通道 19 秒后另一条故事正常发布**（00:46:33Z）⇒ 通道健康，是这条内容被拦。
+# 为什么必须与通道故障分开（R6/R813 既有口径）：旧实现把它落进通用 except 的兜底
+#   `_breaker_record_failure` ⇒ **首次即 10 分钟冷却**、连击指数升级封顶 240 分钟。
+#   12 通道时代这只是无害让位；R872 后**只剩一条健康通道**，一次审核拒稿就等于
+#   整轮停产，敏感题材集中的新闻周期里连挂几条即可自造 40~240 分钟停摆。
+# 只登记高置信措辞：output 形态是生产实证；input 形态与 data_inspection_failed
+#   是同族网关常见写法（**未经本项目生产实证**，纳入是因为它们同样是「内容被拦」
+#   而非「通道坏了」，归类方向一致）。**不泛匹配** "content"/"400"——否则真正的
+#   通道级 400（参数非法、模型名错）会被一起放过，那是把修审核变成掩盖故障。
+_MODERATION_RE = re.compile(r"inappropriate\s+content|data_inspection_failed", re.IGNORECASE)
+
+
+def _is_output_moderation(exc: BaseException) -> bool:
+    """网关内容审核拒稿判定：命中按**内容侧**拒稿处置（不进跨运行断路器）。"""
+    return bool(_MODERATION_RE.search(str(exc or "")))
+
+
 # 结尾站队提问的风格池：每条帖子随机抽取一种，避免时间线上全是同款"扣1扣2"
 # 写派人设风格池：每帖随机抽取一种注入 system prompt，让时间线的"人味"不重样。
 # 核心规则（$ 标识/字数/标签/禁套话）在 SYSTEM_PROMPT 里不受影响，这里只换表达气质。
@@ -4854,12 +4874,17 @@ def _is_reasoning_channel(provider_name: str, model: str = "") -> bool:
         # 预算 → content 系统性None → 看起来像"Google 通道质量差"，实则是预算配错。
         # 同理按推理配给：预算是上限非下限，真不带思考时只会更早自然返回，无成本。
         return True
-    if provider_name == "Preset-opencsg":
+    if provider_name.startswith("Preset-opencsg"):
         # R872：OpenCSG AI 网关（用户 2026-11-20 配 OPENCSG secret）。
         # 只读探针实测（run 44840903549）：deepseek-v4.1-flash-1017 的 SSE
         # delta 带 reasoning_content，一条 668 字中文短讯烧 450 推理 token
         # （completion 847 = 推理 450 + 正文 396）⇒ 思考型。按非推理配
         # 600/25s 会复刻 R218 的系统性空包（思考链吃满预算 → content=None）。
+        # R876：startswith 一并覆盖备份通道 Preset-opencsg-agentic。实测
+        # （run 44846139133）OpenCSG/Agentic-27B 的 SSE **不吐 reasoning_content**
+        # （reasoning_chars=0），但 usage.completion_tokens_details.reasoning_tokens=267
+        # ⇒ 思考在内部发生、只是不外显；一条中文短讯 completion=830 > 非推理预算 600
+        # ⇒ 按非推理配给会复刻 R218 的系统性截断。误升无成本（预算/超时都是上界）。
         return True
     ml = (model or "").lower()
     if "thinking" in ml or "reasoning" in ml:
@@ -5088,6 +5113,11 @@ class MultiLLMEngine:
         # 触发跨运行熔断——把"模型写不好"误判成"通道坏了"，还会让质量门间接冷却
         # 一个其实完全健康的通道。质量差不等于通道故障，故只参与运行内排序。
         self._quality_fail_counts: Dict[str, int] = {}
+        # ★ R877：网关内容审核拒稿连击计数（**单独存放**，理由同质量计数）。
+        # 只用于有界升级：孤立审核拒稿不冷却通道，但同运行零成功连挂达阈值仍进
+        # 断路器——防「网关整体审核策略变更」退化成每轮静默空烧（阈值预注册见
+        # _MODERATION_BREAKER_STRIKES）。成功即清零（与 _fail_counts 同处重置）。
+        self._moderation_fail_counts: Dict[str, int] = {}
         # 客户端缓存：同一提供商复用底层 httpx 连接池
         self._clients: Dict[str, OpenAI] = {}
         # R130：最近一次 prompt 组装抽中的结尾套路（回执遥测用，验证轮换均匀性）
@@ -5139,10 +5169,32 @@ class MultiLLMEngine:
             self._quality_fail_counts = counts
         return counts
 
+    def _moderation_fails(self) -> Dict[str, int]:
+        """网关审核拒稿连击计数（延迟初始化，理由同 _quality_fails：本类有调用方
+        与测试用 `__new__` 构造实例、不走 `__init__`，直读属性会 AttributeError）。"""
+        counts = self.__dict__.get("_moderation_fail_counts")
+        if not isinstance(counts, dict):
+            counts = {}
+            self._moderation_fail_counts = counts
+        return counts
+
     # ---------------- 跨运行熔断持久化（网络抖动级降级到冷却级） ----------------
     _BREAKER_STATE_KEY = "_llm_breaker"
     _BREAKER_BASE_MIN = 10      # 第 1 次失败冷却 10 分钟
     _BREAKER_MAX_MIN = 240      # 指数封顶 4 小时
+    # ★ R877：审核拒稿的**有界升级**阈值（预注册于 2026-11-21，见到更多数据之前）。
+    # 口径：同一运行内、同一通道、**中间没有任何一次成功**的审核拒稿连击数。
+    # 取 6 = 3 条故事 × 2 条 OpenCSG 通道：低于它按「逐条内容被拦」处置（不冷却），
+    # 达到它按「网关整体审核策略」处置（进断路器 10 分钟，有界、非 permanent）。
+    # 为什么不取质量门那种 2：敏感题材集中的新闻周期里连挂 2 条很常见，而 R872 后
+    # 只剩一条健康通道，2 连击就冷却 = 自造停摆（正是本条要修的病）。
+    # 回滚条件（同样预注册）：
+    #   · 若「审核连击 <6 但整轮零产出」反复发生（≥3 轮）⇒ 阈值过高、空烧不可见，
+    #     下调阈值或改为按「轮零产出」触发；
+    #   · 若「≥6 连击触发冷却，但下一条故事本可成功」⇒ 阈值过低，上调。
+    # 触发证据强度：生产 n=1 次事件 + 代码路径确认（通用 400 → 首次即 10min 冷却）。
+    # 不是统计结论，是**机制缺陷**修复；n=1 这点必须随结论一起上报。
+    _MODERATION_BREAKER_STRIKES = 6
 
     @staticmethod
     def _parse_cooldown(raw: Any) -> Optional[datetime]:
@@ -5983,7 +6035,9 @@ class MultiLLMEngine:
             # OpenCSG AI 网关（R872，2026-11-21 接入）：11-20 16:46Z 起产量归零
             # ——stepfun/stepfun-flash 报 400「no active step plan subscription」
             # （订阅失效）、openrouter 免费日额度打满（429 free-models-per-day）、
-            # google 429 ⇒ 三源同时断，47 轮「全部提供商处于冷却期」。
+            # google 429 ⇒ 三源同时断，26 轮零产出（末篇 16:06Z → 恢复首篇
+            # 00:29Z，帖间隔 8.4h）。⚠️ 本行原写「47 轮」是错的，按线上
+            # run_summary 逐轮复核后更正——数字错了会让停摆严重度被高估近一倍。
             # 用户配了 OPENCSG secret，本条目补一条**独立额度池**。
             # 端点/认证/默认名全部来自只读探针实测（run 44840567276 / 44840903549），
             # 不凭文档猜名（R263 纪律）：
@@ -5998,6 +6052,33 @@ class MultiLLMEngine:
                 os.getenv("OPENCSG_API_KEY", "").strip(),
                 "https://opencsg.com/aigateway/v1",
                 os.getenv("OPENCSG_MODEL", "").strip() or "deepseek-v4.1-flash-1017",
+            ),
+            # ★ R876：同一网关的**备份模型**通道（模型级故障转移，不是额度池冗余）。
+            # 动机：R872 恢复产量后只剩一条可用通道，模型级故障（404 下架/改名/超时）
+            # 会再次停摆。同 key、同端点、仅模型名不同——去重键 (key, model) 已放宽，
+            # 故双模型可并存（同 stepfun/stepfun-flash 套路）。
+            # ⚠️ 它**救不了账户级死亡**：同网关共用额度与审核策略。R872 那次「三源
+            # 同断」若发生在 OpenCSG 自身，这条备份一样死；它只挡模型级故障。
+            # 选型不猜名（R263）：只读探针 run 44846139133 对目录内 4 个模型跑生产
+            # 形态请求（流式 + 中文短讯 + max_tokens=3000），全部 finish=stop：
+            #   deepseek-v4.1-flash-1017   8.9s  正文 680 字  推理 664 tok  ¥1.1/¥4.4
+            #   qwen3.8-flash             21.8s  正文 654 字  推理 1417 tok ¥0.88/¥2.97
+            #   glm-5.3-flash             22.7s  正文 669 字  推理 1307 tok ¥0.88/¥3.08
+            #   OpenCSG/Agentic-27B       17.3s  正文 879 字  推理 267 tok  ¥0.35/¥1.0
+            # 取 Agentic-27B：推理开销最小（真实长 prompt 下延迟放大最少）、正文最长、
+            # 单价约主模型 1/4，样本语气最像人写（"那大概率是PPT"/"不是画饼"/"值得盯"）。
+            # ⚠️ 反面证据：n=1 次采样、且是**简化 prompt**；它在完整生产 prompt 下的
+            # 质量门通过率未经实测，上线后由 metrics 的拒稿行观测（预注册见 HANDOVER）。
+            # 不取 auto 别名（R263/R169：路由别名让 404 的 permanent 语义不可解释）；
+            # 名里的 "/" 不影响具体模型判定——_is_router_model 只认 auto/router 路径段。
+            # 排序无需新旋钮：_ordered_providers 第三层由**历史延迟**主导
+            # （分数 = 平均延迟 + 0.001×平均token/1000，token 只是微弱次键），
+            # 主模型实测 10.1~14.3s 快于备份 ⇒ 自然保持主力在前；冷启动无遥测时
+            # 两者同分 +inf，稳定排序保持配置序（主模型先登记）⇒ 同样主力在前。
+            "opencsg-agentic": (
+                os.getenv("OPENCSG_API_KEY", "").strip(),
+                "https://opencsg.com/aigateway/v1",
+                os.getenv("OPENCSG_BACKUP_MODEL", "").strip() or "OpenCSG/Agentic-27B",
             ),
         }
 
@@ -7723,6 +7804,7 @@ class MultiLLMEngine:
                 # 成功即清除该提供商的失败计数（通道 + 质量）与跨运行熔断
                 self._fail_counts.pop(provider.name, None)
                 self._quality_fails().pop(provider.name, None)
+                self._moderation_fails().pop(provider.name, None)
                 self._breaker_record_success(provider.name)
                 logger.info(f"🎉 模型 [{provider.name}] 生成成功！(识别标的: {valid_tokens})"
                             f" | 耗时 {latency_sec}s / tokens {tokens_used or '?'}"
@@ -7790,6 +7872,37 @@ class MultiLLMEngine:
                                f"（{'已计入断路器' if enter_breaker else '孤立事件，不计入断路器'}）")
             except Exception as e:
                 err_msg = str(e)
+                # ★★ R877：网关**内容审核**拒稿 = 内容侧问题，不是通道故障 ⇒ 走
+                #   质量计数路径（R6 口径：不进跨运行断路器、不占通道失败计数，
+                #   只参与运行内让位）。生产首证见 _MODERATION_RE 注释：审核拒稿后
+                #   同通道 19s 正常发布，而旧实现已给它记了 10 分钟冷却。
+                #   ⚠️ 有界升级仍在（_MODERATION_BREAKER_STRIKES）：网关若整体改
+                #   审核策略，零成功连挂到阈值照样冷却，不让它变成每轮静默空烧。
+                #   ⚠️ 放在 credit/permanent/429 判定**之前**但谓词互斥：审核措辞
+                #   不含余额/404/429 字样，故不会抢走那三类的既有处置。
+                if _is_output_moderation(e):
+                    _mod = self._moderation_fails()
+                    _mod[provider.name] = _mod.get(provider.name, 0) + 1
+                    _qf = self._quality_fails()
+                    _qf[provider.name] = _qf.get(provider.name, 0) + 1
+                    _strikes = _mod[provider.name]
+                    enter_breaker = _strikes >= self._MODERATION_BREAKER_STRIKES
+                    if enter_breaker:
+                        self._breaker_record_failure(provider.name)
+                    fail_reason = f"[moderation {_strikes}连击] {err_msg}"
+                    self._log_reject(news_item, provider.name, "moderation", fail_reason,
+                                     persona=persona["name"],
+                                     latency_sec=round(time.perf_counter() - t_call, 3),
+                                     model=provider.model, article=article,
+                                     completion_tokens=completion_tokens,
+                                     budget_cap=budget_cap, lang=out_lang)
+                    logger.warning(f"提供商 [{provider.name}] 网关内容审核拦截（内容侧拒稿，"
+                                   f"{'已计入断路器' if enter_breaker else '不计入断路器'}）: {err_msg}")
+                    # 与统一出口同款切换展示 + 退避（这里 continue 会跳过它，故就地复刻）
+                    if index < len(ordered) - 1:
+                        logger.info(f"正在自动切换至下一个备用提供商（原因: {fail_reason}）...")
+                        time.sleep(1)
+                    continue
                 self._fail_counts[provider.name] = self._fail_counts.get(provider.name, 0) + 1
                 if _is_credit_exhausted(e):
                     # R300：账户余额/额度耗尽是账户级持久故障，充值前必失败——无条件

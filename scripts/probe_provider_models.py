@@ -61,6 +61,8 @@ AUTH_MODE = {
     # R872：OpenCSG 网关目录需鉴权，Bearer 实测 200（run 44840567276）。
     # 认证方式不猜（R619 纪律）：?key= 未实测，故只登记已验证的 Bearer。
     "opencsg": ("OPENCSG_API_KEY", "bearer"),
+    # R876：备份模型通道与主通道同 key 同认证，探针须同样覆盖（R617 全池纪律）
+    "opencsg-agentic": ("OPENCSG_API_KEY", "bearer"),
     "tokenrouter":("TOKENROUTER_API_KEY", "bearer"),  # Bearer 实测
     # R626：b.ai 已弃用（无免费额度），main.py 的 extra_keys 删掉了该条目。
     # 探针的覆盖面从 extra_keys 的 AST 解析来，**不会**再遍历到这里——

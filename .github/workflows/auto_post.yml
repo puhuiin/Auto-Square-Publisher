@@ -196,6 +196,9 @@ jobs:
           # 默认名 deepseek-v4.1-flash-1017 由只读探针按真实目录选定。
           OPENCSG_API_KEY: ${{ secrets.OPENCSG }}
           OPENCSG_MODEL: ${{ secrets.OPENCSG_MODEL }}
+          # R876：同网关备份模型通道（模型级故障转移）。不配则用实测选定的默认名
+          # OpenCSG/Agentic-27B；与主通道共用 OPENCSG 这一个 secret，无需新凭据。
+          OPENCSG_BACKUP_MODEL: ${{ secrets.OPENCSG_BACKUP_MODEL }}
           
           # 可选通知与异常报警渠道 (微信 / iOS / Telegram / 团队群)
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}

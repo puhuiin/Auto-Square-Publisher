@@ -2703,6 +2703,11 @@ def funnel(rows):
             return "内容质量"
         if _st == "numbers":
             return "数字门"
+        # ★ R877：网关内容审核是**内容侧**拒因（R813 口径：别混进"通道挂了"）。
+        #   它不进跨运行断路器 ⇒ 不会出现在 permanent/冷却面板里；若不在这里点名，
+        #   运维只看到"尝试失败率上升"，完全不知道是审核拦的、也无从行动。
+        if _st == "moderation":
+            return "网关审核"
         return _reject_cause((_row or {}).get("reason"))
 
     _causes = collections.Counter(_cause_of(last_rej.get(k) or {}) for k in lost_keys)
