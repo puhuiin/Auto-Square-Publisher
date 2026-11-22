@@ -10127,6 +10127,39 @@ class TestR881ContentStatsFreshness(unittest.TestCase):
         self.assertIn("永久损失", line)
 
 
+class TestR881LowHourEraGuard(unittest.TestCase):
+    """★ R881：低窗子配额的建议文案必须与**当前配额时代**一致。
+
+    病因（本轮实测）：`LOW_HOUR_CAP` 的推荐语写着「回放 2134 轮心跳，高窗 3.9×、
+    总发布仅 −7%」——那是 **12 篇/天时代** 的结论。现在 60 篇/天，高窗（京 06-12）
+    每天约 18 轮 × 每轮 1~2 篇 ⇒ 上限 18~36 篇，`=2` 会把总量压到 ≈20~38 篇。
+    照旧文案去开，是把 −35% 当 −7% 做决策。同一族还有「配额 12/天」「85% 轮次饱和」。
+    """
+
+    @staticmethod
+    def _mr_src():
+        return open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                 "scripts", "metrics_report.py"), encoding="utf-8").read()
+
+    def test_no_stale_quota_era_numbers(self):
+        src = self._mr_src()
+        self.assertNotIn("配额 12/天", src, "配额早已 60，别再写死 12")
+        self.assertNotIn("实测 85% 轮次饱和", src, "饱和率必须现算，别抄旧读数")
+        self.assertNotIn("总发布仅 −7%", src, "旧回放的 −7% 不能再当现状")
+
+    def test_era_caveat_is_present(self):
+        src = self._mr_src()
+        self.assertIn("12 篇/天时代", src, "必须标明旧回放的适用时代")
+        self.assertIn("产量换浏览", src, "必须说清这是取舍而非免费杠杆")
+
+    def test_saturation_is_computed_from_window(self):
+        """饱和率必须由本窗口的 quota_blocked/n 现算（不是写死 85%）"""
+        rows = [{"outcome": "run_summary", "ts": _ago(3), "candidates": 100,
+                 "published": 1, "quota_blocked": True} for _ in range(5)]
+        out = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("本窗口饱和 100%", out)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 
