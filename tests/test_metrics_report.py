@@ -10312,6 +10312,41 @@ class TestR883ZhWindowPrereg(unittest.TestCase):
                  "lang": "en"}]
         self.assertEqual(zw.density_breakdown(joined, pubs), [])
 
+    def test_slot_capacity_counts_per_20min_bin(self):
+        """★ 窗口容量 = 每 20 分钟槽最多篇数 × 窗内槽数。
+
+        这条锁的是今天实踩的坑：管道每轮最多 1 篇 ⇒ 窗口 2h 只有 6 篇/天，
+        永远够不到机制门槛 10 ⇒ 只开窗外限量会让"窗外减量、窗口不增"。
+        """
+        zw = self._zw()
+        pub = [
+            {"outcome": "binance_published", "ts": "2026-11-23T00:05:00+00:00"},
+            {"outcome": "binance_published", "ts": "2026-11-23T00:12:00+00:00"},  # 同槽
+            {"outcome": "binance_published", "ts": "2026-11-23T01:05:00+00:00"},
+            {"outcome": "binance_published", "ts": "2026-11-23T09:05:00+00:00"},  # 窗外
+        ]
+        cap = zw.slot_capacity(pub, (0, 2))
+        self.assertEqual(cap["max_per_slot"], 2)
+        self.assertEqual(cap["slots_per_day"], 6)
+        self.assertEqual(cap["capacity"], 12)
+
+    def test_slot_capacity_flags_impossible_config(self):
+        """容量 < 机制门槛时，渲染必须明确喊停（不是提示，是 🚫）"""
+        zw = self._zw()
+        pub = [{"outcome": "binance_published", "ts": "2026-11-23T00:05:00+00:00"},
+               {"outcome": "binance_published", "ts": "2026-11-23T01:05:00+00:00"}]
+        res = {"baseline_days": [], "treatment_days": [], "base_win_posts_med": None,
+               "base_total_med": None, "rows": [], "valid": 0, "wins_better": 0,
+               "p": 1.0, "win_posts_med": None, "total_med": None, "win_med_pool": None,
+               "out_med_pool": None, "ratio": None, "en_tvd": None, "checks": {},
+               "rollback": False, "verdict": "未开闸 / 无处置样本",
+               "confounds": [], "density": [],
+               "capacity": zw.slot_capacity(pub, zw.ZW_WINDOW_UTC)}
+        out = zw.render(res)
+        self.assertIn("前提自检", out)
+        self.assertIn("容量不足", out)
+        self.assertIn("ZH_WINDOW_DOUBLE_PER_RUN", out)
+
     def test_age_unit_conversion_in_main(self):
         """防回归：`age_days` 是**天**，曝光阈值是**小时** ⇒ 必须换算。
 

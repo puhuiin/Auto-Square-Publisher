@@ -158,6 +158,39 @@ def density_breakdown(joined, pub_rows):
     return out
 
 
+SLOT_MINUTES = 20          # 与 cron 同源的"一轮"粒度
+SLOT_CAPACITY_WARN = True  # 只提示，不参与判定
+
+
+def slot_capacity(pub_rows, utc_window):
+    """★ 窗口容量自检：**每 20 分钟槽最多发过几篇** + 窗内每天最多能发几篇。
+
+    为什么必须有（2026-11-22 实踩）：管道每轮最多 1 篇（1566 轮 {0:382,1:1184}），
+    窗口 2h = 6 轮 ⇒ 容量 6 篇/天，**永远够不到机制门槛 10**
+    ⇒ 只开"窗外限量"时，实验结构上不可能通过（且会白掉产量）。
+    返回 {"max_per_slot": int, "slots_per_day": int, "capacity": int,
+          "window_posts_med": float|None}
+    """
+    from collections import Counter
+    slots = Counter()
+    for m in pub_rows:
+        if not str(m.get("outcome", "")).startswith("binance_published"):
+            continue
+        ts = str(m.get("ts", ""))
+        if len(ts) < 16:
+            continue
+        h = int(ts[11:13])
+        if not (utc_window[0] <= h < utc_window[1]):
+            continue
+        mm = int(ts[14:16]) // SLOT_MINUTES * SLOT_MINUTES
+        slots["%s:%02d" % (ts[:13], mm)] += 1
+    max_per_slot = max(slots.values()) if slots else 0
+    hours = max(1, utc_window[1] - utc_window[0])
+    slots_per_day = hours * (60 // SLOT_MINUTES)
+    return {"max_per_slot": max_per_slot, "slots_per_day": slots_per_day,
+            "capacity": max_per_slot * slots_per_day if max_per_slot else slots_per_day}
+
+
 def hour_profile_tvd(rows_a, rows_b):
     """两组发布行的 3 小时桶分布 TVD（确认 en 夜窗没被带跑）。"""
     def prof(rows):
@@ -271,6 +304,7 @@ def evaluate(joined, pub_rows):
         "rollback": rollback, "verdict": verdict,
         "confounds": confound_breakdown(joined),
         "density": density_breakdown(joined, pub_rows),
+        "capacity": slot_capacity(pub_rows, ZW_WINDOW_UTC),
     }
 
 
@@ -285,6 +319,19 @@ def render(res):
     L.append("  基线臂 %s~%s（%d 天）：窗内 zh 帖/天 中位 %s（全量口径）｜ 总发布/天 中位 %s"
              % (ZW_BASELINE_FROM, ZW_BASELINE_TO, len(res["baseline_days"]),
                 res["base_win_posts_med"], res["base_total_med"]))
+
+    # ★ 前提自检（比任何读数都先打）：容量够不着门槛时，实验根本不可能通过
+    cap = res.get("capacity") or {}
+    if cap:
+        _c = cap.get("capacity") or 0
+        L.append("  前提自检：每 20 分钟槽最多 **%s 篇** × 窗内 %s 槽 ⇒ 窗口容量 **%s 篇/天**"
+                 "（机制门槛 %.0f）"
+                 % (cap.get("max_per_slot"), cap.get("slots_per_day"), _c,
+                    ZW_MIN_WINDOW_POSTS))
+        if _c < ZW_MIN_WINDOW_POSTS:
+            L.append("     🚫 **容量不足 ⇒ 本实验在这套配置下不可能通过**："
+                     "只开 `ZH_OFFWIN_CAP` 会「窗外减量、窗口不增」= 净损失。"
+                     "必须先开 `ZH_WINDOW_DOUBLE_PER_RUN=1`（或把窗口放宽到 ≥4 小时）。")
 
     # 混淆拆解**永远先打**（没有处置样本时也要看：它是判据可信度的前置检查）
     cf = res.get("confounds") or []
