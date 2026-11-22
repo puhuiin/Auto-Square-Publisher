@@ -1,15 +1,5 @@
 [
   {
-    "id": "66f2922cc11418ab",
-    "title": "解绑质押暂停7天,MANTRA应对私钥泄露事件",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-13T12:04:13.849441+00:00",
-    "tokens": [
-      "MANTRA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4fb9c22ade6d3e6b",
     "title": "TechFlow 情报局:黄仁勋因多起婚外情丑闻辞任英伟达 CEO,微软全球宕机 12 小时仍未恢复",
     "source": "深潮TechFlow (中文/简体)",
@@ -5185,6 +5175,18 @@
     "tokens": [
       "ADA",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c09e6179ce641604",
+    "title": "South Korean exchanges halt CYBER transfers amid suspected bridge exploit",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-11-22T07:40:28.972948+00:00",
+    "tokens": [
+      "CYBER",
+      "SOL",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
