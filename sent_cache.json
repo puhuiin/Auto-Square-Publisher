@@ -1,16 +1,5 @@
 [
   {
-    "id": "05996b60da562f24",
-    "title": "Key Bullish Shiba Inu (SHIB) Metric Surges by 30%: When to Expect the Reversal?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-14T03:24:01.892308+00:00",
-    "tokens": [
-      "SHIB",
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0417d5334dff54c2",
     "title": "Lido 宣布停用 GGV 金库,11 月 17 日前可赎回 wstETH",
     "source": "吴说区块链 (中文深度)",
@@ -5183,6 +5172,17 @@
     "sent_at": "2026-11-22T21:04:13.073005+00:00",
     "tokens": [
       "TRUMP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6f8717a72d6b2aaa",
+    "title": "XRP Ledger trial settled 213,000 paid AI requests in 6,324 transactions",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-22T21:23:54.906708+00:00",
+    "tokens": [
+      "XRP",
+      "RLUSD"
     ],
     "lang": "en"
   }
