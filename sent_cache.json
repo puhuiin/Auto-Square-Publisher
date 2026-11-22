@@ -1,15 +1,5 @@
 [
   {
-    "id": "f34e8a0613576c2a",
-    "title": "3 个 Pump fun 钱包解锁 14.58 亿枚 PUMP 转入 Coinbase Prime,价值约 501 万美元",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-14T02:11:47.848508+00:00",
-    "tokens": [
-      "PUMP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "368263c4155dd70d",
     "title": "某巨鲸持续抄底ZEC越跌越买,5倍杠杆多单现浮亏已达350万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5183,6 +5173,16 @@
     "sent_at": "2026-11-22T20:04:04.636274+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2053af8b0e48ffc8",
+    "title": "Fusionist Urges ACE Trading Pause After Exploit Alert",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-22T20:24:09.881099+00:00",
+    "tokens": [
+      "ACE"
     ],
     "lang": "en"
   }
