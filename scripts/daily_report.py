@@ -270,6 +270,29 @@ def build_report(rows, hours: int) -> str:
         _ia = _intel.get("intel_age_hours")
         _fresh.append("情报 guidance 可用 %s ｜ 情报 age %s h（取最近一次真正评估过情报的轮）" % (
             _gu, ("%.1f" % _ia) if isinstance(_ia, (int, float)) else "未知"))
+    # ★ R881：浏览**明细**导出的新鲜度。R818 只覆盖了加权基线（token_engagement.as_of），
+    #   而 R869 时段实验吃的是 content_stats.jsonl 的**观测时刻**：
+    #   预注册只收曝光 ∈ [6,72]h ⇒ 每次导出仅覆盖最近 3 天，**过期即永久丢失**。
+    #   ⚠️ 只报事实与后果，不拍"该多久导一次"的阈值（R670 教训）。
+    try:
+        _cs = _load_content_stats()
+        if _cs:
+            _cs_ts = max((str(r.get("ts") or "") for r in _cs), default="")
+            _d = dt.datetime.fromisoformat(_cs_ts.replace("Z", "+00:00")) if _cs_ts else None
+            if _d is not None:
+                if _d.tzinfo is not None:
+                    _d = _d.astimezone(dt.timezone.utc)
+                _h = (now - _d.replace(tzinfo=None)).total_seconds() / 3600.0
+                _ago_txt = ("%.1f 天前" % (_h / 24.0)) if _h >= 48 else ("%.1f 小时前" % _h)
+                _fresh.append("浏览明细最新观测 %s（%s，覆盖 %d 帖）"
+                              % (_cs_ts[:16].replace("T", " "), _ago_txt, len(_cs)))
+                if _h > 72:
+                    _fresh.append("⚠️ 浏览明细已超 72h 未更新：预注册只收 6–72h 曝光 "
+                                  "⇒ 这段时间的帖已进不了 R869 样本（永久损失）")
+        else:
+            _fresh.append("浏览明细：缺文件（content_stats.jsonl）")
+    except Exception as _e:  # noqa: BLE001 —— 报表不得因新鲜度展示失败而中断
+        _fresh.append("浏览明细新鲜度读取失败（%s）" % type(_e).__name__)
     L.append("   📀 输入新鲜度：%s" % " ｜ ".join(_fresh))
 
     # ③ LLM 与尝试

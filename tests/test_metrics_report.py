@@ -9994,6 +9994,139 @@ class TestR879TokenLimitTopStory(unittest.TestCase):
         self.assertNotIn("low score story", line)
 
 
+class TestR881CollinearityGuard(unittest.TestCase):
+    """★ R881：语种 / 体裁与**时段共线**时必须提示，否则跨类中位差会被读成内容效应。
+
+    本轮实测踩到：11-22 导入后 profit_report 直接印「en 3.9（zh 20+）」「长文 54.4（短讯 21）」。
+    分层后两句话都站不住——20–24 UTC 桶内 zh 2.5 vs en 2.0（1.25×）；8 篇长文 100%
+    落在 00–02 UTC。报告不提示，下一步就会照着假结论改内容策略（R809 教训）。
+    """
+
+    @staticmethod
+    def _pr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "profit_report_r881",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "profit_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _ts(hour, minute=10):
+        """相对日期 + 指定 UTC 小时（遵守 R799 时钟窗纪律：不写死绝对日期）。"""
+        from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+        base = (_dt.now(_tz.utc) - _td(days=1)).replace(hour=0, minute=minute,
+                                                      second=0, microsecond=0)
+        return (base + _td(hours=hour)).isoformat()
+
+    def _rec(self, hour, lang="zh-CN", article=False, vpd=10.0, minute=10):
+        return {"views": int(vpd), "age_days": 1.0, "vpd": vpd,
+                "meta": {"ts": self._ts(hour, minute), "lang": lang,
+                         "article": article, "tokens": ["BTC"]}}
+
+    def test_hour_bucket_and_tvd(self):
+        pr = self._pr()
+        self.assertEqual(pr.hour_bucket(self._ts(0)), 0)
+        self.assertEqual(pr.hour_bucket(self._ts(23)), 7)
+        self.assertIsNone(pr.hour_bucket("bad-ts"))
+        self.assertAlmostEqual(pr.profile_tvd({0: 1.0}, {7: 1.0}), 1.0)
+        self.assertAlmostEqual(pr.profile_tvd({0: 0.5, 1: 0.5}, {0: 0.5, 1: 0.5}), 0.0)
+
+    def test_en_concentrated_in_night_is_flagged(self):
+        """en 只在夜窗发 ⇒ 必须报共线（否则"英文差"是假的）"""
+        pr = self._pr()
+        recs = [self._rec(h) for h in (0, 3, 6, 9, 12, 15, 18, 21)] * 2   # 全样本较均匀
+        recs += [self._rec(15, lang="en", minute=11 + i) for i in range(10)]
+        lines = pr.collinearity_lines(recs, lambda r: r["meta"]["lang"], "语种")
+        self.assertTrue(any("en" in ln and "共线" in ln for ln in lines), lines)
+
+    def test_balanced_language_has_no_warning(self):
+        pr = self._pr()
+        recs = []
+        for h in (0, 3, 6, 9, 12, 15, 18, 21):
+            recs.append(self._rec(h, lang="zh-CN"))
+            recs.append(self._rec(h, lang="en", minute=40))
+        self.assertEqual(pr.collinearity_lines(recs, lambda r: r["meta"]["lang"], "语种"), [])
+
+    def test_article_within_bucket_comparison(self):
+        """桶内对照：同一时段里长文 vs 短讯的中位比（剥离时段后的真实差）"""
+        pr = self._pr()
+        recs = [self._rec(0, article=True, vpd=20.0, minute=10 + i) for i in range(6)]
+        recs += [self._rec(1, article=False, vpd=5.0, minute=10 + i) for i in range(6)]
+        wb = pr.within_bucket(recs, lambda r: "长文" if r["meta"]["article"] else "短讯",
+                              "长文", "短讯")
+        self.assertEqual(len(wb), 1, wb)
+        self.assertAlmostEqual(wb[0][2], 20.0)
+        self.assertAlmostEqual(wb[0][4], 5.0)
+
+    def test_min_n_guard_skips_tiny_category(self):
+        pr = self._pr()
+        recs = [self._rec(0) for _ in range(12)]
+        recs.append(self._rec(15, lang="en"))     # n=1，不足以谈分布
+        self.assertEqual(pr.collinearity_lines(recs, lambda r: r["meta"]["lang"], "语种"), [])
+
+
+class TestR881ContentStatsFreshness(unittest.TestCase):
+    """★ R881：日报的「输入新鲜度」必须报**浏览明细**的观测时刻。
+
+    为什么：R869 预注册只收曝光 ∈ [6,72]h ⇒ 每次导出只覆盖最近 3 天，过期即永久丢失
+    （本轮实测 11-16~11-18 已丢）。日报此前只报加权基线 `token_engagement.as_of`，
+    **完全看不到明细有多久没导** ⇒ 实验会静默饿死，没人知道该去导出。
+    """
+
+    @staticmethod
+    def _dr():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "daily_report_r881",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "daily_report.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    @staticmethod
+    def _tmp(rows):
+        import json as _json
+        import tempfile
+        fd, p = tempfile.mkstemp(suffix=".jsonl")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            for r in rows:
+                fh.write(_json.dumps(r) + "\n")
+        return p
+
+    def _line(self, text):
+        return next(l for l in text.split("\n") if "📀 输入新鲜度" in l)
+
+    def test_reports_detail_freshness_and_coverage(self):
+        mod = self._dr()
+        p = self._tmp([{"content_id": "c1", "ts": _ago(5), "views": 9}])
+        self.addCleanup(os.remove, p)
+        mod._CONTENT_STATS_FILE = p
+        line = self._line(mod.build_report([], 24))
+        self.assertIn("浏览明细最新观测", line)
+        self.assertIn("覆盖 1 帖", line)
+
+    def test_missing_detail_file_is_explicit(self):
+        mod = self._dr()
+        mod._CONTENT_STATS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                               "_no_such_content_stats.jsonl")
+        line = self._line(mod.build_report([], 24))
+        self.assertIn("浏览明细：缺文件", line, "缺失必须明说（未知不是 0）")
+
+    def test_stale_over_72h_names_the_consequence(self):
+        """>72h 必须点名后果（样本永久损失），而不是只给一个"几天前"。"""
+        mod = self._dr()
+        p = self._tmp([{"content_id": "c1", "ts": _ago(100), "views": 3}])
+        self.addCleanup(os.remove, p)
+        mod._CONTENT_STATS_FILE = p
+        line = self._line(mod.build_report([], 24))
+        self.assertIn("已超 72h", line)
+        self.assertIn("永久损失", line)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 

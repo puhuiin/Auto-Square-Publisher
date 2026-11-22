@@ -158,6 +158,77 @@ def first_line(rec):
     return str(t).split("\n")[0]
 
 
+def hour_bucket(ts):
+    """metrics.ts(UTC) → 3 小时桶序号 0..7（只用于分布比较，不是判据阈值）。"""
+    try:
+        h = int(str(ts)[11:13])
+    except (TypeError, ValueError):
+        return None
+    return h // 3
+
+
+def hour_profile(rows):
+    """类别内的小时分布（占比），None 桶丢弃。返回 {bucket: share}。"""
+    c = collections.Counter()
+    for r in rows:
+        b = hour_bucket(r["meta"].get("ts"))
+        if b is not None:
+            c[b] += 1
+    tot = sum(c.values())
+    return {b: v / float(tot) for b, v in c.items()} if tot else {}
+
+
+def profile_tvd(p, q):
+    """两个分布在 8 个桶上的总变差距离（0=同分布，1=完全错开）。"""
+    keys = set(p) | set(q)
+    return 0.5 * sum(abs(p.get(k, 0.0) - q.get(k, 0.0)) for k in keys)
+
+
+COLLINEAR_TVD = 0.35   # 启发式：仅用于"提示读者别直接比"，不参与任何取舍
+
+
+def collinearity(joined, keyfn):
+    """每个类别相对**全样本**的小时分布偏斜。返回 [(类别, n, tvd, 主桶, 主桶占比)]。"""
+    overall = hour_profile(joined)
+    out = []
+    for cat in sorted({keyfn(r) for r in joined}, key=str):
+        rs = [r for r in joined if keyfn(r) == cat]
+        if len(rs) < 8:          # 小样本的分布没有解释力，别拿它发警报
+            continue
+        prof = hour_profile(rs)
+        top = max(prof.items(), key=lambda kv: kv[1]) if prof else (None, 0.0)
+        out.append((cat, len(rs), profile_tvd(prof, overall), top[0], top[1]))
+    return out
+
+
+def within_bucket(joined, keyfn, cat_a, cat_b, min_n=3):
+    """两个类别的**桶内**对照：只返回两边都 ≥min_n 的桶。
+    返回 [(桶, a 的 n, a 中位, b 的 n, b 中位)]。
+    """
+    rows = []
+    for b in range(8):
+        a = [r["vpd"] for r in joined
+             if hour_bucket(r["meta"].get("ts")) == b and keyfn(r) == cat_a]
+        c = [r["vpd"] for r in joined
+             if hour_bucket(r["meta"].get("ts")) == b and keyfn(r) == cat_b]
+        if len(a) >= min_n and len(c) >= min_n:
+            rows.append((b, len(a), st.median(a), len(c), st.median(c)))
+    return rows
+
+
+def collinearity_lines(joined, keyfn, title):
+    """渲染共线告警（只提示，不改任何结论）。"""
+    lines = []
+    for cat, n, tvd, top, share in collinearity(joined, keyfn):
+        if tvd < COLLINEAR_TVD:
+            continue
+        lines.append(
+            "  ⚠️ **%s 「%s」与时段共线**：n=%d，%d–%d 点 UTC 占 %.0f%%（TVD=%.2f）"
+            "⇒ 别拿它跟别的%s直接比中位，先看桶内对照。"
+            % (title, cat, n, (top or 0) * 3, (top or 0) * 3 + 3, share * 100, tvd, title))
+    return lines
+
+
 def _fmt(rows):
     for k, n, md, mean in rows:
         print("  %-20s n=%-3d views/天 中位=%-6.1f 均值=%.1f" % (str(k)[:20], n, md, mean))
@@ -197,8 +268,22 @@ def main(argv=None):
 
     print("\n== 语种 ==")
     _fmt(summarize(joined, lambda r: r["meta"].get("lang") or "(无lang)"))
+    # ★ R881：语种 × 时段共线护栏（en 只在夜窗发时，跨语种中位差会伪造出"英文差"）
+    for _ln in collinearity_lines(joined, lambda r: r["meta"].get("lang") or "(无lang)", "语种"):
+        print(_ln)
     print("\n== 长短文 ==")
     _fmt(summarize(joined, lambda r: "长文" if r["meta"].get("article") else "短讯"))
+    # ★ R881：体裁 × 时段共线护栏（长文常集中在少数时段，直接比会把它读成"长文更好"）
+    for _ln in collinearity_lines(joined, lambda r: "长文" if r["meta"].get("article") else "短讯",
+                                  "体裁"):
+        print(_ln)
+    _wb = within_bucket(joined, lambda r: "长文" if r["meta"].get("article") else "短讯",
+                        "长文", "短讯")
+    if _wb:
+        print("  ↳ 桶内对照（两边各 ≥3 帖才列；用于剥离时段）：")
+        for _b, _na, _ma, _nc, _mc in _wb:
+            print("     %02d–%02d UTC  长文 n=%-2d 中位 %-6.1f ｜ 短讯 n=%-3d 中位 %-6.1f ｜ 比 %.2f×"
+                  % (_b * 3, _b * 3 + 3, _na, _ma, _nc, _mc, (_ma / _mc) if _mc else 0))
     print("\n== 小时(UTC) × 语种（中位 views/天）==")
     for h in sorted(set(str(r["meta"].get("ts", ""))[11:13] for r in joined)):
         cells = []
