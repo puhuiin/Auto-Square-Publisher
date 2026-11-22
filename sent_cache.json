@@ -1,15 +1,5 @@
 [
   {
-    "id": "cb6346b41efcc688",
-    "title": "MEGA Discloses 20% Staff Cut Amid AI Product Push",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-13T19:44:56.151392+00:00",
-    "tokens": [
-      "MEGA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3ec963c0f66a27d8",
     "title": "MEGA cuts 20% of workforce as former MegaETH Foundation restructures",
     "source": "The Block (机构与政策)",
@@ -5184,6 +5174,16 @@
     "sent_at": "2026-11-22T15:24:09.028697+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c62d46552ada99c4",
+    "title": "对冲后反获利6美元,Morten Christensen第三次获得TRUMP晚宴资格",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-22T15:44:01.696785+00:00",
+    "tokens": [
+      "TRUMP"
     ],
     "lang": "en"
   }
