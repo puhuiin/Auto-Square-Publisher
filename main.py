@@ -1031,6 +1031,11 @@ ZH_WINDOW_UTC = (0, 2)                    # 目标窗（UTC）：00–02 = 北�
 ZH_WINDOW_LANGS = ("zh-CN", "zh-TW")      # 只动中文帖；英文夜窗（R710）不碰
 ZH_OFFWIN_CAP = _env_int("ZH_OFFWIN_CAP", 0)
 
+# ★★ R886：闸门只能作用在**中文输出时段**（北京 06–22，与 R710 的 `LANG_DAY_START/END` 同源）。
+#   为什么必须限定：闸门在配额层按轮拦，**语种要到后面 pick_output_lang() 才定**
+#   ⇒ 不限定的话，zh 计数在下午达上限后会把**整个英文夜窗（北京 22–06）**也静默，
+#   英文产量归零、判据的 en-TVD 护栏直接炸、总量护栏也崩（实验结论作废）。
+
 
 def _utc_hour_now(now: Optional[datetime] = None) -> int:
     """当前 UTC 小时（可注入，便于确定性单测）。"""
@@ -1040,6 +1045,15 @@ def _utc_hour_now(now: Optional[datetime] = None) -> int:
 def _bj_hour_now(now: Optional[datetime] = None) -> int:
     """当前北京时间小时（可注入）。窗口判定共用一份，避免各写一遍（R643）。"""
     return (_utc_hour_now(now) + 8) % 24
+
+
+def _in_zh_output_hours(now: Optional[datetime] = None) -> bool:
+    """★ R886：当前是否在**中文输出时段**（北京 06–22）。
+
+    与 R710 `pick_output_lang` 的 `is_day` 同一口径（`LANG_DAY_START/END`），
+    不另写字面量——否则两处漂移就会让闸门拦住英文轮（R643 教训）。
+    """
+    return LANG_DAY_START <= _bj_hour_now(now) < LANG_DAY_END
 
 
 def _in_zh_target_window(now: Optional[datetime] = None) -> bool:
@@ -12439,7 +12453,9 @@ def _run_main():
         # ★★★ R883：中文帖窗口倾斜闸门（预注册实验，默认关）
         #   与 R662 同型但**按语种 + 更窄窗口**：只在窗外拦中文帖，
         #   英文夜窗（北京 22–06）完全不受影响（那是另一批受众的活跃时段）。
-        if ZH_OFFWIN_CAP > 0 and not window_blocked_reason:
+        #   ⚠️ R886：只在中文时段生效（英文夜窗的轮次一律跳过，见常量处注释）
+        if (ZH_OFFWIN_CAP > 0 and not window_blocked_reason
+                and _in_zh_output_hours()):
             _now_utc_h = _utc_hour_now()
             _in_zh_window = _in_zh_target_window()
             if not _in_zh_window:

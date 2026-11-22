@@ -10778,6 +10778,7 @@ class TestRunMainSemantics(unittest.TestCase):
             self._cache_at_utc_hour(paths, 32, utc_hour=12)
             with patch.object(m, "ZH_OFFWIN_CAP", 32), \
                  patch.object(m, "_in_zh_target_window", return_value=False), \
+                 patch.object(m, "_bj_hour_now", return_value=15), \
                  patch.object(m, "MAX_DAILY_POSTS", 60):
                 with self.assertRaises(SystemExit):
                     m._run_main()
@@ -10808,12 +10809,53 @@ class TestRunMainSemantics(unittest.TestCase):
             self._cache_at_utc_hour(paths, 32, utc_hour=12)
             with patch.object(m, "ZH_OFFWIN_CAP", 32), \
                  patch.object(m, "_in_zh_target_window", return_value=True), \
+                 patch.object(m, "_bj_hour_now", return_value=9), \
                  patch.object(m, "MAX_DAILY_POSTS", 60):
                 m._run_main()
             self.assertEqual(self._engine.summarize.call_count, 1, "窗内必须正常生成")
             self.assertTrue(pub.publish.called, "窗内必须正常发布")
         finally:
             self._teardown(patches, tmpdir)
+
+    def test_zh_window_gate_never_blocks_english_hours(self):
+        """★ R886：英文夜窗（北京 22–06）的轮次**一律不拦**。
+
+        根因：闸门在配额层按轮拦，语种要到后面 `pick_output_lang()` 才定 ⇒
+        若不限定时段，zh 计数下午达上限后会把整个英文夜窗静默（英文产量归零、
+        判据的 en-TVD 护栏直接炸、实验作废）。
+        """
+        tmpdir, paths = self._iso_files()
+        cand = dict(self._candidate(), impact_score=40, base_impact_score=40)
+        patches = self._base_patches(tmpdir, paths, dry=False, candidates=[cand])
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            self._cache_at_utc_hour(paths, 32, utc_hour=12)
+            with patch.object(m, "ZH_OFFWIN_CAP", 32), \
+                 patch.object(m, "_in_zh_target_window", return_value=False), \
+                 patch.object(m, "_bj_hour_now", return_value=23), \
+                 patch.object(m, "MAX_DAILY_POSTS", 60):
+                m._run_main()
+            self.assertTrue(pub.publish.called,
+                            "英文时段的轮次不得被中文窗闸门拦下")
+        finally:
+            self._teardown(patches, tmpdir)
+
+    def test_zh_output_hours_share_lang_window(self):
+        """帮手必须与 R710 的 `LANG_DAY_START/END` 同源（不写字面量，免漂移）"""
+        class _Now:
+            def __init__(self, h):
+                from datetime import datetime as _dt, timezone as _tz
+                self.dt = _dt(2026, 1, 1, (h - 8) % 24, 0, tzinfo=_tz.utc)
+
+        self.assertTrue(m._in_zh_output_hours(_Now(6).dt))
+        self.assertTrue(m._in_zh_output_hours(_Now(21).dt))
+        self.assertFalse(m._in_zh_output_hours(_Now(22).dt))
+        self.assertFalse(m._in_zh_output_hours(_Now(5).dt))
 
     def test_zh_window_gate_off_by_default(self):
         """默认 0 = 关：同样的缓存（32 条窗外）也不拦（未开闸的仓库行为不变）"""
