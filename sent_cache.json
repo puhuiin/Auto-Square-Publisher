@@ -1,15 +1,5 @@
 [
   {
-    "id": "3fdbce517709cf7e",
-    "title": "Coinbase Institutional:比特币近期下跌主要受美联储政策预期影响,而非币安黑客事件",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-13T23:50:04.929583+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d17197869b320ca1",
     "title": "吴说周精选:以太坊或提前抗量子升级、美国国会紧盯泰达币安与新闻 Top10",
     "source": "吴说区块链 (中文深度)",
@@ -5186,6 +5176,16 @@
     "sent_at": "2026-11-22T18:24:34.023288+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c6d8c9572c0a5132",
+    "title": "Chainflip users face frozen withdrawals after $4.86 million vanishes from Ethereum vault",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-22T18:44:15.175684+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
