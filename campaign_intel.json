@@ -20,38 +20,38 @@
   "last_updated": "2026-11-22T15:03:54.739735Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "last_fail": "2026-11-22T18:43:45.032782+00:00",
       "fails": 3,
       "parked_until": "2026-11-22T11:24:04.008594+00:00",
-      "reset_at": "2026-11-22T22:43:31.368786+00:00"
+      "reset_at": "2026-11-22T23:03:29.162275+00:00",
+      "last_fail": "2026-11-22T18:43:45.032782+00:00"
     },
     "Watcher.Guru (快讯)": {
-      "last_fail": "2026-11-22T22:43:31.746226+00:00",
       "fails": 3,
-      "parked_until": "2026-11-17T10:23:31.478522+00:00"
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-22T23:03:29.267990+00:00"
     },
     "AMBCrypto (技术与链上)": {
-      "last_fail": "2026-11-22T21:03:35.780720+00:00",
       "fails": 1,
-      "reset_at": "2026-11-22T22:43:31.000334+00:00"
+      "reset_at": "2026-11-22T23:03:28.775244+00:00",
+      "last_fail": "2026-11-22T21:03:35.780720+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
     "Preset-stepfun": {
-      "last_fail": "2026-11-22T02:43:50.430291+00:00",
       "fails": 1,
+      "permanent": true,
       "cooldown_until": "2026-11-23T02:43:50.430277+00:00",
-      "permanent": true
+      "last_fail": "2026-11-22T02:43:50.430291+00:00"
     },
     "Preset-stepfun-flash": {
-      "last_fail": "2026-11-22T02:43:46.516873+00:00",
       "fails": 1,
+      "permanent": true,
       "cooldown_until": "2026-11-23T02:43:46.516859+00:00",
-      "permanent": true
+      "last_fail": "2026-11-22T02:43:46.516873+00:00"
     }
   },
   "_article_sent_date": "2026-11-22",
