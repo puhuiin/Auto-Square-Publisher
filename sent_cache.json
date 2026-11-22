@@ -1,16 +1,5 @@
 [
   {
-    "id": "c868121f1f4ef4b7",
-    "title": "Pi Network (PI) Hit by Volatility, Solana (SOL) Braces for Additional Sell-off: Bits Recap Nov 13",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-13T14:30:00.401371+00:00",
-    "tokens": [
-      "SOL",
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "94051ca746de84e4",
     "title": "Solana Moves Closer To Wall Street As DTCC Reveals Tokenization Plans",
     "source": "Bitcoinist (比特币向)",
@@ -5184,6 +5173,18 @@
     "sent_at": "2026-11-22T10:44:06.028726+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "16bd5d6d6c7d050e",
+    "title": "一周热门项目动态:以太坊 Glamsterdam 升级推迟、Solana2027 路线图、首笔代币化股票链上分红等(1115–1121)",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-22T11:02:29.155750+00:00",
+    "tokens": [
+      "USDC",
+      "ETH",
+      "SOL"
     ],
     "lang": "zh-TW"
   }
