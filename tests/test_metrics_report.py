@@ -9932,6 +9932,65 @@ class TestR851hOverwrite(unittest.TestCase):
                         now=dt.datetime(2026, 10, 31, 9, 0, 0, tzinfo=dt.timezone.utc)))
 
 
+class TestR879TokenLimitTopStory(unittest.TestCase):
+    """★ R879：限流门槛校准行必须点名**被拦/被放行的那条故事**。
+
+    背景：生产实读到「拦截顶分 29 / 放行门槛 30」，但遥测只有一个分数 ⇒
+    R216 的「顶分贴门槛即复评」无法执行：29 分可能是真事件差 1 分被吞（该复评
+    门槛），也可能是常规行情帖恰好过 29 分（不该动）。只量不点名 = 有数据无出口
+    （R276/R672 同族教训）。
+    """
+
+    def _rows(self, **kw):
+        row = {"outcome": "run_summary", "ts": _ago(2), "candidates": 80,
+               "published": 0}
+        row.update(kw)
+        return [row]
+
+    def test_calibration_line_names_blocked_story(self):
+        rows = self._rows(token_limit_capped_top=21,
+                          token_limit_capped_top_title="Bitcoin stays stuck as traders wait for the Fed",
+                          token_limit_capped_top_tokens=["BTC"],
+                          token_limit_capped_scores={"21": 3, "28": 1})
+        out = mr.render_text(mr.summarize(rows), rows)
+        line = next(l for l in out.split("\n") if "限流门槛校准" in l)
+        self.assertIn("拦截顶分 21", line)
+        self.assertIn("Bitcoin stays stuck", line,
+                      "顶分故事必须能读出来（不然 21 vs 29 无法判读）")
+
+    def test_bypass_story_also_named(self):
+        rows = self._rows(token_limit_bypass_top=33,
+                          token_limit_bypass_top_title="BTC cold wallet drained in $200M exploit")
+        out = mr.render_text(mr.summarize(rows), rows)
+        line = next(l for l in out.split("\n") if "限流门槛校准" in l)
+        self.assertIn("放行顶分 33", line)
+        self.assertIn("cold wallet drained", line)
+
+    def test_historic_rows_without_story_keep_old_text(self):
+        """历史行没有标题字段 ⇒ 退回「拦截顶分 N」，不伪造故事"""
+        rows = self._rows(token_limit_capped_top=29)
+        out = mr.render_text(mr.summarize(rows), rows)
+        line = next(l for l in out.split("\n") if "限流门槛校准" in l)
+        self.assertIn("拦截顶分 29", line)
+        self.assertNotIn("「", line)
+
+    def test_title_follows_the_max_score_run(self):
+        """两个 run 各自有顶分与标题：取到最大分的那一轮，标题必须同步"""
+        rows = [
+            {"outcome": "run_summary", "ts": _ago(5), "candidates": 50,
+             "published": 0, "token_limit_capped_top": 21,
+             "token_limit_capped_top_title": "low score story"},
+            {"outcome": "run_summary", "ts": _ago(4), "candidates": 60,
+             "published": 0, "token_limit_capped_top": 29,
+             "token_limit_capped_top_title": "high score story"},
+        ]
+        out = mr.render_text(mr.summarize(rows), rows)
+        line = next(l for l in out.split("\n") if "限流门槛校准" in l)
+        self.assertIn("拦截顶分 29", line)
+        self.assertIn("high score story", line)
+        self.assertNotIn("low score story", line)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 

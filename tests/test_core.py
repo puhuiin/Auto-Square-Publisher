@@ -10708,6 +10708,53 @@ class TestRunMainSemantics(unittest.TestCase):
         finally:
             self._teardown(patches, tmpdir)
 
+    def test_r879_capped_top_story_is_recorded(self):
+        """★ R879：拦截/放行两侧的**顶分故事本身**必须留痕（标题 + 标的 + 直方图）。
+
+        背景：R216 立了「拦截顶分贴门槛 ⇒ 真事件被吞、需复评」的判据，但遥测只落
+        一个分数（生产实读到「拦截顶分 29 / 放行门槛 30」）。运维无法回答"那条 29
+        分的是真是假"——而两条处置方向相反：真事件差 1 分该复评门槛；常规行情帖
+        恰好过 29 分则不该动。R728 已用同样理由补了逐币分布，这里补故事维度。
+        """
+        tmpdir, paths = self._iso_files()
+        routine = dict(self._candidate(), id="n-routine", impact_score=21,
+                       base_impact_score=21,
+                       title="Bitcoin stays stuck as traders wait for the Fed")
+        hot = dict(self._candidate(), id="n-hot", impact_score=33,
+                   base_impact_score=33,
+                   title="BTC exchange cold wallet drained in $200M exploit")
+        patches = self._base_patches(tmpdir, paths, dry=False,
+                                     candidates=[routine, hot])
+        pub = MagicMock()
+        pub.publish.return_value = True
+        pub._publish_parked.return_value = False
+        sq_patch = patch.object(m, "SquarePublisher", return_value=pub)
+        sq_patch.start()
+        patches.append(sq_patch)
+        try:
+            import json
+            with open(paths["cache"], "w", encoding="utf-8") as f:
+                json.dump([{"id": "old", "title": "t", "source": "s",
+                            "sent_at": datetime.now(timezone.utc).isoformat(),
+                            "tokens": ["BTC"]}], f)
+            with patch.object(m, "TOKEN_DAILY_LIMIT", 1):
+                m._run_main()
+            with open(paths["metrics"], encoding="utf-8") as f:
+                rows = [json.loads(l) for l in f if l.strip()]
+            run_row = next(r for r in rows if r.get("outcome") == "run_summary")
+            # 拦截侧：常规帖被拦 —— 分数、故事、标的、直方图都要在
+            self.assertEqual(run_row.get("token_limit_capped_top"), 21)
+            self.assertEqual(run_row.get("token_limit_capped_top_title"),
+                             "Bitcoin stays stuck as traders wait for the Fed")
+            self.assertEqual(run_row.get("token_limit_capped_top_tokens"), ["BTC"])
+            self.assertEqual(run_row.get("token_limit_capped_scores"), {"21": 1})
+            # 放行侧：真实事件照发，同样留下故事（否则放行顶分 153 不可解释）
+            self.assertEqual(run_row.get("token_limit_bypass_top"), 33)
+            self.assertEqual(run_row.get("token_limit_bypass_top_title"),
+                             "BTC exchange cold wallet drained in $200M exploit")
+        finally:
+            self._teardown(patches, tmpdir)
+
     def test_published_row_carries_base_impact_score(self):
         """R617：发布回执必须落 base_impact_score（准入分）。
 

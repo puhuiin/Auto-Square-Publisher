@@ -1512,6 +1512,10 @@ def summarize(rows):
         "token_limit_bypass": 0,  # R215：限流高影响放行计数（拦截的另一半）
         # R216：门槛校准两端顶分（窗口内最大，None=窗口内没有该类候选）
         "token_limit_capped_top": None, "token_limit_bypass_top": None,
+        # ★ R879：顶分**故事**（与顶分同源的那一条）——只有分数时，R216 的
+        #   「顶分贴门槛即复评」无法执行：分不出「真事件差 1 分被吞」还是
+        #   「常规帖恰好过 29 分」，而两者处置方向相反。
+        "token_limit_capped_top_title": None, "token_limit_bypass_top_title": None,
         # R220：每源入选率——源名首词 → [扫描, 入选]（源治理数据面）
         # R621：桶扩为 [扫描, 入选, 旧闻, 重复推送, 跨源同题]；另置
         # feed_yield_attr 记录窗口内是否**出现过**归因字段（区别于"归因累加为 0"
@@ -2340,10 +2344,15 @@ def summarize(rows):
             if _ct is not None and (runs_tmp["token_limit_capped_top"] is None
                                     or _ct > runs_tmp["token_limit_capped_top"]):
                 runs_tmp["token_limit_capped_top"] = int(_ct)
+                # ★ R879：标题必须与**取最大分那次**同步换，不能取窗口内任意一条
+                runs_tmp["token_limit_capped_top_title"] = r.get(
+                    "token_limit_capped_top_title")
             _bt = _num(r.get("token_limit_bypass_top"))
             if _bt is not None and (runs_tmp["token_limit_bypass_top"] is None
                                     or _bt > runs_tmp["token_limit_bypass_top"]):
                 runs_tmp["token_limit_bypass_top"] = int(_bt)
+                runs_tmp["token_limit_bypass_top_title"] = r.get(
+                    "token_limit_bypass_top_title")
             # R220：每源入选率累加（有则收，历史行无字段不进）
             for _fname, _fy in (r.get("per_feed_yield") or {}).items():
                 if isinstance(_fy, dict):
@@ -3543,10 +3552,23 @@ def render_text(s, rows=None):
         # 常规档 = 门槛健康。门槛数值不在此硬编码（R106：双份事实源会漂移），
         # 经 main.py --healthcheck 的「运行策略」行可见。
         calib = []
+        # ★ R879：顶分必须带**故事**——只有分数时这条雷达读不出可执行结论
+        #   （生产实读「拦截顶分 29 / 放行门槛 30」，但不知道被拦的是什么事）。
+        #   历史行没有标题字段 ⇒ 退回旧文案（不假装有数据）。
+        def _with_story(label, score, title):
+            if not title:
+                return f"{label} {score}"
+            _t = str(title)
+            if len(_t) > 28:
+                _t = _t[:28] + "…"
+            return f"{label} {score}「{_t}」"
+
         if runs.get("token_limit_capped_top") is not None:
-            calib.append(f"拦截顶分 {runs['token_limit_capped_top']}")
+            calib.append(_with_story("拦截顶分", runs["token_limit_capped_top"],
+                                     runs.get("token_limit_capped_top_title")))
         if runs.get("token_limit_bypass_top") is not None:
-            calib.append(f"放行顶分 {runs['token_limit_bypass_top']}")
+            calib.append(_with_story("放行顶分", runs["token_limit_bypass_top"],
+                                     runs.get("token_limit_bypass_top_title")))
         if calib:
             lines.append(f"  🎚️ 限流门槛校准: {' / '.join(calib)}（顶分贴门槛即复评）")
         # R220：每源入选率——0% 源是"扫描了却从未进入候选池"的死重候选，

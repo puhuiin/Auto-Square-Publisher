@@ -12715,6 +12715,18 @@ def _run_main():
     # None 经 append_metrics 过滤 = 本轮没有该类候选，不写空字段。
     token_limit_capped_top = None
     token_limit_bypass_top = None
+    # ★★ R879：拦截/放行两侧的**顶分故事本身**（标题 + 标的）与拦截分数直方图。
+    #   为什么必须补（R216 的判据此前**不可执行**）：`token_limit_capped_top` 只有
+    #   一个分数，运维读到「拦截顶分 29 / 放行门槛 30」时无法判断那条被拦的是
+    #   「真事件差 1 分被吞」还是「常规行情帖恰好过 29 分」——两者处置方向相反
+    #   （前者该复评门槛，后者不该动）。R728 已用同样的理由补了**逐币**分布，
+    #   这里补的是**故事维度**的唯一决策面。
+    token_limit_capped_top_title = None
+    token_limit_capped_top_tokens = None
+    token_limit_bypass_top_title = None
+    # 拦截侧分数直方图 `{分数: 次数}`：**不预设"近门槛"是几分**（否则再造一个魔数），
+    # 让未来用真实分布去定复评线。空 dict 不落行（写侧 `or None`，同 R728）。
+    token_limit_capped_scores: Dict[int, int] = {}
 
     # 每日深度长文（contentType=2）：当日本轮次未发过长文且榜首热度达标时，
     # 首帖升级为长文——短讯抢时效，长文打专业垂直度与长尾流量（平台算法对
@@ -12851,15 +12863,26 @@ def _run_main():
                             token_limit_bypassed += 1
                             if token_limit_bypass_top is None or base_impact > token_limit_bypass_top:
                                 token_limit_bypass_top = base_impact
+                                # ★ R879：分数不可复评，故事才可复评（同拦截侧）
+                                token_limit_bypass_top_title = str(title)[:80]
                         logger.info(
                             f"代币 {capped} 已达 24h 限流，但本条热度 {base_impact} "
                             f">= {TOKEN_LIMIT_BYPASS_IMPACT}（高影响放行）: {title[:50]}")
                     else:
                         # R216：拦截侧顶分留痕——多日后顶分仍只贴着 20~26 常规档
                         # 说明门槛健康；顶分频繁逼近门槛值即需复评（真事件被吞）。
-                        if not _is_seed and (token_limit_capped_top is None
-                                             or base_impact > token_limit_capped_top):
-                            token_limit_capped_top = base_impact
+                        if not _is_seed:
+                            # ★ R879：直方图**先记**（与"是不是顶分"无关）——
+                            #   只记顶分会丢掉"贴着门槛的还有多少条"这一质量信息，
+                            #   而门槛复评要看的正是这团近门槛质量。
+                            _sc = int(base_impact)
+                            token_limit_capped_scores[_sc] = (
+                                token_limit_capped_scores.get(_sc, 0) + 1)
+                            if (token_limit_capped_top is None
+                                    or base_impact > token_limit_capped_top):
+                                token_limit_capped_top = base_impact
+                                token_limit_capped_top_title = str(title)[:80]
+                                token_limit_capped_top_tokens = list(detected_tokens)
                         # ⚠️⚠️ R731：**必须印逐币真实档位**。此前这里印的是全局
                         # `TOKEN_DAILY_LIMIT`(3)，而 R718 分档 + R722 弱样本之后
                         # 档位已经是**逐币**的（ETH/SOL/HYPE/LINK=6、XRP=2、其余=3）
@@ -13863,6 +13886,13 @@ def _run_main():
         # 贴门槛 = 常规帖在越线边缘需收紧。None 不落行（append_metrics 过滤）。
         "token_limit_capped_top": token_limit_capped_top,
         "token_limit_bypass_top": token_limit_bypass_top,
+        # ★★ R879：顶分故事（标题/标的）+ 拦截分数直方图 —— R216「顶分贴门槛即复评」
+        #   的**可执行面**；没有故事就只能数分，分不出"真事件被吞"与"常规帖过线"。
+        #   标题截 80 字符（run_summary 每轮一条，不膨胀）；空值不落行同 R728。
+        "token_limit_capped_top_title": token_limit_capped_top_title,
+        "token_limit_capped_top_tokens": token_limit_capped_top_tokens,
+        "token_limit_bypass_top_title": token_limit_bypass_top_title,
+        "token_limit_capped_scores": token_limit_capped_scores or None,
         # ★★ R731：配额口径（分子+分母）**每轮都落**，不再只落"配额打满早退"轮。
         # 缺陷（实测）：`sent_24h` / `max_daily_posts` 此前只在饱和早退路径
         #   （append_run_summary 的两处）落盘 ⇒ 日报的配额行只有在**打满时**
