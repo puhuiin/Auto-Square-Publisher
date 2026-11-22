@@ -1,17 +1,5 @@
 [
   {
-    "id": "1c55ea6a2b77ed65",
-    "title": "Coinbase to Delist 12 Crypto Trading Pairs, ADA-ETH and XLM-BTC Among Them",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-13T12:44:42.191849+00:00",
-    "tokens": [
-      "ADA",
-      "ETH",
-      "XLM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "d5a7e6ea48cdd8e7",
     "title": "Nvidia Futures Top XRP in Crypto Liquidations as Jensen Huang’s Exit Sparks $2.14 Billion Surge",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5189,5 +5177,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a142a41e5e6257a9",
+    "title": "Hyperliquid 近 7 日收入约 2122 万美元,环比增长 15.51%",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-22T09:23:43.313432+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "zh-TW"
   }
 ]
