@@ -1,15 +1,5 @@
 [
   {
-    "id": "3ec963c0f66a27d8",
-    "title": "MEGA cuts 20% of workforce as former MegaETH Foundation restructures",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-13T20:05:15.223375+00:00",
-    "tokens": [
-      "MEGA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a7c5a09edcc63844",
     "title": "Aave plan could cut some lenders’ share of interest by 60%",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5184,6 +5174,18 @@
     "sent_at": "2026-11-22T15:44:01.696785+00:00",
     "tokens": [
       "TRUMP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "59673d63afb48273",
+    "title": "Ripple USD (RLUSD) Breaks Into Global Top Five Stablecoins as Supply Hits New ATH",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-22T16:03:55.644011+00:00",
+    "tokens": [
+      "RLUSD",
+      "USDC",
+      "XRP"
     ],
     "lang": "en"
   }
