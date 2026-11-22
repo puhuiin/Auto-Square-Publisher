@@ -20,43 +20,51 @@
   "last_updated": "2026-11-22T02:44:40.994308Z",
   "_feed_health": {
     "CoinJournal (山寨异动)": {
-      "last_fail": "2026-11-22T05:24:04.008594+00:00",
       "parked_until": "2026-11-22T11:24:04.008594+00:00",
+      "last_fail": "2026-11-22T05:24:04.008594+00:00",
       "fails": 3
     },
+    "CryptoPotato (山寨币/Meme热点)": {
+      "fails": 1,
+      "last_fail": "2026-11-22T07:57:29.755775+00:00"
+    },
     "深潮TechFlow (中文/繁体)": {
-      "last_fail": "2026-11-22T02:03:57.787986+00:00",
       "reset_at": "2026-11-22T01:23:37.469021+00:00",
       "parked_until": "2026-11-22T08:03:57.787986+00:00",
+      "last_fail": "2026-11-22T02:03:57.787986+00:00",
       "fails": 3
     },
     "Watcher.Guru (快讯)": {
-      "last_fail": "2026-11-22T07:40:07.550704+00:00",
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-22T07:57:30.477930+00:00",
       "fails": 3
     },
     "深潮TechFlow (中文/简体)": {
-      "last_fail": "2026-11-22T02:03:57.703408+00:00",
       "reset_at": "2026-11-22T01:23:35.630784+00:00",
       "parked_until": "2026-11-22T08:03:57.703408+00:00",
+      "last_fail": "2026-11-22T02:03:57.703408+00:00",
       "fails": 3
+    },
+    "Bitcoinist (比特币向)": {
+      "fails": 1,
+      "last_fail": "2026-11-22T07:57:29.916367+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {
     "Preset-stepfun-flash": {
-      "last_fail": "2026-11-22T02:43:46.516873+00:00",
       "cooldown_until": "2026-11-23T02:43:46.516859+00:00",
       "permanent": true,
+      "last_fail": "2026-11-22T02:43:46.516873+00:00",
       "fails": 1
     },
     "Preset-stepfun": {
-      "last_fail": "2026-11-22T02:43:50.430291+00:00",
       "cooldown_until": "2026-11-23T02:43:50.430277+00:00",
       "permanent": true,
+      "last_fail": "2026-11-22T02:43:50.430291+00:00",
       "fails": 1
     }
   },
