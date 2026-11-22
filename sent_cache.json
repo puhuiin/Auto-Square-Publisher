@@ -1,15 +1,5 @@
 [
   {
-    "id": "d5a7e6ea48cdd8e7",
-    "title": "Nvidia Futures Top XRP in Crypto Liquidations as Jensen Huang’s Exit Sparks $2.14 Billion Surge",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-13T13:10:23.834978+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "aa2c99821c3055dc",
     "title": "15 Years Since David Schwartz First Coded XRP Ledger’s Foundation, XRPL’s First Step?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5185,6 +5175,17 @@
     "sent_at": "2026-11-22T09:23:43.313432+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "299a8e25ca0d6c9a",
+    "title": "Elon Musk’s Grok AI Predicts ETH Vs SOL For 2027: Who Wins?",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-22T09:43:57.461339+00:00",
+    "tokens": [
+      "ETH",
+      "SOL"
     ],
     "lang": "zh-TW"
   }
