@@ -20,42 +20,42 @@
   "last_updated": "2026-11-22T02:44:40.994308Z",
   "_feed_health": {
     "CryptoPotato (山寨币/Meme热点)": {
-      "fails": 1,
       "last_fail": "2026-11-22T07:57:29.755775+00:00",
+      "fails": 1,
       "reset_at": "2026-11-22T10:00:05.886468+00:00"
     },
-    "Bitcoinist (比特币向)": {
-      "fails": 1,
-      "last_fail": "2026-11-22T07:57:29.916367+00:00",
-      "reset_at": "2026-11-22T10:00:06.206223+00:00"
-    },
     "Watcher.Guru (快讯)": {
+      "last_fail": "2026-11-22T10:00:06.405123+00:00",
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-22T10:00:06.405123+00:00"
+      "fails": 3
     },
     "CoinJournal (山寨异动)": {
+      "last_fail": "2026-11-22T05:24:04.008594+00:00",
       "parked_until": "2026-11-22T11:24:04.008594+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-22T05:24:04.008594+00:00"
+      "fails": 3
+    },
+    "Bitcoinist (比特币向)": {
+      "last_fail": "2026-11-22T07:57:29.916367+00:00",
+      "fails": 1,
+      "reset_at": "2026-11-22T10:00:06.206223+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {
-    "Preset-stepfun-flash": {
-      "permanent": true,
-      "fails": 1,
-      "last_fail": "2026-11-22T02:43:46.516873+00:00",
-      "cooldown_until": "2026-11-23T02:43:46.516859+00:00"
-    },
     "Preset-stepfun": {
+      "cooldown_until": "2026-11-23T02:43:50.430277+00:00",
       "permanent": true,
-      "fails": 1,
       "last_fail": "2026-11-22T02:43:50.430291+00:00",
-      "cooldown_until": "2026-11-23T02:43:50.430277+00:00"
+      "fails": 1
+    },
+    "Preset-stepfun-flash": {
+      "cooldown_until": "2026-11-23T02:43:46.516859+00:00",
+      "permanent": true,
+      "last_fail": "2026-11-22T02:43:46.516873+00:00",
+      "fails": 1
     }
   },
   "_article_sent_date": "2026-11-22",
