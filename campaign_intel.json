@@ -19,15 +19,15 @@
   "strategy_guidance": "最紧迫的是 Binance Pay「This Black Friday」Spend/Deposit/Share $140,000 奖励活动：今天起先发预热任务清单和参与路径，黑五当天做冲刺提醒，节后跟进参与复盘/抄作业，内容角度以“活动冲刺+任务拆解+避坑复盘”为主。日常快讯可挂接 #Futures 与 #TradingTournament，把 Trade Futures & Win 200 BNB、ANT & NVDA Perps Carnival 和新上线 TradFi 合约背景结合，引导读者关注任务、评论互动拿奖励，并仅围绕任务、互动与产品体验做合规表达。次优先跟进无明确截止的 Agent ID Hackathon、Trading Master Tournament、RLUSD 持币分享 XRP 与 ANTB bStocks 上新，用快讯+活动入口+评论互动角度提升曝光。",
   "last_updated": "2026-11-23T03:24:00.103460Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "parked_until": "2026-11-23T08:04:05.665186+00:00",
-      "last_fail": "2026-11-23T02:04:05.665186+00:00",
-      "fails": 3
-    },
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-23T06:23:32.471939+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-11-23T06:23:32.471939+00:00"
+    },
+    "CoinJournal (山寨异动)": {
+      "parked_until": "2026-11-23T08:04:05.665186+00:00",
+      "fails": 3,
+      "last_fail": "2026-11-23T02:04:05.665186+00:00"
     }
   },
   "_fallback_image": {
