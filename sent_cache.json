@@ -1,18 +1,5 @@
 [
   {
-    "id": "053f69b796240ab8",
-    "title": "XRP, Dogecoin, and Solana Doomed? Billionaire Tim Draper Predicts Altcoins Will Be Absorbed By Bitcoin — Here’s Why",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-14T19:06:32.209110+00:00",
-    "tokens": [
-      "XRP",
-      "DOGE",
-      "SOL",
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5956dd8ad024940e",
     "title": "Hoskinson Credits Cardano’s Staking Model After Binance Hack Leaves Network Unaffected",
     "source": "ZyCrypto (新币与空投)",
@@ -5196,6 +5183,17 @@
     "sent_at": "2026-11-23T15:04:08.379296+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ba1f976787bd151a",
+    "title": "增发 1.77 亿只拿 2960 万买币,Saylor 砸 2.12 亿救急破发优先股",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-23T15:24:01.929750+00:00",
+    "tokens": [
+      "STRK",
+      "BTC"
     ],
     "lang": "en"
   }
