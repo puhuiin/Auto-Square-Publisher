@@ -1,16 +1,5 @@
 [
   {
-    "id": "17a78f24c831b65c",
-    "title": "借贷协议 Kava Lend 遭攻击,约 5520 万枚 KAVA 被借出",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-15T00:06:50.647741+00:00",
-    "tokens": [
-      "KAVA",
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "dbe940686805e56d",
     "title": "比特币接近5.95万至6.26万美元清算密集区,Glassnode警告多头仓位风险",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5198,6 +5187,16 @@
     "sent_at": "2026-11-23T18:44:01.804246+00:00",
     "tokens": [
       "ARK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "96c959a2b6363068",
+    "title": "Trump Invokes China at Meme Coin Dinner to Justify His Crypto Involvement",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-23T19:04:06.640326+00:00",
+    "tokens": [
+      "TRUMP"
     ],
     "lang": "en"
   }
