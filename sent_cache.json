@@ -1,16 +1,5 @@
 [
   {
-    "id": "0424fd03278eae70",
-    "title": "Kava Lend loses roughly $3.8 million to hack, sending KAVA token down nearly 40%",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-14T23:09:22.782699+00:00",
-    "tokens": [
-      "KAVA",
-      "BNB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "17a78f24c831b65c",
     "title": "借贷协议 Kava Lend 遭攻击,约 5520 万枚 KAVA 被借出",
     "source": "深潮TechFlow (中文/简体)",
@@ -5199,6 +5188,16 @@
     "sent_at": "2026-11-23T18:23:55.686901+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6a574c5c72024970",
+    "title": "女股神不玩了!ARK Invest 撤回兩檔加密 ETF 申請",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-11-23T18:44:01.804246+00:00",
+    "tokens": [
+      "ARK"
     ],
     "lang": "en"
   }
