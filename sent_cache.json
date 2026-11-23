@@ -1,15 +1,5 @@
 [
   {
-    "id": "11fe894e62999610",
-    "title": "1inch Warns Delegators to Claim Rewards by Nov. 27",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-14T08:49:30.799127+00:00",
-    "tokens": [
-      "1INCH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a4084f0163d369d2",
     "title": "Ondo Backs Spout Plan for No-Interest Stock-Token Loans",
     "source": "The Defiant (DeFi 深度)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-23T03:01:58.951843+00:00",
     "tokens": [
       "XPL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0ff3db1933a1c710",
+    "title": "HYPE现货ETF上周净流出1533.99万美元,连续七周净流出",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-23T03:24:23.385037+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }

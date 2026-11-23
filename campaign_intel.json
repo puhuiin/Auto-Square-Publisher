@@ -8,37 +8,37 @@
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$USDC",
-    "$USDT",
     "$XRP",
-    "$RLUSD",
+    "$USDC",
     "$ANTB",
+    "$RLUSD",
+    "$ANT",
     "$NVDA",
     "$BTC"
   ],
-  "strategy_guidance": "优先围绕仍在进行的 Trade Futures & Win（200 BNB）、RLUSD 持币分享 XRP、ANTB/NVDA TradFi 合约与 Black Friday 系列做快讯拆解，把日常行情/上线公告落到具体活动规则、参与路径和风险提示上。发帖时用“活动冲刺/规则复盘/抄作业清单”角度引导读者参与评论与互动拿奖励并追当期活动热度，避免任何收益承诺；对 Black Friday 到新年的限时活动保持高频跟贴，先发参与入口和任务清单，再发复盘。将 Binance Earn 的 USDC/USDT 活期与 BTC Yield 活动作为产品背景补充，不暗示参加活动会带来交易收益。",
-  "last_updated": "2026-11-22T15:03:54.739735Z",
+  "strategy_guidance": "最紧迫的是 Binance Pay「This Black Friday」Spend/Deposit/Share $140,000 奖励活动：今天起先发预热任务清单和参与路径，黑五当天做冲刺提醒，节后跟进参与复盘/抄作业，内容角度以“活动冲刺+任务拆解+避坑复盘”为主。日常快讯可挂接 #Futures 与 #TradingTournament，把 Trade Futures & Win 200 BNB、ANT & NVDA Perps Carnival 和新上线 TradFi 合约背景结合，引导读者关注任务、评论互动拿奖励，并仅围绕任务、互动与产品体验做合规表达。次优先跟进无明确截止的 Agent ID Hackathon、Trading Master Tournament、RLUSD 持币分享 XRP 与 ANTB bStocks 上新，用快讯+活动入口+评论互动角度提升曝光。",
+  "last_updated": "2026-11-23T03:24:00.103460Z",
   "_feed_health": {
-    "CoinJournal (山寨异动)": {
-      "fails": 3,
-      "last_fail": "2026-11-23T02:04:05.665186+00:00",
-      "parked_until": "2026-11-23T08:04:05.665186+00:00"
-    },
     "Watcher.Guru (快讯)": {
-      "fails": 3,
-      "last_fail": "2026-11-23T03:01:40.913717+00:00",
-      "parked_until": "2026-11-17T10:23:31.478522+00:00"
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-23T03:24:01.345926+00:00",
+      "fails": 3
+    },
+    "CoinJournal (山寨异动)": {
+      "parked_until": "2026-11-23T08:04:05.665186+00:00",
+      "last_fail": "2026-11-23T02:04:05.665186+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-23",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1244,
+  "_img_rot": 1245,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
