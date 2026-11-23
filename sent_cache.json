@@ -1,15 +1,5 @@
 [
   {
-    "id": "ab1e04d12b7eb214",
-    "title": "2027年第一季度,哈萨克斯坦计划发行代币化政府债券",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-14T16:06:22.121567+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a4aa312a0ba742bc",
     "title": "Ripple Price Analysis: Is the Worst Yet to Come as XRP Dumps to a 2-Year Low?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5194,6 +5184,16 @@
     "sent_at": "2026-11-23T12:19:46.589364+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "2eb67e6dfb229a55",
+    "title": "Bitcoin hedges could expire an hour before ETF trading resumes on Black Friday",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-23T12:43:49.766372+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
