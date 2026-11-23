@@ -1,16 +1,5 @@
 [
   {
-    "id": "913b7c5fc19179b9",
-    "title": "即使比特币跌至1美分仍可存活,Strive称公司无强制出售比特币的债务",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-14T11:07:05.972103+00:00",
-    "tokens": [
-      "SATS",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9f3e1b80dd0dd526",
     "title": "Big SHIB Development as North American Derivatives Exchange Self-Certifies Strike Contract",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5188,6 +5177,16 @@
     "sent_at": "2026-11-23T05:06:37.834313+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4bc10dbbf68d8124",
+    "title": "暴跌之后,为什么机构仍在持续加仓比特币 ETF?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-23T05:26:35.812272+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
