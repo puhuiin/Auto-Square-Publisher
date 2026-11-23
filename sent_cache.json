@@ -1,15 +1,5 @@
 [
   {
-    "id": "71949407c32e343b",
-    "title": "Aave Proposal Targets $3.5M in Added Annual Revenue Through Reserve-Factor Changes",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-14T10:04:30.136211+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "a07f139d85625b1f",
     "title": "Dogecoin ETFs Mark One Month of Zero Activity",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5189,5 +5179,16 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "39ab45508658860a",
+    "title": "Bithumb halts CYBER deposits and withdrawals while trading stays open",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-23T04:24:02.950586+00:00",
+    "tokens": [
+      "CYBER",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
