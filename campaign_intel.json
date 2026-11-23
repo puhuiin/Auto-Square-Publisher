@@ -19,15 +19,15 @@
   "strategy_guidance": "优先追无截止日期或公告日仍有效的当期热度：用 Black Friday Binance Pay、Trading Master Tournament、ANT & NVDA Perps Carnival 与 Blockchain Week 小游戏做快讯切入，先出活动冲刺清单/玩法教程，再做复盘与“抄作业”式要点，引导读者去活动页参与评论互动拿奖励。日常行情快讯可绑定 TradFi 新合约、ANTB bStocks 新交易对/抵押背景与 BTC Yield APR Boost 做延伸解读，文末用互动问题收集反馈并追踪点击，便于后续交易返佣转化；全程避免任何收益承诺，只强调活动参与、评论互动和资讯价值。",
   "last_updated": "2026-11-23T15:44:05.068906Z",
   "_feed_health": {
+    "Protos (隐私与合规)": {
+      "reset_at": "2026-11-23T19:43:36.395733+00:00",
+      "last_fail": "2026-11-23T15:03:40.579715+00:00",
+      "fails": 1
+    },
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-23T19:23:49.952818+00:00",
+      "last_fail": "2026-11-23T19:43:37.258927+00:00",
       "fails": 3
-    },
-    "Protos (隐私与合规)": {
-      "last_fail": "2026-11-23T15:03:40.579715+00:00",
-      "fails": 1,
-      "reset_at": "2026-11-23T19:23:49.518557+00:00"
     }
   },
   "_fallback_image": {
@@ -38,7 +38,7 @@
   "_article_sent_date": "2026-11-23",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1262,
+  "_img_rot": 1263,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

@@ -1,15 +1,5 @@
 [
   {
-    "id": "fdd34eacd1ad1209",
-    "title": "Kava Lend Exploit Drains Millions as KAVA Falls 47%",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-15T01:24:55.813094+00:00",
-    "tokens": [
-      "KAVA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "7e683bb1d23dd148",
     "title": "Tom Lee:加密市场近期承压或与AI股票抛售、Anthropic IPO资金需求及黑客事件资金释放有关",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5198,6 +5188,16 @@
     "tokens": [
       "USDC",
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "199590ecbcfb7752",
+    "title": "Shiba Inu Dev Flags Security Concerns as Pump.Fun Migration Asks Users for Private Keys",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-23T19:43:59.247637+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
