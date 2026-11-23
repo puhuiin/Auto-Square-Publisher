@@ -1,15 +1,5 @@
 [
   {
-    "id": "714424c74493159a",
-    "title": "交易员 Ansem:HYPE 利好后未能延续上涨并非好信号",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-14T14:06:11.084940+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5e8869248641ea80",
     "title": "XRP Ledger Activity Hits New November Highs as Batch, Ticket Usage Surge",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5188,6 +5178,16 @@
     "title": "QCP Capital:比特币面临下行风险,美联储议息会议为下个关键节点",
     "source": "吴说区块链 (中文深度)",
     "sent_at": "2026-11-23T10:23:50.730322+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "8d7b3c89537a2851",
+    "title": "QCP:比特币持续复苏需科技股和机构资金流改善",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-23T10:44:02.955500+00:00",
     "tokens": [
       "BTC"
     ],
