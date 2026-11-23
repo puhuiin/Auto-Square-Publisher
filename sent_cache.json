@@ -1,15 +1,5 @@
 [
   {
-    "id": "aa961cf24174c137",
-    "title": "XRP Whales Keep Loading Up Despite Heightened Retail Fear of a Drop Below $1",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-14T22:46:51.785955+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0424fd03278eae70",
     "title": "Kava Lend loses roughly $3.8 million to hack, sending KAVA token down nearly 40%",
     "source": "The Block (机构与政策)",
@@ -5199,6 +5189,16 @@
     "sent_at": "2026-11-23T18:04:09.743529+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "31cd9998ba86b644",
+    "title": "9,293 Ether moves between wallets tied to the 2026 Binance hack",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-23T18:23:55.686901+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
