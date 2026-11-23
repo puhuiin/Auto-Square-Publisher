@@ -20,19 +20,19 @@
   "last_updated": "2026-11-23T15:44:05.068906Z",
   "_feed_health": {
     "Watcher.Guru (快讯)": {
-      "fails": 3,
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-23T22:43:38.683426+00:00"
+      "last_fail": "2026-11-23T22:43:38.683426+00:00",
+      "fails": 3
     },
     "CryptoPotato (山寨币/Meme热点)": {
+      "last_fail": "2026-11-23T20:03:38.381049+00:00",
       "fails": 1,
-      "reset_at": "2026-11-23T22:43:38.517780+00:00",
-      "last_fail": "2026-11-23T20:03:38.381049+00:00"
+      "reset_at": "2026-11-23T22:43:38.517780+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-23",
