@@ -1,15 +1,5 @@
 [
   {
-    "id": "dec628ab8ab91966",
-    "title": "Harley Lewis Foote遭恶意WhatsApp攻击,资金仅剩800美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-14T13:26:13.221234+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "386985a7deaa0231",
     "title": "交易员 Harley Foote 称遭攻击,资金几乎全部被盗",
     "source": "深潮TechFlow (中文/简体)",
@@ -5190,6 +5180,16 @@
     "tokens": [
       "ETH",
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "9d724afd526aaa7e",
+    "title": "代币化美股背后的隐形巨头:Alpaca 掌控近九成底层股票,Binance、Coinbase、Ondo 都在用它",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-23T10:04:03.050889+00:00",
+    "tokens": [
+      "ONDO"
     ],
     "lang": "zh-TW"
   }
