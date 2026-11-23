@@ -1,15 +1,5 @@
 [
   {
-    "id": "631e82437d70a86a",
-    "title": "SOL跌破70 USDT,24H跌幅12.02%",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-14T21:29:40.410481+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9d866a945e854e61",
     "title": "Zcash (ZEC) Price Warning? Long Liquidation Cluster Sits at $860",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5199,6 +5189,16 @@
       "USDC",
       "BNB",
       "ARB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "afbb83ee4020fc40",
+    "title": "灰度首只 Zcash 两倍杠杆 ETF ZECX 在纽交所 Arca 上市",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-23T17:04:31.031476+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
