@@ -1,15 +1,5 @@
 [
   {
-    "id": "13cb1833cd788a1f",
-    "title": "Charles Hoskinson Speaks Out on Finishing Cardano",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-14T20:07:36.123619+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4e176488a31d983c",
     "title": "XRP price prediction — These TWO factors can help altcoin reclaim $1.2-level",
     "source": "AMBCrypto (技术与链上)",
@@ -5196,6 +5186,17 @@
       "SOL",
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a2920ffa43024982",
+    "title": "OnchainLens:一用户称两个钱包损失超 60 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-23T16:23:58.537797+00:00",
+    "tokens": [
+      "TRX",
+      "SOL"
     ],
     "lang": "en"
   }
