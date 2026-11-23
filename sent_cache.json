@@ -1,15 +1,5 @@
 [
   {
-    "id": "3448b93f9224dbfc",
-    "title": "KAVA token sinks 40% as exploit hits Kava Lend, exchanges halt withdrawals",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-14T14:45:59.132075+00:00",
-    "tokens": [
-      "KAVA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "264c433af99343b3",
     "title": "Kava 调查生态内 dApp 异常行为,KAVA 代币 24 小时跌逾 41%",
     "source": "吴说区块链 (中文深度)",
@@ -5192,5 +5182,17 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "2ca9b9a221b4442f",
+    "title": "HYPE and ENA Catch the Bid, but ZEC Misses Crypto Bounce",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-23T11:24:03.657628+00:00",
+    "tokens": [
+      "HYPE",
+      "ENA",
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
