@@ -1,15 +1,5 @@
 [
   {
-    "id": "907024a2048d2bed",
-    "title": "Why isn’t Avalanche’s 295% DeFi deposit surge enough for AVAX’s price?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-14T18:04:34.200241+00:00",
-    "tokens": [
-      "AVAX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "34d4a00f177fd08d",
     "title": "ETH Tanks Another 5% as Ethereum Foundation Keeps Selling and Schiff Sounds the Alarm",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5194,6 +5184,18 @@
     "sent_at": "2026-11-23T14:03:52.307378+00:00",
     "tokens": [
       "PEPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "620c23e861f32585",
+    "title": "XRP, BTC, SHIB Surge as Nvidia Reinstates Huang",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-23T14:24:01.174691+00:00",
+    "tokens": [
+      "XRP",
+      "BTC",
+      "SHIB"
     ],
     "lang": "en"
   }
