@@ -1,15 +1,5 @@
 [
   {
-    "id": "9acc978ad454a4ca",
-    "title": "XRP Is Not in Free Fall According to Bollinger Bands, Even After Nine Red Days",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-14T05:08:21.265823+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ff8325748db2f68e",
     "title": "Satoshi-era wallet served in a $260 billion lawsuit moves 75 BTC it held since 2011",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5188,5 +5178,17 @@
       "HUMA"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "b584ece0cc2ddcdd",
+    "title": "XRP, Hyperliquid (HYPE) and Dogecoin (DOGE) Price Analysis for November 23: Altcoin Prices Are Bouncing, Finally",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-23T00:29:14.566493+00:00",
+    "tokens": [
+      "XRP",
+      "HYPE",
+      "DOGE"
+    ],
+    "lang": "zh-CN"
   }
 ]

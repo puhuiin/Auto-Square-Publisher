@@ -21,19 +21,19 @@
   "_feed_health": {
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-23T00:03:34.789000+00:00",
-      "fails": 3
-    },
-    "AMBCrypto (技术与链上)": {
-      "last_fail": "2026-11-22T21:03:35.780720+00:00",
-      "fails": 1,
-      "reset_at": "2026-11-23T00:03:33.764832+00:00"
+      "fails": 3,
+      "last_fail": "2026-11-23T00:23:28.092125+00:00"
     },
     "CoinJournal (山寨异动)": {
       "parked_until": "2026-11-22T11:24:04.008594+00:00",
-      "last_fail": "2026-11-22T18:43:45.032782+00:00",
+      "reset_at": "2026-11-23T00:23:27.882132+00:00",
       "fails": 3,
-      "reset_at": "2026-11-23T00:03:34.347453+00:00"
+      "last_fail": "2026-11-22T18:43:45.032782+00:00"
+    },
+    "AMBCrypto (技术与链上)": {
+      "reset_at": "2026-11-23T00:23:27.354646+00:00",
+      "fails": 1,
+      "last_fail": "2026-11-22T21:03:35.780720+00:00"
     }
   },
   "_fallback_image": {
@@ -42,22 +42,32 @@
   },
   "_llm_breaker": {
     "Preset-stepfun-flash": {
-      "fails": 1,
-      "permanent": true,
       "cooldown_until": "2026-11-23T02:43:46.516859+00:00",
-      "last_fail": "2026-11-22T02:43:46.516873+00:00"
+      "last_fail": "2026-11-22T02:43:46.516873+00:00",
+      "permanent": true,
+      "fails": 1
     },
     "Preset-stepfun": {
-      "fails": 1,
-      "permanent": true,
       "cooldown_until": "2026-11-23T02:43:50.430277+00:00",
-      "last_fail": "2026-11-22T02:43:50.430291+00:00"
+      "last_fail": "2026-11-22T02:43:50.430291+00:00",
+      "permanent": true,
+      "fails": 1
+    },
+    "Preset-openrouter": {
+      "fails": 1,
+      "cooldown_until": "2026-11-23T00:36:08.228772+00:00",
+      "last_fail": "2026-11-23T00:26:08.228779+00:00"
+    },
+    "Preset-opencsg-agentic": {
+      "fails": 1,
+      "cooldown_until": "2026-11-23T00:38:39.492028+00:00",
+      "last_fail": "2026-11-23T00:28:39.492048+00:00"
     }
   },
   "_article_sent_date": "2026-11-22",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1240,
+  "_img_rot": 1241,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
