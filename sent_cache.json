@@ -1,15 +1,5 @@
 [
   {
-    "id": "34d4a00f177fd08d",
-    "title": "ETH Tanks Another 5% as Ethereum Foundation Keeps Selling and Schiff Sounds the Alarm",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-14T18:26:12.457384+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d35192f0e0b9e486",
     "title": "Charles Hoskinson Clashes With Angry ADA Holders Over Promises of Price Gains",
     "source": "BeInCrypto (山寨与行情)",
@@ -5196,6 +5186,16 @@
       "XRP",
       "BTC",
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7e22b105aef24276",
+    "title": "Bitrue AI Finds XRP Echoes November 2022, Before Its Rally the Next Year",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-23T14:46:17.178692+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
