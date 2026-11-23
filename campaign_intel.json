@@ -21,21 +21,15 @@
   "_feed_health": {
     "Watcher.Guru (快讯)": {
       "fails": 3,
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-23T13:43:38.275600+00:00"
+      "last_fail": "2026-11-23T14:03:32.551247+00:00",
+      "parked_until": "2026-11-17T10:23:31.478522+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
-  "_llm_breaker": {
-    "Preset-google": {
-      "fails": 1,
-      "cooldown_until": "2026-11-23T13:53:50.297147+00:00",
-      "last_fail": "2026-11-23T13:43:50.297159+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-11-23",
   "_publish_park": {},
   "_intel_refresh_fail": {},
