@@ -1,15 +1,5 @@
 [
   {
-    "id": "d35192f0e0b9e486",
-    "title": "Charles Hoskinson Clashes With Angry ADA Holders Over Promises of Price Gains",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-14T18:46:08.163666+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "053f69b796240ab8",
     "title": "XRP, Dogecoin, and Solana Doomed? Billionaire Tim Draper Predicts Altcoins Will Be Absorbed By Bitcoin — Here’s Why",
     "source": "ZyCrypto (新币与空投)",
@@ -5196,6 +5186,16 @@
     "sent_at": "2026-11-23T14:46:17.178692+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5a8e74f6a8163b98",
+    "title": "Shiba Inu (SHIB) Santa Rally Hopes Meet a Grinch: Four Red Decembers in Five",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-23T15:04:08.379296+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }

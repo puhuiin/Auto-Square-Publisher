@@ -19,8 +19,12 @@
   "strategy_guidance": "最紧迫的是 Binance Pay「This Black Friday」Spend/Deposit/Share $140,000 奖励活动：今天起先发预热任务清单和参与路径，黑五当天做冲刺提醒，节后跟进参与复盘/抄作业，内容角度以“活动冲刺+任务拆解+避坑复盘”为主。日常快讯可挂接 #Futures 与 #TradingTournament，把 Trade Futures & Win 200 BNB、ANT & NVDA Perps Carnival 和新上线 TradFi 合约背景结合，引导读者关注任务、评论互动拿奖励，并仅围绕任务、互动与产品体验做合规表达。次优先跟进无明确截止的 Agent ID Hackathon、Trading Master Tournament、RLUSD 持币分享 XRP 与 ANTB bStocks 上新，用快讯+活动入口+评论互动角度提升曝光。",
   "last_updated": "2026-11-23T03:24:00.103460Z",
   "_feed_health": {
+    "Protos (隐私与合规)": {
+      "fails": 1,
+      "last_fail": "2026-11-23T15:03:40.579715+00:00"
+    },
     "Watcher.Guru (快讯)": {
-      "last_fail": "2026-11-23T14:43:48.599582+00:00",
+      "last_fail": "2026-11-23T15:03:40.600081+00:00",
       "fails": 3,
       "parked_until": "2026-11-17T10:23:31.478522+00:00"
     }
@@ -29,17 +33,11 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
     "date": "2026-10-18"
   },
-  "_llm_breaker": {
-    "Preset-google": {
-      "fails": 1,
-      "cooldown_until": "2026-11-23T14:54:14.722327+00:00",
-      "last_fail": "2026-11-23T14:44:14.722341+00:00"
-    }
-  },
+  "_llm_breaker": {},
   "_article_sent_date": "2026-11-23",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1255,
+  "_img_rot": 1256,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
