@@ -1,15 +1,5 @@
 [
   {
-    "id": "ff8325748db2f68e",
-    "title": "Satoshi-era wallet served in a $260 billion lawsuit moves 75 BTC it held since 2011",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-11-14T05:32:13.196282+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "73995c1f217cfa0f",
     "title": "彭博社:过去一年比特币 24 小时爆仓额 13 次超过 5 亿美元",
     "source": "吴说区块链 (中文深度)",
@@ -5190,5 +5180,15 @@
       "DOGE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "0816413f2bb580f3",
+    "title": "报告:特朗普晚宴榜单逾半钱包从限制美国用户的交易所获取代币",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-23T01:04:23.397496+00:00",
+    "tokens": [
+      "TRUMP"
+    ],
+    "lang": "zh-TW"
   }
 ]
