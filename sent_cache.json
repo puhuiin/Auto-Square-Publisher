@@ -1,15 +1,5 @@
 [
   {
-    "id": "d00270eafeee33a0",
-    "title": "U.S. Department of Energy Bets on XRP Ledger for Blockchain-Based Energy Market Settlements",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-14T19:48:30.968763+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "13cb1833cd788a1f",
     "title": "Charles Hoskinson Speaks Out on Finishing Cardano",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5193,6 +5183,19 @@
     "sent_at": "2026-11-23T15:44:35.577016+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4f1ebaf8a05cba5a",
+    "title": "Solana Flips Bitcoin and XRP in Weekly ETF Performance",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-23T16:03:53.945109+00:00",
+    "tokens": [
+      "XRP",
+      "SOL",
+      "BTC",
+      "ETH"
     ],
     "lang": "en"
   }
