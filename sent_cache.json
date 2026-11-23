@@ -1,15 +1,5 @@
 [
   {
-    "id": "9f3e1b80dd0dd526",
-    "title": "Big SHIB Development as North American Derivatives Exchange Self-Certifies Strike Contract",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-14T11:27:05.689788+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "aa8afdbe17644114",
     "title": "Jane Street Nearly Doubled Its Bitcoin ETF Book In Q3: What The Filing Really Shows",
     "source": "Bitcoinist (比特币向)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-23T05:26:35.812272+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e0faa95a77989bbf",
+    "title": "特朗普 Meme 币暴跌 98%,第三场晚宴遇冷:有人「白嫖」入席还倒赚 6 美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-23T06:03:53.593691+00:00",
+    "tokens": [
+      "TRUMP"
     ],
     "lang": "zh-CN"
   }
