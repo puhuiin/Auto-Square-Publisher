@@ -1,15 +1,5 @@
 [
   {
-    "id": "dbe940686805e56d",
-    "title": "比特币接近5.95万至6.26万美元清算密集区,Glassnode警告多头仓位风险",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T00:49:03.212478+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fdd34eacd1ad1209",
     "title": "Kava Lend Exploit Drains Millions as KAVA Falls 47%",
     "source": "The Defiant (DeFi 深度)",
@@ -5197,6 +5187,17 @@
     "sent_at": "2026-11-23T19:04:06.640326+00:00",
     "tokens": [
       "TRUMP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ab6432989d8d2a1a",
+    "title": "USDC Treasury mints 250M USDC on Solana, boosting liquidity potential",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-23T19:24:13.427322+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
     ],
     "lang": "en"
   }
