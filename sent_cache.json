@@ -1,15 +1,5 @@
 [
   {
-    "id": "5eb987db664930c2",
-    "title": "某大户地址向币安充值592,895枚UNI,若卖出预计亏损154.6万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T03:44:33.178601+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b24069e479ff90cb",
     "title": "Solana’s “retired” validators still vote with 15% of active stake",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5201,6 +5191,16 @@
     "tokens": [
       "USDC",
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3b81593d1ef6d236",
+    "title": "Another XRP Record Ahead? Ripple CEO Predicts XRP Demand Surge as Inflation-Stricken Markets Seek Alternatives to Fiat",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-23T21:43:57.075867+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
