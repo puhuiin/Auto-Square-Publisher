@@ -1,15 +1,5 @@
 [
   {
-    "id": "64cea1bfa236868b",
-    "title": "Jensen Huang Resigns: Why Nvidia’s Crisis Could Spill Further Into Bitcoin",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-14T10:49:41.827989+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "913b7c5fc19179b9",
     "title": "即使比特币跌至1美分仍可存活,Strive称公司无强制出售比特币的债务",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-23T04:43:51.360039+00:00",
     "tokens": [
       "ARB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "780fa08f3b5ac74a",
+    "title": "Nansen 创始人曝 ACI 创始人做空 AAVE 浮盈 24.65 万美元",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-23T05:06:37.834313+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "zh-CN"
   }
