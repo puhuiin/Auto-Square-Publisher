@@ -1,15 +1,5 @@
 [
   {
-    "id": "a07f139d85625b1f",
-    "title": "Dogecoin ETFs Mark One Month of Zero Activity",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-14T10:24:31.101869+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "64cea1bfa236868b",
     "title": "Jensen Huang Resigns: Why Nvidia’s Crisis Could Spill Further Into Bitcoin",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5188,6 +5178,16 @@
     "tokens": [
       "CYBER",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4565621496600a5c",
+    "title": "Arbitrum Q3 收入 740 万美元环比增 200%,年内累计超 1360 万",
+    "source": "吴说区块链 (中文深度)",
+    "sent_at": "2026-11-23T04:43:51.360039+00:00",
+    "tokens": [
+      "ARB"
     ],
     "lang": "zh-CN"
   }
