@@ -1,15 +1,5 @@
 [
   {
-    "id": "b24069e479ff90cb",
-    "title": "Solana’s “retired” validators still vote with 15% of active stake",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-15T04:04:22.318233+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "69ede4b562f60be0",
     "title": "某大户向 Binance 充值约 59.3 万枚 UNI",
     "source": "深潮TechFlow (中文/简体)",
@@ -5203,5 +5193,15 @@
       "XRP"
     ],
     "lang": "en"
+  },
+  {
+    "id": "715891331deb0e36",
+    "title": "Grayscale’s new 2x leveraged Zcash ETF takes 13% opening day tumble",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-23T22:43:58.468188+00:00",
+    "tokens": [
+      "ZEC"
+    ],
+    "lang": "zh-CN"
   }
 ]
