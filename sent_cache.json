@@ -1,15 +1,5 @@
 [
   {
-    "id": "aa8afdbe17644114",
-    "title": "Jane Street Nearly Doubled Its Bitcoin ETF Book In Q3: What The Filing Really Shows",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-14T11:50:19.941119+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "4fc03ae0019ad425",
     "title": "XRP ETF Outflows Hit an 8-Month High. December Rarely Brings Relief",
     "source": "BeInCrypto (山寨与行情)",
@@ -5187,6 +5177,17 @@
     "sent_at": "2026-11-23T06:03:53.593691+00:00",
     "tokens": [
       "TRUMP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "8e1a71205e088d08",
+    "title": "Arbitrum 单季收入暴涨 200%,Robinhood Chain 百日贡献超 500 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-23T06:23:47.035510+00:00",
+    "tokens": [
+      "ARB",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
