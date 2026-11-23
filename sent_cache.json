@@ -1,15 +1,5 @@
 [
   {
-    "id": "30f8e3d9a8316905",
-    "title": "累计销毁5059万枚HYPE,占最大供应量5.06%",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-14T22:27:54.745696+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "aa961cf24174c137",
     "title": "XRP Whales Keep Loading Up Despite Heightened Retail Fear of a Drop Below $1",
     "source": "ZyCrypto (新币与空投)",
@@ -5197,6 +5187,16 @@
     "title": "XRP Briefly Tops $1 as Short Squeeze Hits 578% Liquidation Imbalance",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-11-23T17:43:48.353752+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e45306a15063a6b3",
+    "title": "XRP Price Plunges 25%, but Dom Kwok’s $1,000 Calls Remain in Play",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-23T18:04:09.743529+00:00",
     "tokens": [
       "XRP"
     ],
