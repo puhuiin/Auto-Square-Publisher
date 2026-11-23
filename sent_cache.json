@@ -1,15 +1,5 @@
 [
   {
-    "id": "5e8869248641ea80",
-    "title": "XRP Ledger Activity Hits New November Highs as Batch, Ticket Usage Surge",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-14T14:26:05.366520+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3448b93f9224dbfc",
     "title": "KAVA token sinks 40% as exploit hits Kava Lend, exchanges halt withdrawals",
     "source": "Crypto Briefing (深度与研报)",
@@ -5190,6 +5180,16 @@
     "sent_at": "2026-11-23T10:44:02.955500+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "ff0f8466b9f9e7f1",
+    "title": "Solana hits record $1.8 billion in weekly tokenized equities trading",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-23T11:04:10.547794+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
