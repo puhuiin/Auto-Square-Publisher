@@ -1,15 +1,5 @@
 [
   {
-    "id": "553cf38e34c052fa",
-    "title": "TRON, Tether and Chainalysis launch task force as crypto hacks hit $8.78B",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-14T06:46:49.644411+00:00",
-    "tokens": [
-      "TRX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7d560a0eb70eace2",
     "title": "MANTRA Announces Seven-Day Pause on New Unstaking",
     "source": "The Defiant (DeFi 深度)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-23T01:44:41.012737+00:00",
     "tokens": [
       "PEPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "de358e9de6c3d99c",
+    "title": "史詩級比特幣抄底機會正在逼近:十大維度推演週期大底,4.5 萬美元能否守住?",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-23T02:04:28.493377+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
