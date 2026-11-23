@@ -1,15 +1,5 @@
 [
   {
-    "id": "8eb6b9b22182aed5",
-    "title": "CryptoQuant:比特币需求降至去年 4 月以来最低水平,巨鲸增持仍不足以抵消抛售压力",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-14T17:05:22.915581+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "03b4a32ffe37a6cc",
     "title": "Arbitrum One 稳定币市值 24 小时增长 9180 万美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5196,5 +5186,15 @@
       "AAVE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "3001e9a6a0e804ee",
+    "title": "持有超 8500 枚 BTC,American Bitcoin 抵押借出 1.5 亿美元:不卖币、不增发,年利率仅 5.95%",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-23T13:23:56.590028+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
