@@ -1,15 +1,5 @@
 [
   {
-    "id": "f2e116b930fa2a12",
-    "title": "以太坊的未来、安全与 AI:Vitalik 在 Devcon 香港分会场的问答实录",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-14T12:47:02.066307+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "dec628ab8ab91966",
     "title": "Harley Lewis Foote遭恶意WhatsApp攻击,资金仅剩800美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5191,5 +5181,16 @@
       "TRUMP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "4c5de582c7d42efb",
+    "title": "Ark buys $146 million in Anthropic shares last week, trims Ethereum and Solana Staking ETF holdings",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-23T09:43:44.196081+00:00",
+    "tokens": [
+      "ETH",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
