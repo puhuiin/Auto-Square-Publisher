@@ -1,15 +1,5 @@
 [
   {
-    "id": "84ab4da41ab24672",
-    "title": "Solana Labs推出Leap交易应用,支持全天候交易代币化股票等资产",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-14T15:26:43.286339+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "58b6ab889ae124fd",
     "title": "哈萨克斯坦拟于 2027 年一季度发行代币化国债",
     "source": "深潮TechFlow (中文/简体)",
@@ -5196,5 +5186,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "6e6ed16f824cb727",
+    "title": "American Bitcoin 以比特币抵押获 FalconX 1.5 亿美元循环信贷额度",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-23T12:03:51.961702+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
