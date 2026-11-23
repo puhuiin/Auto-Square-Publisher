@@ -1,15 +1,5 @@
 [
   {
-    "id": "4e7a5d649f4ae27c",
-    "title": "XRP on Wall Street Turns Ugly: Evernorth’s XRPN Crashes 83% in a Month",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-14T09:47:31.671493+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "71949407c32e343b",
     "title": "Aave Proposal Targets $3.5M in Added Annual Revenue Through Reserve-Factor Changes",
     "source": "NewsBTC (比特币与山寨)",
@@ -5187,6 +5177,16 @@
     "sent_at": "2026-11-23T03:44:04.491538+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "3b6773ad6da73916",
+    "title": "Solana’s new memory checks could make some older app transactions fail",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-23T04:04:03.236435+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
