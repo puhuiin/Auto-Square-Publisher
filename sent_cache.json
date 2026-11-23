@@ -1,15 +1,5 @@
 [
   {
-    "id": "7d560a0eb70eace2",
-    "title": "MANTRA Announces Seven-Day Pause on New Unstaking",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-14T07:04:39.327908+00:00",
-    "tokens": [
-      "MANTRA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b10923bb91193c5c",
     "title": "某巨鲸以 150 万枚 USDT 兑换 786.16 枚 ETH",
     "source": "深潮TechFlow (中文/简体)",
@@ -5190,5 +5180,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "e595cfecd995a73c",
+    "title": "Bitget UEX 日报|纳指重挫,英伟达调查加剧 AI 抛售;比特币周末收复 6 万美元(2026 年 11 月 23 日)",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-23T02:24:18.912227+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
