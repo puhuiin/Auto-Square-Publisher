@@ -1,15 +1,5 @@
 [
   {
-    "id": "7e683bb1d23dd148",
-    "title": "Tom Lee:加密市场近期承压或与AI股票抛售、Anthropic IPO资金需求及黑客事件资金释放有关",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T01:47:32.878899+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "0ef08442c63affc5",
     "title": "日元稳定币发行一年:首个无 gas 采用者是鹌鹑蛋商家;单次 100 万成最大限制",
     "source": "吴说区块链 (中文深度)",
@@ -5198,6 +5188,17 @@
     "sent_at": "2026-11-23T19:43:59.247637+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "096e87609f7acd40",
+    "title": "Cyber Bridge Hack Followed LayerZero's Support Exit",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-23T20:03:57.942625+00:00",
+    "tokens": [
+      "CYBER",
+      "BTC"
     ],
     "lang": "en"
   }
