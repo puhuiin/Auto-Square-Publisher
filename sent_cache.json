@@ -1,15 +1,5 @@
 [
   {
-    "id": "58b6ab889ae124fd",
-    "title": "哈萨克斯坦拟于 2027 年一季度发行代币化国债",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-14T15:46:26.073659+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ab1e04d12b7eb214",
     "title": "2027年第一季度,哈萨克斯坦计划发行代币化政府债券",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5194,6 +5184,16 @@
     "sent_at": "2026-11-23T12:03:51.961702+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "62c5dc2ec1c169a4",
+    "title": "Mysterious XRP Ledger Metric Spikes 3,062.1%: What Does This Function Do?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-23T12:19:46.589364+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
