@@ -1,15 +1,5 @@
 [
   {
-    "id": "e0da66b06d905397",
-    "title": "过去24小时Hyperliquid上HYPE爆仓超6000万美元,99.7%为多头仓位",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T02:44:35.844955+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5c8efde65253181f",
     "title": "鲸鱼Technorevenant卖出约17.58万枚HYPE,套现1098万美元偿还USDC贷款",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5200,6 +5190,17 @@
     "sent_at": "2026-11-23T20:44:09.519404+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f3506edc7b178713",
+    "title": "至少2.47亿美元币安被盗资金已被朝鲜黑客转入比特币混币交易",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-23T21:03:56.546415+00:00",
+    "tokens": [
+      "ETH",
+      "BTC"
     ],
     "lang": "en"
   }
