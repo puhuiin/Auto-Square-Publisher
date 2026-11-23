@@ -1,15 +1,5 @@
 [
   {
-    "id": "e6ac71e782ea5771",
-    "title": "分析:比特币空头正加速入场,市场接近长期趋势通道底部",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T02:24:32.451485+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e0da66b06d905397",
     "title": "过去24小时Hyperliquid上HYPE爆仓超6000万美元,99.7%为多头仓位",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5199,6 +5189,16 @@
     "sent_at": "2026-11-23T20:23:58.342197+00:00",
     "tokens": [
       "BNB",
+      "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3dd00aa7f25e46c2",
+    "title": "DeFi Development extends Solana buying streak to 11 straight weeks, SOL treasury hits 2.62 million",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-23T20:44:09.519404+00:00",
+    "tokens": [
       "SOL"
     ],
     "lang": "en"
