@@ -1,16 +1,5 @@
 [
   {
-    "id": "5956dd8ad024940e",
-    "title": "Hoskinson Credits Cardano’s Staking Model After Binance Hack Leaves Network Unaffected",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-14T19:28:17.527480+00:00",
-    "tokens": [
-      "ADA",
-      "NIGHT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d00270eafeee33a0",
     "title": "U.S. Department of Energy Bets on XRP Ledger for Blockchain-Based Energy Market Settlements",
     "source": "ZyCrypto (新币与空投)",
@@ -5194,6 +5183,16 @@
     "tokens": [
       "STRK",
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "594a2d1fe332b921",
+    "title": "Grayscale Launches ZECX, a Leveraged Zcash-Focused ETF",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-23T15:44:35.577016+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
