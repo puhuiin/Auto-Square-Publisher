@@ -1,16 +1,5 @@
 [
   {
-    "id": "5c8efde65253181f",
-    "title": "鲸鱼Technorevenant卖出约17.58万枚HYPE,套现1098万美元偿还USDC贷款",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T03:08:15.637266+00:00",
-    "tokens": [
-      "HYPE",
-      "USDC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5eb987db664930c2",
     "title": "某大户地址向币安充值592,895枚UNI,若卖出预计亏损154.6万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5200,6 +5189,17 @@
     "sent_at": "2026-11-23T21:03:56.546415+00:00",
     "tokens": [
       "ETH",
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e67ecfd2aea7d1e8",
+    "title": "US seeks to recover $1.1B in crypto stolen in North Korea-linked Binance hack",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-11-23T21:23:56.071442+00:00",
+    "tokens": [
+      "USDC",
       "BTC"
     ],
     "lang": "en"
