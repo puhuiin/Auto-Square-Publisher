@@ -1,15 +1,5 @@
 [
   {
-    "id": "264c433af99343b3",
-    "title": "Kava 调查生态内 dApp 异常行为,KAVA 代币 24 小时跌逾 41%",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-14T15:06:41.554232+00:00",
-    "tokens": [
-      "KAVA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "84ab4da41ab24672",
     "title": "Solana Labs推出Leap交易应用,支持全天候交易代币化股票等资产",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5194,5 +5184,17 @@
       "ZEC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "8657ef557de6ce70",
+    "title": "韩国加密钱包DCENT将关闭手机端应用服务,此前黑客攻击致资产被盗",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-23T11:43:59.888779+00:00",
+    "tokens": [
+      "XRP",
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
