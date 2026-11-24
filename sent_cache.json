@@ -1,15 +1,5 @@
 [
   {
-    "id": "3c285d38d0c90b48",
-    "title": "Blockstream And Thales Launch Bitcoin Custody System",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-15T10:07:03.866270+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "65bf5f3628e7398a",
     "title": "Shiba Inu Death Cross Completes After 14-Month Wait, What’s Next?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5205,5 +5195,16 @@
       "SUI"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "203115afd8bb4bc9",
+    "title": "Aave’s USDC loans surge 36% to $2.6 billion as liquid collateral share plunges",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-24T04:44:01.575877+00:00",
+    "tokens": [
+      "USDC",
+      "AAVE"
+    ],
+    "lang": "zh-CN"
   }
 ]
