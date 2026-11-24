@@ -1,15 +1,5 @@
 [
   {
-    "id": "3ae808e15dba1469",
-    "title": "Why Is XRP Down Today? Three Reasons According to Onchain Data",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-15T14:29:49.228445+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9a961274f455b45d",
     "title": "Robots now run AI-written code without an AI calling the shots, succeeding 92% of the time",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5210,6 +5200,16 @@
       "SKY",
       "USDS",
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "1a82bc65c4365675",
+    "title": "Ansem 确认 Pump 钱包被盗,疑因 Bullpen 账户遭未授权访问",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T11:24:51.841844+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-TW"
   }
