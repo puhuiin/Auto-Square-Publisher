@@ -1,15 +1,5 @@
 [
   {
-    "id": "69edc16459bd22d6",
-    "title": "Kava Lend Exploit Exposes a Dangerous Gap in DeFi Collateral Accounting",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-15T22:24:01.679712+00:00",
-    "tokens": [
-      "KAVA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "923bfda17ffe053c",
     "title": "Microsoft Copilot AI Predicts a Seismic Hyperliquid Rally by 2027",
     "source": "CryptoNews (全球快讯)",
@@ -5211,6 +5201,16 @@
     "title": "Nasdaq 100 Surges 6.8% As AI Stocks Rebound, Potential Move For BTC",
     "source": "Bitcoinist (比特币向)",
     "sent_at": "2026-11-24T16:03:59.793356+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d3ab858d43b48800",
+    "title": "Coldcard 发布钱包漏洞复盘,弱随机种子导致比特币被盗",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T16:24:39.898353+00:00",
     "tokens": [
       "BTC"
     ],
