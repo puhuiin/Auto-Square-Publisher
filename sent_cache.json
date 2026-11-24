@@ -1,15 +1,5 @@
 [
   {
-    "id": "fe6aab6f31fffbca",
-    "title": "某巨鲸5日内向币安存入约43.5万枚SOL,价值约3296万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T07:04:23.688822+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "59686778f4234ccd",
     "title": "某巨鯨過去 5 天累計向 Binance 存入約 43.5 萬枚 SOL",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5203,6 +5193,16 @@
     "tokens": [
       "ONDO",
       "XLM"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "d2084e54fba16b3a",
+    "title": "诉状不再允许修改,法院驳回Pearl针对Coinbase的TerraUSD集体诉讼",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-24T02:09:35.561535+00:00",
+    "tokens": [
+      "LUNA"
     ],
     "lang": "zh-TW"
   }
