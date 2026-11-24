@@ -1,15 +1,5 @@
 [
   {
-    "id": "021fbac0fb846cc3",
-    "title": "Jito:BAM 接入验证者质押量占 Solana 全网超 40%",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-15T12:44:29.696892+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "bfcad571e66c2962",
     "title": "Crypto Fear & Greed Index sinks to 21 as ETH and XRP hit multi-month lows",
     "source": "Crypto Briefing (深度与研报)",
@@ -5207,6 +5197,17 @@
     "sent_at": "2026-11-24T08:03:46.986891+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "687556a37263a483",
+    "title": "Sky 陷创始人债务风波:Acier 创始人建议以七五折回购 Rune 持仓,直指 DAO 治理失衡",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T09:26:50.325675+00:00",
+    "tokens": [
+      "SKY",
+      "AAVE"
     ],
     "lang": "zh-CN"
   }
