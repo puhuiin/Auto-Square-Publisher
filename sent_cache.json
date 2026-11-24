@@ -1,16 +1,5 @@
 [
   {
-    "id": "4ed20f0c3d8d5969",
-    "title": "CZ:过去几天已逢低买入,币安没有抛售加密货币",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T16:26:46.501012+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d4c77f6f3c3e2418",
     "title": "XRP Ledger Passes 11.7 Million Sub-Dollar AI Agent Microtransactions",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5212,6 +5201,16 @@
     "sent_at": "2026-11-24T12:43:49.861379+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7b60ab65ca1a6aa4",
+    "title": "270 Million XRP Moves From Uphold to Three Wallets in Three Transfers",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-24T13:04:23.946476+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
