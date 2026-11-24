@@ -1,15 +1,5 @@
 [
   {
-    "id": "caf9847519718de4",
-    "title": "何一:宏观压力推升短期波动,BTC 下跌 15.6%,ETF 累计净流出 19.1 亿美元",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-15T13:46:32.977429+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "633b07ebb0d2a0d0",
     "title": "Hyperliquid Whale Who Lost $10 Million Now Bets on Solana",
     "source": "BeInCrypto (山寨与行情)",
@@ -5209,6 +5199,16 @@
     "tokens": [
       "USDC",
       "ARB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "fd462867890cad61",
+    "title": "Shiba Inu (SHIB) Community Builds New Shibarium Explorer While Shytoshi Kusama Stays Silent",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-24T10:44:17.435617+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-TW"
   }
