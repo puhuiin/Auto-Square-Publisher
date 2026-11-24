@@ -1,15 +1,5 @@
 [
   {
-    "id": "29d4c6db6d4f2983",
-    "title": "Bloomberg:比特币跌至 6.2 万美元附近,多重利空令加密市场持续承压",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-15T06:20:46.228530+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4be67c97bec185fe",
     "title": "JPMorgan Lifts Strategy Stake 36% and Holds $540M in BlackRock’s Bitcoin ETF",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5202,6 +5192,16 @@
       "ETH",
       "USDC",
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "9516b3c8d4812168",
+    "title": "PEPE whale adds 667B to its 2.5T stack in 5 days – But this bet can backfire",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-24T01:27:29.670011+00:00",
+    "tokens": [
+      "PEPE"
     ],
     "lang": "zh-TW"
   }
