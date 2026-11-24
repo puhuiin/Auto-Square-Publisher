@@ -1,15 +1,5 @@
 [
   {
-    "id": "ed2244b17db8b89a",
-    "title": "All of Shiba Inu's (SHIB) Value on the Verge of Dropping Below $300 Million",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-15T09:49:54.457681+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3c285d38d0c90b48",
     "title": "Blockstream And Thales Launch Bitcoin Custody System",
     "source": "Bitcoinist (比特币向)",
@@ -5202,6 +5192,17 @@
     "sent_at": "2026-11-24T04:04:38.498105+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "9b083b9f8025f28e",
+    "title": "三星钱包现已支持 Sui USDC 免手续费转账,面向美国约 8,200 万台设备开放",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T04:23:53.515101+00:00",
+    "tokens": [
+      "USDC",
+      "SUI"
     ],
     "lang": "zh-TW"
   }
