@@ -1,16 +1,5 @@
 [
   {
-    "id": "9a961274f455b45d",
-    "title": "Robots now run AI-written code without an AI calling the shots, succeeding 92% of the time",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-15T14:50:04.235908+00:00",
-    "tokens": [
-      "ACE",
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "52f6c73812ef3b31",
     "title": "XRP crashes to its lowest since November 2024 as money leaves crypto",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5212,5 +5201,16 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "fd7432c4b4d6022a",
+    "title": "Ansem 关联钱包抛售代币,是否遭攻击存在争议",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T11:44:10.213527+00:00",
+    "tokens": [
+      "USDC",
+      "ARB"
+    ],
+    "lang": "zh-CN"
   }
 ]
