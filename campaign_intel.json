@@ -19,20 +19,20 @@
   "strategy_guidance": "优先追 Black Friday 的 Binance Pay 消费/充值活动，按预热—冲刺—收尾复盘节奏发帖，用“活动冲刺/抄作业”角度拆解参与路径并引导评论互动。把 ANT/ANTB、NVDA TradFi 合约与 bStocks 上线快讯接入合约 Carnival 和现货/抵押品更新，把 RLUSD 持仓、P2P USDC 零费率及 Simple Earn 新用户活动做成快讯+教程组合。发帖时只强调参与评论/互动拿奖励和追当期活动热度，不对活动参与作任何收益承诺。",
   "last_updated": "2026-11-24T04:04:11.500396Z",
   "_feed_health": {
-    "Watcher.Guru (快讯)": {
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-24T06:43:33.751328+00:00",
+    "吴说区块链 (中文深度)": {
+      "last_fail": "2026-11-24T01:46:04.867856+00:00",
+      "parked_until": "2026-11-24T07:46:04.867856+00:00",
       "fails": 3
     },
-    "吴说区块链 (中文深度)": {
-      "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "last_fail": "2026-11-24T01:46:04.867856+00:00",
+    "Watcher.Guru (快讯)": {
+      "last_fail": "2026-11-24T06:43:33.751328+00:00",
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
       "fails": 3
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-24",
