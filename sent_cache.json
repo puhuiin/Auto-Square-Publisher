@@ -1,15 +1,5 @@
 [
   {
-    "id": "69d9d957cfe1fa28",
-    "title": "黑客对比特币挖矿基础设施实施新型攻击",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T22:04:26.886517+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "69edc16459bd22d6",
     "title": "Kava Lend Exploit Exposes a Dangerous Gap in DeFi Collateral Accounting",
     "source": "NewsBTC (比特币与山寨)",
@@ -5213,6 +5203,16 @@
     "sent_at": "2026-11-24T15:43:58.935880+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "bcb77261dd367cf6",
+    "title": "Nasdaq 100 Surges 6.8% As AI Stocks Rebound, Potential Move For BTC",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-24T16:03:59.793356+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
