@@ -1,15 +1,5 @@
 [
   {
-    "id": "59686778f4234ccd",
-    "title": "某巨鯨過去 5 天累計向 Binance 存入約 43.5 萬枚 SOL",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-11-15T07:24:19.760439+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "87e158a81e5cf3c4",
     "title": "波場生態|stUSDT 宣布收攤:TVL 從 23 億縮到 861 萬,半年贖回期開跑",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5205,5 +5195,15 @@
       "LUNA"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "bb21d75d0dfee41b",
+    "title": "美国SOL现货ETF单日净流出382.80万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-24T02:26:19.690282+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
