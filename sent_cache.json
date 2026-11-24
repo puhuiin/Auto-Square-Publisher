@@ -1,16 +1,5 @@
 [
   {
-    "id": "3698b8c22ef634d5",
-    "title": "星球午讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T05:44:43.941786+00:00",
-    "tokens": [
-      "ETH",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "29d4c6db6d4f2983",
     "title": "Bloomberg:比特币跌至 6.2 万美元附近,多重利空令加密市场持续承压",
     "source": "吴说区块链 (中文深度)",
@@ -5203,5 +5192,17 @@
       "DOGE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "feaab2dbcda508a8",
+    "title": "Chainflip金库约1260万美元资产被转出,初步指向第三方网络库漏洞",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-24T01:06:34.196841+00:00",
+    "tokens": [
+      "ETH",
+      "USDC",
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
