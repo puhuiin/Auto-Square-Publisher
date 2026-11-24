@@ -1,15 +1,5 @@
 [
   {
-    "id": "5f621721edaaf9ca",
-    "title": "黑客正用 AI 把攻击成本降到归零,互联网该如何自救?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-16T01:24:38.761373+00:00",
-    "tokens": [
-      "ZKP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3a004d9f032a8de1",
     "title": "英伟达失去 CEO 的那一天:半导体资本开支与加密流动性的暗战",
     "source": "深潮TechFlow (中文/简体)",
@@ -5206,6 +5196,16 @@
     "sent_at": "2026-11-24T19:04:06.016011+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b4de075bbd2c45c1",
+    "title": "$9 Billion Wealth Manager Discloses XRP ETF Stake",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-24T19:23:57.497994+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
