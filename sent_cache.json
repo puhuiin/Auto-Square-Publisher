@@ -1,15 +1,5 @@
 [
   {
-    "id": "30803c649b8151f2",
-    "title": "‘Under pressure’ Dogecoin down by 40%, but is more downside ahead for memecoin?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-15T05:05:37.410194+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "582a3ab38f4737d4",
     "title": "累计盈利约4126万美元地址调整多资产仓位:增持ETH、HYPE多单,反手做多CRCL",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5203,5 +5193,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c7cf188e758017b3",
+    "title": "Solana Price Prediction 2030: Is $2,000 SOL Still on the Table After a 75% Crash?",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-24T00:24:06.008048+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
