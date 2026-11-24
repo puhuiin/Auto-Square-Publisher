@@ -1,15 +1,5 @@
 [
   {
-    "id": "d4c77f6f3c3e2418",
-    "title": "XRP Ledger Passes 11.7 Million Sub-Dollar AI Agent Microtransactions",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-15T16:50:33.409818+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "df3198da88f555ce",
     "title": "Tether wants its gold token to rival ETFs",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5211,6 +5201,16 @@
     "sent_at": "2026-11-24T13:04:23.946476+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "67e82dc76381ccfe",
+    "title": "Bitcoin Loses $60,000 And Gold Offers No Protection During Its Worst Selloff Since 1982",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-24T13:23:57.400327+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
