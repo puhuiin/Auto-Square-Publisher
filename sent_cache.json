@@ -1,16 +1,5 @@
 [
   {
-    "id": "7f94d19fcc44613e",
-    "title": "DTCC Adds Solana to Wall Street Tokenization Plans, Targeting 2027",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-16T00:04:42.395017+00:00",
-    "tokens": [
-      "SOL",
-      "XLM"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "c81fd730179fbf6c",
     "title": "CryptoQuant 分析师:短期持有巨鲸 BTC 浮亏约 80 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5211,6 +5200,16 @@
     "sent_at": "2026-11-24T17:43:59.712969+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e0918cdb17da44f8",
+    "title": "1778.84枚BTC被盗,Coinkite公布COLDCARD五年安全漏洞复盘",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-24T18:03:52.623189+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
