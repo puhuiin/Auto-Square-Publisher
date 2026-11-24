@@ -1,15 +1,5 @@
 [
   {
-    "id": "4be67c97bec185fe",
-    "title": "JPMorgan Lifts Strategy Stake 36% and Holds $540M in BlackRock’s Bitcoin ETF",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-15T06:44:29.813908+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "fe6aab6f31fffbca",
     "title": "某巨鲸5日内向币安存入约43.5万枚SOL,价值约3296万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5202,6 +5192,17 @@
     "sent_at": "2026-11-24T01:27:29.670011+00:00",
     "tokens": [
       "PEPE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "1bcb2f2ef79565c0",
+    "title": "35.2 亿美元反超 Ondo,富兰克林登顶代币化美债市场:周末流动性如何成为竞争新壁垒?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T01:46:40.055303+00:00",
+    "tokens": [
+      "ONDO",
+      "XLM"
     ],
     "lang": "zh-TW"
   }
