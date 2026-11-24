@@ -1,15 +1,5 @@
 [
   {
-    "id": "84fac58d5dd0514b",
-    "title": "Solflare Launches Private Mode for Solana Payments",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-15T21:24:13.261738+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "69d9d957cfe1fa28",
     "title": "黑客对比特币挖矿基础设施实施新型攻击",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5213,6 +5203,16 @@
     "sent_at": "2026-11-24T15:23:56.082119+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "710437bbda7a8a98",
+    "title": "Bill Gates Microsoft Copilot AI Predicts a Historic Hyperliquid Rally",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-24T15:43:58.935880+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
