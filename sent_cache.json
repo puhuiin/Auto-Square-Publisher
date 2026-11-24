@@ -1,16 +1,5 @@
 [
   {
-    "id": "171a74e5ac2983c4",
-    "title": "EnaatN过去16天卖出14亿枚PUMP并买入HYPE",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-16T03:47:04.524064+00:00",
-    "tokens": [
-      "PUMP",
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "95de0e25275fda1c",
     "title": "XRP Scams Soar Across Social Media, Here’s What To Watch Out For",
     "source": "ZyCrypto (新币与空投)",
@@ -5206,6 +5195,16 @@
     "sent_at": "2026-11-24T21:24:09.269435+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b1bea9a9edad3e99",
+    "title": "Ansem claims wallet hack after an 87 million ANSEM token dump, but on-chain data raises questions",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-24T21:44:20.363535+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
