@@ -1,16 +1,5 @@
 [
   {
-    "id": "6624aed4ecabfcec",
-    "title": "Elon Musk’s Grok AI Predicts a Huge XRP Crash Amid Ongoing Market Volatility",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-15T19:26:18.436284+00:00",
-    "tokens": [
-      "XRP",
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "29015c89704bab4a",
     "title": "客服数据遭未授权访问,Coinone称账户访问需二次验证",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5213,6 +5202,16 @@
     "sent_at": "2026-11-24T14:04:33.508483+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "405764c0709ae40a",
+    "title": "XRP Price is Showing a Historical Pattern That Led to a 200% Rally",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-24T14:23:59.183359+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
