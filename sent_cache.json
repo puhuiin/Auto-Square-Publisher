@@ -1,15 +1,5 @@
 [
   {
-    "id": "a6c3ced8a8db729a",
-    "title": "Solana 生态周报:Raydium 代币化股票累计交易额超 80 亿美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-15T15:29:30.002903+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "995cbdda3aaeba44",
     "title": "Coinone Warns of Identity Theft After Support Breach",
     "source": "The Defiant (DeFi 深度)",
@@ -5212,5 +5202,17 @@
       "XRP"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "9ad5ed38e6164e3f",
+    "title": "社交网络 Cyber 跨链桥遭攻击损失约 110 万美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T12:24:10.567978+00:00",
+    "tokens": [
+      "CYBER",
+      "ETH",
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
