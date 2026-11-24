@@ -1,15 +1,5 @@
 [
   {
-    "id": "df63e8275ec09ae7",
-    "title": "ASTER 短时振幅超 30%,Aster CEO 回应:与做市无关,正调查高杠杆清算",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-16T02:04:34.707100+00:00",
-    "tokens": [
-      "ASTER"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "1f4004fc88e4c065",
     "title": "币圈已经不存在了",
     "source": "深潮TechFlow (中文/简体)",
@@ -5207,6 +5197,16 @@
       "XRP",
       "ADA",
       "POL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9431e336c2842f22",
+    "title": "21Shares:比特币下跌或持续,关注 53250 美元价位",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T20:03:58.659181+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
