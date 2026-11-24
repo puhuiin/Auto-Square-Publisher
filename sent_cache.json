@@ -1,15 +1,5 @@
 [
   {
-    "id": "1bf083f3b54df0d2",
-    "title": "Solana 财库公司 Forward Industries 向 Coinbase Prime 转入约 1.23 亿美元 SOL",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-15T04:44:21.256968+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "30803c649b8151f2",
     "title": "‘Under pressure’ Dogecoin down by 40%, but is more downside ahead for memecoin?",
     "source": "AMBCrypto (技术与链上)",
@@ -5201,6 +5191,16 @@
     "sent_at": "2026-11-23T23:44:31.227445+00:00",
     "tokens": [
       "TRUMP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "38a54a636755a990",
+    "title": "Decrypt 联合创始人:已集成永续合约和代币兑换功能",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T00:03:57.810037+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
