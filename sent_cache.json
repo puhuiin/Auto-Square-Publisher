@@ -1,17 +1,5 @@
 [
   {
-    "id": "5f853842c2aca0bb",
-    "title": "链上侦探Specter:某地址被归属为以太坊基金会钱包的证据不足",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T11:28:18.234313+00:00",
-    "tokens": [
-      "ETH",
-      "BAT",
-      "UNI"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "66f44ed05b519cff",
     "title": "Cardano's Hoskinson Says Everyone Will Be Happy Next Year",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5206,6 +5194,17 @@
     "sent_at": "2026-11-24T05:23:50.636071+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "8acae639a3042271",
+    "title": "Mark Zuckerberg Meta AI Predicts LINK Vs. AVAX: Which Goes Higher in 2027?",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-24T05:43:48.373492+00:00",
+    "tokens": [
+      "AVAX",
+      "LINK"
     ],
     "lang": "zh-CN"
   }
