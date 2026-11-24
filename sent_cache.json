@@ -1,15 +1,5 @@
 [
   {
-    "id": "66f44ed05b519cff",
-    "title": "Cardano's Hoskinson Says Everyone Will Be Happy Next Year",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-15T11:45:23.071143+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "42ef06abe02e2a07",
     "title": "XRP Ledger Creates New Baseline: 1 Billion Secured",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5205,6 +5195,16 @@
     "tokens": [
       "AVAX",
       "LINK"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ac13bf998a505bb7",
+    "title": "Can Institutions Secretly Buy Billions of XRP? Ripple Veteran Says It Is 'Not Impossible'",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-24T06:24:16.342230+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
