@@ -1,16 +1,5 @@
 [
   {
-    "id": "582a3ab38f4737d4",
-    "title": "累计盈利约4126万美元地址调整多资产仓位:增持ETH、HYPE多单,反手做多CRCL",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T05:24:58.820807+00:00",
-    "tokens": [
-      "ETH",
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "3698b8c22ef634d5",
     "title": "星球午讯",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5203,5 +5192,16 @@
       "SOL"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "abd3376e5bd55a0e",
+    "title": "XRP's Activity Is Recovering, Monero (XMR) Grows on Privacy Demand and Dogecoin's (DOGE) Price Recovery Attempt: Crypto Market Review",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-24T00:44:06.670223+00:00",
+    "tokens": [
+      "XRP",
+      "DOGE"
+    ],
+    "lang": "zh-CN"
   }
 ]
