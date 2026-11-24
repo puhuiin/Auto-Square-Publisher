@@ -1,15 +1,5 @@
 [
   {
-    "id": "995cbdda3aaeba44",
-    "title": "Coinone Warns of Identity Theft After Support Breach",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-15T16:06:05.058221+00:00",
-    "tokens": [
-      "ID"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4ed20f0c3d8d5969",
     "title": "CZ:过去几天已逢低买入,币安没有抛售加密货币",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5211,6 +5201,16 @@
     "tokens": [
       "CYBER",
       "ETH",
+      "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1812e4d535841c4d",
+    "title": "Solana Validators Can Now Stop Block Processing",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-24T12:43:49.861379+00:00",
+    "tokens": [
       "SOL"
     ],
     "lang": "zh-CN"
