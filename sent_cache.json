@@ -1,15 +1,5 @@
 [
   {
-    "id": "fbab98333e66e9a8",
-    "title": "Aster CEO Blames Liquidations for ASTER's Sharp Swing",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-16T02:44:46.433237+00:00",
-    "tokens": [
-      "ASTER"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c7503f4f40fadeaa",
     "title": "HYPE现货ETF上周净流出432.57万美元,连续六周净流出",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5207,6 +5197,16 @@
     "sent_at": "2026-11-24T20:23:54.633822+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "6cd0bc8d72682914",
+    "title": "INJ现已上线Base上的1inch,可直接兑换",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-24T20:43:52.252181+00:00",
+    "tokens": [
+      "INJ"
     ],
     "lang": "en"
   }
