@@ -1,16 +1,5 @@
 [
   {
-    "id": "633b07ebb0d2a0d0",
-    "title": "Hyperliquid Whale Who Lost $10 Million Now Bets on Solana",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-15T14:08:48.444102+00:00",
-    "tokens": [
-      "SOL",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3ae808e15dba1469",
     "title": "Why Is XRP Down Today? Three Reasons According to Onchain Data",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5209,6 +5198,18 @@
     "sent_at": "2026-11-24T10:44:17.435617+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b0177b09bd0b078d",
+    "title": "拯救大兵 MakerDAO",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T11:04:35.879159+00:00",
+    "tokens": [
+      "SKY",
+      "USDS",
+      "ETH"
     ],
     "lang": "zh-TW"
   }
