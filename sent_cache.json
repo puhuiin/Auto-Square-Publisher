@@ -1,15 +1,5 @@
 [
   {
-    "id": "fea8e7b1f9998e7a",
-    "title": "彭博:比特币阴跌令交易者绝望,市场信心与机构需求双双承压",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T09:04:35.619960+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9ac8459258ecacc5",
     "title": "AI Cyberattacks And Outages Keep Breaking Centralized Systems, But Bitcoin Keeps Running",
     "source": "Bitcoinist (比特币向)",
@@ -5203,6 +5193,16 @@
     "sent_at": "2026-11-24T03:23:58.818521+00:00",
     "tokens": [
       "LUNA"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "5de70265f13c1bb2",
+    "title": "China's Z.ai Says Its New AI Model Can Think Like One Four Times Its Size",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-24T03:44:02.715815+00:00",
+    "tokens": [
+      "GLM"
     ],
     "lang": "zh-CN"
   }
