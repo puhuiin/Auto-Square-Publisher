@@ -1,15 +1,5 @@
 [
   {
-    "id": "42ef06abe02e2a07",
-    "title": "XRP Ledger Creates New Baseline: 1 Billion Secured",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-15T12:05:29.678385+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "8664047aee34fcf9",
     "title": "Someone Moves 240 Million XRP the Exact Moment Price Hits Its $0.89 Floor",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5205,6 +5195,18 @@
     "sent_at": "2026-11-24T06:24:16.342230+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "8d817f0651c0fd2c",
+    "title": "United Stables($U) 与 LTP 达成合作,$U 接入 MarginX 释放双重收益",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T06:44:48.243033+00:00",
+    "tokens": [
+      "BNB",
+      "ETH",
+      "TRX"
     ],
     "lang": "zh-CN"
   }
