@@ -1,15 +1,5 @@
 [
   {
-    "id": "328f3af4d4fc037b",
-    "title": "Google Gemini AI Predicts an Insane Quant Crypto Reversal",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-15T21:06:03.334610+00:00",
-    "tokens": [
-      "QNT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "84fac58d5dd0514b",
     "title": "Solflare Launches Private Mode for Solana Payments",
     "source": "The Defiant (DeFi 深度)",
@@ -5213,6 +5203,16 @@
     "sent_at": "2026-11-24T15:04:14.091285+00:00",
     "tokens": [
       "SKY"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c05d5a7f8228011d",
+    "title": "The “Dogecoin Millionaire” Shares Brutal Advices For Crypto Investors",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-24T15:23:56.082119+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
