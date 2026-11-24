@@ -1,16 +1,5 @@
 [
   {
-    "id": "9ac8459258ecacc5",
-    "title": "AI Cyberattacks And Outages Keep Breaking Centralized Systems, But Bitcoin Keeps Running",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-15T09:27:14.324134+00:00",
-    "tokens": [
-      "BTC",
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ed2244b17db8b89a",
     "title": "All of Shiba Inu's (SHIB) Value on the Verge of Dropping Below $300 Million",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5205,5 +5194,15 @@
       "GLM"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "87ec77519879a3c8",
+    "title": "火币 HTX 首席分析师 Cloud:加密已成美股的「融资市场」,美股反弹难带动 BTC 走强",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T04:04:38.498105+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]

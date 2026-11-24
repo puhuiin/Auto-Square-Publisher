@@ -4,30 +4,30 @@
     "#BinanceSquare",
     "#TradingTournament",
     "#Futures",
-    "#TradFi"
+    "#BlackFriday"
   ],
   "incentivized_tokens": [
-    "$BNB",
-    "$XRP",
-    "$RLUSD",
-    "$USDC",
-    "$USDT",
+    "$ANT",
     "$ANTB",
     "$NVDA",
-    "$BTC"
+    "$RLUSD",
+    "$XRP",
+    "$USDC",
+    "$USDT",
+    "$BNB"
   ],
-  "strategy_guidance": "优先追无截止日期或公告日仍有效的当期热度：用 Black Friday Binance Pay、Trading Master Tournament、ANT & NVDA Perps Carnival 与 Blockchain Week 小游戏做快讯切入，先出活动冲刺清单/玩法教程，再做复盘与“抄作业”式要点，引导读者去活动页参与评论互动拿奖励。日常行情快讯可绑定 TradFi 新合约、ANTB bStocks 新交易对/抵押背景与 BTC Yield APR Boost 做延伸解读，文末用互动问题收集反馈并追踪点击，便于后续交易返佣转化；全程避免任何收益承诺，只强调活动参与、评论互动和资讯价值。",
-  "last_updated": "2026-11-23T15:44:05.068906Z",
+  "strategy_guidance": "优先追 Black Friday 的 Binance Pay 消费/充值活动，按预热—冲刺—收尾复盘节奏发帖，用“活动冲刺/抄作业”角度拆解参与路径并引导评论互动。把 ANT/ANTB、NVDA TradFi 合约与 bStocks 上线快讯接入合约 Carnival 和现货/抵押品更新，把 RLUSD 持仓、P2P USDC 零费率及 Simple Earn 新用户活动做成快讯+教程组合。发帖时只强调参与评论/互动拿奖励和追当期活动热度，不对活动参与作任何收益承诺。",
+  "last_updated": "2026-11-24T04:04:11.500396Z",
   "_feed_health": {
     "Watcher.Guru (快讯)": {
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-24T04:04:12.483084+00:00",
       "fails": 3,
-      "last_fail": "2026-11-24T03:43:31.689367+00:00"
+      "parked_until": "2026-11-17T10:23:31.478522+00:00"
     },
     "吴说区块链 (中文深度)": {
-      "parked_until": "2026-11-24T07:46:04.867856+00:00",
+      "last_fail": "2026-11-24T01:46:04.867856+00:00",
       "fails": 3,
-      "last_fail": "2026-11-24T01:46:04.867856+00:00"
+      "parked_until": "2026-11-24T07:46:04.867856+00:00"
     }
   },
   "_fallback_image": {
@@ -38,7 +38,7 @@
   "_article_sent_date": "2026-11-24",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1273,
+  "_img_rot": 1274,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
