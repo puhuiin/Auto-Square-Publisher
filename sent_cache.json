@@ -1,17 +1,5 @@
 [
   {
-    "id": "2f4a891184930d18",
-    "title": "一周热门项目动态:CFTC 或对 Kalshi 提起指控、纽交所将使用 Avalanche 结算代币化股票、Zcash 推进 NU8 重大升级等(1108–1114)",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-15T08:09:43.242212+00:00",
-    "tokens": [
-      "USDC",
-      "MEGA",
-      "KAT"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "fea8e7b1f9998e7a",
     "title": "彭博:比特币阴跌令交易者绝望,市场信心与机构需求双双承压",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5205,6 +5193,16 @@
       "HYPE",
       "ZEC",
       "PUMP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "80c159cf5d413057",
+    "title": "Coinbase 赢下 UST 崩盘集体诉讼:法院认定平台已充分披露算法机制,无需为投资者亏损兜底",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T03:23:58.818521+00:00",
+    "tokens": [
+      "LUNA"
     ],
     "lang": "zh-CN"
   }
