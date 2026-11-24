@@ -1,15 +1,5 @@
 [
   {
-    "id": "29015c89704bab4a",
-    "title": "客服数据遭未授权访问,Coinone称账户访问需二次验证",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-15T20:05:00.568411+00:00",
-    "tokens": [
-      "ID"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9a63982b01375b21",
     "title": "Solana 钱包 Solflare 推出私密模式",
     "source": "深潮TechFlow (中文/简体)",
@@ -5212,6 +5202,17 @@
     "sent_at": "2026-11-24T14:23:59.183359+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "77a12b546e401b27",
+    "title": "XRP Ledger DEX volume hits 4.51 million XRP a day in Q3 as big traders take over: Evernorth",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-24T14:44:16.194249+00:00",
+    "tokens": [
+      "XRP",
+      "RLUSD"
     ],
     "lang": "en"
   }
