@@ -1,15 +1,5 @@
 [
   {
-    "id": "65bf5f3628e7398a",
-    "title": "Shiba Inu Death Cross Completes After 14-Month Wait, What’s Next?",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-15T10:44:33.431987+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9823710840ab65f5",
     "title": "AI Agent Identity Needs Blockchain, Legal Experts Say",
     "source": "BeInCrypto (山寨与行情)",
@@ -5204,6 +5194,18 @@
     "tokens": [
       "USDC",
       "AAVE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4bb029d4b3b48b5d",
+    "title": "美国政府要“抢走”币安被盗的 11 亿美元?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-24T05:04:43.936257+00:00",
+    "tokens": [
+      "USDC",
+      "BTC",
+      "ETH"
     ],
     "lang": "zh-CN"
   }
