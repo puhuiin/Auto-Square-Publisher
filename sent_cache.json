@@ -1,16 +1,5 @@
 [
   {
-    "id": "bfcad571e66c2962",
-    "title": "Crypto Fear & Greed Index sinks to 21 as ETH and XRP hit multi-month lows",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-15T13:04:31.286891+00:00",
-    "tokens": [
-      "ETH",
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "85f193c9f10268da",
     "title": "Are Whales Selling Bitcoin For The Anthropic IPO? The SpaceX Playbook Hints A Bottom Is Near",
     "source": "Bitcoinist (比特币向)",
@@ -5210,5 +5199,16 @@
       "AAVE"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "dd67ac42247d3f7f",
+    "title": "Lookonchain:Ansem疑似遭黑客攻击,黑客已转移215万USDC",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-24T10:04:15.238291+00:00",
+    "tokens": [
+      "USDC",
+      "ARB"
+    ],
+    "lang": "zh-TW"
   }
 ]
