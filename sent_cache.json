@@ -1,15 +1,5 @@
 [
   {
-    "id": "67cde8c9f2228557",
-    "title": "Bitwise sees Solana reaching $1,100 by 2031 in bull case as onchain trading grows",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-16T23:45:53.262012+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0d402de706795a97",
     "title": "Analyzing XRP’s $44M liquidation imbalance – Is a market reset underway?",
     "source": "AMBCrypto (技术与链上)",
@@ -5206,6 +5196,16 @@
     "sent_at": "2026-11-25T17:44:22.725236+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "825407a10515aa2f",
+    "title": "Coinbase Warns of XRP Long Liquidation Risks as 6% Price Move Looms",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-25T18:04:02.006740+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
