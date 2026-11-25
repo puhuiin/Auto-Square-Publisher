@@ -1,15 +1,5 @@
 [
   {
-    "id": "852ba4db65935615",
-    "title": "Why Avalanche stood out as demand for other altcoin ETFs weakened",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-16T11:45:01.097913+00:00",
-    "tokens": [
-      "AVAX"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "fd9a9badda7ca010",
     "title": "Cardano (ADA) Price Predictions for This Week",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5205,6 +5195,16 @@
     "sent_at": "2026-11-25T05:44:00.347150+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "9756e8755482f9bb",
+    "title": "币安钱包上线 Gacha 集换式卡牌盲盒功能,支持实物卡牌链上确权",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-25T06:04:41.332668+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-CN"
   }
