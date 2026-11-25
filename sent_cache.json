@@ -1,15 +1,5 @@
 [
   {
-    "id": "8f29d4f3c3881eb6",
-    "title": "Cypherpunk Technologies(CYPH)公布 2026 年第三季度财报",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-16T15:06:41.006735+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "590dbfebd3b6516e",
     "title": "Fortitude Mining 和 Cypherpunk Technologies 两家矿企目前合计控制约 29% 的 Zcash 网络算力",
     "source": "吴说区块链 (中文深度)",
@@ -5202,6 +5192,16 @@
     "sent_at": "2026-11-25T11:49:03.303022+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "ecfe685fe7083a2e",
+    "title": "‘Shibarium Is Ready Either Way’: SHIB Developer Teases Privacy Boost for Shiba Inu",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-25T12:24:38.096956+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-TW"
   }
