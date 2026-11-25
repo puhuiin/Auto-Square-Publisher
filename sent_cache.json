@@ -1,15 +1,5 @@
 [
   {
-    "id": "7614fd8c814b73ca",
-    "title": "富国银行第三季度 IBIT 持仓翻倍至约 4958 万股,市值达 23.5 亿美元",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-17T01:24:40.556590+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "cb8710ec442148e2",
     "title": "Shiba Inu (SHIB) Bearish Rally is Fading, Solana (SOL) Death Cross Isn't Dangerous, Stellar (XLM) Recovery Signal Potential: Crypto Market Review",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5202,6 +5192,16 @@
     "sent_at": "2026-11-25T19:24:03.575871+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e0ca655c67a88962",
+    "title": "Fidelity files for spot Chainlink ETF with planned Nasdaq listing",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-25T19:44:00.357333+00:00",
+    "tokens": [
+      "LINK"
     ],
     "lang": "en"
   }
