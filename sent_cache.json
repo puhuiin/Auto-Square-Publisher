@@ -1,15 +1,5 @@
 [
   {
-    "id": "d202a9ba87e4a968",
-    "title": "上诉被拒,最高法院维持Custodia Bank主账户申请裁决",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-16T16:09:35.774954+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "38808b7a6490dafe",
     "title": "Solana 验证者获提醒修复 Linux 内核漏洞 NoisyTCP",
     "source": "深潮TechFlow (中文/简体)",
@@ -5206,6 +5196,16 @@
       "USDS",
       "AAVE",
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "b21938babe1e3bbc",
+    "title": "Japan’s SBI, SMFG launch Solana venture for stablecoins, tokenization",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-11-25T13:24:00.475753+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
