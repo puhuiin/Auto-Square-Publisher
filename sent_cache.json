@@ -1,15 +1,5 @@
 [
   {
-    "id": "b463d2fa2e24405f",
-    "title": "数据:比特币 2026 年至今跌 22%,或将首次连续两年收跌",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-16T05:44:06.246647+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "c240940958d421cc",
     "title": "Upbit将于11月19日暂停Polygon网络相关资产充提",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5205,5 +5195,15 @@
       "ARB"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "a0fde67ffb48f4b5",
+    "title": "Is LINK heading towards $5 as ETF outflows hit record $3.35 million?",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-11-25T00:44:00.852087+00:00",
+    "tokens": [
+      "LINK"
+    ],
+    "lang": "zh-TW"
   }
 ]
