@@ -1,16 +1,5 @@
 [
   {
-    "id": "6d8f11a11678218c",
-    "title": "加密交易所不再需要加密货币",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-16T08:24:38.187247+00:00",
-    "tokens": [
-      "USDC",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "5b5b0ca44a4c1d67",
     "title": "Harvard, Dartmouth keep Bitcoin ETF stakes steady as fund gains 42% in Q3",
     "source": "Cointelegraph (全球综合快讯)",
@@ -5201,6 +5190,18 @@
     "sent_at": "2026-11-25T03:06:48.507363+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "649cde9d07830b04",
+    "title": "LINK, AAVE and UNI Now Supported by Fidelity",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-25T03:43:53.964547+00:00",
+    "tokens": [
+      "AAVE",
+      "UNI",
+      "LINK"
     ],
     "lang": "zh-CN"
   }
