@@ -1,15 +1,5 @@
 [
   {
-    "id": "8870b1546951621e",
-    "title": "Move Over World of Warcraft: Cardano Has Its Own MMORPG",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-16T23:24:22.149581+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "67cde8c9f2228557",
     "title": "Bitwise sees Solana reaching $1,100 by 2031 in bull case as onchain trading grows",
     "source": "The Block (机构与政策)",
@@ -5206,6 +5196,16 @@
     "tokens": [
       "AAVE",
       "ARB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8a78fd3c31546399",
+    "title": "520 Billion Shiba Inu (SHIB) Exit Exchanges in 24 Hours as Price Nears 5-Year Low",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-25T17:44:22.725236+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "en"
   }
