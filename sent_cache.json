@@ -1,17 +1,5 @@
 [
   {
-    "id": "655c776dccda90cb",
-    "title": "ARK 买入 Circle 和 Coinbase,减持 ETH、SOL 质押 ETF",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T02:04:49.444861+00:00",
-    "tokens": [
-      "ARK",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "990e6ee124d19c8a",
     "title": "美国ZEC、NEAR现货ETF单日合计净流出969.22万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5200,6 +5188,16 @@
     "sent_at": "2026-11-25T20:03:54.702915+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b1c57fd591e9ced9",
+    "title": "Hyperliquid (HYPE) Faces Risk of Another 15% Drop: Where is the Bottom?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-25T20:23:55.498490+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
