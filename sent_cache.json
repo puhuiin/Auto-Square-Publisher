@@ -1,15 +1,5 @@
 [
   {
-    "id": "4eca13f595d09078",
-    "title": "Bitcoin Bottom? Is the Market Preparing for a Reversal or One Final Crash?",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-16T13:24:38.010343+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "99b5d54ea378c5ab",
     "title": "Solana’s stablecoin market shrinks $919 million as USDC grows",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5206,5 +5196,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c5f093927469390f",
+    "title": "从联盟链转向公链,日本 SBI 与三井住友联手 Solana 布局链上金融",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-25T10:06:22.451433+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
