@@ -1,16 +1,5 @@
 [
   {
-    "id": "9850f66afbb310da",
-    "title": "Bitcoin's $2 Billion Liquidation Weekend Leaves Traders Watching $60,000",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-16T22:07:10.767791+00:00",
-    "tokens": [
-      "BTC",
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "21dc9282e82f31c6",
     "title": "Sam Altman’s ChatGPT AI Predicts a Crazy ADA Crypto Price",
     "source": "CryptoNews (全球快讯)",
@@ -5205,6 +5194,16 @@
     "sent_at": "2026-11-25T16:24:04.945933+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e12bca511859290b",
+    "title": "巨鲸亏损超 800 万美元后再开 20 万枚 HYPE 多仓",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-25T16:44:00.102244+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
