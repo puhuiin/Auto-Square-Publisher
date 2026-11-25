@@ -1,15 +1,5 @@
 [
   {
-    "id": "9a6ccab9feed164c",
-    "title": "千问办公上线 10 款模型,支持选择第三方大模型",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-16T06:24:29.447721+00:00",
-    "tokens": [
-      "GLM"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0be73c7d754aefeb",
     "title": "今年各类资产拿到现在,比特币 -22%回报垫底",
     "source": "深潮TechFlow (中文/简体)",
@@ -5204,5 +5194,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "1dee1da82682195a",
+    "title": "Ethereum Foundation Says AI Is a More Urgent Threat Than Quantum Computing",
+    "source": "Decrypt (Web3/AI/Meme)",
+    "sent_at": "2026-11-25T01:24:00.512021+00:00",
+    "tokens": [
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
