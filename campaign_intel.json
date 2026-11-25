@@ -21,28 +21,28 @@
     "Watcher.Guru (快讯)": {
       "fails": 3,
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-25T06:03:31.804366+00:00"
+      "last_fail": "2026-11-25T06:26:02.511998+00:00"
     },
     "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-11-25T06:03:31.146649+00:00",
+      "reset_at": "2026-11-25T06:26:01.922105+00:00",
       "fails": 1,
       "last_fail": "2026-11-25T04:43:55.677104+00:00"
     },
     "吴说区块链 (中文深度)": {
       "fails": 3,
       "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "last_fail": "2026-11-25T06:03:32.890712+00:00"
+      "last_fail": "2026-11-25T06:26:03.406509+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-25",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1310,
+  "_img_rot": 1311,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

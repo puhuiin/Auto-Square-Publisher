@@ -1,15 +1,5 @@
 [
   {
-    "id": "fd9a9badda7ca010",
-    "title": "Cardano (ADA) Price Predictions for This Week",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-16T12:06:35.403868+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "f804733f1b8b4a84",
     "title": "Pendle推出USDe固定期限市场,为链上信贷提供新框架",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5205,6 +5195,16 @@
     "sent_at": "2026-11-25T06:04:41.332668+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "951b95b9246a0381",
+    "title": "OpenVault完成200万美元种子轮融资,HorizonArc Ventures领投",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-25T06:26:26.311080+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
