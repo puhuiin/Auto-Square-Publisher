@@ -1,15 +1,5 @@
 [
   {
-    "id": "1a9e7cb6c391757d",
-    "title": "跌破200周铁底,恐惧指数到10,BTC 这次真的跌到位了吗?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-16T10:47:12.104866+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "0825ef5a5961408d",
     "title": "Major Wealth Advisor With $24 Billion in Assets Discloses XRP ETF Stake",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5204,6 +5194,17 @@
       "BTC",
       "ZEC",
       "ENA"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "bd4b89d32c1de439",
+    "title": "Bullpen正式版2FA漏洞致19个账户遭入侵,Ansem称49% ANSEM供应量安全",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-25T05:24:06.202253+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
     ],
     "lang": "zh-CN"
   }
