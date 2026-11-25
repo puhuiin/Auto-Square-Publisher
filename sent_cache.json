@@ -1,15 +1,5 @@
 [
   {
-    "id": "1722fc4d95464f51",
-    "title": "Winklevoss-backed Cypherpunk buys Zcash dip as mining debut delivers $2.6 million operating profit",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-16T19:30:07.903969+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "12e211db4baea8f1",
     "title": "Tether Capital 向巴西金融科技公司 Nomad 投资 1,500 万美元,拟拓展 USDT 和 XAUT 应用",
     "source": "吴说区块链 (中文深度)",
@@ -5203,6 +5193,16 @@
     "title": "Perplexity AI Predicts an Unbelievable XRP Price Target",
     "source": "CryptoNews (全球快讯)",
     "sent_at": "2026-11-25T14:44:22.216653+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5023cc192f3024b4",
+    "title": "Ripple was worth both $90.10 and $300 per share on September 30",
+    "source": "Protos (隐私与合规)",
+    "sent_at": "2026-11-25T15:03:58.584804+00:00",
     "tokens": [
       "XRP"
     ],
