@@ -1,15 +1,5 @@
 [
   {
-    "id": "590dbfebd3b6516e",
-    "title": "Fortitude Mining 和 Cypherpunk Technologies 两家矿企目前合计控制约 29% 的 Zcash 网络算力",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-16T15:26:21.792241+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9cdab8d54fafa835",
     "title": "Solana 生态基础设施公司 Solmate 拟拓展 GPU 算力服务",
     "source": "深潮TechFlow (中文/简体)",
@@ -5204,5 +5194,17 @@
       "SHIB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "8cd811d86c89d181",
+    "title": "代币化美股半年吸金 24 亿美元,抵押借贷如何打开 DeFi 新市场?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-25T12:44:15.633638+00:00",
+    "tokens": [
+      "USDC",
+      "AAVE",
+      "ETH"
+    ],
+    "lang": "zh-CN"
   }
 ]
