@@ -1,15 +1,5 @@
 [
   {
-    "id": "1da964a0bbb5df73",
-    "title": "'1 Shib Always 1 Shib': Shiba Inu Developer Responds to Rare Price Lows",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-16T14:46:14.401182+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8f29d4f3c3881eb6",
     "title": "Cypherpunk Technologies(CYPH)公布 2026 年第三季度财报",
     "source": "吴说区块链 (中文深度)",
@@ -5202,6 +5192,16 @@
     "sent_at": "2026-11-25T11:24:33.134761+00:00",
     "tokens": [
       "GLM"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "ac6a64f236fdebea",
+    "title": "Peter Brandt Warns Ethereum Could Crash Below $500 if One Key Level Breaks",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-25T11:49:03.303022+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-TW"
   }
