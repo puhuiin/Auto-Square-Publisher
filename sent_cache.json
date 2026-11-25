@@ -1,15 +1,5 @@
 [
   {
-    "id": "9a10f8ed746610cb",
-    "title": "XRP Price Bounce: Analyzing Possibility of Relief Rally",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-16T12:44:27.746602+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2d4850465e276a36",
     "title": "TechFlow 情報局:英偉達深陷出口違規風暴被白宮點名\"國家冠軍\",QDII 納指 ETF 集體停牌溢價最高39.9%",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5205,6 +5195,16 @@
     "sent_at": "2026-11-25T06:46:30.429477+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a090beb1e2f05646",
+    "title": "Solana developers move to stop validators finishing work on blocks that already lost",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-25T08:23:56.242365+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
