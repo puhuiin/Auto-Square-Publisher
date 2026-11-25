@@ -1,16 +1,5 @@
 [
   {
-    "id": "c1738d310b95faaa",
-    "title": "为什么加密行业正在奏效,从业者却感到如此绝望?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-16T08:04:31.903055+00:00",
-    "tokens": [
-      "ETH",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "6d8f11a11678218c",
     "title": "加密交易所不再需要加密货币",
     "source": "深潮TechFlow (中文/简体)",
@@ -5202,6 +5191,16 @@
     "sent_at": "2026-11-25T02:44:21.508983+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "31064965a0c67c47",
+    "title": "XRP’s shrinking exchange supply may be telling investors the wrong story",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-25T03:06:48.507363+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
