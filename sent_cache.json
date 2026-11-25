@@ -1,16 +1,5 @@
 [
   {
-    "id": "990e6ee124d19c8a",
-    "title": "美国ZEC、NEAR现货ETF单日合计净流出969.22万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-17T02:24:37.373303+00:00",
-    "tokens": [
-      "ZEC",
-      "NEAR"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "da8877980d12e93e",
     "title": "收入与叙事的陷阱:为什么极简主义资产更能穿越加密周期?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5198,6 +5187,16 @@
     "sent_at": "2026-11-25T20:23:55.498490+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e299176692776cfd",
+    "title": "Veteran Analyst Sounds Alarm Over XRP Price Manipulation, But Sees a Monster Bull Run Coming — Here’s Why",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-25T20:43:54.822762+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
