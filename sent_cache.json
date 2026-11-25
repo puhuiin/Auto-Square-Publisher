@@ -1,17 +1,5 @@
 [
   {
-    "id": "73b321e2cbb89c98",
-    "title": "Solana Meme 平台 StonkFun 累计收入近 4,000 万美元,已回购销毁逾 2,200 万美元 STONK",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-17T05:08:00.154103+00:00",
-    "tokens": [
-      "STO",
-      "SOL",
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "4b50e50648c94104",
     "title": "predict.fun上线宝可梦预测市场",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5188,6 +5176,16 @@
     "sent_at": "2026-11-25T23:12:42.268146+00:00",
     "tokens": [
       "USDS"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "62c91b3a6383cc1a",
+    "title": "LayerZero Opens Canton Coin Bridge to BNB Smart Chain",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-25T23:48:40.719073+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-CN"
   }
