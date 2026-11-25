@@ -1,15 +1,5 @@
 [
   {
-    "id": "8e0bf2c23e530153",
-    "title": "Uniswap freezes $300,000 in stranded fees, halting automatic token burns",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-17T04:24:04.818081+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "46965122e584525a",
     "title": "Solana Breakpoint 2026 伦敦手记:Solana 的成人礼和代币超级周期",
     "source": "深潮TechFlow (中文/简体)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-25T22:23:57.466892+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "3d7d663911d58e36",
+    "title": "XRP risks crashing to $0.80 as extreme fear threatens recovery",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-11-25T22:44:23.203405+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
