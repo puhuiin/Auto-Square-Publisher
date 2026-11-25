@@ -1,16 +1,5 @@
 [
   {
-    "id": "38808b7a6490dafe",
-    "title": "Solana 验证者获提醒修复 Linux 内核漏洞 NoisyTCP",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-16T16:31:02.277048+00:00",
-    "tokens": [
-      "SYN",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "75b11c2c6a5fa8a3",
     "title": "Canada’s National Bank Discloses XRP Position Through Bitwise",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5206,6 +5195,16 @@
     "sent_at": "2026-11-25T13:24:00.475753+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e3f7abf5e144d80a",
+    "title": "Franklin Templeton adds Hyperliquid’s HYPE token to its crypto index ETF",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-25T13:43:52.575273+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-CN"
   }
