@@ -1,15 +1,5 @@
 [
   {
-    "id": "46965122e584525a",
-    "title": "Solana Breakpoint 2026 伦敦手记:Solana 的成人礼和代币超级周期",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T04:45:16.539571+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "73b321e2cbb89c98",
     "title": "Solana Meme 平台 StonkFun 累计收入近 4,000 万美元,已回购销毁逾 2,200 万美元 STONK",
     "source": "吴说区块链 (中文深度)",
@@ -5188,6 +5178,16 @@
     "sent_at": "2026-11-25T22:44:23.203405+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "f6f7fd7086ca6ed8",
+    "title": "Sky Proposes Urgent 25M USDS Transfer to Foundation",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-25T23:12:42.268146+00:00",
+    "tokens": [
+      "USDS"
     ],
     "lang": "zh-CN"
   }
