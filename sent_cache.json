@@ -1,16 +1,5 @@
 [
   {
-    "id": "1d54a9923be07183",
-    "title": "NYSE Parent ICE Weighs Becoming a Solana Validator",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-16T14:27:34.187224+00:00",
-    "tokens": [
-      "SOL",
-      "AVAX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1da964a0bbb5df73",
     "title": "'1 Shib Always 1 Shib': Shiba Inu Developer Responds to Rare Price Lows",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5203,6 +5192,16 @@
     "sent_at": "2026-11-25T11:04:00.430031+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "af82d5d0a9d76fa3",
+    "title": "Aethir:Mesh 自 6 月上线以来营收超 600 万美元,处理逾 29 万亿 Tokens",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-25T11:24:33.134761+00:00",
+    "tokens": [
+      "GLM"
     ],
     "lang": "zh-TW"
   }
