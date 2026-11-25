@@ -1,18 +1,5 @@
 [
   {
-    "id": "9760efc5cbda3a41",
-    "title": "加密早报:Solana 正式迈入 1.0 版本,李林新平台 UMX 内部信流出",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T00:23:14.425177+00:00",
-    "tokens": [
-      "ETH",
-      "BTC",
-      "USDC",
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b167fa4ba0b76d85",
     "title": "Wintermute 场外交易团队:比特币或承压跌至 5 万美元区间",
     "source": "深潮TechFlow (中文/简体)",
@@ -5206,6 +5193,16 @@
     "sent_at": "2026-11-25T18:24:22.828392+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1eba398071d4006d",
+    "title": "Franklin Templeton's Crypto ETF to Add Hyperliquid: Will HYPE Price Recover?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-25T18:44:06.425282+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
