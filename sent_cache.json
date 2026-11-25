@@ -1,15 +1,5 @@
 [
   {
-    "id": "1d3558942de1fe95",
-    "title": "CZ Fires Back at Binance Dump Claims as Vitalik Bullish on Ethereum Quantum Upgrade",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-16T17:48:39.133583+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f36e5f9b80aeb975",
     "title": "Solflare CEO:AI 安全审查可识别组合攻击漏洞",
     "source": "深潮TechFlow (中文/简体)",
@@ -5205,6 +5195,16 @@
     "sent_at": "2026-11-25T14:04:15.415912+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e822768369faa37c",
+    "title": "数据:第三季度机构增持56,493枚BTC,比特币ETF总持仓环比增长19%",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-25T14:24:13.914884+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
