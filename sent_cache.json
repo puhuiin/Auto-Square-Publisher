@@ -1,15 +1,5 @@
 [
   {
-    "id": "12e211db4baea8f1",
-    "title": "Tether Capital 向巴西金融科技公司 Nomad 投资 1,500 万美元,拟拓展 USDT 和 XAUT 应用",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-16T20:08:28.157865+00:00",
-    "tokens": [
-      "XAUT"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "01afc0eb08f08bb4",
     "title": "Peraire-Bueno brothers acquitted of wire fraud in $25 million Ethereum MEV case",
     "source": "The Block (机构与政策)",
@@ -5205,6 +5195,16 @@
     "sent_at": "2026-11-25T15:03:58.584804+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "807ff18b2f160a9d",
+    "title": "143 吨黄金浮亏二十多亿,泰达危险了吗?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-25T15:24:06.310195+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
