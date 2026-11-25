@@ -1,15 +1,5 @@
 [
   {
-    "id": "f804733f1b8b4a84",
-    "title": "Pendle推出USDe固定期限市场,为链上信贷提供新框架",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-16T12:24:27.186886+00:00",
-    "tokens": [
-      "ENA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9a10f8ed746610cb",
     "title": "XRP Price Bounce: Analyzing Possibility of Relief Rally",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5205,6 +5195,16 @@
     "sent_at": "2026-11-25T06:26:26.311080+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "ef8731bb738fba59",
+    "title": "Bitwise XRP ETF Averages $14 Million in Daily Trading in Year One",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-25T06:46:30.429477+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
