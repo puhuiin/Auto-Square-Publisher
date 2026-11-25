@@ -1,15 +1,5 @@
 [
   {
-    "id": "0825ef5a5961408d",
-    "title": "Major Wealth Advisor With $24 Billion in Assets Discloses XRP ETF Stake",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-16T11:07:06.670806+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "852ba4db65935615",
     "title": "Why Avalanche stood out as demand for other altcoin ETFs weakened",
     "source": "AMBCrypto (技术与链上)",
@@ -5205,6 +5195,16 @@
     "tokens": [
       "USDC",
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "452ce807cc024bba",
+    "title": "Charles Hoskinson Says One Viral App Could Bring Millions to Cardano as India Police Probe ADA-Linked Evidence",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-25T05:44:00.347150+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "zh-CN"
   }
