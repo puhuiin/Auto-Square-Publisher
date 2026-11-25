@@ -1,16 +1,5 @@
 [
   {
-    "id": "0a4552359f24ddfd",
-    "title": "CoW Swap 正式登陆 Solana,推出意图交易模式并免收至少一年交易量费用",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-16T09:30:05.430583+00:00",
-    "tokens": [
-      "USDC",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "7c3d07bd62a91b06",
     "title": "Kava:借贷协议漏洞已封堵,拟永久关闭新增借贷",
     "source": "深潮TechFlow (中文/简体)",
@@ -5203,5 +5192,17 @@
       "ADA"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "b5407f67926f8b08",
+    "title": "Orca 的盈利真相:主力池贡献四成交易量,其他交易池却赚走 81% 手续费",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-25T04:23:59.817375+00:00",
+    "tokens": [
+      "SOL",
+      "USDC",
+      "ORCA"
+    ],
+    "lang": "zh-TW"
   }
 ]
