@@ -1,15 +1,5 @@
 [
   {
-    "id": "0d402de706795a97",
-    "title": "Analyzing XRP’s $44M liquidation imbalance – Is a market reset underway?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-17T00:04:35.762781+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9760efc5cbda3a41",
     "title": "加密早报:Solana 正式迈入 1.0 版本,李林新平台 UMX 内部信流出",
     "source": "深潮TechFlow (中文/简体)",
@@ -5206,6 +5196,16 @@
     "sent_at": "2026-11-25T18:04:02.006740+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "f17f31c1662966e0",
+    "title": "Bithumb Says October Hack Exposed Passports, Bank Accounts and Wallet Addresses",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-11-25T18:24:22.828392+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
