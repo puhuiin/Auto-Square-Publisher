@@ -1,15 +1,5 @@
 [
   {
-    "id": "f36e5f9b80aeb975",
-    "title": "Solflare CEO:AI 安全审查可识别组合攻击漏洞",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-16T19:09:43.691333+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1722fc4d95464f51",
     "title": "Winklevoss-backed Cypherpunk buys Zcash dip as mining debut delivers $2.6 million operating profit",
     "source": "The Block (机构与政策)",
@@ -5205,6 +5195,16 @@
     "sent_at": "2026-11-25T14:24:13.914884+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "72be2847411115a0",
+    "title": "Perplexity AI Predicts an Unbelievable XRP Price Target",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-25T14:44:22.216653+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
