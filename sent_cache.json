@@ -1,15 +1,5 @@
 [
   {
-    "id": "b167fa4ba0b76d85",
-    "title": "Wintermute 场外交易团队:比特币或承压跌至 5 万美元区间",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T00:44:01.364212+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "77fc8078bdd6721a",
     "title": "“25 岁 AI 股神”Leopold 旗下基金三季度持仓骤降 92%,清仓美光和闪迪",
     "source": "深潮TechFlow (中文/简体)",
@@ -5203,6 +5193,16 @@
     "sent_at": "2026-11-25T18:44:06.425282+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "3d0abb43eaf6959b",
+    "title": "消息称 Fidelity 向 SEC 申请推出 Chainlink ETF",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-25T19:04:10.717407+00:00",
+    "tokens": [
+      "LINK"
     ],
     "lang": "en"
   }
