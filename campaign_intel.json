@@ -2,32 +2,35 @@
   "active_tags": [
     "#Write2Earn",
     "#BinanceSquare",
-    "#Alpha",
-    "#TradFi",
-    "#BlackFriday"
+    "#Futures",
+    "#TradingTournament",
+    "#TradFi"
   ],
   "incentivized_tokens": [
-    "$RIVER",
-    "$ANTB",
     "$ANT",
+    "$NVDA",
     "$RLUSD",
     "$XRP",
-    "$NVDA",
+    "$USDC",
     "$BNB",
-    "$USDC"
+    "$U"
   ],
-  "strategy_guidance": "最紧迫的是标题日期为今天的 RIVER Alpha 交易竞赛，按截止日处理：优先追贴，用“活动冲刺/规则拆解/复盘抄作业”角度讲清参与步骤、时间节点和风险提示，并引导读者在评论区互动拿 Write2Earn 奖励。日常快讯可与 ANTB/ANT/NVDA 的 TradFi 合约与 bStocks 上线背景、RLUSD 持币分享 XRP、Binance Pay 黑五和 Blockchain Week 小游戏结合，做成“活动入口+产品背景+互动提问”的短贴。所有导流只强调参与评论/互动拿奖励和追当期活动热度，不暗示参加活动会带来交易收益。",
-  "last_updated": "2026-11-24T16:24:10.914477Z",
+  "strategy_guidance": "最紧迫的是 Binance Pay 黑五（Black Friday，11-27）消费与入金分享活动，发帖机器人应最先跟进，用“活动冲刺”角度拆解任务路径、提示时间节点，并配 #Futures #TradingTournament 跟进当期热度；第二优先级是今日上线的 bStocks 新交易对、零挂单费延续、ANT 股票期权与 ANT/NVDA 合约嘉年华，把日常行情快讯改写成“产品上新与活动规则”双视角帖文。轻量互动选题可用 RLUSD 与 U 持仓分享、Word of the Day、Blockchain Week 小游戏，引导读者在评论区交流任务进度以参与互动拿奖励。所有文案只描述活动规则与参与方式，不暗示参加活动会带来任何交易结果。",
+  "last_updated": "2026-11-25T04:43:38.619568Z",
   "_feed_health": {
-    "Watcher.Guru (快讯)": {
-      "last_fail": "2026-11-25T04:23:35.124151+00:00",
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "fails": 3
-    },
     "吴说区块链 (中文深度)": {
-      "last_fail": "2026-11-25T04:23:35.789447+00:00",
-      "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "fails": 3
+      "last_fail": "2026-11-25T04:43:40.554461+00:00",
+      "fails": 3,
+      "parked_until": "2026-11-24T07:46:04.867856+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "fails": 1,
+      "last_fail": "2026-11-25T04:43:55.677104+00:00"
+    },
+    "Watcher.Guru (快讯)": {
+      "last_fail": "2026-11-25T04:43:39.600677+00:00",
+      "fails": 3,
+      "parked_until": "2026-11-17T10:23:31.478522+00:00"
     }
   },
   "_fallback_image": {
@@ -42,5 +45,6 @@
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
-  }
+  },
+  "notes": "已剔除标题日期早于 2026-11-25 的竞赛与理财活动（RIVER 11-24、PIEVERSE 11-20、Binance Earn USDC/USDT 灵活产品 11-22、KII 11-18）；11-25 的 bStocks 新增抵押资产与新交易对、11-20 的 TradFi 永续合约为公告日，仅作背景使用。"
 }
