@@ -1,15 +1,5 @@
 [
   {
-    "id": "21dc9282e82f31c6",
-    "title": "Sam Altman’s ChatGPT AI Predicts a Crazy ADA Crypto Price",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-16T22:45:19.386288+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "dddec80f0674e727",
     "title": "Aster rebounds 4.29% after sharp selloff",
     "source": "AMBCrypto (技术与链上)",
@@ -5204,6 +5194,17 @@
     "sent_at": "2026-11-25T16:44:00.102244+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "31fb675502420b27",
+    "title": "Hyperliquid’s HYPE will join bitcoin, ether and more in Franklin Templeton’s crypto ETF",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-25T17:04:54.555091+00:00",
+    "tokens": [
+      "HYPE",
+      "BTC"
     ],
     "lang": "en"
   }
