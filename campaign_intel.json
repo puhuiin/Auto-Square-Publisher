@@ -18,31 +18,31 @@
   "strategy_guidance": "最紧迫的是 Binance Pay 黑五（Black Friday，11-27）消费与入金分享活动，发帖机器人应最先跟进，用“活动冲刺”角度拆解任务路径、提示时间节点，并配 #Futures #TradingTournament 跟进当期热度；第二优先级是今日上线的 bStocks 新交易对、零挂单费延续、ANT 股票期权与 ANT/NVDA 合约嘉年华，把日常行情快讯改写成“产品上新与活动规则”双视角帖文。轻量互动选题可用 RLUSD 与 U 持仓分享、Word of the Day、Blockchain Week 小游戏，引导读者在评论区交流任务进度以参与互动拿奖励。所有文案只描述活动规则与参与方式，不暗示参加活动会带来任何交易结果。",
   "last_updated": "2026-11-25T04:43:38.619568Z",
   "_feed_health": {
-    "吴说区块链 (中文深度)": {
-      "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-25T16:03:34.535997+00:00"
-    },
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-25T16:03:33.216136+00:00"
+      "last_fail": "2026-11-25T16:23:40.320171+00:00",
+      "fails": 3
+    },
+    "吴说区块链 (中文深度)": {
+      "parked_until": "2026-11-24T07:46:04.867856+00:00",
+      "last_fail": "2026-11-25T16:23:41.419947+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-25",
   "_publish_park": {
     "1d9f4b59e537658e": {
-      "fails": 1,
-      "last_fail": "2026-11-25T11:44:21.246032+00:00"
+      "last_fail": "2026-11-25T11:44:21.246032+00:00",
+      "fails": 1
     }
   },
   "_intel_refresh_fail": {},
-  "_img_rot": 1319,
+  "_img_rot": 1320,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

@@ -1,15 +1,5 @@
 [
   {
-    "id": "35913485ecff18f4",
-    "title": "Cardano Holders Reject $5M Investment as Treasury Proposal Fails",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-16T21:27:19.452456+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9850f66afbb310da",
     "title": "Bitcoin's $2 Billion Liquidation Weekend Leaves Traders Watching $60,000",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5205,6 +5195,16 @@
     "sent_at": "2026-11-25T16:03:56.592170+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b7b2776bd5653847",
+    "title": "XRP Exchange Inflows Hit 4.61 Billion in 30 Days",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-25T16:24:04.945933+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
