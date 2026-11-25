@@ -1,15 +1,5 @@
 [
   {
-    "id": "c545e10e1d1a0651",
-    "title": "Zcash算力格局生变:两家矿企Fortitude与Cypherpunk合计算力逼近全网三成",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-16T14:06:14.730806+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1d54a9923be07183",
     "title": "NYSE Parent ICE Weighs Becoming a Solana Validator",
     "source": "The Defiant (DeFi 深度)",
@@ -5203,6 +5193,16 @@
     "sent_at": "2026-11-25T10:43:57.410543+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "4ac69617e6c5eb40",
+    "title": "Dogecoin Creator Explains Why No One Can Predict Crypto Prices",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-25T11:04:00.430031+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "zh-TW"
   }
