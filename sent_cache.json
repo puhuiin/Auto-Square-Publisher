@@ -1,17 +1,5 @@
 [
   {
-    "id": "da8877980d12e93e",
-    "title": "收入与叙事的陷阱:为什么极简主义资产更能穿越加密周期?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T02:45:33.556746+00:00",
-    "tokens": [
-      "UNI",
-      "AAVE",
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "accfd8039868ba98",
     "title": "收入與敘事的陷阱:為什麼極簡主義資產更能穿越加密週期?",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5197,6 +5185,16 @@
     "sent_at": "2026-11-25T20:43:54.822762+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "44040309994df3af",
+    "title": "Chainlink slipped despite Fidelity news: What could stop LINK’s slide?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-25T21:04:06.107578+00:00",
+    "tokens": [
+      "LINK"
     ],
     "lang": "en"
   }
