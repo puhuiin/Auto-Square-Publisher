@@ -1,15 +1,5 @@
 [
   {
-    "id": "20302fa9ca02a921",
-    "title": "加密市场中性策略经理的十年:达摩克利斯之剑下的超额收益与零踩雷实录",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T08:24:55.174120+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a060ff4a3bcf22df",
     "title": "币安黑客沉寂 18 天后再次行动,3.43 万枚 ETH 被转入三个新钱包",
     "source": "吴说区块链 (中文深度)",
@@ -5186,6 +5176,16 @@
     "sent_at": "2026-11-26T03:03:59.470140+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "7616d79f045e241e",
+    "title": "Could Bitwise’s $667M XRP ETF inflows come to the rescue as bear trap takes shape?",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-26T03:24:08.169563+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
