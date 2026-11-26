@@ -1,16 +1,5 @@
 [
   {
-    "id": "24a5080b1ab24678",
-    "title": "ARK出售约35万股3iQ Solana Staking ETF及约30万股3iQ Ether Staking ETF",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-17T13:27:04.198797+00:00",
-    "tokens": [
-      "ARK",
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6cc84975f25773e8",
     "title": "XRP Breaks Below $1 as Spot ETF Outflows and Market-Wide Selling Deepen",
     "source": "ZyCrypto (新币与空投)",
@@ -5184,5 +5173,16 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "9a2083bddeaeb31e",
+    "title": "Glassnode 机构策略月报:稳定币流出超 60 亿美元,机构资金转向防守",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-26T10:08:30.374795+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "zh-TW"
   }
 ]
