@@ -19,24 +19,25 @@
   "strategy_guidance": "当前最需优先追贴 Big Binance Bonanza 的 Black Friday/感恩节档，按“活动冲刺/复盘/抄作业”角度切入：先用一句快讯钩子点明奖池与参与入口，再复盘可复用参与路径，引导读者在评论区互动拿奖励。将日常快讯与 Spot Trading Tournament Season 11、Futures/TradFi 合约上新、bStocks/Convert、Simple Earn 等当期产品结合，正文只陈述规则、时间节奏和操作路径，避免任何承诺，以提升曝光与 Write2Earn 互动转化。",
   "last_updated": "2026-11-26T05:17:48.796841Z",
   "_feed_health": {
-    "吴说区块链 (中文深度)": {
-      "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "last_fail": "2026-11-26T13:23:43.473457+00:00",
-      "fails": 3
+    "NewsBTC (比特币与山寨)": {
+      "fails": 1,
+      "reset_at": "2026-11-26T13:43:35.811478+00:00",
+      "last_fail": "2026-11-26T11:03:49.600703+00:00"
     },
     "Bitcoinist (比特币向)": {
+      "reset_at": "2026-11-26T13:43:35.850190+00:00",
       "fails": 1,
       "last_fail": "2026-11-26T13:23:42.106830+00:00"
     },
-    "NewsBTC (比特币与山寨)": {
-      "last_fail": "2026-11-26T11:03:49.600703+00:00",
-      "fails": 1,
-      "reset_at": "2026-11-26T13:23:42.273883+00:00"
-    },
     "Watcher.Guru (快讯)": {
+      "fails": 3,
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-26T13:23:42.434003+00:00",
-      "fails": 3
+      "last_fail": "2026-11-26T13:43:36.334075+00:00"
+    },
+    "吴说区块链 (中文深度)": {
+      "fails": 3,
+      "parked_until": "2026-11-24T07:46:04.867856+00:00",
+      "last_fail": "2026-11-26T13:43:36.428226+00:00"
     }
   },
   "_fallback_image": {
@@ -47,7 +48,7 @@
   "_article_sent_date": "2026-11-26",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1341,
+  "_img_rot": 1342,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

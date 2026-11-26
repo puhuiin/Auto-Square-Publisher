@@ -1,15 +1,5 @@
 [
   {
-    "id": "f6ca02f4355e14da",
-    "title": "巨鲸从多家交易所提取 ZEC,向新地址转入 9938 枚",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T16:26:33.372926+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9519ec2e872d2410",
     "title": "Bank of America Joins XRP ETF Holders in New Q3 SEC Filing",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5180,6 +5170,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "595ca734ec626951",
+    "title": "Shiba Inu Burn Transactions Near 22,000 in Key Milestone",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-26T13:44:00.331297+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-CN"
   }
