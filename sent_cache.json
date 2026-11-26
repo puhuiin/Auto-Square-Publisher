@@ -1,17 +1,5 @@
 [
   {
-    "id": "ac7b8ac6d05482ba",
-    "title": "吴说每日精选加密新闻 - Solana 基金会取得 CoinGecko 控股权益,具体持股比例及交易金额尚未披露",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-17T14:10:10.549031+00:00",
-    "tokens": [
-      "BTC",
-      "SOL",
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9d67672036bb6f65",
     "title": "Ripple-Backed Evernorth Cuts XRP Holdings by 60%",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5182,6 +5170,16 @@
     "sent_at": "2026-11-26T11:04:15.052644+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "3a0a5adb867200a9",
+    "title": "XRP ETF Buyers Suddenly Return",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-26T11:24:01.322278+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-TW"
   }
