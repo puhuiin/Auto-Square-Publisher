@@ -1,17 +1,5 @@
 [
   {
-    "id": "cde4b5debf2746d1",
-    "title": "These 4 Tokens Will Pump Before the AI Bubble Ends: Arthur Hayes",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-18T04:24:32.325023+00:00",
-    "tokens": [
-      "ZEC",
-      "HYPE",
-      "NEAR"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "66336779359cd5bd",
     "title": "Abraxas Capital 被盗后清仓 2 亿美元仓位,赎回 21.9 万枚 HYPE",
     "source": "吴说区块链 (中文深度)",
@@ -5170,5 +5158,16 @@
       "ZRO"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "13d50b6215979bbc",
+    "title": "Stellar (XLM) Beats XRP in Daily Tokenized Fund Growth",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-26T22:43:59.934540+00:00",
+    "tokens": [
+      "XLM",
+      "XRP"
+    ],
+    "lang": "zh-CN"
   }
 ]
