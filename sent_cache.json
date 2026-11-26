@@ -1,15 +1,5 @@
 [
   {
-    "id": "3ba6585bfec91830",
-    "title": "民主党重掌国会,加密监管将走向何方?Paradigm 解读未来两年政策风向",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-18T03:07:14.281159+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "22ac4685d37d1db8",
     "title": "Abraxas Capital疑因Lighter账户被盗关闭链上仓位,清仓Hyperliquid约2亿美元持仓",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-11-26T21:23:45.284820+00:00",
     "tokens": [
       "HBAR"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fddc08bf0e07750c",
+    "title": "Cypherpunk posts first profitable quarter from Zcash mining",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-26T21:43:53.387826+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
