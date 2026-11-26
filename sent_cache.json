@@ -1,15 +1,5 @@
 [
   {
-    "id": "9d67672036bb6f65",
-    "title": "Ripple-Backed Evernorth Cuts XRP Holdings by 60%",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-17T14:30:34.663644+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "27de420a902b2459",
     "title": "Bitwise 首席投资官:未来 5 至 10 年看好 Solana 表现",
     "source": "深潮TechFlow (中文/简体)",
@@ -5180,6 +5170,16 @@
     "sent_at": "2026-11-26T11:24:01.322278+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "f79b02d9957bebca",
+    "title": "Zcash devs urge users to migrate 2% of ZEC supply to accelerate Sapling pool retirement",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-11-26T11:44:02.152512+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-TW"
   }
