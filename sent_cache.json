@@ -1,16 +1,5 @@
 [
   {
-    "id": "e84c2b881696c384",
-    "title": "从 Canton 到 Solana:华尔街清算巨头 DTCC 为何开始拥抱公链?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-18T04:03:58.463190+00:00",
-    "tokens": [
-      "SOL",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "cde4b5debf2746d1",
     "title": "These 4 Tokens Will Pump Before the AI Bubble Ends: Arthur Hayes",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5171,5 +5160,15 @@
       "TRX"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "d767391e9f25f45f",
+    "title": "LayerZero locks early ZRO deposits behind validators users cannot choose",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-26T22:24:02.855780+00:00",
+    "tokens": [
+      "ZRO"
+    ],
+    "lang": "zh-TW"
   }
 ]
