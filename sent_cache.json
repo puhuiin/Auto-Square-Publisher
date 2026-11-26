@@ -1,16 +1,5 @@
 [
   {
-    "id": "1b93c783e44b5770",
-    "title": "Mastercard Spotlights XRP Ledger After Groundbreaking Test",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-17T06:47:58.206396+00:00",
-    "tokens": [
-      "XRP",
-      "RLUSD"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "be6f9a22984901f3",
     "title": "24小时涨超102%,Solana生态Meme币GTA6市值短时突破1500万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5187,6 +5176,16 @@
     "sent_at": "2026-11-26T01:43:56.798833+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "86cf7ffa1c4dff27",
+    "title": "某地址再从币安提出4900亿枚PEPE,累计建仓5.15万亿枚并浮亏9.7万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-26T02:04:06.019104+00:00",
+    "tokens": [
+      "PEPE"
     ],
     "lang": "zh-TW"
   }
