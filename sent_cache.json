@@ -1,15 +1,5 @@
 [
   {
-    "id": "6edb1b48b88aa68f",
-    "title": "Zcash price eyes $940 – Can ZEC turn its relief rally into a recovery?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-17T20:25:37.305832+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9ffc3c3cec6131f3",
     "title": "Why Chainlink price faces a make-or-break test at the $8.88 level",
     "source": "AMBCrypto (技术与链上)",
@@ -5178,6 +5168,16 @@
     "sent_at": "2026-11-26T15:23:59.235096+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "25c3f153b876c316",
+    "title": "Bitcoin News: Swiss ETF Debut Meets $7B Options Expiry and US Strategic Reserve Push",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-26T15:43:58.855965+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
