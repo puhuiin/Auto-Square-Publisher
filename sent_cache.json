@@ -1,17 +1,5 @@
 [
   {
-    "id": "ce2db34d214c9eea",
-    "title": "USD1 Supply Falls 11% in a Week to Below $3 Billion",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-18T02:27:11.655789+00:00",
-    "tokens": [
-      "USD1",
-      "BNB",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "4a3142e727077e18",
     "title": "Bitget UEX 日報|英偉達營收翻倍,毛利率指引成新焦點;美股延續調整;比特幣守在6.5 萬美元附近(2026年11月18日)",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5173,6 +5161,16 @@
     "sent_at": "2026-11-26T20:44:12.362494+00:00",
     "tokens": [
       "LINK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c3c89c7547bec9e0",
+    "title": "Zcash Developers Map Out Response to Possible Cryptographic Breakthrough",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-26T21:04:05.710651+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
