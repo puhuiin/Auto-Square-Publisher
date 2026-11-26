@@ -1,15 +1,5 @@
 [
   {
-    "id": "c008545639a38855",
-    "title": "The Graph to Tie Indexer Reward Requirements to Stake",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-17T23:27:07.882169+00:00",
-    "tokens": [
-      "GRT"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e80b20d9737c176d",
     "title": "Nvidia 財報前方舟資本大砍 8,480 萬美元輝達持股!轉頭買入 Block、Circle 與 Coinbase",
     "source": "BlockTempo (动区动趋中文/台湾繁体)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-11-26T17:44:10.008149+00:00",
     "tokens": [
       "PEPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c7136b9c2f8a1a12",
+    "title": "Anthropic Claude AI Predicts ‘Why Is Crypto Up Today’: BTC to $450K?",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-26T18:04:14.605036+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
