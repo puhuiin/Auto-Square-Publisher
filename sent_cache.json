@@ -1,15 +1,5 @@
 [
   {
-    "id": "e80b20d9737c176d",
-    "title": "Nvidia 財報前方舟資本大砍 8,480 萬美元輝達持股!轉頭買入 Block、Circle 與 Coinbase",
-    "source": "BlockTempo (动区动趋中文/台湾繁体)",
-    "sent_at": "2026-11-17T23:47:36.243608+00:00",
-    "tokens": [
-      "ARK"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "81a30098a291ed4e",
     "title": "Cardano Faces a Crucial Turning Point Amid Treasury Rejection, Putting $22M ADA Proposal to Rest",
     "source": "ZyCrypto (新币与空投)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-11-26T18:04:14.605036+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d56d198d90b9692c",
+    "title": "XRP price eyes $1 – But THESE signals warn traders to stay cautious",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-26T18:23:58.260805+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
