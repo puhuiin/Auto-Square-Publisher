@@ -1,15 +1,5 @@
 [
   {
-    "id": "ca9e14ee2f2201aa",
-    "title": "D. E. Shaw 三季度末持有约 8990 万美元比特币 ETF",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T23:06:36.979911+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "c008545639a38855",
     "title": "The Graph to Tie Indexer Reward Requirements to Stake",
     "source": "The Defiant (DeFi 深度)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-11-26T17:24:25.993923+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8d044b8f86c60dd4",
+    "title": "PEPE Whales Are Sitting On $21 Million In Tokens, And One Wallet Keeps Getting Bigger",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-26T17:44:10.008149+00:00",
+    "tokens": [
+      "PEPE"
     ],
     "lang": "en"
   }
