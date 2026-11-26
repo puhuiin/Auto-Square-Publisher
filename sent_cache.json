@@ -1,15 +1,5 @@
 [
   {
-    "id": "df15ddb9bc7d6b3d",
-    "title": "PREDICT 推迟 TGE,Prime Sale 可申请退款",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T06:26:38.773378+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1b93c783e44b5770",
     "title": "Mastercard Spotlights XRP Ledger After Groundbreaking Test",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5189,5 +5179,15 @@
       "LINK"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "43793dd184c215a9",
+    "title": "Galaxy 撤回比特币见底判断:13 项指标仅 2 项达标,熊市还要跌多深?",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-26T01:43:56.798833+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
