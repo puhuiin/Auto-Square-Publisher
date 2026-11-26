@@ -1,15 +1,5 @@
 [
   {
-    "id": "69036649117d21e8",
-    "title": "TRUMP Holders Bought the Crash for a Dinner Seat. Will They Hold After Dessert?",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-17T06:07:33.967302+00:00",
-    "tokens": [
-      "TRUMP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "df15ddb9bc7d6b3d",
     "title": "PREDICT 推迟 TGE,Prime Sale 可申请退款",
     "source": "深潮TechFlow (中文/简体)",
@@ -5189,5 +5179,15 @@
       "ZEC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "cde6319e9fe8d2fc",
+    "title": "富達申請 Chainlink 現貨 ETF!代號 FLNK 登納斯達克",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-11-26T01:23:44.402691+00:00",
+    "tokens": [
+      "LINK"
+    ],
+    "lang": "zh-CN"
   }
 ]
