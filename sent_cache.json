@@ -1,15 +1,5 @@
 [
   {
-    "id": "0235f5eba74de040",
-    "title": "Ripple-backed Evernorth has written down its pre-listing XRP holdings by 60%",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-11-17T05:46:58.292372+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "69036649117d21e8",
     "title": "TRUMP Holders Bought the Crash for a Dinner Seat. Will They Hold After Dessert?",
     "source": "BeInCrypto (山寨与行情)",
@@ -5188,5 +5178,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "57314773b1987cd2",
+    "title": "Hyperliquid (HYPE), Zcash (ZEC) and Near Protocol (NEAR) Price Analysis for November 26: Buying Opportunity or Bearish Dominance?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-26T01:04:07.917381+00:00",
+    "tokens": [
+      "HYPE",
+      "ZEC"
+    ],
+    "lang": "zh-TW"
   }
 ]
