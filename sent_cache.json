@@ -1,15 +1,5 @@
 [
   {
-    "id": "99703c9071dd17f1",
-    "title": "Three wallets hoard $52.7M on XRP’s sidechain, and nobody is trading it",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-17T22:48:05.699035+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ca9e14ee2f2201aa",
     "title": "D. E. Shaw 三季度末持有约 8990 万美元比特币 ETF",
     "source": "深潮TechFlow (中文/简体)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-11-26T17:03:53.172402+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "1617c33a26f5714c",
+    "title": "BNB Chain’s New Blockchain Hides Who Is Trading, But Not What They Trade",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-26T17:24:25.993923+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
