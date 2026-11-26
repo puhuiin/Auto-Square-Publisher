@@ -1,15 +1,5 @@
 [
   {
-    "id": "185238244fee05ff",
-    "title": "Seven straight red weeks! Can Sui avoid a steep drop towards $0.65 lows?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-17T10:07:35.014468+00:00",
-    "tokens": [
-      "SUI"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "fc264a696c3ded02",
     "title": "Why Is Ripple-Backed Evernorth Writing Down Its XRP Again?",
     "source": "BeInCrypto (山寨与行情)",
@@ -5185,6 +5175,16 @@
     "tokens": [
       "USDC",
       "SOL"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "2aa833a4c9e95c5e",
+    "title": "Ethereum Bulls on Edge as Peter Brandt Warns of Sub-$500 Crash If ETH Loses This Crucial Support",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-26T05:03:53.927766+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-TW"
   }

@@ -21,23 +21,23 @@
   "_feed_health": {
     "吴说区块链 (中文深度)": {
       "fails": 3,
-      "last_fail": "2026-11-26T04:43:36.994798+00:00",
-      "parked_until": "2026-11-24T07:46:04.867856+00:00"
-    },
-    "Watcher.Guru (快讯)": {
-      "fails": 3,
-      "last_fail": "2026-11-26T04:43:36.218224+00:00",
-      "parked_until": "2026-11-17T10:23:31.478522+00:00"
+      "parked_until": "2026-11-24T07:46:04.867856+00:00",
+      "last_fail": "2026-11-26T05:03:33.933944+00:00"
     },
     "深潮TechFlow (中文/繁体)": {
       "fails": 1,
-      "reset_at": "2026-11-26T04:43:39.899519+00:00",
-      "last_fail": "2026-11-26T04:03:31.816326+00:00"
+      "last_fail": "2026-11-26T04:03:31.816326+00:00",
+      "reset_at": "2026-11-26T05:03:36.447815+00:00"
+    },
+    "Watcher.Guru (快讯)": {
+      "fails": 3,
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-26T05:03:32.886057+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-26",
