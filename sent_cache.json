@@ -1,15 +1,5 @@
 [
   {
-    "id": "1d19d69db290a0ca",
-    "title": "Hoskinson: Cardano Not Done Yet",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-17T22:10:00.512668+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "99703c9071dd17f1",
     "title": "Three wallets hoard $52.7M on XRP’s sidechain, and nobody is trading it",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-11-26T16:43:48.575681+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4de2805046a2507f",
+    "title": "Solana (SOL) Has Its Worst Year Ever: Can It Get Worse?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-26T17:03:53.172402+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
