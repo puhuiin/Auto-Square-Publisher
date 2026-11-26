@@ -1,15 +1,5 @@
 [
   {
-    "id": "9f0b6267f449266e",
-    "title": "Shiba Inu (SHIB) Hits Long-Expected 1.7 Million User Milestone",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-17T12:09:25.696484+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ea28d0fa0e440543",
     "title": "Gate将上线infiniFi (INFI) 现货交易、闪兑交易并开启Launchpool",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5182,6 +5172,17 @@
     "sent_at": "2026-11-26T06:23:53.999594+00:00",
     "tokens": [
       "ETH"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "532c60b254b6ed90",
+    "title": "基于币安AI项目Agent ID完成444万份铸造",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-26T06:44:06.653816+00:00",
+    "tokens": [
+      "ID",
+      "AI"
     ],
     "lang": "zh-CN"
   }
