@@ -1,15 +1,5 @@
 [
   {
-    "id": "dfe09e7ad9431fa2",
-    "title": "Shiba Inu Hits Lowest Price Since May 2021: Is the Meme Coin Dead?",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-17T09:44:25.710510+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "185238244fee05ff",
     "title": "Seven straight red weeks! Can Sui avoid a steep drop towards $0.65 lows?",
     "source": "AMBCrypto (技术与链上)",
@@ -5186,5 +5176,16 @@
       "ZK"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "d7f8138bd90b3a07",
+    "title": "SBI brings Japanese stocks to Solana but investors face a five-day wait to cash out",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-26T04:43:57.272028+00:00",
+    "tokens": [
+      "USDC",
+      "SOL"
+    ],
+    "lang": "zh-TW"
   }
 ]
