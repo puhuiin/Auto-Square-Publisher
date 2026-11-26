@@ -1,16 +1,5 @@
 [
   {
-    "id": "4a3142e727077e18",
-    "title": "Bitget UEX 日報|英偉達營收翻倍,毛利率指引成新焦點;美股延續調整;比特幣守在6.5 萬美元附近(2026年11月18日)",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-11-18T02:49:56.903411+00:00",
-    "tokens": [
-      "ETH",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "3ba6585bfec91830",
     "title": "民主党重掌国会,加密监管将走向何方?Paradigm 解读未来两年政策风向",
     "source": "深潮TechFlow (中文/简体)",
@@ -5171,6 +5160,16 @@
     "sent_at": "2026-11-26T21:04:05.710651+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d6d0331518f4953a",
+    "title": "Why Hedera bears still have control despite HBAR’s 9% price surge",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-26T21:23:45.284820+00:00",
+    "tokens": [
+      "HBAR"
     ],
     "lang": "en"
   }
