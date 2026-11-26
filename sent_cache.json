@@ -1,16 +1,5 @@
 [
   {
-    "id": "a849e62fbc7d6a8a",
-    "title": "加密早报:段永平三季度减持 63% 英伟达股份,Anthropic 获准在纳斯达克上市",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-18T01:07:28.249995+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "af097fe90358ddbb",
     "title": "新地址再次提出 4500 亿枚 PEPE,累计提出约 8050 亿枚",
     "source": "深潮TechFlow (中文/简体)",
@@ -5177,6 +5166,16 @@
     "sent_at": "2026-11-26T19:24:06.710582+00:00",
     "tokens": [
       "LINK"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ca601c5e93e81c9a",
+    "title": "Ripple’s $900 Million Revenue Target Raises Questions About XRP’s Stagnant Price",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-26T19:44:10.675030+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
