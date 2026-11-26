@@ -1,15 +1,5 @@
 [
   {
-    "id": "d14ab5cebb264b10",
-    "title": "Xsolla ZK Introduces a Gas Token Designed to Let Digital Items Move Between Games and Players",
-    "source": "DailyHodl (山寨异动与百倍币叙事)",
-    "sent_at": "2026-11-18T00:24:49.519561+00:00",
-    "tokens": [
-      "ZK"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d526b9930a29be16",
     "title": "Curve Finance 披露遭攻击,3.82 万美元费用被盗,已禁用合约暂停兑换",
     "source": "吴说区块链 (中文深度)",
@@ -5177,6 +5167,16 @@
     "sent_at": "2026-11-26T18:44:07.081034+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "88561ef23494cab6",
+    "title": "BNB Chain 公布新 L1 設計:目標 200 毫秒出塊,公共測試網尚未上線",
+    "source": "BlockTempo (动区动趋中文/台湾繁体)",
+    "sent_at": "2026-11-26T19:03:56.629446+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
