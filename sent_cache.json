@@ -1,15 +1,5 @@
 [
   {
-    "id": "6cc84975f25773e8",
-    "title": "XRP Breaks Below $1 as Spot ETF Outflows and Market-Wide Selling Deepen",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-17T13:47:13.934607+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ac7b8ac6d05482ba",
     "title": "吴说每日精选加密新闻 - Solana 基金会取得 CoinGecko 控股权益,具体持股比例及交易金额尚未披露",
     "source": "吴说区块链 (中文深度)",
@@ -5182,6 +5172,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "d2e78ee7b3a853cb",
+    "title": "Gate《大门说》第八期上线,独角兽分享BTC本位策略与风险管理",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-26T11:04:15.052644+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
