@@ -1,17 +1,5 @@
 [
   {
-    "id": "cd5467018e92498c",
-    "title": "加密市场窄幅震荡,SocialFi、PayFi板块涨超2%",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-18T02:06:40.889505+00:00",
-    "tokens": [
-      "GRAM",
-      "CHZ",
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ce2db34d214c9eea",
     "title": "USD1 Supply Falls 11% in a Week to Below $3 Billion",
     "source": "The Defiant (DeFi 深度)",
@@ -5175,6 +5163,16 @@
     "sent_at": "2026-11-26T20:24:02.558047+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2537c21e55cb628f",
+    "title": "Chainlink jumps 10% as its Wall Street ambitions gain momentum on two fronts",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-26T20:44:12.362494+00:00",
+    "tokens": [
+      "LINK"
     ],
     "lang": "en"
   }
