@@ -1,16 +1,5 @@
 [
   {
-    "id": "9c63952549e79456",
-    "title": "星球早讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-18T01:49:10.297312+00:00",
-    "tokens": [
-      "GRAM",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "cd5467018e92498c",
     "title": "加密市场窄幅震荡,SocialFi、PayFi板块涨超2%",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5174,6 +5163,16 @@
     "title": "XRP Bulls and Bears to Get 3x ETFs Soon",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-11-26T20:03:45.911950+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "96c3ea13d49743d9",
+    "title": "Elon Musk’s Grok AI Predicts a Huge XRP Price Reversal: Could This Happen?",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-26T20:24:02.558047+00:00",
     "tokens": [
       "XRP"
     ],
