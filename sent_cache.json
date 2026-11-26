@@ -1,16 +1,5 @@
 [
   {
-    "id": "4e49415b7789a0e1",
-    "title": "Aave App Launches on TRON, Bringing USDT Deposits to Mobile Users on Android and iOS",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-17T17:53:04.321291+00:00",
-    "tokens": [
-      "AAVE",
-      "TRX"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "5f142fc5e21a8c77",
     "title": "Brevan Howard 第三季度末持有 IBIT 价值约 10.6 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5179,6 +5168,16 @@
     "sent_at": "2026-11-26T14:24:08.849104+00:00",
     "tokens": [
       "SHIB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fc3e2845aae7eb8a",
+    "title": "‘The time to prepare for a cryptographic breakthrough is before it happens’: Zcash team urges faster deprecation of legacy shielded pool",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-26T14:44:07.748795+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
