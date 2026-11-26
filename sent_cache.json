@@ -1,16 +1,5 @@
 [
   {
-    "id": "22ac4685d37d1db8",
-    "title": "Abraxas Capital疑因Lighter账户被盗关闭链上仓位,清仓Hyperliquid约2亿美元持仓",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-18T03:26:41.040581+00:00",
-    "tokens": [
-      "USDC",
-      "HYPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e84c2b881696c384",
     "title": "从 Canton 到 Solana:华尔街清算巨头 DTCC 为何开始拥抱公链?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5172,5 +5161,15 @@
       "ZEC"
     ],
     "lang": "en"
+  },
+  {
+    "id": "af01253c6b6378ce",
+    "title": "TRON leads stablecoin market cap growth with $195.5 million daily gain",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-26T22:03:59.397491+00:00",
+    "tokens": [
+      "TRX"
+    ],
+    "lang": "zh-CN"
   }
 ]
