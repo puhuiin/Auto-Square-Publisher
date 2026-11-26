@@ -1,15 +1,5 @@
 [
   {
-    "id": "67d18f248fe96d4f",
-    "title": "Shiba Inu (SHIB) Prints 312 Billion Outflow For the First Time Since Price Drop",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-17T13:08:58.510910+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "24a5080b1ab24678",
     "title": "ARK出售约35万股3iQ Solana Staking ETF及约30万股3iQ Ether Staking ETF",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5182,6 +5172,16 @@
     "sent_at": "2026-11-26T08:44:29.113976+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4af6f0af6bdd01f4",
+    "title": "代码被他人滥用,开发者却面临 45 年监禁:Tornado Cash 审判与开源创新的生死存亡",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-26T09:44:04.200576+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
