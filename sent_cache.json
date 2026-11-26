@@ -1,15 +1,5 @@
 [
   {
-    "id": "fc264a696c3ded02",
-    "title": "Why Is Ripple-Backed Evernorth Writing Down Its XRP Again?",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-17T10:28:05.119923+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "e786f808eab24814",
     "title": "币安刚赔六十三亿,Lighter 链上自托管为何照样失守",
     "source": "深潮TechFlow (中文/简体)",
@@ -5187,5 +5177,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "f961785b5e5c3735",
+    "title": "Arkham:Bitget 黑客累计约 4011 枚 BTC 进入 CoinJoin",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-26T05:23:46.561016+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
