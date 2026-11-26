@@ -1,15 +1,5 @@
 [
   {
-    "id": "db17e72e15009c3b",
-    "title": "Evernorth’s XRP Treasury Carries $505 Million of Write-Downs Under an Unusual Accounting Rule",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-17T15:31:16.744315+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4d355625bd04e765",
     "title": "Half-Year Silence: Shiba Inu Community Demands Answers From Missing Shytoshi Kusama",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5180,5 +5170,16 @@
       "BNB"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "698832c49bc2a12a",
+    "title": "币安黑客数小时内转移价值3552万美元ETH,仍持有价值约18.95亿美元的ETH和BTC",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-26T12:46:22.964736+00:00",
+    "tokens": [
+      "ETH",
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
