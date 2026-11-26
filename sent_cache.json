@@ -1,15 +1,5 @@
 [
   {
-    "id": "81a30098a291ed4e",
-    "title": "Cardano Faces a Crucial Turning Point Amid Treasury Rejection, Putting $22M ADA Proposal to Rest",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-18T00:08:04.349931+00:00",
-    "tokens": [
-      "ADA"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "d14ab5cebb264b10",
     "title": "Xsolla ZK Introduces a Gas Token Designed to Let Digital Items Move Between Games and Players",
     "source": "DailyHodl (山寨异动与百倍币叙事)",
@@ -5175,6 +5165,16 @@
     "title": "XRP price eyes $1 – But THESE signals warn traders to stay cautious",
     "source": "AMBCrypto (技术与链上)",
     "sent_at": "2026-11-26T18:23:58.260805+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "cc9048dd2443d4f8",
+    "title": "XRP News: Thanksgiving Rally or December 1 Supply Shock?",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-26T18:44:07.081034+00:00",
     "tokens": [
       "XRP"
     ],
