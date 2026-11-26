@@ -1,16 +1,5 @@
 [
   {
-    "id": "ec9fa7ea6fc1e130",
-    "title": "Solana 基金会主席:TRUMP 发行及 2025 年 10 月暴跌是 Solana 的两次重大压力测试",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-17T11:47:21.056931+00:00",
-    "tokens": [
-      "TRUMP",
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9f0b6267f449266e",
     "title": "Shiba Inu (SHIB) Hits Long-Expected 1.7 Million User Milestone",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5183,6 +5172,16 @@
     "sent_at": "2026-11-26T06:04:01.827349+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0ea3d93b3477c993",
+    "title": "英偉達掏了3 億美元,和解八年前對幣圈的“隱瞞”",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-26T06:23:53.999594+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
