@@ -1,16 +1,5 @@
 [
   {
-    "id": "e786f808eab24814",
-    "title": "币安刚赔六十三亿,Lighter 链上自托管为何照样失守",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T10:53:05.535111+00:00",
-    "tokens": [
-      "USDC",
-      "ETH"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "22b332996e9e2de8",
     "title": "稳定币市场遭遇 Terra-Luna 崩溃以来最大撤资潮,30 天缩水 120 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5185,6 +5174,16 @@
     "sent_at": "2026-11-26T05:23:46.561016+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "efc1881ac00debbb",
+    "title": "Ripple is worth $90 a share to one fund and $300 to another, SEC filings show",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-26T05:44:01.003385+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
