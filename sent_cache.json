@@ -1,16 +1,5 @@
 [
   {
-    "id": "22b332996e9e2de8",
-    "title": "稳定币市场遭遇 Terra-Luna 崩溃以来最大撤资潮,30 天缩水 120 亿美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T11:09:43.471633+00:00",
-    "tokens": [
-      "USDC",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ec9fa7ea6fc1e130",
     "title": "Solana 基金会主席:TRUMP 发行及 2025 年 10 月暴跌是 Solana 的两次重大压力测试",
     "source": "吴说区块链 (中文深度)",
@@ -5182,6 +5171,16 @@
     "title": "Ripple is worth $90 a share to one fund and $300 to another, SEC filings show",
     "source": "CoinDesk (权威宏观与机构)",
     "sent_at": "2026-11-26T05:44:01.003385+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "5e16ff540eb271e2",
+    "title": "两家基金对 Ripple 股票估值分别为每股约 90 美元和 300 美元",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-26T06:04:01.827349+00:00",
     "tokens": [
       "XRP"
     ],
