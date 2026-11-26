@@ -1,17 +1,5 @@
 [
   {
-    "id": "0b3abe3bc9c27c64",
-    "title": "播客笔记|Dragonfly 合伙人 Haseeb:当年 0.4 美金没投 Solana,现在押注 Ethena 和 Zcash",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T09:26:50.902327+00:00",
-    "tokens": [
-      "SOL",
-      "ENA",
-      "ZEC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "dfe09e7ad9431fa2",
     "title": "Shiba Inu Hits Lowest Price Since May 2021: Is the Meme Coin Dead?",
     "source": "BeInCrypto (山寨与行情)",
@@ -5186,6 +5174,16 @@
     "sent_at": "2026-11-26T04:03:54.904925+00:00",
     "tokens": [
       "LINK"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a759971c32e4505b",
+    "title": "LayerZero adds Samsung Card, Kakao Pay, ZAN as validators for upcoming Zero blockchain",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-26T04:24:24.754449+00:00",
+    "tokens": [
+      "ZK"
     ],
     "lang": "zh-CN"
   }
