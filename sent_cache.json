@@ -1,16 +1,5 @@
 [
   {
-    "id": "fc10786a22b92a4f",
-    "title": "Cathie Wood's ARK Sells $85 Million in Nvidia, Buys $40 Million in Crypto Stocks",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-17T21:46:01.303461+00:00",
-    "tokens": [
-      "ARK",
-      "HYPE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1d19d69db290a0ca",
     "title": "Hoskinson: Cardano Not Done Yet",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5178,6 +5167,16 @@
     "sent_at": "2026-11-26T16:24:08.735445+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b4cbe50a1b869e09",
+    "title": "Bitcoin Price Analysis: Can BTC Hold $60K as Apparent Demand Plunges to Record Lows?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-26T16:43:48.575681+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
