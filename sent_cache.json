@@ -1,15 +1,5 @@
 [
   {
-    "id": "6edb103e2be04dab",
-    "title": "PEPE price prediction — Does a mini-rebound mean much for the memecoin?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-18T05:04:47.345772+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e7bcbd7f075b59c1",
     "title": "Bitwise Reveals the Massive Catalyst That Could Send Solana (SOL) Price Soaring",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5164,6 +5154,16 @@
     "title": "One Vote Left: XRP's Bank-Style Lending Nears Activation Countdown",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
     "sent_at": "2026-11-26T23:04:07.685210+00:00",
+    "tokens": [
+      "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "764f0fcd0b76f431",
+    "title": "XRP sellers could lose an extra $3,146 on a large trade if five accounts pull their buy orders",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-26T23:24:04.506902+00:00",
     "tokens": [
       "XRP"
     ],
