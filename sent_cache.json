@@ -1,15 +1,5 @@
 [
   {
-    "id": "9ffc3c3cec6131f3",
-    "title": "Why Chainlink price faces a make-or-break test at the $8.88 level",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-17T21:05:32.797032+00:00",
-    "tokens": [
-      "LINK"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ec94243d7af2f4e9",
     "title": "新型交易场所面向代币化股票,SEC创新豁免要求采用公链AMM",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5178,6 +5168,16 @@
     "sent_at": "2026-11-26T15:43:58.855965+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "203e5d25c224e08f",
+    "title": "停止运营且不再发行代币,Okto Wallet将于2026年12月22日下线",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-26T16:04:07.533414+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
