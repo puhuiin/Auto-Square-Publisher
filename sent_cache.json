@@ -1,15 +1,5 @@
 [
   {
-    "id": "5f142fc5e21a8c77",
-    "title": "Brevan Howard 第三季度末持有 IBIT 价值约 10.6 亿美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T19:26:01.382298+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0b92bc42c7228e62",
     "title": "Jito CEO:未来两年加密开发者应放缓开发速度,优先修复安全漏洞",
     "source": "吴说区块链 (中文深度)",
@@ -5178,6 +5168,16 @@
     "sent_at": "2026-11-26T14:44:07.748795+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "2845bfc0d5fccf54",
+    "title": "Solana Reclaims $70 After a Major Deal With Japan’s $2.3 Trillion Banking Giants",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-26T15:03:57.318854+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "en"
   }
