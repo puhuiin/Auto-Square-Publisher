@@ -1,15 +1,5 @@
 [
   {
-    "id": "27de420a902b2459",
-    "title": "Bitwise 首席投资官:未来 5 至 10 年看好 Solana 表现",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T14:49:47.785555+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c150af6ce0688fa0",
     "title": "TechFlow 情报局:加州起诉 OpenAI\"AI 失控\",NVIDIA 万亿市值蒸发后拒绝黄仁勋回归",
     "source": "深潮TechFlow (中文/简体)",
@@ -5180,6 +5170,16 @@
     "sent_at": "2026-11-26T11:44:02.152512+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "6b22b328f05db0b9",
+    "title": "Aave Labs致函FCA要求明确DeFi监管范围,CryptoUK反对默认监管开发者",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-26T12:04:01.872182+00:00",
+    "tokens": [
+      "AAVE"
     ],
     "lang": "zh-TW"
   }
