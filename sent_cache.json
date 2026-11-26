@@ -1,15 +1,5 @@
 [
   {
-    "id": "ec94243d7af2f4e9",
-    "title": "新型交易场所面向代币化股票,SEC创新豁免要求采用公链AMM",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-17T21:25:48.892623+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "fc10786a22b92a4f",
     "title": "Cathie Wood's ARK Sells $85 Million in Nvidia, Buys $40 Million in Crypto Stocks",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5178,6 +5168,16 @@
     "sent_at": "2026-11-26T16:04:07.533414+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4a7da43deecde9fe",
+    "title": "Monero (XMR) Drops 12% on KuCoin Delisting Announcement: Is Zcash Next?",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-26T16:24:08.735445+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "en"
   }
