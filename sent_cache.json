@@ -1,17 +1,5 @@
 [
   {
-    "id": "c150af6ce0688fa0",
-    "title": "TechFlow 情报局:加州起诉 OpenAI\"AI 失控\",NVIDIA 万亿市值蒸发后拒绝黄仁勋回归",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-17T15:10:51.308581+00:00",
-    "tokens": [
-      "KAVA",
-      "BTC",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "db17e72e15009c3b",
     "title": "Evernorth’s XRP Treasury Carries $505 Million of Write-Downs Under an Unusual Accounting Rule",
     "source": "NewsBTC (比特币与山寨)",
@@ -5180,6 +5168,16 @@
     "sent_at": "2026-11-26T12:04:01.872182+00:00",
     "tokens": [
       "AAVE"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "027e1a4abce6f498",
+    "title": "BNB Chain unveils new L1 litepaper built for high-frequency trading and payments",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-26T12:26:28.092653+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-TW"
   }
