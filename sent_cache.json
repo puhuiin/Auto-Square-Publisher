@@ -1,16 +1,5 @@
 [
   {
-    "id": "ea28d0fa0e440543",
-    "title": "Gate将上线infiniFi (INFI) 现货交易、闪兑交易并开启Launchpool",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-17T12:29:41.897740+00:00",
-    "tokens": [
-      "BTC",
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ee94c0a72bd35d95",
     "title": "Dogecoin ETFs Haven’t Taken In a Dollar Since October. So Who Is Buying?",
     "source": "BeInCrypto (山寨与行情)",
@@ -5183,6 +5172,16 @@
     "tokens": [
       "ID",
       "AI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "79cdf617733cd73a",
+    "title": "持有9年盈利超1200万美元,Zcash OG向Kraken存入1.575万枚ZEC",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-26T07:04:05.244137+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
