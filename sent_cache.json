@@ -1,15 +1,5 @@
 [
   {
-    "id": "5a28572c0a46ae9c",
-    "title": "'Doomed From the Start': President Trump's Meme Coin Hits New Lows After Midterms",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-18T13:44:52.744756+00:00",
-    "tokens": [
-      "TRUMP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9aa8251e5394e504",
     "title": "吴说每日精选加密新闻 - 两名用户称迪拜购 Ledger 钱包被盗,拆机发现疑似植入电路板",
     "source": "吴说区块链 (中文深度)",
@@ -5171,5 +5161,15 @@
       "SOL"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "cfe2a6bb997fdb22",
+    "title": "BIT :Anthropic 仍处回撤期或下探 57 美元,AI 股与比特币机会在 2027 年",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-27T10:23:51.346743+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
