@@ -1,15 +1,5 @@
 [
   {
-    "id": "8383e56a306d5b6e",
-    "title": "XRP Ledger Scores Historic First in Global Banking Standards Review",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-18T23:24:37.184332+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "fc8c8b421f0c298a",
     "title": "Bitwise offloads 23.7M XRP while silently stacking 126M more",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-11-27T17:44:38.759454+00:00",
     "tokens": [
       "UNI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8232b6f12659252a",
+    "title": "Binance Fully Lifts Withdrawal Suspension a Month After $6.3 Billion Hack",
+    "source": "Bitcoin Magazine (比特币核心)",
+    "sent_at": "2026-11-27T18:04:40.416878+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
