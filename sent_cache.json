@@ -1,15 +1,5 @@
 [
   {
-    "id": "81949c2c74578810",
-    "title": "Blockaid:Gonka AI 以太坊跨链桥遭攻击,约 105 万美元资产被盗",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-18T19:48:43.340038+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "75cf6a95a685f630",
     "title": "Bitcoin Tanks Ahead of Anthropic’s IPO. Should We Really Blame AI?",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-11-27T15:24:04.679723+00:00",
     "tokens": [
       "XLM"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "fc9f0d504a18ad83",
+    "title": "LayerZero Names 40-Plus Validators for Zero Launch",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-27T15:43:53.588797+00:00",
+    "tokens": [
+      "ZRO"
     ],
     "lang": "en"
   }
