@@ -1,15 +1,5 @@
 [
   {
-    "id": "414994aa23929f36",
-    "title": "比特币反弹动能衰竭:流动性较年内高点萎缩38%,8月以来全部涨幅被抹",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-19T00:44:58.289876+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "e144d7268200ecb4",
     "title": "某地址累计从 Binance 提出约 1.898 万亿枚 PEPE",
     "source": "深潮TechFlow (中文/简体)",
@@ -5172,5 +5162,15 @@
       "BNB"
     ],
     "lang": "en"
+  },
+  {
+    "id": "ef3069a528106633",
+    "title": "Solana (SOL) Suffers Its Worst Year So Far: Is More Pain Ahead?",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-27T23:03:50.157151+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
   }
 ]
