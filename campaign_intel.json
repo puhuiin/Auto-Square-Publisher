@@ -20,29 +20,30 @@
   "last_updated": "2026-11-27T18:04:04.689376Z",
   "_feed_health": {
     "Watcher.Guru (快讯)": {
+      "last_fail": "2026-11-27T21:03:30.315916+00:00",
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-27T20:43:35.331611+00:00"
-    },
-    "Bitcoinist (比特币向)": {
-      "reset_at": "2026-11-27T19:43:29.101845+00:00",
-      "parked_until": "2026-11-27T13:43:41.931378+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-27T20:43:34.587385+00:00"
-    },
-    "ZyCrypto (新币与空投)": {
-      "fails": 2,
-      "last_fail": "2026-11-27T20:43:34.682255+00:00"
+      "fails": 3
     },
     "吴说区块链 (中文深度)": {
+      "last_fail": "2026-11-27T21:03:31.595477+00:00",
       "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "fails": 3,
-      "last_fail": "2026-11-27T20:43:35.869359+00:00"
+      "fails": 3
+    },
+    "Bitcoinist (比特币向)": {
+      "last_fail": "2026-11-27T20:43:34.587385+00:00",
+      "reset_at": "2026-11-27T21:03:29.997493+00:00",
+      "parked_until": "2026-11-27T13:43:41.931378+00:00",
+      "fails": 3
+    },
+    "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-11-27T21:03:29.860563+00:00",
+      "last_fail": "2026-11-27T20:43:34.682255+00:00",
+      "fails": 2
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-27",
