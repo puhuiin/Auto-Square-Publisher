@@ -1,15 +1,5 @@
 [
   {
-    "id": "b2836bf7a904dce5",
-    "title": "Top 10 Shiba Inu (SHIB) Holders Move 6 Billion in 24 Hours",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-18T14:44:57.716329+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "80f175e107ed7e85",
     "title": "AI Will Make the Next 12 Months 'a Slaughterhouse' for Crypto Security: Anchorage Exec",
     "source": "Decrypt (Web3/AI/Meme)",
@@ -5169,6 +5159,17 @@
       "BTC",
       "ETH",
       "BNB"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "1f6859843c8fc370",
+    "title": "Whale Dumps $13.25M HYPE, Buys $7M ETH, Leaves Hyperliquid",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-27T12:04:36.874752+00:00",
+    "tokens": [
+      "HYPE",
+      "ETH"
     ],
     "lang": "zh-TW"
   }
