@@ -1,15 +1,5 @@
 [
   {
-    "id": "609be705acfd4d8a",
-    "title": "Important Ripple News and XRP Price Update: November 18",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-18T21:48:23.731129+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "44805b3f93520a89",
     "title": "Losing Almost $3 Million in Less Than 2 Years: The Sad Story of This Crypto Trader",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-11-27T16:44:03.859114+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8c4fa2e3041651c0",
+    "title": "XRP Ledger Lending Clears Vote Threshold, Eyes Dec. 11",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-27T17:03:55.755502+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
