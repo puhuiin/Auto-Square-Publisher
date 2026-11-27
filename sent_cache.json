@@ -1,15 +1,5 @@
 [
   {
-    "id": "b482791ee6b1b294",
-    "title": "让专业判断走在行情之前:火币 HTX 把投研做成基础能力",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-18T13:04:34.069800+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "94c020639dc9086c",
     "title": "成为现货比特币ETF最大机构持有者,Wells Fargo持有3.06万枚BTC",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5168,6 +5158,17 @@
     "sent_at": "2026-11-27T08:04:22.701821+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "22df2f82936e9962",
+    "title": "Zcash Developers Race to Secure Crypto. Can Quantum Computing Break Bitcoin?",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-27T08:46:38.831497+00:00",
+    "tokens": [
+      "ZEC",
+      "BTC"
     ],
     "lang": "zh-CN"
   }
