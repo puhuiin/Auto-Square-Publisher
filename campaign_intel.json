@@ -21,24 +21,24 @@
   "_feed_health": {
     "Bitcoinist (比特币向)": {
       "parked_until": "2026-11-27T13:43:41.931378+00:00",
-      "reset_at": "2026-11-27T19:03:31.718268+00:00",
-      "last_fail": "2026-11-27T17:43:34.301949+00:00",
-      "fails": 3
+      "fails": 3,
+      "reset_at": "2026-11-27T19:23:32.342244+00:00",
+      "last_fail": "2026-11-27T17:43:34.301949+00:00"
     },
     "Watcher.Guru (快讯)": {
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-27T19:03:31.679045+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-11-27T19:23:32.868243+00:00"
     },
     "吴说区块链 (中文深度)": {
       "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "last_fail": "2026-11-27T19:03:33.030877+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-11-27T19:23:34.021959+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-27",
