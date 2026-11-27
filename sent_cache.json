@@ -1,15 +1,5 @@
 [
   {
-    "id": "9c13771196b1a79d",
-    "title": "Solana Foundation takes ‘majority interest’ in CoinGecko – What changes next?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-18T08:07:49.352296+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "42cdd760007c9dd1",
     "title": "Ripple (XRP) Price Flashes Incredibly Rare Signals: is a Rebound Coming?",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5169,5 +5159,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "733cc2158f5f16e9",
+    "title": "Bitcoin in Extreme Fear: Historically a Buy Signal, But Potentially a Trap?",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-27T03:24:02.152240+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-CN"
   }
 ]
