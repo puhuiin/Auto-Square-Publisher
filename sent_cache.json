@@ -1,16 +1,5 @@
 [
   {
-    "id": "755ecc70d554ab26",
-    "title": "TechFlow 情报局:英伟达单季营收破 1158 亿美元,比特币暴跌至 64500 美元资金转向 Anthropic IPO",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-18T12:44:44.831196+00:00",
-    "tokens": [
-      "BTC",
-      "USDC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b482791ee6b1b294",
     "title": "让专业判断走在行情之前:火币 HTX 把投研做成基础能力",
     "source": "深潮TechFlow (中文/简体)",
@@ -5169,6 +5158,16 @@
     "sent_at": "2026-11-27T07:44:30.095143+00:00",
     "tokens": [
       "PENDLE"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "dd24f1962ec973a5",
+    "title": "Zcash stays below $750 as weak spot demand threatens recovery",
+    "source": "CoinJournal (山寨异动)",
+    "sent_at": "2026-11-27T08:04:22.701821+00:00",
+    "tokens": [
+      "ZEC"
     ],
     "lang": "zh-CN"
   }
