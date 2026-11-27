@@ -10534,6 +10534,75 @@ class TestR893ScoreBandPanel(unittest.TestCase):
         self.assertIn("±0.6", src)
 
 
+class TestR894ZhWindowWatch(unittest.TestCase):
+    """★ 开闸后即时体检：槽口径必须带小时；总量跌破护栏必须报红。
+
+    为什么锁：初版槽键漏了小时，把"每 20 分钟槽篇数"算成 8~13（跨小时合并），
+    这会让"一轮两篇到底有没有发生"完全失真——而那正是开闸后最要紧的读数。
+    """
+
+    @staticmethod
+    def _w():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "zh_window_watch_r894",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "zh_window_watch.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _pub(self, ts, lang="zh-CN"):
+        return {"outcome": "binance_published", "ts": ts, "lang": lang}
+
+    def test_slot_key_includes_hour(self):
+        w = self._w()
+        rows = [self._pub("2026-11-25T00:05:00+00:00"),
+                self._pub("2026-11-25T01:05:00+00:00")]   # 同分钟、不同小时
+        days, _ = w.summarize(rows)
+        slots = days["2026-11-25"]["slots"]
+        self.assertEqual(len(slots), 2, "不同小时必须是不同的槽")
+        self.assertEqual(set(slots.values()), {1})
+
+    def test_two_posts_in_one_slot_counted_as_two(self):
+        w = self._w()
+        rows = [self._pub("2026-11-25T00:05:00+00:00"),
+                self._pub("2026-11-25T00:12:00+00:00")]   # 同一 20 分钟槽
+        days, _ = w.summarize(rows)
+        self.assertEqual(list(days["2026-11-25"]["slots"].values()), [2])
+
+    def test_window_counts_only_zh_in_window(self):
+        w = self._w()
+        rows = [self._pub("2026-11-25T00:05:00+00:00", "zh-TW"),
+                self._pub("2026-11-25T01:05:00+00:00", "zh-CN"),
+                self._pub("2026-11-25T02:05:00+00:00", "zh-CN"),   # 窗口外
+                self._pub("2026-11-25T00:10:00+00:00", "en")]      # 英文
+        days, _ = w.summarize(rows)
+        self.assertEqual(days["2026-11-25"]["win_zh"], 2)
+        self.assertEqual(days["2026-11-25"]["total"], 4)
+
+    def test_report_flags_total_floor(self):
+        """★ 总量跌破护栏必须报红并给出回滚建议。
+
+        ⚠️ 日期必须**相对生成**：`report()` 属时钟窗口型报告器，
+           喂绝对日期会被 TestNoWallClockWindowedTests 当场咬住（本轮踩到）。
+        """
+        from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+        w = self._w()
+        base_d = [str(_dt.now(_tz.utc).date() - _td(days=6)),
+                  str(_dt.now(_tz.utc).date() - _td(days=5))]
+        treat_d = str(_dt.now(_tz.utc).date() - _td(days=1))
+        rows = []
+        for d in base_d:                                   # 基线：每天 60 篇
+            for i in range(60):
+                rows.append(self._pub("%sT%02d:%02d:00+00:00" % (d, i % 24, (i % 3) * 20)))
+        for i in range(30):                                # 处置日只有 30 篇（<50）
+            rows.append(self._pub("%sT%02d:%02d:00+00:00" % (treat_d, i % 24, (i % 3) * 20)))
+        out = "\n".join(w.report(rows, since=treat_d))
+        self.assertIn("跌破护栏", out)
+        self.assertIn("回滚", out)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 
