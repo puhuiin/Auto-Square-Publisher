@@ -10603,6 +10603,50 @@ class TestR894ZhWindowWatch(unittest.TestCase):
         self.assertIn("回滚", out)
 
 
+class TestR895TextSkeleton(unittest.TestCase):
+    """★ 正文骨架：段数集中度 / CTA / 推广——**结构层**的观测面。
+
+    实测（1212 篇）：6 段 593 + 7 段 515 = **91%** 同一骨架；CTA 65~73%；推广 57%
+    （近三天 76→98→100%）。现有雷达全在"句内"，这层此前完全不可见。
+    """
+
+    @staticmethod
+    def _mk(n_para, cta=True, promo=False):
+        body = "\n\n".join("段%d" % i for i in range(n_para))
+        if cta:
+            body += "\n\n扣 1 还是扣 2？"
+        if promo:
+            body += "\n\nBlack Friday 活动页自己看。"
+        return body
+
+    def _rows(self, texts):
+        return [{"outcome": "binance_published", "ts": "2026-11-25T00:00:00+00:00",
+                 "final_text": t} for t in texts]
+
+    def test_para_concentration_and_rates(self):
+        rows = self._rows([self._mk(6)] * 4 + [self._mk(3, cta=False)])
+        sk = mr.text_skeleton(rows)
+        self.assertEqual(sk["n"], 5)
+        # 6 段 + CTA 段 = 7 段；另一篇 3 段 ⇒ **前两名合计即全部**（4+1 / 5）
+        self.assertEqual(sk["para_top"][0], (7, 4))
+        self.assertAlmostEqual(sk["para_share"], 1.0)
+        self.assertAlmostEqual(sk["cta"], 0.8)
+        self.assertAlmostEqual(sk["promo"], 0.0)
+
+    def test_promo_detected(self):
+        rows = self._rows([self._mk(6, promo=True)] * 5)
+        self.assertAlmostEqual(mr.text_skeleton(rows)["promo"], 1.0)
+
+    def test_returns_none_when_too_few(self):
+        self.assertIsNone(mr.text_skeleton(self._rows([self._mk(6)] * 3)))
+
+    def test_render_has_skeleton_line(self):
+        rows = self._rows([self._mk(6)] * 6)
+        out = mr.render_text(mr.summarize(rows), rows)
+        self.assertIn("正文骨架", out)
+        self.assertIn("读者易辨识为模板", out)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 

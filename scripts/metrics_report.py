@@ -3088,6 +3088,36 @@ def _provider_dispatch_order(by_provider, reject_by_provider, latency_by_provide
     return rows
 
 
+CTA_RE = re.compile(r"(扣|打)\s*[123]")
+PROMO_RE = re.compile(r"Black ?Friday|Bonanza|Tournament|Season|大师赛|活動頁|活动页|官方入口"
+                      r"|返佣|返傭", re.I)
+
+
+def text_skeleton(rows):
+    """★ R895：正文**结构**指标（段数集中度 / 二选一 CTA / 推广句）。
+
+    只统计有 `final_text` 的发布行；样本 <5 返回 None。
+    为什么要有这一条：现有雷达全是"句内"指标（句长 CV、复读短语、套话），
+    结构层（几段、怎么收尾、带不带活动）此前**完全不可见**。
+    ⚠️ 只报事实：高集中度不等于差，但它 + 点赞率≈0 同时出现时该有人看。
+    """
+    texts = [r.get("final_text") for r in (rows or [])
+             if str(r.get("outcome", "")).startswith("binance_published") and r.get("final_text")]
+    if len(texts) < 5:
+        return None
+    paras = collections.Counter(
+        len([x for x in t.split("\n\n") if x.strip()]) for t in texts)
+    n = len(texts)
+    top2 = sum(c for _k, c in paras.most_common(2))
+    return {
+        "n": n,
+        "para_top": paras.most_common(2),
+        "para_share": top2 / float(n),
+        "cta": sum(1 for t in texts if CTA_RE.search(t)) / float(n),
+        "promo": sum(1 for t in texts if PROMO_RE.search(t)) / float(n),
+    }
+
+
 def render_text(s, rows=None):
     """人类可读简报"""
     lines = [
@@ -3884,6 +3914,16 @@ def render_text(s, rows=None):
                 lines.append(f"  🎵 句长节奏 CV: **不可度量**（窗口内 {q['scanned']} 篇仅 "
                              f"{len(_cvs)} 篇有 final_text 全文遥测且 ≥3 句；{_trunc} 篇无全文）"
                              "⇒ 勿据 200 字片段 CV 下结论（R747/R784）")
+            # ★ R895：正文骨架（结构层）——只报事实，不判好坏
+            _sk = text_skeleton(rows)
+            if _sk:
+                _pk = "／".join("%d 段×%d" % (k, c) for k, c in _sk["para_top"])
+                lines.append(
+                    f"  🧱 正文骨架：{_pk} 占 {_sk['para_share']:.0%}（{_sk['n']} 篇）"
+                    f" ｜ 二选一 CTA {_sk['cta']:.0%} ｜ 推广/活动 {_sk['promo']:.0%}")
+                if _sk["para_share"] >= 0.85:
+                    lines.append("     ↳ 段数高度集中 ⇒ 读者易辨识为模板；"
+                                 "结合点赞率一起看（本行不判好坏）")
             # R607：「利好不涨」描述复读——加密新闻最常见场景被收敛到固定描述句
             # （连个像样的反弹都没有/盘面不买账/连个水花都没溅）。句中短语、前缀雷达
             # 看不见。只追踪：≥40% 才提示（且可能是话题驱动而非风格退化，需读样本甄别）。
