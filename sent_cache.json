@@ -1,15 +1,5 @@
 [
   {
-    "id": "c606b4b40316f314",
-    "title": "Bitcoin options flash warning as downside premiums surge ahead of Fed minutes",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-18T17:09:47.496668+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "f6f76d44dc6af04c",
     "title": "USA₮ 已在 Avalanche 上线,将为 Aave 新 RWA Hub 提供美元流动性",
     "source": "吴说区块链 (中文深度)",
@@ -5171,6 +5161,16 @@
     "tokens": [
       "BTC",
       "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "4dc134cd05802e83",
+    "title": "Dogecoin Price Down Nearly 25% in November: Here’s What History Says About December.",
+    "source": "Bitcoinist (比特币向)",
+    "sent_at": "2026-11-27T14:44:02.975030+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
