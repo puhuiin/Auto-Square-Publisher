@@ -1,15 +1,5 @@
 [
   {
-    "id": "fc8c8b421f0c298a",
-    "title": "Bitwise offloads 23.7M XRP while silently stacking 126M more",
-    "source": "CryptoSlate (新赛道与代币经济)",
-    "sent_at": "2026-11-18T23:44:04.348383+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "9975ba1e27ab53c2",
     "title": "Countdown to Upgrade: Only 4 Votes Needed for XRP Ledger Vault to Go Live in 2026",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-11-27T18:04:40.416878+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "9ebb8fbff40861fc",
+    "title": "XRP holders face a choice between earning more yield and getting their tokens back",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-27T20:43:54.775568+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
