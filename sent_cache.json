@@ -1,15 +1,5 @@
 [
   {
-    "id": "75cf6a95a685f630",
-    "title": "Bitcoin Tanks Ahead of Anthropic’s IPO. Should We Really Blame AI?",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-18T20:28:58.385732+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c4b14a7e33f9f744",
     "title": "Blockaid:超 8800 枚 GTA 主题代币被标记为风险或垃圾",
     "source": "深潮TechFlow (中文/简体)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-11-27T15:43:53.588797+00:00",
     "tokens": [
       "ZRO"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "cfb8e39138e860bc",
+    "title": "Franklin Templeton to add Hyperliquid’s HYPE token to crypto ETF in December",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-27T16:03:49.910398+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
