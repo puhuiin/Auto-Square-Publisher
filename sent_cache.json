@@ -1,15 +1,5 @@
 [
   {
-    "id": "d79b154a5493ff23",
-    "title": "Four.Meme上线新4Stock资产RYDE4,支持创建Stock Memes",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-18T15:46:39.123975+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "1b58edd8c867ba87",
     "title": "Bitwise Targets Texas Stock Exchange for New Zcash ETF Under ZEC Ticker",
     "source": "Bitcoinist (比特币向)",
@@ -5172,5 +5162,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "b5330979bd617c55",
+    "title": "After 95% Crash, Can Shiba Inu (SHIB) Hit $500 Million Christmas Rally?",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-27T13:04:02.601275+00:00",
+    "tokens": [
+      "SHIB"
+    ],
+    "lang": "zh-CN"
   }
 ]
