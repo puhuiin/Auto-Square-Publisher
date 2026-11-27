@@ -10788,6 +10788,57 @@ class TestR898CapIdentity(unittest.TestCase):
         self.assertIn("cap=0", key)
 
 
+class TestR899ConvergenceHint(unittest.TestCase):
+    """★ 首日窗口不涨是**机制决定**的（滚动 24h 零余量），不是失效。
+
+    实测生产 59~60 篇/天、窗内 4~6：00:00 时 sent_24h≈60 ⇒ 窗口轮被配额挡住。
+    cap 压缩窗外后总量变 47+W，次日松量恰等于缺口 ⇒ 一天收敛到 12。
+    体检工具必须把这层说清，否则第一天就会被误判成"闸门没生效"并回滚。
+    """
+
+    @staticmethod
+    def _w():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "zh_window_watch_r899",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "zh_window_watch.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _pub(self, ts, lang="zh-CN"):
+        return {"outcome": "binance_published", "ts": ts, "lang": lang}
+
+    @staticmethod
+    def _d(offset):
+        from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+        return str(_dt.now(_tz.utc).date() + _td(days=offset))
+
+    def test_hint_on_first_days(self):
+        w = self._w()
+        rows = []
+        for off in (-5, -4):                            # 基线
+            for i in range(10):
+                rows.append(self._pub("%sT%02d:00:00+00:00" % (self._d(off), i)))
+        for i in range(10):                             # 处置仅 1 天
+            rows.append(self._pub("%sT%02d:00:00+00:00" % (self._d(-1), i)))
+        out = "\n".join(w.report(rows, since=self._d(-1)))
+        self.assertIn("收敛提示", out)
+        self.assertIn("别用首日读数判失效", out)
+
+    def test_no_hint_after_convergence_window(self):
+        w = self._w()
+        rows = []
+        for i in range(10):
+            rows.append(self._pub("%sT%02d:00:00+00:00" % (self._d(-8), i)))
+        for off in (-4, -3, -2, -1):                    # 处置已 4 天
+            for i in range(10):
+                rows.append(self._pub("%sT%02d:00:00+00:00" % (self._d(off), i)))
+        out = "\n".join(w.report(rows, since=self._d(-4)))
+        self.assertNotIn("收敛提示", out)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 

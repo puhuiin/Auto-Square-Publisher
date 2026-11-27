@@ -146,6 +146,11 @@ def report(rows, since=None, base_days=7):
     verdicts = []
     if t_tot is not None and t_tot < TOTAL_FLOOR:
         verdicts.append("🔴 总量跌破护栏（%s < %d）⇒ **建议回滚**（两个变量设 0）" % (t_tot, TOTAL_FLOOR))
+    # ★ R899：收敛提示——首日不涨是机制决定的，不是失效
+    if len(treat) <= 3:
+        L.append("  ↳ 收敛提示：闸门生效**首日**窗内篇数≈基线（滚动 24h 无余量，窗口轮被配额挡住）；"
+                 "cap 压缩窗外后**次日起**应升到 ~12。**别用首日读数判失效**。")
+
     if b_win is not None and t_win is not None and t_win <= b_win:
         verdicts.append("🟡 窗内 zh 没有增加（%s → %s）⇒ 闸门/双篇可能没生效，先查 cap 与间隔门"
                         % (b_win, t_win))
