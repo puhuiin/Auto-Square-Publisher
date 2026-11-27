@@ -1,15 +1,5 @@
 [
   {
-    "id": "888083f5df84a025",
-    "title": "Ondo to launch tokenized Anthropic stock on IPO day",
-    "source": "The Block (机构与政策)",
-    "sent_at": "2026-11-19T00:24:04.864016+00:00",
-    "tokens": [
-      "ONDO"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "414994aa23929f36",
     "title": "比特币反弹动能衰竭:流动性较年内高点萎缩38%,8月以来全部涨幅被抹",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-11-27T21:23:55.471044+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5031212447cf5fdc",
+    "title": "BNB Chain unveils litepaper for a second L1 built for traders, payments and AI agents",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-27T21:44:02.078302+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
