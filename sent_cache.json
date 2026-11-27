@@ -1,16 +1,5 @@
 [
   {
-    "id": "f6f76d44dc6af04c",
-    "title": "USA₮ 已在 Avalanche 上线,将为 Aave 新 RWA Hub 提供美元流动性",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-18T18:05:06.880760+00:00",
-    "tokens": [
-      "AVAX",
-      "AAVE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "6ebc23dd7846e02d",
     "title": "Bitcoin Price Analysis: BTC at a Breaking Point as $63K Support Faces Critical Test",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5171,6 +5160,16 @@
     "sent_at": "2026-11-27T14:44:02.975030+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "e885bcb56ad2795d",
+    "title": "Cardano’s Next Chapter: Euler Named as Major Upgrade After Dijkstra",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-27T15:03:53.735438+00:00",
+    "tokens": [
+      "ADA"
     ],
     "lang": "en"
   }
