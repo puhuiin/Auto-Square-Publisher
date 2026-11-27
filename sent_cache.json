@@ -1,15 +1,5 @@
 [
   {
-    "id": "c4b14a7e33f9f744",
-    "title": "Blockaid:超 8800 枚 GTA 主题代币被标记为风险或垃圾",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-18T21:08:37.270075+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "3f367a3fd65ed9ea",
     "title": "Major Institutional Milestone for XRP: XRPL Becomes First Public Blockchain to Pass Global Financial Infrastructure Standards Assessment",
     "source": "ZyCrypto (新币与空投)",
@@ -5168,6 +5158,16 @@
     "title": "Franklin Templeton to add Hyperliquid’s HYPE token to crypto ETF in December",
     "source": "Crypto Briefing (深度与研报)",
     "sent_at": "2026-11-27T16:03:49.910398+00:00",
+    "tokens": [
+      "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "83ffb7fe2540da5f",
+    "title": "Franklin Templeton计划于12月1日前后将HYPE纳入加密指数ETF",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-27T16:21:53.354332+00:00",
     "tokens": [
       "HYPE"
     ],
