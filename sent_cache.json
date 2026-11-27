@@ -1,16 +1,5 @@
 [
   {
-    "id": "c681ed5b8aee0cb7",
-    "title": "星球午讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-18T06:07:28.948515+00:00",
-    "tokens": [
-      "USDC",
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "46f62d21b05398d4",
     "title": "Zcash (ZEC) Price Skyrockets 10%, Will the Rally Continue?",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5168,5 +5157,15 @@
       "ETH"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "cb8c18c7500feaa6",
+    "title": "Is the Bitcoin Bear Market Repeating 2022? Key Gaps Remain",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-27T01:07:04.401109+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]

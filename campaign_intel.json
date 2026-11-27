@@ -17,29 +17,29 @@
   "strategy_guidance": "优先追 11-27 的 USDⓈ-Margined TradFi 永续合约上线：今天发预热与规则解读，明日上线后立刻发快讯和首日盘面复盘，并引导读者在评论区讨论挂单思路与风控，这是当前最紧迫的节奏点。日常快讯可绑定 Season 12 现货交易赛、Black Friday Bonanza 以及 bStocks 新交易对/抵押品扩展，用“活动冲刺/复盘/抄作业”角度切入，但只引导参与评论互动和任务拿 Write2Earn 奖励，不承诺任何交易收益。Earn 类内容可结合 USDT/USDC 灵活产品与新用户活动做规则科普和对比，强调风险自担。",
   "last_updated": "2026-11-26T17:24:08.117144Z",
   "_feed_health": {
-    "Watcher.Guru (快讯)": {
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-27T00:45:58.060445+00:00",
-      "fails": 3
-    },
     "吴说区块链 (中文深度)": {
+      "fails": 3,
       "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "last_fail": "2026-11-27T00:45:59.573164+00:00",
-      "fails": 3
+      "last_fail": "2026-11-27T01:06:03.346713+00:00"
     },
-    "CoinJournal (山寨异动)": {
-      "fails": 1,
-      "last_fail": "2026-11-27T00:46:28.004883+00:00"
+    "Watcher.Guru (快讯)": {
+      "fails": 3,
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-27T01:06:01.836290+00:00"
     },
     "Bitcoinist (比特币向)": {
       "fails": 2,
-      "last_fail": "2026-11-27T00:45:57.832978+00:00",
-      "reset_at": "2026-11-27T00:03:29.664266+00:00"
+      "reset_at": "2026-11-27T01:06:01.424495+00:00",
+      "last_fail": "2026-11-27T00:45:57.832978+00:00"
+    },
+    "CoinJournal (山寨异动)": {
+      "last_fail": "2026-11-27T01:06:31.524635+00:00",
+      "fails": 2
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-27",
