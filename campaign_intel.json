@@ -18,19 +18,23 @@
   "last_updated": "2026-11-26T17:24:08.117144Z",
   "_feed_health": {
     "Watcher.Guru (快讯)": {
-      "last_fail": "2026-11-27T00:03:28.880268+00:00",
-      "fails": 3,
-      "parked_until": "2026-11-17T10:23:31.478522+00:00"
-    },
-    "Bitcoinist (比特币向)": {
-      "last_fail": "2026-11-26T23:23:40.814499+00:00",
-      "fails": 2,
-      "reset_at": "2026-11-27T00:03:29.664266+00:00"
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-27T00:45:58.060445+00:00",
+      "fails": 3
     },
     "吴说区块链 (中文深度)": {
-      "last_fail": "2026-11-27T00:03:29.798487+00:00",
-      "fails": 3,
-      "parked_until": "2026-11-24T07:46:04.867856+00:00"
+      "parked_until": "2026-11-24T07:46:04.867856+00:00",
+      "last_fail": "2026-11-27T00:45:59.573164+00:00",
+      "fails": 3
+    },
+    "CoinJournal (山寨异动)": {
+      "fails": 1,
+      "last_fail": "2026-11-27T00:46:28.004883+00:00"
+    },
+    "Bitcoinist (比特币向)": {
+      "fails": 2,
+      "last_fail": "2026-11-27T00:45:57.832978+00:00",
+      "reset_at": "2026-11-27T00:03:29.664266+00:00"
     }
   },
   "_fallback_image": {
@@ -38,10 +42,10 @@
     "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
-  "_article_sent_date": "2026-11-26",
+  "_article_sent_date": "2026-11-27",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1353,
+  "_img_rot": 1354,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"

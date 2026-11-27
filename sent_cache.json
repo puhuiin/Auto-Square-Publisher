@@ -1,15 +1,5 @@
 [
   {
-    "id": "ba9652c34691b59d",
-    "title": "Solana为何不再大力发展Meme?toly回应:无法在pump的基础上改进,还是做DePIN吧",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-18T05:46:29.232049+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "c681ed5b8aee0cb7",
     "title": "星球午讯",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5166,6 +5156,16 @@
     "sent_at": "2026-11-27T00:07:31.931771+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "17f7f08271e912b7",
+    "title": "加密早报:马斯克称每名美国儿童将获赠两股 SpaceX 股票,Vitalik 发长文探讨开源芯片设计",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-27T00:46:57.515825+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-CN"
   }
