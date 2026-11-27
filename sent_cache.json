@@ -1,15 +1,5 @@
 [
   {
-    "id": "6ebc23dd7846e02d",
-    "title": "Bitcoin Price Analysis: BTC at a Breaking Point as $63K Support Faces Critical Test",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-18T19:28:34.709090+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "81949c2c74578810",
     "title": "Blockaid:Gonka AI 以太坊跨链桥遭攻击,约 105 万美元资产被盗",
     "source": "吴说区块链 (中文深度)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-11-27T15:03:53.735438+00:00",
     "tokens": [
       "ADA"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "ea7e3bac1b67656a",
+    "title": "Stellar (XLM) Sees 22% Weekly Drop in DEX Volume, while Its RWA Market Hits $4.3 Billion",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-27T15:24:04.679723+00:00",
+    "tokens": [
+      "XLM"
     ],
     "lang": "en"
   }
