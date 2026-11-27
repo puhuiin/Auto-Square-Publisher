@@ -1,15 +1,5 @@
 [
   {
-    "id": "80f175e107ed7e85",
-    "title": "AI Will Make the Next 12 Months 'a Slaughterhouse' for Crypto Security: Anchorage Exec",
-    "source": "Decrypt (Web3/AI/Meme)",
-    "sent_at": "2026-11-18T15:05:20.113585+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "bad6fa9f73a032cb",
     "title": "币股双杀之后:守仓、抄底还是等?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5170,6 +5160,16 @@
     "tokens": [
       "HYPE",
       "ETH"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "d3b36f08b593a04b",
+    "title": "Hyperliquid现货代码DIAM以500枚HYPE拍得,标的为抗量子公链Diamante",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-27T12:24:01.472359+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "zh-TW"
   }
