@@ -1,15 +1,5 @@
 [
   {
-    "id": "9975ba1e27ab53c2",
-    "title": "Countdown to Upgrade: Only 4 Votes Needed for XRP Ledger Vault to Go Live in 2026",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-19T00:04:17.276592+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "888083f5df84a025",
     "title": "Ondo to launch tokenized Anthropic stock on IPO day",
     "source": "The Block (机构与政策)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-11-27T20:43:54.775568+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "a86248f75144627e",
+    "title": "Franklin Templeton makes room for HYPE in crypto index ETF",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-11-27T21:23:55.471044+00:00",
+    "tokens": [
+      "HYPE"
     ],
     "lang": "en"
   }
