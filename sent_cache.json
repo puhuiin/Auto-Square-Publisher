@@ -1,15 +1,5 @@
 [
   {
-    "id": "fbd37c3ef15ed210",
-    "title": "Anchorage 联合创始人:AI 或令未来一年加密安全形势严峻",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-18T12:24:06.328537+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "755ecc70d554ab26",
     "title": "TechFlow 情报局:英伟达单季营收破 1158 亿美元,比特币暴跌至 64500 美元资金转向 Anthropic IPO",
     "source": "深潮TechFlow (中文/简体)",
@@ -5169,6 +5159,16 @@
     "sent_at": "2026-11-27T07:24:14.382863+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4959e609de1c9a6a",
+    "title": "接近500万美元,Pendle PENDLE回购量达V2排放量4倍",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-27T07:44:30.095143+00:00",
+    "tokens": [
+      "PENDLE"
     ],
     "lang": "zh-CN"
   }
