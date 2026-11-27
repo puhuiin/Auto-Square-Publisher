@@ -1,15 +1,5 @@
 [
   {
-    "id": "9ce0e8ace6cb8671",
-    "title": "Binance Hack-Linked Wallet Moves 34,279 ETH, but Investigators See No Confirmed Sale",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-18T07:25:03.710528+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "4cb6e1a8ec66d2c3",
     "title": "逾1亿美元比特币失窃,Coinkite CEO称约0.17% Coldcard用户受影响",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5166,6 +5156,16 @@
     "sent_at": "2026-11-27T02:23:58.854042+00:00",
     "tokens": [
       "ZEC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "dd51e63a59aeb3d0",
+    "title": "TRON资源服务平台CatFee与纽交所美国市场上市公司Exodus达成合作",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-27T02:44:44.596498+00:00",
+    "tokens": [
+      "TRX"
     ],
     "lang": "zh-TW"
   }
