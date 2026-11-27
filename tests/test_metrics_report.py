@@ -10647,6 +10647,63 @@ class TestR895TextSkeleton(unittest.TestCase):
         self.assertIn("读者易辨识为模板", out)
 
 
+class TestR896WeeklyRatio(unittest.TestCase):
+    """★ 分期比值：区分「市场热度衰减」与「窗口效应变弱」。
+
+    实测：11-16 周 10.8× → 11-23 周 6.4×（收窄 41%，但仍远高于门槛 1.5×）。
+    工具必须**报出来**而不是自动安慰——所以两条分支都锁。
+    """
+
+    @staticmethod
+    def _sp():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "slot_prereg_r896",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "slot_prereg.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _r(self, day, bucket, vpd):
+        return {"day": day, "bucket": bucket, "vpd": vpd, "lang": "zh-CN"}
+
+    def test_groups_by_monday_and_skips_small(self):
+        sp = self._sp()
+        rows = [self._r("2026-11-16", "00-02", 10.0)] * 3 + \
+               [self._r("2026-11-16", "02-05", 2.0)] * 3 + \
+               [self._r("2026-11-17", "00-02", 10.0)]          # 只够一侧 ⇒ 该周仍应可用
+        out = sp.weekly_ratio(rows)
+        self.assertEqual(len(out), 1)
+        w, nh, mh, nl_, ml, ratio = out[0]
+        self.assertEqual(w, "2026-11-16")
+        self.assertEqual((nh, nl_), (4, 3))
+        self.assertAlmostEqual(ratio, 5.0)
+
+    def test_week_with_one_side_too_small_is_skipped(self):
+        sp = self._sp()
+        rows = [self._r("2026-11-23", "00-02", 10.0)] * 3 + \
+               [self._r("2026-11-23", "02-05", 2.0)] * 2      # 窗外只有 2 帖
+        self.assertEqual(sp.weekly_ratio(rows), [])
+
+    def test_render_flags_narrowing(self):
+        """比值收窄 41% 时必须打 ⚠️（不能自动说"不影响判定"）"""
+        sp = self._sp()
+        rows = ([self._r("2026-11-16", "00-02", 26.0)] * 3 +
+                [self._r("2026-11-16", "02-05", 2.4)] * 3 +
+                [self._r("2026-11-23", "00-02", 20.8)] * 3 +
+                [self._r("2026-11-23", "02-05", 3.2)] * 3)
+        res = {"baseline_days": [], "treatment_days": [], "base_win_posts_med": None,
+               "base_total_med": None, "rows": [], "valid": 0, "wins_better": 0,
+               "p": 1.0, "win_posts_med": None, "total_med": None, "win_med_pool": None,
+               "out_med_pool": None, "ratio": None, "en_tvd": None, "checks": {},
+               "rollback": False, "verdict": "数据不足", "confounds": [], "density": [],
+               "capacity": None}
+        out = sp.render(rows)      # ⚠️ render(rows, pre_rows)，别把 res 当 rows 传
+        self.assertIn("分期比值", out)
+        self.assertIn("比值收窄", out)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 

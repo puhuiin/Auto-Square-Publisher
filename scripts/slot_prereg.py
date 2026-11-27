@@ -35,6 +35,7 @@
 ⚠️ 本文件**只读**：不参与发帖决策，不改任何生成/排程参数。
 """
 import argparse
+import collections
 import datetime
 import io
 import json
@@ -263,6 +264,42 @@ def robustness_reference(pre_rows, cut=R869_FROM_DATE):
             "n_lo_zh": len(zlo), "med_lo_zh": _med(zlo)}
 
 
+def weekly_ratio(rows):
+    """★ 分期比值：按自然周（周一起）看「窗内中位 / 窗外中位」。
+
+    用途：区分两种"整体下滑"——
+      · **比值稳定、绝对水平降** ⇒ 市场层面热度衰减，判据（窗内外对比）不受影响；
+      · **比值也在缩** ⇒ 衰减对窗口更不利，得重新掂量结论。
+    两侧各 <3 帖的周跳过。
+    """
+    import datetime as _dt
+
+    def _week(day):
+        d = _dt.date.fromisoformat(day)
+        return str(d - _dt.timedelta(days=d.weekday()))
+
+    g = collections.defaultdict(lambda: {"hi": [], "lo": []})
+    for r in rows or []:
+        key = "hi" if r.get("bucket") == R869_PRIMARY[0] else (
+            "lo" if r.get("bucket") == R869_PRIMARY[1] else None)
+        if not key:
+            continue
+        try:
+            w = _week(str(r.get("day", "")))
+        except ValueError:
+            continue
+        g[w][key].append(r["vpd"])
+    out = []
+    for w in sorted(g):
+        hi, lo = g[w]["hi"], g[w]["lo"]
+        if len(hi) < 3 or len(lo) < 3:
+            continue
+        import statistics as _st   # 本文件模块级没有 statistics（st 在 render 里是局部变量）
+        mh, ml = _st.median(hi), _st.median(lo)
+        out.append((w, len(hi), mh, len(lo), ml, (mh / ml) if ml else None))
+    return out
+
+
 def render(rows, pre_rows=None) -> str:
     lines = []
     pairs = day_pairs(rows)
@@ -281,6 +318,26 @@ def render(rows, pre_rows=None) -> str:
     st, why = slot_verdict(rows)
     lines.append("")
     lines.append("  ⇒ 判定：**%s** —— %s" % (st, why))
+
+    # ★ R896：分期比值——区分"市场热度衰减"与"窗口效应变弱"
+    _wr = weekly_ratio(rows)
+    if len(_wr) >= 2:
+        lines.append("")
+        lines.append("  【分期比值 · 只用于排除「整体触达衰减」这一解释】")
+        lines.append("     周(周一)      窗内 n/中位    窗外 n/中位    比值")
+        for _w, _nh, _mh, _nl2, _ml, _r in _wr:
+            lines.append("     %s    %3d / %5.1f    %3d / %5.1f    %s"
+                         % (_w, _nh, _mh, _nl2, _ml, ("%.1f×" % _r) if _r else "-"))
+        _rs = [x[5] for x in _wr if x[5]]
+        if len(_rs) >= 2:
+            _chg = _rs[-1] / _rs[0]
+            if _chg >= 0.8:
+                lines.append("     ↳ 比值基本稳定（%.2f× → %.2f×）⇒ 绝对水平下落属**市场热度**，"
+                             "不影响窗内外对比" % (_rs[0], _rs[-1]))
+            else:
+                lines.append("     ↳ ⚠️ 比值收窄了 %.0f%%（%.2f× → %.2f×）：仍高于门槛 %.1f×，"
+                             "但需单独排查「衰减是否对窗口更不利」，别只读合并比值"
+                             % (100 * (1 - _chg), _rs[0], _rs[-1], R869_MIN_RATIO))
 
     # ★ R892：稳健性参考（**不参与判定**）——用发现样本之前的数据复算一次
     rb = robustness_reference(pre_rows)
