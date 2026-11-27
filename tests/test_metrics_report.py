@@ -10510,6 +10510,30 @@ class TestR892RobustnessReference(unittest.TestCase):
         self.assertEqual(sp.slot_verdict(base), sp.slot_verdict(mixed))
 
 
+class TestR893ScoreBandPanel(unittest.TestCase):
+    """★ 热度分档面板：分档要正确，且**必须**带"不得用于改排序"的旁注。
+
+    背景（2026-11-27）：原始读数看着"分越高浏览越低"（2.2→0.9 单调），
+    但按小时居中后残差只有 ±0.6 ⇒ 单调来自时段构成。面板若不带旁注，
+    下一个人很可能就去"按低分排序"了（那会把新闻账号做成杂讯号）。
+    """
+
+    def test_band_mapping(self):
+        import re
+        src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                "scripts", "profit_report.py"), encoding="utf-8").read()
+        self.assertIn("热度分档", src)
+        self.assertIn("_score_band", src)
+        for lo in ("0, 15", "15, 25", "25, 35", "35, 60", "60, 10 ** 9"):
+            self.assertIn(lo, src)
+
+    def test_panel_warns_against_sorting(self):
+        src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                "scripts", "profit_report.py"), encoding="utf-8").read()
+        self.assertIn("不得用于改排序", src)
+        self.assertIn("±0.6", src)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 

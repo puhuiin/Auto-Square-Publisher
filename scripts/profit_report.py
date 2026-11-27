@@ -294,6 +294,28 @@ def main(argv=None):
         print("  %s  %s  %s  %s" % (h, cells[0], cells[1], cells[2]))
     print("\n== 币种 ==")
     _fmt(summarize(joined, lambda r: (r["meta"].get("tokens") or ["?"])[0]))
+    # ★ R893：热度分档 × 浏览（2026-11-27 深挖后固化的观测面板）
+    #   实测（曝光 24~72h、zh 短讯）：分 ≥60 的帖 vpd 中位只有 1.0~1.3，
+    #   而 0–35 档在 1.6~3.1 ⇒ 超大事件帖反而低。
+    #   ⚠️ **不能据此改排序**：低分档是"被限流/配额筛过后的残余集"（选择偏差），
+    #   真要验证得做受控实验。这里只负责让它**持续可见**，别再靠一次性脚本重挖。
+    def _score_band(r):
+        v = r["meta"].get("impact_score")
+        if not isinstance(v, (int, float)):
+            return "无分"
+        v = int(v)
+        for lo, hi in ((0, 15), (15, 25), (25, 35), (35, 60), (60, 10 ** 9)):
+            if lo <= v < hi:
+                return "%d-%d" % (lo, min(hi, 999))
+        return "无分"
+
+    print("\n== 热度分档 × 浏览（低分档=被筛后的残余集，别当因果）==")
+    _fmt(summarize(joined, _score_band))
+    # ★ 2026-11-27 已验伪：原始读数看着"分越高浏览越低"（2.2→0.9 单调），
+    #   但**按小时居中后残差只有 ±0.6** ⇒ 那条单调主要是**时段构成**造成的。
+    #   ⇒ 别据此改排序（真要验得做受控实验）。这行旁注就是防止下一个人重犯。
+    print("  ↳ 已验伪：按小时居中后各档残差仅 ±0.6（原始单调来自时段构成）；"
+          "低档还是被筛残余集 ⇒ **本面板只做监控，不得用于改排序**")
     print("\n== 币种大类 ==")
     _fmt(summarize(joined, lambda r: token_category((r["meta"].get("tokens") or ["?"])[0])))
     print("\n== 配图 ==")
