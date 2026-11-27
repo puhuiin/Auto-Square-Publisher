@@ -1,15 +1,5 @@
 [
   {
-    "id": "e7bcbd7f075b59c1",
-    "title": "Bitwise Reveals the Massive Catalyst That Could Send Solana (SOL) Price Soaring",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-18T05:25:54.563597+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "ba9652c34691b59d",
     "title": "Solana为何不再大力发展Meme?toly回应:无法在pump的基础上改进,还是做DePIN吧",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5166,6 +5156,16 @@
     "sent_at": "2026-11-26T23:24:04.506902+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "150490c0fa0c2a19",
+    "title": "Cournot Raises $5M to Build the Verifiable Intelligence Layer",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-27T00:07:31.931771+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "zh-CN"
   }
