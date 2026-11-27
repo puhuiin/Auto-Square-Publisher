@@ -1,15 +1,5 @@
 [
   {
-    "id": "27519f44c6154ccf",
-    "title": "DeFi Development Adds 9,482 SOL as Treasury Grows for Tenth Straight Week",
-    "source": "NewsBTC (比特币与山寨)",
-    "sent_at": "2026-11-18T09:28:31.097904+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ae32afa89230343f",
     "title": "The Graph’s Curation Burn Stays at 1% After 300,000 GRT Deposit",
     "source": "The Defiant (DeFi 深度)",
@@ -5168,6 +5158,16 @@
     "tokens": [
       "SOL",
       "USDC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "a814114a9101d675",
+    "title": "Solana launches AI-assisted Playground for building programs in the browser",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-27T04:44:09.272252+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
