@@ -1,15 +1,5 @@
 [
   {
-    "id": "4cb6e1a8ec66d2c3",
-    "title": "逾1亿美元比特币失窃,Coinkite CEO称约0.17% Coldcard用户受影响",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-18T07:47:14.413328+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9c13771196b1a79d",
     "title": "Solana Foundation takes ‘majority interest’ in CoinGecko – What changes next?",
     "source": "AMBCrypto (技术与链上)",
@@ -5166,6 +5156,17 @@
     "sent_at": "2026-11-27T02:44:44.596498+00:00",
     "tokens": [
       "TRX"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "e43f6f334de4264c",
+    "title": "Upbit将在韩元市场上线HAEDAL,在BTC、USDT市场上线KGEN、FLR",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-27T03:04:05.523180+00:00",
+    "tokens": [
+      "HAEDAL",
+      "BTC"
     ],
     "lang": "zh-TW"
   }
