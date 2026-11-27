@@ -1,15 +1,5 @@
 [
   {
-    "id": "f948cce29f9a64f3",
-    "title": "SOL链Meme币DCTY短时市值突破1000万美元,日内涨超5177%",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-18T16:48:50.008200+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "c606b4b40316f314",
     "title": "Bitcoin options flash warning as downside premiums surge ahead of Fed minutes",
     "source": "CryptoSlate (新赛道与代币经济)",
@@ -5167,6 +5157,17 @@
     "title": "Chainflip披露攻击者利用libzmq漏洞窃取金库密钥分片",
     "source": "Odaily星球日报 (中文快讯)",
     "sent_at": "2026-11-27T14:04:01.968899+00:00",
+    "tokens": [
+      "BTC",
+      "ETH"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c3fe7f4691f62252",
+    "title": "安全审查完成前不会重启协议,Chainflip查明金库攻击入口",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-27T14:23:53.202891+00:00",
     "tokens": [
       "BTC",
       "ETH"
