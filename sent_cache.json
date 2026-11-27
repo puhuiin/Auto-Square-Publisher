@@ -1,15 +1,5 @@
 [
   {
-    "id": "e144d7268200ecb4",
-    "title": "某地址累计从 Binance 提出约 1.898 万亿枚 PEPE",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-19T01:04:05.555403+00:00",
-    "tokens": [
-      "PEPE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "2fd245ac82f5e984",
     "title": "XRP Whales Move $270M During Sell-Off, but Exchange Deposits Tell a Different Story",
     "source": "Bitcoinist (比特币向)",
@@ -5168,6 +5158,16 @@
     "title": "Solana (SOL) Suffers Its Worst Year So Far: Is More Pain Ahead?",
     "source": "CryptoPotato (山寨币/Meme热点)",
     "sent_at": "2026-11-27T23:03:50.157151+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "d4c0bbe09a6aee85",
+    "title": "Anza Urges Immediate Agave Upgrade on Solana Mainnet",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-27T23:44:22.696048+00:00",
     "tokens": [
       "SOL"
     ],
