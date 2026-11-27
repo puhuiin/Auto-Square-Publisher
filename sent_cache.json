@@ -1,15 +1,5 @@
 [
   {
-    "id": "2326d01547947d60",
-    "title": "Beosin:币安黑客将7.84万ETH转入7个地址",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-18T08:47:47.142212+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "27519f44c6154ccf",
     "title": "DeFi Development Adds 9,482 SOL as Treasury Grows for Tenth Straight Week",
     "source": "NewsBTC (比特币与山寨)",
@@ -5167,6 +5157,17 @@
     "sent_at": "2026-11-27T03:44:05.422539+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "68d5675bd4bba1c5",
+    "title": "支持超100万种代币,Sanctum钱包扩展代币支持范围",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-27T04:23:57.724043+00:00",
+    "tokens": [
+      "SOL",
+      "USDC"
     ],
     "lang": "zh-CN"
   }
