@@ -10704,6 +10704,50 @@ class TestR896WeeklyRatio(unittest.TestCase):
         self.assertIn("比值收窄", out)
 
 
+class TestR897ExposureSensitivity(unittest.TestCase):
+    """★ 口径敏感性：同一数据在 [6,72]h 与 [24,72]h 下是否给同一结论。
+
+    本轮实测：前者 10.8×→6.4×（-41%），后者 9.2×→9.4×（稳定）
+    ⇒ "窗口效应在变弱"是**年轻帖占比**造成的假象。工具必须同时报两个口径。
+    """
+
+    @staticmethod
+    def _sp():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "slot_prereg_r897",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "slot_prereg.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _r(self, day, bucket, vpd, exp):
+        return {"day": day, "bucket": bucket, "vpd": vpd, "exposure_h": exp, "lang": "zh-CN"}
+
+    def test_tight_filter_excludes_young_posts(self):
+        sp = self._sp()
+        rows = ([self._r("2026-11-16", "00-02", 20.0, 48)] * 3 +
+                [self._r("2026-11-16", "02-05", 2.0, 48)] * 3 +
+                [self._r("2026-11-16", "02-05", 99.0, 8)] * 3)   # 年轻帖，只进 loose
+        loose, tight = sp.weekly_ratio_detail(rows)
+        self.assertEqual(len(loose), 1)
+        self.assertEqual(len(tight), 1)
+        self.assertGreater(loose[0][4], tight[0][4], "loose 的窗外中位应被年轻帖抬高")
+        self.assertAlmostEqual(tight[0][4], 2.0)
+
+    def test_render_prints_both_calibers(self):
+        sp = self._sp()
+        rows = ([self._r("2026-11-16", "00-02", 20.0, 48)] * 3 +
+                [self._r("2026-11-16", "02-05", 2.0, 48)] * 3 +
+                [self._r("2026-11-23", "00-02", 20.0, 48)] * 3 +
+                [self._r("2026-11-23", "02-05", 2.0, 48)] * 3)
+        out = sp.render(rows)
+        self.assertIn("分期比值", out)
+        self.assertIn("口径敏感性", out)
+        self.assertIn("[24,72]h", out)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 

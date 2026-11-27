@@ -264,6 +264,48 @@ def robustness_reference(pre_rows, cut=R869_FROM_DATE):
             "n_lo_zh": len(zlo), "med_lo_zh": _med(zlo)}
 
 
+def weekly_ratio_detail(rows):
+    """★ R897：按周算比值，并**同时给两个曝光口径**（[6,72] 与 [24,72]）。
+
+    为什么必须给两个：`vpd = views/age`，6–24h 的年轻帖系统性偏高，
+    各周年轻帖占比不同就会伪造出"比值在收窄"。实测：
+        口径 [6,72]h  ：10.8× → 6.4×（看着收窄 41%）
+        口径 [24,72]h ：9.2×  → 9.4×（稳定）
+    ⇒ 单看前者会误判"窗口效应变弱"。预注册口径不改，这里只做敏感性展示。
+    """
+    import datetime as _dt
+    import statistics as _st
+
+    def _week(day):
+        d = _dt.date.fromisoformat(day)
+        return str(d - _dt.timedelta(days=d.weekday()))
+
+    def _calc(rs):
+        g = collections.defaultdict(lambda: {"hi": [], "lo": []})
+        for r in rs:
+            key = "hi" if r.get("bucket") == R869_PRIMARY[0] else (
+                "lo" if r.get("bucket") == R869_PRIMARY[1] else None)
+            if not key:
+                continue
+            try:
+                w = _week(str(r.get("day", "")))
+            except ValueError:
+                continue
+            g[w][key].append(r["vpd"])
+        out = []
+        for w in sorted(g):
+            hi, lo = g[w]["hi"], g[w]["lo"]
+            if len(hi) < 3 or len(lo) < 3:
+                continue
+            mh, ml = _st.median(hi), _st.median(lo)
+            out.append((w, len(hi), mh, len(lo), ml, (mh / ml) if ml else None))
+        return out
+
+    loose = _calc(rows or [])
+    tight = _calc([r for r in (rows or []) if float(r.get("exposure_h") or 0) >= 24.0])
+    return loose, tight
+
+
 def weekly_ratio(rows):
     """★ 分期比值：按自然周（周一起）看「窗内中位 / 窗外中位」。
 
@@ -328,8 +370,29 @@ def render(rows, pre_rows=None) -> str:
         for _w, _nh, _mh, _nl2, _ml, _r in _wr:
             lines.append("     %s    %3d / %5.1f    %3d / %5.1f    %s"
                          % (_w, _nh, _mh, _nl2, _ml, ("%.1f×" % _r) if _r else "-"))
+        # ★ R897：口径敏感性——[6,72]h 与 [24,72]h 是否给同一结论
+        _artefact = False
+        _loose, _tight = weekly_ratio_detail(rows)
+        if len(_loose) >= 2 and len(_tight) >= 2:
+            def _trend(seq):
+                xs = [x[5] for x in seq if x[5]]
+                return (xs[-1] / xs[0]) if len(xs) >= 2 and xs[0] else None
+            _tl, _tt = _trend(_loose), _trend(_tight)
+            def _fmt(seq, t):
+                if len(seq) < 2:
+                    return "-"
+                return "%.2f×→%.2f×（%+.0f%%）" % (seq[0][5], seq[-1][5], 100 * ((t or 1) - 1))
+            lines.append("     ↳ 口径敏感性：[6,72]h %s ｜ [24,72]h %s"
+                         % (_fmt(_loose, _tl), _fmt(_tight, _tt)))
+            if _tl is not None and _tt is not None and _tl < 0.8 and _tt >= 0.9:
+                _artefact = True
+                lines.append("        ⚠️ 两个口径结论相反 ⇒ 收窄是**年轻帖占比**造成的假象，"
+                             "别据此说「窗口效应在变弱」（本轮实测即此）")
+
         _rs = [x[5] for x in _wr if x[5]]
-        if len(_rs) >= 2:
+        if _artefact:
+            pass          # 已由上面的口径敏感性解释：收窄是年轻帖占比造成的，不再重复告警
+        elif len(_rs) >= 2:
             _chg = _rs[-1] / _rs[0]
             if _chg >= 0.8:
                 lines.append("     ↳ 比值基本稳定（%.2f× → %.2f×）⇒ 绝对水平下落属**市场热度**，"
