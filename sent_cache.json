@@ -1,15 +1,5 @@
 [
   {
-    "id": "a35b04f2809d5050",
-    "title": "Bitwise 拟在得克萨斯证券交易所上市现货 Zcash ETF",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-18T11:24:53.355527+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "72611b17979e5f85",
     "title": "Zcash targets $1,134 as ZEC futures demand rises",
     "source": "CoinJournal (山寨异动)",
@@ -5165,6 +5155,17 @@
     "title": "90 分钟争夺 10 万美元奖金,币安交易大师赛选手都是什么来头?",
     "source": "深潮TechFlow (中文/简体)",
     "sent_at": "2026-11-27T06:44:17.475670+00:00",
+    "tokens": [
+      "BTC",
+      "LTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "4cc34e15da2c9286",
+    "title": "90 分鐘爭奪 10 萬美元獎金,幣安交易大師賽選手都是什麼來頭?",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-27T07:03:49.063656+00:00",
     "tokens": [
       "BTC",
       "LTC"
