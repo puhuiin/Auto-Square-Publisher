@@ -1,17 +1,5 @@
 [
   {
-    "id": "9aa8251e5394e504",
-    "title": "吴说每日精选加密新闻 - 两名用户称迪拜购 Ledger 钱包被盗,拆机发现疑似植入电路板",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-18T14:05:44.777093+00:00",
-    "tokens": [
-      "USDC",
-      "ETH",
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a806e6c23ed72ba9",
     "title": "永续 DEX Variational 完成 1.1 亿美元融资,估值达 15 亿美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5167,6 +5155,16 @@
     "title": "BIT :Anthropic 仍处回撤期或下探 57 美元,AI 股与比特币机会在 2027 年",
     "source": "深潮TechFlow (中文/简体)",
     "sent_at": "2026-11-27T10:23:51.346743+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "e2ed96ac309b6000",
+    "title": "Swiss Bitcoin ETF: Bitcoin Wasn’t the Problem, Institutional Rules Were – BIT CEO",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-27T11:06:51.776961+00:00",
     "tokens": [
       "BTC"
     ],
