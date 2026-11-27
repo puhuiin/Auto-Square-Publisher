@@ -232,7 +232,38 @@ def build_rows(stats_path=None, metrics_path=None, from_date=R869_FROM_DATE):
     return collect(joined, from_date)
 
 
-def render(rows) -> str:
+def robustness_reference(pre_rows, cut=R869_FROM_DATE):
+    """★ 稳健性参考（**不参与判定**）：用**发现样本之前**的数据复算窗内/窗外。
+
+    入参是 `collect()` 产出的**扁平行**（day/hour/bucket/vpd/lang），且已按
+    `cut` 之前过滤好——`build_rows()` 自带 from_date 过滤，所以前置样本必须由
+    调用方用更早的 from_date 单独构建（否则这里永远是空集）。
+    绝不并入 `slot_verdict`：预注册口径只认确认样本。
+    """
+    import statistics as _st   # 本文件此前没导 statistics（st 在 render 里是局部变量）
+
+    def _med(xs):
+        return _st.median(xs) if xs else None
+
+    def _split(rs):
+        hi = [r["vpd"] for r in rs if r["bucket"] == R869_PRIMARY[0]]
+        lo = [r["vpd"] for r in rs if r["bucket"] == R869_PRIMARY[1]]
+        return hi, lo
+
+    pre = [r for r in (pre_rows or []) if str(r.get("day", "")) < cut]
+    if not pre:
+        return None
+    hi, lo = _split(pre)
+    if not hi or not lo:
+        return None
+    zh = [r for r in pre if r.get("lang") in ("zh-CN", "zh-TW")]
+    zhi, zlo = _split(zh)
+    return {"n_hi": len(hi), "med_hi": _med(hi), "n_lo": len(lo), "med_lo": _med(lo),
+            "n_hi_zh": len(zhi), "med_hi_zh": _med(zhi),
+            "n_lo_zh": len(zlo), "med_lo_zh": _med(zlo)}
+
+
+def render(rows, pre_rows=None) -> str:
     lines = []
     pairs = day_pairs(rows)
     lines.append("  日期        %s              %s              有效" % R869_PRIMARY)
@@ -250,6 +281,31 @@ def render(rows) -> str:
     st, why = slot_verdict(rows)
     lines.append("")
     lines.append("  ⇒ 判定：**%s** —— %s" % (st, why))
+
+    # ★ R892：稳健性参考（**不参与判定**）——用发现样本之前的数据复算一次
+    rb = robustness_reference(pre_rows)
+    if rb:
+        def _r(a, b):
+            return ("%.1f×" % (a / b)) if (a is not None and b) else "-"
+        lines.append("")
+        lines.append("  【稳健性参考 · **不参与判定**】发现样本（%s）之前的数据："
+                     % R869_FROM_DATE)
+        lines.append("     全部：00–02 桶 n=%d 中位 %s ｜ 02–05 桶 n=%d 中位 %s ⇒ %s"
+                     % (rb["n_hi"], ("%.1f" % rb["med_hi"]) if rb["med_hi"] is not None else "-",
+                        rb["n_lo"], ("%.1f" % rb["med_lo"]) if rb["med_lo"] is not None else "-",
+                        _r(rb["med_hi"], rb["med_lo"])))
+        lines.append("     仅 zh：00–02 桶 n=%d 中位 %s ｜ 02–05 桶 n=%d 中位 %s ⇒ %s"
+                     % (rb["n_hi_zh"],
+                        ("%.1f" % rb["med_hi_zh"]) if rb["med_hi_zh"] is not None else "-",
+                        rb["n_lo_zh"],
+                        ("%.1f" % rb["med_lo_zh"]) if rb["med_lo_zh"] is not None else "-",
+                        _r(rb["med_hi_zh"], rb["med_lo_zh"])))
+        _small = min(rb["n_hi"], rb["n_lo"]) < 8
+        lines.append("     用途：回答「这是不是偶然」；**不得**并入上面的判定，"
+                     "也不得据此提前改排程。")
+        if _small:
+            lines.append("     ⚠️ 前置样本很小（n=%d/%d）⇒ 只看方向与量级，别当独立证据。"
+                         % (rb["n_hi"], rb["n_lo"]))
     return "\n".join(lines)
 
 
@@ -262,13 +318,15 @@ def main(argv=None):
     args = ap.parse_args(argv)
 
     rows = build_rows(args.stats or None, args.metrics or None, args.from_date)
+    # ★ R892：前置样本要单独构建（build_rows 会按 from_date 过滤，同一个 rows 里没有前置数据）
+    pre_rows = build_rows(args.stats or None, args.metrics or None, "2000-01-01")
     print("【R869 时段×浏览 · 预注册判据】只读；样本从 %s 起，曝光 ∈ [%.0f, %.0f]h"
           % (args.from_date, R869_EXPOSURE_HOURS[0], R869_EXPOSURE_HOURS[1]))
     print("  样本 %d 帖 ｜ 覆盖日 %d ｜ 语种 %s"
           % (len(rows), len({r["day"] for r in rows}),
              {l: sum(1 for r in rows if r["lang"] == l)
               for l in sorted({r["lang"] for r in rows})}))
-    print(render(rows))
+    print(render(rows, pre_rows))
     print("\n【混淆报告（R871，只读、不参与判定）】")
     print(confound_text(rows))
     if args.json:

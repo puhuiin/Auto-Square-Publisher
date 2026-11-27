@@ -10462,6 +10462,54 @@ class TestR891SlotScenarios(unittest.TestCase):
         self.assertIn("锁住", src)
 
 
+class TestR892RobustnessReference(unittest.TestCase):
+    """★ 稳健性参考：只统计**发现样本之前**的行，且必须与判定分开。
+
+    为什么单独锁：这块数据一旦被误并入 `slot_verdict`，预注册就废了
+    （口径从"确认样本"退化成"全样本"，等于事后扩大样本）。
+    """
+
+    @staticmethod
+    def _sp():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "slot_prereg_r892",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "slot_prereg.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _row(self, day, hour, bucket, vpd, lang="zh-CN"):
+        return {"day": day, "hour": hour, "bucket": bucket, "lang": lang, "vpd": vpd}
+
+    def test_only_pre_cutoff_rows_counted(self):
+        sp = self._sp()
+        rows = [self._row("2026-11-10", 0, "00-02", 10.0),
+                self._row("2026-11-10", 3, "02-05", 2.0),
+                self._row("2026-11-20", 0, "00-02", 99.0),   # 确认样本，必须被排除
+                self._row("2026-11-20", 3, "02-05", 99.0)]
+        rb = sp.robustness_reference(rows, "2026-11-16")
+        self.assertEqual(rb["n_hi"], 1)
+        self.assertAlmostEqual(rb["med_hi"], 10.0)
+        self.assertEqual(rb["n_lo"], 1)
+        self.assertAlmostEqual(rb["med_lo"], 2.0)
+
+    def test_returns_none_without_pre_sample(self):
+        sp = self._sp()
+        rows = [self._row("2026-11-20", 0, "00-02", 5.0),
+                self._row("2026-11-20", 3, "02-05", 5.0)]
+        self.assertIsNone(sp.robustness_reference(rows, "2026-11-16"))
+
+    def test_verdict_ignores_pre_rows(self):
+        """把前置行混进 rows 也**不得**改变判定（判定只看 >= from_date）"""
+        sp = self._sp()
+        base = [self._row("2026-11-20", 0, "00-02", 5.0),
+                self._row("2026-11-20", 3, "02-05", 5.0)]
+        mixed = base + [self._row("2026-11-10", 0, "00-02", 999.0)]
+        self.assertEqual(sp.slot_verdict(base), sp.slot_verdict(mixed))
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 
