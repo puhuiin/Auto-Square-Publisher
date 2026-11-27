@@ -1,15 +1,5 @@
 [
   {
-    "id": "3f367a3fd65ed9ea",
-    "title": "Major Institutional Milestone for XRP: XRPL Becomes First Public Blockchain to Pass Global Financial Infrastructure Standards Assessment",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-18T21:29:11.395832+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "609be705acfd4d8a",
     "title": "Important Ripple News and XRP Price Update: November 18",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5170,6 +5160,16 @@
     "sent_at": "2026-11-27T16:21:53.354332+00:00",
     "tokens": [
       "HYPE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "8971784572dfdfa8",
+    "title": "Bitcoin Whales Accumulate $7.4 Billion in BTC, Breaking a Nine Year Pattern",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-27T16:44:03.859114+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
