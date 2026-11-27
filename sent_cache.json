@@ -1,15 +1,5 @@
 [
   {
-    "id": "42cdd760007c9dd1",
-    "title": "Ripple (XRP) Price Flashes Incredibly Rare Signals: is a Rebound Coming?",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-18T08:27:44.625601+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "2326d01547947d60",
     "title": "Beosin:币安黑客将7.84万ETH转入7个地址",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5167,6 +5157,16 @@
     "sent_at": "2026-11-27T03:24:02.152240+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "518f51fa793c9a3f",
+    "title": "Retail Dumps XRP as Smart Money Starts Buying Again",
+    "source": "CryptoNews (全球快讯)",
+    "sent_at": "2026-11-27T03:44:05.422539+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
