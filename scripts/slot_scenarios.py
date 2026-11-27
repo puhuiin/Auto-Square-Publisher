@@ -38,6 +38,7 @@ import profit_report as pr  # noqa: E402  ← 口径唯一实现
 ZH_HOURS = list(range(0, 14)) + [22, 23]   # R710：北京 06–22 = UTC 22–14
 EN_HOURS = list(range(14, 22))             # 北京 22–06 = UTC 14–22
 WINDOW = (0, 2)
+MAX_DAILY = 60          # 与生产 MAX_DAILY_POSTS 一致（60/24h 滚动）
 
 
 def hourly_vpd(rows):
@@ -49,8 +50,13 @@ def hourly_vpd(rows):
     return out
 
 
-def daily_count(metrics, lang_set):
-    days = {}
+def daily_count(metrics, lang_set, recent_days=5):
+    """★ 用**最近 N 个完整日**的篇数中位（不含最后一天：它通常是半天）。
+
+    为什么不用全窗口中位：全窗口含早期 en 较少的时段，会把 en 低估 ~15%，
+    进而把"窗口还能塞几篇"算高（本轮实测 en 全窗 20.5 vs 近 5 日 24）。
+    """
+    per = {}
     for m in metrics:
         if not str(m.get("outcome", "")).startswith("binance_published"):
             continue
@@ -58,11 +64,12 @@ def daily_count(metrics, lang_set):
         if lg not in lang_set:
             continue
         d = str(m.get("ts", ""))[:10]
-        days[d] = days.get(d, 0) + 1
-    if not days:
+        per[d] = per.get(d, 0) + 1
+    if not per:
         return None
-    vals = sorted(days.values())
-    return st.median(vals)
+    days = sorted(per)[:-1] if len(per) > recent_days else sorted(per)
+    vals = [per[d] for d in days[-recent_days:]]
+    return st.median(vals) if vals else None
 
 
 def scenarios(zh_vpd, en_vpd, zh_per_day, en_per_day):
@@ -80,12 +87,16 @@ def scenarios(zh_vpd, en_vpd, zh_per_day, en_per_day):
     out["S0 现状（zh 均摊）"] = total(c0, zh_vpd) + total(
         {h: en_per_day / len(en_h) for h in en_h}, en_vpd)
 
-    # S1 cap=24 + 窗内一轮两篇
-    win_posts = 2 * (wid * 3)            # 每槽 2 篇 × 窗内槽数（20 分钟一轮）
-    zh_out = max(0.0, zh_per_day - win_posts)
+    # S1：窗内一轮两篇。★ 容量必须由**配额恒等式**导出，不能只看 zh 日产量：
+    #     zh_out + W + en ≤ MAX_DAILY  ⇒  cap = MAX - en - W
+    #   （旧式 `cap = zh_per_day - W` 忽略了 en，把 cap 高估 3 篇、收益高估 ~6pp。）
+    win_cap = 2 * (wid * 3)                          # 每槽 2 篇 × 窗内槽数
+    win_posts = max(0.0, min(win_cap, MAX_DAILY - en_per_day, zh_per_day))
+    # cap 同时受两个约束：① 配额恒等式（zh_out + W + en ≤ MAX）；② 实际日产量（不能凭空多写）
+    zh_out = max(0.0, min(MAX_DAILY - en_per_day - win_posts, zh_per_day - win_posts))
     c1 = {h: win_posts / wid for h in range(*WINDOW)}
     c1.update({h: zh_out / len(rest) for h in rest})
-    out["S1 cap=%d + 窗内两篇" % int(zh_out)] = (
+    out["S1 cap=%d + 窗内两篇（W=%d）" % (int(zh_out), int(win_posts))] = (
         total(c1, zh_vpd) + total({h: en_per_day / len(en_h) for h in en_h}, en_vpd))
 
     # S2 窗口放宽到 00–04、仍 1 篇/轮

@@ -10748,6 +10748,46 @@ class TestR897ExposureSensitivity(unittest.TestCase):
         self.assertIn("[24,72]h", out)
 
 
+class TestR898CapIdentity(unittest.TestCase):
+    """★ S1 的 cap 不能只看 zh 日产量：必须满足「zh_out + W + en ≤ MAX_DAILY」。
+
+    旧式 `cap = zh_per_day - W` 忽略 en ⇒ cap 高估 3 篇、收益高估约 6pp
+    （实测：zh 35 / en 24 时正确 cap = 23，旧式给 27）。
+    """
+
+    @staticmethod
+    def _mod():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "slot_scenarios_r898",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "slot_scenarios.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _vpd(self):
+        return {0: 10.0, 1: 10.0, 5: 2.0, 6: 2.0, 7: 2.0, 8: 2.0}, {14: 1.0, 15: 1.0}
+
+    def test_cap_respects_quota_identity(self):
+        m = self._mod()
+        zh, en = self._vpd()
+        # zh 35 / en 24 / MAX 60 ⇒ W=12，zh_out = min(60-24-12, 35-12) = 23
+        sc = m.scenarios(zh, en, 35.0, 24.0)
+        key = [k for k in sc if k.startswith("S1")][0]
+        self.assertIn("cap=23", key)
+        self.assertIn("W=12", key)
+
+    def test_cap_cannot_exceed_actual_daily_output(self):
+        m = self._mod()
+        zh, en = self._vpd()
+        # zh 只有 10 篇/天：窗口拿不到 12（W≤10），且 zh_out 不能为负
+        sc = m.scenarios(zh, en, 10.0, 24.0)
+        key = [k for k in sc if k.startswith("S1")][0]
+        self.assertIn("W=10", key)
+        self.assertIn("cap=0", key)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 
