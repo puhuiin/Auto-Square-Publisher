@@ -10402,6 +10402,66 @@ class TestR884YieldNotSaturation(unittest.TestCase):
         self.assertNotIn("中文窗让额", out)
 
 
+class TestR891SlotScenarios(unittest.TestCase):
+    """★ 排程方案测算：算术要对，且必须**明说** S3 的配额死锁假设。
+
+    背景：同是"多塞 6 篇进窗口"，三种做法实测差 5 倍（+62% / +9% / +10%）。
+    工具若把 S3 按"窗口能长到 8 篇"算，会给出虚高的 +33%，误导决策。
+    """
+
+    @staticmethod
+    def _mod():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "slot_scenarios_r891",
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "scripts", "slot_scenarios.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def _vpd(self):
+        # 只给两种小时：窗内 10、窗外 2，便于手算
+        zh = {0: 10.0, 1: 10.0, 5: 2.0, 6: 2.0, 7: 2.0, 8: 2.0}
+        en = {14: 1.0, 15: 1.0}
+        return zh, en
+
+    def test_baseline_equals_sum_of_hourly(self):
+        m = self._mod()
+        zh, en = self._vpd()
+        sc = m.scenarios(zh, en, 12.0, 4.0)
+        base = sc["S0 现状（zh 均摊）"]
+        # zh 12 篇均摊到 6 个小时 = 2/小时 ⇒ 2*(10+10+2+2+2+2)=56；en 4 篇均摊 2 小时 ⇒ 2*1*2=4
+        self.assertAlmostEqual(base, 60.0)
+
+    def test_cap_scenario_moves_six_posts_into_window(self):
+        m = self._mod()
+        zh, en = self._vpd()
+        sc = m.scenarios(zh, en, 18.0, 2.0)
+        s1 = [k for k in sc if k.startswith("S1")][0]
+        # 窗口容量 = 2 篇/槽 × 6 槽 = 12 ⇒ cap = 18-12 = 6
+        self.assertIn("cap=6", s1)
+        # 窗内 12 篇 × 10 = 120；窗外 6 篇均摊 4 小时 = 1.5/小时 × (2+2+2+2)=12
+        self.assertAlmostEqual(sc[s1], 132.0 + 2.0)
+
+    def test_s3_uses_locked_window_not_wishful(self):
+        """S3 必须按"窗口被锁在昨日水平（6 篇）"算，而不是按能长到 12 篇"""
+        m = self._mod()
+        zh, en = self._vpd()
+        # zh_per_day 很大时，S3 的窗内篇数仍固定为 6
+        small = m.scenarios(zh, en, 12.0, 2.0)["S3 只放宽两篇、cap 不变"]
+        large = m.scenarios(zh, en, 40.0, 2.0)["S3 只放宽两篇、cap 不变"]
+        # 两者窗内贡献都是 6 篇×10=60；差异只来自窗外部份的均摊浓度
+        self.assertGreater(large, small)          # 篇数多 ⇒ 窗外贡献变大
+        self.assertLess(large - small, 60.0)      # 但不得把窗内也从 6 提到 12（那会多 60）
+
+    def test_deadlock_warning_present(self):
+        src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                "scripts", "slot_scenarios.py"), encoding="utf-8").read()
+        self.assertIn("滚动 24h", src)
+        self.assertIn("锁住", src)
+
+
 class TestR850Preregistration(unittest.TestCase):
     """★★ R850：**守卫式重试**的预注册判据（先写判据，部署等 R848 的 ③ 窗口关掉）。
 
