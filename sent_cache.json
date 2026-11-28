@@ -1,16 +1,5 @@
 [
   {
-    "id": "364ab584106b7fb4",
-    "title": "Solana Tokenized Stock Hits $1.2B as Wall Street Moves Equities Onchain",
-    "source": "CryptoNews (全球快讯)",
-    "sent_at": "2026-11-19T09:04:07.909834+00:00",
-    "tokens": [
-      "SOL",
-      "ONDO"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "b8d2ea72f3c5b9e4",
     "title": "Zelle Moves $1.25 Million On Solana — Could This Be A Turning Point For SOL?",
     "source": "Bitcoinist (比特币向)",
@@ -5162,6 +5151,16 @@
     "sent_at": "2026-11-28T07:43:53.235484+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "e41a8ca4c3feab00",
+    "title": "USD1 在 Gate 短時跌至 0.8406 美元,方程式創始人 Vida 抄底浮盈 53.6 萬美元",
+    "source": "深潮TechFlow (中文/繁体)",
+    "sent_at": "2026-11-28T08:03:52.407213+00:00",
+    "tokens": [
+      "USD1"
     ],
     "lang": "zh-CN"
   }
