@@ -1,15 +1,5 @@
 [
   {
-    "id": "4a4fd01fd820a9b6",
-    "title": "婚前持有大额 USDT,离婚时要分给另一半吗?",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-19T14:24:57.273998+00:00",
-    "tokens": [
-      "ALLO"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ca86c1c777b1d79f",
     "title": "Securitize Plans IPO-Day Anthropic Tokens on Solana",
     "source": "The Defiant (DeFi 深度)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-11-28T12:04:01.267545+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "b0bf8aff98a5f5f7",
+    "title": "前FTX高管回忆崩盘往事:72小时流出约60亿美元,SBF曾试图撤回CEO任命",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-28T12:24:02.424952+00:00",
+    "tokens": [
+      "FTT"
     ],
     "lang": "zh-TW"
   }
