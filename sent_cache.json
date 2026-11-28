@@ -1,15 +1,5 @@
 [
   {
-    "id": "984280ce7a284a2e",
-    "title": "CertiK完成GL1自评声明独立核验",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-19T01:44:39.381037+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "440a48c77282095b",
     "title": "Bitget UEX 日报|英伟达财报难撑反弹,紧缩预期压制估值;Anthropic 敲定 IPO;比特币回落至 6.3 万美元附近(2026 年 11 月 19 日)",
     "source": "深潮TechFlow (中文/简体)",
@@ -5168,6 +5158,16 @@
     "title": "消息称 Anza 要求 Solana 主网验证节点紧急升级",
     "source": "深潮TechFlow (中文/简体)",
     "sent_at": "2026-11-28T00:03:55.964631+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "fd0aef038db4eb2e",
+    "title": "Binance moves 210.2 million USDT to an unlabeled Solana wallet",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-28T00:31:54.620326+00:00",
     "tokens": [
       "SOL"
     ],
