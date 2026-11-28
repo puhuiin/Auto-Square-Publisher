@@ -1,15 +1,5 @@
 [
   {
-    "id": "9a6129d90d0ac7db",
-    "title": "Ripple CEO Predicts Utility-Driven Crypto Will Win — Could XRP Be The Biggest Beneficiary?",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-19T10:04:00.152199+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "12c4b0aa8a32b295",
     "title": "Charles Hoskinson Signals a New Cardano Era as Midnight Takes Center Stage Amid 23 Million ADA Treasury Return",
     "source": "ZyCrypto (新币与空投)",
@@ -5164,5 +5154,15 @@
       "USD1"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "ab177cd07f2ad94a",
+    "title": "MEXC Launches Golden Gratitude Gala With a 10M USDT Prize Pool, Including a Gold Bar and BTC",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-28T08:43:44.983800+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
