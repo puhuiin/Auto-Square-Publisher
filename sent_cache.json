@@ -1,15 +1,5 @@
 [
   {
-    "id": "a70d760a2fb7e952",
-    "title": "播客笔记|对话连赚 30 年的投资大师 Druckenmiller:未来 12 个月看不清,最明智的策略就是彻底“不入局”",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-19T08:04:33.135434+00:00",
-    "tokens": [
-      "IQ"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ab89ba33261fba25",
     "title": "Principia Research:从 5.57 亿美元认购退款到自建证券交易所,币安的「链上纳斯达克」野心",
     "source": "深潮TechFlow (中文/简体)",
@@ -5163,6 +5153,16 @@
     "tokens": [
       "USD1",
       "WLFI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "298957ee93a4e3d4",
+    "title": "Bitcoin recovery needs USDT supply growth: CryptoQuant, K33 weighs AI threat to Bitcoin, and more",
+    "source": "The Block (机构与政策)",
+    "sent_at": "2026-11-28T07:03:57.922143+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
