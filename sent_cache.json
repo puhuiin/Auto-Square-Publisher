@@ -1,15 +1,5 @@
 [
   {
-    "id": "7641f66100856fd0",
-    "title": "Bitwise Files SEC Registration for a Zcash ETF",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-19T18:05:02.145793+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d791596593a5c9dd",
     "title": "Binance Wallet 公布 Anthropic IPO 配售补偿方案:全额退还认购资金,额外空投价值 100 万美元的 ANTB 代币",
     "source": "吴说区块链 (中文深度)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-11-28T14:43:56.385320+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7d318922f834d56d",
+    "title": "Dogecoin Early History: Every Block Once Paid Up to 1 Million DOGE",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-28T15:03:51.468660+00:00",
+    "tokens": [
+      "DOGE"
     ],
     "lang": "en"
   }
