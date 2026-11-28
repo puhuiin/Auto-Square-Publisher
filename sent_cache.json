@@ -1,15 +1,5 @@
 [
   {
-    "id": "49fa283d16ce7a24",
-    "title": "Ripple CEO: Utility-driven crypto assets to outperform speculative tokens",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-19T07:24:06.941642+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "5108a3c095c6a43b",
     "title": "韩国 Upbit 将上线 STRK、EIGEN、US 及 REQ,开放 BTC 和 USDT 交易对",
     "source": "吴说区块链 (中文深度)",
@@ -5164,6 +5154,16 @@
     "sent_at": "2026-11-28T06:04:15.760721+00:00",
     "tokens": [
       "USD1"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "02817153a8e7002a",
+    "title": "World Liberty Financial’s WLFI token plunges 59% in 24 hours",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-28T06:24:35.235549+00:00",
+    "tokens": [
+      "WLFI"
     ],
     "lang": "zh-TW"
   }

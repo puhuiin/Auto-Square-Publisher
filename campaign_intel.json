@@ -4,51 +4,50 @@
     "#BinanceSquare",
     "#TradingTournament",
     "#Futures",
-    "#BinanceAlpha"
+    "#BlackFriday"
   ],
   "incentivized_tokens": [
     "$BNB",
-    "$CT",
-    "$NIGHT",
     "$USDC",
     "$USDT",
-    "$ANT",
+    "$NIGHT",
+    "$SPCXB",
     "$ANTB",
-    "$SPCXB"
+    "$ANT"
   ],
-  "strategy_guidance": "最紧迫的是标注 2026-11-27 的 Concrete (CT) Alpha 交易竞赛，按截止日节奏优先追贴：先发规则拆解与冲刺提醒，再补赛后复盘和抄作业角度，并在评论区引导互动参与 Write2Earn 奖励。日常快讯可把今日 TradFi USDⓈ-永续合约上线、bStocks 新增交易对/抵押及零挂单费延续作为背景，串联未截止的 Spot Trading Tournament Season 12、THE BIG BINANCE BONANZA、Simple Earn 等活动做教程与活动导流，提高曝光和 Write to Earn 交易返佣。发帖措辞只强调参与评论/互动拿奖励和追当期活动热度，避免任何参与活动即可获交易回报的暗示。",
-  "last_updated": "2026-11-27T18:04:04.689376Z",
+  "strategy_guidance": "优先追“THE BIG BINANCE BONANZA: Black Friday Frenzy”这一强时效当期热点，用活动冲刺/复盘/抄作业角度切入，并串联 Spot Trading Tournament Season 12、Binance Futures 新上线 TradFi 永续、bStocks 新增抵押与交易对、Anthropic 股票期权等产品快讯，提醒读者参与评论/互动拿奖励。日常快讯建议采用“活动进度+玩法拆解+风险提示”结构，不暗示参加活动能带来交易收益，以提升 Write2Earn 曝光与合规互动转化。",
+  "last_updated": "2026-11-28T06:24:06.165759Z",
   "_feed_health": {
-    "Watcher.Guru (快讯)": {
-      "last_fail": "2026-11-28T06:03:30.763939+00:00",
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "fails": 3
-    },
-    "吴说区块链 (中文深度)": {
-      "last_fail": "2026-11-28T06:03:31.319442+00:00",
-      "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "fails": 3
-    },
-    "Bitcoinist (比特币向)": {
-      "last_fail": "2026-11-28T05:23:34.051098+00:00",
-      "parked_until": "2026-11-27T13:43:41.931378+00:00",
-      "reset_at": "2026-11-28T06:03:30.463538+00:00",
-      "fails": 3
-    },
-    "ZyCrypto (新币与空投)": {
-      "last_fail": "2026-11-28T03:23:31.344948+00:00",
-      "reset_at": "2026-11-28T06:03:30.141622+00:00",
+    "CryptoPotato (山寨币/Meme热点)": {
+      "reset_at": "2026-11-28T06:03:30.303084+00:00",
+      "last_fail": "2026-11-28T06:24:06.679617+00:00",
       "fails": 1
     },
     "CoinJournal (山寨异动)": {
-      "last_fail": "2026-11-28T05:24:04.267893+00:00",
       "parked_until": "2026-11-28T11:24:04.267893+00:00",
+      "last_fail": "2026-11-28T05:24:04.267893+00:00",
       "fails": 3
     },
-    "CryptoPotato (山寨币/Meme热点)": {
-      "last_fail": "2026-11-28T03:23:31.341508+00:00",
-      "reset_at": "2026-11-28T06:03:30.303084+00:00",
+    "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-11-28T06:24:07.203220+00:00",
+      "last_fail": "2026-11-28T03:23:31.344948+00:00",
       "fails": 1
+    },
+    "Watcher.Guru (快讯)": {
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "last_fail": "2026-11-28T06:24:07.409619+00:00",
+      "fails": 3
+    },
+    "Bitcoinist (比特币向)": {
+      "reset_at": "2026-11-28T06:24:07.132118+00:00",
+      "parked_until": "2026-11-27T13:43:41.931378+00:00",
+      "last_fail": "2026-11-28T05:23:34.051098+00:00",
+      "fails": 3
+    },
+    "吴说区块链 (中文深度)": {
+      "parked_until": "2026-11-24T07:46:04.867856+00:00",
+      "last_fail": "2026-11-28T06:24:08.248687+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
