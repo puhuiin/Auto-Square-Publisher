@@ -1,16 +1,5 @@
 [
   {
-    "id": "ba8746d5aa7f018c",
-    "title": "CZ Sounds Alarm as Japan Orders Crackdown on ID Data Storage",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-19T06:44:05.824982+00:00",
-    "tokens": [
-      "ID",
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b81f974399bbe9c1",
     "title": "Dogecoin down by 44%, hits 2026’s lowest price — More downside ahead?",
     "source": "AMBCrypto (技术与链上)",
@@ -5165,6 +5154,16 @@
     "sent_at": "2026-11-28T05:24:15.763646+00:00",
     "tokens": [
       "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "0c014cc3ba1179f0",
+    "title": "This Trader Just Told XRP Holders to Stop Trusting Chart-Only Bears",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-28T05:43:54.074319+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "zh-CN"
   }
