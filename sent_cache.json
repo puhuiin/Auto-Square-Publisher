@@ -1,15 +1,5 @@
 [
   {
-    "id": "b81f974399bbe9c1",
-    "title": "Dogecoin down by 44%, hits 2026’s lowest price — More downside ahead?",
-    "source": "AMBCrypto (技术与链上)",
-    "sent_at": "2026-11-19T07:04:00.420922+00:00",
-    "tokens": [
-      "DOGE"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "49fa283d16ce7a24",
     "title": "Ripple CEO: Utility-driven crypto assets to outperform speculative tokens",
     "source": "Crypto Briefing (深度与研报)",
@@ -5166,5 +5156,15 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "519d0987b5be9b2c",
+    "title": "USD1最低跌至0.99750美元,现报0.99768美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-28T06:04:15.760721+00:00",
+    "tokens": [
+      "USD1"
+    ],
+    "lang": "zh-TW"
   }
 ]
