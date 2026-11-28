@@ -1,15 +1,5 @@
 [
   {
-    "id": "683913341a604b72",
-    "title": "Bitcoin Price Rebounds Near $64,000 as Anthropic IPO Lifts Tech Stocks",
-    "source": "Bitcoin Magazine (比特币核心)",
-    "sent_at": "2026-11-19T14:06:52.007610+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "4a4fd01fd820a9b6",
     "title": "婚前持有大额 USDT,离婚时要分给另一半吗?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-11-28T11:44:00.862936+00:00",
     "tokens": [
       "WLFI"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "f8d130dc197effd3",
+    "title": "Keel Infrastructure sells entire Bitcoin treasury worth $192M",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-28T12:04:01.267545+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
