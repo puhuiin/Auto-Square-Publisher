@@ -1,15 +1,5 @@
 [
   {
-    "id": "b860ec69b10e0442",
-    "title": "XRP Out at Royal Bank of Canada: Leveraged Fund Cut to Zero",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-19T13:42:23.651265+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "683913341a604b72",
     "title": "Bitcoin Price Rebounds Near $64,000 as Anthropic IPO Lifts Tech Stocks",
     "source": "Bitcoin Magazine (比特币核心)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-11-28T11:24:01.232539+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "3f76f388c436acc5",
+    "title": "Trump-linked crypto token WLFI plunges 50% to record lows",
+    "source": "CoinDesk (权威宏观与机构)",
+    "sent_at": "2026-11-28T11:44:00.862936+00:00",
+    "tokens": [
+      "WLFI"
     ],
     "lang": "zh-TW"
   }

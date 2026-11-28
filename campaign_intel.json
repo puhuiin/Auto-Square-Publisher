@@ -18,31 +18,31 @@
   "strategy_guidance": "优先追“THE BIG BINANCE BONANZA: Black Friday Frenzy”这一强时效当期热点，用活动冲刺/复盘/抄作业角度切入，并串联 Spot Trading Tournament Season 12、Binance Futures 新上线 TradFi 永续、bStocks 新增抵押与交易对、Anthropic 股票期权等产品快讯，提醒读者参与评论/互动拿奖励。日常快讯建议采用“活动进度+玩法拆解+风险提示”结构，不暗示参加活动能带来交易收益，以提升 Write2Earn 曝光与合规互动转化。",
   "last_updated": "2026-11-28T06:24:06.165759Z",
   "_feed_health": {
-    "吴说区块链 (中文深度)": {
-      "fails": 3,
-      "last_fail": "2026-11-28T11:23:33.071577+00:00",
-      "parked_until": "2026-11-24T07:46:04.867856+00:00"
-    },
-    "Bitcoinist (比特币向)": {
-      "fails": 3,
-      "last_fail": "2026-11-28T11:03:41.586053+00:00",
-      "reset_at": "2026-11-28T11:23:31.452890+00:00",
-      "parked_until": "2026-11-27T13:43:41.931378+00:00"
-    },
     "CryptoPotato (山寨币/Meme热点)": {
       "fails": 1,
-      "last_fail": "2026-11-28T07:43:32.894152+00:00",
-      "reset_at": "2026-11-28T11:23:31.636359+00:00"
+      "reset_at": "2026-11-28T11:43:37.467936+00:00",
+      "last_fail": "2026-11-28T07:43:32.894152+00:00"
+    },
+    "吴说区块链 (中文深度)": {
+      "fails": 3,
+      "last_fail": "2026-11-28T11:43:38.497327+00:00",
+      "parked_until": "2026-11-24T07:46:04.867856+00:00"
     },
     "Watcher.Guru (快讯)": {
       "fails": 3,
-      "last_fail": "2026-11-28T11:23:31.838315+00:00",
+      "last_fail": "2026-11-28T11:43:37.755718+00:00",
       "parked_until": "2026-11-17T10:23:31.478522+00:00"
+    },
+    "Bitcoinist (比特币向)": {
+      "fails": 3,
+      "reset_at": "2026-11-28T11:23:31.452890+00:00",
+      "last_fail": "2026-11-28T11:43:37.400639+00:00",
+      "parked_until": "2026-11-27T13:43:41.931378+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-28",
