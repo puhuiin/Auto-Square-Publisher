@@ -1,15 +1,5 @@
 [
   {
-    "id": "73d201d6a31d77ef",
-    "title": "K3 Capital 遭盗 342 万美元,超半数被盗资金流向以太坊区块构建者",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-19T06:24:18.901616+00:00",
-    "tokens": [
-      "ETH"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "ba8746d5aa7f018c",
     "title": "CZ Sounds Alarm as Japan Orders Crackdown on ID Data Storage",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5165,6 +5155,16 @@
     "sent_at": "2026-11-28T05:04:17.274596+00:00",
     "tokens": [
       "WLFI"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "791fe2f687ec4c80",
+    "title": "SOL现货ETF昨日净流出87.17万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-28T05:24:15.763646+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
