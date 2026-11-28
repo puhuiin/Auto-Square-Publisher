@@ -1,15 +1,5 @@
 [
   {
-    "id": "d29540b9e6fbb5fb",
-    "title": "Raoul Pal Hails Solana as Tokenized Equities Leader After Explosive Growth From $10M to $2B in 15 Months",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-19T18:44:12.610620+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0ddccddeef7c5a2a",
     "title": "上线数小时内,代币化ANT在Uniswap交易量超1000万美元",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5160,6 +5150,17 @@
     "sent_at": "2026-11-28T15:24:00.882985+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "b49402021cb75df3",
+    "title": "World Liberty Financial Blames Binance for Its 50% Crash Overnight",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-28T15:44:03.957065+00:00",
+    "tokens": [
+      "WLFI",
+      "USD1"
     ],
     "lang": "en"
   }
