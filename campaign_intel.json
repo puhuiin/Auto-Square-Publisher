@@ -18,26 +18,26 @@
   "strategy_guidance": "最需优先追贴的是仍有效的 BIG BINANCE BONANZA 的 Black Friday/Thanksgiving 主题，按“活动冲刺/复盘/抄作业”节奏把日常行情快讯与 Spot Trading Tournament Season 12（$BNB）、Season 11（$NIGHT）及 USDⓈ-Margined TradFi 永续/ANT 股票期权公告结合，结尾引导读者到 Binance Square 评论区互动参与 Write2Earn，并自然放置返佣注册入口。次级贴可拆分 bStocks 新品与抵押、$ANTB/$SPCXB 奖励分享、Simple Earn 和 P2P 区域活动，围绕当期官方活动持续追热，不写任何交易收益承诺。",
   "last_updated": "2026-11-28T18:44:08.093671Z",
   "_feed_health": {
-    "吴说区块链 (中文深度)": {
-      "fails": 3,
-      "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "last_fail": "2026-11-28T18:44:10.151774+00:00"
-    },
     "Bitcoinist (比特币向)": {
-      "fails": 3,
-      "parked_until": "2026-11-27T13:43:41.931378+00:00",
       "last_fail": "2026-11-28T18:44:08.897496+00:00",
-      "reset_at": "2026-11-28T18:23:30.578564+00:00"
+      "fails": 3,
+      "reset_at": "2026-11-28T18:23:30.578564+00:00",
+      "parked_until": "2026-11-27T13:43:41.931378+00:00"
     },
     "CryptoPotato (山寨币/Meme热点)": {
       "fails": 1,
-      "last_fail": "2026-11-28T17:23:27.014829+00:00",
-      "reset_at": "2026-11-28T18:44:08.848826+00:00"
+      "reset_at": "2026-11-28T18:44:08.848826+00:00",
+      "last_fail": "2026-11-28T17:23:27.014829+00:00"
+    },
+    "吴说区块链 (中文深度)": {
+      "fails": 3,
+      "last_fail": "2026-11-28T18:44:10.151774+00:00",
+      "parked_until": "2026-11-24T07:46:04.867856+00:00"
     },
     "Watcher.Guru (快讯)": {
       "fails": 3,
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-28T18:44:09.273221+00:00"
+      "last_fail": "2026-11-28T18:44:09.273221+00:00",
+      "parked_until": "2026-11-17T10:23:31.478522+00:00"
     }
   },
   "_fallback_image": {
