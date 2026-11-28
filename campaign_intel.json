@@ -19,46 +19,46 @@
   "strategy_guidance": "最紧迫的是标注 2026-11-27 的 Concrete (CT) Alpha 交易竞赛，按截止日节奏优先追贴：先发规则拆解与冲刺提醒，再补赛后复盘和抄作业角度，并在评论区引导互动参与 Write2Earn 奖励。日常快讯可把今日 TradFi USDⓈ-永续合约上线、bStocks 新增交易对/抵押及零挂单费延续作为背景，串联未截止的 Spot Trading Tournament Season 12、THE BIG BINANCE BONANZA、Simple Earn 等活动做教程与活动导流，提高曝光和 Write to Earn 交易返佣。发帖措辞只强调参与评论/互动拿奖励和追当期活动热度，避免任何参与活动即可获交易回报的暗示。",
   "last_updated": "2026-11-27T18:04:04.689376Z",
   "_feed_health": {
-    "CryptoPotato (山寨币/Meme热点)": {
-      "reset_at": "2026-11-28T04:43:31.628455+00:00",
-      "last_fail": "2026-11-28T03:23:31.341508+00:00",
-      "fails": 1
+    "Watcher.Guru (快讯)": {
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "fails": 3,
+      "last_fail": "2026-11-28T05:03:28.620952+00:00"
     },
     "Bitcoinist (比特币向)": {
-      "reset_at": "2026-11-28T04:03:37.472584+00:00",
-      "last_fail": "2026-11-28T04:43:31.565128+00:00",
+      "reset_at": "2026-11-28T05:03:27.949044+00:00",
       "parked_until": "2026-11-27T13:43:41.931378+00:00",
-      "fails": 3
-    },
-    "Watcher.Guru (快讯)": {
-      "last_fail": "2026-11-28T04:43:32.165606+00:00",
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "fails": 3
-    },
-    "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-11-28T04:43:31.658512+00:00",
-      "last_fail": "2026-11-28T03:23:31.344948+00:00",
-      "fails": 1
+      "fails": 3,
+      "last_fail": "2026-11-28T04:43:31.565128+00:00"
     },
     "CoinJournal (山寨异动)": {
-      "fails": 1,
-      "last_fail": "2026-11-28T04:44:01.798318+00:00"
+      "fails": 2,
+      "last_fail": "2026-11-28T05:03:58.198445+00:00"
     },
     "吴说区块链 (中文深度)": {
-      "last_fail": "2026-11-28T04:43:33.294514+00:00",
       "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-11-28T05:03:29.066144+00:00"
+    },
+    "CryptoPotato (山寨币/Meme热点)": {
+      "reset_at": "2026-11-28T05:03:27.803086+00:00",
+      "fails": 1,
+      "last_fail": "2026-11-28T03:23:31.341508+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-11-28T05:03:27.847377+00:00",
+      "fails": 1,
+      "last_fail": "2026-11-28T03:23:31.344948+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-28",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1383,
+  "_img_rot": 1384,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
