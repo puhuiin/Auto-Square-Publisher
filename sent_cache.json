@@ -1,15 +1,5 @@
 [
   {
-    "id": "31f6331e53bf71ef",
-    "title": "CZ says tokenized Anthropic is coming to BNB Chain on IPO day",
-    "source": "CoinDesk (权威宏观与机构)",
-    "sent_at": "2026-11-19T03:44:01.970558+00:00",
-    "tokens": [
-      "BNB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "932257f1cbf43f7c",
     "title": "CZ:Anthropic上市首日将登陆BNB Chain链上代币化交易",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5168,6 +5158,16 @@
     "tokens": [
       "USDS",
       "SKY"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "055303545aa8d2cf",
+    "title": "观点:BTC不会轻易被AI攻破,双重加密机制构成独立防线且将超越当前密码学技术",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-28T03:04:17.774277+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-TW"
   }
