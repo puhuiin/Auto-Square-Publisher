@@ -1,15 +1,5 @@
 [
   {
-    "id": "ca86c1c777b1d79f",
-    "title": "Securitize Plans IPO-Day Anthropic Tokens on Solana",
-    "source": "The Defiant (DeFi 深度)",
-    "sent_at": "2026-11-19T14:44:30.967284+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "21b315bfce8720db",
     "title": "USDC Treasury 在 Solana 新铸造 2.5 亿枚 USDC",
     "source": "吴说区块链 (中文深度)",
@@ -5162,6 +5152,17 @@
     "sent_at": "2026-11-28T12:24:02.424952+00:00",
     "tokens": [
       "FTT"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "8084d92c049e8caf",
+    "title": "USDD 推出 ETH/WBTC Vault 1%稳定费优惠活动并上线 wstETH Vault",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-28T12:44:36.626110+00:00",
+    "tokens": [
+      "ETH",
+      "WBTC"
     ],
     "lang": "zh-TW"
   }
