@@ -1,17 +1,5 @@
 [
   {
-    "id": "5108a3c095c6a43b",
-    "title": "韩国 Upbit 将上线 STRK、EIGEN、US 及 REQ,开放 BTC 和 USDT 交易对",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-19T07:43:51.432674+00:00",
-    "tokens": [
-      "STRK",
-      "EIGEN",
-      "REQ"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "a70d760a2fb7e952",
     "title": "播客笔记|对话连赚 30 年的投资大师 Druckenmiller:未来 12 个月看不清,最明智的策略就是彻底“不入局”",
     "source": "深潮TechFlow (中文/简体)",
@@ -5166,5 +5154,16 @@
       "WLFI"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "d1a3199d9a8ef2a2",
+    "title": "USD1 Trades at $0.9967 on Coinbase After WLFI Selloff",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-28T06:44:02.713671+00:00",
+    "tokens": [
+      "USD1",
+      "WLFI"
+    ],
+    "lang": "zh-CN"
   }
 ]
