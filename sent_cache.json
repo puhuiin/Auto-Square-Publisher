@@ -1,15 +1,5 @@
 [
   {
-    "id": "abd2108e07d63126",
-    "title": "金銀股幣全線下跌,錢都去哪了?",
-    "source": "深潮TechFlow (中文/繁体)",
-    "sent_at": "2026-11-19T05:03:59.501306+00:00",
-    "tokens": [
-      "BTC"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "570b22b90708c114",
     "title": "Sarvam 一邊做主權 AI,一邊轉售 DeepSeek 模型",
     "source": "深潮TechFlow (中文/繁体)",
@@ -5167,6 +5157,16 @@
     "tokens": [
       "BNB",
       "ZEC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "399b33b343672944",
+    "title": "Solana faces its ‘worst’ year since launch as November losses hit 22%",
+    "source": "AMBCrypto (技术与链上)",
+    "sent_at": "2026-11-28T04:04:05.122663+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
