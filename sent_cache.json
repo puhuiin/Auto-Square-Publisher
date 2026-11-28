@@ -1,15 +1,5 @@
 [
   {
-    "id": "7325fc74a0f1b4f9",
-    "title": "Take-Two 代币化股票 DEX 成交量达 2.495 亿美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-19T12:47:14.868169+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "dda5ef36bbf209bc",
     "title": "Can Shiba Inu (SHIB) Avoid 86 Trillion? Bears Giving Up",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5164,5 +5154,15 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "86f0837b7f9cfbe6",
+    "title": "ALT5 Sigma过去3小时累计转移4.1亿枚WLFI,价值783万美元",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-28T11:03:57.918381+00:00",
+    "tokens": [
+      "WLFI"
+    ],
+    "lang": "zh-CN"
   }
 ]
