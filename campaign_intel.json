@@ -19,31 +19,31 @@
   "strategy_guidance": "最紧迫的是标注 2026-11-27 的 Concrete (CT) Alpha 交易竞赛，按截止日节奏优先追贴：先发规则拆解与冲刺提醒，再补赛后复盘和抄作业角度，并在评论区引导互动参与 Write2Earn 奖励。日常快讯可把今日 TradFi USDⓈ-永续合约上线、bStocks 新增交易对/抵押及零挂单费延续作为背景，串联未截止的 Spot Trading Tournament Season 12、THE BIG BINANCE BONANZA、Simple Earn 等活动做教程与活动导流，提高曝光和 Write to Earn 交易返佣。发帖措辞只强调参与评论/互动拿奖励和追当期活动热度，避免任何参与活动即可获交易回报的暗示。",
   "last_updated": "2026-11-27T18:04:04.689376Z",
   "_feed_health": {
-    "ZyCrypto (新币与空投)": {
-      "reset_at": "2026-11-28T01:34:26.982576+00:00",
-      "last_fail": "2026-11-27T20:43:34.682255+00:00",
-      "fails": 2
+    "Watcher.Guru (快讯)": {
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "fails": 3,
+      "last_fail": "2026-11-28T01:34:27.536234+00:00"
     },
     "吴说区块链 (中文深度)": {
       "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "last_fail": "2026-11-28T01:34:28.290909+00:00",
-      "fails": 3
+      "fails": 3,
+      "last_fail": "2026-11-28T01:34:28.290909+00:00"
+    },
+    "ZyCrypto (新币与空投)": {
+      "reset_at": "2026-11-28T01:34:26.982576+00:00",
+      "fails": 2,
+      "last_fail": "2026-11-27T20:43:34.682255+00:00"
     },
     "Bitcoinist (比特币向)": {
+      "fails": 3,
       "reset_at": "2026-11-28T01:34:27.336211+00:00",
       "parked_until": "2026-11-27T13:43:41.931378+00:00",
-      "last_fail": "2026-11-28T01:23:37.832492+00:00",
-      "fails": 3
-    },
-    "Watcher.Guru (快讯)": {
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-28T01:34:27.536234+00:00",
-      "fails": 3
+      "last_fail": "2026-11-28T01:23:37.832492+00:00"
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-28",
