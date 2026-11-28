@@ -1,15 +1,5 @@
 [
   {
-    "id": "a52afb0e409193d5",
-    "title": "Winklevoss twins say Zcash could top $5,000 within five to 10 years",
-    "source": "Crypto Briefing (深度与研报)",
-    "sent_at": "2026-11-19T20:04:33.744758+00:00",
-    "tokens": [
-      "ZEC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "8655042a240e9775",
     "title": "Solana Is Planning Its Next Major Upgrades: Here’s What Changes",
     "source": "CryptoPotato (山寨币/Meme热点)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-11-28T16:03:56.901222+00:00",
     "tokens": [
       "WLFI"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c630e92304d9c3db",
+    "title": "BNB Chain tops four real-world asset metrics as RWA market cap hits $6.1B",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-28T16:23:54.407840+00:00",
+    "tokens": [
+      "BNB"
     ],
     "lang": "en"
   }
