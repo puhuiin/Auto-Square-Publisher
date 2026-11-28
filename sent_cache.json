@@ -1,15 +1,5 @@
 [
   {
-    "id": "0ddccddeef7c5a2a",
-    "title": "上线数小时内,代币化ANT在Uniswap交易量超1000万美元",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-19T19:44:11.835375+00:00",
-    "tokens": [
-      "UNI"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "a52afb0e409193d5",
     "title": "Winklevoss twins say Zcash could top $5,000 within five to 10 years",
     "source": "Crypto Briefing (深度与研报)",
@@ -5161,6 +5151,16 @@
     "tokens": [
       "WLFI",
       "USD1"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d1ad3d5ce28abfb7",
+    "title": "World Liberty Breaks Silence After WLFI Crash, Denies Role in Binance Futures Closures",
+    "source": "CryptoPotato (山寨币/Meme热点)",
+    "sent_at": "2026-11-28T16:03:56.901222+00:00",
+    "tokens": [
+      "WLFI"
     ],
     "lang": "en"
   }
