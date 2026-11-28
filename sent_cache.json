@@ -1,15 +1,5 @@
 [
   {
-    "id": "6c0495c69debadc2",
-    "title": "Ripple CEO Says Crypto Could Rally Once Anthropic’s IPO Is Done",
-    "source": "BeInCrypto (山寨与行情)",
-    "sent_at": "2026-11-19T10:43:53.124959+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "1514ffc76d70d379",
     "title": "火币HTX将于11月19日20:00上线MMT(Momentum)",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5162,6 +5152,16 @@
     "tokens": [
       "WLFI",
       "USD1"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "f0d309bf235bbf33",
+    "title": "BlackRock Bitcoin ETF Loses $2.8 Billion in Eight Consecutive Trading Sessions",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-28T09:23:49.851912+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "zh-CN"
   }
