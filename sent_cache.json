@@ -1,17 +1,5 @@
 [
   {
-    "id": "76440c5f21c0c2df",
-    "title": "星球晚讯",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-19T12:04:05.458270+00:00",
-    "tokens": [
-      "ETH",
-      "BTC",
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "932256de3ce0143f",
     "title": "以太坊金库 8 分钟被盗 340 万美元:抢跑机器人截胡 191 万,178 万却成了打包费",
     "source": "深潮TechFlow (中文/简体)",
@@ -5164,6 +5152,16 @@
       "HYPE",
       "SOL",
       "FET"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "bc6af343c15ae9ac",
+    "title": "Wallet linked to Kyle Samani sells 144K SOL for $10M",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-28T10:23:54.225175+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
