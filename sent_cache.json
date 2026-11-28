@@ -1,16 +1,5 @@
 [
   {
-    "id": "12c4b0aa8a32b295",
-    "title": "Charles Hoskinson Signals a New Cardano Era as Midnight Takes Center Stage Amid 23 Million ADA Treasury Return",
-    "source": "ZyCrypto (新币与空投)",
-    "sent_at": "2026-11-19T10:26:20.363956+00:00",
-    "tokens": [
-      "ADA",
-      "NIGHT"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "6c0495c69debadc2",
     "title": "Ripple CEO Says Crypto Could Rally Once Anthropic’s IPO Is Done",
     "source": "BeInCrypto (山寨与行情)",
@@ -5164,5 +5153,16 @@
       "BTC"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "ba4e1ff50141508d",
+    "title": "孙宇晨就WLFI事件发声,呼吁交易所与司法部门追查资金流向",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-28T09:03:58.759410+00:00",
+    "tokens": [
+      "WLFI",
+      "USD1"
+    ],
+    "lang": "zh-CN"
   }
 ]
