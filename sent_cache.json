@@ -1,17 +1,5 @@
 [
   {
-    "id": "21b315bfce8720db",
-    "title": "USDC Treasury 在 Solana 新铸造 2.5 亿枚 USDC",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-19T15:04:19.781643+00:00",
-    "tokens": [
-      "USDC",
-      "SOL",
-      "PENGU"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ca0cd1d3da311f8d",
     "title": "Sky社区成员提议暂停SKY-USDS质押奖励并加大SKY回购力度,以稳定代币价格",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5163,6 +5151,16 @@
     "tokens": [
       "ETH",
       "WBTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "27cdb97345c1cd10",
+    "title": "Vitalik Buterin warns against rushing Ethereum gas change that could break some contracts",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-28T13:04:03.499290+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "zh-TW"
   }
