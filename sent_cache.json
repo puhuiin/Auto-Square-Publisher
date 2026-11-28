@@ -1,15 +1,5 @@
 [
   {
-    "id": "0b4ca4d9af8cfdf8",
-    "title": "Binance 已分配 AMATB 股息,每股 0.53 美元",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-19T21:24:41.326157+00:00",
-    "tokens": [
-      "AMATB"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "65c5eff869444e0b",
     "title": "Aave App登陆Android,新增早期访问名额",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-11-28T16:44:01.225108+00:00",
     "tokens": [
       "XRP"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "d5aca43f86961875",
+    "title": "Galaxy研究主管:美国现货比特币ETP 11月净流出额或创2024年1月以来单月新高",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-28T17:04:24.319206+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }

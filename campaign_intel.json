@@ -18,37 +18,37 @@
   "strategy_guidance": "优先追“THE BIG BINANCE BONANZA: Black Friday Frenzy”这一强时效当期热点，用活动冲刺/复盘/抄作业角度切入，并串联 Spot Trading Tournament Season 12、Binance Futures 新上线 TradFi 永续、bStocks 新增抵押与交易对、Anthropic 股票期权等产品快讯，提醒读者参与评论/互动拿奖励。日常快讯建议采用“活动进度+玩法拆解+风险提示”结构，不暗示参加活动能带来交易收益，以提升 Write2Earn 曝光与合规互动转化。",
   "last_updated": "2026-11-28T06:24:06.165759Z",
   "_feed_health": {
-    "Bitcoinist (比特币向)": {
-      "fails": 3,
-      "reset_at": "2026-11-28T16:03:30.844213+00:00",
-      "parked_until": "2026-11-27T13:43:41.931378+00:00",
-      "last_fail": "2026-11-28T16:43:40.500943+00:00"
-    },
     "CryptoPotato (山寨币/Meme热点)": {
       "fails": 1,
-      "reset_at": "2026-11-28T16:43:40.467160+00:00",
-      "last_fail": "2026-11-28T12:23:31.920867+00:00"
+      "last_fail": "2026-11-28T12:23:31.920867+00:00",
+      "reset_at": "2026-11-28T17:03:32.691430+00:00"
     },
     "吴说区块链 (中文深度)": {
       "fails": 3,
       "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "last_fail": "2026-11-28T16:43:41.782131+00:00"
+      "last_fail": "2026-11-28T17:03:34.216039+00:00"
     },
     "Watcher.Guru (快讯)": {
       "fails": 3,
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-28T16:43:40.824441+00:00"
+      "last_fail": "2026-11-28T17:03:33.083695+00:00"
+    },
+    "Bitcoinist (比特币向)": {
+      "fails": 3,
+      "parked_until": "2026-11-27T13:43:41.931378+00:00",
+      "last_fail": "2026-11-28T16:43:40.500943+00:00",
+      "reset_at": "2026-11-28T17:03:32.817636+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-28",
   "_publish_park": {},
   "_intel_refresh_fail": {},
-  "_img_rot": 1397,
+  "_img_rot": 1398,
   "_alert_state": {},
   "_risk_blocked": {
     "59c9313a0d31229b": "2026-10-15T02:05:13.455146+00:00"
