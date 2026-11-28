@@ -1,16 +1,5 @@
 [
   {
-    "id": "d791596593a5c9dd",
-    "title": "Binance Wallet 公布 Anthropic IPO 配售补偿方案:全额退还认购资金,额外空投价值 100 万美元的 ANTB 代币",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-19T18:25:57.269597+00:00",
-    "tokens": [
-      "ANTB",
-      "USDC"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "d29540b9e6fbb5fb",
     "title": "Raoul Pal Hails Solana as Tokenized Equities Leader After Explosive Growth From $10M to $2B in 15 Months",
     "source": "ZyCrypto (新币与空投)",
@@ -5161,6 +5150,16 @@
     "sent_at": "2026-11-28T15:03:51.468660+00:00",
     "tokens": [
       "DOGE"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c7d904fb30e71fe5",
+    "title": "XRP NFT Platform Hit by Security Exploit, Key Wallet Disclosure Made",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-28T15:24:00.882985+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
