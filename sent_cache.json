@@ -1,15 +1,5 @@
 [
   {
-    "id": "dda5ef36bbf209bc",
-    "title": "Can Shiba Inu (SHIB) Avoid 86 Trillion? Bears Giving Up",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-19T13:23:59.462384+00:00",
-    "tokens": [
-      "SHIB"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "b860ec69b10e0442",
     "title": "XRP Out at Royal Bank of Canada: Leveraged Fund Cut to Zero",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5164,5 +5154,15 @@
       "WLFI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "c3a981a179c24070",
+    "title": "Bitcoin whales pile into BTC despite shrinking profit cushion",
+    "source": "Cointelegraph (全球综合快讯)",
+    "sent_at": "2026-11-28T11:24:01.232539+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "zh-TW"
   }
 ]
