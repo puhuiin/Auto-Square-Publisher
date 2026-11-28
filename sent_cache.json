@@ -1,15 +1,5 @@
 [
   {
-    "id": "1514ffc76d70d379",
-    "title": "火币HTX将于11月19日20:00上线MMT(Momentum)",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-19T11:06:28.068548+00:00",
-    "tokens": [
-      "MMT"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "99b1514161e924f7",
     "title": "累计转账超 1730 亿美元、用户突破 55 万:GasFree 上线 20 个月跑出稳定币支付亮眼增长曲线",
     "source": "深潮TechFlow (中文/简体)",
@@ -5164,5 +5154,16 @@
       "BTC"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "94a64b36c013bd3a",
+    "title": "孙宇晨称 WLFI 事件为内部套现及欺诈,呼吁交易所下架 WLFI 和 USD1",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-28T09:44:53.321120+00:00",
+    "tokens": [
+      "WLFI",
+      "USD1"
+    ],
+    "lang": "zh-TW"
   }
 ]
