@@ -19,30 +19,30 @@
   "last_updated": "2026-11-28T18:44:08.093671Z",
   "_feed_health": {
     "Bitcoinist (比特币向)": {
-      "fails": 3,
       "parked_until": "2026-11-27T13:43:41.931378+00:00",
+      "fails": 3,
       "last_fail": "2026-11-28T18:44:08.897496+00:00",
       "reset_at": "2026-11-28T18:23:30.578564+00:00"
     },
-    "Watcher.Guru (快讯)": {
-      "fails": 3,
-      "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-28T18:44:09.273221+00:00"
-    },
     "CryptoPotato (山寨币/Meme热点)": {
-      "fails": 1,
+      "last_fail": "2026-11-28T17:23:27.014829+00:00",
       "reset_at": "2026-11-28T18:44:08.848826+00:00",
-      "last_fail": "2026-11-28T17:23:27.014829+00:00"
+      "fails": 1
     },
     "吴说区块链 (中文深度)": {
-      "fails": 3,
+      "last_fail": "2026-11-28T18:44:10.151774+00:00",
       "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "last_fail": "2026-11-28T18:44:10.151774+00:00"
+      "fails": 3
+    },
+    "Watcher.Guru (快讯)": {
+      "last_fail": "2026-11-28T18:44:09.273221+00:00",
+      "parked_until": "2026-11-17T10:23:31.478522+00:00",
+      "fails": 3
     }
   },
   "_fallback_image": {
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
-    "date": "2026-10-18"
+    "date": "2026-10-18",
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-28",
