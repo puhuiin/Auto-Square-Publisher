@@ -18,36 +18,36 @@
   "strategy_guidance": "优先追“THE BIG BINANCE BONANZA: Black Friday Frenzy”这一强时效当期热点，用活动冲刺/复盘/抄作业角度切入，并串联 Spot Trading Tournament Season 12、Binance Futures 新上线 TradFi 永续、bStocks 新增抵押与交易对、Anthropic 股票期权等产品快讯，提醒读者参与评论/互动拿奖励。日常快讯建议采用“活动进度+玩法拆解+风险提示”结构，不暗示参加活动能带来交易收益，以提升 Write2Earn 曝光与合规互动转化。",
   "last_updated": "2026-11-28T06:24:06.165759Z",
   "_feed_health": {
-    "Bitcoinist (比特币向)": {
-      "reset_at": "2026-11-28T09:23:31.652954+00:00",
-      "fails": 3,
-      "parked_until": "2026-11-27T13:43:41.931378+00:00",
-      "last_fail": "2026-11-28T09:03:27.532707+00:00"
+    "CoinJournal (山寨异动)": {
+      "last_fail": "2026-11-28T05:24:04.267893+00:00",
+      "parked_until": "2026-11-28T11:24:04.267893+00:00",
+      "fails": 3
     },
     "Watcher.Guru (快讯)": {
-      "fails": 3,
+      "last_fail": "2026-11-28T09:23:31.781051+00:00",
       "parked_until": "2026-11-17T10:23:31.478522+00:00",
-      "last_fail": "2026-11-28T09:23:31.781051+00:00"
-    },
-    "CoinJournal (山寨异动)": {
-      "fails": 3,
-      "parked_until": "2026-11-28T11:24:04.267893+00:00",
-      "last_fail": "2026-11-28T05:24:04.267893+00:00"
-    },
-    "CryptoPotato (山寨币/Meme热点)": {
-      "reset_at": "2026-11-28T09:23:31.563478+00:00",
-      "fails": 1,
-      "last_fail": "2026-11-28T07:43:32.894152+00:00"
+      "fails": 3
     },
     "吴说区块链 (中文深度)": {
-      "fails": 3,
+      "last_fail": "2026-11-28T09:23:32.353714+00:00",
       "parked_until": "2026-11-24T07:46:04.867856+00:00",
-      "last_fail": "2026-11-28T09:23:32.353714+00:00"
+      "fails": 3
+    },
+    "Bitcoinist (比特币向)": {
+      "last_fail": "2026-11-28T09:03:27.532707+00:00",
+      "fails": 3,
+      "parked_until": "2026-11-27T13:43:41.931378+00:00",
+      "reset_at": "2026-11-28T09:23:31.652954+00:00"
+    },
+    "CryptoPotato (山寨币/Meme热点)": {
+      "last_fail": "2026-11-28T07:43:32.894152+00:00",
+      "fails": 1,
+      "reset_at": "2026-11-28T09:23:31.563478+00:00"
     }
   },
   "_fallback_image": {
-    "date": "2026-10-18",
-    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg"
+    "url": "https://public.bnbstatic.com/image/pgc/20261018/b435d0bcc4364a0c97d2651d113ac10e.jpg",
+    "date": "2026-10-18"
   },
   "_llm_breaker": {},
   "_article_sent_date": "2026-11-28",
