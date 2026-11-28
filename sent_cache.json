@@ -1,15 +1,5 @@
 [
   {
-    "id": "2fd245ac82f5e984",
-    "title": "XRP Whales Move $270M During Sell-Off, but Exchange Deposits Tell a Different Story",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-19T01:24:33.206431+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "984280ce7a284a2e",
     "title": "CertiK完成GL1自评声明独立核验",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5168,6 +5158,16 @@
     "title": "Anza Urges Immediate Agave Upgrade on Solana Mainnet",
     "source": "The Defiant (DeFi 深度)",
     "sent_at": "2026-11-27T23:44:22.696048+00:00",
+    "tokens": [
+      "SOL"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "c1bd562ad357a6d3",
+    "title": "消息称 Anza 要求 Solana 主网验证节点紧急升级",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-28T00:03:55.964631+00:00",
     "tokens": [
       "SOL"
     ],
