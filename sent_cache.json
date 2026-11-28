@@ -1,15 +1,5 @@
 [
   {
-    "id": "8655042a240e9775",
-    "title": "Solana Is Planning Its Next Major Upgrades: Here’s What Changes",
-    "source": "CryptoPotato (山寨币/Meme热点)",
-    "sent_at": "2026-11-19T20:44:03.137485+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "0b4ca4d9af8cfdf8",
     "title": "Binance 已分配 AMATB 股息,每股 0.53 美元",
     "source": "深潮TechFlow (中文/简体)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-11-28T16:23:54.407840+00:00",
     "tokens": [
       "BNB"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7816fea1d2fdbd04",
+    "title": "XRP Holders Want to Burn 31 Billion Tokens, But Ripple CTO Pushes Back",
+    "source": "BeInCrypto (山寨与行情)",
+    "sent_at": "2026-11-28T16:44:01.225108+00:00",
+    "tokens": [
+      "XRP"
     ],
     "lang": "en"
   }
