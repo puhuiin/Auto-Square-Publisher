@@ -1,17 +1,5 @@
 [
   {
-    "id": "932257f1cbf43f7c",
-    "title": "CZ:Anthropic上市首日将登陆BNB Chain链上代币化交易",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-19T04:22:15.671170+00:00",
-    "tokens": [
-      "BNB",
-      "USDC",
-      "ONDO"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "02494b56fc35e6c6",
     "title": "金银股币全线下跌,钱都去哪了?",
     "source": "深潮TechFlow (中文/简体)",
@@ -5168,6 +5156,16 @@
     "sent_at": "2026-11-28T03:04:17.774277+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-TW"
+  },
+  {
+    "id": "25e109c4693e7102",
+    "title": "+42% Shiba Inu (SHIB) Surges in 24 Hours: Transactional Activity Increases as Price Rebounds",
+    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
+    "sent_at": "2026-11-28T03:24:35.618648+00:00",
+    "tokens": [
+      "SHIB"
     ],
     "lang": "zh-TW"
   }
