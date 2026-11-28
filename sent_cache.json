@@ -1,15 +1,5 @@
 [
   {
-    "id": "700cb1035499a996",
-    "title": "Solana:Anthropic 代币化股票已在链上上线",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-19T17:06:27.852689+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "ea493f711d88030a",
     "title": "ANT通过@sunrise在Solana挂牌,由@Backpack Securities发行",
     "source": "Odaily星球日报 (中文快讯)",
@@ -5162,5 +5152,16 @@
       "WLFI"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "84e860fb63bfbcd9",
+    "title": "Ai 姨:某地址向 Coinbase 转入约 1064 万美元 ETH 和 WBTC",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-28T14:04:11.306292+00:00",
+    "tokens": [
+      "ETH",
+      "WBTC"
+    ],
+    "lang": "en"
   }
 ]
