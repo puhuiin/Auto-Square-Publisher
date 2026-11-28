@@ -1,15 +1,5 @@
 [
   {
-    "id": "65c5eff869444e0b",
-    "title": "Aave App登陆Android,新增早期访问名额",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-19T21:44:14.417463+00:00",
-    "tokens": [
-      "AAVE"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "9b708d0f9889301f",
     "title": "Gemini AI Predicts Which Privacy Coin Goes to the Moon in 2027? XMR Vs. Zcash",
     "source": "CryptoNews (全球快讯)",
@@ -5161,6 +5151,16 @@
     "sent_at": "2026-11-28T17:04:24.319206+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "c4d71549ee86ed50",
+    "title": "Ethereum’s Co-Founder Takes On Crypto’s Next Security Threat. Who Is Vitalik Buterin?",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-28T17:23:48.920162+00:00",
+    "tokens": [
+      "ETH"
     ],
     "lang": "en"
   }
