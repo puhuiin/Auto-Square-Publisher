@@ -1,15 +1,5 @@
 [
   {
-    "id": "9279e791fd81869d",
-    "title": "XRP Flashes Biggest Volatility Warning Among Major Cryptocurrencies",
-    "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
-    "sent_at": "2026-11-19T08:44:33.024829+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "364ab584106b7fb4",
     "title": "Solana Tokenized Stock Hits $1.2B as Wall Street Moves Equities Onchain",
     "source": "CryptoNews (全球快讯)",
@@ -5162,6 +5152,16 @@
     "sent_at": "2026-11-28T07:23:55.299241+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "71211d0f3e5226cc",
+    "title": "Solana News: Developers Issue Urgent Upgrade Notice to Mainnet Validators",
+    "source": "NewsBTC (比特币与山寨)",
+    "sent_at": "2026-11-28T07:43:53.235484+00:00",
+    "tokens": [
+      "SOL"
     ],
     "lang": "zh-CN"
   }
