@@ -1,15 +1,5 @@
 [
   {
-    "id": "9f94be30e3b54204",
-    "title": "Binance’s $6.5B freeze order, Hong Kong ‘suspicious’ of HYPE: Asia Express",
-    "source": "Cointelegraph (全球综合快讯)",
-    "sent_at": "2026-11-19T23:45:01.200694+00:00",
-    "tokens": [
-      "HYPE"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "97f5ed9da2aff4fa",
     "title": "XRP and Solana ETF Plans Abruptly Scrapped After Yearlong Wait",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5158,6 +5148,17 @@
     "sent_at": "2026-11-28T18:23:54.474005+00:00",
     "tokens": [
       "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "5e4d493b5c788089",
+    "title": "Ripple Scores Major Turkish Custody Deal as Analyst Unveils $16T Payment Master Plan That Could Supercharge XRP to $600",
+    "source": "ZyCrypto (新币与空投)",
+    "sent_at": "2026-11-28T18:44:31.445216+00:00",
+    "tokens": [
+      "XRP",
+      "BNB"
     ],
     "lang": "en"
   }
