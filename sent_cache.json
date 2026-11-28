@@ -1,15 +1,5 @@
 [
   {
-    "id": "12269ac9feeb69ff",
-    "title": "代币化股票平台 Ondo 推出 Anthropic 股票代币 ANTon",
-    "source": "深潮TechFlow (中文/简体)",
-    "sent_at": "2026-11-19T17:46:10.904536+00:00",
-    "tokens": [
-      "ONDO"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "7641f66100856fd0",
     "title": "Bitwise Files SEC Registration for a Zcash ETF",
     "source": "The Defiant (DeFi 深度)",
@@ -5159,6 +5149,16 @@
     "title": "Bitcoin wallet from 2010 wakes up, sparks AI hacking fears",
     "source": "Crypto Briefing (深度与研报)",
     "sent_at": "2026-11-28T14:23:49.865354+00:00",
+    "tokens": [
+      "BTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "7a76f0c7d6775871",
+    "title": "What a 12-cent Bitcoin ETF option reveals about crash protection",
+    "source": "CryptoSlate (新赛道与代币经济)",
+    "sent_at": "2026-11-28T14:43:56.385320+00:00",
     "tokens": [
       "BTC"
     ],
