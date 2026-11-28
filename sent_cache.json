@@ -1,16 +1,5 @@
 [
   {
-    "id": "ca0cd1d3da311f8d",
-    "title": "Sky社区成员提议暂停SKY-USDS质押奖励并加大SKY回购力度,以稳定代币价格",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-19T15:24:25.558526+00:00",
-    "tokens": [
-      "SKY",
-      "USDS"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "70d46f74a81e8ec6",
     "title": "What’s Coming for Solana in 2027? Upgrade Planned Across Four Key Areas",
     "source": "U.Today (Meme币/DOGE/SHIB/SOL/XRP热点)",
@@ -5163,5 +5152,15 @@
       "ETH"
     ],
     "lang": "zh-TW"
+  },
+  {
+    "id": "cad9f98d28b3e27c",
+    "title": "World Liberty Says Binance Closed WLFI Futures Bets",
+    "source": "The Defiant (DeFi 深度)",
+    "sent_at": "2026-11-28T13:24:42.190750+00:00",
+    "tokens": [
+      "WLFI"
+    ],
+    "lang": "zh-CN"
   }
 ]
