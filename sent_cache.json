@@ -1,15 +1,5 @@
 [
   {
-    "id": "b8d2ea72f3c5b9e4",
-    "title": "Zelle Moves $1.25 Million On Solana — Could This Be A Turning Point For SOL?",
-    "source": "Bitcoinist (比特币向)",
-    "sent_at": "2026-11-19T09:43:56.896275+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "zh-TW"
-  },
-  {
     "id": "9a6129d90d0ac7db",
     "title": "Ripple CEO Predicts Utility-Driven Crypto Will Win — Could XRP Be The Biggest Beneficiary?",
     "source": "Bitcoinist (比特币向)",
@@ -5160,6 +5150,17 @@
     "source": "深潮TechFlow (中文/繁体)",
     "sent_at": "2026-11-28T08:03:52.407213+00:00",
     "tokens": [
+      "USD1"
+    ],
+    "lang": "zh-CN"
+  },
+  {
+    "id": "1056e8d57ba5e5fd",
+    "title": "Justin Sun 被指控诉 WLFI 和 USD1 存在内幕抛售",
+    "source": "深潮TechFlow (中文/简体)",
+    "sent_at": "2026-11-28T08:23:51.974111+00:00",
+    "tokens": [
+      "WLFI",
       "USD1"
     ],
     "lang": "zh-CN"
