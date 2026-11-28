@@ -1,15 +1,5 @@
 [
   {
-    "id": "ea493f711d88030a",
-    "title": "ANT通过@sunrise在Solana挂牌,由@Backpack Securities发行",
-    "source": "Odaily星球日报 (中文快讯)",
-    "sent_at": "2026-11-19T17:24:05.589303+00:00",
-    "tokens": [
-      "SOL"
-    ],
-    "lang": "en"
-  },
-  {
     "id": "12269ac9feeb69ff",
     "title": "代币化股票平台 Ondo 推出 Anthropic 股票代币 ANTon",
     "source": "深潮TechFlow (中文/简体)",
@@ -5161,6 +5151,16 @@
     "tokens": [
       "ETH",
       "WBTC"
+    ],
+    "lang": "en"
+  },
+  {
+    "id": "818aa230cd7bad78",
+    "title": "Bitcoin wallet from 2010 wakes up, sparks AI hacking fears",
+    "source": "Crypto Briefing (深度与研报)",
+    "sent_at": "2026-11-28T14:23:49.865354+00:00",
+    "tokens": [
+      "BTC"
     ],
     "lang": "en"
   }
