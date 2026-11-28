@@ -1,15 +1,5 @@
 [
   {
-    "id": "2bade7e7497daf32",
-    "title": "XRP Ledger 完成 GL1 十项原则自评及部分独立核验",
-    "source": "吴说区块链 (中文深度)",
-    "sent_at": "2026-11-19T03:24:21.725811+00:00",
-    "tokens": [
-      "XRP"
-    ],
-    "lang": "zh-CN"
-  },
-  {
     "id": "31f6331e53bf71ef",
     "title": "CZ says tokenized Anthropic is coming to BNB Chain on IPO day",
     "source": "CoinDesk (权威宏观与机构)",
@@ -5169,5 +5159,16 @@
       "XRP"
     ],
     "lang": "zh-CN"
+  },
+  {
+    "id": "7d893f8a45ebeb3d",
+    "title": "Sky联创Rune:缓解stUSDS流动性困境的相关交易谈判已进入最后阶段",
+    "source": "Odaily星球日报 (中文快讯)",
+    "sent_at": "2026-11-28T02:43:55.434659+00:00",
+    "tokens": [
+      "USDS",
+      "SKY"
+    ],
+    "lang": "zh-TW"
   }
 ]
